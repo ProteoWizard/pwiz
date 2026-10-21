@@ -16,11 +16,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
     <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
     <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
     <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />
     <ProjectReference Include="..\CarafeSharp.Training\CarafeSharp.Training.csproj" />
     <ProjectReference Include="..\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Tasks\CarafeSharp.Tasks.csproj" />
     <ProjectReference Include="..\CarafeSharp\CarafeSharp.csproj" />
   </ItemGroup>
 

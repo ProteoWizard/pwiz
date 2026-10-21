@@ -43,6 +43,28 @@ namespace pwiz.Common.CommandLine
             _dynamicValues = dynamicValues;
         }
 
+        /// <summary>
+        /// A declaration with everything <paramref name="template"/> declares about its name and
+        /// value - the name, the value example, the listed and accepted values, whether the value
+        /// is optional or variadic - for a host that includes another tool's declarations in its
+        /// own parse (Osprey presents CarafeSharp's library options). The short name and the
+        /// applies-to text are the host's to set: both are spelled in the host's grammar and the
+        /// short names of two tools collide.
+        /// </summary>
+        protected ArgumentBase(ArgumentBase template)
+            : this(template.Name, template.ValueExample, template._fixedValues, template._dynamicValues)
+        {
+            WrapValue = template.WrapValue;
+            OptionalValue = template.OptionalValue;
+            OptionalValueFilter = template.OptionalValueFilter;
+            Variadic = template.Variadic;
+            MissingValueMessage = template.MissingValueMessage;
+            InternalUse = template.InternalUse;
+            HasValueChecking = template.HasValueChecking;
+            AcceptedValues = template.AcceptedValues;
+            AcceptsValue = template.AcceptsValue;
+        }
+
         private readonly string[] _fixedValues;
         private readonly Func<string[]> _dynamicValues;
 
@@ -92,11 +114,18 @@ namespace pwiz.Common.CommandLine
         /// e.g. the invariant names for an argument whose values are shown localized.
         /// </summary>
         public Func<string[]> AcceptedValues { get; set; }
+        /// <summary>
+        /// A test for values accepted beyond <see cref="Values"/> and <see cref="AcceptedValues"/>
+        /// that no list can name, e.g. a culture accepted because its parent is known. An argument
+        /// that checks its value when parsed (<see cref="HasValueChecking"/>) should test with the
+        /// same rule here, so a token built with <c>+</c> is refused exactly when the parser would
+        /// refuse it.
+        /// </summary>
+        public Func<string, bool> AcceptsValue { get; set; }
 
         /// <summary>
         /// The argument as typed and as help shows it: the installed grammar's
-        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>; <c>-db</c> for
-        /// CarafeSharp).
+        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>, <c>--db</c>).
         /// </summary>
         public string ArgumentText
         {
@@ -148,15 +177,18 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case,
-        /// or if the argument lists neither and so has nothing to check the value against.
+        /// or passes <see cref="AcceptsValue"/>, or if the argument has none of them and so nothing to
+        /// check the value against.
         /// </summary>
         public bool IsValidValue(string value)
         {
-            if (Values == null && AcceptedValues == null)
+            if (Values == null && AcceptedValues == null && AcceptsValue == null)
                 return true;
             if (Values != null && Values.Any(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase)))
                 return true;
-            return AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
+            if (AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase)))
+                return true;
+            return AcceptsValue != null && AcceptsValue(value);
         }
 
         /// <summary>

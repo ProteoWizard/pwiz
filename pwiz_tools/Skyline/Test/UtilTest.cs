@@ -501,6 +501,21 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&amp;oops")); // Already escaped
             Assert.AreEqual("&amp;oops &amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops &amp;oops")); // Mix of escaped and unescaped
             Assert.AreEqual("&amp;oops &amp;oops &apos;oops", PathEx.EscapePathForXML("&oops &oops &apos;oops")); // Use of & to escape apostrophe
+            Assert.AreEqual("&#38;oops &#x26;oops", PathEx.EscapePathForXML("&#38;oops &#x26;oops")); // Character references
+            Assert.AreEqual("R&amp;#D", PathEx.EscapePathForXML("R&#D")); // '#' without a complete reference
+            Assert.AreEqual("&amp;#;oops", PathEx.EscapePathForXML("&#;oops")); // Empty reference
+            Assert.AreEqual("&amp;#X41;oops", PathEx.EscapePathForXML("&#X41;oops")); // XML requires lowercase 'x'
+            // References to characters XML does not allow
+            Assert.AreEqual("&amp;#0;oops", PathEx.EscapePathForXML("&#0;oops"));
+            Assert.AreEqual("&amp;#1;oops", PathEx.EscapePathForXML("&#1;oops"));
+            Assert.AreEqual("&amp;#xD800;oops", PathEx.EscapePathForXML("&#xD800;oops")); // Surrogate
+            Assert.AreEqual("&amp;#xFFFE;oops", PathEx.EscapePathForXML("&#xFFFE;oops"));
+            Assert.AreEqual("&amp;#x110000;oops", PathEx.EscapePathForXML("&#x110000;oops")); // Beyond Unicode
+            Assert.AreEqual("&amp;#99999999999;oops", PathEx.EscapePathForXML("&#99999999999;oops")); // Overflows int
+            // References to characters XML allows
+            Assert.AreEqual("&#9;&#xA;&#xD;&#x10000;&#x10FFFF;oops", PathEx.EscapePathForXML("&#9;&#xA;&#xD;&#x10000;&#x10FFFF;oops"));
+            const char arabicIndicThree = (char) 0x0663; // Non-ASCII digit, which Regex \d would match
+            Assert.AreEqual("&amp;#" + arabicIndicThree + ";oops", PathEx.EscapePathForXML("&#" + arabicIndicThree + ";oops"));
         }
 
         [TestMethod]

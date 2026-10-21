@@ -148,11 +148,11 @@
       <Component Id="arrow.dll">
         <File Source="$(var.Skyline.TargetDir)/arrow.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="BiblioSpec.dll">
-        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.dll" KeyPath="yes"/>
+      <Component Id="BiblioSpecUtil.dll">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpecUtil.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="BiblioSpec.pdb">
-        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.pdb" KeyPath="yes"/>
+      <Component Id="BiblioSpecUtil.pdb">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpecUtil.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="BlibBuild.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe" KeyPath="yes"/>
@@ -463,8 +463,8 @@
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="ja_files" Directory="ja_directory">
-      <Component Id="ja_BiblioSpec.resources.dll">
-        <File Source="$(var.Skyline.TargetDir)/ja\BiblioSpec.resources.dll" Id="ja_BiblioSpec.resources.dll_file" KeyPath="yes"/>
+      <Component Id="ja_BiblioSpecUtil.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\BiblioSpecUtil.resources.dll" Id="ja_BiblioSpecUtil.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="ja_DigitalRune.Windows.Docking.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\DigitalRune.Windows.Docking.resources.dll" Id="ja_DigitalRune.Windows.Docking.resources.dll_file" KeyPath="yes"/>
@@ -526,8 +526,8 @@
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="zh_CHS_files" Directory="zh_CHS_directory">
-      <Component Id="zh_CHS_BiblioSpec.resources.dll">
-        <File Source="$(var.Skyline.TargetDir)/zh-CHS\BiblioSpec.resources.dll" Id="zh_CHS_BiblioSpec.resources.dll_file" KeyPath="yes"/>
+      <Component Id="zh_CHS_BiblioSpecUtil.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\BiblioSpecUtil.resources.dll" Id="zh_CHS_BiblioSpecUtil.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_DigitalRune.Windows.Docking.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\DigitalRune.Windows.Docking.resources.dll" Id="zh_CHS_DigitalRune.Windows.Docking.resources.dll_file" KeyPath="yes"/>

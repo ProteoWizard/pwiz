@@ -79,7 +79,11 @@ namespace pwiz.Skyline.SettingsUI
             this.labelFilename = new System.Windows.Forms.Label();
             this.comboRedundantSpectra = new System.Windows.Forms.ComboBox();
             this.labelRT = new System.Windows.Forms.Label();
+            this.flowAddAllOptions = new System.Windows.Forms.FlowLayoutPanel();
+            this.labelGlobalCutoff = new System.Windows.Forms.Label();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
+            this.comboQValueLevel = new System.Windows.Forms.ComboBox();
+            this.textQValueCutoff = new System.Windows.Forms.TextBox();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -122,6 +126,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
+            this.flowAddAllOptions.SuspendLayout();
             this.ViewLibraryPanel.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.SuspendLayout();
@@ -452,9 +457,7 @@ namespace pwiz.Skyline.SettingsUI
             // panel2
             // 
             this.panel2.Controls.Add(this.tableLayoutPanel2);
-            this.panel2.Controls.Add(this.cbAssociateProteins);
-            this.panel2.Controls.Add(this.btnAdd);
-            this.panel2.Controls.Add(this.btnAddAll);
+            this.panel2.Controls.Add(this.flowAddAllOptions);
             this.panel2.Controls.Add(this.btnCancel);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
@@ -486,7 +489,37 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.labelRT, "labelRT");
             this.labelRT.Name = "labelRT";
-            // 
+            //
+            // flowAddAllOptions
+            //
+            resources.ApplyResources(this.flowAddAllOptions, "flowAddAllOptions");
+            this.flowAddAllOptions.Controls.Add(this.btnAdd);
+            this.flowAddAllOptions.Controls.Add(this.btnAddAll);
+            this.flowAddAllOptions.Controls.Add(this.labelGlobalCutoff);
+            this.flowAddAllOptions.Controls.Add(this.comboQValueLevel);
+            this.flowAddAllOptions.Controls.Add(this.textQValueCutoff);
+            this.flowAddAllOptions.Controls.Add(this.cbAssociateProteins);
+            this.flowAddAllOptions.Name = "flowAddAllOptions";
+            //
+            // labelGlobalCutoff
+            //
+            resources.ApplyResources(this.labelGlobalCutoff, "labelGlobalCutoff");
+            this.labelGlobalCutoff.Name = "labelGlobalCutoff";
+            //
+            // comboQValueLevel
+            //
+            resources.ApplyResources(this.comboQValueLevel, "comboQValueLevel");
+            this.comboQValueLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboQValueLevel.FormattingEnabled = true;
+            this.comboQValueLevel.Name = "comboQValueLevel";
+            this.toolTip1.SetToolTip(this.comboQValueLevel, resources.GetString("comboQValueLevel.ToolTip"));
+            //
+            // textQValueCutoff
+            //
+            resources.ApplyResources(this.textQValueCutoff, "textQValueCutoff");
+            this.textQValueCutoff.Name = "textQValueCutoff";
+            this.toolTip1.SetToolTip(this.textQValueCutoff, resources.GetString("textQValueCutoff.ToolTip"));
+            //
             // cbAssociateProteins
             // 
             resources.ApplyResources(this.cbAssociateProteins, "cbAssociateProteins");
@@ -515,7 +548,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
+            //
             // ViewLibraryPanel
             // 
             this.ViewLibraryPanel.Controls.Add(this.splitMain);
@@ -736,6 +769,8 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
+            this.flowAddAllOptions.ResumeLayout(false);
+            this.flowAddAllOptions.PerformLayout();
             this.ViewLibraryPanel.ResumeLayout(false);
             this.contextMenuSpectrum.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -787,6 +822,10 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnAddAll;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.CheckBox cbAssociateProteins;
+        private System.Windows.Forms.FlowLayoutPanel flowAddAllOptions;
+        private System.Windows.Forms.Label labelGlobalCutoff;
+        private System.Windows.Forms.ComboBox comboQValueLevel;
+        private System.Windows.Forms.TextBox textQValueCutoff;
         private System.Windows.Forms.ToolStripMenuItem chargesContextMenuItem;
         private System.Windows.Forms.Label labelRT;
         private System.Windows.Forms.Button btnLibDetails;

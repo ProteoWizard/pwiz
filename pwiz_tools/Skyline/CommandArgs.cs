@@ -325,7 +325,8 @@ namespace pwiz.Skyline
         // Parsing checks the value in SetCulture, which also accepts other spellings of a known culture name.
         public static readonly Argument ARG_CULTURE = new Argument(@"culture",
             () => DISPLAY_LANGUAGE_NAMES.Value, (c, p) => SetCulture(p))
-            { HasValueChecking = true, AcceptedValues = GetKnownCultureNames };
+            // The value is checked by SetCulture when parsed; a token built with + is checked by the same rule.
+            { HasValueChecking = true, AcceptsValue = name => GetKnownCulture(name) != null };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,

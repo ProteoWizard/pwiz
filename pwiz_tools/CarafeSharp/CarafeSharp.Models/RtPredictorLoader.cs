@@ -103,7 +103,7 @@ namespace pwiz.CarafeSharp.Models
             if (type == Core.RtModelType.chronologer)
                 return WithAlignment(LoadChronologer(path));
             if (RtReference != null)
-                throw new InvalidOperationException(string.Format(@"-rt_reference {0} needs the Chronologer RT model, not {1}.", RtReference, type));
+                throw new InvalidOperationException(string.Format(@"--rt-reference {0} needs the Chronologer RT model, not {1}.", RtReference, type));
             if (path != null)
             {
                 WriteLog(@"Using fine-tuned RT model " + path);
@@ -135,7 +135,7 @@ namespace pwiz.CarafeSharp.Models
                     if (RtReference != null)
                     {
                         throw new InvalidOperationException(string.Format(
-                            @"-rt_reference {0} needs a Chronologer trained with -rt_align kde, whose runs' maps ({1}) its model folder holds.",
+                            @"--rt-reference {0} needs a Chronologer trained with --rt-align kde, whose runs' maps ({1}) its model folder holds.",
                             RtReference, ModelFiles.RT_MAPS));
                     }
                     return rt;
@@ -145,7 +145,7 @@ namespace pwiz.CarafeSharp.Models
                     if (RtReference != null)
                     {
                         throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
-                            @"-rt_reference {0} needs a library in minutes, which an rt_max of {1} is not.", RtReference, RtMax));
+                            @"--rt-reference {0} needs a library in minutes, which --rt-max {1} is not.", RtReference, RtMax));
                     }
                     return rt;
                 }
@@ -163,7 +163,7 @@ namespace pwiz.CarafeSharp.Models
                     var medianToRun = rt.PredictsNormalizedRt ? alignment.MedianToRunMinutes(run) : null;
                     Func<double, double> toMinutes = medianToRun != null ? rtNorm => medianToRun(rtNorm * trainingRtMax) : alignment.ToRunMinutes(run);
                     LogMapsTakeMinutes();
-                    WriteLog(string.Format(@"Library RT: minutes of training run {0} (-rt_reference, {1}): {2}", run, path, alignment));
+                    WriteLog(string.Format(@"Library RT: minutes of training run {0} (--rt-reference, {1}): {2}", run, path, alignment));
                     return new AlignedRtPredictor(rt, toMinutes, RtMax);
                 }
                 if (rt.PredictsNormalizedRt)
@@ -172,7 +172,7 @@ namespace pwiz.CarafeSharp.Models
                 {
                     WriteLog(string.Format(CultureInfo.InvariantCulture,
                         @"WARNING: the training runs are on different gradients ({0}), so their median minutes are none of theirs; " +
-                        @"the library RT is iRT. Name a run with -rt_reference for its minutes: {1}.",
+                        @"the library RT is iRT. Name a run with --rt-reference for its minutes: {1}.",
                         alignment, string.Join(@", ", alignment.Runs.Select(r => r.Run))));
                     return rt;
                 }
@@ -192,7 +192,7 @@ namespace pwiz.CarafeSharp.Models
         {
             if (UserRtMax)
             {
-                WriteLog(string.Format(CultureInfo.InvariantCulture, @"Ignored -rt_max {0}: the library's minutes come from the training runs' maps",
+                WriteLog(string.Format(CultureInfo.InvariantCulture, @"Ignored --rt-max {0}: the library's minutes come from the training runs' maps",
                     RtMax));
             }
         }

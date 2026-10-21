@@ -22,8 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 
 namespace pwiz.CarafeSharp.Training
@@ -190,7 +190,7 @@ namespace pwiz.CarafeSharp.Training
 
         private const string OTHER_ACTIVATION = @"other";
 
-        public static OspreyTrainingSet Build(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
+        public static OspreyTrainingSet Build(IReadOnlyList<TrainingExport> exports, OspreyTrainingSetOptions options)
         {
             var stats = new OspreyTrainingSetStats();
             var candidates = new List<Candidate>();
@@ -313,7 +313,7 @@ namespace pwiz.CarafeSharp.Training
         /// Each run's name, by its export's path: the export's stem, or, where two exports from different folders share a
         /// stem, the folder and the stem, so that two acquisitions of the same file name are two runs.
         /// </summary>
-        public static Dictionary<string, string> GetRunNames(IReadOnlyList<OspreyTrainingExport> exports)
+        public static Dictionary<string, string> GetRunNames(IReadOnlyList<TrainingExport> exports)
         {
             var names = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var group in exports.GroupBy(e => TrainingExportLocator.RunStem(e.Path), StringComparer.OrdinalIgnoreCase))
@@ -395,7 +395,7 @@ namespace pwiz.CarafeSharp.Training
         }
 
         /// <summary>Each run's length, its last MS2 retention time, by its name (<see cref="GetRunNames"/>).</summary>
-        private static Dictionary<string, double> RunMinutes(IReadOnlyList<OspreyTrainingExport> exports, IReadOnlyDictionary<string, string> runNames)
+        private static Dictionary<string, double> RunMinutes(IReadOnlyList<TrainingExport> exports, IReadOnlyDictionary<string, string> runNames)
         {
             return exports.GroupBy(e => runNames[e.Path], StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.Max(e => e.RtMax), StringComparer.Ordinal);
@@ -441,7 +441,7 @@ namespace pwiz.CarafeSharp.Training
         /// </list>
         /// A run that names neither vendor nor model counts as Thermo, as Carafe reads it.
         /// </summary>
-        public static RunCollisionEnergy GetCollisionEnergy(OspreyTrainingExport export, OspreyTrainingSetOptions options)
+        public static RunCollisionEnergy GetCollisionEnergy(TrainingExport export, OspreyTrainingSetOptions options)
         {
             double? energy = export.DominantCollisionEnergy;
             if (energy.HasValue && ReportsElectronvolts(export))
@@ -477,7 +477,7 @@ namespace pwiz.CarafeSharp.Training
         /// says nothing or names only electron-based methods, which leave the columns zero.
         /// </summary>
         /// <exception cref="InvalidDataException">The run's sampled MS2 spectra mix activations.</exception>
-        public static string GetActivation(OspreyTrainingExport export, string userActivation)
+        public static string GetActivation(TrainingExport export, string userActivation)
         {
             if (userActivation != null)
                 return userActivation;
@@ -490,7 +490,7 @@ namespace pwiz.CarafeSharp.Training
                     counts[activation] = (counts.TryGetValue(activation, out long n) ? n : 0) + pair.Value;
             }
             if (counts.Count > 1)
-                throw MixedClasses(export, @"activations", counts, @"-activation");
+                throw MixedClasses(export, @"activations", counts, @"--activation");
             return counts.Keys.FirstOrDefault();
         }
 
@@ -502,7 +502,7 @@ namespace pwiz.CarafeSharp.Training
         /// it has one MS2 analyzer: a Stellar's LIT, an Astral's ToF. Null otherwise.
         /// </summary>
         /// <exception cref="InvalidDataException">The run's sampled MS2 spectra were read out in more than one kind of analyzer.</exception>
-        public static string GetAnalyzer(OspreyTrainingExport export, string userAnalyzer)
+        public static string GetAnalyzer(TrainingExport export, string userAnalyzer)
         {
             if (userAnalyzer != null)
                 return userAnalyzer;
@@ -514,7 +514,7 @@ namespace pwiz.CarafeSharp.Training
                     counts[analyzer] = (counts.TryGetValue(analyzer, out long n) ? n : 0) + pair.Value;
             }
             if (counts.Count > 1)
-                throw MixedClasses(export, @"analyzers", counts, @"-analyzer");
+                throw MixedClasses(export, @"analyzers", counts, @"--analyzer");
             if (counts.Count == 1)
                 return counts.Keys.First();
             string model = export.InstrumentModel?.Trim();
@@ -564,9 +564,9 @@ namespace pwiz.CarafeSharp.Training
         }
 
         /// <summary>A Thermo instrument, by its vendor or, without one, by its model's name.</summary>
-        private static bool IsThermo(OspreyTrainingExport export)
+        private static bool IsThermo(TrainingExport export)
         {
-            if (export.Metadata.TryGetValue(@"osprey.instrument_vendor", out string vendor) && !string.IsNullOrEmpty(vendor))
+            if (export.Metadata.TryGetValue(TrainingExportKeys.INSTRUMENT_VENDOR, out string vendor) && !string.IsNullOrEmpty(vendor))
                 return vendor.IndexOf(@"Thermo", StringComparison.OrdinalIgnoreCase) >= 0;
             string model = export.InstrumentModel ?? string.Empty;
             return CARAFE_INSTRUMENTS.TryGetValue(model.Trim(), out string name) && name != @"SciexTOF" ||
@@ -579,14 +579,14 @@ namespace pwiz.CarafeSharp.Training
         /// The run's collision energies are in eV: its vendor is not Thermo, or, without a vendor,
         /// its model is not a Thermo one. pwiz reports a Thermo file's NCE as the energy.
         /// </summary>
-        private static bool ReportsElectronvolts(OspreyTrainingExport export)
+        private static bool ReportsElectronvolts(TrainingExport export)
         {
-            if (export.Metadata.TryGetValue(@"osprey.instrument_vendor", out string vendor) && !string.IsNullOrEmpty(vendor))
+            if (export.Metadata.TryGetValue(TrainingExportKeys.INSTRUMENT_VENDOR, out string vendor) && !string.IsNullOrEmpty(vendor))
                 return !IsThermo(export);
             return !string.IsNullOrWhiteSpace(export.InstrumentModel) && !IsThermo(export);
         }
 
-        private static InvalidDataException MixedClasses(OspreyTrainingExport export, string what, IReadOnlyDictionary<string, long> counts,
+        private static InvalidDataException MixedClasses(TrainingExport export, string what, IReadOnlyDictionary<string, long> counts,
             string option)
         {
             return new InvalidDataException(string.Format(
@@ -596,13 +596,13 @@ namespace pwiz.CarafeSharp.Training
         }
 
         /// <summary>A run's <c>rt_max</c>, the larger of <c>-rt_max</c> and its last MS2 RT plus the padding.</summary>
-        public static double GetRtMax(OspreyTrainingExport export, OspreyTrainingSetOptions options)
+        public static double GetRtMax(TrainingExport export, OspreyTrainingSetOptions options)
         {
             return Math.Max(options.RtMax, export.RtMax + options.RtMaxPadding);
         }
 
-        /// <summary>The one RT normalizer of a training set: the largest <see cref="GetRtMax(OspreyTrainingExport, OspreyTrainingSetOptions)"/>.</summary>
-        public static double GetRtMax(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
+        /// <summary>The one RT normalizer of a training set: the largest <see cref="GetRtMax(TrainingExport, OspreyTrainingSetOptions)"/>.</summary>
+        public static double GetRtMax(IReadOnlyList<TrainingExport> exports, OspreyTrainingSetOptions options)
         {
             return exports.Aggregate(options.RtMax, (max, export) => Math.Max(max, GetRtMax(export, options)));
         }
@@ -647,14 +647,14 @@ namespace pwiz.CarafeSharp.Training
         public OspreyTrainingSetStats Stats { get; }
 
         /// <summary>The collision energy, and the NCE trained with, of the run of an export <see cref="Build"/> read.</summary>
-        public RunCollisionEnergy GetCollisionEnergy(OspreyTrainingExport export)
+        public RunCollisionEnergy GetCollisionEnergy(TrainingExport export)
         {
             return _energies[export.Path];
         }
 
         private sealed class Candidate
         {
-            public Candidate(OspreyTrainingRecord record, PeptideForm peptide, RunCollisionEnergy energy, string instrument, string activation,
+            public Candidate(TrainingRecord record, PeptideForm peptide, RunCollisionEnergy energy, string instrument, string activation,
                 string analyzer, string run)
             {
                 Run = run;
@@ -668,7 +668,7 @@ namespace pwiz.CarafeSharp.Training
                 Key = FormKey + @"|" + record.Charge;
             }
 
-            public OspreyTrainingRecord Record { get; }
+            public TrainingRecord Record { get; }
             public PeptideForm Peptide { get; }
             public RunCollisionEnergy Energy { get; }
             public string Instrument { get; }

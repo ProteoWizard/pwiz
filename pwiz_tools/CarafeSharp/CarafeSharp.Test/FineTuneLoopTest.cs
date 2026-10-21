@@ -27,11 +27,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
 using TorchSharp;
 using static TorchSharp.torch;
@@ -357,7 +359,7 @@ namespace pwiz.CarafeSharp.Test
             // Every MS2 row of the run carries its calibrated NCE.
             using (var model = Ms2Model.FromSafetensors(start, CPU))
             {
-                var read = OspreyTrainingExport.Read(export);
+                var read = TrainingExport.Read(export);
                 var set = OspreyTrainingSet.Build(new[] { read }, new OspreyTrainingSetOptions { CalibrateNce = r => NceCalibration.Calibrate(model, r) });
                 var energy = set.GetCollisionEnergy(read);
                 Assert.AreEqual(RunCollisionEnergy.CALIBRATED, energy.Source);
@@ -500,7 +502,7 @@ namespace pwiz.CarafeSharp.Test
             StringAssert.Contains(text, string.Format(@"WARNING: {0} took its run q-values from Osprey's first pass", exportB));
             Assert.IsFalse(text.Contains(exportA + @" took its run q-values"), @"a second-pass export is not warned about");
             StringAssert.Contains(text, @"come from different Osprey searches");
-            StringAssert.Contains(text, @"-no_masking: training on every ion of the kept spectra");
+            StringAssert.Contains(text, @"--no-masking: training on every ion of the kept spectra");
             // The library opens the model this run wrote, over the stale checkpoint beside it.
             StringAssert.Contains(text, string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT,
                 Path.Combine(output, ModelFiles.MS2_SAFETENSORS), staleCheckpoint));
@@ -603,7 +605,7 @@ namespace pwiz.CarafeSharp.Test
             new ModelTrainer(TrainFrom(export, toChronologer, baseFile, @"-rt_model", @"chronologer"), log, zip => null)
                 { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(),
-                @"WARNING: -rt_model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not fine-tuned further");
+                @"WARNING: --rt-model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not fine-tuned further");
             StringAssert.Contains(log.ToString(), @"RT: fine-tuning Chronologer ");
             string chronologerFile = Path.Combine(toChronologer, CarafeModelFile.DEFAULT_FILE_NAME);
             var toChronologerSaved = CarafeModelFile.Open(chronologerFile);
@@ -621,7 +623,7 @@ namespace pwiz.CarafeSharp.Test
             log = new StringWriter();
             new ModelTrainer(TrainFrom(export, further, chronologerFile), log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(), @"RT: fine-tuning the Chronologer model ");
-            Assert.IsFalse(log.ToString().Contains(@"WARNING: -rt_model"), log.ToString());
+            Assert.IsFalse(log.ToString().Contains(@"WARNING: --rt-model"), log.ToString());
             var furtherSaved = CarafeModelFile.Open(Path.Combine(further, CarafeModelFile.DEFAULT_FILE_NAME));
             Assert.AreEqual(RtModelType.chronologer, furtherSaved.RtModel);
             Assert.AreEqual(CarafeModelOrigin.START_BASE, furtherSaved.RtOrigin.Start);
@@ -635,7 +637,7 @@ namespace pwiz.CarafeSharp.Test
             new ModelTrainer(TrainFrom(export, back, chronologerFile, @"-rt_model", @"alphapeptdeep"), log)
                 { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(),
-                @"WARNING: -rt_model alphapeptdeep: the saved model's fine-tuned chronologer RT model is not fine-tuned further");
+                @"WARNING: --rt-model alphapeptdeep: the saved model's fine-tuned chronologer RT model is not fine-tuned further");
             Assert.IsFalse(ChronologerModel.IsChronologerFile(Path.Combine(back, ModelFiles.RT_SAFETENSORS)));
             var backSaved = CarafeModelFile.Open(Path.Combine(back, CarafeModelFile.DEFAULT_FILE_NAME));
             Assert.AreEqual(RtModelType.alphapeptdeep, backSaved.RtModel);
@@ -725,12 +727,12 @@ namespace pwiz.CarafeSharp.Test
             StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"aligned_from_file"), @"Library RT: rt_pred * rt_max");
             // -rt_reference takes one run's minutes instead, by its name or the end of it.
             StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"aligned_run_b", @"-rt_reference", @"_b"),
-                @"Library RT: minutes of training run drift_b (-rt_reference");
+                @"Library RT: minutes of training run drift_b (--rt-reference");
             StringAssert.Contains(Assert.ThrowsException<ArgumentException>(() =>
                 PredictFromSavedModel(savedPath, fasta, @"aligned_run_c", @"-rt_reference", @"drift_c")).Message, @"drift_a, drift_b");
             // A model of the median minutes goes back to them by the training's normalizer, so -rt_max does not move it.
             string withRtMax = PredictFromSavedModel(savedPath, fasta, @"aligned_run_b_rt_max", @"-rt_reference", @"_b", @"-rt_max", @"60");
-            StringAssert.Contains(withRtMax, @"Ignored -rt_max 60");
+            StringAssert.Contains(withRtMax, @"Ignored --rt-max 60");
             CollectionAssert.AreEqual(LibraryRetentionTimes(Path.Combine(_folder, @"aligned_run_b")),
                 LibraryRetentionTimes(Path.Combine(_folder, @"aligned_run_b_rt_max")));
             // A run -rt_reference cannot name fails before the training, not after it.
@@ -799,7 +801,7 @@ namespace pwiz.CarafeSharp.Test
             string savedPath = Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME);
             StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"mixed_from_file"), @"Library RT: iRT");
             StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"mixed_run_b", @"-rt_reference", @"drift_b"),
-                @"Library RT: minutes of training run drift_b (-rt_reference");
+                @"Library RT: minutes of training run drift_b (--rt-reference");
 
             // Fine-tuned further from the model of one gradient's minutes, which these runs do not share, Chronologer starts
             // over from its pretrained model on the hydrophobic index.
@@ -947,7 +949,7 @@ namespace pwiz.CarafeSharp.Test
         /// </summary>
         private string WriteCleanExport(string run, string searchHash = null, string runQPass = null, IReadOnlyDictionary<string, string> footerValues = null)
         {
-            var records = new List<OspreyTrainingRecord>();
+            var records = new List<TrainingRecord>();
             foreach (string sequence in MS2_PEPTIDES)
             {
                 foreach (int charge in new[] { 2, 3 })
@@ -962,7 +964,7 @@ namespace pwiz.CarafeSharp.Test
             }
             var footer = new Dictionary<string, string>
             {
-                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.training_export.format_version", TrainingExportParquet.FORMAT_VERSION_TEXT },
                 { @"osprey.rt_max", @"12" },
                 { @"osprey.instrument_model", @"Orbitrap Astral" },
                 { @"osprey.isolation_mz_min", @"380" },
@@ -970,12 +972,12 @@ namespace pwiz.CarafeSharp.Test
                 { @"osprey.ms2_scan_window", @"150,2000" },
             };
             if (searchHash != null)
-                footer[OspreyTrainingExport.SEARCH_HASH_KEY] = searchHash;
+                footer[TrainingExportKeys.SEARCH_HASH] = searchHash;
             if (runQPass != null)
                 footer[@"osprey.training_export.run_q_pass"] = runQPass;
             foreach (var pair in footerValues ?? new Dictionary<string, string>())
                 footer[pair.Key] = pair.Value;
-            string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
+            string export = Path.Combine(_folder, run + TrainingExportParquet.EXT);
             OspreyTestRecords.WriteExport(export, records, footer, 4);
             return export;
         }
@@ -1000,7 +1002,7 @@ namespace pwiz.CarafeSharp.Test
             var exports = new List<string>();
             foreach (var (run, runScale, runDelay) in new[] { (@"drift_a", 1.0, 0.0), (@"drift_b", scale, delay) })
             {
-                var records = new List<OspreyTrainingRecord>();
+                var records = new List<TrainingRecord>();
                 for (int i = 0; i < sequences.Length; i++)
                 {
                     var record = OspreyTestRecords.CleanRecord(sequences[i], 2);
@@ -1012,14 +1014,14 @@ namespace pwiz.CarafeSharp.Test
                 }
                 var footer = new Dictionary<string, string>
                 {
-                    { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                    { @"osprey.training_export.format_version", TrainingExportParquet.FORMAT_VERSION_TEXT },
                     { @"osprey.rt_max", @"30" },
                     { @"osprey.instrument_model", @"Orbitrap Astral" },
                     { @"osprey.isolation_mz_min", @"380" },
                     { @"osprey.isolation_mz_max", @"980" },
                     { @"osprey.ms2_scan_window", @"150,2000" },
                 };
-                string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
+                string export = Path.Combine(_folder, run + TrainingExportParquet.EXT);
                 OspreyTestRecords.WriteExport(export, records, footer, 16);
                 exports.Add(export);
             }

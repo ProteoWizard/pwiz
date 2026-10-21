@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Contracts;
 
 namespace pwiz.CarafeSharp.Training
 {
@@ -51,14 +51,14 @@ namespace pwiz.CarafeSharp.Training
 
         public static TrainingExportSelection Find(string identifications, IReadOnlyList<string> msFiles)
         {
-            return Find(identifications, msFiles, OspreyTrainingExport.ReadFooter);
+            return Find(identifications, msFiles, TrainingExport.ReadFooter);
         }
 
         /// <summary>The run stem an export belongs to: its file name without <c>.training.parquet</c>.</summary>
         public static string RunStem(string exportPath)
         {
             string name = Path.GetFileName(exportPath);
-            return name.Substring(0, name.Length - OspreyTrainingExport.FILE_SUFFIX.Length);
+            return name.Substring(0, name.Length - TrainingExportParquet.EXT.Length);
         }
 
         /// <summary><see cref="Find(string, IReadOnlyList{string})"/> with the export footers read by <paramref name="readFooter"/>.</summary>
@@ -72,8 +72,8 @@ namespace pwiz.CarafeSharp.Training
             {
                 IEnumerable<string> exports;
                 if (Directory.Exists(input))
-                    exports = Directory.GetFiles(input, @"*" + OspreyTrainingExport.FILE_SUFFIX);
-                else if (input.EndsWith(OspreyTrainingExport.FILE_SUFFIX, StringComparison.OrdinalIgnoreCase))
+                    exports = Directory.GetFiles(input, @"*" + TrainingExportParquet.EXT);
+                else if (input.EndsWith(TrainingExportParquet.EXT, StringComparison.OrdinalIgnoreCase))
                     exports = new[] { RequireFile(input) };
                 else
                     exports = BesideBlib(RequireFile(input), runs);
@@ -88,14 +88,14 @@ namespace pwiz.CarafeSharp.Training
             if (missing.Length > 0)
             {
                 throw new FileNotFoundException(string.Format(
-                    @"No Osprey training export ({0}) for {1} in -i {2} or beside the run. Run Osprey with --training-export.",
-                    OspreyTrainingExport.FILE_SUFFIX, string.Join(@", ", missing), identifications));
+                    @"No Osprey training export ({0}) for {1} in --i {2} or beside the run. Run Osprey with --training-export.",
+                    TrainingExportParquet.EXT, string.Join(@", ", missing), identifications));
             }
             if (result.Length == 0)
             {
                 throw new FileNotFoundException(string.Format(
-                    @"No Osprey training export ({0}) found for -i {1}. Run Osprey with --training-export.",
-                    OspreyTrainingExport.FILE_SUFFIX, identifications));
+                    @"No Osprey training export ({0}) found for --i {1}. Run Osprey with --training-export.",
+                    TrainingExportParquet.EXT, identifications));
             }
             var warnings = CheckOneSearch(inputs, readFooter);
             var runPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -108,12 +108,12 @@ namespace pwiz.CarafeSharp.Training
         {
             string folder = Path.GetDirectoryName(Path.GetFullPath(blib)) ?? string.Empty;
             if (runs.Count == 0)
-                return Directory.GetFiles(folder, @"*" + OspreyTrainingExport.FILE_SUFFIX);
+                return Directory.GetFiles(folder, @"*" + TrainingExportParquet.EXT);
             var found = new List<string>();
             foreach (var run in runs)
             {
                 string path = new[] { folder, run.Folder }
-                    .Select(candidate => Path.Combine(candidate, run.Stem + OspreyTrainingExport.FILE_SUFFIX))
+                    .Select(candidate => Path.Combine(candidate, run.Stem + TrainingExportParquet.EXT))
                     .FirstOrDefault(File.Exists);
                 if (path != null)
                     found.Add(path);
@@ -142,7 +142,7 @@ namespace pwiz.CarafeSharp.Training
                     {
                         throw new InvalidDataException(string.Format(
                             @"{0} and {1} in {2} come from different Osprey searches ({3} or {4} differ); train on one search's exports.",
-                            exports[0], other, input, OspreyTrainingExport.SEARCH_HASH_KEY, OspreyTrainingExport.LIBRARY_HASH_KEY));
+                            exports[0], other, input, TrainingExportKeys.SEARCH_HASH, TrainingExportKeys.LIBRARY_HASH));
                     }
                 }
                 if (firstExport == null)
@@ -153,7 +153,7 @@ namespace pwiz.CarafeSharp.Training
                 else if (search != firstSearch)
                 {
                     warnings.Add(string.Format(@"WARNING: {0} and {1} come from different Osprey searches ({2} or {3} differ).",
-                        firstExport, exports[0], OspreyTrainingExport.SEARCH_HASH_KEY, OspreyTrainingExport.LIBRARY_HASH_KEY));
+                        firstExport, exports[0], TrainingExportKeys.SEARCH_HASH, TrainingExportKeys.LIBRARY_HASH));
                 }
             }
             return warnings;
@@ -161,8 +161,8 @@ namespace pwiz.CarafeSharp.Training
 
         private static string SearchIdentity(IReadOnlyDictionary<string, string> footer)
         {
-            footer.TryGetValue(OspreyTrainingExport.SEARCH_HASH_KEY, out string search);
-            footer.TryGetValue(OspreyTrainingExport.LIBRARY_HASH_KEY, out string library);
+            footer.TryGetValue(TrainingExportKeys.SEARCH_HASH, out string search);
+            footer.TryGetValue(TrainingExportKeys.LIBRARY_HASH, out string library);
             return search + @"|" + library;
         }
 

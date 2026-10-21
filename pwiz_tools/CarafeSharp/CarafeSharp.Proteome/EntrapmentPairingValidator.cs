@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -115,9 +116,9 @@ namespace pwiz.CarafeSharp.Proteome
             foreach (var pair in manifestPairs)
             {
                 manifestTypes.TryGetValue(pair.Key, out string type);
-                if (type == EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET)
+                if (type == PairingManifest.KIND_TARGET)
                     targetOfPair[pair.Value] = pair.Key;
-                else if (type == EntrapmentFastaBuilder.PEPTIDE_TYPE_P_TARGET)
+                else if (type == PairingManifest.KIND_P_TARGET)
                     entrapmentOfPair[pair.Value] = pair.Key;
             }
             var entrapmentList = libraryEntrapment.ToList();
@@ -195,11 +196,11 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 throw new InvalidOperationException(@"Entrapment manifest failed integrity checks: " + detail +
                     @". These pairings would break a paired FDP estimator (FDRBench), so the manifest was not written. " +
-                    @"If you have reviewed the violations above and want the manifest anyway, re-run with -ignore_pairing_errors. " +
-                    @"Do NOT use -no_similarity_gate for this: it changes which sequences are generated and produces a library that should not be searched.");
+                    @"If you have reviewed the violations above and want the manifest anyway, re-run with " + CarafeCommandLine.ARG_IGNORE_PAIRING_ERRORS.ArgumentText + @". " +
+                    @"Do NOT use " + CarafeCommandLine.ARG_NO_SIMILARITY_GATE.ArgumentText + @" for this: it changes which sequences are generated and produces a library that should not be searched.");
             }
             log?.WriteLine(@"WARNING: Entrapment manifest failed integrity checks: " + detail +
-                @". Writing it anyway because -ignore_pairing_errors was given. A paired FDP estimator may crash or report a mis-scaled FDP on this manifest.");
+                @". Writing it anyway because " + CarafeCommandLine.ARG_IGNORE_PAIRING_ERRORS.ArgumentText + @" was given. A paired FDP estimator may crash or report a mis-scaled FDP on this manifest.");
         }
 
         /// <summary>The violations as one message, separated by "; ".</summary>

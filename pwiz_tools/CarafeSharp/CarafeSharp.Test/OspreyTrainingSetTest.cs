@@ -24,10 +24,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
 
 namespace pwiz.CarafeSharp.Test
@@ -126,7 +127,7 @@ namespace pwiz.CarafeSharp.Test
                 { @"osprey.isolation_mz_min", @"400.5" },
                 { @"osprey.isolation_mz_max", @"900.5" },
             };
-            var export = OspreyTrainingExport.Create(@"a" + OspreyTrainingExport.FILE_SUFFIX, new[] { phospho, plain }, metadata);
+            var export = TrainingExport.Create(@"a" + TrainingExportParquet.EXT, new[] { phospho, plain }, metadata);
             var trainingSet = OspreyTrainingSet.Build(new[] { export }, new OspreyTrainingSetOptions());
             var ms2 = trainingSet.Ms2.ToDictionary(e => e.Precursor.Peptide.ModsText);
             CollectionAssert.AreEquivalent(new[] { string.Empty, @"Phospho@S" }, ms2.Keys.ToArray());
@@ -142,7 +143,7 @@ namespace pwiz.CarafeSharp.Test
             // PEPTIDEK, L = 8: 7 positions x (b+, b++, y+, y++) = 28 slots, all applicable at charge 2.
             // Every ion matched with a clean profile; slot 10 (y5+) is the top ion.
             var record = NewRecord(@"PEPTIDEK", 2);
-            for (int slot = 0; slot < record.SlotCount; slot++)
+            for (int slot = 0; slot < record.NSlots; slot++)
                 Match(record, slot, slot == 10 ? 1000 : 100 + slot, 0.95f);
             var settings = new OspreyMaskingSettings();
             var masked = Apply(settings, record);
@@ -161,7 +162,7 @@ namespace pwiz.CarafeSharp.Test
             record.CorrPolish[5] = 0.5f;
             record.CorrPolish[6] = 0.8f;
             // A peak another confident precursor matched at the same apex masks the ion.
-            record.SharedApexCount[9] = 1;
+            record.SharedApexN[9] = 1;
             // Two ions of this precursor on one peak (same observed m/z) are both masked.
             record.IonMz[13] = record.IonMz[12] + 0.3;
             record.ApexMzError[13] = -0.3f;
@@ -179,7 +180,7 @@ namespace pwiz.CarafeSharp.Test
             // Sharing with another precursor only masks when it is the better identification, if asked.
             settings.SharedOnlyWhenBetterClaimant = true;
             Assert.AreEqual(0.0, Apply(settings, record).Invalid[9]);
-            record.IonFlags[9] |= OspreyIonFlags.BETTER_CLAIMANT_APEX;
+            record.IonFlags[9] |= TrainingIonFlags.BETTER_CLAIMANT_APEX;
             Assert.AreEqual(1.0, Apply(settings, record).Invalid[9]);
 
             // An intense b2 or y2 (at least half the top ion) needs a correlation above 0.9.
@@ -194,14 +195,14 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(0.0, Apply(settings, record).Invalid[4]);
 
             // An unmatched ion trains as 0 and stays valid: the model learns it is absent.
-            record.IonFlags[16] &= unchecked((byte)~OspreyIonFlags.MATCHED_AT_APEX);
+            record.IonFlags[16] &= unchecked((byte)~TrainingIonFlags.MATCHED_AT_APEX);
             record.ApexIntensity[16] = 0;
             masked = Apply(settings, record);
             Assert.AreEqual(0.0, masked.Intensities[16]);
             Assert.AreEqual(0.0, masked.Invalid[16]);
             Assert.AreEqual(27, masked.MatchedCount);
             // So does an ion outside the scan window, as Carafe trains, unless asked to mask it.
-            record.IonFlags[18] = OspreyIonFlags.APPLICABLE;
+            record.IonFlags[18] = TrainingIonFlags.APPLICABLE;
             record.ApexIntensity[18] = 0;
             Assert.AreEqual(0.0, Apply(settings, record).Invalid[18]);
             settings.OutOfRange = OutOfRangeIons.masked;
@@ -225,8 +226,8 @@ namespace pwiz.CarafeSharp.Test
 
             // The polish's row effects give the intensities when asked, on one scale.
             var polished = NewRecord(@"PEPTIDEK", 2);
-            polished.MedianPolishFitted = true;
-            for (int slot = 0; slot < polished.SlotCount; slot++)
+            polished.MpFitted = true;
+            for (int slot = 0; slot < polished.NSlots; slot++)
             {
                 Match(polished, slot, 100 + slot, 0.95f);
                 polished.PolishRowEffect[slot] = (float)Math.Log(slot + 1);
@@ -239,7 +240,7 @@ namespace pwiz.CarafeSharp.Test
             // A charge 1 precursor has no charge 2 ions, which Carafe trains as valid zeros, even
             // when ions outside the scan window are masked; only the ordinal floor masks them.
             var singly = NewRecord(@"PEPTIDEK", 1);
-            for (int slot = 0; slot < singly.SlotCount; slot += 2)
+            for (int slot = 0; slot < singly.NSlots; slot += 2)
                 Match(singly, slot, 100 + slot, 0.95f);
             masked = Apply(new OspreyMaskingSettings { OutOfRange = OutOfRangeIons.masked }, singly);
             Assert.IsNull(masked.RejectReason);
@@ -340,8 +341,9 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(1960.0, settings.Library.MaxFragmentMz);
             // Carafe's XIC options are Osprey's to decide; they are reported, not silently dropped.
             Assert.AreEqual(2, commandLine.Warnings.Count);
-            StringAssert.Contains(commandLine.Warnings[0], @"-itol -itolu -rf -rf_rt_win -min_mz");
-            StringAssert.Contains(commandLine.Warnings[1], @"-ez");
+            // Named in the standard spelling, whatever spelling they were typed in.
+            StringAssert.Contains(commandLine.Warnings[0], @"--itol --itolu --rf --rf-rt-win --min-mz");
+            StringAssert.Contains(commandLine.Warnings[1], @"--ez");
 
             // Carafe's code defaults when the options are absent; training exports named directly
             // train without -ms, which Carafe could never have read.
@@ -411,9 +413,9 @@ namespace pwiz.CarafeSharp.Test
                 Directory.CreateDirectory(results);
                 Directory.CreateDirectory(raw);
                 string blib = Touch(results, @"osprey.blib");
-                string a = Touch(results, @"run_a" + OspreyTrainingExport.FILE_SUFFIX);
-                string b = Touch(results, @"run_b" + OspreyTrainingExport.FILE_SUFFIX);
-                string c = Touch(raw, @"run_c" + OspreyTrainingExport.FILE_SUFFIX);
+                string a = Touch(results, @"run_a" + TrainingExportParquet.EXT);
+                string b = Touch(results, @"run_b" + TrainingExportParquet.EXT);
+                string c = Touch(raw, @"run_c" + TrainingExportParquet.EXT);
                 Touch(raw, @"run_a.mzML");
                 Touch(raw, @"run_c.raw");
 
@@ -443,7 +445,7 @@ namespace pwiz.CarafeSharp.Test
                 // Every -ms run needs an export, whatever -i names, checked over all of -i.
                 string other = Path.Combine(folder, @"other");
                 Directory.CreateDirectory(other);
-                string d = Touch(other, @"run_d" + OspreyTrainingExport.FILE_SUFFIX);
+                string d = Touch(other, @"run_d" + TrainingExportParquet.EXT);
                 CollectionAssert.AreEqual(new[] { a, d }, FindExports(results + @"," + other, @"run_a.mzML", @"run_d.mzML"));
                 AssertThrows<FileNotFoundException>(() => Find(a, @"run_a.mzML", @"run_d.mzML"));
                 AssertThrows<FileNotFoundException>(() => Find(blib, Path.Combine(raw, @"run_d.mzML")));
@@ -454,7 +456,7 @@ namespace pwiz.CarafeSharp.Test
 
                 // The exports of one blib or folder must come from one Osprey search; exports of
                 // different searches named separately are only a warning.
-                string e = Touch(other, @"run_e" + OspreyTrainingExport.FILE_SUFFIX);
+                string e = Touch(other, @"run_e" + TrainingExportParquet.EXT);
                 var footers = new Dictionary<string, IReadOnlyDictionary<string, string>> { { e, Footer(@"another search") } };
                 Func<string, IReadOnlyDictionary<string, string>> readFooter = p => footers.TryGetValue(p, out var f) ? f : Footer(@"search");
                 AssertThrows<InvalidDataException>(() => TrainingExportLocator.Find(other, null, readFooter));
@@ -585,12 +587,12 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>A one-record export from <paramref name="vendor"/>'s <paramref name="model"/>, with these footer histograms (JSON), each left out when null.</summary>
-        private static OspreyTrainingExport AcquisitionExport(string folder, string vendor, string model, string methods, string analyzers,
+        private static TrainingExport AcquisitionExport(string folder, string vendor, string model, string methods, string analyzers,
             string energies = null)
         {
             var footer = new Dictionary<string, string>
             {
-                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.training_export.format_version", TrainingExportParquet.FORMAT_VERSION_TEXT },
                 { @"osprey.instrument_model", model },
                 { @"osprey.rt_max", @"20" },
             };
@@ -602,12 +604,12 @@ namespace pwiz.CarafeSharp.Test
                 footer[@"osprey.ms2_mass_analyzers"] = analyzers;
             if (energies != null)
                 footer[@"osprey.collision_energies"] = energies;
-            string path = Path.Combine(folder, Guid.NewGuid().ToString(@"N") + OspreyTrainingExport.FILE_SUFFIX);
+            string path = Path.Combine(folder, Guid.NewGuid().ToString(@"N") + TrainingExportParquet.EXT);
             var record = OspreyTestRecords.CleanRecord(@"PEPTIDEK", 2);
             record.FileName = Path.GetFileNameWithoutExtension(path);
             record.RunPrecursorQ = 0.001;
             OspreyTestRecords.WriteExport(path, new[] { record }, footer, 1);
-            return OspreyTrainingExport.Read(path);
+            return TrainingExport.Read(path);
         }
 
         /// <summary>The exports for <paramref name="identifications"/> and the <c>-ms</c> runs, every one of the same search.</summary>
@@ -625,8 +627,8 @@ namespace pwiz.CarafeSharp.Test
         {
             return new Dictionary<string, string>
             {
-                { OspreyTrainingExport.SEARCH_HASH_KEY, searchHash },
-                { OspreyTrainingExport.LIBRARY_HASH_KEY, @"library" },
+                { TrainingExportKeys.SEARCH_HASH, searchHash },
+                { TrainingExportKeys.LIBRARY_HASH, @"library" },
             };
         }
 
@@ -656,7 +658,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.Fail(@"Expected " + typeof(T).Name);
         }
 
-        private static MaskedSpectrum Apply(OspreyMaskingSettings settings, OspreyTrainingRecord record)
+        private static MaskedSpectrum Apply(OspreyMaskingSettings settings, TrainingRecord record)
         {
             return new OspreyMaskingPolicy(settings).Apply(record);
         }
@@ -666,23 +668,24 @@ namespace pwiz.CarafeSharp.Test
             return Enumerable.Range(0, masked.SlotCount).Where(s => masked.Invalid[s] > 0).ToArray();
         }
 
-        private static OspreyTrainingRecord NewRecord(string sequence, int charge)
+        private static TrainingRecord NewRecord(string sequence, int charge)
         {
             int slots = 4 * (sequence.Length - 1);
-            var record = new OspreyTrainingRecord
+            var record = new TrainingRecord
             {
                 Sequence = sequence,
                 ModifiedSequence = sequence,
-                Charge = charge,
+                Charge = (byte)charge,
                 ModPositions = Array.Empty<int>(),
                 ModMasses = Array.Empty<double>(),
                 ModUnimodIds = Array.Empty<int>(),
+                NSlots = slots,
                 IonMz = Enumerable.Range(0, slots).Select(s => 300.0 + s).ToArray(),
                 IonFlags = new byte[slots],
                 ApexIntensity = new float[slots],
                 ApexMzError = new float[slots],
                 LibraryRelIntensity = new float[slots],
-                FiniteScanCount = new ushort[slots],
+                NFiniteScans = new ushort[slots],
                 XicStart = new float[slots],
                 XicEnd = new float[slots],
                 XicMax = new float[slots],
@@ -690,20 +693,20 @@ namespace pwiz.CarafeSharp.Test
                 CorrReference = Enumerable.Repeat(float.NaN, slots).ToArray(),
                 PolishRowEffect = new float[slots],
                 PolishR2 = new float[slots],
-                PolishPositiveResidualMax = new float[slots],
+                PolishPosResidMax = new float[slots],
                 PolishApexResidual = new float[slots],
                 PolishOutlierZ = new float[slots],
                 PolishApexRatio = new float[slots],
                 PolishRelIntensity = new float[slots],
-                SharedApexCount = new byte[slots],
-                SharedCoeluteCount = new byte[slots],
+                SharedApexN = new byte[slots],
+                SharedCoeluteN = new byte[slots],
                 MinClaimantQ = new float[slots],
             };
             for (int slot = 0; slot < slots; slot++)
             {
                 bool applicable = slot % 2 == 0 || charge >= 2;
                 if (applicable)
-                    record.IonFlags[slot] = OspreyIonFlags.APPLICABLE | OspreyIonFlags.IN_SCAN_RANGE;
+                    record.IonFlags[slot] = TrainingIonFlags.APPLICABLE | TrainingIonFlags.IN_SCAN_RANGE;
                 else
                     record.IonMz[slot] = double.NaN;
             }
@@ -727,11 +730,11 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>A run's export holding one confidently identified precursor at charge 2, every ion clean.</summary>
-        private static OspreyTrainingExport NewExport(string stem, double rtMax, string collisionEnergies, string instrument,
+        private static TrainingExport NewExport(string stem, double rtMax, string collisionEnergies, string instrument,
             string sequence, double apexRt)
         {
             var record = NewRecord(sequence, 2);
-            for (int slot = 0; slot < record.SlotCount; slot++)
+            for (int slot = 0; slot < record.NSlots; slot++)
                 Match(record, slot, slot == 10 ? 1000 : 100 + slot, 0.95f);
             record.FileName = stem;
             record.ApexRt = apexRt;
@@ -744,12 +747,12 @@ namespace pwiz.CarafeSharp.Test
             };
             if (collisionEnergies != null)
                 metadata.Add(@"osprey.collision_energies", collisionEnergies);
-            return OspreyTrainingExport.Create(stem + OspreyTrainingExport.FILE_SUFFIX, new[] { record }, metadata);
+            return TrainingExport.Create(stem + TrainingExportParquet.EXT, new[] { record }, metadata);
         }
 
-        private static void Match(OspreyTrainingRecord record, int slot, float intensity, float correlation)
+        private static void Match(TrainingRecord record, int slot, float intensity, float correlation)
         {
-            record.IonFlags[slot] |= OspreyIonFlags.MATCHED_AT_APEX;
+            record.IonFlags[slot] |= TrainingIonFlags.MATCHED_AT_APEX;
             record.ApexIntensity[slot] = intensity;
             record.XicMax[slot] = intensity;
             record.CorrPolish[slot] = correlation;

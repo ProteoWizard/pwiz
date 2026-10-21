@@ -131,17 +131,16 @@
     <Compile Remove="Controls\Graphs\ReplicateValue.cs" />
   </ItemGroup>
 
-  <!-- NHibernate mapping XMLs. Six Skyline models use NHibernate for
-       persistence (BlibData spec libs, ChromLib chromatogram libs, IonMobility
-       libraries, Irt tables, Midas libs, Optimization libraries). Each has a
-       DataModel-adjacent mapping.xml that must be embedded, not deployed -
-       SessionFactoryFactory loads via assembly.GetManifestResourceStream.
-       SDK default globs don't include .xml as EmbeddedResource. -->
+  <!-- NHibernate mapping XMLs. Five Skyline models use NHibernate for
+       persistence (ChromLib chromatogram libs, IonMobility libraries, Irt
+       tables, Midas libs, Optimization libraries; the BlibData spectral
+       libraries moved onto BiblioSpec.IO). Each has a DataModel-adjacent
+       mapping.xml that must be embedded, not deployed - SessionFactoryFactory
+       loads via assembly.GetManifestResourceStream. SDK default globs don't
+       include .xml as EmbeddedResource. -->
   <ItemGroup>
     <EmbeddedResource Include="Model\IonMobility\mapping.xml" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
@@ -196,7 +195,8 @@
   <ItemGroup>
     <!-- Shared dep tree - all multi-targeted in the same session as this csproj.
          Each follows the same net472/net10.0-windows split internally. -->
-    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\Shared\Common\Common.csproj" />
@@ -519,7 +519,6 @@
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />

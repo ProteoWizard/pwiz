@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -493,6 +493,25 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// <c>&lt;blib-stem&gt;&lt;ext&gt;</c> for an analysis-wide artifact: named for the output
+        /// blib, in the directory this analysis's per-run artifacts resolve to - the rule doc 00
+        /// gives under "Where blib-named experiment-wide artifacts live". Null when there is no
+        /// output blib or input to resolve it from.
+        /// </summary>
+        internal static string AnalysisArtifactPath(OspreyConfig config, string ext)
+        {
+            string outputBlib = config?.OutputBlib;
+            string siblingPath = ArtifactSiblingPath(config);
+            if (string.IsNullOrEmpty(outputBlib) || string.IsNullOrEmpty(siblingPath))
+                return null;
+            string stem = Path.GetFileNameWithoutExtension(outputBlib);
+            if (string.IsNullOrEmpty(stem))
+                return null;
+            string parent = ArtifactPaths.ResolveOutputDir(siblingPath);
+            return string.IsNullOrEmpty(parent) ? stem + ext : Path.Combine(parent, stem + ext);
+        }
+
+        /// <summary>
         /// Whether this run's Stage-6 rescore hydrates each run from that run's own artifacts.
         /// TRUE means the <c>--input-scores</c> load must NOT build the all-runs bundle: the
         /// rescore loop hydrates per run, and anything the load pre-built would be discarded and
@@ -956,10 +975,10 @@ namespace pwiz.Osprey.Tasks
         /// null with <paramref name="error"/> set to an operator-facing message naming the
         /// producer.
         ///
-        /// <para>Absence is FATAL to the caller and must not fall back to rebuilding the union
-        /// from every run's <c>reconciliation.json</c>. That fallback is precisely the O(files)
-        /// pre-pass this artifact exists to delete - 10.7 GB of envelope JSON on a 446-run
-        /// cohort - so a quiet degradation to it would restore the behaviour without restoring
+        /// <para>Absence is FATAL to the caller and must not fall back to rebuilding the set by
+        /// surveying every run. That fallback is precisely the O(files) pre-pass this artifact
+        /// exists to delete - it once read 10.7 GB of per-run JSON on a 446-run cohort - so a
+        /// quiet degradation to it would restore the behaviour without restoring
         /// any signal that it had happened. A directory written before this artifact existed is
         /// re-runnable, which costs a FirstPassFDR pass; a silent join is not detectable at
         /// all.</para>
@@ -986,7 +1005,79 @@ namespace pwiz.Osprey.Tasks
                     path, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                 return null;
             }
+            string stampProblem = FirstPassProductStampProblem(config, path);
+            if (stampProblem != null)
+            {
+                error = string.Format(
+                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_cannot_be_used,
+                    path, stampProblem, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
+                return null;
+            }
             return retained;
+        }
+
+        /// <summary>
+        /// Why the analysis-wide FirstPassFDR product at <paramref name="path"/> - the
+        /// retained base_id summary or the Stage 6 consensus - cannot be trusted, or null when it
+        /// can as far as a reader is able to tell.
+        ///
+        /// <para>This is a CONSISTENCY check, not the validity check a resume makes. A full
+        /// check rebuilds the writer's key and compares, and a reader on another HPC node
+        /// cannot: FirstPassFDR's key includes <c>LibraryFragmentRelease.ValidityKeySuffix</c>,
+        /// which records what the WRITING leg did, so a PerFileRescoring or SecondPassFDR node
+        /// would compute its own leg's term and refuse a valid file. What a reader can check
+        /// is that the file was written by FirstPassFDR of this build - which catches an HPC
+        /// node shipped a file from an older Osprey - and that the two products FirstPassFDR
+        /// writes back to back under one stamp still carry the same one, which catches one of
+        /// them left over from an earlier run by a failed overwrite. A matching stale pair
+        /// from the same build under other settings passes; only the writer can detect that,
+        /// and a straight-through run does, because both are declared FirstPassFDR outputs.</para>
+        ///
+        /// <para>The first-pass experiment sidecar is compared too: the same run writes it under
+        /// the same stamp, and its write failure is counted rather than fatal, so a failed
+        /// overwrite can leave an earlier run's beside this run's pair. Each is compared only
+        /// where present - a SecondPassFDR node is shipped the retained summary and not the
+        /// consensus - and only where its stamp is readable: a sibling with no readable stamp
+        /// is refused by its own reader, for its own reason, and blaming it here would name
+        /// the wrong cause. The first-pass model file is not compared, because its write is
+        /// best-effort and an earlier run's model may legitimately sit beside this run's
+        /// products.</para>
+        /// </summary>
+        internal static string FirstPassProductStampProblem(OspreyConfig config, string path)
+        {
+            var stamp = ArtifactValidity.ReadStamp(path);
+            if (stamp == null)
+                return OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp;
+            if (!string.Equals(stamp.Task, FirstPassFdrTask.TASK_NAME, StringComparison.Ordinal) ||
+                !string.Equals(stamp.Version, OspreyVersion.Current, StringComparison.Ordinal))
+            {
+                return string.Format(
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__,
+                    stamp.Task, stamp.Version, FirstPassFdrTask.TASK_NAME, OspreyVersion.Current);
+            }
+            string siblingPath = ArtifactSiblingPath(config);
+            var siblings = new[]
+            {
+                Stage6ConsensusFile.PathFor(config),
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath),
+                FdrExperimentSidecar.PathFor(config.OutputBlib, siblingPath, FdrScoresSidecar.Pass.FirstPass)
+            };
+            foreach (string other in siblings)
+            {
+                if (string.IsNullOrEmpty(other) ||
+                    string.Equals(Path.GetFullPath(other), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                var otherStamp = ArtifactValidity.ReadStamp(other);
+                if (otherStamp != null && !string.Equals(stamp.ToString(), otherStamp.ToString(), StringComparison.Ordinal))
+                {
+                    return string.Format(
+                        OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
+                        other, FirstPassFdrTask.TASK_NAME);
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -1013,9 +1104,9 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// <see cref="FeedModelDiagnostics(ModelDiagnosticsData.Accumulator, int, List{FdrEntry})"/>
-        /// for one run's joined <see cref="FirstPassFoldRows"/>, in row order. PEP is 1.0 on every
-        /// row, as it was on the stubs these rows replace: the first-pass sidecar carries no PEP
-        /// column (see <see cref="FdrScoreRecord"/>), so a stub kept its default.
+        /// for one run's joined <see cref="FirstPassFoldRows"/>, in row order. Both PEPs are 1.0 on
+        /// every row, as they were on the stubs these rows replace: the first-pass sidecar carries
+        /// no PEP column (see <see cref="FdrScoreRecord"/>), so a stub kept its defaults.
         /// </summary>
         internal static void FeedModelDiagnostics(
             ModelDiagnosticsData.Accumulator accumulator, int fileIdx, FirstPassFoldRows rows)

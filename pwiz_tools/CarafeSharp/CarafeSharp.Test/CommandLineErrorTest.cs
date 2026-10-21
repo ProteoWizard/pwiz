@@ -24,12 +24,14 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.CommonResources;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.Common.SystemUtil;
 using static TorchSharp.torch;
 
@@ -99,7 +101,7 @@ namespace pwiz.CarafeSharp.Test
                 .LibrarySettings.TrainingType);
             // -model_dir keeps Carafe's reading, where another value predicts with neither fine-tuned model, and says so.
             Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"MS2" }).Warnings
-                .Any(w => w.StartsWith(@"-tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
+                .Any(w => w.StartsWith(@"--tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
             AssertUsageError(@"-db", @"x.fasta", @"-fixMod", @"abc");
             AssertUsageError(@"-db", @"x.fasta", @"-max_pep_charge", @"1");
             AssertUsageError(@"-db", @"x.fasta", @"-nce", @"30x");
@@ -121,9 +123,9 @@ namespace pwiz.CarafeSharp.Test
             // -ccs with training, as Carafe on Osprey's results: no CCS fine-tune, the library's 1/K0 from the CCS model.
             var withMobility = CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-db", @"x.fasta", @"-ccs" });
             Assert.IsTrue(withMobility.TrainingSettings.Library.PredictIonMobility);
-            Assert.IsTrue(withMobility.Warnings.Any(w => w.StartsWith(@"-ccs: the CCS model is not fine-tuned", StringComparison.Ordinal)));
+            Assert.IsTrue(withMobility.Warnings.Any(w => w.StartsWith(@"--ccs: the CCS model is not fine-tuned", StringComparison.Ordinal)));
             Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-ccs" }).Warnings
-                .Any(w => w.StartsWith(@"Ignored -ccs", StringComparison.Ordinal)));
+                .Any(w => w.StartsWith(@"Ignored --ccs", StringComparison.Ordinal)));
             Assert.AreEqual(7L, CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"o.fasta", @"-db", @"i.fasta", @"-decoy_seed", @"7" })
                 .BuildSettings.DecoySeed);
         }
@@ -137,7 +139,7 @@ namespace pwiz.CarafeSharp.Test
             string missingZip = Path.Combine(_folder, @"missing.zip");
             // Training checks the library FASTA, the start model and the pretrained models before
             // it creates the output folder or reads an export.
-            string export = Path.Combine(_folder, @"run" + OspreyTrainingExport.FILE_SUFFIX);
+            string export = Path.Combine(_folder, @"run" + TrainingExportParquet.EXT);
             AssertRunError(output, @"-i", export, @"-o", output, @"-db", missingFasta);
             AssertRunError(output, @"-i", export, @"-o", output, @"-ms2_model", Path.Combine(_folder, @"missing.pt"));
             AssertRunError(output, @"-i", export, @"-o", output, @"-pretrained", missingZip);
@@ -149,7 +151,7 @@ namespace pwiz.CarafeSharp.Test
             AssertRunError(built, @"-build_entrapment_fasta", built, @"-db", missingFasta);
 
             // A failure with a cause reports both: a .blib library that is not a database.
-            string manifest = WriteText(@"manifest.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
+            string manifest = WriteText(@"manifest.tsv", PairingManifest.HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
             string notBlib = WriteText(@"library.blib", @"not a database");
             string reconciled = Path.Combine(_folder, @"reconciled.tsv");
             var (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", manifest, @"-predicted_library", notBlib);
@@ -423,29 +425,37 @@ namespace pwiz.CarafeSharp.Test
             using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = blib, ReadOnly = true }.ToString()))
             {
                 connection.Open();
-                var rows = new List<(long Pair, long Decoy, string Method, string Sequence, long Charge)>();
-                using (var command = new SQLiteCommand(@"SELECT d.PairID, d.IsDecoy, d.Method, r.peptideSeq, r.precursorCharge " +
-                                                       @"FROM DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID ORDER BY d.PairID, d.IsDecoy", connection))
+                var rows = new List<(long Pairing, long Entrapment, long Decoy, string Method, string Sequence, long Charge, long Id, long? Target)>();
+                using (var command = new SQLiteCommand(@"SELECT d.PairingID, d.IsEntrapment, d.IsDecoy, d.Method, r.peptideSeq, r.precursorCharge, d.RefSpectraID, d.TargetRefSpectraID " +
+                                                       @"FROM DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID ORDER BY d.PairingID, d.IsEntrapment, d.IsDecoy", connection))
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        rows.Add((reader.GetInt64(0), reader.GetInt64(1), reader.IsDBNull(2) ? null : reader.GetString(2),
-                            reader.GetString(3), reader.GetInt64(4)));
+                        rows.Add((reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2), reader.IsDBNull(3) ? null : reader.GetString(3),
+                            reader.GetString(4), reader.GetInt64(5), reader.GetInt64(6), reader.IsDBNull(7) ? null : reader.GetInt64(7)));
                     }
                 }
                 Assert.IsTrue(rows.Count > 0);
-                foreach (var pair in rows.GroupBy(r => r.Pair))
+                // Every decoy names a target of its pairing and side at its charge, every target is
+                // named by one decoy, and a target row names nothing.
+                var byId = rows.ToDictionary(r => r.Id);
+                var named = new HashSet<long>();
+                foreach (var decoy in rows.Where(r => r.Decoy == 1))
                 {
-                    var members = pair.ToArray();
-                    Assert.AreEqual(2, members.Length);
-                    Assert.AreEqual(0L, members[0].Decoy);
-                    Assert.AreEqual(1L, members[1].Decoy);
-                    Assert.AreEqual(members[0].Charge, members[1].Charge);
-                    Assert.IsNull(members[0].Method);
-                    if (members[1].Method == @"reverse")
-                        Assert.AreEqual(EntrapmentSequences.ReversePreservingCterm(members[0].Sequence), members[1].Sequence);
+                    Assert.IsNotNull(decoy.Target, decoy.Sequence);
+                    var target = byId[decoy.Target.Value];
+                    Assert.AreEqual(0L, target.Decoy);
+                    Assert.AreEqual(target.Pairing, decoy.Pairing);
+                    Assert.AreEqual(target.Entrapment, decoy.Entrapment);
+                    Assert.AreEqual(target.Charge, decoy.Charge);
+                    Assert.IsNull(target.Method);
+                    Assert.IsTrue(named.Add(target.Id), target.Sequence);
+                    if (decoy.Method == @"reverse")
+                        Assert.AreEqual(EntrapmentSequences.ReversePreservingCterm(target.Sequence), decoy.Sequence);
                 }
+                Assert.AreEqual(rows.Count(r => r.Decoy == 0), named.Count);
+                Assert.IsTrue(rows.Where(r => r.Decoy == 0).All(r => r.Target == null));
             }
         }
 
