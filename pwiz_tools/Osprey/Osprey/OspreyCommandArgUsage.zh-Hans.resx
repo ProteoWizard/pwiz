@@ -97,14 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="_decoy_pairing_manifest" xml:space="preserve">
-    <value>FDRBench 5 列配对清单 (TSV)，与“{0}”一起使用</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_decoys_in_library" xml:space="preserve">
-    <value>信任谱图库中已有的诱饵，而不是生成反向诱饵。如果未识别到任何诱饵，则报错停止。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_diagnostics" xml:space="preserve">
     <value>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</value>
     <comment>Needs Review:New resource</comment>
@@ -129,20 +121,12 @@
     <value>输入路径列表文件，每行一个（忽略 # 注释）。可替代很长的“{0}”列表。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_log_file" xml:space="preserve">
-    <value>将所有输出写入此文件，而不是 stderr</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_memstamp" xml:space="preserve">
     <value>在每行输出前加上以 MB 为单位的托管内存和专用内存（与“{0}”配合使用，供 perfviz 读取）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_model_diagnostics" xml:space="preserve">
     <value>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_parallel_files" xml:space="preserve">
-    <value>同时评分的输入文件数（外层）。省略：每次一个（默认）。不带值：根据可用内存和核心数自动确定。&lt;N&gt;：不论内存和核心数，恰好为 N。与“{0}”不同。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_perf_stats" xml:space="preserve">

@@ -33,8 +33,10 @@ using pwiz.Osprey.FDR;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// The user-facing end-of-run reports, modeled on DIA-NN's output so the two tools
-    /// are directly comparable:
+    /// The end-of-run reports modeled on DIA-NN's output, so the two tools are directly
+    /// comparable, written only under OSPREY_DIANN_REPORTS
+    /// (<see cref="OspreyEnvironment.DiannReports"/>): they hold nothing the output .blib does
+    /// not, and nothing in Osprey reads them.
     /// <list type="bullet">
     /// <item><c>&lt;output&gt;.protein_groups.tsv</c> -- DIA-NN's <c>pg_matrix</c> shape
     /// (Protein.Group / Protein.Names / N.Peptides / N.Proteotypic / PG.Q.Value), plus the
@@ -45,9 +47,8 @@ namespace pwiz.Osprey.Tasks
     /// experiment-level row.</item>
     /// </list>
     /// These are distinct from the <c>cs_stage7_protein_fdr.tsv</c> cross-impl DIAGNOSTIC
-    /// dump (counts only, env-gated); these are default, user-facing, and additive (new
-    /// files), so the byte-parity gate -- which compares the blib + the Stage-7 dump -- is
-    /// unaffected.
+    /// dump (counts only, env-gated); these are additive (new files), so the byte-parity
+    /// gate -- which compares the blib + the Stage-7 dump -- is unaffected.
     /// </summary>
     public static class OspreyReportWriter
     {

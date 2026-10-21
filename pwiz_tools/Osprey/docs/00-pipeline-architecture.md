@@ -517,7 +517,7 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 durable artifact that does not appear there is a defect.
 
 **"Durable artifact" is not narrowed to what the pipeline reads back.** The Stage-7
-reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on) commit
+reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (under `OSPREY_DIANN_REPORTS`) commit
 through `SimpleFileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
 previous run's report or none, never a half-written one. Because nothing downstream reads
 them and the blib has not been written yet when they run, a report that cannot be written

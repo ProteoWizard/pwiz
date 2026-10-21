@@ -165,7 +165,7 @@ namespace pwiz.Osprey
             {
                 ShortName = @"o",
                 DescriptionArgs = () => new object[] { LibrarySource.EXT_BLIB,
-                    @"<output>" + OspreyReportWriter.EXT_PROTEIN_GROUPS, @"<output>" + OspreyReportWriter.EXT_STATS, ARG_FASTA.ArgumentText }
+                    ARG_FASTA.ArgumentText }
             };
         public static readonly OspreyArgument ARG_WORK_DIR = new OspreyArgument(@"work-dir",
             PATH_TO_FOLDER, (c, p) => c._workDir = p.Value)
@@ -177,7 +177,7 @@ namespace pwiz.Osprey
             PATH_TO_FOLDER, (c, p) => c._cacheDir = p.Value)
             {
                 DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText, TextUtil.EXT_TSV,
-                    ARG_TASK.ArgumentText, ARG_OUTPUT_DIR.ArgumentText }
+                    ARG_TASK.ArgumentText, ARG_OUTPUT_DIR.ArgumentText, LibrarySource.EXT_BLIB }
             };
         public static readonly OspreyArgument ARG_EXPORT_LIBRARY = new OspreyArgument(@"export-library",
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
@@ -400,9 +400,11 @@ namespace pwiz.Osprey
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,
-            (c, p) => c._config.DecoysInLibrary = true);
+            (c, p) => c._config.DecoysInLibrary = true)
+            { DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
-            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value) { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText } };
+            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
+            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
@@ -483,8 +485,8 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Performance, true,
-                ARG_PARALLEL_FILES, ARG_PARALLEL_FILES_CACHING, ARG_PARALLEL_FILES_SCORING, ARG_PARALLEL_FILES_RESCORING,
-                ARG_THREADS);
+                ARG_THREADS, ARG_PARALLEL_FILES, ARG_PARALLEL_FILES_CACHING, ARG_PARALLEL_FILES_SCORING,
+                ARG_PARALLEL_FILES_RESCORING);
 
         // --- Logging ----------------------------------------------------------------------
         // Per-line output decoration and redirection. --timestamp / --memstamp prefix each
@@ -557,7 +559,8 @@ namespace pwiz.Osprey
                     GROUP_GENERAL_IO,
                     GROUP_LIBRARY_BUILD,
                     GROUP_LIBRARY_DIGEST,
-                    CarafeCommandLine.DigestTablesBlock,
+                    CarafeCommandLine.EnzymeTableBlock,
+                    CarafeCommandLine.ModificationTableBlock,
                     GROUP_LIBRARY_PREDICTION,
                     GROUP_LIBRARY_TUNING,
                     GROUP_SCORING,
@@ -569,9 +572,13 @@ namespace pwiz.Osprey
                     GROUP_LOGGING,
                     GROUP_INFO,
                     new ParaUsageBlock(OspreyResources.OspreyCommandArgs_UsageBlocks_EXAMPLES_),
-                    new ParaUsageBlock(@"  Osprey -i sample.mzML -l library.tsv -o results.blib"),
-                    new ParaUsageBlock(@"  Osprey -i *.mzML -l library.tsv -o results.blib " + (ARG_RESOLUTION + @"hram")),
-                    new ParaUsageBlock(@"  Osprey -i *.mzML " + (ARG_FASTA + @"human.fasta") + @" -o results.blib " + (ARG_RESOLUTION + @"hram")),
+                    new ParaUsageBlock(@"  Osprey -i *.raw " + (ARG_FASTA + @"human.fasta") + @" -o results.blib"),
+                    new ParaUsageBlock(@"  Osprey -i *.raw " + (ARG_FASTA + @"human.fasta") + @" " +
+                                       (ARG_TRAINING_INPUT_LIST + @"tuning.txt") + @" -o results.blib"),
+                    new ParaUsageBlock(@"  Osprey -i *.raw -l results.predicted.blib -o results2.blib"),
+                    new ParaUsageBlock(@"  Osprey -i *.mzML -l library.blib -o results.blib " + (ARG_RESOLUTION + @"unit")),
+                    new ParaUsageBlock(@"  Osprey -i *.d -l library.blib -o results.blib"),
+                    new ParaUsageBlock(@"  Osprey -i *.mzML -l diann_library.tsv -o results.blib"),
                     new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_,
                         ARG_TASK.ArgumentText)),
                     // The other forms the parser accepts, after the reference, as CarafeSharp's help ends.

@@ -268,8 +268,9 @@ The production protein report is `Osprey.Tasks/OspreyReportWriter.cs`:
 group: accessions, names, peptide counts, group q-value, pass flag, and the
 grouping / library-unique peptide lists) and `WriteSummary` emits
 `<output>.stats.tsv` (per-run and experiment precursor / peptide / protein
-counts). Both are DIA-NN-shaped, ON by default (`OspreyConfig.WriteProteinReport`
-/ `WriteSummaryReport`), committed through `SimpleFileSaver`, and written by
+counts). Both are DIA-NN-shaped, for comparing the two tools, and written only under
+`OSPREY_DIANN_REPORTS` (2026-10-21: they hold nothing the output .blib does not; then
+`OspreyConfig.WriteProteinReport` / `WriteSummaryReport` select each), committed through `SimpleFileSaver`, and written by
 `SecondPassFdrTask.RunProteinFdr` at the end of Stage 7; a write failure is a
 warning, not a pipeline failure. There is no CLI switch to disable them (the
 `--no-protein-report` / `--no-summary-report` flags named in the `OspreyConfig`

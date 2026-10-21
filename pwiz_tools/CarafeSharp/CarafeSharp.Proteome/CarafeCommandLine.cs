@@ -320,7 +320,8 @@ namespace pwiz.CarafeSharp.Proteome
                     new ParaUsageBlock(@"       CarafeSharp " + ARG_MODEL_INFO.ArgumentText + @" " + PATH_TO_FILE + CarafeModelFile.EXTENSION),
                     GROUP_MODES,
                     GROUP_DIGEST,
-                    DigestTablesBlock,
+                    EnzymeTableBlock,
+                    ModificationTableBlock,
                     GROUP_ENTRAPMENT,
                     GROUP_LIBRARY,
                     GROUP_MODELS,
@@ -354,25 +355,46 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
-        /// Carafe's enzymes and modifications, by the index and id <see cref="ARG_ENZYME"/>,
+        /// Carafe's enzymes, by the index <see cref="ARG_ENZYME"/> takes, and (the next block)
+        /// its modifications, by the id
         /// <see cref="ARG_FIX_MOD"/> and <see cref="ARG_VAR_MOD"/> take, generated from the tables
         /// the digest reads so the help cannot drift from them. The help is the only place a user
         /// can learn what <c>--enzyme 7</c> or <c>--var-mod 2,7</c> means, so a host that presents
         /// the digest options presents this after them too.
         /// </summary>
-        public static IUsageBlock DigestTablesBlock
+        public static IUsageBlock EnzymeTableBlock
         {
             get
             {
-                var enzymes = EnzymeTable.All.Select((enzyme, index) =>
-                    string.Format(CultureInfo.InvariantCulture, @"{0} {1}", index, enzyme.Name));
-                var modifications = CarafeModification.TopModifications.Select(modification =>
-                    string.Format(CultureInfo.InvariantCulture, @"{0} {1} ({2:+0.0###;-0.0###})",
-                        modification.Id, modification.Name, modification.Mass));
-                return new ParaUsageBlock(@"ENZYMES (" + ARG_ENZYME.ArgumentText + @", by index or name): " +
-                                          string.Join(@", ", enzymes) + @". MODIFICATIONS (" + ARG_FIX_MOD.ArgumentText +
-                                          @" and " + ARG_VAR_MOD.ArgumentText + @", by id): " +
-                                          string.Join(@", ", modifications) + @".");
+                return new TableUsageBlock(@"Enzymes", new[] { @"#", @"Enzyme" },
+                    EnzymeTable.All.Select((enzyme, index) => new[]
+                    {
+                        index.ToString(CultureInfo.InvariantCulture), enzyme.Name
+                    }))
+                {
+                    Preamble = ARG_ENZYME.ArgumentText + @" takes the number or the name",
+                    ColumnGroups = 3,
+                    RightAlignedColumns = new[] { 0 }
+                };
+            }
+        }
+
+        /// <summary>The modifications half of the digest tables: see <see cref="EnzymeTableBlock"/>.</summary>
+        public static IUsageBlock ModificationTableBlock
+        {
+            get
+            {
+                return new TableUsageBlock(@"Modifications", new[] { @"#", @"Modification", @"Mass" },
+                    CarafeModification.TopModifications.Select(modification => new[]
+                    {
+                        modification.Id.ToString(CultureInfo.InvariantCulture), modification.Name,
+                        modification.Mass.ToString(@"+0.0000;-0.0000", CultureInfo.InvariantCulture)
+                    }))
+                {
+                    Preamble = ARG_FIX_MOD.ArgumentText + @" and " + ARG_VAR_MOD.ArgumentText + @" take the numbers, comma-separated",
+                    ColumnGroups = 2,
+                    RightAlignedColumns = new[] { 0, 2 }
+                };
             }
         }
 

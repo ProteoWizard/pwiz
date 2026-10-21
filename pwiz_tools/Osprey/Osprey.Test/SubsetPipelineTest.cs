@@ -73,6 +73,7 @@ namespace pwiz.Osprey.Test
         private const string LIBDECOY_PAIRING_FILE = @"stellar-subset-libdecoy-pairing.tsv";
         private const string BLIB_FILE = @"output.blib";
         private const string FDR_FILE_LANES = @"OSPREY_FDR_FILE_LANES";
+        private const string DIANN_REPORTS = @"OSPREY_DIANN_REPORTS";
         private const string MZML_EXTENSION = SpectrumFileReader.EXT_MZML;
         private const string SPECTRA_CACHE_EXTENSION = SpectraCache.EXT;
         private const double TOLERANCE = 1e-9;
@@ -145,6 +146,9 @@ namespace pwiz.Osprey.Test
             string straightLog = RunAnalysis(straightDir, DataInputs(), Verifier(true));
             string log = straightLog;
             ValidateStraightThrough(straightDir, log);
+            // The DIA-NN-shaped reports are written only under OSPREY_DIANN_REPORTS.
+            Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS))));
+            Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_STATS))));
             string coldBlib = Path.Combine(straightDir, @"output_cold.blib");
             File.Copy(blib, coldBlib);
             byte[] coldHash = HashFile(blib);
@@ -260,14 +264,15 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
                 OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
             };
-            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"RefSpectra") >= MIN_LIBDECOY_PRECURSORS);
             // No decoy reaches the library, but entrapment peptides compete as targets.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"accession LIKE 'decoy_%'"));
             foreach (string pass in new[] { @"pass1", @"pass2" })
                 AssertHasRows(Path.ChangeExtension(bench, pass + @".tsv"));
-            // The protein-group and summary reports are named from the output library.
+            // The protein-group and summary reports, under OSPREY_DIANN_REPORTS, are named from
+            // the output library.
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS)));
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
@@ -1464,8 +1469,19 @@ namespace pwiz.Osprey.Test
             {
                 { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty },
                 { @"OSPREY_PASS2_QVALUE", string.Empty },
-                { FDR_FILE_LANES, string.Empty }
+                { FDR_FILE_LANES, string.Empty },
+                { DIANN_REPORTS, string.Empty }
             };
+        }
+
+        /// <summary><paramref name="variables"/> with the DIA-NN-shaped reports switched on.</summary>
+        private static IReadOnlyDictionary<string, string> WithDiannReports(IReadOnlyDictionary<string, string> variables)
+        {
+            var on = new Dictionary<string, string>();
+            foreach (var kvp in variables)
+                on[kvp.Key] = kvp.Value;
+            on[DIANN_REPORTS] = @"1";
+            return on;
         }
 
         /// <summary>

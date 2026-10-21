@@ -1054,12 +1054,14 @@ namespace pwiz.Osprey.Tasks
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
 
-            // Default user-facing reports (protein groups + per-replicate/experiment
-            // summary), modeled on DIA-NN. Additive files next to the output blib, so the
-            // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
-            // protein counts re-run protein FDR per run, so this is the one place with the
-            // full per-file pool + library in hand.
-            if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
+            // The DIA-NN-shaped reports (protein groups + per-replicate/experiment summary),
+            // for comparing the two tools, under OSPREY_DIANN_REPORTS: they hold nothing the
+            // blib does not. Additive files next to the output blib, so the byte-parity gate
+            // (blib + Stage-7 dump) is unaffected. The per-replicate protein counts re-run
+            // protein FDR per run, so this is the one place with the full per-file pool +
+            // library in hand.
+            if (OspreyEnvironment.DiannReports &&
+                (config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
                 OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config,
                     ctx, ctx.LogWarning);

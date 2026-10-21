@@ -37,8 +37,7 @@ list import does. Nothing is guessed for a bad value.
 # Single file, precursor + peptide FDR at 1%
 Osprey -i sample.mzML -l hela.tsv -o results.blib --resolution unit
 
-# A replicate set, with protein-level FDR (results.protein_groups.tsv and results.stats.tsv
-# are written beside results.blib)
+# A replicate set, with protein-level FDR
 Osprey -i rep1.mzML rep2.mzML rep3.mzML -l hela.blib -o results.blib \
        --resolution unit --protein-fdr 0.01
 
@@ -100,11 +99,11 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 |--------|-------|--------|
 | `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads (vendor files where the vendor readers are installed). Variadic; also accepts positional paths. |
 | `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
-| `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. Beside it, `<output>.protein_groups.tsv` and `<output>.stats.tsv` summarize the same results in the shape of DIA-NN's reports, for comparing the two tools; Osprey does not need them. |
+| `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
 | `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `path/to/folder` | Directory for derived artifacts (overrides `--work-dir`). |
-| `--cache-dir` | `path/to/folder` | Directory for the rebuildable caches - `.spectra.bin` and the derived `<library-leaf>.blib` of a `.tsv` library (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
-| `--export-library` | `path/to/file.blib` | Convert the `-l` library into a self-contained `.blib` and exit without searching: loaded as a search loads it (deduplicated; with `--decoys-in-library`, decoys marked and paired, by `--decoy-pairing-manifest` for a `.tsv`), with the pairing kept in its `DecoyPairs` table, so it searches back exactly as the original did with no manifest, and Skyline imports it. |
+| `--cache-dir` | `path/to/folder` | Where Osprey keeps the files it builds once and reuses in later searches: each run's `.spectra.bin` and, for a `.tsv` library, the `.blib` it is converted to (`hela.tsv.blib`). By default each goes beside the file it comes from, or under `--output-dir` / `--work-dir` when that folder is read-only. Give it to put them elsewhere (data and library on a read-only share, or one cache shared by several analyses). An HPC run whose `--output-dir` is away from the data should give every `--task` node the same one. |
+| `--export-library` | `path/to/file.blib` | Write the `-l` library to this path as a `.blib` and exit without searching: the same file a search caches for a `.tsv` library (`hela.tsv.blib`, through the same `LibraryBlibWriter`), with its decoys and pairing in its own `DecoyPairs` table (with `--decoys-in-library`, and `--decoy-pairing-manifest` for a `.tsv`), so it needs no manifest and searches back exactly as the original did. It differs from the cache only in recording its command line, carrying no validity hash, and prefixing decoy accessions. |
 
 ### Library build
 

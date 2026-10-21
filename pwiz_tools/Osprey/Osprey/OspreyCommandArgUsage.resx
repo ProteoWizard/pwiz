@@ -98,13 +98,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="_cache_dir" xml:space="preserve">
-    <value>Write the rebuildable caches here, overriding {1}: each run's {0} spectra and a {2} library's loaded form, which later searches reuse. Needed on a {3} node whose {4} differs from the data folder, which has no input path to find the cache from.</value>
+    <value>Where Osprey keeps the files it builds once and reuses in later searches: each run's {0} (its spectra, faster to read than the data file) and, for a {2} library, the {5} it is converted to (e.g. hela{2}{5}). By default each goes beside the file it comes from, or under {4} or {1} when that folder is read-only. Give it to put them elsewhere, for example when the data and the library are on a read-only share, or to let several analyses share one cache. An HPC run ({3}) that writes to an {4} away from the data should give every node the same one.</value>
   </data>
   <data name="_decoy_pairing_manifest" xml:space="preserve">
-    <value>FDRBench 5-column pairing manifest (TSV), used with {0}</value>
+    <value>With {0} and a {1} library: the FDRBench pairing manifest (a 5-column TSV) that pairs each decoy, and each entrapment peptide, with its target. A {2} library carries its pairing in its own table and needs none.</value>
   </data>
   <data name="_decoys_in_library" xml:space="preserve">
-    <value>Trust decoys already in the spectral library instead of generating reverse decoys. Stops with an error if none are recognized.</value>
+    <value>Search with the decoys the library holds instead of generating a reversed decoy for every target. A decoy is recognized by the library's own decoy table (in a {2}), by its Decoy column (in a {0}), or by a protein accession starting with one of {1}; the search stops with an error when none is recognized.</value>
   </data>
   <data name="_demux" xml:space="preserve">
     <value>Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0})</value>
@@ -116,7 +116,7 @@
     <value>The experiment-level FDR threshold (default: 0.01): a precursor is reported when its q-value across all the runs is at most this. {0} says which q-value.</value>
   </data>
   <data name="_export_library" xml:space="preserve">
-    <value>Convert the library given by {0} into a self-contained {1} at this path, and exit without searching. The library is loaded as a search would load it - deduplicated, and with {2} its decoys marked and paired (by {3} for a {4}) - and the {1} keeps that pairing in its own table, so it searches back exactly as the original did, needs no manifest, and Skyline can import it. Use it once to turn a DIA-NN format {4} and its manifest into the {1} form Osprey reads directly.</value>
+    <value>Write the library given by {0} to this path as a {1} and exit without searching. It is the file a search keeps in its cache for a {4} library (e.g. hela{4}{1}): the library as a search loads it, with its decoys and their pairing in its own table (with {2}, and {3} for a {4}), so it needs no manifest, searches back exactly as the original did, and Skyline can import it.</value>
   </data>
   <data name="_fdr_level" xml:space="preserve">
     <value>Which experiment-level q-value {1} applies to: {0} (the default; each precursor's own), peptide (its peptide's, over all its charge states), or both (the larger of the two).</value>
@@ -146,10 +146,10 @@
     <value>File of input paths, one per line (# comments ignored). Bounded alternative to a long {0} list.</value>
   </data>
   <data name="_library" xml:space="preserve">
-    <value>Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or a DIA-NN format {1}. Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library's own decoys are used: a {0} pairs them from its own table, and a {1} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pairing manifest) or by composition.</value>
+    <value>Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or, for comparing with DIA-NN, a library in the {1} format DIA-NN imports, such as Java Carafe writes for it. Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library's own decoys are used: a {0} pairs them from its own table, and a {1} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pairing manifest) or by composition.</value>
   </data>
   <data name="_log_file" xml:space="preserve">
-    <value>Write all output to this file instead of stderr</value>
+    <value>Write all output to this file instead of the console</value>
   </data>
   <data name="_memstamp" xml:space="preserve">
     <value>Prefix each output line with managed and private memory in MB (pair with {0} for perfviz)</value>
@@ -161,13 +161,13 @@
     <value>Score every library precursor in each isolation window, not only those whose fragments first show a coelution signal. About 30% slower; for checking that the pre-filter loses no detections.</value>
   </data>
   <data name="_output" xml:space="preserve">
-    <value>The search result, for Skyline: a {0} that holds, for every precursor that passes FDR, the library spectrum it was searched with (the predicted one, with {3}), the retention time and peak boundaries of its best run, its experiment-wide precursor q-value and PEP and its peptide q-value, and, for every run it was detected in, that run's retention time, peak boundaries and q-value. The protein groups its peptides belong to are in it too, with their q-values. Beside it Osprey writes {1} and {2}, summaries of the same results in the shape of DIA-NN's reports, for comparing the two tools; Osprey does not need them.</value>
+    <value>The search result, for Skyline: a {0} that holds, for every precursor that passes FDR, the library spectrum it was searched with (the predicted one, with {1}), the retention time and peak boundaries of its best run, its experiment-wide precursor q-value and PEP and its peptide q-value, and, for every run it was detected in, that run's retention time, peak boundaries and q-value. The protein groups its peptides belong to are in it too, with their q-values.</value>
   </data>
   <data name="_output_dir" xml:space="preserve">
     <value>Write the intermediate files here - each run's scores and calibration and the analysis-wide FDR files - overriding {0}. The output and its reports stay where {1} names.</value>
   </data>
   <data name="_parallel_files" xml:space="preserve">
-    <value>Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}.</value>
+    <value>Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}. Worth setting only for high-resolution data on a server with more cores than one file's search can keep busy (a multi-socket, NUMA machine); on a workstation leave it unset and let {0} use the cores.</value>
   </data>
   <data name="_parallel_files_caching" xml:space="preserve">
     <value>Files {1} caches concurrently, overriding {0} for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time.</value>
