@@ -248,15 +248,14 @@ namespace pwiz.SkylineTestFunctional
             var outBlib = TestFilesDir.GetTestPath("Koina.blib");
 
             if (newDocument)
-            {
                 RunUI(() => SkylineWindow.NewDocument(true));
-                // The new document starts loading the libraries in the last-used settings, Koina.blib included
-                WaitForDocumentLoaded();
-            }
 
             var doc = SkylineWindow.Document;
 
-            FileEx.SafeDelete(outBlib);
+            // An empty document builds no library, and the new document may be loading Koina.blib
+            // from the last-used settings
+            if (!newDocument)
+                FileEx.SafeDelete(outBlib);
 
             // Open Peptide Settings -- Library
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
