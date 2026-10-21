@@ -133,6 +133,8 @@ namespace TestPerf
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+            // The new document starts loading the libraries in the last-used settings
+            WaitForDocumentLoaded();
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
