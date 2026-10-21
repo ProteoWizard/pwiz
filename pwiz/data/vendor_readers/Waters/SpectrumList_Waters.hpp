@@ -124,8 +124,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 #define LOCKMASS_FUNCTION_UNKNOWN -2
 
     /// The 0-based lockmass function number, or LOCKMASS_FUNCTION_UNKNOWN if the source has none.
-    /// Resolved once by the constructor, so this is a plain read and is safe from any thread. Do not
-    /// make it lazy again: spectrum() calls it holding readMutex while calibrationSpectraAreOmitted()
+    /// Resolved once by the constructor, so this is a plain read and is safe from any thread. It must
+    /// not be resolved lazily: spectrum() calls it holding readMutex while calibrationSpectraAreOmitted()
     /// calls it without, so a lazy write would race and would also let two threads into the MassLynx
     /// SDK at once.
     int lockMassFunction() const;
