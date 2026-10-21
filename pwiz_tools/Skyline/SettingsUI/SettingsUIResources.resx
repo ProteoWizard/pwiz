@@ -1244,6 +1244,18 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models" xml:space="preserve">
     <value>Fine-tuned Carafe Models</value>
   </data>
+  <data name="CarafeModelChoice_GetDetails__0__min_gradient" xml:space="preserve">
+    <value>{0} min gradient</value>
+  </data>
+  <data name="CarafeModelChoice_GetDetails_precursor_m_z__0___1_" xml:space="preserve">
+    <value>precursor m/z {0}-{1}</value>
+  </data>
+  <data name="CarafeModelChoice_GetDetails_NCE__0_" xml:space="preserve">
+    <value>NCE {0}</value>
+  </data>
+  <data name="CarafeModelChoice_GetDetails_saved__0_" xml:space="preserve">
+    <value>saved {0}</value>
+  </data>
   <data name="BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime" xml:space="preserve">
     <value>Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk.</value>
   </data>

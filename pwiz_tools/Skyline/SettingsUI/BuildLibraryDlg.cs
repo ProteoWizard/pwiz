@@ -105,8 +105,11 @@ namespace pwiz.Skyline.SettingsUI
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
 
+        public const int MAX_RECENT_CARAFE_MODELS = 10;
+
         private TorchRuntimes _torchRuntimes;
         private bool _updatingUseGpu;
+        private bool _recentCarafeModelsLoaded;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -300,6 +303,8 @@ namespace pwiz.Skyline.SettingsUI
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu
             };
+            if (carafeModelPath.Length > 0)
+                AddRecentCarafeModel(carafeModelPath);
             // Not when this session already loaded a runtime, which decides the box
             if (TorchRuntimes.CanChooseRuntime)
                 Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
@@ -423,7 +428,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!File.Exists(path))
             {
-                _helper.ShowTextBoxError(textCarafeModel,
+                _helper.ShowTextBoxError(comboCarafeModel,
                     SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_, path);
                 return false;
             }
@@ -438,7 +443,7 @@ namespace pwiz.Skyline.SettingsUI
                     throw;
                 MessageDlg.ShowWithException(this,
                     string.Format(SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_, path), x);
-                textCarafeModel.Focus();
+                comboCarafeModel.Focus();
                 return false;
             }
         }
@@ -449,8 +454,69 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public string CarafeModelPath
         {
-            get { return textCarafeModel.Text; }
-            set { textCarafeModel.Text = value; }
+            get { return comboCarafeModel.Text; }
+            set { comboCarafeModel.Text = value; }
+        }
+
+        /// <summary>
+        /// The fine-tuned models libraries were recently built with, most recent first, which the model
+        /// list offers with what each was trained on. Files that are gone or unreadable are left out.
+        /// </summary>
+        public IList<CarafeModelChoice> RecentCarafeModels
+        {
+            get
+            {
+                if (!_recentCarafeModelsLoaded)
+                {
+                    string text = comboCarafeModel.Text;
+                    comboCarafeModel.Items.AddRange(Settings.Default.CarafeModelList
+                        .Select(CarafeModelChoice.Read).Where(choice => choice != null).Cast<object>().ToArray());
+                    comboCarafeModel.Text = text;
+                    _recentCarafeModelsLoaded = true;
+                }
+                return comboCarafeModel.Items.Cast<CarafeModelChoice>().ToList();
+            }
+        }
+
+        /// <summary>
+        /// Puts <paramref name="path"/> first in the recently used models, keeping at most
+        /// <see cref="MAX_RECENT_CARAFE_MODELS"/>.
+        /// </summary>
+        private static void AddRecentCarafeModel(string path)
+        {
+            var recent = Settings.Default.CarafeModelList;
+            recent.RemoveAll(recentPath => string.Equals(recentPath, path, StringComparison.OrdinalIgnoreCase));
+            recent.Insert(0, path);
+            if (recent.Count > MAX_RECENT_CARAFE_MODELS)
+                recent.RemoveRange(MAX_RECENT_CARAFE_MODELS, recent.Count - MAX_RECENT_CARAFE_MODELS);
+        }
+
+        /// <summary>
+        /// Lists the recent models, and sizes the list to show them, before it drops down: the list
+        /// is sized before the combo box says it is dropping down, and a combo box of variable height
+        /// items does not size it from them.
+        /// </summary>
+        private void UpdateCarafeModelDropDownSize()
+        {
+            var models = RecentCarafeModels;
+            using var graphics = comboCarafeModel.CreateGraphics();
+            int width = models.Select(model => model.MeasureWidth(graphics, comboCarafeModel.Font))
+                .Append(comboCarafeModel.Width).Max() + SystemInformation.VerticalScrollBarWidth;
+            comboCarafeModel.DropDownWidth = Math.Min(width, Screen.FromControl(this).WorkingArea.Width);
+            int visibleCount = Math.Max(1, Math.Min(models.Count, comboCarafeModel.MaxDropDownItems));
+            comboCarafeModel.DropDownHeight = visibleCount * CarafeModelChoice.MeasureHeight(comboCarafeModel.Font) +
+                                              2 * SystemInformation.BorderSize.Height;
+        }
+
+        private void comboCarafeModel_MeasureItem(object sender, MeasureItemEventArgs e)
+        {
+            e.ItemHeight = CarafeModelChoice.MeasureHeight(comboCarafeModel.Font);
+        }
+
+        private void comboCarafeModel_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index >= 0 && comboCarafeModel.Items[e.Index] is CarafeModelChoice model)
+                model.Draw(e);
         }
 
         private void btnCarafeModelBrowse_Click(object sender, EventArgs e)
@@ -1049,6 +1115,7 @@ namespace pwiz.Skyline.SettingsUI
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     // Only now, so the NVIDIA driver is not loaded for the other library sources
                     UpdateUseGpu();
+                    UpdateCarafeModelDropDownSize();
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 }
                 else // must be Koina

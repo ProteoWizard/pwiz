@@ -640,28 +640,28 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;btnCarafeModelBrowse.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="textCarafeModel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="comboCarafeModel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="textCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="comboCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 20</value>
   </data>
-  <data name="textCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>233, 20</value>
+  <data name="comboCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>233, 21</value>
   </data>
-  <data name="textCarafeModel.TabIndex" type="System.Int32, mscorlib">
+  <data name="comboCarafeModel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;textCarafeModel.Name" xml:space="preserve">
-    <value>textCarafeModel</value>
+  <data name="&gt;&gt;comboCarafeModel.Name" xml:space="preserve">
+    <value>comboCarafeModel</value>
   </data>
-  <data name="&gt;&gt;textCarafeModel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;comboCarafeModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textCarafeModel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboCarafeModel.Parent" xml:space="preserve">
     <value>tabAlphaSource</value>
   </data>
-  <data name="&gt;&gt;textCarafeModel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboCarafeModel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelCarafeModel.AutoSize" type="System.Boolean, mscorlib">

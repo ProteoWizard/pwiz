@@ -60,7 +60,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabAlphaSource = new System.Windows.Forms.TabPage();
             this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.btnCarafeModelBrowse = new System.Windows.Forms.Button();
-            this.textCarafeModel = new System.Windows.Forms.TextBox();
+            this.comboCarafeModel = new System.Windows.Forms.ComboBox();
             this.labelCarafeModel = new System.Windows.Forms.Label();
             this.tabFilesSource = new System.Windows.Forms.TabPage();
             this.cbFilter = new System.Windows.Forms.CheckBox();
@@ -291,7 +291,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
             this.tabAlphaSource.Controls.Add(this.cbUseGpu);
             this.tabAlphaSource.Controls.Add(this.btnCarafeModelBrowse);
-            this.tabAlphaSource.Controls.Add(this.textCarafeModel);
+            this.tabAlphaSource.Controls.Add(this.comboCarafeModel);
             this.tabAlphaSource.Controls.Add(this.labelCarafeModel);
             resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
             this.tabAlphaSource.Name = "tabAlphaSource";
@@ -310,11 +310,15 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCarafeModelBrowse.UseVisualStyleBackColor = true;
             this.btnCarafeModelBrowse.Click += new System.EventHandler(this.btnCarafeModelBrowse_Click);
             //
-            // textCarafeModel
+            // comboCarafeModel
             //
-            resources.ApplyResources(this.textCarafeModel, "textCarafeModel");
-            this.textCarafeModel.Name = "textCarafeModel";
-            //
+            resources.ApplyResources(this.comboCarafeModel, "comboCarafeModel");
+            this.comboCarafeModel.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.comboCarafeModel.FormattingEnabled = true;
+            this.comboCarafeModel.IntegralHeight = false;
+            this.comboCarafeModel.Name = "comboCarafeModel";
+            this.comboCarafeModel.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.comboCarafeModel_DrawItem);
+            this.comboCarafeModel.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.comboCarafeModel_MeasureItem);            //
             // labelCarafeModel
             //
             resources.ApplyResources(this.labelCarafeModel, "labelCarafeModel");
@@ -433,7 +437,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TabPage tabAlphaSource;
         private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.Button btnCarafeModelBrowse;
-        private System.Windows.Forms.TextBox textCarafeModel;
+        private System.Windows.Forms.ComboBox comboCarafeModel;
         private System.Windows.Forms.Label labelCarafeModel;
         private System.Windows.Forms.TabPage tabKoinaSource;
         private System.Windows.Forms.Label ceLabel;

@@ -494,6 +494,42 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} min gradient.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails__0__min_gradient {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails__0__min_gradient", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NCE {0}.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails_NCE__0_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails_NCE__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to precursor m/z {0}-{1}.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails_precursor_m_z__0___1_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails_precursor_m_z__0___1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to saved {0}.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails_saved__0_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails_saved__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Window width must be an integer value when optimize window placement is selected..
         /// </summary>
         public static string CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer {

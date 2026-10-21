@@ -23,6 +23,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.SettingsUI;
@@ -113,6 +114,21 @@ namespace TestPerf
                 Assert.IsTrue(Math.Abs(predicted - peptide.RetentionTime) <= RT_TOLERANCE,
                     string.Format(@"{0}: predicted {1:F2} min, measured {2:F2} min", peptide.Sequence, predicted, peptide.RetentionTime));
             }
+
+            // The next library build offers the model again, with what it was trained on
+            peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            RunUI(() =>
+            {
+                buildLibraryDlg.AlphaPeptDeep = true;
+                var recentModel = buildLibraryDlg.RecentCarafeModels.Single();
+                Assert.AreEqual(modelPath, recentModel.Path);
+                Assert.AreEqual(@"Thermo Orbitrap Astral", recentModel.Instrument);
+                StringAssert.Contains(recentModel.Details, string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
+                    24.ToString(LocalizationHelper.CurrentCulture)));
+            });
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.CancelDialog);
 
             // Release the library before checking that nothing still holds the test files
             RunUI(() => SkylineWindow.NewDocument(true));

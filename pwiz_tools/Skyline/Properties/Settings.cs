@@ -511,6 +511,21 @@ namespace pwiz.Skyline.Properties
             set { this[@"StackTraceList"] = value; }
         }
 
+        /// <summary>
+        /// The fine-tuned Carafe model files AlphaPeptDeep libraries were last built with, most recent first.
+        /// </summary>
+        [UserScopedSettingAttribute]
+        public List<string> CarafeModelList
+        {
+            get
+            {
+                if (this[@"CarafeModelList"] == null)
+                    CarafeModelList = new List<string>();
+                return (List<string>)this[@"CarafeModelList"];
+            }
+            set { this[@"CarafeModelList"] = value; }
+        }
+
         [UserScopedSettingAttribute]
         public ViewSpecList ViewSpecList
         {
