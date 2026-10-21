@@ -642,8 +642,14 @@ namespace pwiz.Skyline.Model.Results
             int groupIndex = GetGroupIndex(chromatogramIndex);
             var spillFile = _spillFiles[groupIndex];
 
-            // Not done reading yet.
-            if (retentionTime < spillFile.MaxTime || (collector != null && !collector.IsSetTimes))
+            // Not done reading yet. Extraction must be strictly past the spill file's MaxTime:
+            // several spectra can share one retention time (e.g. the spectra demultiplexed from a
+            // single overlapping-window DIA scan), so reaching MaxTime does not mean the last
+            // spectrum at MaxTime has been added. Releasing then would read the spill file while
+            // the extractor is still appending to it. float.MaxValue marks extraction complete.
+            if (retentionTime < spillFile.MaxTime ||
+                (retentionTime == spillFile.MaxTime && retentionTime < float.MaxValue) ||
+                (collector != null && !collector.IsSetTimes))
             {
                 timeIntensities = null;
                 return -1;
