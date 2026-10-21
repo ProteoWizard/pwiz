@@ -200,15 +200,19 @@ namespace pwiz.Osprey.Test
                 string heldOut = Path.GetFileNameWithoutExtension(tuningRuns[2]);
                 Assert.AreEqual(0, BlibComparer.CountWhere(products.Output, @"SpectrumSourceFiles", @"FileName LIKE '%" + heldOut + @"%'"));
 
-                // The model this run tuned, tuned further on the same runs.
+            }
+            // The model this run tuned, tuned further on the same runs. At learning rate 0 the
+            // further tuning keeps the saved model's weights, so the search reports what the first
+            // one did on every platform: a second one-epoch tune at the first one's rate leaves a
+            // model so marginal that on Linux nothing passed 1% (TeamCity 4228252).
+            using (ShortFineTune(0))
+            {
                 string furtherDir = CreateDir(@"library-build-further");
                 var further = new TunedProducts(furtherDir);
                 string furtherLog = RunOsprey(TunedArgs(fasta, furtherDir, inputs, tuningRuns)
                     .Concat(new[] { OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model }).ToArray(), Verifier(false));
                 AssertTunedPhases(furtherLog, Array.Empty<string>(), TUNING_PHASES, false, true);
-                // Two one-epoch tunes in a row move the RT model further than the reported count can
-                // stand for: here it shows only that the output was searched.
-                AssertTunedProducts(further, tuningRuns, inputs.Length, 1);
+                AssertTunedProducts(further, tuningRuns, inputs.Length, MIN_LIBRARY_BUILD_PRECURSORS);
                 var baseModels = CarafeModelFile.Open(further.Model).BaseModels;
                 Assert.AreEqual(1, baseModels.Count, @"the further-tuned model names the model it started from");
                 Assert.AreEqual(CarafeModelFile.Open(products.Model).FileSha256, baseModels[0].Sha256);
@@ -438,12 +442,12 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>A fine-tune of an epoch or two, in seconds on the CPU, for the length of the scope.</summary>
-        private static IDisposable ShortFineTune()
+        private static IDisposable ShortFineTune(double learningRate = 1e-3)
         {
             LibraryBuildWorkflow.ConfigureFineTuneForTests = options =>
             {
-                options.Ms2 = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 64, LearningRate = 1e-3, AdjustBatchSize = false };
-                options.Rt = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 64, LearningRate = 1e-3, AdjustBatchSize = false };
+                options.Ms2 = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 64, LearningRate = learningRate, AdjustBatchSize = false };
+                options.Rt = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 64, LearningRate = learningRate, AdjustBatchSize = false };
             };
             return new ScopedAction(() => LibraryBuildWorkflow.ConfigureFineTuneForTests = null);
         }
