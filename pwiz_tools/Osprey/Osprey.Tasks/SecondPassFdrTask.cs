@@ -543,10 +543,11 @@ namespace pwiz.Osprey.Tasks
                 {
                     WriteBlibOutput(rescored, nFiles, libraryById, proteinFdr, config, ctx);
                 }
-                catch (BlibOutputException ex)
+                catch (Exception ex) when (ex is BlibOutputException || ex is UserMessageException)
                 {
                     // A user-correctable state (the .blib is locked or its folder is not
-                    // writable), so an Error: line and a failure exit, not a stack trace.
+                    // writable, or nothing passed to write), so an Error: line and a failure
+                    // exit, not a stack trace.
                     ctx.LogError(ex.Message);
                     ctx.ExitCode = 1;
                     return false;
@@ -1201,10 +1202,14 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Stage 1 passing peptides: {0}", passingPeptides.Count);
             ctx.LogInfo(LogTag.COUNT, @"Stage 2 passing precursors: {0}", passingPrecursors.Count);
 
+            // A search that reports nothing fails rather than succeeding with an empty .blib,
+            // which only a later step could notice.
             if (passingEntries.Count == 0)
             {
-                ctx.LogWarning(string.Format(OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_,
-                    LibrarySource.EXT_BLIB));
+                throw new UserMessageException(string.Format(
+                    OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                    config.LibrarySource?.Path, config.ExperimentFdr,
+                    OspreyArgNames.Text(OspreyArgNames.EXPERIMENT_FDR), LibrarySource.EXT_BLIB));
             }
 
             // Ensure output directory exists

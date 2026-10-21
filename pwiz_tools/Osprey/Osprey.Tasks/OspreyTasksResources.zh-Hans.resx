@@ -1433,10 +1433,6 @@
     <value>“{0}”：跳过写入 {1}（仅报告）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
-    <value>没有母离子通过 FDR 阈值。正在写入空的 {0}。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_across__0__runs_to__3_" xml:space="preserve">
     <value>已将 {0:N0} 次运行中带有 {2:N0} 个峰的 {1:N0} 个库谱图写入 {3}</value>
     <comment>Needs Review:New resource</comment>

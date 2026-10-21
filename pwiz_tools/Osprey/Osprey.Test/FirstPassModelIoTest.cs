@@ -207,11 +207,15 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(new[] { 1u, 3u, 47u, 900u, 12345u },
                     ReadStratumInFileOrder(stratumPath), @"stratum written ascending");
 
-                // Nothing to persist is not a failure to persist - it is how every mode but
-                // protein-compact reaches this code, and an empty file would make a resume
-                // adopt an empty stratum as if it were a computed one.
-                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, new HashSet<uint>(), TestStamps.Any),
-                    @"empty stratum should not persist");
+                // An empty stratum is a computed result - no protein had 2 or more detected
+                // peptides - and must come back empty, not missing: PerFileRescoring refuses a
+                // missing stratum, and the run it refused still had precursors to report.
+                Assert.IsTrue(FirstPassModelIO.SaveStratum(stratumPath, new HashSet<uint>(), TestStamps.Any),
+                    @"empty stratum should persist");
+                var reloadedEmpty = FirstPassModelIO.LoadStratum(stratumPath);
+                Assert.IsNotNull(reloadedEmpty, @"empty stratum should load as empty, not missing");
+                Assert.AreEqual(0, reloadedEmpty.Count, @"empty stratum base ids");
+                // No stratum at all is nothing to persist.
                 Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, null, TestStamps.Any),
                     @"null stratum should not persist");
 

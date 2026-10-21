@@ -269,11 +269,11 @@ namespace pwiz.Osprey
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",
             () => @"<threshold>", (c, p) => c._config.RunFdr = ParseDouble(p));
-        public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(@"experiment-fdr",
+        public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(OspreyArgNames.EXPERIMENT_FDR,
             () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p));
-        public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(@"reconciliation-compaction-fdr",
+        public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(OspreyArgNames.RECONCILIATION_COMPACTION_FDR,
             () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_RUN_FDR.ArgumentText } };
-        public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
+        public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(OspreyArgNames.PROTEIN_FDR,
             () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p));
         // --fdr-method is GONE (#4543), with no alias: it is rejected as an unknown argument.
         // Its percolator and gbdt values chose the classifier inside the one Percolator

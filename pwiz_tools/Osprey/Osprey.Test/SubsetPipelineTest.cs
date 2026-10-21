@@ -819,6 +819,81 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// A search that detects nothing fails with one Error: line naming the threshold nothing
+        /// passed, and writes no .blib, whichever pass comes up empty. A conservative q-value is
+        /// never 0, so a threshold of 0 passes nothing. A search in which no protein has 2 or
+        /// more detected peptides has an EMPTY protein stratum, which is a result and not a
+        /// missing input: it runs through the second pass and ends in that pass's error, not in
+        /// PerFileRescoring's refusal to run without a stratum.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetNothingPasses()
+        {
+            string library = Path.Combine(_dataDir, LIBRARY_FILE);
+
+            // Nothing passes the first pass: the run stops at the compaction gate, before the
+            // second pass spends any time.
+            string firstPassDir = CreateDir(@"nothing-first-pass");
+            string firstPassLog = RunOspreyExpecting(SearchArgs(firstPassDir, library,
+                    OspreyCommandArgs.ARG_RUN_FDR.ArgumentText, @"0",
+                    OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0",
+                    OspreyCommandArgs.ARG_RECONCILIATION_COMPACTION_FDR.ArgumentText, @"0",
+                    OspreyCommandArgs.ARG_PROTEIN_FDR.ArgumentText, @"0"),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(firstPassLog, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_,
+                library, 0.0, OspreyCommandArgs.ARG_RECONCILIATION_COMPACTION_FDR.ArgumentText,
+                0.0, OspreyCommandArgs.ARG_PROTEIN_FDR.ArgumentText));
+            Assert.IsFalse(firstPassLog.Contains(TaskLine(PerFileRescoreTask.TASK_NAME, @"starting")), firstPassLog);
+            Assert.IsFalse(File.Exists(Path.Combine(firstPassDir, BLIB_FILE)));
+
+            // The first pass keeps its candidates and nothing passes the reported set.
+            string secondPassDir = CreateDir(@"nothing-second-pass");
+            string secondPassLog = RunOspreyExpecting(SearchArgs(secondPassDir, library,
+                    OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(secondPassLog, string.Format(
+                OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                library, 0.0, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
+            Assert.IsFalse(File.Exists(Path.Combine(secondPassDir, BLIB_FILE)));
+
+            // One protein per peptide: no protein has 2 detected peptides, so the stratum is
+            // empty. The second pass competes only the peaks reconciliation changed, and on the
+            // subset none of them passes.
+            string singleHits = WriteLibraryCopy(@"one-protein-per-peptide.tsv", @"ProteinID", (fields, column) =>
+            {
+                fields[column] = @"sp|" + fields[1] + @"|" + fields[1] + @"_SUBSET";
+                return fields;
+            });
+            string singleHitsDir = CreateDir(@"one-protein-per-peptide");
+            string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits), Verifier(false),
+                Program.EXIT_CODE_FAILURE_TO_START);
+            // The detected-peptide count varies with the search, so the line is matched on either
+            // side of it (a string argument ignores the N0 format).
+            var stratumLine = string.Format(
+                OspreyTasksResources.FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_,
+                0, @"|", 0).Split('|');
+            Assert.IsTrue(SplitLines(singleHitsLog).Any(line => line.Contains(stratumLine[0]) && line.Contains(stratumLine[1])),
+                singleHitsLog);
+            StringAssert.Contains(singleHitsLog, string.Format(
+                OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                singleHits, 0.01, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
+            Assert.IsFalse(File.Exists(Path.Combine(singleHitsDir, BLIB_FILE)));
+        }
+
+        /// <summary>A search of every subset run against <paramref name="library"/>, writing into
+        /// <paramref name="workDir"/>, with <paramref name="extraArgs"/> after the common ones.</summary>
+        private string[] SearchArgs(string workDir, string library, params string[] extraArgs)
+        {
+            return InputArgs(DataInputs()).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
+            }).Concat(CommonArgs()).Concat(extraArgs).ToArray();
+        }
+
+        /// <summary>
         /// Every reported precursor has a RetentionTimes row for at least one run and at most
         /// one per run. Not one per run: a precursor passes the experiment on its best runs,
         /// and a run with no acceptable peak writes no observation (the Stellar golden has
