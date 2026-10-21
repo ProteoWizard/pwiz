@@ -1,0 +1,23 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Background proteome: a pale blue notepad with a blue frame, a darker label band at the top
+       and a short band at the bottom, with a blue pen lying diagonally over the lower right. -->
+  <Rectangle Canvas.Left="4" Canvas.Top="4" Width="18" Height="23" RadiusX="1" RadiusY="1" Fill="#EEF4FA" Stroke="#4A8FC8" StrokeThickness="2"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="4" Width="12" Height="4" Fill="#3C7EC0"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="24" Width="6" Height="3" Fill="#3C7EC0"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="10" Width="14" Height="1" Fill="#C9DCEE"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="14" Width="14" Height="1" Fill="#C9DCEE"/>
+  <Canvas>
+    <Canvas.RenderTransform><RotateTransform Angle="-45" CenterX="17" CenterY="17"/></Canvas.RenderTransform>
+    <Rectangle Canvas.Left="14.5" Canvas.Top="15" Width="5" Height="12" Stroke="#1C3C9C" StrokeThickness="1">
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+          <GradientStop Color="#9DB6F0" Offset="0"/>
+          <GradientStop Color="#2A4CC2" Offset="0.5"/>
+          <GradientStop Color="#1E3AA8" Offset="1"/>
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+    <Rectangle Canvas.Left="14.5" Canvas.Top="15" Width="5" Height="3" Fill="#C8D6F6" Stroke="#1C3C9C" StrokeThickness="1"/>
+    <Path Data="M 14.5,27 L 19.5,27 L 17,30.5 Z" Fill="#707070" Stroke="#404040" StrokeThickness="0.5"/>
+  </Canvas>
+</Canvas>

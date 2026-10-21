@@ -1,0 +1,26 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Add folder: the closed folder with a green plus sign centered over the front panel. -->
+  <Rectangle Canvas.Left="27" Canvas.Top="10" Width="2" Height="19" Fill="#A8A090" Opacity="0.7"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="28" Width="25" Height="2" Fill="#A8A090" Opacity="0.7"/>
+  <Path Data="M 1,6 L 11,6 L 15,9 L 26,9 L 26,27 L 1,27 Z" Fill="#FFF2A8" Stroke="#B8860B" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="5" Canvas.Top="13" Width="21" Height="14" Stroke="#C08A10" StrokeThickness="2">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF9CC" Offset="0"/>
+        <GradientStop Color="#FFE878" Offset="0.5"/>
+        <GradientStop Color="#F2B830" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Path Data="M 6,14.5 L 25,14.5" Stroke="#FFFCE6" StrokeThickness="1"/>
+  <!-- Plus sign -->
+  <Path Data="M 12.5,7.5 L 18.5,7.5 L 18.5,12.5 L 23.5,12.5 L 23.5,18.5 L 18.5,18.5 L 18.5,23.5 L 12.5,23.5 L 12.5,18.5 L 7.5,18.5 L 7.5,12.5 L 12.5,12.5 Z" Stroke="#257A25" StrokeThickness="1" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#6CD46C" Offset="0"/>
+        <GradientStop Color="#44B844" Offset="0.5"/>
+        <GradientStop Color="#2E9A2E" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+</Canvas>

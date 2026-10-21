@@ -1,0 +1,34 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Peptide list: a list panel (teal header band, four rows of a magenta marker and a gray bar) with the
+       Peptide glyph in the right half: the navy octagonal disc with the white P sits fully inside the
+       canvas (x 17-31, y 0-14), shaded lighter toward the right, with the red Y beneath it. -->
+  <Rectangle Canvas.Left="0" Canvas.Top="0" Width="32" Height="6">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#A5CEDE" Offset="0"/>
+        <GradientStop Color="#4294BD" Offset="0.5"/>
+        <GradientStop Color="#2984B5" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="0" Canvas.Top="6" Width="16" Height="26" Fill="#EFF7F7"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="8" Width="2" Height="4" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="8" Width="8" Height="4" Fill="#5A4A4A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="14" Width="2" Height="4" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="14" Width="8" Height="4" Fill="#5A4A4A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="4" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="8" Height="4" Fill="#5A4A4A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="2" Height="4" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="26" Width="8" Height="4" Fill="#5A4A4A"/>
+  <Path Data="M 21,0 L 27,0 L 31,4 L 31,10 L 27,14 L 21,14 L 17,10 L 17,4 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#10107B" Offset="0"/>
+        <GradientStop Color="#18188C" Offset="0.5"/>
+        <GradientStop Color="#7B7BC6" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 21,2 L 27,2 L 29,4 L 29,6 L 27,8 L 23,8 L 23,12 L 21,12 Z M 23,4 L 27,4 L 27,6 L 23,6 Z" Fill="#FFFFFF"/>
+  <Path Data="M 19,16 L 21,16 L 24,20 L 27,16 L 29,16 L 29,18 L 25,23 L 25,30 L 23,30 L 23,23 L 19,18 Z" Fill="#FF0000"/>
+</Canvas>

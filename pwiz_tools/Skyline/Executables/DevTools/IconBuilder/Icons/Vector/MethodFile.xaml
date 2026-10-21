@@ -1,0 +1,10 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Method file: thick dark gray rounded frame around a white sheet with a vertical gray bar
+       on the left and four horizontal gray text bars. -->
+  <Rectangle Canvas.Left="5.5" Canvas.Top="5.5" Width="21" Height="21" RadiusX="1" RadiusY="1" Fill="#FFFFFF" Stroke="#5A5A5A" StrokeThickness="3"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="8" Width="2" Height="18" Fill="#8A8A8A"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="11" Width="12" Height="2" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="15" Width="12" Height="2" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="19" Width="12" Height="2" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="23" Width="12" Height="2" Fill="#9A9A9A"/>
+</Canvas>

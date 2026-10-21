@@ -1,0 +1,14 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- iRT calculator: black-framed light gray calculator with a dark-rimmed white display and
+       eight dark gray keys in a three-column grid (the bottom-right key is missing). -->
+  <Rectangle Canvas.Left="7" Canvas.Top="3" Width="18" Height="26" Fill="#DCDCDC" Stroke="#1A1A1A" StrokeThickness="2"/>
+  <Rectangle Canvas.Left="10.5" Canvas.Top="6.5" Width="11" Height="5" RadiusX="0.5" RadiusY="0.5" Fill="#FFFFFF" Stroke="#555555" StrokeThickness="1.5"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="14" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="15" Canvas.Top="14" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="14" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="19" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="15" Canvas.Top="19" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="19" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="24" Width="3" Height="3" Fill="#555555"/>
+  <Rectangle Canvas.Left="15" Canvas.Top="24" Width="3" Height="3" Fill="#555555"/>
+</Canvas>

@@ -1,0 +1,24 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Redo: mirror of Undo. Blue arrow with its head at the top right (flat right and bottom
+       edges, slanted hypotenuse), shaft leaving the head, sweeping left along the top, down the
+       left side and tapering to a lighter tail at the lower middle. -->
+  <Path Data="M 23,11 C 14,3 4,6 5,15 C 5.5,22 9,25.5 13,27" StrokeThickness="4.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Round">
+    <Path.Stroke>
+      <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+        <GradientStop Color="#4A7FD8" Offset="0"/>
+        <GradientStop Color="#6A9AE6" Offset="0.5"/>
+        <GradientStop Color="#9ABCEE" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Stroke>
+  </Path>
+  <Path Data="M 20,8.5 C 13,4 7,6.5 6.5,13" StrokeThickness="1.5" Stroke="#A9C6F0" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.8"/>
+  <Path Data="M 27,6 L 22.5,6 L 16,17 L 27,17 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+        <GradientStop Color="#4F84DC" Offset="0"/>
+        <GradientStop Color="#2D5FBE" Offset="0.6"/>
+        <GradientStop Color="#1F4BA3" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+</Canvas>

@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Peptide QC: navy block Q with a tail at the lower right over a red block C, no disc or Y. -->
+  <Path Data="M 6,0 L 16,0 L 18,2 L 18,12 L 16,14 L 6,14 L 4,12 L 4,2 Z M 8,2 L 14,2 L 14,8 L 10,8 L 10,10 L 12,10 L 12,12 L 8,12 Z" Fill="#000080"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="14" Width="2" Height="2" Fill="#000080"/>
+  <Path Data="M 6,14 L 16,14 L 18,16 L 18,18 L 14,18 L 14,16 L 8,16 L 8,26 L 14,26 L 14,24 L 18,24 L 18,26 L 16,28 L 6,28 L 4,26 L 4,16 Z" Fill="#FF0000"/>
+</Canvas>

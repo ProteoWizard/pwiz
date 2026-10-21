@@ -1,0 +1,42 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Panorama download: a yellow-orange sun ring over white sky, the Space Needle at the
+       left, blue ground below, and a green down-pointing arrow with a white outline in the
+       middle. -->
+  <Ellipse Canvas.Left="0.5" Canvas.Top="2.5" Width="31" Height="31" Fill="#FFFFFF" StrokeThickness="3.5">
+    <Ellipse.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFE087" Offset="0"/>
+        <GradientStop Color="#FFC857" Offset="0.4"/>
+        <GradientStop Color="#FFCA1A" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Stroke>
+  </Ellipse>
+  <!-- Ground -->
+  <Rectangle Canvas.Left="2" Canvas.Top="21" Width="30" Height="11">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#467DC8" Offset="0"/>
+        <GradientStop Color="#5489D5" Offset="0.5"/>
+        <GradientStop Color="#93B0D5" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <!-- Space Needle, the same drawing as Skyline_FilesTree and Panorama scaled to the left edge -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+        <TranslateTransform X="-0.5" Y="0.3"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <Rectangle Canvas.Left="7.4" Canvas.Top="11" Width="3.2" Height="17.5" Fill="#1A579F"/>
+    <Path Data="M 2.5,8.5 L 15.5,8.5 L 11,11.5 L 7,11.5 Z" Fill="#2B65AF"/>
+    <Rectangle Canvas.Left="1.5" Canvas.Top="6.5" Width="15" Height="2.5" RadiusX="1.25" RadiusY="1.25" Fill="#1A579F"/>
+    <Path Data="M 3.5,6.5 Q 9,1.5 14.5,6.5 Z" Fill="#2A63AB"/>
+    <Path Data="M 6,6.5 Q 9,3.6 12,6.5 Z" Fill="#5F8EC8"/>
+    <Rectangle Canvas.Left="8.3" Canvas.Top="0.5" Width="1.4" Height="4" Fill="#1A579F"/>
+  </Canvas>
+  <!-- Arrow -->
+  <Path Data="M 11,6 L 21,6 L 21,16 L 26,16 L 16,28 L 6,16 L 11,16 Z" Fill="#25C301" Stroke="#FFFFFF" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Path Data="M 12,8 L 12,17 L 8,17" Stroke="#92E180" StrokeThickness="1.5"/>
+</Canvas>

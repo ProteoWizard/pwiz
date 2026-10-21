@@ -1,0 +1,53 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Panorama publish: a yellow-orange sun ring over pale sky, the Space Needle and a blue
+       building skyline at the left, blue ground below, and a green left-pointing arrow with a
+       white outline over the lower right. -->
+  <Ellipse Canvas.Left="0" Canvas.Top="1.5" Width="32" Height="32" StrokeThickness="3.5">
+    <Ellipse.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FFEAA3" Offset="0"/>
+        <GradientStop Color="#FFFFFF" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Fill>
+    <Ellipse.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FBE996" Offset="0"/>
+        <GradientStop Color="#FFE087" Offset="0.4"/>
+        <GradientStop Color="#FFBB22" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Stroke>
+  </Ellipse>
+  <!-- Ground -->
+  <Rectangle Canvas.Left="0" Canvas.Top="20" Width="32" Height="12">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#3A72BC" Offset="0"/>
+        <GradientStop Color="#4F84D0" Offset="0.4"/>
+        <GradientStop Color="#75A5F3" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <!-- Buildings -->
+  <Rectangle Canvas.Left="8" Canvas.Top="12" Width="5" Height="8" Fill="#3A72BC"/>
+  <Rectangle Canvas.Left="13" Canvas.Top="14" Width="2" Height="6" Fill="#8AA9CD"/>
+  <Rectangle Canvas.Left="15" Canvas.Top="10" Width="6" Height="10" Fill="#0D4B93"/>
+  <Rectangle Canvas.Left="21" Canvas.Top="15" Width="3" Height="5" Fill="#3A72BC"/>
+  <!-- Space Needle, the same drawing as Skyline_FilesTree and Panorama scaled to the left edge -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform ScaleX="0.68" ScaleY="0.68"/>
+        <TranslateTransform X="-0.5" Y="0.6"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <Rectangle Canvas.Left="7.4" Canvas.Top="11" Width="3.2" Height="17.5" Fill="#17559D"/>
+    <Path Data="M 2.5,8.5 L 15.5,8.5 L 11,11.5 L 7,11.5 Z" Fill="#2B65AF"/>
+    <Rectangle Canvas.Left="1.5" Canvas.Top="6.5" Width="15" Height="2.5" RadiusX="1.25" RadiusY="1.25" Fill="#17559D"/>
+    <Path Data="M 3.5,6.5 Q 9,1.5 14.5,6.5 Z" Fill="#2A63AB"/>
+    <Path Data="M 6,6.5 Q 9,3.6 12,6.5 Z" Fill="#5F8EC8"/>
+    <Rectangle Canvas.Left="8.3" Canvas.Top="0.5" Width="1.4" Height="4" Fill="#17559D"/>
+  </Canvas>
+  <!-- Arrow -->
+  <Path Data="M 13,20 L 22,11 L 22,16 L 31,16 L 31,24 L 22,24 L 22,29 Z" Fill="#25C301" Stroke="#FFFFFF" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Path Data="M 15,20 L 22,13" Stroke="#92E180" StrokeThickness="1.5"/>
+</Canvas>

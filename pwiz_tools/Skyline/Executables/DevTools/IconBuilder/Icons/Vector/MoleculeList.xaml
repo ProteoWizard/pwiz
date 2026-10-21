@@ -1,0 +1,61 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Molecule list window: the EmptyList window with its right half holding a pastel pink panel
+       and an anthracene, three fused six-membered rings stacked vertically, drawn ball-and-stick
+       in the Molecule icon's style (gray bonds, shaded red atoms). -->
+  <Canvas.Resources>
+    <RadialGradientBrush x:Key="Atom" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.65" RadiusY="0.65">
+      <GradientStop Color="#F4A8A8" Offset="0"/>
+      <GradientStop Color="#E35F5F" Offset="0.5"/>
+      <GradientStop Color="#B82020" Offset="1"/>
+    </RadialGradientBrush>
+  </Canvas.Resources>
+  <Rectangle Canvas.Left="0" Canvas.Top="8" Width="20" Height="24" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="0" Width="16" Height="32">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFE7F7" Offset="0"/>
+        <GradientStop Color="#FFD6DE" Offset="0.5"/>
+        <GradientStop Color="#F7E7FF" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="0" Canvas.Top="0" Width="20" Height="8">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#A5CEDE" Offset="0"/>
+        <GradientStop Color="#94BDCE" Offset="0.25"/>
+        <GradientStop Color="#4A9CC6" Offset="0.26"/>
+        <GradientStop Color="#3184AD" Offset="0.55"/>
+        <GradientStop Color="#217BAD" Offset="0.8"/>
+        <GradientStop Color="#2984B5" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="2" Height="2" Fill="#73524A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="12" Width="10" Height="2" Fill="#5A3931"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="2" Height="2" Fill="#A5315A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="16" Width="10" Height="2" Fill="#4A4A4A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="2" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="10" Height="2" Fill="#4A5252"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="24" Width="2" Height="2" Fill="#CE104A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="24" Width="10" Height="2" Fill="#4A524A"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="28" Width="2" Height="2" Fill="#AD2152"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="28" Width="10" Height="2" Fill="#525252"/>
+  <!-- Bonds: three fused flat-top hexagons (r 5) stacked vertically, centered at x 24 -->
+  <Path Data="M 29,6.5 L 26.5,10.83 L 21.5,10.83 L 19,6.5 L 21.5,2.17 L 26.5,2.17 Z M 29,15.16 L 26.5,19.49 L 21.5,19.49 L 19,15.16 L 21.5,10.83 L 26.5,10.83 Z M 29,23.82 L 26.5,28.15 L 21.5,28.15 L 19,23.82 L 21.5,19.49 L 26.5,19.49 Z" Stroke="#7B7B7B" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+  <!-- Atoms at the fourteen ring vertices -->
+  <Ellipse Canvas.Left="19.7" Canvas.Top="0.37" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.7" Canvas.Top="0.37" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="17.2" Canvas.Top="4.7" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.2" Canvas.Top="4.7" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.7" Canvas.Top="9.03" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.7" Canvas.Top="9.03" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="17.2" Canvas.Top="13.36" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.2" Canvas.Top="13.36" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.7" Canvas.Top="17.69" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.7" Canvas.Top="17.69" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="17.2" Canvas.Top="22.02" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.2" Canvas.Top="22.02" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.7" Canvas.Top="26.35" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.7" Canvas.Top="26.35" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+</Canvas>

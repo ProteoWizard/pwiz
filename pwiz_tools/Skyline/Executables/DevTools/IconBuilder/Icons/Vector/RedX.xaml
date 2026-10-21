@@ -1,0 +1,7 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Red X: two thick diagonal strokes with a dark red rim, bright red body and a pink highlight
+       along the center. -->
+  <Path Data="M 4,4 L 28,28 M 28,4 L 4,28" Stroke="#A81414" StrokeThickness="7" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 4,4 L 28,28 M 28,4 L 4,28" Stroke="#E52020" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 5,5 L 27,27 M 27,5 L 5,27" Stroke="#FF9A9A" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.85"/>
+</Canvas>
