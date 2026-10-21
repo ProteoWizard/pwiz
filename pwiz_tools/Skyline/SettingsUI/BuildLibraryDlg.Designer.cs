@@ -58,6 +58,7 @@ namespace pwiz.Skyline.SettingsUI
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.ceLabel = new System.Windows.Forms.Label();
             this.tabAlphaSource = new System.Windows.Forms.TabPage();
+            this.groupAlphaOptions = new System.Windows.Forms.GroupBox();
             this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.btnCarafeModelBrowse = new System.Windows.Forms.Button();
             this.comboCarafeModel = new System.Windows.Forms.ComboBox();
@@ -76,6 +77,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControlDataSource.SuspendLayout();
             this.tabKoinaSource.SuspendLayout();
             this.tabAlphaSource.SuspendLayout();
+            this.groupAlphaOptions.SuspendLayout();
             this.tabFilesSource.SuspendLayout();
             this.tabControlMain.SuspendLayout();
             this.SuspendLayout();
@@ -289,12 +291,19 @@ namespace pwiz.Skyline.SettingsUI
             // tabAlphaSource
             // 
             this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
-            this.tabAlphaSource.Controls.Add(this.cbUseGpu);
-            this.tabAlphaSource.Controls.Add(this.btnCarafeModelBrowse);
-            this.tabAlphaSource.Controls.Add(this.comboCarafeModel);
-            this.tabAlphaSource.Controls.Add(this.labelCarafeModel);
+            this.tabAlphaSource.Controls.Add(this.groupAlphaOptions);
             resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
             this.tabAlphaSource.Name = "tabAlphaSource";
+            //
+            // groupAlphaOptions
+            //
+            resources.ApplyResources(this.groupAlphaOptions, "groupAlphaOptions");
+            this.groupAlphaOptions.Controls.Add(this.cbUseGpu);
+            this.groupAlphaOptions.Controls.Add(this.labelCarafeModel);
+            this.groupAlphaOptions.Controls.Add(this.comboCarafeModel);
+            this.groupAlphaOptions.Controls.Add(this.btnCarafeModelBrowse);
+            this.groupAlphaOptions.Name = "groupAlphaOptions";
+            this.groupAlphaOptions.TabStop = false;
             //
             // cbUseGpu
             //
@@ -318,7 +327,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboCarafeModel.IntegralHeight = false;
             this.comboCarafeModel.Name = "comboCarafeModel";
             this.comboCarafeModel.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.comboCarafeModel_DrawItem);
-            this.comboCarafeModel.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.comboCarafeModel_MeasureItem);            //
+            this.comboCarafeModel.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.comboCarafeModel_MeasureItem);
+            //
             // labelCarafeModel
             //
             resources.ApplyResources(this.labelCarafeModel, "labelCarafeModel");
@@ -406,6 +416,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControlDataSource.ResumeLayout(false);
             this.tabKoinaSource.ResumeLayout(false);
             this.tabKoinaSource.PerformLayout();
+            this.groupAlphaOptions.ResumeLayout(false);
+            this.groupAlphaOptions.PerformLayout();
             this.tabAlphaSource.ResumeLayout(false);
             this.tabAlphaSource.PerformLayout();
             this.tabFilesSource.ResumeLayout(false);
@@ -435,6 +447,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.TabPage tabAlphaSource;
+        private System.Windows.Forms.GroupBox groupAlphaOptions;
         private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.Button btnCarafeModelBrowse;
         private System.Windows.Forms.ComboBox comboCarafeModel;

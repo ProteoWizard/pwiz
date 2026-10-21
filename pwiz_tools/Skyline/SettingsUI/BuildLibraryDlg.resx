@@ -590,13 +590,13 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="cbUseGpu.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 52</value>
+    <value>9, 19</value>
   </data>
   <data name="cbUseGpu.Size" type="System.Drawing.Size, System.Drawing">
     <value>70, 17</value>
   </data>
   <data name="cbUseGpu.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="cbUseGpu.Text" xml:space="preserve">
     <value>Use &amp;GPU</value>
@@ -608,7 +608,7 @@ you can append more spectra in the future.</value>
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbUseGpu.Parent" xml:space="preserve">
-    <value>tabAlphaSource</value>
+    <value>groupAlphaOptions</value>
   </data>
   <data name="&gt;&gt;cbUseGpu.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -617,16 +617,16 @@ you can append more spectra in the future.</value>
     <value>Top, Right</value>
   </data>
   <data name="btnCarafeModelBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>245, 19</value>
+    <value>285, 59</value>
   </data>
   <data name="btnCarafeModelBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>29, 23</value>
   </data>
   <data name="btnCarafeModelBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnCarafeModelBrowse.Text" xml:space="preserve">
-    <value>Br&amp;owse...</value>
+    <value>...</value>
   </data>
   <data name="&gt;&gt;btnCarafeModelBrowse.Name" xml:space="preserve">
     <value>btnCarafeModelBrowse</value>
@@ -635,22 +635,22 @@ you can append more spectra in the future.</value>
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCarafeModelBrowse.Parent" xml:space="preserve">
-    <value>tabAlphaSource</value>
+    <value>groupAlphaOptions</value>
   </data>
   <data name="&gt;&gt;btnCarafeModelBrowse.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboCarafeModel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="comboCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 20</value>
+    <value>9, 60</value>
   </data>
   <data name="comboCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>233, 21</value>
+    <value>270, 21</value>
   </data>
   <data name="comboCarafeModel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;comboCarafeModel.Name" xml:space="preserve">
     <value>comboCarafeModel</value>
@@ -659,7 +659,7 @@ you can append more spectra in the future.</value>
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboCarafeModel.Parent" xml:space="preserve">
-    <value>tabAlphaSource</value>
+    <value>groupAlphaOptions</value>
   </data>
   <data name="&gt;&gt;comboCarafeModel.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -668,13 +668,13 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="labelCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 4</value>
+    <value>6, 44</value>
   </data>
   <data name="labelCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
     <value>217, 13</value>
   </data>
   <data name="labelCarafeModel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="labelCarafeModel.Text" xml:space="preserve">
     <value>&amp;Fine-tuned Carafe model (optional):</value>
@@ -686,10 +686,37 @@ you can append more spectra in the future.</value>
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelCarafeModel.Parent" xml:space="preserve">
-    <value>tabAlphaSource</value>
+    <value>groupAlphaOptions</value>
   </data>
   <data name="&gt;&gt;labelCarafeModel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
+  </data>
+  <data name="groupAlphaOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="groupAlphaOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="groupAlphaOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>320, 92</value>
+  </data>
+  <data name="groupAlphaOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="groupAlphaOptions.Text" xml:space="preserve">
+    <value>AlphaPeptDeep Options</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.Name" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.Parent" xml:space="preserve">
+    <value>tabAlphaSource</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tabAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
