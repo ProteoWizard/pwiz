@@ -35,6 +35,7 @@ namespace pwiz.Skyline.EditUI
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
             this.btnReset = new System.Windows.Forms.Button();
+            this.btnHelp = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.panelClauses = new System.Windows.Forms.Panel();
@@ -71,6 +72,13 @@ namespace pwiz.Skyline.EditUI
             this.btnReset.Name = "btnReset";
             this.btnReset.UseVisualStyleBackColor = true;
             this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // btnHelp
+            // 
+            resources.ApplyResources(this.btnHelp, "btnHelp");
+            this.btnHelp.Name = "btnHelp";
+            this.btnHelp.UseVisualStyleBackColor = true;
+            this.btnHelp.Click += new System.EventHandler(this.btnHelp_Click);
             // 
             // btnCancel
             // 
@@ -145,6 +153,7 @@ namespace pwiz.Skyline.EditUI
             // buttonPanel
             // 
             this.buttonPanel.Controls.Add(this.btnReset);
+            this.buttonPanel.Controls.Add(this.btnHelp);
             this.buttonPanel.Controls.Add(this.cbCreateCopy);
             this.buttonPanel.Controls.Add(this.btnOk);
             this.buttonPanel.Controls.Add(this.btnCancel);
@@ -248,6 +257,7 @@ namespace pwiz.Skyline.EditUI
         private Controls.DataGridViewEx dataGridViewEx1;
         private System.Windows.Forms.CheckBox cbCreateCopy;
         private System.Windows.Forms.Button btnReset;
+        private System.Windows.Forms.Button btnHelp;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Panel panelClauses;

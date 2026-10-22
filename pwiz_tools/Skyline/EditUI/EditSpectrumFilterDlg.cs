@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -37,12 +38,47 @@ namespace pwiz.Skyline.EditUI
         private FilterPages _filterPages;
         private FilterPages _originalFilterPages;
         private ColumnDescriptor _rootColumn;
-        private Dictionary<string, ColumnDescriptor> _propertyColumns = new Dictionary<string, ColumnDescriptor>();
+        private Dictionary<string, FilterColumn> _propertyColumns = new Dictionary<string, FilterColumn>();
+        /// <summary>
+        /// All that can be asked of a column whose term carries no value: whether the spectrum has it.
+        ///
+        /// Has Any Value is deliberately absent, though it is offered everywhere else. It means "no
+        /// criterion" - it matches every row and is dropped when the clause is built - but beside these
+        /// two it reads as the presence test they actually perform, and would silently filter nothing.
+        /// The name is doubly wrong here: a flag that is present carries an empty value, so "has any
+        /// value" is untrue of every spectrum, present or absent. Leaving the operation blank still means
+        /// no criterion, and the row delete button still removes one.
+        /// </summary>
+        private static readonly IList<IFilterOperation> VALUELESS_COLUMN_OPERATIONS = new[]
+        {
+            FilterOperations.OP_IS_BLANK, FilterOperations.OP_IS_NOT_BLANK
+        };
+
+        private IList<SpectrumClassColumn> _extraColumns;
+        private SpectrumColumnScanner.Availability _columnAvailability = SpectrumColumnScanner.Availability.UNKNOWN;
+        private Font _unanswerableFont;
         private bool _updating;
 
         public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages)
+            : this(rootColumn, filterPages, null)
+        {
+        }
+
+        /// <summary>
+        /// <paramref name="extraColumns"/> are dynamic columns (the discovered mzML CV/user parameters)
+        /// that are not properties of the databound row type, so they cannot be resolved from
+        /// <paramref name="rootColumn"/>; the dialog offers them alongside the resolvable columns.
+        /// </summary>
+        public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages,
+            IEnumerable<SpectrumClassColumn> extraColumns)
         {
             InitializeComponent();
+            // The property column holds friendly CV term names (e.g. "base peak intensity (MS:1000505)"),
+            // which are longer than the operand values, so give it the larger share of the width.
+            propertyColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            propertyColumn.FillWeight = 2;
+            valueColumn.FillWeight = 1;
+            _extraColumns = extraColumns?.ToArray() ?? Array.Empty<SpectrumClassColumn>();
             _rootColumn = rootColumn;
             _rowList = new List<Row>();
             _rowBindingList = new BindingList<Row>(_rowList);
@@ -181,6 +217,63 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        /// <summary>
+        /// A filterable column the dialog offers, reduced to what the dialog needs (caption, path, type).
+        /// Backed either by a <see cref="ColumnDescriptor"/> (a property of the databound row type) or by
+        /// a dynamic <see cref="SpectrumClassColumn"/> (a discovered mzML CV/user parameter, which has no
+        /// such property).
+        /// </summary>
+        private class FilterColumn
+        {
+            public FilterColumn(PropertyPath propertyPath, Type propertyType, string caption,
+                SpectrumClassColumn spectrumColumn = null)
+            {
+                PropertyPath = propertyPath;
+                PropertyType = propertyType;
+                Caption = caption;
+                SpectrumColumn = spectrumColumn;
+            }
+
+            public PropertyPath PropertyPath { get; }
+            public Type PropertyType { get; }
+            public string Caption { get; }
+
+            // The dynamic CV/user-parameter column this represents, or null for an ordinary databound
+            // property. A CV column's operand type depends on the operator rather than the column's
+            // discovered ValueType (see GetOperandType).
+            public SpectrumClassColumn SpectrumColumn { get; }
+
+            public static FilterColumn FromColumnDescriptor(ColumnDescriptor columnDescriptor)
+            {
+                return new FilterColumn(columnDescriptor.PropertyPath, columnDescriptor.PropertyType,
+                    columnDescriptor.GetColumnCaption(ColumnCaptionType.localized));
+            }
+
+            public static FilterColumn FromSpectrumClassColumn(SpectrumClassColumn column)
+            {
+                return new FilterColumn(column.PropertyPath, column.ValueType,
+                    column.GetLocalizedColumnName(CultureInfo.CurrentCulture), column);
+            }
+        }
+
+        /// <summary>
+        /// Explains the property list's styling. The three states are conveyed by appearance alone,
+        /// with nowhere on the form to say what they mean, so this is where the rule is written down.
+        /// </summary>
+        private void btnHelp_Click(object sender, EventArgs e)
+        {
+            ShowStylingHelp();
+        }
+
+        /// <summary>
+        /// Public so a test can open the help the way the button does, rather than reaching for the button.
+        /// </summary>
+        public void ShowStylingHelp()
+        {
+            using var dlg = new SpectrumFilterStylingHelpDlg();
+            dlg.ShowDialog(this);
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -192,21 +285,58 @@ namespace pwiz.Skyline.EditUI
             var dataSchema = _rootColumn.DataSchema;
             foreach (var filterSpec in clause.FilterSpecs)
             {
-                var propertyPath = filterSpec.ColumnId;
-                var entry = _propertyColumns.FirstOrDefault(kvp => Equals(kvp.Value.PropertyPath, propertyPath));
-                if (entry.Value == null)
+                var filterColumn = ResolveFilterColumn(filterSpec.ColumnId);
+                if (filterColumn == null)
                 {
                     continue;
                 }
                 rows.Add(new Row
                 {
-                    Property = entry.Key,
+                    Property = filterColumn.Caption,
                     Operation = filterSpec.Operation.DisplayName,
-                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema, entry.Value.PropertyType)
+                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema,
+                        GetOperandType(filterColumn, filterSpec.Operation))
                 });
             }
 
             return rows;
+        }
+
+        /// <summary>
+        /// Finds the offered column for a saved filter spec's path. If the path is a CV/user-parameter
+        /// column the editor does not currently offer (a userParam absent from the loaded data, or a term
+        /// excluded from the catalog), it is reconstructed from its encoded path and registered, so the
+        /// criterion is shown and preserved rather than silently dropped when the dialog is confirmed.
+        /// </summary>
+        private FilterColumn ResolveFilterColumn(PropertyPath propertyPath)
+        {
+            var filterColumn = _propertyColumns.Values.FirstOrDefault(fc => Equals(fc.PropertyPath, propertyPath));
+            if (filterColumn != null)
+            {
+                return filterColumn;
+            }
+            var spectrumColumn = SpectrumClassColumn.FindColumn(propertyPath);
+            if (spectrumColumn == null || !SpectrumClassColumn.IsCvParamColumn(spectrumColumn))
+            {
+                return null;
+            }
+            AddFilterColumn(FilterColumn.FromSpectrumClassColumn(spectrumColumn));
+            return _propertyColumns.Values.FirstOrDefault(fc => Equals(fc.PropertyPath, propertyPath));
+        }
+
+        /// <summary>
+        /// The type used to parse and display a column's operand. For a CV/user-parameter column the operand
+        /// type depends on the operator (matching how chromatogram extraction evaluates it), not on the
+        /// column's discovered ValueType - so a "contains" operand is text even on a term whose values are
+        /// numeric, and an ordered comparison is numeric.
+        /// </summary>
+        private static Type GetOperandType(FilterColumn filterColumn, IFilterOperation operation)
+        {
+            if (filterColumn.SpectrumColumn != null && SpectrumClassColumn.IsCvParamColumn(filterColumn.SpectrumColumn))
+            {
+                return SpectrumClassFilter.GetCvOperandType(operation);
+            }
+            return filterColumn.PropertyType;
         }
 
         public void OkDialog()
@@ -280,6 +410,98 @@ namespace pwiz.Skyline.EditUI
             get { return _rowBindingList; }
         }
 
+        /// <summary>
+        /// What this document's data was found to answer, which the property dropdown marks (see
+        /// <see cref="propertyComboBox_DrawItem"/>). May be set after construction; nothing is precomputed
+        /// from it, so late assignment still takes effect. Defaults to
+        /// <see cref="SpectrumColumnScanner.Availability.UNKNOWN"/>, so a dialog opened by a caller that
+        /// never scanned marks nothing rather than marking everything.
+        /// </summary>
+        public SpectrumColumnScanner.Availability ColumnAvailability
+        {
+            get { return _columnAvailability; }
+            set { _columnAvailability = value ?? SpectrumColumnScanner.Availability.UNKNOWN; }
+        }
+
+        /// <summary>
+        /// Where the column behind a dropdown caption stands for this document's data.
+        /// </summary>
+        private SpectrumColumnScanner.Standing GetCaptionStanding(string caption)
+        {
+            if (caption == null || !_propertyColumns.TryGetValue(caption, out var filterColumn))
+            {
+                return SpectrumColumnScanner.Standing.undetermined;
+            }
+            return _columnAvailability.GetStanding(filterColumn.PropertyPath,
+                SpectrumClassColumn.IsCvParamColumn(filterColumn.SpectrumColumn));
+        }
+
+        /// <summary>
+        /// Shows where each column stands for this document's data, in three states rather than two:
+        ///
+        ///   accent color  - this data has it, so a filter on it will match something
+        ///   plain         - nothing is known either way, which is a document with no results yet
+        ///   italic        - this data was examined and has nothing to match on
+        ///
+        /// Two states would have to conflate one pair, and every pairing misleads: merging "has it" with
+        /// "unknown" hides the only positive signal, and merging "unknown" with "does not have it" claims
+        /// an absence never observed.
+        ///
+        /// The accent also acts as the legend. There is nowhere to explain what the styling means, so a
+        /// familiar column that any data answers - MS level, say - is left marked rather than suppressed
+        /// as redundant: it lets the reader confirm the rule against data they already understand before
+        /// trusting the styling on a CV term they have never heard of.
+        ///
+        /// Italic, not gray, for the absent. Graying is the scheme's disabled treatment, and these entries
+        /// are anything but - a term absent from today's data is a reasonable thing to filter on for data
+        /// yet to be imported. Italic carries "of a different kind" without borrowing that meaning, keeps
+        /// full contrast, and follows any color scheme for free.
+        /// </summary>
+        private void propertyComboBox_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0)
+            {
+                return;
+            }
+            var comboBox = (ComboBox) sender;
+            var caption = comboBox.Items[e.Index].ToString();
+            var standing = GetCaptionStanding(caption);
+            e.DrawBackground();
+            // The selected item keeps the scheme's own selection colors: the accent is unreadable on the
+            // selection background, and the item the user is already on needs no guidance toward it.
+            var foreColor = (e.State & DrawItemState.Selected) != 0
+                ? SystemColors.HighlightText
+                : SpectrumColumnStyle.GetForeColor(standing, e.ForeColor);
+            var font = SpectrumColumnStyle.GetFontStyle(standing) == FontStyle.Italic
+                ? GetUnanswerableFont(e.Font)
+                : e.Font;
+            TextRenderer.DrawText(e.Graphics, caption, font, e.Bounds, foreColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+            e.DrawFocusRectangle();
+        }
+
+        /// <summary>
+        /// The italic form of the list font, built once and reused: this is asked for on every item of
+        /// every repaint, and a Font per draw would leak handles for as long as the dialog is open.
+        /// </summary>
+        private Font GetUnanswerableFont(Font baseFont)
+        {
+            if (_unanswerableFont == null || !Equals(_unanswerableFont.FontFamily, baseFont.FontFamily) ||
+                _unanswerableFont.SizeInPoints != baseFont.SizeInPoints)
+            {
+                _unanswerableFont?.Dispose();
+                _unanswerableFont = new Font(baseFont, baseFont.Style | FontStyle.Italic);
+            }
+            return _unanswerableFont;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            _unanswerableFont?.Dispose();
+            _unanswerableFont = null;
+            base.OnFormClosed(e);
+        }
+
         private void dataGridViewEx1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             int columnIndex = dataGridViewEx1.CurrentCell.ColumnIndex;
@@ -314,6 +536,48 @@ namespace pwiz.Skyline.EditUI
                     textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
                 }
             }
+
+            if (columnIndex == propertyColumn.Index && e.Control is ComboBox comboBox)
+            {
+                comboBox.DrawMode = DrawMode.OwnerDrawFixed;
+                // The grid reuses one editing control across cells, so the handler is removed before it is
+                // added rather than accumulating a copy per edit.
+                comboBox.DrawItem -= propertyComboBox_DrawItem;
+                comboBox.DrawItem += propertyComboBox_DrawItem;
+            }
+
+            if (columnIndex == operationColumn.Index && e.Control is ComboBox operationComboBox &&
+                rowIndex >= 0 && rowIndex < _rowBindingList.Count)
+            {
+                PopulateOperationItems(operationComboBox, _rowBindingList[rowIndex]);
+            }
+        }
+
+        /// <summary>
+        /// The operations worth offering for a row's column. A CV term the ontology declares no value type
+        /// for is a pure flag: a spectrum either carries it or does not, so the blank tests are the only
+        /// questions that can be asked, and offering a comparison invites a filter that can never match.
+        ///
+        /// Only the list offered while editing is narrowed, never <see cref="operationColumn"/>'s own
+        /// items, so a committed value is still validated against the full set and cannot be rejected. An
+        /// operation an existing filter already uses is kept in the list even where it would not be offered
+        /// now, so opening and confirming this dialog cannot quietly rewrite a filter someone saved.
+        /// </summary>
+        private void PopulateOperationItems(ComboBox comboBox, Row row)
+        {
+            var operations = FilterOperations.ListOperations();
+            if (row.Property != null && _propertyColumns.TryGetValue(row.Property, out var filterColumn) &&
+                SpectrumClassColumn.IsValuelessCvColumn(filterColumn.SpectrumColumn))
+            {
+                operations = VALUELESS_COLUMN_OPERATIONS;
+            }
+            var displayNames = operations.Select(op => op.DisplayName).ToList();
+            if (!string.IsNullOrEmpty(row.Operation) && !displayNames.Contains(row.Operation))
+            {
+                displayNames.Add(row.Operation);
+            }
+            comboBox.Items.Clear();
+            comboBox.Items.AddRange(displayNames.Cast<object>().ToArray());
         }
 
         private void tabClauses_SelectedIndexChanged(object sender, EventArgs e)
@@ -350,6 +614,33 @@ namespace pwiz.Skyline.EditUI
             return true;
         }
 
+        private void AddFilterColumn(FilterColumn filterColumn)
+        {
+            // The combobox and its reverse lookup are keyed by the displayed caption, so a caption can be
+            // offered only once. Distinct CV terms cannot collide (the caption carries the unique accession);
+            // the only possible clash is a vendor userParam named identically to a built-in property caption.
+            // Interpreted properties are added first (see DisplayCurrentPage) and keep the plain caption.
+            if (_propertyColumns.ContainsKey(filterColumn.Caption))
+            {
+                // The clashing userParam is offered under the marker the filter syntax uses to name one,
+                // rather than dropped. Dropping it left ResolveFilterColumn with nothing to return, so a
+                // saved criterion on such a term was not shown - and confirming the dialog, which rebuilds
+                // the clause from the rows, then wrote it away.
+                if (filterColumn.SpectrumColumn == null)
+                {
+                    return;
+                }
+                filterColumn = new FilterColumn(filterColumn.PropertyPath, filterColumn.PropertyType,
+                    SpectrumClassFilter.USER_PARAM_PREFIX + filterColumn.Caption, filterColumn.SpectrumColumn);
+                if (_propertyColumns.ContainsKey(filterColumn.Caption))
+                {
+                    return;
+                }
+            }
+            _propertyColumns.Add(filterColumn.Caption, filterColumn);
+            propertyColumn.Items.Add(filterColumn.Caption);
+        }
+
         private void DisplayCurrentPage()
         {
             var currentPage = FilterPages.Pages.ElementAtOrDefault(CurrentPageIndex) ?? SpectrumClassFilter.GenericFilterPage;
@@ -358,12 +649,16 @@ namespace pwiz.Skyline.EditUI
             foreach (var column in currentPage.AvailableColumns)
             {
                 var columnDescriptor = GetColumnDescriptor(column);
-                string caption = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-                if (!_propertyColumns.ContainsKey(caption))
+                if (columnDescriptor != null)
                 {
-                    _propertyColumns.Add(caption, columnDescriptor);
-                    propertyColumn.Items.Add(caption);
+                    AddFilterColumn(FilterColumn.FromColumnDescriptor(columnDescriptor));
                 }
+            }
+            // The discovered mzML CV/user-parameter columns are not properties of the databound row
+            // type, so they are offered here rather than through currentPage.AvailableColumns.
+            foreach (var extraColumn in _extraColumns)
+            {
+                AddFilterColumn(FilterColumn.FromSpectrumClassColumn(extraColumn));
             }
 
             if (tabClauses.SelectedIndex != CurrentPageIndex)
@@ -418,9 +713,15 @@ namespace pwiz.Skyline.EditUI
                 FilterPredicate filterPredicate;
                 try
                 {
+                    // A CV operand is stored as the user typed it, so a number is converted to its
+                    // invariant form here - the filter is evaluated invariantly wherever it ends up.
+                    var operandText = propertyColumnDescriptor.SpectrumColumn == null
+                        ? row.Value
+                        : SpectrumClassFilter.ToInvariantCvOperand(row.Value, CultureInfo.CurrentCulture);
                     filterPredicate =
-                        FilterPredicate.Parse(_rootColumn.DataSchema, propertyColumnDescriptor.PropertyType, filterOperation,
-                            row.Value);
+                        FilterPredicate.Parse(_rootColumn.DataSchema,
+                            GetOperandType(propertyColumnDescriptor, filterOperation), filterOperation,
+                            operandText);
                 }
                 catch (Exception ex)
                 {
