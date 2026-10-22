@@ -351,6 +351,13 @@ namespace pwiz.Osprey.DemuxTool
             {
                 Console.WriteLine(@"Warning: MS1 passes through as read (profile, for profile input); only a vendor file is centroided.");
             }
+            else if (staggered && profile && centroidSeparation > 0 && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+            {
+                // Staggered profile demultiplexing centroids its own MS2 output; MS1 takes the vendor's centroids, so
+                // the file written holds only centroids.
+                spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1");
+                Console.WriteLine(@"Vendor centroiding (MS1; MS2 profile, demultiplexed then centroided): {0}", input);
+            }
             else if (!profile && options.JointMs1 && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
                 // The channel solve on the vendor's MS2 centroids, MS1 centroided by the joint solve.

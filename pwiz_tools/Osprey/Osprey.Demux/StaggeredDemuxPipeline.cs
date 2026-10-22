@@ -185,9 +185,13 @@ namespace pwiz.Osprey.Demux
             // Every MS2 spectrum of the padded cycles, its nonzero peaks in ions.
             var inBlock = Enumerable.Range(0, _ms2Spectra.Length)
                 .Where(i => _cycleOfMs2[i] >= padLo && _cycleOfMs2[i] <= padHi).ToArray();
+            // Read on the read threads (a vendor reader serves concurrent requests), each into its own slot.
+            var read = new (double[] Mz, double[] Ions)[inBlock.Length];
+            Parallel.For(0, inBlock.Length, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _options.ReadThreads) },
+                n => read[n] = ReadPeaks(_ms2Spectra[inBlock[n]]));
             var peaks = new Dictionary<int, (double[] Mz, double[] Ions)>();
-            foreach (int i in inBlock)
-                peaks[i] = ReadPeaks(_ms2Spectra[i]);
+            for (int n = 0; n < inBlock.Length; n++)
+                peaks[inBlock[n]] = read[n];
             readSeconds = clock.Elapsed.TotalSeconds;
 
             var work = new List<DemuxWork>();
