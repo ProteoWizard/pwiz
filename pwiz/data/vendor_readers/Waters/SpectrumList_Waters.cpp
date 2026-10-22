@@ -42,10 +42,20 @@ namespace detail {
 using namespace Waters;
 
 SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config)
-    : msd_(msd), rawdata_(rawdata), config_(config), lockmassFunction_(LOCKMASS_FUNCTION_UNINIT)
+    : msd_(msd), rawdata_(rawdata), config_(config), lockmassFunction_(LOCKMASS_FUNCTION_UNKNOWN)
 {
     useDDAProcessor_ = config_.ddaProcessing;
     rawdata_->EnableProcessing(useDDAProcessor_);
+
+    // Resolve the lockmass function once, here, while still single threaded. Doing it lazily would let
+    // spectrum() (which holds readMutex) and calibrationSpectraAreOmitted() (which does not) race on
+    // the member and enter the MassLynx SDK unserialized. Note the out-parameter goes to a local: the
+    // SDK wrapper leaves it untouched when the call fails, so handing it the member directly would
+    // cache whatever happened to be there.
+    int lockmassFunction = LOCKMASS_FUNCTION_UNKNOWN;
+    if (!rawdata_->Info.TryGetLockMassFunction(lockmassFunction) || lockmassFunction < 0)
+        lockmassFunction = LOCKMASS_FUNCTION_UNKNOWN;
+    lockmassFunction_ = lockmassFunction;
 
     if (useDDAProcessor_)
     {       
@@ -107,16 +117,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance, msLevelsToCentroid);
 }
 
+PWIZ_API_DECL int SpectrumList_Waters::lockMassFunction() const
+{
+    return lockmassFunction_; // resolved in the constructor, so this is safe to call from any thread
+}
+
 PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
 {
-    if (lockmassFunction_ == LOCKMASS_FUNCTION_UNINIT)
-    {
-        if (!rawdata_->Info.TryGetLockMassFunction(lockmassFunction_))
-        {
-            lockmassFunction_ = LOCKMASS_FUNCTION_UNKNOWN;
-        }
-    }
-    return function == lockmassFunction_;
+    return function == lockMassFunction();
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const
@@ -629,7 +637,7 @@ PWIZ_API_DECL void SpectrumList_Waters::calculatePeakMetadata(SpectrumPtr& spect
 
 PWIZ_API_DECL bool SpectrumList_Waters::calibrationSpectraAreOmitted() const
 {
-    return config_.ignoreCalibrationScans && lockmassFunction_ >= 0;
+    return config_.ignoreCalibrationScans && lockMassFunction() >= 0;
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
@@ -834,6 +842,7 @@ bool SpectrumList_Waters::hasCombinedIonMobility() const {return false;}
 bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const {return false;}
 double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
 double SpectrumList_Waters::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
+int SpectrumList_Waters::lockMassFunction() const {return LOCKMASS_FUNCTION_UNKNOWN;}
 bool SpectrumList_Waters::isLockMassFunction(int function) const {return false;}
 bool SpectrumList_Waters::calibrationSpectraAreOmitted() const {return false;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
