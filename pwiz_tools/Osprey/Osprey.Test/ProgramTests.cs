@@ -448,18 +448,16 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstPassFdrRequiresReconciliationEnabled()
+        public void TestValidateFirstPassFdrAcceptsReconciliationOff()
         {
+            // Stage 5 trains the first-pass model and computes its q-values whether or not a
+            // consensus is planned from them.
             var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             config.Reconciliation.Enabled = false;
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, string.Format(
-                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME));
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         // - SecondPassFDR (every run in, reading their reconciled parquets) --

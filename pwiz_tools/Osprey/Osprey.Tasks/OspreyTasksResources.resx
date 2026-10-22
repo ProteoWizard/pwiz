@@ -418,9 +418,6 @@
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>Failed to read the first-pass intermediate file for '{0}': {1}</value>
   </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_" xml:space="preserve">
-    <value>{0} requires cross-run reconciliation, which the configuration turns off. The intermediate files it writes for {1} are only useful when cross-run reconciliation runs.</value>
-  </data>
   <data name="FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_" xml:space="preserve">
     <value>Failed to write {0}: {1}</value>
   </data>

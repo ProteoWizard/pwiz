@@ -89,28 +89,11 @@ namespace pwiz.Osprey.Tasks
             config.StopAfterStage5 = true;
         }
 
-        /// <summary>
-        /// The Stage 5 -> Stage 6 boundary file pair is only meaningful with 2+ siblings
-        /// to reconcile against and reconciliation enabled, so both are rejected early on
-        /// top of the shared input / library / output requirement.
-        /// </summary>
-        public override string ValidateSelection(OspreyConfig config)
-        {
-            string err = base.ValidateSelection(config);
-            if (err != null)
-                return err;
-            // One input is a search like any other: with no other run to reconcile against, the
-            // consensus is empty, PerFileRescoring has no plan for the run and says so, and the
-            // chain is the same four tasks whatever the run count - so a workflow manager need not
-            // count the runs to choose its shape (the one command's single tuning run).
-            if (!config.Reconciliation.Enabled)
-            {
-                return string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                    OspreyArgNames.TaskText(Name), PerFileRescoreTask.TASK_NAME);
-            }
-            return null;
-        }
+        // No ValidateSelection of its own: the shared input / library / output requirement is all
+        // it needs. Stage 5 trains the first-pass model and computes the first-pass q-values for
+        // any number of runs, one included, with or without reconciliation, which only adds the
+        // consensus PerFileRescoring plans from; so the chain is the same four tasks whatever the
+        // run count, and a workflow manager need not count the runs to choose its shape.
 
         /// <summary>
         /// The first join writes per-run intermediate files and the analysis-wide ones beside
