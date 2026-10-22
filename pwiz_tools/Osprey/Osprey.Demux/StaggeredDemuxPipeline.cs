@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Demux
@@ -55,9 +56,13 @@ namespace pwiz.Osprey.Demux
             var times = new List<double>();
             var windows = new List<IsolationWindow>();
             _intensityPerIon = new double[source.Count];
+            // Described on the read threads (a vendor reader serves concurrent requests), then used in order.
+            var infos = new DemuxSpectrumInfo[source.Count];
+            Parallel.For(0, source.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, options.ReadThreads) },
+                k => infos[k] = source.Describe(k));
             for (int k = 0; k < source.Count; k++)
             {
-                var info = source.Describe(k);
+                var info = infos[k];
                 _intensityPerIon[k] = options.FillTimeIonScale > 0 && info.InjectionTime > 0
                     ? options.FillTimeIonScale / info.InjectionTime
                     : options.CountsPerIon;

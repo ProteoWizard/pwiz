@@ -392,114 +392,261 @@ namespace pwiz.Osprey.Demux
                 _atomStart.Add(start);
             }
 
-            /// <summary>Greedy sparse fit: add the best candidate, refit all amplitudes, reweight, until no gain.</summary>
+            /// <summary>Greedy sparse fit: add the best candidate, refit the amplitudes it interacts with, reweight.</summary>
+            /// <remarks>
+            /// <para>Peaks that reach no common observation do not interact: the weighted Gram matrix is block diagonal
+            /// over groups of peaks linked by shared observations, and the NNLS solution of each group is its own. So
+            /// adding a peak refits only the group it joins (the groups of every chosen peak it shares an observation
+            /// with, merged), warm-started from their amplitudes, and the misfit, the fit and the weights change only
+            /// over that group's observations.</para>
+            /// <para>A candidate's score depends only on the observations it reaches. After the first peak is added every
+            /// weight changes (from the data's counts to the fit's), so every candidate is scored again; after that
+            /// only the candidates reaching the refitted group's observations are.</para>
+            /// </remarks>
             private void Fit()
             {
                 int observations = _obsY.Count, atoms = _atomColumn.Count;
                 if (atoms == 0)
                     return;
+                var footObs = _footObs.ToArray();
+                var footValue = _footValue.ToArray();
+                var atomStart = new int[atoms + 1];
+                for (int atom = 0; atom < atoms; atom++)
+                    atomStart[atom] = _atomStart[atom];
+                atomStart[atoms] = footObs.Length;
+                var y = _obsY.ToArray();
+
+                // The candidates reaching each observation.
+                var obsStart = new int[observations + 1];
+                foreach (int o in footObs)
+                    obsStart[o + 1]++;
+                for (int o = 0; o < observations; o++)
+                    obsStart[o + 1] += obsStart[o];
+                var obsAtoms = new int[footObs.Length];
+                var fill = new int[observations];
+                for (int atom = 0; atom < atoms; atom++)
+                {
+                    for (int f = atomStart[atom]; f < atomStart[atom + 1]; f++)
+                    {
+                        int o = footObs[f];
+                        obsAtoms[obsStart[o] + fill[o]++] = atom;
+                    }
+                }
+
                 var w = new double[observations];
                 var mu = new double[observations];
                 for (int o = 0; o < observations; o++)
-                    w[o] = 1 / Math.Max(_obsY[o], _params.InitialFloorIons);
-                double chi = Misfit(w, mu);
+                    w[o] = 1 / Math.Max(y[o], _params.InitialFloorIons);
+                var score = new double[atoms];
+                for (int atom = 0; atom < atoms; atom++)
+                    score[atom] = Score(atom, atomStart, footObs, footValue, y, w, mu);
+
+                // The chosen peaks, their amplitudes and groups.
                 var isChosen = new bool[atoms];
+                var beta = new double[atoms];
+                var group = new int[atoms];
+                var chosen = new List<int>();
+                var inTrial = new bool[atoms];
+                var trial = new List<int>();
+                var trialObs = new List<int>();
+                var obsMark = new bool[observations];
                 var dense = new double[observations];
+                var stale = new bool[atoms];
                 int maxPeaks = Math.Min(_params.MaxPeaks, atoms);
                 var gram = new double[maxPeaks * maxPeaks];
                 var atb = new double[maxPeaks];
-                var trialBeta = new double[maxPeaks];
+                var start = new double[maxPeaks];
+                var solution = new double[maxPeaks];
                 var workspace = new NnlsSolver.Workspace(maxPeaks);
-                var trialMu = new double[observations];
-                while (_chosen.Count < maxPeaks)
+                var newMu = new double[observations];
+
+                // The weighted NNLS of a group of candidates, warm-started from their amplitudes, into solution.
+                void SolveGroup(List<int> members)
+                {
+                    int count = members.Count;
+                    for (int c1 = 0; c1 < count; c1++)
+                    {
+                        int a1 = members[c1];
+                        start[c1] = isChosen[a1] ? beta[a1] : 0;
+                        for (int f = atomStart[a1]; f < atomStart[a1 + 1]; f++)
+                            dense[footObs[f]] = footValue[f];
+                        double b = 0;
+                        for (int f = atomStart[a1]; f < atomStart[a1 + 1]; f++)
+                            b += w[footObs[f]] * footValue[f] * y[footObs[f]];
+                        atb[c1] = b;
+                        for (int c2 = 0; c2 < count; c2++)
+                        {
+                            int a2 = members[c2];
+                            double sum = 0;
+                            for (int f = atomStart[a2]; f < atomStart[a2 + 1]; f++)
+                                sum += w[footObs[f]] * dense[footObs[f]] * footValue[f];
+                            gram[c1 * count + c2] = sum;
+                        }
+                        for (int f = atomStart[a1]; f < atomStart[a1 + 1]; f++)
+                            dense[footObs[f]] = 0;
+                    }
+                    NnlsSolver.SolveNormal(gram, atb, count, solution, workspace, 0, start);
+                }
+
+                while (chosen.Count < maxPeaks)
                 {
                     int best = -1;
                     double bestScore = 0;
                     for (int atom = 0; atom < atoms; atom++)
                     {
-                        if (isChosen[atom])
-                            continue;
-                        double numerator = 0, norm = 0;
-                        for (int f = _atomStart[atom]; f < FootEnd(atom); f++)
+                        if (!isChosen[atom] && score[atom] > bestScore)
                         {
-                            int o = _footObs[f];
-                            double g = _footValue[f];
-                            numerator += w[o] * (_obsY[o] - mu[o]) * g;
-                            norm += w[o] * g * g;
-                        }
-                        if (norm <= 0)
-                            continue;
-                        double score = numerator / Math.Sqrt(norm);
-                        if (score > bestScore)
-                        {
-                            bestScore = score;
+                            bestScore = score[atom];
                             best = atom;
                         }
                     }
                     if (best < 0)
                         break;
 
-                    // Weighted NNLS of the chosen peaks plus the best candidate.
-                    _chosen.Add(best);
-                    int n = _chosen.Count;
-                    for (int c1 = 0; c1 < n; c1++)
+                    // The trial group: the best candidate and every chosen peak in a group it shares an observation
+                    // with, in index order.
+                    trial.Clear();
+                    for (int f = atomStart[best]; f < atomStart[best + 1]; f++)
                     {
-                        int a1 = _chosen[c1];
-                        for (int f = _atomStart[a1]; f < FootEnd(a1); f++)
-                            dense[_footObs[f]] = _footValue[f];
-                        double b = 0;
-                        for (int f = _atomStart[a1]; f < FootEnd(a1); f++)
-                            b += w[_footObs[f]] * _footValue[f] * _obsY[_footObs[f]];
-                        atb[c1] = b;
-                        for (int c2 = 0; c2 < n; c2++)
+                        int o = footObs[f];
+                        for (int k = obsStart[o]; k < obsStart[o + 1]; k++)
                         {
-                            int a2 = _chosen[c2];
-                            double sum = 0;
-                            for (int f = _atomStart[a2]; f < FootEnd(a2); f++)
-                                sum += w[_footObs[f]] * dense[_footObs[f]] * _footValue[f];
-                            gram[c1 * n + c2] = sum;
+                            int other = obsAtoms[k];
+                            if (!isChosen[other] || inTrial[other])
+                                continue;
+                            foreach (int member in chosen)
+                            {
+                                if (group[member] == group[other] && !inTrial[member])
+                                {
+                                    inTrial[member] = true;
+                                    trial.Add(member);
+                                }
+                            }
                         }
-                        for (int f = _atomStart[a1]; f < FootEnd(a1); f++)
-                            dense[_footObs[f]] = 0;
                     }
-                    NnlsSolver.SolveNormal(gram, atb, n, trialBeta, workspace);
-                    Array.Clear(trialMu, 0, observations);
-                    for (int c = 0; c < n; c++)
+                    trial.Add(best);
+                    inTrial[best] = true;
+                    trial.Sort(); // Array.Sort OK: distinct candidate indices, no ties
+                    int n = trial.Count;
+                    if (n > maxPeaks)
                     {
-                        int atom = _chosen[c];
-                        for (int f = _atomStart[atom]; f < FootEnd(atom); f++)
-                            trialMu[_footObs[f]] += trialBeta[c] * _footValue[f];
-                    }
-                    double trialChi = Misfit(w, trialMu);
-                    if (chi - trialChi < _params.MinGain)
-                    {
-                        _chosen.RemoveAt(n - 1);
+                        foreach (int atom in trial)
+                            inTrial[atom] = false;
                         break;
                     }
+
+                    // The group's observations, and the fit there without the group.
+                    trialObs.Clear();
+                    foreach (int atom in trial)
+                    {
+                        for (int f = atomStart[atom]; f < atomStart[atom + 1]; f++)
+                        {
+                            int o = footObs[f];
+                            if (obsMark[o])
+                                continue;
+                            obsMark[o] = true;
+                            trialObs.Add(footObs[f]);
+                        }
+                    }
+                    trialObs.Sort(); // Array.Sort OK: distinct observation indices, no ties
+
+                    // Weighted NNLS of the group, warm-started from its amplitudes.
+                    SolveGroup(trial);
+
+                    // The group's new fit over its observations: the rest of the fit there is the same.
+                    foreach (int o in trialObs)
+                        newMu[o] = mu[o];
+                    for (int c = 0; c < n; c++)
+                    {
+                        int atom = trial[c];
+                        double delta = solution[c] - (isChosen[atom] ? beta[atom] : 0);
+                        for (int f = atomStart[atom]; f < atomStart[atom + 1]; f++)
+                            newMu[footObs[f]] += delta * footValue[f];
+                    }
+                    double gain = 0;
+                    foreach (int o in trialObs)
+                    {
+                        double before = y[o] - mu[o], after = y[o] - newMu[o];
+                        gain += w[o] * (before * before - after * after);
+                    }
+                    foreach (int o in trialObs)
+                        obsMark[o] = false;
+                    foreach (int atom in trial)
+                        inTrial[atom] = false;
+                    if (gain < _params.MinGain)
+                        break;
+
+                    // Accept: the group's amplitudes and one group id, its observations' fit and weights.
                     isChosen[best] = true;
-                    _beta = new double[n];
-                    Array.Copy(trialBeta, _beta, n);
-                    Array.Copy(trialMu, mu, observations);
-                    for (int o = 0; o < observations; o++)
+                    chosen.Add(best);
+                    for (int c = 0; c < n; c++)
+                    {
+                        int atom = trial[c];
+                        beta[atom] = solution[c];
+                        group[atom] = best;
+                    }
+                    if (chosen.Count == 1)
+                    {
+                        foreach (int o in trialObs)
+                            mu[o] = newMu[o];
+                        for (int o = 0; o < observations; o++)
+                            w[o] = 1 / Math.Max(mu[o], _floor);
+                        for (int atom = 0; atom < atoms; atom++)
+                            score[atom] = Score(atom, atomStart, footObs, footValue, y, w, mu);
+                        continue;
+                    }
+                    foreach (int o in trialObs)
+                    {
+                        mu[o] = newMu[o];
                         w[o] = 1 / Math.Max(mu[o], _floor);
-                    chi = Misfit(w, mu);
+                        for (int k = obsStart[o]; k < obsStart[o + 1]; k++)
+                            stale[obsAtoms[k]] = true;
+                    }
+                    for (int atom = 0; atom < atoms; atom++)
+                    {
+                        if (!stale[atom])
+                            continue;
+                        stale[atom] = false;
+                        score[atom] = Score(atom, atomStart, footObs, footValue, y, w, mu);
+                    }
                 }
-            }
-
-            private double Misfit(double[] w, double[] mu)
-            {
-                double chi = 0;
-                for (int o = 0; o < w.Length; o++)
+                // One more refit of each group under the final weights: a group the later peaks did not join was last
+                // fitted under the weights before its own reweighting.
+                chosen.Sort(); // Array.Sort OK: distinct candidate indices, no ties
+                var done = new HashSet<int>();
+                foreach (int atom in chosen)
                 {
-                    double r = _obsY[o] - mu[o];
-                    chi += w[o] * r * r;
+                    if (!done.Add(group[atom]))
+                        continue;
+                    trial.Clear();
+                    foreach (int member in chosen)
+                    {
+                        if (group[member] == group[atom])
+                            trial.Add(member);
+                    }
+                    SolveGroup(trial);
+                    for (int c = 0; c < trial.Count; c++)
+                        beta[trial[c]] = solution[c];
                 }
-                return chi;
+                _chosen.AddRange(chosen);
+                _beta = new double[chosen.Count];
+                for (int c = 0; c < chosen.Count; c++)
+                    _beta[c] = beta[chosen[c]];
             }
 
-            private int FootEnd(int atom)
+            /// <summary>A candidate's correlation with the weighted residual over its weighted norm; 0 without reach.</summary>
+            private static double Score(int atom, int[] atomStart, int[] footObs, double[] footValue, double[] y, double[] w,
+                double[] mu)
             {
-                return atom + 1 < _atomStart.Count ? _atomStart[atom + 1] : _footObs.Count;
+                double numerator = 0, norm = 0;
+                for (int f = atomStart[atom]; f < atomStart[atom + 1]; f++)
+                {
+                    int o = footObs[f];
+                    double g = footValue[f];
+                    numerator += w[o] * (y[o] - mu[o]) * g;
+                    norm += w[o] * g * g;
+                }
+                return norm > 0 ? numerator / Math.Sqrt(norm) : 0;
             }
 
             private static int LowerBound(double[] values, double target)
