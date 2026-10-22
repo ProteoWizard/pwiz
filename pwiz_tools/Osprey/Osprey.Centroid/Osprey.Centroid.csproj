@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.Centroid</RootNamespace>
+    <AssemblyName>Osprey.Centroid</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <!-- Deliberately depends on nothing: the centroider takes a profile spectrum's points in and hands
+       centroids back, so the reader, the demultiplexers and later pwiz-sharp can all share it. -->
+
+</Project>

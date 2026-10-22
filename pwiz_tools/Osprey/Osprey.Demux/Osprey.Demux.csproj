@@ -9,11 +9,12 @@
     <InternalsVisibleTo Include="Osprey.Test" />
   </ItemGroup>
 
-  <!-- Deliberately depends on Osprey.Core alone: the demultiplexer takes spectra in and
-       hands spectra back, with no knowledge of scoring, FDR or the cache format, so it
-       can later move into pwiz-sharp for Skyline and msconvert to share. -->
+  <!-- Deliberately depends on Osprey.Core and the centroider alone: the demultiplexer takes
+       spectra in and hands spectra back, with no knowledge of scoring, FDR or the cache format,
+       so it can later move into pwiz-sharp for Skyline and msconvert to share. -->
   <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.Centroid\Osprey.Centroid.csproj" />
   </ItemGroup>
 
 </Project>

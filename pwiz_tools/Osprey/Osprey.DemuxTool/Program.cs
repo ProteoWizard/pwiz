@@ -29,6 +29,8 @@ using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Spectra;
+using pwiz.Osprey.Centroid;
 using pwiz.Osprey.Demux;
 
 namespace pwiz.Osprey.DemuxTool
@@ -41,21 +43,23 @@ namespace pwiz.Osprey.DemuxTool
     internal static class Program
     {
         private const string USAGE =
-            @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
+            @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered|none]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
-            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
+            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" +
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
             @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
-            @" [--remultiplex K]";
+            @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
             int remultiplex = 0;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
-            bool countsPerIonSet = false, ms1Set = false, schemeSet = false;
+            bool countsPerIonSet = false, ms1Set = false, schemeSet = false, noDemux = false, centrix = false;
             var options = new ScanningDemuxOptions();
+            var centrixMs2 = new CentrixParams();
+            double centrixSigmaMs1 = 0;
             for (int i = 0; i < args.Length; i++)
             {
                 // Every option but the switches takes a value.
@@ -83,8 +87,10 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--scheme":
                         // scanning: SCIEX ZT Scan (needs --kernel); staggered: stepped overlapping windows. Without it
-                        // the run must look like a scanning acquisition (DemuxSchemeDetector.DetectScanning).
+                        // the run must look like a scanning acquisition (DemuxSchemeDetector.DetectScanning). none: no
+                        // demultiplexing, the spectra only centroided (--centroid).
                         staggered = value == @"staggered";
+                        noDemux = value == @"none";
                         schemeSet = true;
                         break;
                     case @"--layout":
@@ -270,8 +276,28 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--centroid":
                         // events: the profile centroided keeping every single ion event; vendor: the
-                        // vendor library's centroids (the default for a vendor file).
+                        // vendor library's centroids (the default for a vendor file); centrix: the profile
+                        // read, and the output spectra centroided by the Centrix lasso (a linear ion trap's).
                         eventCentroids = value == @"events";
+                        centrix = value == @"centrix";
+                        if (centrix)
+                            profile = true;
+                        break;
+                    case @"--centrix-sigma":
+                        // Centrix: the MS2 profile peak's sigma, in Th (default 0.33, the Stellar's).
+                        centrixMs2.SigmaTh = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--centrix-sigma-ms1":
+                        // Centrix: the MS1 profile peak's sigma, in Th (default the MS2 sigma).
+                        centrixSigmaMs1 = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--centrix-param":
+                        // Any scalar setting of Centrix by its property name, for tuning.
+                        if (!SetParameter(centrixMs2, value))
+                        {
+                            Console.Error.WriteLine(@"Unknown Centrix setting: {0}", value);
+                            return 1;
+                        }
                         break;
                     default:
                         Console.Error.WriteLine(USAGE);
@@ -291,14 +317,14 @@ namespace pwiz.Osprey.DemuxTool
             // step of a run read serially (about 2.6 s a sweep for a ZT Scan .wiff2).
             if (!readThreadsSet && input != null && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
                 options.ReadThreads = 4;
-            if (input == null || output == null || (kernelPath == null && !staggered))
+            if (input == null || output == null || (kernelPath == null && !staggered && !noDemux))
             {
                 Console.Error.WriteLine(USAGE);
                 return 1;
             }
 
             var stopwatch = Stopwatch.StartNew();
-            var kernel = staggered ? null : ScanningKernel.Load(kernelPath);
+            var kernel = staggered || noDemux ? null : ScanningKernel.Load(kernelPath);
             if (kernel != null)
                 Console.WriteLine(@"Kernel: {0}", kernel.Descriptor);
             Console.WriteLine(@"Layout: {0}{1}", staggered ? @"staggered bins" : options.Raw ? @"raw" : options.Layout.Name,
@@ -329,7 +355,7 @@ namespace pwiz.Osprey.DemuxTool
             ReaderList.Default.Read(input, msd);
             var spectra = msd.Run.SpectrumList;
             Console.WriteLine(@"Opened {0} spectra in {1:F0} s", spectra.Count, stopwatch.Elapsed.TotalSeconds);
-            if (!countsPerIonSet)
+            if (!countsPerIonSet && !noDemux)
             {
                 // SCIEX reports rates, so an ion's worth of counts depends on the accumulation time: taken from the
                 // file's own profile MS2 spectra, whose lowest levels are whole numbers of ions. The same in every
@@ -406,6 +432,13 @@ namespace pwiz.Osprey.DemuxTool
                 Console.WriteLine(@"Wrote {0} in {1:F0} s", output, stopwatch.Elapsed.TotalSeconds);
                 return 0;
             }
+            if (noDemux)
+            {
+                msd.Run.SpectrumList = centrix ? CentrixCentroided(spectra, centrixMs2, centrixSigmaMs1) : spectra;
+                WriteMzml(msd, output);
+                Console.WriteLine(@"Wrote {0} in {1:F0} s", output, stopwatch.Elapsed.TotalSeconds);
+                return 0;
+            }
             if (staggered)
             {
                 stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out);
@@ -420,6 +453,9 @@ namespace pwiz.Osprey.DemuxTool
                     scanning.CycleCount, stopwatch.Elapsed.TotalSeconds, scanning.FirstCycle, scanning.LastCycle,
                     scanning.Count);
             }
+            // The demultiplexed profile centroided as it is written.
+            if (centrix)
+                msd.Run.SpectrumList = CentrixCentroided(msd.Run.SpectrumList, centrixMs2, centrixSigmaMs1);
 
             WriteMzml(msd, output);
 
@@ -447,7 +483,7 @@ namespace pwiz.Osprey.DemuxTool
         /// the middle of the run on, read as they come from the source (profile for a vendor file). NaN, with a fit
         /// of 0, for centroided spectra.
         /// </summary>
-        private static double MS2CountsPerIon(Pwiz.Data.MsData.Spectra.ISpectrumList spectra, out double fit, out int used)
+        private static double MS2CountsPerIon(ISpectrumList spectra, out double fit, out int used)
         {
             var intensities = new List<double>();
             used = 0;
@@ -468,6 +504,20 @@ namespace pwiz.Osprey.DemuxTool
                 used++;
             }
             return IonCalibration.CountsPerIon(intensities, out fit);
+        }
+
+        /// <summary>
+        /// The spectra's profiles centroided by Centrix, MS1 with its own peak sigma (the MS2 sigma when not given) and
+        /// MS2 with the settings, as Centrix keeps a sigma per MS level.
+        /// </summary>
+        private static ISpectrumList CentrixCentroided(ISpectrumList spectra, CentrixParams ms2, double sigmaMs1)
+        {
+            var ms1 = ms2.Copy();
+            if (sigmaMs1 > 0)
+                ms1.SigmaTh = sigmaMs1;
+            Console.WriteLine(@"Centrix centroiding: sigma {0} Th (MS1 {1} Th)", ms2.SigmaTh, ms1.SigmaTh);
+            spectra = new SpectrumList_PeakPicker(spectra, new CentrixPeakDetector(ms1), false, @"1");
+            return new SpectrumList_PeakPicker(spectra, new CentrixPeakDetector(ms2), false, @"2-");
         }
 
         /// <summary>Writes the mzML through a partial file, so an interrupted run leaves no output that looks finished.</summary>
