@@ -18,7 +18,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
-REM #             [--build-only] [--with-tutorial-perf]
+REM #             [--build-only] [--with-tutorial-perf] [--no-warnings-as-errors]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -61,6 +61,11 @@ REM #   --skip-connected-tests
 REM #       Same for TestConnected (skip=TestConnected.dll). tcbuild.bat always passes
 REM #       it: the TestConnected config runs those tests on bt209's staged build, and
 REM #       only when the smart trigger sees a remote-API change.
+REM #   --no-warnings-as-errors
+REM #       Leave warnings as warnings (-p:PwizWarningsAsErrors=false), as TeamCity
+REM #       builds do. A developer build otherwise promotes them to errors - see the
+REM #       root Directory.Build.props. SkylineTester's nightly passes this, so a
+REM #       warning cannot stop a nightly from building and running its tests.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -109,6 +114,7 @@ set NOTESTS=0
 set SEQUENTIAL=1
 set BUILDONLY=0
 set WITHTUTORIALPERF=0
+set WARNINGSASERRORS=1
 set TEST_SKIP=
 set SKIP_DLLS=
 set PERF_TESTS=
@@ -141,6 +147,7 @@ if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
 if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
+if /i "%~1"=="--no-warnings-as-errors" (set WARNINGSASERRORS=0) else ^
 if /i "%~1"=="--skip-tutorial-tests" (set "SKIP_DLLS=!SKIP_DLLS!,TestTutorial.dll") else ^
 if /i "%~1"=="--skip-connected-tests" (set "SKIP_DLLS=!SKIP_DLLS!,TestConnected.dll") else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
@@ -193,6 +200,7 @@ REM # reuse into a full rebuild.
 set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
+if %WARNINGSASERRORS%==0 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:PwizWarningsAsErrors=false
 
 if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: ENABLED']
