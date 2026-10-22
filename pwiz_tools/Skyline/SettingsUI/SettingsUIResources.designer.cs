@@ -495,7 +495,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// </summary>
         public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
+                return ResourceManager.GetString("EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
             }
         }
 
