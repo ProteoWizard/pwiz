@@ -165,7 +165,8 @@ namespace TestPerf
                 string.Format(SettingsUIResources.BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_, @"Phospho (ST)"),
                 buildLibraryDlg.ModificationWarning));
             var limitedModelAlert = ShowDialog<AlertDlg>(buildLibraryDlg.OkWizardPage);
-            Assert.AreEqual(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)), limitedModelAlert.Message);
+            Assert.AreEqual(TextUtil.LineSeparate(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)),
+                Environment.NewLine, ModelResources.Alphapeptdeep_Warn_continue_building), limitedModelAlert.Message);
             OkDialog(limitedModelAlert, limitedModelAlert.OkDialog);
 
             WaitForCondition(() => buildLibraryDlg.Builder != null);

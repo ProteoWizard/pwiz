@@ -236,9 +236,7 @@ namespace pwiz.Skyline.Model {
         ///
         ///{0}
         ///
-        ///Please consider using the fine-tuning method provided by Carafe for building this library.
-        ///
-        ///Would you like to continue building this predicted library?.
+        ///Please consider using the fine-tuning method provided by Carafe for building this library..
         /// </summary>
         public static string Alphapeptdeep_Warn_limited_modification {
             get {
@@ -247,15 +245,22 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected:
         ///
-        ///{0}
-        ///
-        ///Would you like to continue building this predicted library?.
+        ///{0}.
         /// </summary>
         public static string Alphapeptdeep_Warn_unknown_modification {
             get {
                 return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Alphapeptdeep_Warn_continue_building {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Warn_continue_building", resourceCulture);
             }
         }
         

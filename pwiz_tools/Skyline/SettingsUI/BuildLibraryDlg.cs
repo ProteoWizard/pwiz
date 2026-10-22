@@ -496,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 string mods = warningMods.Keys.OrderBy(name => name).CommaSeparateListItems();
                 labelModWarning.Text = string.Format(SettingsUIResources.BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_, mods);
-                helpTip.SetToolTip(labelModWarning, AbstractDeepLibraryBuilder.GetWarning(warningMods));
+                helpTip.SetToolTip(labelModWarning, AbstractDeepLibraryBuilder.GetWarning(warningMods, false));
             }
         }
 

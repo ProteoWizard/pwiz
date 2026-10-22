@@ -276,15 +276,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public string GetWarning()
         {
-            return GetWarning(GetWarningMods());
+            return GetWarning(GetWarningMods(), true);
         }
 
         /// <summary>
-        /// The question to ask before building with modifications the models do not know or
-        /// support only in part, from <see cref="GetWarningMods(SrmDocument,LibraryBuilderModificationSupport)"/>,
-        /// or null when there are none.
+        /// The warning about building with modifications the models do not know or support only in
+        /// part, from <see cref="GetWarningMods(SrmDocument,LibraryBuilderModificationSupport)"/>, or
+        /// null when there are none. With <paramref name="ask"/> it ends with the question a build
+        /// asks before it starts; without, it is the statement alone, for a tooltip.
         /// </summary>
-        public static string GetWarning(Dictionary<string, PredictionSupport> warningModSupports)
+        public static string GetWarning(Dictionary<string, PredictionSupport> warningModSupports, bool ask)
         {
             if (warningModSupports.IsNullOrEmpty())
                 return null;
@@ -295,6 +296,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // Only the modifications the models know in part; an unknown one is already listed above
             AddWarning(warnings, ModelResources.Alphapeptdeep_Warn_limited_modification,
                 warningModSupports.Where(kvp => kvp.Value != PredictionSupport.none && kvp.Value != PredictionSupport.all).Select(kvp => kvp.Key));
+            if (ask)
+            {
+                warnings.Add(Environment.NewLine);
+                warnings.Add(ModelResources.Alphapeptdeep_Warn_continue_building);
+            }
             return TextUtil.LineSeparate(warnings);
         }
 
