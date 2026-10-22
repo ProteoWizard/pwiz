@@ -40,8 +40,8 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         /// <summary>
-        /// The reader's version, in the library composition hash (the derived .blib's and the
-        /// <c>.libcache</c>'s). 4: one peak per m/z,
+        /// The reader's version, in the library composition hash (the derived .blib's).
+        /// 4: one peak per m/z,
         /// scaled to the base peak (<see cref="FragmentPeaks"/>); the modified sequence in the
         /// blib writer's text (<c>C[+57.0215]</c>) and modifications named by their UniMod
         /// entry, as the blib loader reads them, so an entry reads the same from either file.

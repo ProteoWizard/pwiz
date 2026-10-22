@@ -43,9 +43,9 @@ namespace pwiz.Osprey.Test
         /// and on the entrapment pairing built from them. The regression's
         /// <c>-LibraryAsBlib</c> legs prove the same thing at the search's output, forty
         /// minutes later; this is the seconds-long form of that gate, and the one to run first
-        /// when a loader changes. The derived library the loader keeps of a .tsv in place of
-        /// the <c>.libcache</c> is the same round trip made by the loader itself
-        /// (<see cref="DerivedLibraryDifferences"/>), its lean loads included.
+        /// when a loader changes. The derived library the loader keeps of a .tsv is the same
+        /// round trip made by the loader itself (<see cref="DerivedLibraryDifferences"/>), its
+        /// lean loads included.
         /// </summary>
         [TestMethod]
         public void TestLibraryLoadsIdenticallyFromTsvAndBlib()
@@ -161,15 +161,17 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// The derived library. The first <see cref="LibraryLoader"/> load of the library-decoy
-        /// subset from its .tsv writes <c>&lt;library&gt;.blib</c> where the <c>.libcache</c> was
-        /// kept, and no <c>.libcache</c>; the next load says it read the derived library and
-        /// gives the identical library, entry by entry; a load under another configuration says
-        /// the derived library no longer matches and rebuilds it. The two lean loads through the
-        /// derived library have the cache route's shape: under <c>OmitFragments</c> every entry
-        /// keeps its scalars with a readable empty spectrum, and under <c>RetainFragmentsFor</c>
-        /// the library is exactly what a full load followed by
-        /// <see cref="LibraryFragmentRelease.ReleaseFragments"/> leaves - released, not empty,
-        /// where the set does not name the entry's base id, decoys following their targets.
+        /// subset from its .tsv writes <c>&lt;library&gt;.blib</c> in the cache directory, and
+        /// a <c>.libcache</c> left there by the reload cache it replaced is deleted, at exactly
+        /// that path, once the derived library is written (a cache is rebuilt from its source,
+        /// never carried forward); the next load says it read the derived library and gives
+        /// the identical library, entry by entry; a load under another configuration says the
+        /// derived library no longer matches and rebuilds it. The two lean loads through the
+        /// derived library: under <c>OmitFragments</c> every entry keeps its scalars with a
+        /// readable empty spectrum, and under <c>RetainFragmentsFor</c> the library is exactly
+        /// what a full load followed by <see cref="LibraryFragmentRelease.ReleaseFragments"/>
+        /// leaves - released, not empty, where the set does not name the entry's base id, decoys
+        /// following their targets.
         /// </summary>
         private List<string> DerivedLibraryDifferences()
         {
@@ -180,26 +182,42 @@ namespace pwiz.Osprey.Test
             File.Copy(Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE), manifest);
             string cacheDir = ArtifactPaths.ResolveCacheDir(tsv);
             string derived = Path.Combine(cacheDir, LIBDECOY_FILE + LibraryLoader.DERIVED_LIBRARY_EXT);
+            // The reload cache an earlier build left beside the library: its bytes are never
+            // read, so any file at the path stands in for one.
+            string retiredCache = Path.Combine(cacheDir, LIBDECOY_FILE + LibraryLoader.RETIRED_CACHE_EXT);
+            File.WriteAllText(retiredCache, @"OSPRLBR");
             var differences = new List<string>();
 
             var firstLog = new StringBuilder();
             var first = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, firstLog);
             if (!File.Exists(derived))
                 differences.Add(@"derived: no derived library written at " + derived);
-            if (File.Exists(Path.Combine(cacheDir, LIBDECOY_FILE + LibraryCache.EXT)))
-                differences.Add(@"derived: a .libcache was written");
+            if (File.Exists(retiredCache))
+                differences.Add(@"derived: the .libcache was not removed at " + retiredCache);
             string saved = string.Format(OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
                 first.Count, derived);
             string loaded = string.Format(OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__,
                 first.Count, derived);
+            string removed = string.Format(OspreyIOResources.LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_,
+                retiredCache);
             StringAssert.Contains(firstLog.ToString(), saved);
+            StringAssert.Contains(firstLog.ToString(), removed);
             Assert.IsFalse(firstLog.ToString().Contains(loaded), firstLog.ToString());
 
-            // The second load reads the derived library and gives the same library.
+            // The second load reads the derived library and gives the same library, and removes
+            // a .libcache too: the derived library is in place whether this load wrote or read it.
+            File.WriteAllText(retiredCache, @"OSPRLBR");
             var secondLog = new StringBuilder();
             var second = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, secondLog);
             StringAssert.Contains(secondLog.ToString(), loaded);
+            StringAssert.Contains(secondLog.ToString(), removed);
             Assert.IsFalse(secondLog.ToString().Contains(saved), secondLog.ToString());
+            if (File.Exists(retiredCache))
+                differences.Add(@"derived: the .libcache was not removed by the read at " + retiredCache);
+            // With none left, a load says nothing about one.
+            var thirdLog = new StringBuilder();
+            LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, thirdLog);
+            Assert.IsFalse(thirdLog.ToString().Contains(removed), thirdLog.ToString());
             differences.AddRange(LibraryDifferences(first, second));
 
             // Every entry's scalars with a readable empty spectrum: the FirstPassFDR worker's load.
@@ -329,8 +347,7 @@ namespace pwiz.Osprey.Test
         /// untouched on both sides, a skipped spectrum RELEASED (asked through
         /// <see cref="LibraryEntry.IsSpectrumReleased"/>, and the throw on reading it asserted
         /// rather than inferred, since equality would also hold if both sides had quietly become
-        /// readable-empty), a retained one carrying the identical peaks. The cache route's
-        /// <c>IOTest.TestLibraryCacheRetainMatchesRelease</c>, for the derived library.
+        /// readable-empty), a retained one carrying the identical peaks.
         /// </summary>
         private static void AssertRetainMatchesRelease(IReadOnlyList<LibraryEntry> released, IReadOnlyList<LibraryEntry> skipped,
             HashSet<uint> retained)
