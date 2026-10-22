@@ -36,8 +36,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class MidasTest : AbstractFunctionalTest
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestMidas()
         {
             TestFilesZip = @"TestFunctional\MidasTest.zip";

@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -17,6 +18,7 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -245,15 +247,33 @@ namespace pwiz.SkylineTestUtil
         public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial)
             : base(docInitial, pathInitial)
         {
+            EnableWaitForCancelRestart();
         }
 
         public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait)
             : base(docInitial, pathInitial, wait)
         {
+            EnableWaitForCancelRestart();
+        }
+
+        /// <summary>
+        /// Tests replace the document while loaders are running far more abruptly than the
+        /// application does, so they are the ones that see a loader cancel itself over a
+        /// superseded document and then restart. Wait that hand-off out rather than reporting it
+        /// as a failed load.
+        ///
+        /// <para>On by default here but SETTABLE, not baked in: two callers deliberately turn it
+        /// back off because they depend on the fail-fast it removes. See
+        /// <see cref="MemoryDocumentContainer.WaitForCancelRestart"/>.</para>
+        /// </summary>
+        private void EnableWaitForCancelRestart()
+        {
+            WaitForCancelRestart = true;
         }
 
         private const int SLEEP_INTERVAL = 10;
         public const int WAIT_TIME = 5 * 1000;    // 5 seconds
+        public const int WAIT_TIME_LIBRARIES = 60 * 1000;    // 60 seconds
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
@@ -277,15 +297,97 @@ namespace pwiz.SkylineTestUtil
             get { return BackgroundLoaders.Any(l => l.AnyProcessing()); }
         }
 
+        /// <summary>
+        /// Waits for the document's spectral libraries to finish loading.
+        /// <see cref="AssertComplete"/> only inspects the chromatogram loader's progress, so it
+        /// can return while the library manager is still working. A caller that then reads
+        /// Settings.PeptideSettings.Libraries.IsLoaded sees false purely because it got there
+        /// first, and silently takes whatever path the code has for a library-less document.
+        /// A document with no libraries reports itself loaded, so this returns immediately.
+        /// </summary>
+        public void WaitForLibrariesLoaded(int millis = WAIT_TIME_LIBRARIES)
+        {
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                if (Document.Settings.PeptideSettings.Libraries.IsLoaded)
+                    return;
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            // One last look: the loop sleeps after its final check, so the libraries may have
+            // finished during that sleep, and a timeout below SLEEP_INTERVAL yields no cycles
+            // at all and must still get one check rather than failing without ever looking.
+            if (Document.Settings.PeptideSettings.Libraries.IsLoaded)
+                return;
+
+            Assert.Fail("Libraries still not loaded after {0} seconds: {1}",
+                waitCycles*SLEEP_INTERVAL/1000,
+                Document.Settings.PeptideSettings.Libraries.IsNotLoadedExplained);
+        }
+
         public void AssertComplete()
         {
-            if (LastProgress == null || LastProgress.IsComplete) return;
-            if (LastProgress.IsError)
-                Assert.Fail(LastProgress.ErrorException.ToString());
+            // Snapshot it. LastProgress is written by loader threads that are demonstrably still
+            // alive here - the wait that just returned ends on a cancel or error status, not on
+            // the loaders exiting - so re-reading the property can throw a NullReferenceException
+            // out of the diagnostic, or describe a different status than the one being reported.
+            var progress = LastProgress;
+            if (progress == null || progress.IsComplete) return;
+            if (progress.IsError)
+                Assert.Fail(progress.ErrorException.ToString());
 
-            Assert.Fail(LastProgress.IsCanceled
-                            ? "Loader cancelled"
-                            : "Unexpected loader progress state \"" + LastProgress.State + "\"");
+            Assert.Fail((progress.IsCanceled
+                             ? "Loader cancelled"
+                             : "Unexpected loader progress state \"" + progress.State + "\"")
+                        + DescribeLoadState(progress));
+        }
+
+        /// <summary>
+        /// What the document itself has to say about the progress status above. A non-complete
+        /// status on a document that IS loaded is a stale status left by a superseded document,
+        /// which is a different defect from a load that genuinely did not finish - and the
+        /// status alone tells the two apart not at all. This is what turns an intermittent
+        /// "Loader cancelled" into something diagnosable from a nightly log.
+        /// </summary>
+        public string DescribeLoadState(IProgressStatus progress)
+        {
+            var lines = new List<string>();
+            if (progress != null)
+            {
+                lines.Add(string.Format("Progress: {0} at {1}%", progress.State, progress.PercentComplete));
+                if (!string.IsNullOrEmpty(progress.Message))
+                    lines.Add("Message: " + progress.Message);
+                if (!string.IsNullOrEmpty(progress.WarningMessage))
+                    lines.Add("Warning: " + progress.WarningMessage);
+                if (progress.ErrorException != null)
+                    lines.Add("Error: " + progress.ErrorException);
+            }
+
+            var document = Document;
+            if (document == null)
+            {
+                lines.Add("Document: none");
+            }
+            else if (document.IsLoaded)
+            {
+                lines.Add("Document IS loaded - the status above is stale, from a superseded document");
+            }
+            else
+            {
+                lines.Add("Document is NOT loaded:");
+                lines.AddRange(document.NonLoadedStateDescriptionsFull.Select(why => "  " + why));
+            }
+
+            // The loader trace has to be surfaced HERE, not only from
+            // AbstractFunctionalTest.WaitForDocumentLoaded. The failures this instrumentation was
+            // built for - "Loader cancelled", and an import that reaches 100% while the document
+            // never becomes loaded - are reported by this method, from TestData, an assembly that
+            // never calls WaitForDocumentLoaded at all. Surfaced only there, the trace would be
+            // recorded at the moment of the failure and then discarded unread.
+            lines.Add(string.Empty);
+            lines.Add("*** Loader trace (most recent last):");
+            lines.Add(BackgroundLoader.GetLoaderTrace());
+            return Environment.NewLine + string.Join(Environment.NewLine, lines);
         }
 
         public void AssertError(string expectedError)

@@ -93,8 +93,7 @@ namespace pwiz.SkylineTestFunctional
         private ViewLibraryDlg _viewLibUI;
         private bool asSmallMolecules;
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestLibraryExplorerAsSmallMolecules()
         {
             if (SkipSmallMoleculeTestVersions())

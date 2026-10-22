@@ -1,6 +1,7 @@
 /*
  * Original author: brendanx .at. uw.edu
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  * 
@@ -104,8 +105,10 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestDnsFailureHandling()
         {
-            using var helper = HttpClientTestHelper.SimulateDnsFailure();
-            ValidateDownloadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsFailure())
+                ValidateDownloadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsNoDataFailure())
+                ValidateDownloadFailure(helper, "http://nonexistent.example.com");
         }
 
         private static void TestConnectionFailureHandling()
@@ -501,8 +504,10 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestUploadFileDnsFailure()
         {
-            using var helper = HttpClientTestHelper.SimulateDnsFailure();
-            ValidateUploadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsFailure())
+                ValidateUploadFailure(helper, "http://nonexistent.example.com");
+            using (var helper = HttpClientTestHelper.SimulateDnsNoDataFailure())
+                ValidateUploadFailure(helper, "http://nonexistent.example.com");
         }
 
         private void TestUploadFileConnectionFailure()

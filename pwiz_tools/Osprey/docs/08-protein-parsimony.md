@@ -263,9 +263,20 @@ against `RunProteinQvalue <= EffectiveProteinFdr`.
 
 ## Diagnostics
 
-There is no persistent production protein report writer in the examined C# code
-path (no `*.proteins.csv` / `protein_groups.tsv` emitter). What exists are
-env-var-gated cross-impl bisection dumps in
+The production protein report is `Osprey.Tasks/OspreyReportWriter.cs`:
+`WriteProteinGroups` emits `<output>.protein_groups.tsv` (one row per protein
+group: accessions, names, peptide counts, group q-value, pass flag, and the
+grouping / library-unique peptide lists) and `WriteSummary` emits
+`<output>.stats.tsv` (per-run and experiment precursor / peptide / protein
+counts). Both are DIA-NN-shaped, for comparing the two tools, and written only under
+`OSPREY_DIANN_REPORTS` (2026-10-21: they hold nothing the output .blib does not; then
+`OspreyConfig.WriteProteinReport` / `WriteSummaryReport` select each), committed through `SimpleFileSaver`, and written by
+`SecondPassFdrTask.RunProteinFdr` at the end of Stage 7; a write failure is a
+warning, not a pipeline failure. There is no CLI switch to disable them (the
+`--no-protein-report` / `--no-summary-report` flags named in the `OspreyConfig`
+doc comments are not registered in `OspreyCommandArgs.cs`).
+
+Separate from that report are the env-var-gated cross-impl bisection dumps in
 `Osprey/OspreyFileDiagnostics.cs`:
 
 - `WriteStage6ProteinFdrDump` → `cs_stage6_protein_fdr.tsv`
@@ -334,16 +345,16 @@ pairing uses the fixed `DECOY_` prefix constant (`ProteinFdr.cs:203`).
   Evidence: `Osprey.Core/OspreyConfig.cs:411-416`, `Osprey/OspreyCommandArgs.cs:138-157`.
   Severity: minor.
 
-- **[UNVERIFIED] No production protein report** - Rust doc §"Implementation"
-  lists `write_protein_report()` emitting `*.proteins.csv` with gene names, PEP,
-  and q-values. No equivalent production writer was found in the C# path
-  (grep for `proteins.csv`/`protein_groups`/`ProteinReport` returned no
-  emitter); only the env-var-gated diagnostic dumps
-  `cs_stage6_protein_fdr.tsv` / `cs_stage7_protein_fdr.tsv` exist
-  (`Osprey/OspreyFileDiagnostics.cs:1918`, `:1983`). A human should confirm
-  whether a protein report writer lives outside the files reviewed here (lab
-  memory references a `protein_groups.tsv` / `stats.tsv` feature that this
-  checkout's protein-FDR code does not surface). Severity: minor.
+- **[INTENTIONAL-CSHARP-DESIGN] Protein report is DIA-NN-shaped, not Rust's
+  `*.proteins.csv`** (formerly flagged UNVERIFIED as "no production protein
+  report") - Rust doc §"Implementation" lists `write_protein_report()` emitting
+  `*.proteins.csv` with gene names, PEP, and q-values. The C# writer exists
+  outside the protein-FDR files: `Osprey.Tasks/OspreyReportWriter.cs` emits
+  `<output>.protein_groups.tsv` and `<output>.stats.tsv` from
+  `SecondPassFdrTask.RunProteinFdr`, default on, committed through `SimpleFileSaver`
+  (see §"Diagnostics" above). Its columns follow DIA-NN's `pg_matrix` /
+  `stats.tsv` for direct comparability, so gene names and PEP are absent by
+  design. Severity: minor.
 
 - **[STALE-RUST-DOC] Second-pass detected set gates on `config.fdr_level`, not
   "peptide FDR"** - Rust doc §"Second Pass" step 1 says the second parsimony is

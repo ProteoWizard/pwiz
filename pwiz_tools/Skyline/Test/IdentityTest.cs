@@ -51,7 +51,7 @@ namespace pwiz.SkylineTest
             {
                 // Default contentless implementation instances are all equal
                 NumericIdentity idNew = new NumericIdentity(i);
-                Assert.AreNotEqual(id, idNew);
+                Assert.AreNotEqual((object)id, idNew);
                 if (i > 0)
                     Assert.AreNotEqual(0, idNew.GetHashCode());
                 // Global index always incrementing

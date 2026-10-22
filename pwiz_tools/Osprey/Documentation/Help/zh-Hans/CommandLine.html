@@ -1,0 +1,213 @@
+<html><head>
+<meta charset="utf-8">
+<title>Osprey 命令行用法</title>
+<meta name="description" content="Osprey（MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具）的命令行用法：搜索和 FDR 参数、蛋白质推断、SpectraCache 暂存任务、ModelDiagnostics 仅报告任务，以及四个分布式 HPC --task 工作进程（PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR）。">
+<style>
+body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }
+h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }
+.RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }
+table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }
+th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }
+td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }
+pre { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-family: Consolas,'Courier New',monospace; font-size: .92em; white-space: pre-wrap; }
+code { font-family: Consolas,'Courier New',monospace; }
+a { color: #1565c0; }
+</style>
+</head><body>
+<h1>Osprey 命令行用法</h1>
+<p>Osprey 是 MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具。它读取 DIA mzML 文件和谱图库，并将经过 FDR 控制的结果写入 BiblioSpecLite（<code>.blib</code>）库，该库可直接导入 Skyline。它在 Windows 和 Linux 上作为独立的可执行文件运行。</p>
+<p>有关流程概述、各阶段详情以及四个分布式 HPC 任务如何拆分与合并，请参见工作流程图：<a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>。下方的参数表由命令行声明生成，因此始终与构建版本一致；运行 <code>Osprey --help</code> 可查看相同内容的文本版本。</p>
+<p>Osprey - 以肽段为中心的 DIA 分析</p><p>用法：Osprey -i 路径/到/文件 ... -l 路径/到/文件.blib|.tsv -o 路径/到/文件.blib</p><p>       Osprey -i 路径/到/文件 ... --fasta 路径/到/文件.fasta -o 路径/到/文件.blib</p><div class="RowType">一般输入/输出</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;路径/到/文件&nbsp;...</td><td>Mass spectrometry data files to search: mzML, or any format ProteoWizard reads, including vendor files (.raw, .d, .wiff, .lcd) where the vendor readers are installed</td></tr>
+<tr><td><nobr>--input-list</nobr>&nbsp;路径/到/文件.txt</td><td>输入路径列表文件，每行一个（忽略 # 注释）。可替代很长的“<nobr>-i</nobr>”列表。</td></tr>
+<tr><td><nobr>-l</nobr>, <nobr>--library</nobr> 路径/到/文件.blib|.tsv</td><td>Spectral library to search: a .blib (as <nobr>--fasta</nobr> and CarafeSharp write it, or one from Skyline or BiblioSpec), or, for comparing with <nobr>DIA-NN</nobr>, a library in the .tsv format <nobr>DIA-NN</nobr> imports, such as Java Carafe writes for it. Without <nobr>--decoys-in-library</nobr>, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With <nobr>--decoys-in-library</nobr>, the library&#39;s own decoys are used: a .blib pairs them from its own table, and a .tsv marks them by its Decoy column or a decoy accession prefix and pairs them by <nobr>--decoy-pairing-manifest</nobr> (an FDRBench pairing manifest) or by composition.</td></tr>
+<tr><td><nobr>-o</nobr>,&nbsp;<nobr>--output</nobr>&nbsp;路径/到/文件.blib</td><td>The search result, for Skyline: a .blib that holds, for every precursor that passes FDR, the library spectrum it was searched with (the predicted one, with <nobr>--fasta</nobr>), the retention time and peak boundaries of its best run, its <nobr>experiment-wide</nobr> precursor <nobr>q-value</nobr> and PEP and its peptide <nobr>q-value</nobr>, and, for every run it was detected in, that run&#39;s retention time, peak boundaries and <nobr>q-value</nobr>. The protein groups its peptides belong to are in it too, with their <nobr>q-values</nobr>.</td></tr>
+<tr><td><nobr>--work-dir</nobr>&nbsp;路径/到/文件夹</td><td>Write the intermediate files and the caches here instead of beside each input, so the data folder can be <nobr>read-only</nobr>. <nobr>--output-dir</nobr> and <nobr>--cache-dir</nobr> send one of the two elsewhere.</td></tr>
+<tr><td><nobr>--output-dir</nobr>&nbsp;路径/到/文件夹</td><td>Write the intermediate files here <nobr>-</nobr> each run&#39;s scores and calibration and the <nobr>analysis-wide</nobr> FDR files <nobr>-</nobr> overriding <nobr>--work-dir</nobr>. The output and its reports stay where <nobr>-o</nobr> names.</td></tr>
+<tr><td><nobr>--cache-dir</nobr>&nbsp;路径/到/文件夹</td><td>Where Osprey keeps the files it builds once and reuses in later searches: each run&#39;s .spectra.bin (its spectra, faster to read than the data file) and, for a .tsv library, the .blib it is converted to (e.g. hela.tsv.blib). By default each goes beside the file it comes from, or under <nobr>--output-dir</nobr> or <nobr>--work-dir</nobr> when that folder is <nobr>read-only</nobr>. Give it to put them elsewhere, for example when the data and the library are on a <nobr>read-only</nobr> share, or to let several analyses share one cache. An HPC run (<nobr>--task</nobr>) that writes to an <nobr>--output-dir</nobr> away from the data should give every node the same one.</td></tr>
+<tr><td><nobr>--export-library</nobr>&nbsp;路径/到/文件.blib</td><td>Write the library given by <nobr>--library</nobr> to this path as a .blib and exit without searching. It is the file a search keeps in its cache for a .tsv library (e.g. hela.tsv.blib): the library as a search loads it, with its decoys and their pairing in its own table (with <nobr>--decoys-in-library</nobr>, and <nobr>--decoy-pairing-manifest</nobr> for a .tsv), so it needs no manifest, searches back exactly as the original did, and Skyline can import it.</td></tr>
+</table>
+<div class="RowType">Library Build</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--fasta</nobr>&nbsp;路径/到/文件.fasta</td><td>Predict the spectral library from this protein FASTA with CarafeSharp&#39;s models and search it, in place of <nobr>-l</nobr>. The library is written beside the output as &lt;output&gt;.predicted.blib and can be given to <nobr>-l</nobr> next time; its working files go in &lt;output&gt;.predicted/. The options of the Library Digest and Library Prediction sections apply, and with <nobr>--training-input</nobr> those of Library Tuning.</td></tr>
+<tr><td><nobr>--training-input</nobr>&nbsp;路径/到/文件&nbsp;...</td><td>With <nobr>--fasta</nobr>: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of <nobr>-i</nobr>: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as &lt;output&gt;.model.zip, which <nobr>--model</nobr> takes next time. The options of the Library Tuning section apply.</td></tr>
+<tr><td><nobr>--training-input-list</nobr>&nbsp;路径/到/文件.txt</td><td>With <nobr>--fasta</nobr>: a file of <nobr>--training-input</nobr> runs, one path per line (# comments ignored), as <nobr>--input-list</nobr> is for <nobr>-i</nobr>: a long list of runs on the command line can pass the Windows <nobr>command-line</nobr> limit and hides the other arguments.</td></tr>
+<tr><td><nobr>--model</nobr>&nbsp;路径/到/文件.model.zip</td><td>With <nobr>--fasta</nobr>: predict the library with this saved <nobr>fine-tuned</nobr> model (.model.zip, from CarafeSharp&#39;s training) instead of the pretrained models. With <nobr>--training-input</nobr>, the tuning starts from it.</td></tr>
+<tr><td><nobr>--device</nobr> &lt;gpu | cpu&gt;</td><td>With <nobr>--fasta</nobr>: where the library is predicted, gpu (falling back to the CPU with a warning when no CUDA runtime is present) or cpu (default: gpu).</td></tr>
+<tr><td><nobr>--entrapment</nobr>&nbsp;[&lt;ratio&gt;]</td><td>With <nobr>--fasta</nobr>: add an entrapment peptide to every target (or to this fraction of the targets, 0.1 to 1), shuffled from the target or, with <nobr>--entrapment-fasta</nobr>, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as &lt;output&gt;.predicted/pairing.tsv.</td></tr>
+<tr><td><nobr>--entrapment-fasta</nobr>&nbsp;路径/到/文件.fasta</td><td>With <nobr>--entrapment</nobr>: draw the entrapment peptides, matched in mass, from this <nobr>foreign-species</nobr> protein FASTA instead of shuffling the targets.</td></tr>
+</table>
+<div class="RowType">Library Digest</div>
+<p>With --fasta: what the library holds. These are CarafeSharp's options, under their standard names.</p>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--enzyme</nobr> &lt;index|name&gt;</td><td>The enzyme, by its index or name in the Enzymes table below (default 1, Trypsin). Index 0, <nobr>non-specific</nobr>, cleaves after every residue and forces 100 missed cleavages; NoCut, the last, never cleaves, so each FASTA record is one peptide.</td></tr>
+<tr><td><nobr>--miss-c</nobr>&nbsp;&lt;n&gt;</td><td>Maximum missed cleavages (default 2).</td></tr>
+<tr><td><nobr>--min-length</nobr>&nbsp;&lt;n&gt;</td><td>Minimum peptide length (default 7).</td></tr>
+<tr><td><nobr>--max-length</nobr>&nbsp;&lt;n&gt;</td><td>Maximum peptide length (default 35).</td></tr>
+<tr><td><nobr>--clip-n-m</nobr></td><td>Also digest each protein with its <nobr>N-terminal</nobr> methionine removed.</td></tr>
+<tr><td><nobr>--fix-mod</nobr>&nbsp;&lt;ids&gt;</td><td>Fixed modifications, by their ids in the Modifications table below, <nobr>comma-separated</nobr> (default 1, Carbamidomethyl of C).</td></tr>
+<tr><td><nobr>--var-mod</nobr>&nbsp;&lt;ids&gt;</td><td>Variable modifications, by their ids in the Modifications table below, <nobr>comma-separated</nobr> (default 2, Oxidation of M).</td></tr>
+<tr><td><nobr>--max-var</nobr>&nbsp;&lt;n&gt;</td><td>Maximum variable modifications per peptide (default 1).</td></tr>
+<tr><td><nobr>--min-pep-mz</nobr>&nbsp;&lt;mz&gt;</td><td>Minimum precursor m/z (default 300).</td></tr>
+<tr><td><nobr>--max-pep-mz</nobr>&nbsp;&lt;mz&gt;</td><td>Maximum precursor m/z (default 2000).</td></tr>
+<tr><td><nobr>--min-pep-charge</nobr>&nbsp;&lt;z&gt;</td><td>Minimum precursor charge (default 2).</td></tr>
+<tr><td><nobr>--max-pep-charge</nobr>&nbsp;&lt;z&gt;</td><td>Maximum precursor charge (default 3 for the FASTA build, 4 for library prediction).</td></tr>
+<tr><td><nobr>--i2l</nobr></td><td>Convert isoleucine to leucine in every sequence.</td></tr>
+</table>
+<p style="font-size:90%; margin:4px 0 2px 2em"><b>Enzymes</b>: <nobr>--enzyme</nobr> takes the number or the name</p>
+<table style="margin:0 0 16px 2em; font-size:85%; border:none">
+<tr><th style="padding:1px 6px; border:none; text-align:right">#</th><th style="padding:1px 6px; border:none">Enzyme</th><th style="padding:1px 6px 1px 24px; border:none; text-align:right">#</th><th style="padding:1px 6px; border:none">Enzyme</th><th style="padding:1px 6px 1px 24px; border:none; text-align:right">#</th><th style="padding:1px 6px; border:none">Enzyme</th></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">0</td><td style="padding:1px 6px; border:none"><nobr>non-specific</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">7</td><td style="padding:1px 6px; border:none"><nobr>Lys-C</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">14</td><td style="padding:1px 6px; border:none">Pepsin A</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">1</td><td style="padding:1px 6px; border:none">Trypsin</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">8</td><td style="padding:1px 6px; border:none"><nobr>Lys-C</nobr> (no P rule)</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">15</td><td style="padding:1px 6px; border:none">CNBr</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">2</td><td style="padding:1px 6px; border:none">Trypsin (no P rule)</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">9</td><td style="padding:1px 6px; border:none"><nobr>Lys-N</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">16</td><td style="padding:1px 6px; border:none">Thermolysin</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">3</td><td style="padding:1px 6px; border:none"><nobr>Arg-C</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">10</td><td style="padding:1px 6px; border:none"><nobr>Asp-N</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">17</td><td style="padding:1px 6px; border:none">LysargiNase</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">4</td><td style="padding:1px 6px; border:none"><nobr>Arg-C</nobr> (no P rule)</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">11</td><td style="padding:1px 6px; border:none"><nobr>Asp-N</nobr> (ambic)</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">18</td><td style="padding:1px 6px; border:none">NoCut</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">5</td><td style="padding:1px 6px; border:none"><nobr>Arg-N</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">12</td><td style="padding:1px 6px; border:none">Chymotrypsin</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right"></td><td style="padding:1px 6px; border:none"></td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">6</td><td style="padding:1px 6px; border:none"><nobr>Glu-C</nobr></td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">13</td><td style="padding:1px 6px; border:none">Chymotrypsin (no P rule)</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right"></td><td style="padding:1px 6px; border:none"></td></tr>
+</table>
+<p style="font-size:90%; margin:4px 0 2px 2em"><b>Modifications</b>: <nobr>--fix-mod</nobr> and <nobr>--var-mod</nobr> take the numbers, <nobr>comma-separated</nobr></p>
+<table style="margin:0 0 16px 2em; font-size:85%; border:none">
+<tr><th style="padding:1px 6px; border:none; text-align:right">#</th><th style="padding:1px 6px; border:none">Modification</th><th style="padding:1px 6px; border:none; text-align:right">Mass</th><th style="padding:1px 6px 1px 24px; border:none; text-align:right">#</th><th style="padding:1px 6px; border:none">Modification</th><th style="padding:1px 6px; border:none; text-align:right">Mass</th></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">1</td><td style="padding:1px 6px; border:none">Carbamidomethyl of C</td><td style="padding:1px 6px; border:none; text-align:right">+57.0215</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">15</td><td style="padding:1px 6px; border:none">TMT <nobr>6-plex</nobr> of K</td><td style="padding:1px 6px; border:none; text-align:right">+229.1629</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">2</td><td style="padding:1px 6px; border:none">Oxidation of M</td><td style="padding:1px 6px; border:none; text-align:right">+15.9949</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">16</td><td style="padding:1px 6px; border:none">TMT <nobr>6-plex</nobr> of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+229.1629</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">3</td><td style="padding:1px 6px; border:none">Deamidated of N</td><td style="padding:1px 6px; border:none; text-align:right">+0.9840</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">17</td><td style="padding:1px 6px; border:none">TMT <nobr>2-plex</nobr> of K</td><td style="padding:1px 6px; border:none; text-align:right">+225.1558</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">4</td><td style="padding:1px 6px; border:none">Deamidated of Q</td><td style="padding:1px 6px; border:none; text-align:right">+0.9840</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">18</td><td style="padding:1px 6px; border:none">TMT <nobr>2-plex</nobr> of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+225.1558</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">5</td><td style="padding:1px 6px; border:none">Acetyl of protein <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+42.0106</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">19</td><td style="padding:1px 6px; border:none">TMTpro of K</td><td style="padding:1px 6px; border:none; text-align:right">+304.2071</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">6</td><td style="padding:1px 6px; border:none">Acetyl of K</td><td style="padding:1px 6px; border:none; text-align:right">+42.0106</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">20</td><td style="padding:1px 6px; border:none">TMTpro of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+304.2071</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">7</td><td style="padding:1px 6px; border:none">Phospho of S</td><td style="padding:1px 6px; border:none; text-align:right">+79.9663</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">21</td><td style="padding:1px 6px; border:none">iTRAQ <nobr>4-plex</nobr> of K</td><td style="padding:1px 6px; border:none; text-align:right">+144.1021</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">8</td><td style="padding:1px 6px; border:none">Phospho of T</td><td style="padding:1px 6px; border:none; text-align:right">+79.9663</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">22</td><td style="padding:1px 6px; border:none">iTRAQ <nobr>4-plex</nobr> of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+144.1021</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">9</td><td style="padding:1px 6px; border:none">Phospho of Y</td><td style="padding:1px 6px; border:none; text-align:right">+79.9663</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">23</td><td style="padding:1px 6px; border:none">iTRAQ <nobr>4-plex</nobr> of Y</td><td style="padding:1px 6px; border:none; text-align:right">+144.1021</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">10</td><td style="padding:1px 6px; border:none">GG of K</td><td style="padding:1px 6px; border:none; text-align:right">+114.0429</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">24</td><td style="padding:1px 6px; border:none">iTRAQ <nobr>8-plex</nobr> of K</td><td style="padding:1px 6px; border:none; text-align:right">+304.1990</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">11</td><td style="padding:1px 6px; border:none">TMT <nobr>10-plex</nobr> of K</td><td style="padding:1px 6px; border:none; text-align:right">+229.1629</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">25</td><td style="padding:1px 6px; border:none">iTRAQ <nobr>8-plex</nobr> of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+304.1990</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">12</td><td style="padding:1px 6px; border:none">TMT <nobr>10-plex</nobr> of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+229.1629</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">26</td><td style="padding:1px 6px; border:none">iTRAQ <nobr>8-plex</nobr> of Y</td><td style="padding:1px 6px; border:none; text-align:right">+304.1990</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">13</td><td style="padding:1px 6px; border:none">TMT <nobr>11-plex</nobr> of K</td><td style="padding:1px 6px; border:none; text-align:right">+229.1629</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">27</td><td style="padding:1px 6px; border:none"><nobr>Glu-</nobr>&gt;<nobr>pyro-Glu</nobr> of E</td><td style="padding:1px 6px; border:none; text-align:right"><nobr>-18</nobr>.0106</td></tr>
+<tr><td style="padding:1px 6px; border:none; text-align:right">14</td><td style="padding:1px 6px; border:none">TMT <nobr>11-plex</nobr> of peptide <nobr>N-term</nobr></td><td style="padding:1px 6px; border:none; text-align:right">+229.1629</td><td style="padding:1px 6px 1px 24px; border:none; text-align:right">28</td><td style="padding:1px 6px; border:none"><nobr>Gln-</nobr>&gt;<nobr>pyro-Glu</nobr> of Q</td><td style="padding:1px 6px; border:none; text-align:right"><nobr>-17</nobr>.0265</td></tr>
+</table>
+<div class="RowType">Library Prediction</div>
+<p>With --fasta: how the library is predicted. These are CarafeSharp's options, under their standard names.</p>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--lf-frag-mz-min</nobr>&nbsp;&lt;mz&gt;</td><td>Minimum fragment m/z (default 200).</td></tr>
+<tr><td><nobr>--lf-frag-mz-max</nobr>&nbsp;&lt;mz&gt;</td><td>Maximum fragment m/z (default 1800).</td></tr>
+<tr><td><nobr>--lf-top-n-frag</nobr>&nbsp;&lt;n&gt;</td><td>Fragments kept per precursor, the most intense first (default 20).</td></tr>
+<tr><td><nobr>--lf-min-n-frag</nobr>&nbsp;&lt;n&gt;</td><td>Minimum fragments for a precursor to be written (default 2).</td></tr>
+<tr><td><nobr>--lf-frag-n-min</nobr>&nbsp;&lt;n&gt;</td><td>Lowest fragment ordinal kept, b and y alike (default 2).</td></tr>
+<tr><td><nobr>--nce</nobr>&nbsp;&lt;nce&gt;</td><td>The normalized collision energy the MS2 model predicts at (default 27, or the one the <nobr>fine-tuned</nobr> model it predicts with was trained at).</td></tr>
+<tr><td><nobr>--ms-instrument</nobr>&nbsp;&lt;name&gt;</td><td>The instrument the MS2 model predicts for, by AlphaPeptDeep&#39;s name (default Eclipse, or the one the <nobr>fine-tuned</nobr> model it predicts with was trained on).</td></tr>
+<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
+<tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
+<tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the <nobr>fine-tuned</nobr> model&#39;s, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--pretrained</nobr>&nbsp;path/to/file.zip</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</td></tr>
+</table>
+<div class="RowType">Library Tuning</div>
+<p>With --training-input: how the models are tuned on its runs. These are CarafeSharp's options, under their standard names.</p>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--tf</nobr> &lt;all | ms2 | rt&gt;</td><td>The models to train: all (default), ms2 or rt.</td></tr>
+<tr><td><nobr>--cor</nobr>&nbsp;&lt;r&gt;</td><td>The minimum fragment correlation of a precursor trained on (default 0.75).</td></tr>
+<tr><td><nobr>--n-ion-min</nobr>&nbsp;&lt;n&gt;</td><td>The lowest <nobr>b-ion</nobr> ordinal trained on (default 0, every ordinal).</td></tr>
+<tr><td><nobr>--c-ion-min</nobr>&nbsp;&lt;n&gt;</td><td>The lowest <nobr>y-ion</nobr> ordinal trained on (default 0, every ordinal).</td></tr>
+<tr><td><nobr>--nf</nobr>&nbsp;&lt;n&gt;</td><td>The minimum matched fragments of a precursor trained on (default 4).</td></tr>
+<tr><td><nobr>--min-n</nobr>&nbsp;&lt;n&gt;</td><td>The minimum valid fragments of a precursor trained on (default 4).</td></tr>
+<tr><td><nobr>--valid</nobr></td><td>Require a precursor&#39;s most intense fragment to be valid.</td></tr>
+<tr><td><nobr>--no-masking</nobr></td><td>Train on every ion of the kept spectra, masking none.</td></tr>
+<tr><td><nobr>--seed</nobr>&nbsp;&lt;n&gt;</td><td>The random seed of training (default 2024; not negative).</td></tr>
+<tr><td><nobr>--rt-align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt-align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. Not in Java Carafe.</td></tr>
+</table>
+<div class="RowType">评分与耐受性</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--resolution</nobr> &lt;hram | unit&gt;</td><td>How spectra are scored: hram (the default; Orbitrap, Astral and TOF instruments) bins them finely, uses the MS1 precursor features, and matches fragments and precursors within 10 ppm; unit (ion traps such as Stellar) bins them coarsely, without MS1 features, and matches fragments within 0.5 m/z and precursors within 1.0 m/z. The resolution is not detected from the data: a search of <nobr>unit-resolution</nobr> data must give unit.</td></tr>
+<tr><td><nobr>--fragment-tolerance</nobr>&nbsp;&lt;数&gt;</td><td>The fragment m/z tolerance, in the unit <nobr>--fragment-unit</nobr> names (default: 10 ppm, or 0.5 m/z with <nobr>--resolution</nobr> unit).</td></tr>
+<tr><td><nobr>--fragment-unit</nobr> &lt;ppm | mz&gt;</td><td>The unit of <nobr>--fragment-tolerance</nobr>: ppm or mz (default: ppm, or mz with <nobr>--resolution</nobr> unit).</td></tr>
+<tr><td><nobr>--no-prefilter</nobr></td><td>Score every library precursor in each isolation window, not only those whose fragments first show a coelution signal. About 30% slower; for checking that the <nobr>pre-filter</nobr> loses no detections.</td></tr>
+<tr><td><nobr>--demux</nobr> &lt;off | auto&gt;</td><td>Demultiplex <nobr>overlapping-window</nobr> (staggered) DIA to its narrow bins before searching (default: off)</td></tr>
+</table>
+<div class="RowType">FDR 与蛋白质推断</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--run-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>The <nobr>run-level</nobr> FDR threshold (default: 0.01). A reported precursor gets an identification in Skyline in each run where its <nobr>q-value</nobr> in that run is at most this, or in its best run when it is in none; the scoring model is also trained and tested at it.</td></tr>
+<tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>The <nobr>experiment-level</nobr> FDR threshold (default: 0.01): a precursor is reported when its <nobr>q-value</nobr> across all the runs is at most this. <nobr>--fdr-level</nobr> says which <nobr>q-value</nobr>.</td></tr>
+<tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>为跨运行协调和第二轮保留第一轮肽段的肽段 q 值阈值（默认：0.01 =“<nobr>--run-fdr</nobr>”；可放宽，例如到 0.05，以扩大协调池）</td></tr>
+<tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Protein-level</nobr> FDR threshold (default: 0.01)</td></tr>
+<tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>Which <nobr>experiment-level</nobr> <nobr>q-value</nobr> <nobr>--experiment-fdr</nobr> applies to: precursor (the default; each precursor&#39;s own), peptide (its peptide&#39;s, over all its charge states), or both (the larger of the two).</td></tr>
+<tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>How a peptide shared by several protein groups counts in protein inference: all (the default; toward every group it maps to), razor (toward only the group with the most unique peptides), or unique (toward none).</td></tr>
+<tr><td><nobr>--fdrbench</nobr>&nbsp;路径/到/文件.tsv</td><td>将与 FDRBench 兼容的输入 TSV 写入此路径。水平取自“<nobr>--fdr-level</nobr>”（peptide；precursor 和 both 输出母离子水平）。包含每个报告的目标，即实际写入输出的肽段，不论 q 值如何，并将原始 SVM 判别值作为“score”，以便 FDRBench 通过诱捕计数计算真实 FDR，而不会在 Osprey 的阈值处截断。</td></tr>
+<tr><td><nobr>--fdrbench-per-run</nobr></td><td>与“<nobr>--fdrbench</nobr>”一起使用：每个（母离子，运行）输出一行，使用运行水平 q 值（增加“run”列）。默认每个母离子输出一行，使用实验水平 q 值。</td></tr>
+<tr><td><nobr>--fdrbench-pass</nobr> &lt;1 | 2 | both&gt;</td><td>与“<nobr>--fdrbench</nobr>”一起使用：要输出哪一轮 FDR。2（默认）= 写入 blib 的第二轮结果（即 Osprey 所报告内容的 FDR）。1 = 为第二轮筛选之前的完整第一轮池（每个已评分目标，不论 q 值），使用第一轮 q 值，与原始 Rust Osprey 的 FDRBench 输入一致（第二轮输出所依据的假设）。both = 在一次运行中同时输出两者，写入“<nobr>--fdrbench</nobr>”路径时使用 .pass1 / .pass2 文件名后缀。</td></tr>
+</table>
+<div class="RowType">诱饵</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--decoys-in-library</nobr></td><td>Search with the decoys the library holds instead of generating a reversed decoy for every target. A decoy is recognized by the library&#39;s own decoy table (in a .blib), by its Decoy column (in a .tsv), or by a protein accession starting with one of DECOY_, rev_, decoy_; the search stops with an error when none is recognized.</td></tr>
+<tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;路径/到/文件.tsv</td><td>With <nobr>--decoys-in-library</nobr> and a .tsv library: the FDRBench pairing manifest (a <nobr>5-column</nobr> TSV) that pairs each decoy, and each entrapment peptide, with its target. A .blib library carries its pairing in its own table and needs none.</td></tr>
+</table>
+<div class="RowType">Training Export</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--training-export</nobr></td><td>Write &lt;stem&gt;.training.parquet per run: every target precursor at run q &lt;= <nobr>--training-export-max-q</nobr> with the observed intensities of its full b/y ladder and <nobr>per-ion</nobr> interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and <nobr>re-scores</nobr> nothing.</td></tr>
+<tr><td><nobr>--training-export-max-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run precursor <nobr>q-value</nobr> a target must reach to be exported (default: <nobr>--run-fdr</nobr>)</td></tr>
+<tr><td><nobr>--training-export-claimant-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run <nobr>q-value</nobr> at which another target counts as a claimant of a shared fragment peak (default: 0.01)</td></tr>
+<tr><td><nobr>--training-export-xics</nobr></td><td>With <nobr>--training-export</nobr>: also write each precursor&#39;s <nobr>per-ion</nobr> XIC matrix over its final peak boundaries</td></tr>
+</table>
+<div class="RowType">性能</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--threads</nobr>&nbsp;&lt;整数&gt;</td><td>每个文件的主搜索线程数（内层；默认：所有核心），在“<nobr>--parallel-files</nobr>”同时运行的文件之间分配</td></tr>
+<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>Input files run concurrently by each <nobr>per-file</nobr> stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from <nobr>--threads</nobr>. Worth setting only for <nobr>high-resolution</nobr> data on a server with more cores than one file&#39;s search can keep busy (a <nobr>multi-socket</nobr>, NUMA machine); on a workstation leave it unset and let <nobr>--threads</nobr> use the cores.</td></tr>
+<tr><td><nobr>--parallel-files-caching</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>--task</nobr> SpectraCache caches concurrently, overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time.</td></tr>
+<tr><td><nobr>--parallel-files-scoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files scored concurrently (PerFileScoring), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+<tr><td><nobr>--parallel-files-rescoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>re-scored</nobr> concurrently (PerFileRescoring, and the <nobr>second-pass</nobr> <nobr>per-file</nobr> phases), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+</table>
+<div class="RowType">分布式 / HPC</div>
+<p>--fasta runs as one process, or task by task: --task PredictTrainingLibrary; the four search stages with --training-search; --task TrainModel; --task PredictLibrary; then the four search stages. Every node takes the same command line and its own --task, and each task reads only what the tasks before it wrote.</p>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PredictTrainingLibrary | TrainModel | PredictLibrary | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | TrainingExport | ModelDiagnostics&gt;</td><td>HPC: run exactly one task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; TrainingExport writes the <nobr>--training-export</nobr> parquets, and on a COMPLETED run only the missing ones; ModelDiagnostics regenerates only the <nobr>--model-diagnostics</nobr> report for a COMPLETED run, writing no other output. With <nobr>--fasta</nobr>, PredictTrainingLibrary, TrainModel and PredictLibrary run the library build one phase at a time, and the four search stages search the library it predicts, or with <nobr>--training-search</nobr> the tuning runs.</td></tr>
+<tr><td><nobr>--training-search</nobr></td><td>With <nobr>--fasta</nobr> and <nobr>--training-input</nobr>: the stage <nobr>--task</nobr> selects is a stage of the tuning runs&#39; search, not the output&#39;s: it searches the <nobr>--training-input</nobr> runs with the library PredictTrainingLibrary predicts, writes into &lt;output&gt;.predicted/training/, and writes the training exports TrainModel reads. Give it to every node of that search and the same command line without it to the others. The same four tasks for any number of tuning runs, one included.</td></tr>
+<tr><td><nobr>--task-files</nobr></td><td>With <nobr>--task</nobr>: print the files the task reads and writes for this command line, one per line as input or output, the task and the path, and exit without running it: what a node must be given and what it hands on.</td></tr>
+</table>
+<div class="RowType">日志</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>在每行输出前加上 [yyyy/MM/dd HH:mm:ss]</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>在每行输出前加上以 MB 为单位的托管内存和专用内存（与“<nobr>--timestamp</nobr>”配合使用，供 perfviz 读取）</td></tr>
+<tr><td><nobr>--log-file</nobr>&nbsp;路径/到/文件</td><td>Write all output to this file instead of the console</td></tr>
+<tr><td><nobr>--perf-stats</nobr></td><td>输出脚本和性能工具读取的机器可解析 [COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH], [TRAIN] 行（默认关闭）</td></tr>
+<tr><td><nobr>--verbose</nobr></td><td>显示默认隐藏的更多详细信息（例如每折的 Percolator 迭代）</td></tr>
+</table>
+<div class="RowType">诊断与信息</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>显示此帮助信息（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>显示版本</td></tr>
+</table>
+<p>示例：</p><p>  Osprey -i *.raw --fasta human.fasta -o results.blib</p><p>  Osprey -i *.raw --fasta human.fasta --training-input-list tuning.txt -o results.blib</p><p>  Osprey -i *.raw -l results.predicted.blib -o results2.blib</p><p>  Osprey -i *.mzML -l library.blib -o results.blib --resolution unit</p><p>  Osprey -i *.d -l library.blib -o results.blib</p><p>  Osprey -i *.mzML -l diann_library.tsv -o results.blib</p><p>HPC 拆分（一个节点 = 一个“--task”）：请参见上方的“--task”。</p><p>也接受的其他形式：值也可以用“=”连在选项后（--output=results.blib）；已存在的文件可以不带 -i 直接给出。 The library build options are listed in the standard form (--miss-c 1) and, for compatibility with Java Carafe's command lines, also accepted as Carafe spells them, with underscores or in camel case (--miss_c 1, --minLength 7).</p><div class="RowType">分布式执行（HPC）</div>
+<p>不指定 <code>--task</code> 时，整个流程在一个进程中运行。对于分布式（HPC／工作流引擎）执行，流程在合并／扇出边界处拆分为四个单任务工作进程，每个节点对应一个 <code>--task</code>：<code>PerFileScoring</code>（拆分，每个文件）&rarr; <code>FirstPassFDR</code>（合并，所有文件）&rarr; <code>PerFileRescoring</code>（拆分，每个文件）&rarr; <code>SecondPassFDR</code>（合并，所有文件）。请向每个任务传入相同的 <code>--library</code> 和搜索选项；parquet 完整性检查会拒绝搜索／库哈希不匹配的输入。</p>
+<pre>
+# 拆分 1 - 每个 mzML 一个进程（在每个输入旁写入 &lt;stem&gt;.scores.parquet、&lt;stem&gt;.calibration.json）
+Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+
+# 合并 1 - 对所有运行使用一个进程（传入排序后的列表，以确保顺序确定）
+Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   在每个 parquet 旁写入：&lt;stem&gt;.1st-pass.fdr_scores.bin、out.1st-pass.*
+
+# 拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）
+Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   写入：&lt;stem&gt;.scores-reconciled.parquet，使用“--training-export”时还写入 &lt;stem&gt;.training.parquet
+
+# 合并 2 - 对所有运行使用一个进程，读取协调后的 parquet（写入 out.blib）
+Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+</pre>
+<p>每个任务都要用 <code>-i</code> 指定数据文件，名称与第一次拆分时相同。合并任务根据输入文件名主干推导每次运行的 parquet 和中间文件，因此数据文件本身不必仍然存在：工作进程的工作目录（或 <code>--output-dir</code> 下）中必须有该运行的产物。FirstPassFDR 协调对顺序敏感，因此请传入确定排序的列表。<code>--input-list</code> 每行接受一个路径；由于 <code>-i</code> 占用的命令行长度与文件数成正比，运行数超过几百个的队列需要使用它。请让调度程序进行扇出（每个拆分进程一个文件），而不要使用 <code>--parallel-files</code>，它是单节点多文件模式。</p>
+</body></html>

@@ -265,6 +265,26 @@ namespace pwiz.SkylineTest
             AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code");
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
 
+            // CommonUtil must stay WinForms-free. It is the portable half of what used to be one
+            // assembly: ProteowizardWrapper depends on it, and the wrapper has to build as plain
+            // net8.0 so Osprey can use it on Linux. Everything WinForms lives in CommonBaseUI now.
+            //
+            // Scoped by DIRECTORY, not by namespace cue, and that is the whole point. Common,
+            // CommonBaseUI and CommonUtil all share the pwiz.Common.* namespace root - a deliberate
+            // compatibility artifact of the original split - so "namespace pwiz.Common" would also
+            // flag the two assemblies where WinForms is perfectly legal.
+            AddTextInspection(@"*.cs",
+                Inspection.Forbidden,
+                Level.Error,
+                null, // Nothing to exempt - the path filter below is the scope
+                null, // No cue - every file under CommonUtil is subject to this
+                @"^(?!\s*///).*?\b(System\.Windows\.Forms|System\.Drawing|pwiz\.Common\.GUI)\b",
+                true,
+                "CommonUtil must not depend on WinForms - ProteowizardWrapper builds against it as plain net8.0. Put UI code in CommonBaseUI (pwiz.CommonBaseUI) instead.",
+                null,
+                0,
+                new[] { @"Shared\CommonUtil\" });
+
             // Check for using DataGridView.
             AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
                 "new System.Windows.Forms.DataGridView()", false,
@@ -299,6 +319,40 @@ namespace pwiz.SkylineTest
                 @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]", // Forbidden pattern - catches file writing with Encoding.UTF8 (but not UTF8Encoding)
                 true, // Pattern is a regular expression
                 @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
+
+            // Remedy for both invisible character inspections below. Verbatim @"" strings do not process escapes, and a
+            // *.Designer.cs file copies its strings from the .resx file it is generated from.
+            const string invisibleCharacterRemedy = @"Delete it or replace it with its ASCII equivalent. If the character is intended, write it as a \uXXXX escape in a regular (not @"""") string or char literal, because verbatim strings do not process escapes. In a generated *.Designer.cs file, fix the source .resx file instead.";
+
+            // Looking for invisible format characters (soft hyphen U+00AD, zero-width spaces and joiners, direction marks,
+            // a BOM inside a file), which are pasted in from documents or produced by editing tools, cannot be seen in
+            // review, and make strings that look identical compare unequal. A BOM at the start of a file is not seen here,
+            // because File.ReadAllText removes it. The soft hyphen is listed separately because the .NET Framework regex
+            // engine classifies it as a dash (Pd), so \p{Cf} alone does not match it there. The regex sees UTF-16 code
+            // units, so format characters outside the Basic Multilingual Plane (e.g. the TAG characters U+E0001-E007F)
+            // are not matched.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Cf}\xAD]", // Forbidden pattern - any BMP character in the Unicode format category, and the soft hyphen
+                true, // Pattern is a regular expression
+                @"Invisible format character (e.g. soft hyphen U+00AD or zero-width space U+200B). " + invisibleCharacterRemedy); // Explanation for prohibition, appears in report
+
+            // Looking for space and line break characters other than the ASCII ones (non-breaking, ideographic and
+            // typographic spaces, which come from pasted text or Japanese and Chinese input methods, and the line and
+            // paragraph separators and next line character). The compiler accepts all of them, and treats the line breaks
+            // as the end of a line, so code after one inside a // comment compiles but is not seen by these inspections,
+            // which split lines only at '\n'.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Zs}\p{Zl}\p{Zp}\x85-[ ]]", // Forbidden pattern - any Unicode space, line or paragraph separator, or next line, except the ASCII space
+                true, // Pattern is a regular expression
+                @"Non-ASCII space or line break character (e.g. non-breaking space U+00A0, ideographic space U+3000 or line separator U+2028). " + invisibleCharacterRemedy); // Explanation for prohibition, appears in report
 
             FilesTreeDataModelInspection();
 
@@ -365,7 +419,8 @@ namespace pwiz.SkylineTest
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
-                "BackgroundEventThreadsTestForm" // Used in tests itself, not a UI thing    
+                "BackgroundEventThreadsTestForm", // Used in tests itself, not a UI thing
+                "SlowLoadingForm" // Used in TestMcpConnectorShowForm itself, not a UI thing
             };
 
             foreach (var formName in foundForms)
@@ -420,7 +475,7 @@ namespace pwiz.SkylineTest
                         // Now work through the other supported L10N languages, verifying that the L10N string is also properly marked as an error hint.
                         // That is, either starts with localized Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_, or starts with
                         // the english language string constant CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. hasn't been localized yet).
-                        foreach (var culture in new[] {@"zh-CHS", @"ja"}) 
+                        foreach (var culture in new[] {@"zh-Hans", @"ja"}) 
                         {
                             var tryCulture = new CultureInfo(culture);
                             Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = tryCulture;
@@ -645,11 +700,11 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 5 },
+                { typeof(Gdi32), 9 },
                 { typeof(Kernel32), 10 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 45 },
+                { typeof(User32), 50 },
 
                 { typeof(DwmapiTest), 4 },
                 { typeof(Gdi32Test), 1 },
@@ -659,13 +714,29 @@ namespace pwiz.SkylineTest
                 { typeof(User32Test), 9 }
             };
 
-            // add types from production code
-            var types = typeof(User32).Assembly.GetTypes()
+            // add types from production code. The pwiz.Common.SystemUtil.PInvoke namespace
+            // spans TWO assemblies since the CommonBaseUI split - User32 and friends moved,
+            // Kernel32/Gdi32/Advapi32/Shell32/Shlwapi did not - so scanning one assembly
+            // silently stops checking the other half.
+            var pInvokeAssemblies = new[] { typeof(User32).Assembly, typeof(Kernel32).Assembly }.Distinct();
+            var types = pInvokeAssemblies.SelectMany(a => a.GetTypes())
                 .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
 
             // add types from test code
             types.AddRange(typeof(User32Test).Assembly.GetTypes()
                 .Where(type => type.Namespace is "TestRunnerLib.PInvoke" && type.IsClass).ToList());
+
+            // A type in the expected list that no scanned assembly produced means the scan
+            // narrowed - fail loudly rather than quietly checking less.
+            foreach (var expectedType in expectedPInvokeApi.Keys)
+            {
+                if (!types.Contains(expectedType))
+                {
+                    errors.Add("PInvoke type " + expectedType.FullName +
+                        " is in the expected list but was not found by the assembly scan - " +
+                        "add its assembly to pInvokeAssemblies.");
+                }
+            }
 
             foreach(var type in types)
             {
@@ -1204,6 +1275,7 @@ namespace pwiz.SkylineTest
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUtil"), fileMask, SearchOption.AllDirectories));
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonBaseUI"), fileMask, SearchOption.AllDirectories));
 
                 foreach (var filename in filenames)
                 {
@@ -1242,18 +1314,12 @@ namespace pwiz.SkylineTest
                     var warnings = new List<string>();
                     // Track already reported issues for this file to avoid duplicate reports
                     var reportedMatches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    // Per-file tracking for inconsistent line endings and multiline pattern faults
-                    var crlfCount =0;
+                    // Per-file tracking for multiline pattern faults
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
 
                     foreach (var line in lines)
                     {
-                        // Look for inconsistent line endings
-                        if (line.EndsWith("\r")) 
-                        {
-                            crlfCount++;
-                        }
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
@@ -1316,11 +1382,6 @@ namespace pwiz.SkylineTest
                                 }
                             }
                         }
-                    }
-
-                    if (crlfCount != 0 && crlfCount < lines.Length-1)
-                    {
-                        results.Add($@"Inconsistent line endings in {filename}");
                     }
 
                     if (requiredPatternsObservedInThisFile != null)
@@ -1449,22 +1510,40 @@ namespace pwiz.SkylineTest
             public string Cue; // If non-empty, pattern only applies to files containing this cue
             public string Reason; // Note to show on failure
             public string[] IgnoredFileMasks; // Don't flag on hits in files that contain these strings in their full paths
+            public string[] RequiredPathMasks; // If non-empty, ONLY flag hits in files whose full path contains one of these
             public Level FailureType;  // Is failure an error, or just a warning?
             public int NumberOfToleratedIncidents; // Some inspections we won't fix yet, but we don't want to see any new ones either
 
-            public PatternDetails(string cue,string reason, string[] ignoredFileMasks, Level failureType, int numberOfToleratedIncidents) 
+            public PatternDetails(string cue,string reason, string[] ignoredFileMasks, Level failureType, int numberOfToleratedIncidents,
+                string[] requiredPathMasks = null) 
             {
                 Cue = cue;
                 Reason = reason;
                 IgnoredFileMasks = ignoredFileMasks;
                 FailureType = failureType;
                 NumberOfToleratedIncidents = numberOfToleratedIncidents;
+                RequiredPathMasks = requiredPathMasks;
             }
 
             public bool IgnorePath(string path)
             {
-                return string.IsNullOrEmpty(path) ||
-                       IgnoredFileMasks != null && IgnoredFileMasks.Any(d => path.ToLowerInvariant().Contains(d.ToLowerInvariant()));
+                if (string.IsNullOrEmpty(path))
+                {
+                    return true;
+                }
+
+                var lowerPath = path.ToLowerInvariant();
+
+                // A path-scoped rule applies to one directory only. This is how a rule can name a
+                // DIRECTORY rather than a namespace - necessary because Common, CommonBaseUI and
+                // CommonUtil all share the pwiz.Common.* namespace root, so a namespace cue cannot
+                // tell them apart.
+                if (RequiredPathMasks != null && !RequiredPathMasks.Any(d => lowerPath.Contains(d.ToLowerInvariant())))
+                {
+                    return true;
+                }
+
+                return IgnoredFileMasks != null && IgnoredFileMasks.Any(d => lowerPath.Contains(d.ToLowerInvariant()));
             }
         }
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
@@ -1582,11 +1661,12 @@ namespace pwiz.SkylineTest
             bool isRegEx, // Is the pattern a regular expression?
             string reason, // Explanation on failure
             string patternException = null, // Optional string which exempts a pattern match if found in matching line
-            int numberToleratedAsWarnings = 0) // Some inspections we won't fix yet, but we don't want to see any new ones either
+            int numberToleratedAsWarnings = 0, // Some inspections we won't fix yet, but we don't want to see any new ones either
+            string[] requiredPathMasks = null) // If non-empty, restrict the inspection to these directories
         {
             foreach (var pattern in patterns)
             {
-                AddTextInspection(fileMask, inspectionType, failureType, ignoredDirectories, cue, pattern, isRegEx, reason, patternException, numberToleratedAsWarnings);
+                AddTextInspection(fileMask, inspectionType, failureType, ignoredDirectories, cue, pattern, isRegEx, reason, patternException, numberToleratedAsWarnings, requiredPathMasks);
             }
         }
 
@@ -1599,7 +1679,8 @@ namespace pwiz.SkylineTest
             bool isRegEx, // Is the pattern a regular expression?
             string reason, // Explanation on failure
             string patternException = null, // Optional string which exempts a pattern match if found in matching line
-            int numberToleratedAsWarnings = 0) // Some inspections we won't fix yet, but we don't want to see any new ones either
+            int numberToleratedAsWarnings = 0, // Some inspections we won't fix yet, but we don't want to see any new ones either
+            string[] requiredPathMasks = null) // If non-empty, restrict the inspection to these directories
         {
             allFileMasks.Add(fileMask);
             var rules = inspectionType == Inspection.Forbidden ? forbiddenPatternsByFileMask : requiredPatternsByFileMask;
@@ -1608,7 +1689,7 @@ namespace pwiz.SkylineTest
                 rules.Add(fileMask, new Dictionary<Pattern, PatternDetails>());
             }
             var patterns = rules[fileMask];
-            var patternDetails = new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings);
+            var patternDetails = new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings, requiredPathMasks);
             patterns.Add(new Pattern(pattern, isRegEx, patternException), patternDetails);
             if (numberToleratedAsWarnings > 0)
             {

@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private ColumnPropertyDescriptor GetColumnPropertyDescriptor()
         {
-            if (null == DataGridView || null == DataPropertyName)
+            if (null == DataGridView || string.IsNullOrEmpty(DataPropertyName))
             {
                 return null;
             }

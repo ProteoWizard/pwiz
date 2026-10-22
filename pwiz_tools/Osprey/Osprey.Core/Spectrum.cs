@@ -28,15 +28,55 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public class Spectrum
     {
+        private double[] _mzs;
+        private MzBucketIndex _mzIndex;
+
         public uint ScanNumber { get; set; }
         public double RetentionTime { get; set; }
         public double PrecursorMz { get; set; }
         public IsolationWindow IsolationWindow { get; set; }
-        public double[] Mzs { get; set; }
+
+        /// <summary>
+        /// Peak m/z values, ascending. Assigning a new array discards the lookup index
+        /// <see cref="MzLowerBound"/> builds; changing the array's values in place after the
+        /// first lookup is not allowed (the window provider calibrates in place, before any).
+        /// </summary>
+        public double[] Mzs
+        {
+            get { return _mzs; }
+            set
+            {
+                _mzs = value;
+                _mzIndex = null;
+            }
+        }
+
         public float[] Intensities { get; set; }
 
         public int Count { get { return Mzs.Length; } }
         public bool IsEmpty { get { return Count == 0; } }
+
+        /// <summary>
+        /// The index of the first peak whose m/z is at least <paramref name="value"/> (the
+        /// peak count when none is) - exactly what a binary search of <see cref="Mzs"/> returns,
+        /// in O(1) through an m/z bucket index built on the first call. Scoring asks this for
+        /// every top fragment of every candidate at every scan of its RT range, which made
+        /// the binary search a third of first-pass scoring time.
+        ///
+        /// <para>The index answers for the array it was built from, and is rebuilt whenever
+        /// that is not the current <see cref="Mzs"/>, so a reassignment racing a lookup cannot
+        /// pair one array with another's index. Editing the array's values in place after the
+        /// first lookup remains disallowed: the index cannot see it.</para>
+        /// </summary>
+        public int MzLowerBound(double value)
+        {
+            // Read into locals first: a concurrent first call builds an identical index.
+            var mzs = _mzs;
+            var index = _mzIndex;
+            if (index == null || !ReferenceEquals(index.Source, mzs))
+                _mzIndex = index = new MzBucketIndex(mzs);
+            return index.LowerBound(value);
+        }
 
         /// <summary>
         /// Returns true if the given m/z is contained within this spectrum's isolation window.

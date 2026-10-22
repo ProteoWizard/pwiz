@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
     Package Osprey for redistribution: a self-contained, per-RID ZIP for each
-    target platform and (optionally) a Windows .msi installer.
+    target platform and (optionally) a Windows Setup.exe installer.
 
 .DESCRIPTION
     Produces the canonical Osprey redistributable artifacts described in
     ai/todos/active/TODO-20260627_osprey_redistribution.md:
 
-      * For each RID, a `dotnet publish -c Release -f net8.0 -r <rid>
+      * For each RID, a `dotnet publish -c Release -f net10.0 -r <rid>
         --self-contained` is laid out under a single versioned top-level
         folder (Osprey.exe + runtime/dependency DLLs + Documentation/ +
         README + LICENSE) and zipped to `Osprey-<version>-<rid>.zip`. The
@@ -15,13 +15,15 @@
         unzipped side by side, and extraction never explodes ~200 files into
         the user's download dir.
 
-      * With -Msi, the win-x64 publish is additionally packaged into a
-        per-machine `C:\Program Files\Osprey` WiX installer
-        (Osprey-<version>-win-x64.msi) with an Add/Remove-Programs entry.
+      * With -Setup, the win-x64 publish is additionally packaged into an
+        Inno Setup installer (Osprey-Setup-<version>.exe): per-user or
+        per-machine at the user's choice, optional PATH entry and Start Menu
+        shortcuts, an Add/Remove-Programs entry, and a "version-specific"
+        install option for keeping several versions side by side. See
+        Installer/Setup.iss.
 
     Self-contained means ZERO system-.NET dependency: copy the folder to an
-    HPC node and run it. net8.0 is the canonical distribution runtime; net472
-    is intentionally not packaged.
+    HPC node and run it. net10.0 is the canonical distribution runtime.
 
     This script is standalone (build.ps1 / Osprey.sln are the dev+CI build;
     this is the redistribution step on top of them). It is NOT wired into
@@ -35,23 +37,24 @@
     Debug or Release. Default Release.
 
 .PARAMETER OutputDir
-    Where the .zip/.msi artifacts land. Default <scriptRoot>/dist (gitignored).
+    Where the .zip/.exe artifacts land. Default <scriptRoot>/dist (gitignored).
     The per-RID publish trees are staged under <OutputDir>/_staging.
 
-.PARAMETER Msi
-    Also build the win-x64 .msi (requires the `wix` dotnet tool and that
-    win-x64 is among -Rid). See Installer/Osprey.wxs.
+.PARAMETER Setup
+    Also build the win-x64 Setup.exe (requires Inno Setup 6, bootstrapped by
+    scripts/installer/Ensure-InnoSetup.ps1 if absent, and that win-x64 is
+    among -Rid). See Installer/Setup.iss.
 
 .PARAMETER NoZip
-    Skip the .zip step (e.g. -Msi -NoZip to produce only the installer).
+    Skip the .zip step (e.g. -Setup -NoZip to produce only the installer).
 
 .PARAMETER IncludePdb
     Keep *.pdb files in the package. Default: stripped (leaner release artifact).
 
 .PARAMETER Sign
-    Authenticode-sign Osprey.exe and the .msi. OFF by default. Also enabled by
-    setting OSPREY_SIGN=1. Requires signtool on PATH (or OSPREY_SIGNTOOL) and a
-    cert: either OSPREY_SIGN_PFX (+ OSPREY_SIGN_PFX_PASSWORD) or, with no PFX,
+    Authenticode-sign Osprey.exe, the Setup.exe and its uninstaller. OFF by default. Also enabled by
+    setting OSPREYDEV_SIGN=1. Requires signtool on PATH (or OSPREYDEV_SIGNTOOL) and a
+    cert: either OSPREYDEV_SIGN_PFX (+ OSPREYDEV_SIGN_PFX_PASSWORD) or, with no PFX,
     signtool's machine-store auto-select (/a). If signing is requested but the
     tool or cert is unavailable this script HARD-FAILS rather than shipping an
     unsigned artifact that looks signed.
@@ -65,19 +68,19 @@
     .\package.ps1
 
 .EXAMPLE
-    # Windows zip + msi only
-    .\package.ps1 -Rid win-x64 -Msi
+    # Windows zip + Setup.exe only
+    .\package.ps1 -Rid win-x64 -Setup
 
 .EXAMPLE
     # CI
-    .\package.ps1 -TeamCity -Msi
+    .\package.ps1 -TeamCity -Setup
 #>
 #Requires -Version 7.0
 param(
     [string[]]$Rid = @('win-x64','linux-x64'),
     [ValidateSet('Debug','Release')] [string]$Configuration = 'Release',
     [string]$OutputDir,
-    [switch]$Msi,
+    [switch]$Setup,
     [switch]$NoZip,
     [switch]$IncludePdb,
     [switch]$Sign,
@@ -99,6 +102,8 @@ if (-not (Test-Path $ospreyCsproj)) {
 $version = Get-OspreyVersion -RepoPath $scriptRoot
 
 if (-not $OutputDir) { $OutputDir = Join-Path $scriptRoot 'dist' }
+# Absolute, because it is handed to ISCC, which resolves relative paths against the script.
+$OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 $stagingRoot = Join-Path $OutputDir '_staging'
 
 # --- TeamCity service-message helpers (mirror build.ps1) ----------------
@@ -120,38 +125,50 @@ function Publish-Artifact-Tc([string]$path) {
 }
 
 # --- Signing (env-gated, hard-fail when requested-but-unavailable) -------
-function Invoke-OspreySign {
-    param([string]$Path)
-    $enabled = $Sign -or ($env:OSPREY_SIGN -eq '1')
-    if (-not $enabled) { return }
+function Test-OspreySignEnabled {
+    return $Sign -or ($env:OSPREYDEV_SIGN -eq '1')
+}
 
-    $signtool = $env:OSPREY_SIGNTOOL
+# The signtool.exe path and the arguments that precede the file to sign, resolved
+# from the OSPREYDEV_SIGN* environment. Shared by Invoke-OspreySign (Osprey.exe in the
+# stage) and New-OspreySetup, which hands the same command to ISCC so the Setup.exe
+# and its uninstaller are signed as part of the compile.
+function Get-OspreySignCommand {
+    $signtool = $env:OSPREYDEV_SIGNTOOL
     if (-not $signtool) {
         $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
         if ($cmd) { $signtool = $cmd.Source }
     }
     if (-not $signtool -or -not (Test-Path $signtool)) {
-        Write-Error "Signing requested but signtool.exe not found (set OSPREY_SIGNTOOL or add it to PATH). Refusing to ship an unsigned artifact."
+        Write-Error "Signing requested but signtool.exe not found (set OSPREYDEV_SIGNTOOL or add it to PATH). Refusing to ship an unsigned artifact."
         exit 3
     }
 
-    $timestampUrl = if ($env:OSPREY_SIGN_TIMESTAMP_URL) { $env:OSPREY_SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
+    $timestampUrl = if ($env:OSPREYDEV_SIGN_TIMESTAMP_URL) { $env:OSPREYDEV_SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
     $signArgs = @('sign', '/fd', 'SHA256', '/tr', $timestampUrl, '/td', 'SHA256')
-    if ($env:OSPREY_SIGN_PFX) {
-        if (-not (Test-Path $env:OSPREY_SIGN_PFX)) {
-            Write-Error "OSPREY_SIGN_PFX points to a missing file: $($env:OSPREY_SIGN_PFX)"
+    if ($env:OSPREYDEV_SIGN_PFX) {
+        if (-not (Test-Path $env:OSPREYDEV_SIGN_PFX)) {
+            Write-Error "OSPREYDEV_SIGN_PFX points to a missing file: $($env:OSPREYDEV_SIGN_PFX)"
             exit 3
         }
-        $signArgs += @('/f', $env:OSPREY_SIGN_PFX)
-        if ($env:OSPREY_SIGN_PFX_PASSWORD) { $signArgs += @('/p', $env:OSPREY_SIGN_PFX_PASSWORD) }
+        $signArgs += @('/f', $env:OSPREYDEV_SIGN_PFX)
+        if ($env:OSPREYDEV_SIGN_PFX_PASSWORD) { $signArgs += @('/p', $env:OSPREYDEV_SIGN_PFX_PASSWORD) }
     } else {
         # No PFX: let signtool auto-select a suitable cert from the machine store.
         $signArgs += '/a'
     }
-    $signArgs += $Path
+    return [pscustomobject]@{ Exe = $signtool; Args = $signArgs }
+}
+
+function Invoke-OspreySign {
+    param([string]$Path)
+    if (-not (Test-OspreySignEnabled)) { return }
+
+    $cmd = Get-OspreySignCommand
+    $signArgs = $cmd.Args + $Path
 
     Write-Progress-Tc "Signing $(Split-Path -Leaf $Path)"
-    & $signtool @signArgs | Out-Host
+    & $cmd.Exe @signArgs | Out-Host
     if ($LASTEXITCODE -ne 0) {
         Write-Error "signtool failed (exit $LASTEXITCODE) for $Path"
         exit 3
@@ -167,16 +184,18 @@ function New-OspreyStage {
     if (Test-Path $stageDir) { Remove-Item $stageDir -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
 
-    Write-Progress-Tc "Publishing $folderName ($Configuration, self-contained net8.0)"
+    Write-Progress-Tc "Publishing $folderName ($Configuration, self-contained net10.0)"
     $publishArgs = @(
         'publish', $ospreyCsproj,
         '-c', $Configuration,
-        '-f', 'net8.0',
+        '-f', 'net10.0',
         '-r', $Rid,
         '--self-contained', 'true',
         '-p:PublishSingleFile=false',
         '-p:Platform=x64',
-        "-p:Version=$version",
+        # No -p:Version: as in build.ps1, a global property would also stamp the shared
+        # libraries (BiblioSpec.IO) with Osprey's version. Directory.Build.targets stamps
+        # the Osprey projects with $version from the same version.ps1; checked below.
         '-o', $stageDir,
         '-v', 'minimal', '--nologo'
     )
@@ -187,6 +206,13 @@ function New-OspreyStage {
         Write-Error "dotnet publish failed for $Rid (exit $LASTEXITCODE)"
         exit $LASTEXITCODE
     }
+    # The stamp target is ContinueOnError, so an unstamped publish still succeeds with the
+    # 26.1.1.0 placeholder; refuse to package it under a dated name.
+    $publishedVersion = [System.Reflection.AssemblyName]::GetAssemblyName((Join-Path $stageDir 'Osprey.dll')).Version.ToString()
+    if ($publishedVersion -ne $version) {
+        Write-Error "Published Osprey.dll is version $publishedVersion, expected $version; the version stamp in Directory.Build.targets did not run"
+        exit 3
+    }
 
     if (-not $IncludePdb) {
         Get-ChildItem -Path $stageDir -Filter *.pdb -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
@@ -194,7 +220,7 @@ function New-OspreyStage {
 
     Add-OspreyDocs -StageDir $stageDir
 
-    # Sign the Windows exe inside the stage before zipping/MSI packaging.
+    # Sign the Windows exe inside the stage before zipping/Setup packaging.
     if ($Rid -like 'win-*') {
         Invoke-OspreySign -Path (Join-Path $stageDir 'Osprey.exe')
     }
@@ -251,18 +277,6 @@ function Add-OspreyDocs {
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force
 }
 
-# --- License.rtf for the MSI UI (generated from the plain-text LICENSE) --
-function Write-LicenseRtf {
-    param([string]$Source, [string]$Destination)
-    # WiX's license dialog requires RTF. Generate it from the canonical
-    # plain-text LICENSE at build time so the installer license never drifts
-    # from the repo. (LICENSE is ASCII, so no \uN escaping is needed.)
-    $text = (Get-Content $Source -Raw).Replace('\', '\\').Replace('{', '\{').Replace('}', '\}')
-    $body = ($text -split "`r?`n") -join '\par '
-    $rtf = '{\rtf1\ansi\deff0{\fonttbl{\f0\fmodern Courier New;}}\fs16 ' + $body + '}'
-    Set-Content -Path $Destination -Value $rtf -NoNewline -Encoding ascii
-}
-
 # --- Zip (single versioned top-level folder) ----------------------------
 function New-OspreyZip {
     param([string]$StageDir, [string]$Rid)
@@ -279,50 +293,59 @@ function New-OspreyZip {
     return $zipPath
 }
 
-# --- MSI (delegates layout to Installer/Osprey.wxs) ---------------------
-function New-OspreyMsi {
+# --- Setup.exe (delegates layout to Installer/Setup.iss) ----------------
+function New-OspreySetup {
     param([string]$StageDir)
 
-    $wxs = Join-Path $scriptRoot 'Installer\Osprey.wxs'
-    if (-not (Test-Path $wxs)) {
-        Write-Error "Installer/Osprey.wxs not found at $wxs"
-        exit 2
-    }
-    $wix = Get-Command wix -ErrorAction SilentlyContinue
-    if (-not $wix) {
-        Write-Error "The 'wix' tool is not installed (dotnet tool install --global wix). Cannot build the .msi."
+    $iss = Join-Path $scriptRoot 'Installer\Setup.iss'
+    if (-not (Test-Path $iss)) {
+        Write-Error "Installer/Setup.iss not found at $iss"
         exit 2
     }
 
-    # MSI ProductVersion only compares major.minor.build for upgrades (the 4th
-    # field is ignored). Map the Osprey version YEAR.ORDINAL.BRANCH.DOY ->
-    # YEAR.ORDINAL.DOY so each dated build is upgrade-significant.
-    $parts = $version.Split('.')
-    $msiVersion = "$($parts[0]).$($parts[1]).$($parts[3])"
+    # Inno Setup 6 is a per-user install of ~10 MB; Ensure-InnoSetup.ps1 fetches it
+    # when the machine lacks it and prints the ISCC.exe path either way.
+    $ensure = Join-Path $repoRoot 'scripts\installer\Ensure-InnoSetup.ps1'
+    $iscc = & pwsh -NoProfile -File $ensure -PassThru | Select-Object -Last 1
+    if ($LASTEXITCODE -ne 0 -or -not $iscc -or -not (Test-Path $iscc)) {
+        Write-Error "Inno Setup (ISCC.exe) is not available; cannot build the Setup.exe."
+        exit 2
+    }
 
-    $msiPath = Join-Path $OutputDir "Osprey-$version-win-x64.msi"
-    if (Test-Path $msiPath) { Remove-Item $msiPath -Force }
+    $baseName = "Osprey-Setup-$version"
+    $setupPath = Join-Path $OutputDir "$baseName.exe"
+    if (Test-Path $setupPath) { Remove-Item $setupPath -Force }
 
-    $licenseRtf = Join-Path $stagingRoot 'License.rtf'
-    Write-LicenseRtf -Source (Join-Path $repoRoot 'LICENSE') -Destination $licenseRtf
+    $isccArgs = @(
+        '/Q',
+        "/DStagingDir=$StageDir",
+        "/DOutputDir=$OutputDir",
+        "/DOutputBaseFilename=$baseName",
+        "/DMyAppVersion=$version"
+    )
+    if (Test-OspreySignEnabled) {
+        # Inno signs the uninstaller and the Setup.exe itself with a named sign tool.
+        # $f is replaced by the (already quoted) file being signed and $q is a literal
+        # quote; a literal $ in an argument (a password, say) has to be written $$.
+        $cmd = Get-OspreySignCommand
+        $quotedArgs = $cmd.Args | ForEach-Object {
+            $escaped = $_.Replace('$', '$$')
+            if ($escaped -match '\s') { '$q' + $escaped + '$q' } else { $escaped }
+        }
+        $signCommand = ('$q' + $cmd.Exe.Replace('$', '$$') + '$q ' + ($quotedArgs -join ' ') + ' $f')
+        $isccArgs += @('/DSignSetup', "/Sospreysign=$signCommand")
+    }
+    $isccArgs += $iss
 
-    Write-Progress-Tc "Building $(Split-Path -Leaf $msiPath) (WiX, per-machine)"
-    & wix build $wxs `
-        -arch x64 `
-        -d "PublishDir=$StageDir" `
-        -d "ProductVersion=$msiVersion" `
-        -d "InformationalVersion=$version" `
-        -d "LicenseRtf=$licenseRtf" `
-        -ext WixToolset.UI.wixext `
-        -o $msiPath | Out-Host
+    Write-Progress-Tc "Building $(Split-Path -Leaf $setupPath) (Inno Setup)"
+    & $iscc @isccArgs | Out-Host
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "wix build failed (exit $LASTEXITCODE)"
+        Write-Error "ISCC failed (exit $LASTEXITCODE)"
         exit $LASTEXITCODE
     }
 
-    Invoke-OspreySign -Path $msiPath
-    Publish-Artifact-Tc $msiPath
-    return $msiPath
+    Publish-Artifact-Tc $setupPath
+    return $setupPath
 }
 
 # --- Main ---------------------------------------------------------------
@@ -332,7 +355,7 @@ New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
 Write-Host "Osprey package version $version" -ForegroundColor Green
 Write-Host "  RIDs:       $($Rid -join ', ')" -ForegroundColor Green
 Write-Host "  Output:     $OutputDir" -ForegroundColor Green
-Write-Host "  Zip:        $(-not $NoZip)   Msi: $Msi   Sign: $($Sign -or ($env:OSPREY_SIGN -eq '1'))" -ForegroundColor Green
+Write-Host "  Zip:        $(-not $NoZip)   Setup: $Setup   Sign: $(Test-OspreySignEnabled)" -ForegroundColor Green
 
 $artifacts = @()
 $winStage = $null
@@ -344,12 +367,12 @@ foreach ($r in $Rid) {
     }
 }
 
-if ($Msi) {
+if ($Setup) {
     if (-not $winStage) {
-        Write-Error "-Msi requires win-x64 in -Rid (got: $($Rid -join ', '))"
+        Write-Error "-Setup requires win-x64 in -Rid (got: $($Rid -join ', '))"
         exit 2
     }
-    $artifacts += (New-OspreyMsi -StageDir $winStage)
+    $artifacts += (New-OspreySetup -StageDir $winStage)
 }
 
 Write-Host "`nArtifacts:" -ForegroundColor Green

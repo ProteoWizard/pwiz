@@ -14,7 +14,8 @@ Single command-line step, same shape as the per-commit config:
 pwiz_tools\Osprey\tctest.bat
 ```
 
-`tctest.bat` calls `regression.ps1 -TeamCity -Dataset All`, which emits
+`tctest.bat` calls `regression-parallel.ps1 -TeamCity -Dataset All` (two concurrent
+lanes, one `regression.ps1` invocation per dataset), which emits
 `##teamcity[progressMessage]` and a `##teamcity[buildProblem]` on any mismatch.
 A non-zero exit fails the build. It publishes **no artifacts** (see Outputs).
 
@@ -47,13 +48,22 @@ every push). Wired in #4283:
 
 ## Agent requirements
 
+**Restrict the config to a capable agent.** The ephemeral AWS agents die about ten
+seconds in with exit code 9009 (a tool the per-commit image does not carry), which reads
+as an instant red. The durable fix is an agent requirement / pool restriction on the
+`ProteoWizard_OspreyWindowsNetPerfRegressionTests` config itself; until that is in place,
+pass `agent_name='MacCoss TeamCity Agent 1'` as well as `branch='pull/<N>'` on every
+manual trigger. One other shape that is not a gate failure: a `freeze.settings.error`
+build problem with no step output (compare the trigger time with the first step's start
+and read the step results; re-trigger).
+
 Same as the per-commit Osprey agent, plus outbound internet:
 
 - **pwsh** (PowerShell 7+) on PATH (project standard; no `powershell.exe` fallback)
-- **Visual Studio Build Tools** (MSBuild — `regression.ps1` builds Release/net8.0
-  first via `build.ps1 -NoTests`; drop with `-NoBuild` if the config builds
-  separately)
-- **.NET 8 SDK**
+- **Visual Studio Build Tools** (MSBuild — `regression-parallel.ps1` builds
+  Release/net10.0 first via `build.ps1 -NoTests`; drop with `-NoBuild` if the config
+  builds separately)
+- **.NET 10 SDK**
 - **Outbound HTTPS to `panoramaweb.org`** — first run downloads
   `osprey-testfiles-mzML.zip` (**~14 GB** — these are real DIA mzML runs, ~1.5 GB
   each) into the agent's `<Downloads>\Perftests`; subsequent runs skip the
@@ -75,7 +85,8 @@ Handled entirely by the harness (no manual staging):
 `panoramaweb.org/.../perftests/osprey-testfiles-mzML.zip` → extracted into
 `<Downloads>\Perftests\osprey-testfiles-mzML\` (`stellar\` + `astral\`
 subfolders), referenced read-only. The raw-data zip (`osprey-testfiles.zip`) is
-future work (reads `.raw` directly once `pwiz_data_cli` is wired in).
+future work; Osprey reads `.raw` directly through ProteoWizard now, so what is
+left is staging the raw fixtures and deciding what the gate asserts on them.
 
 ## Outputs / artifacts
 

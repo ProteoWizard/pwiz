@@ -68,14 +68,23 @@ namespace SkylineBatch
                     percent => _percent = Math.Max(0, Math.Min(percent, 99)), _source.Token);
 
                 using (var httpClient = new HttpClientWithProgress(progressMonitor))
-                using (var fs = new FileSaver(realName))
+                using (var fs = new SimpleFileSaver(realName))
                 {
                     try
                     {
                         // Cancellation now travels through the monitor rather than a
                         // Token.Register(wc.CancelAsync) callback.
-                        httpClient.DownloadFile(downloadUri, fs.SafeName, size > 0 ? size : (long?)null);
-                        fs.Commit();
+                        httpClient.DownloadFile(downloadUri, fs.SafeName, size > 0 ? size : null);
+                        try
+                        {
+                            fs.Commit();
+                        }
+                        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                        {
+                            // The destination could not be replaced (open in another program): the
+                            // download is discarded, as it was when the SharedBatch writer swallowed
+                            // this, and the dialog still closes below.
+                        }
                         if (Visible)
                             BeginInvoke((MethodInvoker)delegate { Close(); });
                     }

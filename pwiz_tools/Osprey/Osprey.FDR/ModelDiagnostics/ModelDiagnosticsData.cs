@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -92,6 +93,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // ----- tabs -----
         public double ModelComposite { get; set; }
         public bool ModelDegenerate { get; set; }
+
+        /// <summary>
+        /// True when the first-pass model is gradient-boosted trees
+        /// (<see cref="FeatureContributions.IsTreeEnsemble"/>): <see cref="Model"/> then lists
+        /// each feature's target-decoy mean gap and histograms with no coefficient or
+        /// contribution, and the page says the contribution table does not apply rather than
+        /// that the model was not retrained. Written only when true
+        /// (<see cref="ShouldSerializeModelIsTreeEnsemble"/>), so a linear model's data is
+        /// byte-for-byte what it was before trees were reported.
+        /// </summary>
+        public bool ModelIsTreeEnsemble { get; set; }
+
+        /// <summary>Newtonsoft's conditional-serialization convention for
+        /// <see cref="ModelIsTreeEnsemble"/>: this project has no Json.NET reference to put an
+        /// attribute on it.</summary>
+        public bool ShouldSerializeModelIsTreeEnsemble()
+        {
+            return ModelIsTreeEnsemble;
+        }
+
         public List<FeatureRow> Model { get; set; }
         /// <summary>
         /// The complete pass-2 (final reported pool) bundle -- every pass-dependent
@@ -534,9 +555,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         /// <summary>
         /// Build the full model-diagnostics data model from first-pass results.
+        ///
+        /// <para>A TEST ORACLE, internal so nothing outside this assembly and its tests can reach
+        /// it. It reduces a resident pool of every run's first-pass entries, which no
+        /// production route holds any more: the report is built from the streamed
+        /// <see cref="Accumulator"/>, and the tests hold that to this independent batch
+        /// reduction on the same rows.</para>
         /// </summary>
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
-        /// <param name="contributions">The trained model's feature contributions (may be null for non-Percolator FDR).</param>
+        /// <param name="contributions">The trained model's feature contributions (may be null: a tree model has none).</param>
         /// <param name="classByBaseId">
         /// library base-id (<c>EntryId &amp; 0x7FFFFFFF</c>) -> target-side
         /// entrapment class (Target / PTarget), resolved from the library
@@ -567,7 +594,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Full entry id to library precursor m/z (NaN when unknown), for the co-assignment panel.
         /// Null skips that panel and leaves <see cref="CoAssignment"/> null.
         /// </param>
-        public static ModelDiagnosticsData Build(
+        internal static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -606,18 +633,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
             data.HasEntrapment = data.NPTarget > 0;
-            data.FeatureCount = contributions?.Features.Count ?? 0;
             data.NClassifiedFromManifest = nWithClass;
             data.NUnclassified = nWithoutClass;
 
             // ---- model table (pass 1) ----
-            if (contributions != null)
-            {
-                data.ModelComposite = contributions.Composite;
-                data.ModelDegenerate = contributions.IsDegenerate;
-                data.FeatureHistEdges = contributions.HistogramEdges;
-                data.Model = BuildFeatureRows(contributions);
-            }
+            ModelView.ApplyTo(ModelView.From(contributions), data);
 
             // ---- score histogram + decoy normal fit ----
             data.Scores = BuildScoreHistogram(precs);
@@ -674,7 +694,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool isEntrap = haveManifest
                             && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var fcls)
                             && fcls == EntrapmentClass.PTarget;
-                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + "|" + e.Charge, isEntrap,
+                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + @"|" + e.Charge, isEntrap,
                             e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel));
                     }
                     FrontierFlushFile(frontier, fileMinQ);   // one increment per detected precursor = one file
@@ -699,12 +719,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
-        /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
-        /// (SecondPassFdrTask) with the post-compaction, second-pass-q-valued pool
-        /// (<c>RescoredEntries</c>) -- the same pool the pass-2 FDRBench TSV is written
-        /// from -- so the HTML pass-2 cards and stock FDRBench see the identical
-        /// peptides and q-values. The classification / pairing / ratio inputs come
-        /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
+        /// top-level Pass 1 / Pass 2 switch from the post-compaction, second-pass-q-valued
+        /// pool - the same pool the pass-2 FDRBench TSV is written from - so the HTML pass-2
+        /// cards and stock FDRBench see the identical peptides and q-values. The
+        /// classification / pairing / ratio inputs come from the searched library exactly as
+        /// pass 1 (see ModelDiagnosticsReport).
+        ///
+        /// <para>A TEST ORACLE, internal for the reason <see cref="Build"/> gives: production
+        /// folds the pass-2 cards run by run through <see cref="Accumulator"/>, and the tests
+        /// hold that fold to this batch build over every run's survivors.</para>
         ///
         /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
         /// <paramref name="pass2Contributions"/> is non-null. Production passes null
@@ -720,7 +743,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// unknown) for the co-assignment panel; null skips that panel and leaves
         /// <see cref="Pass2Data.CoAssignment"/> null.
         /// </summary>
-        public static Pass2Data BuildPass2(
+        internal static Pass2Data BuildPass2(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -755,14 +778,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             bool structural = pass2Contributions != null;
             int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
             // NOT `using`d, matching LibraryDeduplicator: Dispose forces a final 100% from the
-            // finally block, and WritePass2AndFinalize catches and logs our exception as one
-            // line - so a card that threw would read "all cards done" immediately followed by
-            // "pass-2 enrichment failed". The last Report on the success path prints 100% anyway.
+            // finally block, and a report writer catches and logs our exception as one line - so
+            // a card that threw would read "all cards done" immediately followed by "pass-2
+            // enrichment failed". The last Report on the success path prints 100% anyway.
             // The heading counts CARDS because that is what the total is; labelling it with the
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;
             var progress = new ProgressReporter(
-                string.Format(@"Building {0} pass-2 diagnostics card(s)", cards),
+                CountText.Format(cards, OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel,
+                    OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels),
                 cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Indented one level: this reporter nests inside the card reporter, and without it
@@ -864,14 +888,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var rows = new List<FeatureRow>();
             var targetHist = contributions.TargetHistograms;
             var decoyHist = contributions.DecoyHistograms;
+            // A tree ensemble has no percents to rank by, so its rows stay in feature order.
+            bool unranked = contributions.IsDegenerate || contributions.IsTreeEnsemble;
             foreach (var f in contributions.Features
-                .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                .OrderByDescending(f => unranked ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
                 rows.Add(new FeatureRow
                 {
                     Index = f.Index,
-                    Label = f.Label,
+                    // Invariant: the report and its intermediate file read the same in every UI language.
+                    Label = f.ReportLabel,
                     Coefficient = f.Coefficient,
                     Percent = f.Percent,
                     DeltaMu = f.TargetDecoyMeanGap,
@@ -1018,7 +1045,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
             out int nWithClass, out int nWithoutClass,
-            string indent = "")
+            string indent = null)
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
@@ -1030,7 +1057,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // larger dataset. The reporter's throttle means a small run still costs one line.
             int reduceIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
+                       CountText.Format(perFileEntries.Count,
+                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file,
+                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files),
                        perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
@@ -1044,7 +1073,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         uint pairIdx = 0;
                         bool hasPair = pairByBaseId != null &&
                             pairByBaseId.TryGetValue(baseId, out pairIdx);
-                        string key = e.ModifiedSequence + "|" + e.Charge;
+                        string key = e.ModifiedSequence + @"|" + e.Charge;
                         if (!best.TryGetValue(key, out var cur))
                         {
                             cur = new Prec
@@ -1496,7 +1525,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // matching the Summary per-file loop -- not a hardcoded peptide q.
                     if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
-                    string key = e.ModifiedSequence + "|" + e.Charge;   // same key as ReduceToPrecs
+                    string key = e.ModifiedSequence + @"|" + e.Charge;   // same key as ReduceToPrecs
                     bool expOk = e.EffectiveExperimentQvalue(fdrLevel) <= runFdr; // max(run q, exp q) <= FDR
                     // Entrapment (p_target) is a known false set that by design does not
                     // reproduce: route it to its own sets so it can't inflate the real-target

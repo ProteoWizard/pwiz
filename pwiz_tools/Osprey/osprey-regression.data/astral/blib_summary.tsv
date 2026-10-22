@@ -1,36 +1,25 @@
 table	column	rows_or_sum	min	max
-RefSpectra	<rows>	117265		
-RefSpectra	precursorMZ	72264985.98587342	400.4867124947253	901.517116123772
-RefSpectra	retentionTime	1310956.8883469796	2.003337516667	23.813372533333
-RefSpectra	startTime	1303100.3488359952	1.932142116667	23.7654244
-RefSpectra	endTime	1319028.0705461907	2.0269066	23.8603181
-RefSpectra	score	126.57149455072908	3.09626281078738E-05	0.009999090991728025
+RefSpectra	<rows>	118314		
+RefSpectra	precursorMZ	72735465.12021273	400.4867124947253	901.517116123772
+RefSpectra	retentionTime	1318205.3484636333	2.003337516667	23.813372533333
+RefSpectra	startTime	1310306.4962929501	1.932142116667	23.7654244
+RefSpectra	endTime	1326338.6150071002	2.0269066	23.8603181
+RefSpectra	score	129.34190680151534	2.8084365433763024E-05	0.009993541588769164
 RefSpectra	ionMobility	0	0	0
-RetentionTimes	<rows>	351756		
-RetentionTimes	retentionTime	3445885.9597433796	1.961938983333	23.813372533333
-RetentionTimes	startTime	3904324.9066662276	1.798602883333	23.7654244
-RetentionTimes	endTime	3951775.059297032	2.0269066	23.870514
-RetentionTimes	score	8162.255224079928	3.09626281078738E-05	1
-OspreyRunScores	<rows>	117265		
-OspreyRunScores	RunQValue	65.44480369149309	3.09626281078738E-05	0.009719362676905385
-OspreyRunScores	DiscriminantScore	0	0	0
-OspreyRunScores	PosteriorErrorProb	0	0	0
-OspreyExperimentScores	<rows>	117265		
-OspreyExperimentScores	ExperimentQValue	126.57149455072908	3.09626281078738E-05	0.009999090991728025
-OspreyPeakBoundaries	<rows>	117265		
-OspreyPeakBoundaries	StartRT	1303100.3488359952	1.932142116667	23.7654244
-OspreyPeakBoundaries	EndRT	1319028.0705461907	2.0269066	23.8603181
-OspreyPeakBoundaries	ApexRT	1310956.8883469796	2.003337516667	23.813372533333
-OspreyPeakBoundaries	ApexIntensity	0	0	0
-OspreyPeakBoundaries	IntegratedArea	616529846.3907818	0	4525329.633942038
-OspreyCoefficients	<rows>	0		
-OspreyCoefficients	RT			
-OspreyCoefficients	Coefficient			
-RefSpectraProteins	<rows>	125094		
-Modifications	<rows>	25247		
-Modifications	mass	1439620.9016077837	57.021464	57.021464
-Proteins	<rows>	9815		
+RefSpectra	PrecursorQValue	129.34190680151534	2.8084365433763024E-05	0.009993541588769164
+RefSpectra	PrecursorPep	2302.3316318327447	1.277623583334887E-169	0.19067150749849657
+RefSpectra	PeptideQValue	129.60525274398398	2.8084365433763024E-05	0.011393113269925233
+RetentionTimes	<rows>	354916		
+RetentionTimes	retentionTime	3454049.64727675	1.961938983333	23.813372533333
+RetentionTimes	startTime	3925243.7320922	1.798602883333	23.7654244
+RetentionTimes	endTime	3973060.999571967	2.0269066	23.86792025
+RetentionTimes	score	8181.522023573445	2.8084365433763024E-05	1
+RefSpectraProteins	<rows>	123084		
+Modifications	<rows>	25442		
+Modifications	mass	1450740.087088	57.021464	57.021464
+Proteins	<rows>	8939		
+Proteins	QValue	3.1695953769537586	0	1
 SpectrumSourceFiles	<rows>	3		
 SpectrumSourceFiles	cutoffScore	0.03	0.01	0.01
-OspreyMetadata	<rows>	4		
-PeakDigest	<rows>	117265		
+LibMetadata	<rows>	4		
+PeakDigest	<rows>	118314		

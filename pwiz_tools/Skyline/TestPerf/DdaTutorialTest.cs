@@ -223,7 +223,7 @@ namespace TestPerf
 
             // Switch search engine
             if (!useMsAmanda)
-                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = searchEngine));
+                SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = searchEngine);
 
             RunUI(() =>
             {
@@ -270,7 +270,7 @@ namespace TestPerf
                 RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FixedLineCountLock(31));
             }
 
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // Handle download dialogs if necessary
             if (RedownloadTools || HasMissingDependencies)

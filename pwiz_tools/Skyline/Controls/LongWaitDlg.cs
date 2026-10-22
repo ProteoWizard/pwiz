@@ -343,7 +343,7 @@ namespace pwiz.Skyline.Controls
                     _finished = true;
                     if (_windowShown)
                     {
-                        BeginInvoke(new Action(FinishDialog));
+                        BeginInvoke(FinishDialog);
                     }
                 }
 

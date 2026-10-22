@@ -22,6 +22,7 @@
  */
 
 using System.Globalization;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Osprey.Core
 {
@@ -47,9 +48,21 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class NeutralLoss
     {
-        public const double H2OMass = 18.010565;
-        public const double NH3Mass = 17.026549;
-        public const double H3PO4Mass = 97.976896;
+        // From the formulas and the isotope table every tool in pwiz shares
+        // (pwiz.Common.Chemistry, the values Skyline calculates with), not a copy of them: the
+        // tools that compute peptide and fragment masses must agree to the last digit.
+        public static readonly double H2OMass = MonoisotopicMass(@"H2O");
+        public static readonly double NH3Mass = MonoisotopicMass(@"NH3");
+        public static readonly double H3PO4Mass = MonoisotopicMass(@"H3PO4");
+
+        /// <summary>The monoisotopic mass of <paramref name="formula"/> from <see cref="IsotopeAbundances.Default"/>, as <see cref="AminoAcidFormulas"/> sums a peptide's.</summary>
+        public static double MonoisotopicMass(string formula)
+        {
+            double mass = 0.0;
+            foreach (var element in Molecule.Parse(formula))
+                mass += IsotopeAbundances.Default[element.Key].MostAbundanceMass * element.Value;
+            return mass;
+        }
 
         /// <summary>
         /// Mass of the neutral loss for the given code, using
@@ -70,34 +83,34 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Parses a string to a neutral loss. Returns
-        /// (<see cref="NeutralLossCode.None"/>, 0) for empty, "NOLOSS", or
-        /// unrecognized input; a named code for known losses; and
-        /// (<see cref="NeutralLossCode.Custom"/>, mass) for a numeric mass.
+        /// Parses a string to a neutral loss: (<see cref="NeutralLossCode.None"/>, 0) for
+        /// "NOLOSS", a named code for known losses, and
+        /// (<see cref="NeutralLossCode.Custom"/>, mass) for a numeric mass. Null for empty or
+        /// unrecognized input, which a library reader must report rather than read as no loss.
         /// </summary>
-        public static (NeutralLossCode Code, double CustomMass) Parse(string s)
+        public static (NeutralLossCode Code, double CustomMass)? Parse(string s)
         {
             if (string.IsNullOrEmpty(s))
-                return (NeutralLossCode.None, 0.0);
+                return null;
 
             switch (s.ToUpperInvariant())
             {
-                case "H2O":
-                case "WATER":
+                case @"H2O":
+                case @"WATER":
                     return (NeutralLossCode.H2O, 0.0);
-                case "NH3":
-                case "AMMONIA":
+                case @"NH3":
+                case @"AMMONIA":
                     return (NeutralLossCode.NH3, 0.0);
-                case "H3PO4":
-                case "PHOSPHO":
+                case @"H3PO4":
+                case @"PHOSPHO":
                     return (NeutralLossCode.H3PO4, 0.0);
-                case "NOLOSS":
+                case @"NOLOSS":
                     return (NeutralLossCode.None, 0.0);
                 default:
                     double mass;
                     if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out mass))
                         return (NeutralLossCode.Custom, mass);
-                    return (NeutralLossCode.None, 0.0);
+                    return null;
             }
         }
     }

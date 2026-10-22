@@ -7,7 +7,7 @@ REM
 REM Pre-requisites on the build agent (same as tcbuild.bat, plus internet):
 REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallback)
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
-REM   * .NET 8 SDK
+REM   * .NET 10 SDK
 REM   * Outbound HTTPS to panoramaweb.org (downloads the mzML test-data zip into
 REM     the shared <Downloads>\Perftests folder on first run; skipped if present)
 REM
@@ -35,6 +35,14 @@ REM Stellar + StellarLibDecoy in the other), balanced on measured per-leg second
 REM regression-parallel.ps1 sizes threads per lane from the agent's logical
 REM processor count, so this is correct on a 16-logical agent and on a 32-logical
 REM dev box without a per-machine setting here.
+REM
+REM Then CarafeSharp's nightly checks (pwiz_tools/CarafeSharp/tcregression.ps1): its tests with
+REM the test data, the full Stellar fine-tune against its golden, and the chained leg, which
+REM reuses the Osprey build above. They run even when Osprey's regression failed.
 setlocal
 pwsh -NoProfile -File "%~dp0regression-parallel.ps1" -TeamCity -Dataset All
-exit /b %ERRORLEVEL%
+set OSPREYDEV_EXIT=%ERRORLEVEL%
+pwsh -NoProfile -File "%~dp0..\CarafeSharp\tcregression.ps1" -TeamCity
+set CARAFESHARP_EXIT=%ERRORLEVEL%
+if %OSPREYDEV_EXIT% NEQ 0 exit /b %OSPREYDEV_EXIT%
+exit /b %CARAFESHARP_EXIT%

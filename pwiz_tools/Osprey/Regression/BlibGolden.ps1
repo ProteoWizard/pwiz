@@ -36,9 +36,12 @@
     caller (it is produced by the run via OSPREY_DUMP_STAGE7_PROTEIN_FDR, not
     read from the blib).
 
-    The same projection schema also powers the mode-2 self-consistency check
-    (Compare-BlibFull), which compares two .blib files row+column at 1e-9 with
-    no committed baseline (the resume run is its own oracle).
+    The self-consistency checks (Compare-BlibFull: the resume and HPC chain legs)
+    compare two .blib files row+column at 1e-9 with no
+    committed baseline (the resume run is its own oracle). They do not use this
+    schema: they compile Osprey.Test\BlibComparer.cs, the comparer
+    SubsetPipelineTest uses, into this session (Initialize-Sqlite), which takes
+    ~2 s on a Stellar blib where the PowerShell row walk took ~90 s.
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -65,11 +68,11 @@ $script:BlibTables = @(
         Sql = @'
 SELECT peptideModSeq, precursorCharge, peptideSeq, prevAA, nextAA, copies,
        numPeaks, ionMobility, retentionTime, startTime, endTime,
-       precursorMZ, score, scoreType
+       precursorMZ, score, scoreType, PrecursorQValue, PrecursorPep, PeptideQValue
 FROM RefSpectra
 '@
         Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility')
+        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility', 'PrecursorQValue', 'PrecursorPep', 'PeptideQValue')
         Exact = @('peptideSeq', 'prevAA', 'nextAA', 'copies', 'numPeaks', 'scoreType')
     },
     @{
@@ -84,54 +87,6 @@ JOIN SpectrumSourceFiles sf ON rt.SpectrumSourceID = sf.id
         Key = @('peptideModSeq', 'precursorCharge', 'fileName')
         Numeric = @('retentionTime', 'startTime', 'endTime', 'score')
         Exact = @('bestSpectrum')
-    },
-    @{
-        Name = 'OspreyRunScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.RunQValue, s.DiscriminantScore, s.PosteriorErrorProb
-FROM OspreyRunScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('RunQValue', 'DiscriminantScore', 'PosteriorErrorProb')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyExperimentScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge,
-       s.ExperimentQValue, s.NRunsDetected, s.NRunsSearched
-FROM OspreyExperimentScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('ExperimentQValue')
-        Exact = @('NRunsDetected', 'NRunsSearched')
-    },
-    @{
-        Name = 'OspreyPeakBoundaries'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.StartRT, s.EndRT, s.ApexRT, s.ApexIntensity, s.IntegratedArea
-FROM OspreyPeakBoundaries s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('StartRT', 'EndRT', 'ApexRT', 'ApexIntensity', 'IntegratedArea')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyCoefficients'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName, s.ScanNumber,
-       s.RT, s.Coefficient
-FROM OspreyCoefficients s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName', 'ScanNumber')
-        Numeric = @('RT', 'Coefficient')
-        Exact = @()
     },
     @{
         Name = 'RefSpectraProteins'; Scope = 'Subset'
@@ -158,9 +113,9 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
     },
     @{
         Name = 'Proteins'; Scope = 'Full'
-        Sql = 'SELECT accession FROM Proteins'
+        Sql = 'SELECT accession, QValue FROM Proteins'
         Key = @('accession')
-        Numeric = @()
+        Numeric = @('QValue')
         Exact = @()
     },
     @{
@@ -171,11 +126,14 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
         Exact = @('idFileName', 'workflowType')
     },
     @{
-        Name = 'OspreyMetadata'; Scope = 'Full'
-        Sql = 'SELECT Key, Value FROM OspreyMetadata'
-        Key = @('Key')
+        Name = 'LibMetadata'; Scope = 'Full'
+        # Without the validity stamp (osprey.validity) and the command line (osprey.command):
+        # they name the build, key and invocation that wrote the library, which is provenance,
+        # not a search result to hold against a golden.
+        Sql = "SELECT key, value FROM LibMetadata WHERE key NOT IN ('osprey.validity', 'osprey.command')"
+        Key = @('key')
         Numeric = @()
-        Exact = @('Value')
+        Exact = @('value')
     }
 )
 
@@ -193,16 +151,16 @@ JOIN RefSpectra r ON p.RefSpectraID = r.id
 # ----------------------------------------------------------------------
 function Initialize-Sqlite {
     <#
-    Load System.Data.SQLite from the Osprey net8.0 build output and make
+    Load System.Data.SQLite from the Osprey net10.0 build output and make
     sure its native SQLite.Interop.dll sits beside the managed assembly (the
     P/Invoke probes the assembly dir directly when loaded via Add-Type). Call
-    once before any Open-Blib. -OspreyBinDir points at the build's net8.0 dir.
+    once before any Open-Blib. -OspreyBinDir points at the build's net10.0 dir.
     #>
     param([Parameter(Mandatory = $true)][string]$OspreyBinDir)
 
     $dll = Join-Path $OspreyBinDir 'System.Data.SQLite.dll'
     if (-not (Test-Path $dll)) {
-        throw "System.Data.SQLite.dll not found at $dll -- build Osprey (net8.0) first."
+        throw "System.Data.SQLite.dll not found at $dll -- build Osprey (net10.0) first."
     }
     $rid = if ($IsLinux) { 'linux-x64' } else { 'win-x64' }
     $nativeSrc = Join-Path $OspreyBinDir "runtimes/$rid/native/SQLite.Interop.dll"
@@ -244,6 +202,17 @@ function Initialize-Sqlite {
         }
     }
     Add-Type -Path $dll
+
+    # Compare-BlibFull's comparer: the same source file the subset tests compile, so the
+    # two cannot drift. Referenced against every pwsh reference assembly, not a hand-kept
+    # list: naming any list replaces Add-Type's defaults, and a BCL type the test build
+    # accepts would then fail here, only in the nightly. Guarded because Add-Type cannot
+    # redefine a type in one session - after editing BlibComparer.cs, start a fresh pwsh.
+    if (-not ('pwiz.Osprey.Test.BlibComparer' -as [type])) {
+        $comparer = Join-Path (Split-Path -Parent $PSScriptRoot) 'Osprey.Test\BlibComparer.cs'
+        $references = @(Get-ChildItem (Join-Path $PSHOME 'ref\*.dll')).FullName + $dll
+        Add-Type -Path $comparer -ReferencedAssemblies $references
+    }
 }
 
 function Invoke-BlibQuery {
@@ -612,7 +581,11 @@ function Compare-BlibGolden {
         [string]$ProteinFdrTsv,
         [int]$Modulus = $script:DefaultModulus,
         [double]$Tolerance = 1e-9,
-        [double]$SummaryRelTolerance = 1e-6
+        [double]$SummaryRelTolerance = 1e-6,
+        # The run searched the library as a .blib exported from the golden's .tsv (regression.ps1
+        # -LibraryAsBlib): the library file name Osprey records in SpectrumSourceFiles.idFileName
+        # differs by extension and nothing else, so that one column is left out of the comparison.
+        [switch]$LibraryAsBlib
     )
     $tablesDir = Join-Path $GoldenDir 'tables'
     $issues = [System.Collections.Generic.List[string]]::new()
@@ -622,9 +595,13 @@ function Compare-BlibGolden {
         if (-not (Test-Path $goldenPath)) { $issues.Add("missing golden table: $($t.Name)"); continue }
         $golden = Read-Tsv -Path $goldenPath
         $fresh = Get-TableProjection -Blib $Blib -Table $t -SubsetFilter:$true -Modulus $Modulus
+        $exactCols = $t.Exact
+        if ($LibraryAsBlib -and $t.Name -eq 'SpectrumSourceFiles') {
+            $exactCols = @($t.Exact | Where-Object { $_ -ne 'idFileName' })
+        }
         $cmp = Compare-RowSets -Label $t.Name -Header $golden.Header `
             -RowsA $golden.Rows -RowsB $fresh.Rows `
-            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $t.Exact -Tolerance $Tolerance
+            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $exactCols -Tolerance $Tolerance
         foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
     }
 
@@ -720,40 +697,32 @@ function Compare-Summary {
 # ----------------------------------------------------------------------
 function Compare-BlibFull {
     <#
-    Compare two .blib files row + column at Tolerance across the full schema (NO
-    subset filter): the resume run is its own oracle against the straight-through
-    run, so no committed golden is needed. Returns Pass + Issues.
+    Compare two .blib files row + column at Tolerance across every Osprey-written
+    table, peaks included (NO subset filter): the resume run is its own oracle
+    against the straight-through run, so no committed golden is needed. Returns
+    Pass + Issues.
+
+    Runs Osprey.Test\BlibComparer (compiled by Initialize-Sqlite), which reports one
+    line per differing row - 250K on a changed pass-2 arm - so the issues are capped
+    to the first few rows plus a per-table count.
     #>
     param(
         [Parameter(Mandatory = $true)][string]$BlibExpected,
         [Parameter(Mandatory = $true)][string]$BlibActual,
         [double]$Tolerance = 1e-9,
-        [switch]$IncludePeaks
+        [int]$MaxRows = 20
     )
+    $differences = [pwiz.Osprey.Test.BlibComparer]::Compare($BlibExpected, $BlibActual, $Tolerance)
     $issues = [System.Collections.Generic.List[string]]::new()
-    foreach ($t in $script:BlibTables) {
-        # -NoSort: the compare keys into a dictionary, so row order is
-        # irrelevant -- skip the (expensive on 180K-row tables) sort.
-        $a = Get-TableProjection -Blib $BlibExpected -Table $t -NoSort
-        $b = Get-TableProjection -Blib $BlibActual -Table $t -NoSort
-        $cmp = Compare-RowSets -Label $t.Name -Header $a.Header `
-            -RowsA $a.Rows -RowsB $b.Rows `
-            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $t.Exact -Tolerance $Tolerance
-        foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
+    if ($differences.Count -gt $MaxRows) {
+        # The per-table counts FIRST: callers print the first 15 issues, and which tables
+        # differ, by how much, is what a red leg needs before any single row. Every line
+        # starts with its table name.
+        foreach ($g in ($differences | Group-Object { ($_ -split '[ :]', 2)[0] })) {
+            $issues.Add(("{0}: {1:N0} differing row(s) in all" -f $g.Name, $g.Count))
+        }
     }
-    # RefSpectraPeaks are copied verbatim from the spectral library and cannot
-    # differ between a straight-through run and its resume (same library, same
-    # reference spectra) -- the self-consistency check that motivates this
-    # comparison is about computed RT/area/score columns, not peaks. Skip the
-    # 60K-spectrum SHA digest by default; -IncludePeaks forces it.
-    if ($IncludePeaks) {
-        $ap = Get-PeakDigestProjection -Blib $BlibExpected
-        $bp = Get-PeakDigestProjection -Blib $BlibActual
-        $cmp = Compare-RowSets -Label 'PeakDigest' -Header $ap.Header `
-            -RowsA $ap.Rows -RowsB $bp.Rows `
-            -KeyCols @('peptideModSeq', 'precursorCharge') -ExactCols @('peakHash') -Tolerance $Tolerance
-        foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
-    }
-
-    return [pscustomobject]@{ Pass = ($issues.Count -eq 0); Issues = $issues }
+    foreach ($d in ($differences | Select-Object -First $MaxRows)) { $issues.Add($d) }
+    return [pscustomobject]@{ Pass = ($differences.Count -eq 0); Issues = $issues;
+                              Differences = $differences.Count }
 }

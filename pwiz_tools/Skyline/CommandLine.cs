@@ -147,6 +147,27 @@ namespace pwiz.Skyline
 
         public int Run(string[] args, bool withoutUsage = false, bool test = false)
         {
+            // --culture sets the process-wide culture, so restore it for callers that run more than one command
+            // in the same process (the Skyline MCP, the Immediate Window and batch commands).
+            var originalCulture = LocalizationHelper.CurrentCulture;
+            var originalUICulture = LocalizationHelper.CurrentUICulture;
+            var originalThreadCulture = Thread.CurrentThread.CurrentCulture;
+            var originalThreadUICulture = Thread.CurrentThread.CurrentUICulture;
+            try
+            {
+                return RunAndReconcileStatus(args, withoutUsage, test);
+            }
+            finally
+            {
+                LocalizationHelper.CurrentCulture = originalCulture;
+                LocalizationHelper.CurrentUICulture = originalUICulture;
+                Thread.CurrentThread.CurrentCulture = originalThreadCulture;
+                Thread.CurrentThread.CurrentUICulture = originalThreadUICulture;
+            }
+        }
+
+        private int RunAndReconcileStatus(string[] args, bool withoutUsage, bool test)
+        {
             var exitStatus = RunInner(args, withoutUsage);
 
             // Handle cases where the error reporting and exit code are out of synch
@@ -1578,11 +1599,15 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
                 using var fileStream = File.OpenRead(skylineFile);
-                using var progressStream = new ProgressStream(fileStream);
+                // The hash is computed under the read-ahead stream, so it happens on the reading
+                // thread as each block comes off the disk instead of on the thread parsing the XML
+                using var hashingStream = new HashingStream(fileStream, true);
+                // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                using var sequentialReadStream = new SequentialReadStream(hashingStream, true);
+                using var progressStream = new ProgressStream(sequentialReadStream);
                 progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
-                using var hashingStream = new HashingStream(progressStream, true);
                 // Wrap stream in XmlReader so that BaseUri is known
-                var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8), 
+                var reader = XmlReader.Create(new StreamReader(progressStream, Encoding.UTF8),
                     new XmlReaderSettings { IgnoreWhitespace = true }, 
                     skylineFile);  
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
@@ -1591,6 +1616,9 @@ namespace pwiz.Skyline
                 if (_doc == null)
                     return false;
 
+                // The parser can stop before the end of the file, and the reading thread may still be hashing.
+                // Reading to the end waits for that thread to hash the last block.
+                sequentialReadStream.CopyTo(Stream.Null);
                 var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
@@ -2749,19 +2777,45 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(PathEx.SafePath(filePath)));
 
-                using (var reader = new StreamReader(filePath))
+                try
                 {
-                    _doc = _doc.ImportDocumentXml(reader,
-                                                filePath,
-                                                commandArgs.DocImportResultsMerge.Value,
-                                                commandArgs.DocImportMergePeptides,
-                                                FindSpectralLibrary,
-                                                Settings.Default.StaticModList,
-                                                Settings.Default.HeavyModList,
-                                                null,   // Always add to the end
-                                                out _,
-                                                out _,
-                                                false);
+                    using (var reader = new StreamReader(filePath))
+                    {
+                        _doc = _doc.ImportDocumentXml(reader,
+                                                    filePath,
+                                                    commandArgs.DocImportResultsMerge.Value,
+                                                    commandArgs.DocImportMergePeptides,
+                                                    FindSpectralLibrary,
+                                                    Settings.Default.StaticModList,
+                                                    Settings.Default.HeavyModList,
+                                                    null,   // Always add to the end
+                                                    out _,
+                                                    out _,
+                                                    false);
+                    }
+                }
+                catch (Exception e) when (e is IOException || e is ArgumentException || e is NotSupportedException)
+                {
+                    // Malformed path (invalid chars, missing file, etc.). net472 raised
+                    // NotSupportedException on invalid path chars; net8 raises IOException.
+                    // Report and fail the import gracefully so the command-line returns
+                    // an error status instead of unwinding through Main.
+                    _out.WriteLine(@"Error: {0}", e.Message);
+                    return false;
+                }
+                catch (Exception e) when (e is XmlException ||
+                                          (e is InvalidOperationException && e.InnerException is XmlException))
+                {
+                    // The file opened but is not a document. Windows rejects a path like
+                    // "Bad:\Path\Value" outright, so it lands in the catch above; Wine opens it and
+                    // the failure arrives here instead, as XmlSerializer wrapping an XmlException.
+                    // Report it the way OpenSkyFile does - naming the file, which a bare parse
+                    // message does not - rather than unwinding to Main. Narrow on purpose: a
+                    // blanket catch here also swallows unrelated import failures and turns them
+                    // into two spurious error lines.
+                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, filePath);
+                    _out.WriteLine(XmlUtil.GetInvalidDataMessage(filePath, e));
+                    return false;
                 }
             }
             return true;
@@ -4812,9 +4866,9 @@ namespace pwiz.Skyline
             }, x =>
             {
                 if (formatIncludesException)
-                    _out.WriteException(formatMessage, string0, x);
+                    _out.WriteException(EnsureErrorPrefix(formatMessage), string0, x);
                 else
-                    _out.WriteException(string.Format(formatMessage, string0), x, true);
+                    _out.WriteException(EnsureErrorPrefix(string.Format(formatMessage, string0)), x, true);
             });
         }
 
@@ -4824,7 +4878,25 @@ namespace pwiz.Skyline
             {
                 func();
                 return true;
-            }, x => _out.WriteException(message, x, !formatIncludesException));
+            }, x => _out.WriteException(EnsureErrorPrefix(message), x, !formatIncludesException));
+        }
+
+        /// <summary>
+        /// Prepends the "Error:" hint if the message doesn't already start with it, so
+        /// the write flips <see cref="CommandStatusWriter.IsErrorReported"/> and
+        /// downstream ValidateRunExitStatus sees a real error report. Resource strings
+        /// used with HandleExceptions historically expected the caller to hand-encode
+        /// the prefix (e.g. "Error: Failure attempting to..."); a few resources
+        /// (CommandLine_AssociateProteins_Failed_to_associate_proteins, etc.) omit it
+        /// and slipped through undetected on net472 where non-error prefixes weren't
+        /// checked.
+        /// </summary>
+        private static string EnsureErrorPrefix(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return message;
+            if (message.StartsWith(@"Error", StringComparison.InvariantCultureIgnoreCase))
+                return message;
+            return @"Error: " + message;
         }
 
         private static T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)

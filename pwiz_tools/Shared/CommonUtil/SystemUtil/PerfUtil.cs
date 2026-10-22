@@ -1,6 +1,7 @@
 /*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -121,8 +122,16 @@ namespace pwiz.Common.SystemUtil
                         _startIndex = _parent._perftimersList.Count; // note where we began
                         // find outer event, set name as outer:name
                         int calldepth = parent._perftimersList[_startIndex - 1].Key.Count(x => x == ':');
+                        // GetLog() closes the root event, so a timer created after it (e.g. the second
+                        // pass of a two-pass chromatogram extraction over one data file) would otherwise
+                        // resolve to depth -1. Treat it as a new top-level timer instead.
                         if (parent._perftimersList[_startIndex - 1].Key.EndsWith(@"%"))
-                            calldepth--;
+                            calldepth = Math.Max(0, calldepth - 1);
+                        // The depth is inferred from the previous event, so timers interleaved from
+                        // more than one thread can nest deeper than any real call stack. Grow rather
+                        // than fail, since this is a measurement tool and must never abort the work.
+                        while (_parent._callstack.Count <= calldepth + 1)
+                            _parent._callstack.Add(0);
                         _parent._callstack[calldepth + 1] = _startIndex;
                         name = cleanupName(name); // watch for reserved characters in name
                         name = _parent._perftimersList[_parent._callstack[calldepth]].Key + @" : " + name;

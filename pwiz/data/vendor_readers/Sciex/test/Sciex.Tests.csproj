@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+  </ItemGroup>
+
+  <!-- Reference/ holds pwiz-sharp-specific reference mzMLs AND, for fixtures the cpp
+       tree doesn't ship, the source vendor data (.wiff / .wiff.scan etc.). Both kinds
+       are picked up by VendorReaderTestHarness — checks <bin>/Reference/<filename>
+       first, then falls back to the cpp tree. Copying these to bin keeps edits to
+       pwiz-sharp references from retriggering the cpp vendor TC configs. The split
+       is temporary: once the port is complete the location will be consolidated.
+       README.md documents the policy. -->
+  <ItemGroup>
+    <None Update="Reference\*.mzML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Reference\*.wiff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Reference\*.wiff.scan">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- ReaderSciexWiff2ConcurrencyTests drives AbstractWiffFile directly, and Sciex.csproj
+       removes that type from the SDK-less build (NativeVendorsAvailable is false on Linux even
+       with the licences agreed), so the file has to go with it - the same pattern as
+       Agilent.Tests.csproj. The Reader_Sciex-based tests survive because they catch
+       VendorSupportNotEnabledException at run time instead. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="ReaderSciexWiff2ConcurrencyTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sciex.csproj" />
+    <ProjectReference Include="..\..\TestHarness\TestHarness.csproj" />
+    <ProjectReference Include="..\Wiff2\Sciex.Wiff2.csproj"
+                      Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+    <!-- OFX.Logging stub: see comment in Sciex.csproj. The Content/CopyToOutputDirectory
+         pattern doesn't propagate transitively through Sciex.dll, so we repeat the
+         reference in each consumer that needs the stub at runtime. -->
+    <ProjectReference Include="..\OfxLoggingStub\OfxLoggingStub.csproj"
+                      Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- Supplies @(VendorNativeCrtFile) for the wiff2 staging below, and drops the CRT in this test
+       project's own output root. -->
+  <Import Project="$(PwizToolsRoot)\Shared\Lib\VendorNativeCrt.targets" />
+
+  <!-- The wiff2\ plugin folder; see the targets file. -->
+  <Import Project="$(PwizToolsRoot)\Shared\Lib\SciexWiff2Staging.targets" />
+
+</Project>

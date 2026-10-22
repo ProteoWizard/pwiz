@@ -22,11 +22,9 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -100,8 +98,6 @@ namespace SkylineBatch
                     return;
                 }
 
-                InitializeSecurityProtocol();
-                
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
@@ -161,10 +157,15 @@ namespace SkylineBatch
             if (restart) Application.Restart();
         }
 
+        // ClickOnce (System.Deployment) is net472-only; on net8 the app is never network-deployed.
+        private static bool IsNetworkDeployed =>
+            false;
+
         private static void InitializeVersion()
         {
-            if (ApplicationDeployment.IsNetworkDeployed)
-                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            if (IsNetworkDeployed)
+            {
+            }
             else
             {
                 // copied from Skyline Install.cs GetVersion()
@@ -204,12 +205,9 @@ namespace SkylineBatch
         private static string GetFirstArg(string[] args)
         {
             string arg;
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
-                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-                arg = activationData != null && activationData.Length > 0
-                    ? activationData[0]
-                    : string.Empty;
+                arg = string.Empty;
             }
             else
             {
@@ -251,7 +249,7 @@ namespace SkylineBatch
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var configFileIconPath = Path.Combine(baseDirectory, "SkylineBatch_configs.ico");
 
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
                 FileUtil.AddFileTypeClickOnce(TextUtil.EXT_BCFG, "SkylineBatch.Configuration.0",
                     Resources.Program_AddFileTypesToRegistry_Skyline_Batch_Configuration_File,
@@ -278,12 +276,6 @@ namespace SkylineBatch
         public static Icon Icon()
         {
             return System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        }
-
-        private static void InitializeSecurityProtocol()
-        {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
         }
 
         public static void AddTestException(Exception exception)

@@ -59,6 +59,47 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string CacheDir { get; set; }
 
+        // The output directory the cache resolves against, when a scope from
+        // ResolveCacheAs has pinned it apart from OutputDir.
+        private static bool _cacheOutputDirPinned;
+        private static string _cacheOutputDir;
+
+        /// <summary>
+        /// Until disposed, resolve the cache as an analysis with <paramref name="outputDir"/> as its
+        /// <see cref="OutputDir"/> would, whatever <see cref="OutputDir"/> is set to. A second
+        /// analysis in one process (the one command's search of its tuning runs) writes its other
+        /// artifacts to a folder of its own and resolves the cache as the first analysis does, so
+        /// a run both analyses read is parsed once, and a default run still never probes the data
+        /// directory.
+        /// </summary>
+        public static IDisposable ResolveCacheAs(string outputDir)
+        {
+            bool pinned = _cacheOutputDirPinned;
+            string previous = _cacheOutputDir;
+            _cacheOutputDirPinned = true;
+            _cacheOutputDir = outputDir;
+            return new CacheResolutionScope(() =>
+            {
+                _cacheOutputDirPinned = pinned;
+                _cacheOutputDir = previous;
+            });
+        }
+
+        private sealed class CacheResolutionScope : IDisposable
+        {
+            private readonly Action _restore;
+
+            public CacheResolutionScope(Action restore)
+            {
+                _restore = restore;
+            }
+
+            public void Dispose()
+            {
+                _restore();
+            }
+        }
+
         // Writability is probed (an ACL check is unreliable cross-platform) and
         // memoized per directory so resolution stays cheap when called for every
         // input file.
@@ -84,7 +125,8 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Directory for the spectra cache of <paramref name="inputPath"/>.
         /// Resolution order: explicit <see cref="CacheDir"/> -> beside the data
-        /// file if that directory is writable -> <see cref="OutputDir"/>. The
+        /// file if that directory is writable -> <see cref="OutputDir"/> (or the
+        /// directory a <see cref="ResolveCacheAs"/> scope names). The
         /// cache is settings-independent, so a shared CacheDir lets many analyses
         /// (and the straight-through vs. resume passes) reuse one parse.
         /// </summary>
@@ -93,25 +135,33 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(CacheDir))
                 return CacheDir;
             string inputDir = InputDir(inputPath);
+            string outputDir = _cacheOutputDirPinned ? _cacheOutputDir : OutputDir;
             // No redirection configured at all: this is exactly the historical
             // location, so skip the writability probe entirely (a default run
             // must not touch the data directory with a temp file).
-            if (string.IsNullOrEmpty(OutputDir))
+            if (string.IsNullOrEmpty(outputDir))
                 return inputDir;
             // OutputDir is set but no explicit CacheDir: prefer beside-data for
             // cross-analysis reuse, falling back to OutputDir when the data
             // directory is read-only.
-            return IsDirectoryWritable(inputDir) ? inputDir : OutputDir;
+            return IsDirectoryWritable(inputDir) ? inputDir : outputDir;
         }
 
+        /// <summary>
+        /// The input's directory, absolute and with the platform separator, so an input typed
+        /// as D:/data/run.mzML yields D:\data\run.spectra.bin rather than D:/data\run.spectra.bin.
+        /// Empty for a bare file name, which keeps the artifact relative to the working
+        /// directory exactly as before.
+        /// </summary>
         private static string InputDir(string inputPath)
         {
-            return Path.GetDirectoryName(inputPath) ?? string.Empty;
+            string dir = Path.GetDirectoryName(inputPath);
+            return string.IsNullOrEmpty(dir) ? string.Empty : Path.GetFullPath(dir);
         }
 
         private static bool IsDirectoryWritable(string dir)
         {
-            string key = string.IsNullOrEmpty(dir) ? "." : dir;
+            string key = string.IsNullOrEmpty(dir) ? @"." : dir;
             return _writable.GetOrAdd(key, ProbeWritable);
         }
 
@@ -121,7 +171,7 @@ namespace pwiz.Osprey.IO
             {
                 if (!Directory.Exists(dir))
                     return false;
-                string probe = Path.Combine(dir, "." + Guid.NewGuid().ToString("N") + ".osprey-wtest");
+                string probe = Path.Combine(dir, @"." + Guid.NewGuid().ToString(@"N") + @".osprey-wtest");
                 // DeleteOnClose keeps the probe self-cleaning even if disposal
                 // races with AV / permission edge cases -- no littered temp file.
                 using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write,

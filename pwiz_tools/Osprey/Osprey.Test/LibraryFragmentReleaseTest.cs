@@ -151,42 +151,36 @@ namespace pwiz.Osprey.Test
         private static void ValidateEveryLegThatHoldsTheLibraryReleasesIt()
         {
             AssertRunsOnLeg(true, @"straight-through", new OspreyConfig());
-            AssertRunsOnLeg(true, @"--task SecondPassFDR", ForTask(HpcTask.SecondPassFdr));
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME, TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
             // The `--input-scores full pipeline` leg that stood here is gone with the flag:
             // a single-node full pipeline started from parquets IS the straight-through leg
             // above now, asserted once rather than twice under two input kinds.
-            AssertRunsOnLeg(false, @"--task FirstPassFDR", ForTask(HpcTask.FirstPassFdr));
+            AssertRunsOnLeg(false, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
 
             // --fdrbench-pass 1 used to force the RESIDENT first-pass pool, which never computed
             // a surviving base_id set, so there was nothing to release against. Since #4507 the
             // pass-1 emitter streams off the sidecars on the projection path, before compaction
             // and reading only library sequences and accessions, so the leg releases like any
             // other - for either selection that includes pass 1.
-            AssertRunsOnLeg(true, @"--fdrbench-pass 1", new OspreyConfig
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_FDRBENCH_PASS + OspreyConfig.FDRBENCH_PASS_1, new OspreyConfig
             {
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1
             });
-            AssertRunsOnLeg(true, @"--fdrbench-pass both", new OspreyConfig
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_FDRBENCH_PASS + @"both", new OspreyConfig
             {
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
             });
 
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
             bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
             try
             {
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertRunsOnLeg(false, @"OSPREY_FDR_PROJECTION=0", new OspreyConfig());
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
                 OspreyEnvironment.ReleaseLibraryFragments = false;
                 AssertRunsOnLeg(false, @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0", new OspreyConfig());
             }
             finally
             {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
                 OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
             }
         }
@@ -194,7 +188,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The suffix records whether the release RAN, not whether the flag was set. Keying it
         /// on the flag alone left the guarantee resting one gate upstream: a leg that never
-        /// released (Stage 5 forced onto the resident path, say) stamped the same EMPTY suffix
+        /// released stamped the same EMPTY suffix
         /// as a leg that did, so a later run WITH the release could adopt those outputs, skip
         /// the work, and report the release arm's memory profile without ever executing it.
         ///
@@ -204,32 +198,22 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void ValidateValidityKeySuffixTracksWhetherTheReleaseRan()
         {
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
             bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
             try
             {
                 AssertSuffix(true, @"straight-through, released", new OspreyConfig());
-                AssertSuffix(true, @"--task SecondPassFDR, released",
-                    ForTask(HpcTask.SecondPassFdr));
-                AssertSuffix(true, @"--task FirstPassFDR cannot release",
-                    ForTask(HpcTask.FirstPassFdr));
-
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertSuffix(false, @"could have released, Stage 5 went resident instead",
-                    new OspreyConfig());
-                // SecondPassFDR's release is its own and does not ride the Stage 5 path.
-                AssertSuffix(true, @"--task SecondPassFDR ignores OSPREY_FDR_PROJECTION",
-                    ForTask(HpcTask.SecondPassFdr));
-                OspreyEnvironment.UseFdrProjection = savedProjection;
+                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + @", released",
+                    TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
+                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME + @" cannot release",
+                    TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
 
                 OspreyEnvironment.ReleaseLibraryFragments = false;
                 AssertSuffix(false, @"opted out where a release was possible", new OspreyConfig());
                 AssertSuffix(true, @"opted out where it was not possible anyway",
-                    ForTask(HpcTask.FirstPassFdr));
+                    TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
             }
             finally
             {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
                 OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
             }
         }
@@ -251,26 +235,7 @@ namespace pwiz.Osprey.Test
 
         private static PipelineContext MakeContext(OspreyConfig config)
         {
-            return new PipelineContext(config, AnalysisPipeline.CanonicalPipeline(), null, null, null);
-        }
-
-        /// <summary>
-        /// One task's config, built the way <c>Program.Main</c> builds it: the task, and the
-        /// three membership flags DERIVED from it. It used to carry an input KIND as well - a
-        /// parquet list standing for <c>--input-scores</c> - which the release predicate read
-        /// alongside the flags; that seam has retired.
-        /// </summary>
-        private static OspreyConfig ForTask(HpcTask task)
-        {
-            return new OspreyConfig
-            {
-                SelectedTask = task,
-                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                // EXACTLY Program.cs's single assignment. Naming ModelDiagnostics here built
-                // a config the CLI cannot produce - see PipelineMembershipTest.ForTask.
-                StopAfterStage5 = task == HpcTask.FirstPassFdr,
-                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
-            };
+            return TaskConfigs.ContextFor(config);
         }
 
         /// <summary>

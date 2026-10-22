@@ -207,11 +207,11 @@ namespace pwiz.Skyline.Controls.Clustering
             if (!_updateSelectionPending)
             {
                 _updateSelectionPending = true;
-                BeginInvoke(new Action(() =>
+                BeginInvoke(() =>
                 {
                     _updateSelectionPending = false;
                     UpdateSelection();
-                }));
+                });
             }
         }
 
@@ -240,11 +240,11 @@ namespace pwiz.Skyline.Controls.Clustering
                 return;
             }
             _refreshDataPending = true;
-            BeginInvoke(new Action(() =>
+            BeginInvoke(() =>
             {
                 _refreshDataPending = false;
                 RefreshData();
-            }));
+            });
         }
 
         protected virtual void DataChanged()
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Controls.Clustering
         {
             if (DataboundGridControl == null && _dataGridId != null)
             {
-                BeginInvoke(new Action(AttachToOwner));
+                BeginInvoke(AttachToOwner);
             }
         }
 

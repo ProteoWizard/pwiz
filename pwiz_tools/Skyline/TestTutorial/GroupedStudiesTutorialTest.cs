@@ -42,8 +42,7 @@ namespace pwiz.SkylineTestTutorial
             get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestGroupedStudiesTutorialDraft()
         {
             // Set true to look at tutorial screenshots.

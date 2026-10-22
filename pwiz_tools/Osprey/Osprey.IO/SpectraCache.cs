@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -58,16 +60,37 @@ namespace pwiz.Osprey.IO
     /// [footer: [ms1_section_offset: int64] [index_offset: int64]]  (16 bytes at EOF)
     ///
     /// The acquisition-order index lets a reader rebuild the window map, AllMs2Rts,
-    /// and the first-cycle isolation windows from one compact contiguous read (no
+    /// and the run's isolation windows from one compact contiguous read (no
     /// record walk), and restores acquisition order for the full LoadSpectraCache
     /// read even though the body is physically window-grouped.
+    ///
+    /// A DEMULTIPLEXED cache (<c>{stem}.demux.spectra.bin</c>) has the same layout with
+    /// two differences: the magic is <c>"OSPRDMX\0"</c>, and the header is followed by
+    /// [descriptor_length: uint32][descriptor: UTF-8] naming the demux algorithm and every
+    /// setting that changes its output. Everything after the header is addressed by the
+    /// absolute offsets in the index and footer, so every reader decodes it unchanged, and
+    /// a descriptor that differs from the current settings rejects the cache. It records
+    /// the SOURCE file's fingerprint, like the <c>.spectra.bin</c> of the same run, so a missing
+    /// source is handled identically.
     /// </summary>
     public static class SpectraCache
     {
+        public const string EXT = @".spectra.bin";
+
+        /// <summary>Extension of the demultiplexed spectra cache (<see cref="GetDemuxCachePath"/>).</summary>
+        public const string EXT_DEMUX = @".demux.spectra.bin";
+
         private static readonly byte[] MAGIC = new byte[] {
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
             (byte)'S', (byte)'P', (byte)'C', 0
         };
+        private static readonly byte[] DEMUX_MAGIC = new byte[] {
+            (byte)'O', (byte)'S', (byte)'P', (byte)'R',
+            (byte)'D', (byte)'M', (byte)'X', 0
+        };
+
+        // A descriptor is a short settings string; anything longer is a corrupt header.
+        private const int MAX_DESCRIPTOR_BYTES = 64 * 1024;
         // VERSION 2 (2026-05-09): mzML load now sorts non-monotonic centroids
         // before caching, so caches written by VERSION 1 may contain unsorted
         // peaks that produce undefined-behavior divergence in fragment matching.
@@ -112,10 +135,11 @@ namespace pwiz.Osprey.IO
         // LoadSpectraCache here and SpectraWindowIndex.BuildFromCache/LoadWindow.
 
         /// <summary>
-        /// Save spectra to a binary cache file.
+        /// Save spectra to a binary cache file. A non-null <paramref name="demuxDescriptor"/>
+        /// writes a demultiplexed cache carrying that descriptor.
         /// </summary>
-        public static void SaveSpectraCache(string path, List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra,
-            string sourcePath = null)
+        public static void SaveSpectraCache(string path, IReadOnlyList<Spectrum> ms2Spectra,
+            List<MS1Spectrum> ms1Spectra, string sourcePath = null, string demuxDescriptor = null)
         {
             if (ms2Spectra == null)
                 ms2Spectra = new List<Spectrum>();
@@ -131,6 +155,11 @@ namespace pwiz.Osprey.IO
                 sourceMtimeMs = 0;
             }
 
+            // A descriptor the reader would refuse would make a cache nothing can reopen.
+            byte[] descriptorBytes = demuxDescriptor == null ? null : Encoding.UTF8.GetBytes(demuxDescriptor);
+            if (descriptorBytes != null && descriptorBytes.Length > MAX_DESCRIPTOR_BYTES)
+                throw new ArgumentOutOfRangeException(nameof(demuxDescriptor));
+
             int nMs2 = ms2Spectra.Count;
 
             // Group MS2 record indices by isolation-window key, preserving acquisition
@@ -138,7 +167,7 @@ namespace pwiz.Osprey.IO
             // Writing each window's records contiguously lets SpectraWindowIndex
             // .LoadWindow read a whole window in one sequential run (the cold-HDD fix);
             // the acquisition-order index written after the body restores file order
-            // for AllMs2Rts / first-cycle windows and for the full LoadSpectraCache read.
+            // for AllMs2Rts / the isolation windows and for the full LoadSpectraCache read.
             var windowKeyOrder = new List<int>();
             var windowKeyToIndices = new Dictionary<int, List<int>>();
             for (int i = 0; i < nMs2; i++)
@@ -158,28 +187,33 @@ namespace pwiz.Osprey.IO
             // in acquisition order into the index block.
             var recordOffsets = new long[nMs2];
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var w = new BinaryWriter(fs))
                 {
                     // Header
-                    w.Write(MAGIC);
+                    w.Write(demuxDescriptor == null ? MAGIC : DEMUX_MAGIC);
                     w.Write(VERSION);
                     w.Write((ulong)sourceSize);
                     w.Write(sourceMtimeMs);
                     w.Write((uint)nMs2);
                     w.Write((uint)ms1Spectra.Count);
+                    if (descriptorBytes != null)
+                    {
+                        w.Write((uint)descriptorBytes.Length);
+                        w.Write(descriptorBytes);
+                    }
 
                     // MS2 records, grouped by window (contiguous per window).
                     //
-                    // Reported for the same reason LibraryCache reports its own write: this is
-                    // multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
+                    // Reported for the same reason the derived library's writer reports its own:
+                    // this is multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
                     // SEA-AD Astral cohort the cache is ~4.1 GB per file and took ~28 s, which
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
                     // hung, with nothing in the log naming the file being written.
-                    using (var progress = new ProgressReporter(@"Writing spectra cache", nMs2,
+                    using (var progress = new ProgressReporter(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2,
                         string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWritten = 0;
@@ -226,7 +260,8 @@ namespace pwiz.Osprey.IO
         /// order even though the body is physically window-grouped.
         /// Returns null if the file does not exist or has invalid magic/version.
         /// </summary>
-        public static SpectraCacheResult LoadSpectraCache(string path, string sourcePath = null)
+        public static SpectraCacheResult LoadSpectraCache(string path, string sourcePath = null,
+            string demuxDescriptor = null)
         {
             if (!File.Exists(path))
                 return null;
@@ -237,7 +272,7 @@ namespace pwiz.Osprey.IO
                 // Validate magic / version / source fingerprint and read the record
                 // counts. Shared with SpectraWindowIndex so the two readers
                 // accept/reject a cache identically.
-                if (!TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
+                if (!TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out _, demuxDescriptor))
                     return null;
 
                 // Read the acquisition-order index (record offsets into the
@@ -260,8 +295,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (fs.Position != index.RecordOffsets[i])
                         throw new InvalidDataException(string.Format(
-                            "Spectra cache MS2 body is not contiguous in offset order " +
-                            "(expected record at {0} but stream is at {1}).",
+                            OspreyIOResources.SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___,
                             index.RecordOffsets[i], fs.Position));
                     ms2[i] = ReadMs2Record(r);
                 }
@@ -285,7 +319,42 @@ namespace pwiz.Osprey.IO
             // result Path.ChangeExtension produced); only the directory is
             // redirected by ArtifactPaths (beside the data file by default, else
             // the configured cache/output dir).
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + ".spectra.bin";
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT;
+            return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
+        }
+
+        /// <summary>
+        /// Why a cache would be refused, from its header alone, without reading its index or
+        /// body: <see cref="SpectraCacheRejection.None"/> when it would be accepted. A null
+        /// <paramref name="demuxDescriptor"/> expects a plain cache. Cheap enough to run on
+        /// every input at start-up.
+        /// </summary>
+        public static SpectraCacheRejection CheckHeader(string path, string sourcePath, string demuxDescriptor)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return SpectraCacheRejection.Absent;
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var r = new BinaryReader(fs))
+                {
+                    TryReadHeader(r, sourcePath, out _, out _, out var reason, demuxDescriptor);
+                    return reason;
+                }
+            }
+            catch (EndOfStreamException)
+            {
+                return SpectraCacheRejection.TruncatedHeader;
+            }
+        }
+
+        /// <summary>
+        /// Get the demultiplexed spectra cache path for a given input file: beside its
+        /// <c>.spectra.bin</c>, in the same directory.
+        /// </summary>
+        public static string GetDemuxCachePath(string inputFile)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT_DEMUX;
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
@@ -315,8 +384,11 @@ namespace pwiz.Osprey.IO
         // has nothing to do with the distinction; a caller that must FAIL needs to say why,
         // and the six conditions below are not interchangeable - "absent" and "the source
         // file changed underneath it" have opposite remedies.
+        // A null demuxDescriptor expects a plain cache; otherwise a demultiplexed cache
+        // written with exactly that descriptor. Either kind is refused where the other is
+        // expected.
         internal static bool TryReadHeader(BinaryReader r, string sourcePath, out uint nMs2,
-            out uint nMs1, out SpectraCacheRejection reason)
+            out uint nMs1, out SpectraCacheRejection reason, string demuxDescriptor = null)
         {
             nMs2 = 0;
             nMs1 = 0;
@@ -328,13 +400,17 @@ namespace pwiz.Osprey.IO
                 reason = SpectraCacheRejection.TruncatedHeader;
                 return false;
             }
-            for (int i = 0; i < 8; i++)
+            bool isPlain = magic.SequenceEqual(MAGIC);
+            bool isDemux = magic.SequenceEqual(DEMUX_MAGIC);
+            if (!isPlain && !isDemux)
             {
-                if (magic[i] != MAGIC[i])
-                {
-                    reason = SpectraCacheRejection.NotASpectraCache;
-                    return false;
-                }
+                reason = SpectraCacheRejection.NotASpectraCache;
+                return false;
+            }
+            if (isDemux != (demuxDescriptor != null))
+            {
+                reason = SpectraCacheRejection.DemuxSettingsChanged;
+                return false;
             }
 
             uint version = r.ReadUInt32();
@@ -376,6 +452,26 @@ namespace pwiz.Osprey.IO
 
             nMs2 = r.ReadUInt32();
             nMs1 = r.ReadUInt32();
+            if (isDemux)
+            {
+                uint length = r.ReadUInt32();
+                if (length > MAX_DESCRIPTOR_BYTES)
+                {
+                    reason = SpectraCacheRejection.TruncatedHeader;
+                    return false;
+                }
+                byte[] bytes = r.ReadBytes((int)length);
+                if (bytes.Length != length)
+                {
+                    reason = SpectraCacheRejection.TruncatedHeader;
+                    return false;
+                }
+                if (!string.Equals(Encoding.UTF8.GetString(bytes), demuxDescriptor, StringComparison.Ordinal))
+                {
+                    reason = SpectraCacheRejection.DemuxSettingsChanged;
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -387,7 +483,7 @@ namespace pwiz.Osprey.IO
         internal static SpectraCacheIndex ReadIndex(FileStream fs, BinaryReader r, uint nMs2)
         {
             if (fs.Length < FOOTER_BYTES)
-                throw new InvalidDataException("Spectra cache too small to contain a v4 footer.");
+                throw new InvalidDataException(OspreyIOResources.SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_);
 
             fs.Seek(-FOOTER_BYTES, SeekOrigin.End);
             long ms1SectionOffset = r.ReadInt64();
@@ -584,7 +680,7 @@ namespace pwiz.Osprey.IO
             int byteCount = count * 8;
             byte[] bytes = r.ReadBytes(byteCount);
             if (bytes.Length != byteCount)
-                throw new InvalidDataException("Unexpected end of spectra cache while reading double array.");
+                throw new InvalidDataException(OspreyIOResources.SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_);
             double[] result = new double[count];
             Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
             return result;
@@ -595,7 +691,7 @@ namespace pwiz.Osprey.IO
             int byteCount = count * 4;
             byte[] bytes = r.ReadBytes(byteCount);
             if (bytes.Length != byteCount)
-                throw new InvalidDataException("Unexpected end of spectra cache while reading float array.");
+                throw new InvalidDataException(OspreyIOResources.SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_);
             float[] result = new float[count];
             Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
             return result;
@@ -607,7 +703,7 @@ namespace pwiz.Osprey.IO
         /// The per-record index read back from a v4 cache's EOF index block, in
         /// acquisition order. <see cref="RecordOffsets"/>[i] locates MS2 record i's
         /// peak blob within the window-grouped body; the iso/rt fields let a reader
-        /// rebuild the window map, AllMs2Rts, and first-cycle windows without
+        /// rebuild the window map, AllMs2Rts, and the isolation windows without
         /// touching the body.
         /// </summary>
         internal sealed class SpectraCacheIndex

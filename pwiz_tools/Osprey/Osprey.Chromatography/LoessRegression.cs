@@ -241,11 +241,11 @@ namespace pwiz.Osprey.Chromatography
             bool classicalRobust = false)
         {
             if (x == null || y == null)
-                throw new ArgumentNullException(x == null ? "x" : "y");
+                throw new ArgumentNullException(x == null ? @"x" : @"y");
             if (x.Length != y.Length)
-                throw new ArgumentException("x and y must have the same length");
+                throw new ArgumentException(@"x and y must have the same length");
             if (x.Length < 2)
-                throw new ArgumentException("Need at least 2 data points");
+                throw new ArgumentException(@"Need at least 2 data points");
 
             // Sort by x with a secondary key on y, so the order is
             // deterministic for duplicate x values (e.g. multi-charge

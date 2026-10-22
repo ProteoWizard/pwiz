@@ -1,0 +1,54 @@
+<meta-runner name="test3">
+  <description>Build configuration created from meta-runner ProteoWizard_UploadArtifactMetadataToSourceForge</description>
+  <settings>
+    <parameters>
+      <param name="GitHubAuthToken" value="zxx05ef5a299ed0b0f46b4c7898ed776994a1ef0772e2a810cd95ed0b7dca611361dfec53604fd8827c775d03cbe80d301b" spec="password display='hidden' label='GitHubAuthToken'" />
+      <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" spec="text orderNumber='2.0'" />
+      <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" spec="text orderNumber='3.0'" />
+      <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" spec="text orderNumber='4.0'" />
+      <param name="env.PYTHON_HOME" value="C:\Python38" spec="text orderNumber='5.0'" />
+      <param name="teamcity.activeBuildBranch.age.hours" value="0" spec="text orderNumber='6.0'" />
+      <param name="teamcity.activeVcsBranch.age.days" value="3" spec="text orderNumber='7.0'" />
+    </parameters>
+    <build-runners>
+      <runner name="Publish artifacts to TeamCity immediately" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content" value="echo &quot;foobar&quot; &gt; foo.txt" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <conditions>
+          <equals name="teamcity.build.branch.is_default" value="true" />
+          <does-not-equal name="env.BUILD_IS_PERSONAL" value="true" />
+        </conditions>
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="foo.txt %branch" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner name="" type="ssh-exec-runner">
+        <parameters>
+          <param name="jetbrains.buildServer.deployer.targetUrl" value="shell.sf.net" />
+          <param name="jetbrains.buildServer.deployer.username" value="chambm" />
+          <param name="jetbrains.buildServer.sshexec.authMethod" value="UPLOADED_KEY" />
+          <param name="jetbrains.buildServer.sshexec.command"><![CDATA[create
+rm -f foo]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="teamcitySshKey" value="chambm@sourceforge.net" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>

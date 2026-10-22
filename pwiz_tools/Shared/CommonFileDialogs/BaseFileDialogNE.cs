@@ -278,6 +278,10 @@ namespace pwiz.CommonFileDialogs
                     {
                         // If there is exactly one account, then skip the level that
                         // lists the accounts to choose from unless this is an invalid WatersConnect account.
+                        // Skip the account-list level for a single account, but only navigate into a
+                        // WatersConnect account when it actually supports method development. If auth
+                        // fails (SupportsMethodDevelopment returns false) stay at RemoteUrl.EMPTY so the
+                        // dialog lists the account instead of driving a failing populate/auth call.
                         if (ShouldCheckMethodDevelopmentSupport)
                         {
                             var wca = _remoteAccounts[0] as WatersConnectAccount;
@@ -790,7 +794,7 @@ namespace pwiz.CommonFileDialogs
                     // Wait for the handle to be created
                     System.Threading.Thread.Sleep(100);
                 }
-                BeginInvoke(new Action(() =>
+                BeginInvoke(() =>
                 {
                     try
                     {
@@ -802,7 +806,7 @@ namespace pwiz.CommonFileDialogs
                     catch
                     {
                     }
-                }));
+                });
             }
             catch
             {
@@ -1080,7 +1084,7 @@ namespace pwiz.CommonFileDialogs
             {
                 // Defer so the create work runs after the label-edit event completes, avoiding
                 // reentrancy on the list view.
-                BeginInvoke(new Action(() => CreateNewFolder(folderName)));
+                BeginInvoke(() => CreateNewFolder(folderName));
             }
         }
 

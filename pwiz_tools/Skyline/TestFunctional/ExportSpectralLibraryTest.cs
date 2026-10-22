@@ -4,13 +4,13 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -100,14 +100,14 @@ namespace pwiz.SkylineTestFunctional
         }
 
 
-        private void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
+        private void CheckRefSpectraAll(IList<BlibSpectrumRecord> refSpectra)
         {
             if (IsRecordMode)
             {
                 foreach (var refSpec in refSpectra)
                 {
                     Console.WriteLine(@"CheckRefSpectra(refSpectra, ""{0}"", ""{1}"", {2}, {3:F03}, {4}, {5:F03});", 
-                        refSpec.PeptideSeq, refSpec.PeptideModSeq, refSpec.PrecursorCharge, refSpec.PrecursorMZ, refSpec.NumPeaks, refSpec.RetentionTime);
+                        refSpec.PeptideSeq, refSpec.PeptideModSeq, refSpec.PrecursorCharge, refSpec.PrecursorMz, refSpec.NumPeaks, refSpec.RetentionTime);
                 }
                 return;
             }
@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
                         list.Add(new DbIrtPeptide(
                             new Target(reader["PeptideModSeq"].ToString()),
                             double.Parse(reader["Irt"].ToString()),
-                            bool.Parse(reader["Standard"].ToString()),
+                            Convert.ToBoolean(reader["Standard"]), // net8 SQLite returns this INTEGER column as a boxed Int64 (0/1); bool.Parse("1") throws
                             int.Parse(reader["TimeSource"].ToString())));
                     }
                 }

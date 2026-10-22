@@ -133,6 +133,10 @@ namespace TestPerf
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+            // The new document starts loading the libraries in the last-used settings, and the
+            // library loader closes their files only after the loaded document is published
+            WaitForDocumentLoaded();
+            WaitForBackgroundLoaders();
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
@@ -278,9 +282,17 @@ namespace TestPerf
         {
             var sortFields = new List<(int FieldIndex, bool IsAscending)>
             {
-                (0, true),  // ModifiedPeptideSequence 
-                (7, true),  // FragmentType
-                (10, true)  // FragmentCharge
+                (0, true),   // ModifiedPeptideSequence
+                (7, true),   // FragmentType
+                (10, true),  // FragmentCharge
+                // AlphaPeptDeep emits fragments in predicted-intensity order, and the predicted
+                // intensities differ at the ~7th significant figure across machines (CPU float
+                // nondeterminism), which flips the order of near-tied fragments. Sort by the
+                // fragment's identity (series number + loss type) so the row order is deterministic
+                // and the field comparison aligns the same fragment in both files; the tiny per-value
+                // drift is then absorbed by the comparison tolerance.
+                (11, true),  // FragmentSeriesNumber
+                (12, true)   // FragmentLossType
             };
             var product_sorted = product + ".sorted";
             var answer_sorted = answer + ".sorted";

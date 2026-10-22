@@ -49,18 +49,15 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Two things gate it: whether the LEG admits a release at all
         /// (<see cref="LegAdmitsRelease"/>, a pure function of the config) and whether the env
-        /// arms asked for one. SecondPassFDR is the exception to the second - its release is
-        /// its own, so it does not ride <c>OSPREY_FDR_PROJECTION</c>.</para>
+        /// arm asked for one. SecondPassFDR releases against the analysis-wide summary on disk;
+        /// every other leg releases on Stage 5's projection path, which since
+        /// <c>OSPREY_FDR_PROJECTION</c> was removed (2026-10-10) is the only first pass.</para>
         /// </summary>
         public static bool RunsOnThisLeg(PipelineContext ctx)
         {
             if (!OspreyEnvironment.ReleaseLibraryFragments || ctx?.Config == null)
                 return false;
-            if (!LegAdmitsRelease(ctx.Config))
-                return false;
-            // SecondPassFdrTask releases against the analysis-wide summary on disk, which Stage
-            // 5's projection path has no part in; everywhere else the release rides that path.
-            return ctx.Config.ExpectReconciledInput || OspreyEnvironment.UseFdrProjection;
+            return LegAdmitsRelease(ctx.Config);
         }
 
         /// <summary>
@@ -72,8 +69,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Keyed on <see cref="RunsOnThisLeg"/> rather than on
         /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> alone, because the flag is not
-        /// what the outputs record. A leg that never released - the flag was on but
-        /// <c>OSPREY_FDR_PROJECTION=0</c> put Stage 5 on the resident path, say - would otherwise
+        /// what the outputs record. A leg that never released - the flag was on but the leg
+        /// could not reach a release path - would otherwise
         /// stamp the same EMPTY suffix as a leg that did, and a later run WITH the release could
         /// adopt those outputs, skip the work, and report the release arm's memory profile
         /// without ever executing it. That is the self-confirming A/B the suffix exists to
@@ -109,19 +106,15 @@ namespace pwiz.Osprey.Tasks
         /// owns both halves of it - so it reads the analysis-wide summary that task left on
         /// disk (<c>ScoringTaskShared.ReadRetainedBaseIdsOrFail</c>).</para>
         ///
-        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path and
-        /// inherits its config conditions - today only the Percolator framework, since
-        /// <c>--fdrbench-pass 1</c> stopped forcing the resident pool (#4507; the pass-1 TSV is
-        /// emitted before compaction from the sidecars, so the release, which runs after, never
-        /// touches what it reads).</para>
+        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path,
+        /// which no config condition excludes any more. <c>--fdrbench-pass 1</c> stopped forcing
+        /// the resident pool with #4507 (the pass-1 TSV is emitted before compaction from the
+        /// sidecars, so the release, which runs after, never touches what it reads), and the
+        /// last non-Percolator FDR method, the other exclusion, was deleted with #4543.</para>
         /// </summary>
         private static bool LegAdmitsRelease(OspreyConfig config)
         {
-            if (config.StopAfterStage5)
-                return false;
-            if (config.ExpectReconciledInput)
-                return true;
-            return config.FdrMethod.UsesPercolatorFramework();
+            return !config.StopAfterStage5;
         }
 
         /// <summary>
@@ -159,10 +152,11 @@ namespace pwiz.Osprey.Tasks
         /// required; the caller's null check is what decides whether this leg releases at all,
         /// so a null reaching here is a wiring fault and throws.
         ///
-        /// <para><paramref name="gapFillByFile"/> is optional, and NOT because "planning was
-        /// skipped" - skipping planning leaves the non-null empty initializer. It is optional
-        /// because the bundle-adopt path sources it from the reconciliation envelope, which can
-        /// carry nothing.</para>
+        /// <para><paramref name="gapFillByFile"/> is optional, and no production caller passes it:
+        /// the planner no longer keeps an all-runs gap-fill map (issue #4664), and by the
+        /// argument above every target it would add is already in
+        /// <paramref name="firstPassBaseIds"/>. The union is kept, and unit-tested, so that
+        /// argument stays checkable rather than assumed.</para>
         /// </summary>
         public static HashSet<uint> BuildRetainedBaseIds(
             HashSet<uint> firstPassBaseIds,
@@ -214,6 +208,18 @@ namespace pwiz.Osprey.Tasks
             }
             FragmentMath.ClearTop6MzCache();
             return released;
+        }
+
+        /// <summary>
+        /// Write the machine-channel record of one release, which the regression gate parses to
+        /// assert the release ran and what it kept. <paramref name="scope"/> is
+        /// <see cref="LogKey.SCOPE_RESCORE_GAP_FILL"/> or
+        /// <see cref="LogKey.SCOPE_RETAINED_SUMMARY"/>.
+        /// </summary>
+        public static void LogRelease(IOspreyLog log, int released, int entries, int retained, string scope)
+        {
+            log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_RELEASED,
+                @"released={0} entries={1} retained={2} scope={3}", released, entries, retained, scope));
         }
     }
 }

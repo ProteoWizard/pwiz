@@ -62,6 +62,20 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public sealed class LibraryStringInterner
     {
+        /// <summary>
+        /// <paramref name="pool"/>'s shared instance for <paramref name="value"/>, or the value
+        /// unchanged when no pool was supplied. Empty is returned as-is: it carries no peptide
+        /// identity, so pooling it would only add a lookup and skew the pool's collapse summary.
+        /// The one rule every row reader that canonicalizes sequences applies, so rows read by
+        /// different readers share instances the same way.
+        /// </summary>
+        public static string Canonicalize(LibraryStringInterner pool, string value)
+        {
+            if (pool == null || string.IsNullOrEmpty(value))
+                return value;
+            return pool.Intern(value);
+        }
+
         private readonly Dictionary<string, string> _pool =
             new Dictionary<string, string>(StringComparer.Ordinal);
         private long _totalRefs;
@@ -158,18 +172,42 @@ namespace pwiz.Osprey.Core
         public long TotalReferences { get { return _totalRefs; } }
 
         /// <summary>
-        /// Log a one-line distinct/total summary of what this pool collapsed.
-        /// No-op when <paramref name="logInfo"/> is null.
+        /// Log a one-line distinct/total summary of a pool that interned library
+        /// (target) entries. No-op when <paramref name="logInfo"/> is null.
         /// </summary>
         public void LogSummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_);
+        }
+
+        /// <summary>
+        /// Log the same summary for the decoy generator's own pool. Named apart from the
+        /// library line because the two print one after the other and read as the same
+        /// quantity, and the decoy pool reduces less by construction: a decoy's modified
+        /// sequence carries a "DECOY_" prefix, so it never collapses onto its plain sequence
+        /// the way an unmodified target's does. No-op when <paramref name="logInfo"/> is null.
+        /// </summary>
+        public void LogDecoySummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogDecoySummary_Unique_decoy_strings___0_____1__total___2___reduced_);
+        }
+
+        /// <summary>
+        /// Log the same summary for the protein accessions a decoy pairing manifest assigns.
+        /// No-op when <paramref name="logInfo"/> is null.
+        /// </summary>
+        public void LogPairingManifestSummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogPairingManifestSummary_Unique_pairing_manifest_protein_accessions___0_____1__total___2___reduced_);
+        }
+
+        private void LogSummary(Action<string> logInfo, string format)
         {
             if (logInfo == null)
                 return;
             long collapsed = _totalRefs - _pool.Count;
             double pct = _totalRefs > 0 ? 100.0 * collapsed / _totalRefs : 0.0;
-            logInfo(string.Format(
-                "Interned library strings: {0} distinct / {1} total ({2:F1}% collapsed)",
-                _pool.Count, _totalRefs, pct));
+            logInfo(string.Format(format, _pool.Count, _totalRefs, pct));
         }
     }
 }

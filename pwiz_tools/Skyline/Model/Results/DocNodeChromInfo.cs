@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results
         private int _truncated;
         public int? Truncated
         {
-            get { return _truncated >= 0 ? _truncated : (int?) null; }
+            get { return _truncated >= 0 ? _truncated : null; }
             private set { _truncated = value ?? -1; }
         }
 
@@ -437,7 +437,7 @@ namespace pwiz.Skyline.Model.Results
 
         private T? GetOptional<T>(T field, Flags flag) where T:struct
         {
-            return GetFlag(flag) ? field : (T?) null;
+            return GetFlag(flag) ? field : null;
         }
 
         private T SetOptional<T>(T? value, Flags flag) where T : struct
@@ -473,9 +473,11 @@ namespace pwiz.Skyline.Model.Results
         /// <see cref="Equals(TransitionGroupChromInfo)"/> so the two stay in step; the list below
         /// is exactly what that method compares.
         ///
-        /// <para>FileIndex is deliberately NOT reported: <see cref="ChromInfo.Equals(ChromInfo)"/>
-        /// treats all FileIds as equal, so a differing index is not what made these unequal, and
-        /// naming it sends the reader after the wrong thing.</para>
+        /// <para>FileIndex is deliberately NOT reported. Equals here is content equality, as it is
+        /// throughout Skyline - a document saved and read back must come out Equals, which no
+        /// reference comparison could satisfy - so <see cref="ChromInfo.Equals(ChromInfo)"/>
+        /// compares all FileIds as equal. A differing index therefore is not what made these
+        /// unequal, and naming it sends the reader after the wrong thing.</para>
         /// </summary>
         public string ExplainDiff(object other)
         {
@@ -761,7 +763,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : (short?) null;
+                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : null;
             }
             private set
             {
@@ -772,7 +774,7 @@ namespace pwiz.Skyline.Model.Results
 
         public PeakShapeValues? PeakShapeValues
         {
-            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : (PeakShapeValues?) null; }
+            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : null; }
             private set
             {
                 SetFlag(Flags.HasPeakShape, value.HasValue);
@@ -1610,11 +1612,12 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            // TODO: This is not very strong equality, since all FileIds are equal
-            //       It would be better to check reference equality, but this would
-            //       break document equality tests across serialization/deserialization
-            //       At the momement, we rely on it being very unlikely that two
-            //       peaks from different files are exactly equal.
+            // All ChromFileInfoIds compare equal, so this contributes nothing on its own and the
+            // derived class's members do the real work. That is deliberate, not a shortcoming:
+            // Equals is content equality throughout Skyline, because a document saved to disk and
+            // read back must come out Equals to the original, and no reference comparison could
+            // satisfy that. We rely on it being very unlikely that two peaks from different files
+            // are exactly equal in every other member.
             return Equals(other.FileId, FileId);
         }
 

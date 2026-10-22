@@ -31,7 +31,7 @@ The relevant C# types:
 chooses one of three paths after `LibraryLoader.Load`:
 
 ```
-librarySuppliesDecoys = config.DecoysInLibrary || config.DecoyMethod == FromLibrary
+librarySuppliesDecoys = config.LibrarySuppliesDecoys   // DecoysInLibrary || DecoyMethod == FromLibrary
 ```
 
 1. **`--task SecondPassFDR` (`config.ExpectReconciledInput`)** — decoys are not
@@ -43,14 +43,15 @@ librarySuppliesDecoys = config.DecoysInLibrary || config.DecoyMethod == FromLibr
    list is replaced with the collision-filtered `validTargets`
    (`PerFileScoringTask.cs`).
 3. **Library-supplied decoys** — nothing to dispatch: marking and pairing already ran
-   INSIDE `LibraryLoader.Load`, ahead of the `.libcache` write (issue #4650), so the
+   INSIDE `LibraryLoader.Load`, ahead of the derived library's write (issue #4650), so the
    library arrives finished and the target count below already reflects marking. A pairing
    failure surfaces as the loader's `out error`, which the caller reports with
    `ExitCode = 1` exactly as it did when it owned the work.
 
 `DecoyMethod.FromLibrary` is treated as a synonym for `DecoysInLibrary = true`
-(`PerFileScoringTask.cs`); the comment there notes it historically fell
-through to Reverse generation, which was a bug.
+(`OspreyConfig.LibrarySuppliesDecoys`, the rule's one definition, which the load, scoring
+and the argument checks all read); it historically fell through to
+Reverse generation, which was a bug.
 
 Generated and supplied decoys are concatenated onto the (valid) targets into
 `fullLibrary` (`PerFileScoringTask.cs`), then indexed by `Id` into
@@ -126,8 +127,8 @@ production pipeline uses the batch `GenerateAllWithCollisionDetection`, not
 ### Fragment m/z recalculation
 
 Because reversal moves residues, fragment m/z values must be recomputed.
-`RecalculateFragments` (static wrapper `RecalculateFragmentsStatic`) walks the
-target's fragments and:
+`RecalculateFragments` walks the target's fragments, with the decoy's own remapped
+modification list (the one the decoy entry carries), and:
 
 - **b-ion and y-ion**: ion type and ordinal are carried through unchanged, and only
   the m/z is recomputed for the permuted sequence. A target y7 yields a decoy y7.
@@ -188,26 +189,34 @@ entrapment FDP unchanged within noise. It is kept for robustness at SMALL librar
 scale, where palindromes, low-complexity runs and isobaric I/L permutations are a far
 larger fraction.
 
-`CalculateFragmentMz` (`DecoyGenerator.cs`) computes masses from first
-principles against the `STANDARD_AA_MASSES` monoisotopic table
-(`DecoyGenerator.cs`) with `PROTON_MASS = 1.007276` and `H2O_MASS = 18.010565`
-(`DecoyGenerator.cs`):
+`CalculateFragmentMz` (`Osprey.Core/PeptideFragmentMass.cs`) computes masses from first
+principles against the `STANDARD_AA_MASSES` monoisotopic table with
+`PROTON_MASS = 1.007276` and `H2O_MASS = 18.010565`, all in the same file, so anything
+else that needs a peptide's b/y m/z shares one set of residue masses with `DecoyGenerator`:
 
-- b-ion: sum of residues `[0, ordinal)` + proton (`DecoyGenerator.cs`).
-- y-ion: sum of residues `[seqLen-ordinal, seqLen)` + H2O + proton
-  (`DecoyGenerator.cs`).
+- b-ion: sum of residues `[0, ordinal)` + proton.
+- y-ion: sum of residues `[seqLen-ordinal, seqLen)` + H2O + proton.
 - Per-residue modification mass deltas are added by new position via `modMasses`
-  (`DecoyGenerator.cs`).
-- Neutral loss is subtracted when present (`DecoyGenerator.cs`).
-- Final m/z: `(mass + (charge-1)*proton) / charge` (`DecoyGenerator.cs`).
+  (`PeptideFragmentMass.ModMassesByPosition`). Modifications that land on one residue ADD: an
+  N-terminal acetyl and an oxidized first methionine both sit at position 0 in both library
+  loaders, so every decoy ion spanning that residue carries both masses, as every target ion
+  spanning it does. Until this was fixed the map kept only the last of the two, putting those
+  decoy ions 42 Da off. (Both travel with the residue, so the N-terminal modification lands
+  on an internal decoy residue - the same in Rust, and a separate question from this sum.)
+  No validity-key term marks the fix, and none is needed: every artifact's embedded stamp
+  records the build that wrote it, and a different build is never current, so a directory
+  scored before the fix is re-scored when resumed by a build that has it - unless
+  OSPREY_VERSION_OVERRIDE pins the old version, which keeps the old decoys. Only a library
+  with two modifications on one residue is affected.
+- Neutral loss is subtracted when present.
+- Final m/z: `(mass + (charge-1)*proton) / charge`.
 
 This matches the Rust `calculate_fragment_mz` pseudocode step for step, including
 the constants.
 
 ### Modification remapping
 
-`RemapModifications` (`DecoyGenerator.cs`, static wrapper
-`RemapModificationsStatic`) builds a reverse map `old_pos → new_pos` from
+`RemapModifications` (`DecoyGenerator.cs`) builds a reverse map `old_pos -> new_pos` from
 the position mapping and moves each modification to its new position, copying
 `Position`, `UnimodId`, `MassDelta`, `Name` (`DecoyGenerator.cs`). Mods whose
 original position isn't in the mapping are dropped. Because the amino-acid
@@ -247,9 +256,10 @@ decoys from two OR'd signals:
 
 - **DIA-NN `Decoy` column**: the TSV loader sets `IsDecoy` at load time
   (`Osprey.IO/DiannTsvLoader.cs`). `ParseDecoyFlag`
-  (`DiannTsvLoader.cs`) accepts `1`, `true`, `yes`, `y`, `t` case-insensitively
-  (ASCII-only lowering to match Rust `to_ascii_lowercase`; `DiannTsvLoader.cs`);
-  everything else including `0`/empty/garbage is a target. Entries already flagged
+  (`DiannTsvLoader.cs`) accepts `1`, `true`, `yes`, `y`, `t` as decoy and `0`,
+  `false`, `no`, `n`, `f` as target, case-insensitively (ASCII-only lowering to match
+  Rust `to_ascii_lowercase`); anything else, empty included, is an invalid row and the
+  loader refuses the library (Rust reads it as a target). Entries already flagged
   by the loader just get `DECOY_ID_BIT` canonicalized onto their `Id` and count in
   `MarkingStats.NViaColumn` (`LibraryDecoyMarker.cs`).
 - **Protein-accession prefix scan**: `LibraryEntry.LooksLikeLibraryDecoy`
@@ -262,12 +272,33 @@ Marking is idempotent (`LibraryDecoyMarker.cs`). The log breaks the count down:
 `Library-decoy mode: N flagged (X via Decoy column, Y via protein-accession prefix)`
 (`PerFileScoringTask.cs`).
 
-### Step 2: target-decoy pairing (hybrid manifest + composition fallback)
+### Step 2: target-decoy pairing (a blib's own table; for a TSV, manifest + composition fallback)
 
 `LibraryLoader.TryFinishSuppliedDecoys` (`Osprey.IO/LibraryLoader.cs`) pairs each decoy
 with a target
 so their `base_id`s match — required for SVM competition, LDA calibration, and CV
 fold grouping (see 07-fdr-control.md, 16-determinism.md).
+
+A **`.blib` pairs from its `DecoyPairs` table** and nothing else (`Osprey.IO/BlibDecoyPairs.cs`,
+decisions of 2026-10-15 and 2026-10-17; see [24](24-library-contract.md), "Osprey, pairing a
+blib's decoys"): the table's `IsDecoy` is authoritative over the accession prefixes, each decoy
+row's `TargetRefSpectraID` names its target at one charge, and `PairingID` (the manifest's
+`peptide_pair_index`) becomes the entry's `PairingId`, which pairs an entrapment peptide with
+its original target for the diagnostics and the FDRBench output - so a blib needs no manifest.
+A blib searched with its own decoys but without the table is refused at load. The rows are read
+by RefSpectra id before the deduplicator renumbers the entries and carried by entry object into
+the pairing. The two stages below are the **TSV** library's, which has no table to carry its
+pairing; after them `PairingIds.Assign` gives every entry its pairing id - from the table's rows
+for a blib, from the manifest for a TSV (the Met-clip reconciliation that
+`EntrapmentPairing.Build` used to redo per task lives there now), a standalone index for a
+peptide in neither - and the library cache keeps it. Every entry has one; an entrapment peptide
+whose id no original target shares is the orphan `EntrapmentPairing.Build` excludes from the
+FDRBench input and the diagnostics. A library searched with generated decoys takes the same
+id assignment (its table, or the manifest given with it), so an entrapment library's pairing
+ids do not depend on where its decoys come from; the manifest's rewrite of accessions and decoy
+marks (`ApplyToLibrary`) stays the supplied-decoy route's, as before. An entrapment library
+(`_p_target` accessions) that brings neither a table nor a manifest is refused at load: its
+paired FDP and FDRBench output would be guesses, and the message names what to supply.
 
 First, a **hard guard**: if there are no library decoys at all,
 the load returns that fault as `error` and the caller exits with code 1
@@ -313,9 +344,8 @@ manifest-paired target (`LibraryLoader.cs`).
 
 The breakdown is logged as
 `Library-decoy pairing: paired A/B decoys (P%); manifest=M, composition=C; U unpaired decoys, V unpaired targets`
-(`LibraryLoader.cs`). A load served from the `.libcache` did no pairing work - the cache
-holds the finished library - so it reports the same TOTAL from a separate line that omits
-the manifest/composition split, which a finished library does not record. If `PairingStats.PairedFraction <
+(`LibraryLoader.cs`). A load served from the derived `.blib` pairs from its `DecoyPairs`
+table and reports that table's line. If `PairingStats.PairedFraction <
 config.DecoyPairMinFraction` (default **0.80**), Osprey logs an error and exits with
 code 1 rather than run with broken competition (`LibraryLoader.cs`).
 `PairedFraction` returns 1.0 when there are no decoys
@@ -341,11 +371,10 @@ All flags parsed in `Osprey/OspreyCommandArgs.cs`; defaults in
 | Flag / config | Default | Effect on this stage |
 |---|---|---|
 | `--decoys-in-library` (`config.DecoysInLibrary`) | off (`false`) | Trust decoys already in the library instead of generating them; runs mark + pair. Sets the flag to true (`OspreyCommandArgs.cs`). Hard error if no decoys are recognized. |
-| `config.DecoyMethod` | `Reverse` (`OspreyConfig.cs`) | Enum `{Reverse, Shuffle, FromLibrary}` (`OspreyConfig.cs`). `FromLibrary` is treated as a synonym for `DecoysInLibrary` (`PerFileScoringTask.cs`). **No `--decoy-method` CLI flag exists** — only `Reverse` (default, via generation) and `FromLibrary` (via `--decoys-in-library`) are reachable. `Shuffle` is in the enum but not implemented (see divergences). |
+| `config.DecoyMethod` | `Reverse` (`OspreyConfig.cs`) | Enum `{Reverse, Shuffle, FromLibrary}` (`OspreyConfig.cs`). `FromLibrary` is treated as a synonym for `DecoysInLibrary` (`OspreyConfig.LibrarySuppliesDecoys`). **No `--decoy-method` CLI flag exists** — only `Reverse` (default, via generation) and `FromLibrary` (via `--decoys-in-library`) are reachable. `Shuffle` is in the enum but not implemented (see divergences). |
 | `config.DecoyPrefixes` | `["DECOY_", "rev_", "decoy_"]` (`OspreyConfig.cs`) | Case-insensitive protein-accession prefixes used by marking and by composition-fallback stripping. No CLI flag; config-file only. |
 | `config.DecoyPairMinFraction` | `0.80` (`OspreyConfig.cs`) | Minimum fraction of decoys that must pair with a target in library-decoy mode; below it Osprey errors out. Config-file only. |
 | `--decoy-pairing-manifest <manifest.tsv>` (`config.DecoyPairingManifestPath`) | unset (`null`) | FDRBench 5-column manifest for authoritative pairing + classification + protein-ID substitution (`OspreyCommandArgs.cs`). Requires `--decoys-in-library`; setting it without that flag is rejected during validation (`OspreyCommandArgs.cs`). |
-| `--write-pin` (`config.WritePin`) | off (`false`) | Writes PIN files for external tools (`OspreyCommandArgs.cs`). Does not change decoy content; downstream of this stage. |
 
 Generation is not otherwise flag-gated: with none of the above set, Osprey
 generates reverse decoys with the cycling fallback (the default path). No decoy

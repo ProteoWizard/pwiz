@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -24,7 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
 
@@ -40,6 +40,10 @@ namespace pwiz.Osprey
     /// 3. First-pass FDR (Percolator or simple)
     /// 4. Protein FDR (optional)
     /// 5. Write blib output
+    ///
+    /// The walk itself - run each included stage whose outputs are not already valid on disk,
+    /// stop on a task's <c>false</c> - is the shared <see cref="PipelineDriver"/>; what is
+    /// Osprey's is the text and the measurements around each task (<see cref="OspreyPipelineDriver"/>).
     /// </summary>
     public class AnalysisPipeline
     {
@@ -47,19 +51,40 @@ namespace pwiz.Osprey
         /// Run the complete analysis pipeline.
         /// </summary>
         /// <param name="config">Analysis configuration.</param>
+        /// <param name="pipeline">The stages this run walks, in execution order - the list
+        /// <see cref="OspreyConfig.SelectTask"/> was given (<see cref="OspreyTasks.PipelineFor"/>),
+        /// so the driver and the selection share instances.</param>
         /// <returns>0 on success, non-zero on failure.</returns>
-        public int Run(OspreyConfig config)
+        public int Run(OspreyConfig config, IReadOnlyList<OspreyTask> pipeline)
         {
             var stopwatch = Stopwatch.StartNew();
+
+            // The driver walks the same instances the selection was resolved against, or the
+            // by-reference membership rule fails silently: every stage excluded (a no-op
+            // "Analysis complete") for a second list, or every stage included for a namesake
+            // selection. Program.Main hands SelectTask and this method one variable; refuse
+            // anything else rather than run a pipeline the config does not describe.
+            if (!ReferenceEquals(config.Pipeline, pipeline))
+                throw new ArgumentException(@"The pipeline to run must be the one the config's task was selected with.", nameof(pipeline));
 
             try
             {
                 // Select the diagnostics sink before any task runs -- the single
-                // chokepoint every entry point reaches the pipeline through
-                // (Program.Main and the rescore worker). -d forces the dump
+                // chokepoint every invocation reaches the pipeline through
+                // (Program.Main, whatever --task it selected). -d forces the dump
                 // bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);
+                // An ambient/forgotten OSPREY_KEEP_FAILED_WRITES silently stops EVERY
+                // SimpleFileSaver in the process from cleaning up an abandoned temp, in every
+                // run that inherits it, not just the diagnostic session someone meant to
+                // inspect - the same class of hazard OSPREY_ALLOW_UNFIXED_RESIDENT being
+                // left set once masked a real regression for ten days. Unlike that flag
+                // this one has no per-run cost to warn about even when it does nothing
+                // (most runs leave no abandoned write), so log it unconditionally rather
+                // than only when it turns out to matter.
+                if (OspreyEnvironment.KeepFailedWrites)
+                    LogWarning(@"OSPREY_KEEP_FAILED_WRITES is set: an abandoned SimpleFileSaver write leaves its temp file on disk instead of being cleaned up.");
 
                 // No worker-mode entry normalization any more, and its absence is the
                 // point. A --input-scores run arrived here with parquet paths and no
@@ -69,210 +94,147 @@ namespace pwiz.Osprey
                 // task now receives the stems it needs on -i, which is the direction the
                 // derivation was always going.
 
-                // --task SpectraCache stages data rather than analyzing it: it runs
-                // its own one-task pipeline instead of the canonical four. Selecting
-                // it by list, not by an IsIncluded gate on every other task, keeps the
-                // canonical pipeline's membership rules about the analysis itself.
-                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
-                    ? SpectraCachePipeline()
-                    : CanonicalPipeline();
-                var ctx = new PipelineContext(config, pipelineTasks,
+                var ctx = new PipelineContext(config, pipeline,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
-                // Phase B5 driver-owned dataflow: walk the canonical pipeline
-                // and run each INCLUDED task whose outputs are not already
-                // valid on disk. Membership is a per-task fact
-                // (OspreyTask.IsIncluded) rather than a contiguous
-                // [StartAt..StopAfter] window. Excluded tasks -- and included
-                // tasks whose outputs already exist (ctx.CanRehydrate) -- are
-                // not run here; their state lazy-rehydrates through ctx.Demand
-                // when a running task reaches for it. A task returning false is
-                // still the signal to stop and propagate ctx.ExitCode (e.g. an
-                // empty score set or a sidecar-write failure).
-                foreach (var task in pipelineTasks)
-                {
-                    if (!task.IsIncluded(ctx))
-                        continue;
-
-                    if (ctx.CanRehydrate(task))
-                    {
-                        LogInfo(string.Format(@"[TASK] {0}:skipping (outputs valid)", task.Name));
-                        continue;
-                    }
-
-                    if (!RunTask(task, ctx))
-                        return ctx.ExitCode;
-                }
+                // Driver-owned dataflow: walk the pipeline and run each INCLUDED stage whose
+                // outputs are not already valid on disk. Membership is one rule over the
+                // selection and the pipeline (OspreyConfig.Includes: everything, or the
+                // selected stage alone) rather than a contiguous [StartAt..StopAfter] window
+                // or a per-task predicate over flags. Excluded stages - and included stages
+                // whose outputs already exist - are not run; their state lazy-rehydrates
+                // through ctx.Demand when a running stage reaches for it. A task returning
+                // false is the signal to stop: with a failure exit code the run ends there
+                // (e.g. a sidecar-write failure); with exit code 0 the task stopped on purpose
+                // (a per-file worker's boundary, an empty score set), so the run is complete
+                // and says so like any other.
+                int exitCode = new OspreyPipelineDriver().Run(pipeline, ctx, task => config.Includes((OspreyTask)task));
+                if (exitCode != 0)
+                    return exitCode;
 
                 stopwatch.Stop();
-                LogInfo("");
-                LogInfo(string.Format("[TIMING] Total pipeline: {0:F1}s",
-                    stopwatch.Elapsed.TotalSeconds));
-                LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
+                LogInfo(string.Empty);
+                ctx.LogInfo(LogTag.TIMING, @"Total pipeline: {0:F1}s",
+                    stopwatch.Elapsed.TotalSeconds);
+                LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
+            }
+            catch (TaskBudgetSpentException)
+            {
+                // The developer stop (OSPREY_STOP_AFTER_TASKS), not a failure: Program ends the run.
+                throw;
+            }
+            catch (RehydrateFailedException ex)
+            {
+                // The task that could not rehydrate has already logged why, naming the file, and
+                // set the exit code this carries. Restating it as "could not reload its results"
+                // made a designed refusal read as two errors, the second naming nothing. A task
+                // that set the code without logging is still caught: Program reconciles a failing
+                // exit code that has no "Error:" line.
+                return ex.ExitCode;
             }
             catch (Exception ex)
             {
-                LogError(string.Format("Pipeline failed: {0}", ex.Message));
-                LogError(ex.StackTrace);
+                // Skyline's line (CommonExceptionUtil.IsProgrammingDefect): a file or data
+                // problem the user can act on is reported as its message; anything else is a
+                // defect and is reported whole, not ex.Message plus ex.StackTrace. Message can
+                // be empty and a wrapper carries its real cause only in InnerException, so the
+                // pair could name the throwing frame while saying nothing about why: a 17-hour
+                // 163-file run ended in "Pipeline failed: " and a bare BlibWriter constructor
+                // frame. ToString() prints the type, the message, every inner exception and
+                // the stack.
+                LogError(Program.DescribeFailure(ex, OspreyResources.AnalysisPipeline_Run_Pipeline_failed___0_));
                 return 1;
             }
         }
 
         /// <summary>
-        /// The canonical four-task pipeline in execution order:
-        /// PerFileScoring -> FirstPassFDR -> PerFileRescore -> SecondPassFDR.
-        /// Single source of truth for the task list. Tasks read upstream
-        /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
-        /// args; the driver runs each task that is
-        /// <see cref="OspreyTask.IsIncluded"/> for the current config and whose
-        /// outputs are not already valid on disk. Returning false from any task
-        /// is the signal to stop and propagate ctx.ExitCode.
+        /// The shared driver with Osprey's lines around each task: the <c>[TASK]</c> start, skip
+        /// and done markers the regression gate and perfviz read, the block-read statistics, the
+        /// drop-between-tasks diagnostic and the <c>[STAGE-WALL]</c> line per Rust stage.
         /// </summary>
-        internal static OspreyTask[] CanonicalPipeline()
+        private sealed class OspreyPipelineDriver : PipelineDriver
         {
-            return new OspreyTask[]
+            protected override void OnSkipped(PipelineTask task, TaskContext ctx)
             {
-                new PerFileScoringTask(),
-                new FirstPassFdrTask(),
-                new PerFileRescoreTask(),
-                new SecondPassFdrTask(),
-            };
-        }
+                ((PipelineContext)ctx).LogInfo(LogTag.TASK, @"{0}:skipping (outputs valid)", task.Name);
+            }
 
-        /// <summary>
-        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
-        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
-        /// analysis stages.
-        /// </summary>
-        internal static OspreyTask[] SpectraCachePipeline()
-        {
-            return new OspreyTask[]
+            protected override void OnStarting(PipelineTask task, TaskContext ctx)
             {
-                new SpectraCacheTask(),
-            };
+                // Note: nothing is cleared before Run. A stale output is simply
+                // overwritten, stamp and all, and a pre-Run delete here would
+                // wipe the per-file outputs that <see cref="PerFileScoringTask"/>
+                // relies on for its within-task per-file skip.
+                ((PipelineContext)ctx).LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
+            }
+
+            protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
+            {
+                var ospreyCtx = (PipelineContext)ctx;
+                ospreyCtx.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)",
+                    task.Name, elapsed.TotalSeconds);
+                if (OspreyEnvironment.BlockReadMb > 0)
+                    ospreyCtx.LogInfo(LogTag.PATH, @"{0}: {1}", task.Name, BlockReadStats.Text());
+                // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
+                // the HPC split - this task drops everything but the library, and the next reloads
+                // what it needs from artifacts. Off by default; the whole experiment reverts
+                // together. See PipelineContext.DropAllButLibrary.
+                if (OspreyEnvironment.DropBetweenTasks)
+                    ospreyCtx.DropAllButLibrary();
+
+                // [STAGE-WALL] one line per task, labelled with the Rust Osprey stage it
+                // covers, for the perf tooling that compares the two implementations
+                // (Measure-Pipeline.ps1, Test-PerfGate.ps1, Get-MemoryReport.ps1). Machine text
+                // only: the tag prints under --perf-stats and nowhere else. SecondPassFDR has no
+                // entry on purpose, because its wall is NOT one Rust stage: it covers Rust's
+                // stage 7 (second-pass FDR + protein FDR) and the blib write, so the task emits
+                // those walls itself around the steps that match - second-pass-fdr (from
+                // Pass2FdrSidecar), stage7 (protein FDR only) and blib - and Measure-Pipeline.ps1
+                // adds second-pass-fdr into stage7. A whole-task stage7 line here would count the
+                // second-pass FDR twice. SpectraCache and ModelDiagnostics are not Rust stages.
+                string stageName = task.Name switch
+                {
+                    PerFileScoringTask.TASK_NAME => @"stage1to4",
+                    FirstPassFdrTask.TASK_NAME => @"stage5",
+                    PerFileRescoreTask.TASK_NAME => @"stage6",
+                    _                => null,
+                };
+                if (stageName != null)
+                {
+                    ospreyCtx.LogInfo(LogTag.STAGE_WALL, @"{0}: {1:F1}s",
+                        stageName, elapsed.TotalSeconds);
+                }
+                // Last: the developer stop ends the run between this task and the next.
+                TaskBudget.TaskDone(task.Name, ctx.ExitCode);
+            }
         }
 
         #region Utility Methods
-
-        /// <summary>
-        /// Run a single task against <paramref name="ctx"/> with consistent
-        /// start/done logging and wall-time measurement. Returns the task's
-        /// own <see cref="OspreyTask.Run"/> result so the caller can
-        /// short-circuit on <c>false</c> and propagate
-        /// <see cref="PipelineContext.ExitCode"/>.
-        ///
-        /// The skip-if-outputs-valid decision now lives in the driver loop
-        /// (<see cref="PipelineContext.CanRehydrate"/>): this is only called
-        /// for a task that is included and whose outputs are not already on
-        /// disk. The task is run and fresh <c>.osprey.task</c> sidecars are
-        /// written next to each declared output on success.
-        /// </summary>
-        private static bool RunTask(OspreyTask task, PipelineContext ctx)
-        {
-            // Note: stale-sidecar cleanup is the responsibility of each
-            // task body. A task-level pre-Run delete here would wipe the
-            // per-file sidecars that <see cref="PerFileScoringTask"/>
-            // relies on for its within-task per-file skip; deletion has
-            // to happen on per-file granularity for tasks that produce
-            // per-file outputs. Tasks that produce a single coarse output
-            // (e.g. SecondPassFdrTask's output.blib) delete their own
-            // sidecars at the start of Run.
-
-            var sw = Stopwatch.StartNew();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:starting", task.Name));
-            bool keepGoing = task.Run(ctx);
-            // The driver has now run this task, so its state is in memory: mark it
-            // materialized so a later Demand/Get by a downstream task returns the
-            // computed state instead of driving Rehydrate. Replaces the per-task
-            // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
-            ctx.MarkMaterialized(task);
-            sw.Stop();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
-                task.Name, sw.Elapsed.TotalSeconds));
-            // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
-            // the HPC split - this task drops everything but the library, and the next reloads
-            // what it needs from artifacts. Off by default; the whole experiment reverts
-            // together. See PipelineContext.DropAllButLibrary.
-            if (OspreyEnvironment.DropBetweenTasks)
-                ctx.DropAllButLibrary();
-
-            // [STAGE-WALL] one line per task->stage with parseable format
-            // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
-            // SecondPassFdrTask emits its own stage7 + blib lines internally
-            // (one task -> two pipeline stages).
-            string stageName = task.Name switch
-            {
-                "PerFileScoring"   => "stage1to4",
-                "FirstPassFDR"     => "stage5",
-                "PerFileRescoring" => "stage6",
-                _                => null,
-            };
-            if (stageName != null)
-            {
-                ctx.LogInfo(string.Format(@"[STAGE-WALL] {0}: {1:F1}s",
-                    stageName, sw.Elapsed.TotalSeconds));
-            }
-
-            // Write sidecars whenever the task ran without setting a
-            // non-zero exit code. Several tasks intentionally return
-            // false on success to stop the pipeline at a configured
-            // boundary (PerFileScoringTask under --task PerFileScoring, FirstPassFdrTask
-            // under --task FirstPassFDR with StopAfterStage5); gating on
-            // keepGoing alone would skip sidecar writes for those
-            // successful early-exit modes and break resume.
-            if (ctx.ExitCode == 0)
-                WriteTaskSidecars(task, ctx);
-
-            return keepGoing;
-        }
-
-        private static void WriteTaskSidecars(OspreyTask task, PipelineContext ctx)
-        {
-            string key = task.ValidityKey(ctx);
-            var inputs = new List<string>(task.Inputs(ctx));
-            foreach (var output in task.Outputs(ctx))
-            {
-                // A task may not have written every declared output (e.g. a
-                // task that emits an output only when an optional config field
-                // is set). Skip those rather than failing.
-                if (!File.Exists(output)) continue;
-                try
-                {
-                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current, key, inputs);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}",
-                        task.Name, output, ex.Message));
-                }
-            }
-        }
 
         private static string FormatDuration(TimeSpan duration)
         {
             if (duration.TotalDays >= 1)
             {
                 if (duration.Hours > 0)
-                    return string.Format("{0} days {1} hours", (int)duration.TotalDays, duration.Hours);
-                return string.Format("{0} days", (int)duration.TotalDays);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__days__1__hours, (int)duration.TotalDays, duration.Hours);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__days, (int)duration.TotalDays);
             }
             if (duration.TotalHours >= 1)
             {
                 if (duration.Minutes > 0)
-                    return string.Format("{0} hours {1} minutes", (int)duration.TotalHours, duration.Minutes);
-                return string.Format("{0} hours", (int)duration.TotalHours);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__hours__1__minutes, (int)duration.TotalHours, duration.Minutes);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__hours, (int)duration.TotalHours);
             }
             if (duration.TotalMinutes >= 1)
             {
                 if (duration.Seconds > 0)
-                    return string.Format("{0} minutes {1} seconds", (int)duration.TotalMinutes, duration.Seconds);
-                return string.Format("{0} minutes", (int)duration.TotalMinutes);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__minutes__1__seconds, (int)duration.TotalMinutes, duration.Seconds);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__minutes, (int)duration.TotalMinutes);
             }
             if (duration.TotalSeconds >= 1)
-                return string.Format("{0:F3} seconds", duration.TotalSeconds);
-            return string.Format("{0} ms", (int)duration.TotalMilliseconds);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__seconds, duration.TotalSeconds);
+            return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__ms, (int)duration.TotalMilliseconds);
         }
 
         private static void LogInfo(string message)

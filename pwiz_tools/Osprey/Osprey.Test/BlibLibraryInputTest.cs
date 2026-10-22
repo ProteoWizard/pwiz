@@ -1,0 +1,564 @@
+/*
+ * Original author: Michael MacCoss <maccoss .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
+using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
+using pwiz.Osprey.Scoring;
+
+namespace pwiz.Osprey.Test
+{
+    /// <summary>
+    /// Blib libraries as search input: every peak typed from m/z within the search's fragment
+    /// tolerance (<see cref="FragmentTyping"/>), whatever the blib's own
+    /// <c>RefSpectraPeakAnnotations</c> table holds - it is not read - and the decoys generated
+    /// from the typed peaks; and the libraries Osprey refuses rather than search wrongly.
+    /// </summary>
+    [TestClass]
+    public class BlibLibraryInputTest
+    {
+        private const string SEQUENCE = @"PEPCTIDEK";
+        private const string MOD_SEQUENCE = @"PEPC[+57.021464]TIDEK";
+        private const int CYSTEINE_POSITION = 3;
+        private const double CARBAMIDOMETHYL = 57.021464;
+
+        /// <summary>The fragment tolerance these tests search with: an HRAM search's 10 ppm.</summary>
+        internal static readonly FragmentToleranceConfig TOLERANCE = FragmentToleranceConfig.Hram(10);
+
+        /// <summary>
+        /// A blib's peaks are typed from m/z: primary b and y ions at charge 1 or 2 are typed; a
+        /// neutral-loss peak and a peak no ion reaches stay Unknown. The blib's
+        /// <c>RefSpectraPeakAnnotations</c> table is not read: the same blib with rows naming
+        /// other ions, or with a table missing its columns, types identically. Decoys generated
+        /// from the typed peaks get their own m/z.
+        /// </summary>
+        [TestMethod]
+        public void TestBlibLoaderTypesPeaksFromMz()
+        {
+            var cysteine = new[] { new Modification { Position = CYSTEINE_POSITION, MassDelta = CARBAMIDOMETHYL } };
+            var modMasses = PeptideFragmentMass.ModMassesByPosition(cysteine);
+            double b3 = Mz(IonType.B, 3, 1, modMasses, null);
+            double y3 = Mz(IonType.Y, 3, 1, modMasses, null);
+            double y5Doubly = Mz(IonType.Y, 5, 2, modMasses, null);
+            double y4Water = Mz(IonType.Y, 4, 1, modMasses, NeutralLoss.H2OMass);
+            double b5 = Mz(IonType.B, 5, 1, modMasses, null);
+            // In m/z order, which the reader keeps whatever order a blib holds its peaks in.
+            double[] peaks = { y5Doubly, b3, y3, y4Water, b5, 700.0 };
+            CollectionAssert.AreEqual(peaks.OrderBy(mz => mz).ToArray(), peaks);
+
+            string plain = CreateBlib(peaks, new (int, string, int)[0]);
+            try
+            {
+                var log = new List<string>();
+                var entry = new BlibLoader(TOLERANCE).Load(plain, log.Add).Single();
+                AssertTypedAsExpected(entry);
+                CollectionAssert.Contains(log, string.Format(
+                    OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
+                    4, peaks.Length, TOLERANCE.Tolerance, TOLERANCE.Unit.GetLocalizedString()));
+
+                // Decoys generated from typed fragments get their own m/z, not the target's.
+                var decoys = DecoyGenerator.GenerateAllWithCollisionDetection(new List<LibraryEntry> { entry },
+                    new OspreyConfig(), null, false, out _);
+                var decoy = decoys.Single();
+                Assert.IsTrue(decoy.IsDecoy);
+                Assert.AreNotEqual(entry.Fragments[1].Mz, decoy.Fragments[1].Mz);
+                var decoyMods = PeptideFragmentMass.ModMassesByPosition(decoy.Modifications);
+                double? decoyB3 = PeptideFragmentMass.CalculateFragmentMz(IonType.B, 3, 1, decoy.Sequence, decoyMods, null);
+                Assert.IsNotNull(decoyB3);
+                Assert.AreEqual(decoyB3.Value, decoy.Fragments[1].Mz, 1e-9);
+            }
+            finally
+            {
+                TryDeleteFile(plain);
+            }
+
+            // Rows naming other ions than the typing gives change nothing.
+            string annotated = CreateBlib(peaks, new[] { (0, @"y2", 1), (1, @"y4", 1), (4, @"y5", 1), (5, @"y6", 1) });
+            try
+            {
+                AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
+                // Nor does a table the reader could not have read.
+                ExecuteSql(annotated, @"DROP TABLE RefSpectraPeakAnnotations",
+                    @"CREATE TABLE RefSpectraPeakAnnotations (id INTEGER PRIMARY KEY, RefSpectraID INTEGER, peakIndex INTEGER)",
+                    @"INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex) VALUES (1, 0)");
+                AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
+            }
+            finally
+            {
+                TryDeleteFile(annotated);
+            }
+        }
+
+        /// <summary>
+        /// Blib libraries Osprey refuses rather than search wrongly. Modifications are matched as
+        /// Skyline matches them, at the precision their text prints: a one-decimal SILAC label
+        /// gets its exact mass, while a one-decimal mass no known modification matches, an
+        /// unknown UniMod id and other text are listed - each once, with the spectra carrying it -
+        /// and the library is refused. And a blib whose protein accessions mark decoys is refused
+        /// unless <c>--decoys-in-library</c> is given, where a TSV's Decoy column is not needed.
+        /// </summary>
+        [TestMethod]
+        public void TestBlibLibraryRefusals()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"BlibLibraryRefusals_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                double[] peaks = { 300.0, 400.0, 500.0 };
+                string labeled = Path.Combine(dir, @"labeled.blib");
+                WriteBlib(labeled, peaks, (@"PEPC[+57.0]TIDEK[+8.0]", @"P1"), (@"PEPCTIDEK", @"P1"));
+                var entries = new BlibLoader(TOLERANCE).Load(labeled);
+                var labels = entries.First().Modifications.OrderBy(m => m.Position).ToArray();
+                Assert.AreEqual(CARBAMIDOMETHYL, labels[0].MassDelta);
+                Assert.AreEqual(8.014199, labels[1].MassDelta);
+                Assert.AreEqual(259, labels[1].UnimodId);
+
+                string unidentified = Path.Combine(dir, @"unidentified.blib");
+                WriteBlib(unidentified, peaks, (@"PEPC[+99.9]TIDEK", @"P1"), (@"PEPTIDEK(UniMod:99999)", @"P1"),
+                    (@"PEPCTIDEK", @"P1"), (@"PEPTIDEC[+99.9]", @"P1"), (@"PEPTIDEK[Junk]", @"P1"));
+                var error = Assert.ThrowsException<InvalidDataException>(() => new BlibLoader(TOLERANCE).Load(unidentified));
+                string[] lines = error.Message.Split('\n').Select(l => l.Trim()).ToArray();
+                Assert.AreEqual(string.Format(
+                    OspreyIOResources.BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify,
+                    4, UniMod.MAX_PRECISION_TO_MATCH), lines[0]);
+                CollectionAssert.AreEqual(new[]
+                {
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"[+99.9]", 2, @"PEPC[+99.9]TIDEK (id 1)"),
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"(UniMod:99999)", 1, @"PEPTIDEK(UniMod:99999) (id 2)"),
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"[Junk]", 1, @"PEPTIDEK[Junk] (id 5)"),
+                }, lines.Skip(1).ToArray());
+
+                string withDecoys = Path.Combine(dir, @"decoys.blib");
+                WriteBlib(withDecoys, peaks, (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1"));
+                var config = new OspreyConfig
+                {
+                    LibrarySource = new LibrarySource(LibraryFormat.Blib, withDecoys),
+                    FragmentTolerance = TOLERANCE
+                };
+                var refusal = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(config, null, null));
+                StringAssert.Contains(refusal.Message, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
+                StringAssert.Contains(refusal.Message, @"KEDITCPEP");
+                // Searched with its own decoys, the same library is refused for pairing them in no
+                // DecoyPairs table: a blib pairs its decoys from the table or not at all.
+                var noTable = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(withDecoys), null, null));
+                StringAssert.Contains(noTable.Message, string.Format(
+                    OspreyIOResources.LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_,
+                    withDecoys, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
+
+                // A library claiming the Osprey library contract is checked before any repair and
+                // refused with every class of violation: a duplicate precursor, Carafe's per-peptide
+                // accession suffix, and a decoy with one unmarked accession. A clean one loads.
+                string violating = Path.Combine(dir, @"contract-violating.blib");
+                WriteBlib(violating, peaks, true, new[]
+                {
+                    (@"PEPCTIDEK", @"P1_pep00001"), (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1;P1"),
+                });
+                var violation = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(violating), null, null));
+                foreach (var violationClass in new[]
+                         {
+                             LibraryContractViolationClass.DuplicatePrecursor, LibraryContractViolationClass.AccessionSuffix,
+                             LibraryContractViolationClass.DecoyUnmarked,
+                         })
+                {
+                    StringAssert.Contains(violation.Message, violationClass.ToString());
+                }
+                string clean = Path.Combine(dir, @"contract-clean.blib");
+                WriteBlib(clean, peaks, true, new[] { (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1") });
+                var cleanEntries = LibraryLoader.Load(ContractConfig(clean), null, null);
+                Assert.AreEqual(2, cleanEntries.Count);
+                // Paired from the table: the decoy's id is its target's with the decoy bit.
+                Assert.AreEqual(cleanEntries.Single(e => !e.IsDecoy).Id | LibraryEntry.DECOY_ID_BIT, cleanEntries.Single(e => e.IsDecoy).Id);
+
+                // Rule 6 from the table, with no manifest: a decoy naming no target row.
+                string unpaired = Path.Combine(dir, @"contract-unpaired.blib");
+                WriteBlib(unpaired, peaks, true, new[] { (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1"), (@"KEDITCPEQ", @"DECOY_P2") },
+                    new (int, bool, int, int?)[] { (0, false, 1, null), (1, true, 1, 0), (2, true, 2, null) });
+                var unpairedViolation = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(unpaired), null, null));
+                StringAssert.Contains(unpairedViolation.Message, LibraryContractViolationClass.UnpairedDecoy.ToString());
+                StringAssert.Contains(unpairedViolation.Message,
+                    string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__, @"KEDITCPEQ", 2, 2));
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                try
+                {
+                    Directory.Delete(dir, true);
+                }
+                catch (IOException)
+                {
+                    // A test's temp directory; a lingering handle must not fail the test.
+                }
+            }
+        }
+
+        /// <summary>
+        /// A library entry written by <see cref="LibraryBlibWriter"/> reads back as the same entry:
+        /// peaks sorted by m/z and typed from m/z, stacked N-terminal modifications summed onto
+        /// the first residue, a known modification at its exact mass and an unknown one to four
+        /// decimals, proteins and retention time. No <c>RefSpectraPeakAnnotations</c> row is
+        /// written: the table stays empty, as BiblioSpec leaves it, and the reader types the
+        /// primary b and y ions back from m/z; a loss, an a ion and an untyped peak read back
+        /// Unknown.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryBlibWriterRoundTrip()
+        {
+            const string sequence = @"MPEPCTIDEK";
+            const double methyl = 14.01565;
+            var modifications = new[]
+            {
+                new Modification { Position = 0, MassDelta = 42.010565 },
+                new Modification { Position = 0, MassDelta = 15.994915 },
+                new Modification { Position = 4, MassDelta = CARBAMIDOMETHYL },
+                new Modification { Position = 9, MassDelta = methyl },
+            };
+            var modMasses = PeptideFragmentMass.ModMassesByPosition(modifications);
+            var typed = new[]
+            {
+                Annotation(IonType.Y, 3, 1, NeutralLossCode.None, 0),
+                Annotation(IonType.B, 2, 1, NeutralLossCode.None, 0),
+                Annotation(IonType.Y, 5, 2, NeutralLossCode.None, 0),
+                Annotation(IonType.Y, 4, 1, NeutralLossCode.H2O, 0),
+                Annotation(IonType.B, 4, 1, NeutralLossCode.Custom, 44.9977),
+            };
+            var fragments = typed.Select((a, i) => new LibraryFragment
+            {
+                Mz = PeptideFragmentMass.CalculateFragmentMz(a.IonType, a.Ordinal, a.Charge, sequence, modMasses,
+                    a.HasNeutralLoss ? a.NeutralLossMass : null).Value,
+                RelativeIntensity = 1000f - i,
+                Annotation = a
+            }).Concat(new[]
+            {
+                new LibraryFragment { Mz = 650.5, RelativeIntensity = 5f, Annotation = Annotation(IonType.A, 2, 1, NeutralLossCode.None, 0) },
+                new LibraryFragment { Mz = 700.25, RelativeIntensity = 3f, Annotation = Annotation(IonType.Unknown, 0, 1, NeutralLossCode.None, 0) },
+            }).ToArray();
+            var entry = new LibraryEntry(7, sequence, @"_(UniMod:1)M(UniMod:35)PEPC(UniMod:4)TIDEK[+14.0157]_", 2, 624.28, 12.5)
+            {
+                Modifications = modifications,
+                Fragments = fragments,
+                ProteinIds = new[] { @"P12345", @"Q67890" }
+            };
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                Assert.AreEqual(1, LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv"));
+                Assert.AreEqual(0, BlibComparer.CountWhere(path, @"RefSpectraPeakAnnotations", @"1"));
+                // The library retention time, where Skyline reads library retention times from, with
+                // no peak boundaries.
+                Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RetentionTimes",
+                    @"retentionTime = 12.5 AND startTime IS NULL AND endTime IS NULL AND bestSpectrum = 1"));
+                var read = new BlibLoader(TOLERANCE).Load(path).Single();
+                Assert.AreEqual(@"M[+58.0055]PEPC[+57.0215]TIDEK[+14.0157]", read.ModifiedSequence);
+                Assert.AreEqual(entry.PrecursorMz, read.PrecursorMz);
+                Assert.AreEqual(entry.Charge, read.Charge);
+                Assert.AreEqual(entry.RetentionTime, read.RetentionTime);
+                CollectionAssert.AreEqual(entry.ProteinIds.ToArray(), read.ProteinIds.ToArray());
+
+                var readMods = PeptideFragmentMass.ModMassesByPosition(read.Modifications);
+                Assert.AreEqual(3, readMods.Count);
+                Assert.AreEqual(modMasses[0], readMods[0], 5e-5);
+                Assert.AreEqual(CARBAMIDOMETHYL, readMods[4]);
+                Assert.AreEqual(methyl, readMods[9], 5e-5);
+
+                var sorted = fragments.OrderBy(f => f.Mz).ToArray();
+                CollectionAssert.AreEqual(sorted.Select(f => f.Mz).ToArray(), read.Fragments.Select(f => f.Mz).ToArray());
+                // The reader scales the base peak to 1, as a DIA-NN library already is.
+                float basePeak = fragments.Max(f => f.RelativeIntensity);
+                CollectionAssert.AreEqual(sorted.Select(f => f.RelativeIntensity / basePeak).ToArray(),
+                    read.Fragments.Select(f => f.RelativeIntensity).ToArray());
+                for (int i = 0; i < sorted.Length; i++)
+                {
+                    var expected = sorted[i].Annotation;
+                    var actual = read.Fragments[i].Annotation;
+                    if (FragmentTyping.IsPrimary(expected))
+                        AssertAnnotation(actual, expected.IonType, expected.Ordinal, expected.Charge, NeutralLossCode.None);
+                    else
+                        Assert.AreEqual(IonType.Unknown, actual.IonType, FragmentTypeCheck.FormatIon(expected));
+                }
+
+                AssertLibraryTextAndDecoys(path);
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
+        /// The text and accessions a library precursor keeps in the blib: a modification its
+        /// loader could not resolve keeps the library's own text, so two precursors never share a
+        /// key; a mass known only to one decimal keeps that precision, the precision Skyline
+        /// matches at; and a decoy flagged only by the library's Decoy column gets the decoy
+        /// prefix on its accessions, so <c>--decoys-in-library</c> still finds it.
+        /// </summary>
+        private static void AssertLibraryTextAndDecoys(string path)
+        {
+            var fragment = new[] { new LibraryFragment { Mz = 300.0, RelativeIntensity = 1f } };
+            var unresolved = new LibraryEntry(1, @"PEPTIDEK", @"_PEPTIDEK(UniMod:259)_", 2, 470.0, 10.0) { Fragments = fragment, PairingId = 1 };
+            var plain = new LibraryEntry(2, @"PEPTIDEK", @"_PEPTIDEK_", 2, 466.0, 10.0) { Fragments = fragment };
+            var oneDecimal = new LibraryEntry(3, @"LIFAGKQLEDGR", @"LIFAGK[+114.0]QLEDGR", 2, 717.9, 20.0)
+            {
+                Modifications = new[] { new Modification { Position = 5, MassDelta = 114.0 } },
+                Fragments = fragment, PairingId = 2
+            };
+            var columnDecoy = new LibraryEntry(4, @"KEDITPEP", @"KEDITPEP", 2, 464.7, 15.0)
+            {
+                Fragments = fragment, ProteinIds = new[] { @"P12345" }, IsDecoy = true, PairingId = 3
+            };
+            var prefixedDecoy = new LibraryEntry(5, @"KEDITPEPR", @"KEDITPEPR", 2, 542.8, 15.0)
+            {
+                Fragments = fragment, ProteinIds = new[] { @"rev_P12345" }, IsDecoy = true, PairingId = 4
+            };
+            // A library with decoys writes a DecoyPairs row for every entry, each with its own
+            // pairing id: a decoy the load paired with plain (its id is plain's with the decoy
+            // bit) names it, the two unpaired decoys name no target, and plain and its decoy
+            // share a pairing id.
+            plain.PairingId = 7;
+            var pairedDecoy = new LibraryEntry(2 | LibraryEntry.DECOY_ID_BIT, @"KEDITPEPK", @"KEDITPEPK", 2, 466.0, 10.0)
+            {
+                Fragments = fragment, ProteinIds = new[] { @"DECOY_P2" }, IsDecoy = true, PairingId = 7
+            };
+            LibraryBlibWriter.Write(path, new[] { unresolved, plain, oneDecimal, columnDecoy, prefixedDecoy, pairedDecoy }, @"library.tsv");
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'PEPTIDEK(UniMod:259)'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'PEPTIDEK'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'LIFAGK[+114.0]QLEDGR'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'DECOY_P12345'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'rev_P12345'"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'P12345'"));
+            Assert.AreEqual(6, BlibComparer.CountWhere(path, @"DecoyPairs", @"IsEntrapment = 0"));
+            Assert.AreEqual(2, BlibComparer.CountWhere(path, @"DecoyPairs", @"PairingID = 7"));
+            Assert.AreEqual(4, BlibComparer.CountWhere(path, @"DecoyPairs", @"PairingID IN (1, 2, 3, 4)"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID",
+                @"r.peptideModSeq = 'PEPTIDEK' AND d.IsDecoy = 0 AND d.PairingID = 7 AND d.TargetRefSpectraID IS NULL"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID JOIN RefSpectra t ON t.id = d.TargetRefSpectraID",
+                @"r.peptideModSeq = 'KEDITPEPK' AND d.IsDecoy = 1 AND d.PairingID = 7 AND t.peptideModSeq = 'PEPTIDEK'"));
+            Assert.AreEqual(2, BlibComparer.CountWhere(path, @"DecoyPairs", @"IsDecoy = 1 AND TargetRefSpectraID IS NULL"));
+        }
+
+        /// <summary>The types <see cref="TestBlibLoaderTypesPeaksFromMz"/>'s six peaks take.</summary>
+        private static void AssertTypedAsExpected(LibraryEntry entry)
+        {
+            var types = entry.Fragments.Select(f => f.Annotation).ToArray();
+            AssertAnnotation(types[0], IonType.Y, 5, 2, NeutralLossCode.None);
+            AssertAnnotation(types[1], IonType.B, 3, 1, NeutralLossCode.None);
+            AssertAnnotation(types[2], IonType.Y, 3, 1, NeutralLossCode.None);
+            Assert.AreEqual(IonType.Unknown, types[3].IonType, @"a neutral loss is not typed");
+            AssertAnnotation(types[4], IonType.B, 5, 1, NeutralLossCode.None);
+            Assert.AreEqual(IonType.Unknown, types[5].IonType, @"no ion reaches 700.0");
+        }
+
+        private static double Mz(IonType ionType, int ordinal, byte charge, IReadOnlyDictionary<int, double> modMasses, double? loss)
+        {
+            double? mz = PeptideFragmentMass.CalculateFragmentMz(ionType, ordinal, charge, SEQUENCE, modMasses, loss);
+            Assert.IsNotNull(mz);
+            return mz.Value;
+        }
+
+        private static string CreateBlib(double[] peaks, (int PeakIndex, string Name, int Charge)[] annotations)
+        {
+            return CreateBlib(Path.GetTempFileName(), MOD_SEQUENCE, peaks, annotations);
+        }
+
+        /// <summary>
+        /// A blib at <paramref name="path"/> with one spectrum of <paramref name="peaks"/> per
+        /// modified sequence, each mapped to its protein.
+        /// </summary>
+        private static void WriteBlib(string path, double[] peaks, params (string ModSeq, string Protein)[] spectra)
+        {
+            WriteBlib(path, peaks, false, spectra);
+        }
+
+        /// <summary>
+        /// A blib at <paramref name="path"/> with one spectrum of <paramref name="peaks"/> per
+        /// modified sequence, each mapped to its <c>;</c>-separated proteins, claiming the Osprey
+        /// library contract when <paramref name="libraryContract"/>.
+        /// </summary>
+        private static void WriteBlib(string path, double[] peaks, bool libraryContract, (string ModSeq, string Protein)[] spectra,
+            (int Index, bool IsDecoy, int PairingId, int? TargetIndex)[] decoyPairs = null)
+        {
+            using (var writer = new OspreyBlibWriter(path))
+            {
+                long fileId = writer.AddSourceFile(@"test.mzML", @"library.blib", 0.01);
+                var refIds = new long[spectra.Length];
+                for (int i = 0; i < spectra.Length; i++)
+                {
+                    var (modSeq, protein) = spectra[i];
+                    string sequence = new string(StripBrackets(modSeq).Where(char.IsLetter).ToArray());
+                    refIds[i] = writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
+                        peaks, peaks.Select((_, i2) => 100f + i2).ToArray(), 0.01, fileId, 1, 0.0,
+                        proteins: protein.Split(';'));
+                }
+                if (libraryContract)
+                    writer.AddMetadata(LibraryContract.METADATA_KEY, LibraryContract.METADATA_VALUE);
+                // A contract library pairs its decoys in DecoyPairs, as CarafeSharp writes them;
+                // explicit rows override the pairing read from the accessions.
+                foreach (var (index, isDecoy, pairingId, targetIndex) in decoyPairs ?? (libraryContract ? PairsByAccession(spectra) : Array.Empty<(int, bool, int, int?)>()))
+                    writer.AddDecoyPair(refIds[index], isDecoy, false, pairingId, targetIndex.HasValue ? refIds[targetIndex.Value] : null);
+                writer.Complete();
+            }
+            SQLiteConnection.ClearAllPools();
+        }
+
+        /// <summary>The DecoyPairs rows of <paramref name="spectra"/>: each <c>DECOY_</c> accession paired with the first spectrum of the accession it marks.</summary>
+        private static (int Index, bool IsDecoy, int PairingId, int? TargetIndex)[] PairsByAccession((string ModSeq, string Protein)[] spectra)
+        {
+            var rows = new List<(int, bool, int, int?)>();
+            int pairId = 0;
+            for (int i = 0; i < spectra.Length; i++)
+            {
+                string accession = spectra[i].Protein.Split(';')[0];
+                if (!accession.StartsWith(@"DECOY_", StringComparison.Ordinal))
+                    continue;
+                string target = accession.Substring(@"DECOY_".Length);
+                int targetIndex = Array.FindIndex(spectra, s => s.Protein.Split(';')[0] == target);
+                if (targetIndex < 0)
+                    continue;
+                pairId++;
+                rows.Add((targetIndex, false, pairId, null));
+                rows.Add((i, true, pairId, targetIndex));
+            }
+            return rows.ToArray();
+        }
+
+        /// <summary>A search of <paramref name="library"/> with the decoys it supplies and no manifest.</summary>
+        private static OspreyConfig ContractConfig(string library)
+        {
+            return new OspreyConfig
+            {
+                LibrarySource = new LibrarySource(LibraryFormat.Blib, library),
+                FragmentTolerance = TOLERANCE,
+                DecoysInLibrary = true,
+            };
+        }
+
+        private static string StripBrackets(string modSeq)
+        {
+            var sb = new System.Text.StringBuilder();
+            int depth = 0;
+            foreach (char c in modSeq)
+            {
+                if (c == '[' || c == '(')
+                    depth++;
+                else if (c == ']' || c == ')')
+                    depth--;
+                else if (depth == 0)
+                    sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// A one-spectrum blib of <see cref="SEQUENCE"/> at <paramref name="path"/>, written the
+        /// way Osprey writes its own, plus the given <c>RefSpectraPeakAnnotations</c> rows.
+        /// </summary>
+        internal static string CreateBlib(string path, string modSequence, double[] peaks,
+            (int PeakIndex, string Name, int Charge)[] annotations)
+        {
+            long refId;
+            using (var writer = new OspreyBlibWriter(path))
+            {
+                long fileId = writer.AddSourceFile(@"test.mzML", @"library.tsv", 0.01);
+                refId = writer.AddSpectrum(SEQUENCE, modSequence, 525.25, 2, 10.0, 9.0, 11.0,
+                    peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0);
+                writer.Complete();
+            }
+            using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;"))
+            {
+                conn.Open();
+                using (var transaction = conn.BeginTransaction())
+                {
+                    foreach (var (peakIndex, name, charge) in annotations)
+                    {
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            cmd.CommandText = @"INSERT INTO RefSpectraPeakAnnotations
+                                (RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved)
+                                VALUES (@ref, @peak, @name, '', '', '', @charge, '', '', @mz, @mz)";
+                            cmd.Parameters.AddWithValue(@"@ref", refId);
+                            cmd.Parameters.AddWithValue(@"@peak", peakIndex);
+                            cmd.Parameters.AddWithValue(@"@name", name);
+                            cmd.Parameters.AddWithValue(@"@charge", charge);
+                            cmd.Parameters.AddWithValue(@"@mz", peaks[peakIndex]);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    transaction.Commit();
+                }
+            }
+            SQLiteConnection.ClearAllPools();
+            return path;
+        }
+
+        private static FragmentAnnotation Annotation(IonType ionType, byte ordinal, byte charge, NeutralLossCode loss, double customLoss)
+        {
+            return new FragmentAnnotation
+            {
+                IonType = ionType, Ordinal = ordinal, Charge = charge, NeutralLoss = loss, CustomLossMass = customLoss
+            };
+        }
+
+        internal static void AssertAnnotation(FragmentAnnotation annotation, IonType ionType, byte ordinal, byte charge, NeutralLossCode loss)
+        {
+            Assert.AreEqual(ionType, annotation.IonType);
+            Assert.AreEqual(ordinal, annotation.Ordinal);
+            Assert.AreEqual(charge, annotation.Charge);
+            Assert.AreEqual(loss, annotation.NeutralLoss);
+        }
+
+        /// <summary>Runs <paramref name="statements"/> against the blib at <paramref name="path"/>.</summary>
+        private static void ExecuteSql(string path, params string[] statements)
+        {
+            using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;"))
+            {
+                conn.Open();
+                foreach (string sql in statements)
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = sql;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            SQLiteConnection.ClearAllPools();
+        }
+
+        internal static void TryDeleteFile(string path)
+        {
+            SQLiteConnection.ClearAllPools();
+            try
+            {
+                File.Delete(path);
+            }
+            catch (IOException)
+            {
+                // A test's temp file; a lingering handle must not fail the test.
+            }
+        }
+    }
+}

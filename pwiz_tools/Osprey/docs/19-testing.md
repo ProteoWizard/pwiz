@@ -26,12 +26,12 @@ crate carried its own `#[cfg(test)]` tests compiled into that crate.
   `Osprey.Test.csproj:12-13`) on `Microsoft.NET.Test.Sdk` 17.12.0
   (`Osprey.Test.csproj:11`). Tests are annotated with `[TestClass]` /
   `[TestMethod]`, the Skyline-standard MSTest attributes.
-- **Multi-target**: the test project builds for both `net472` and `net8.0`. The
-  `net472` leg needs extra native/managed wiring the SDK gives `net8.0` for
-  free: an explicit `IronCompress` native `nironcompress.dll` copy for Parquet
-  Zstd (`Osprey.Test.csproj:17-36`) and an explicit `System.Memory` reference
-  (`Osprey.Test.csproj:38-41`). The production regression build runs the
-  `net8.0` binary (`regression.ps1:123`).
+- **Single target**: the test project builds for `net8.0` only, the same
+  binary the production regression build runs (`regression.ps1:123`). The
+  `net472` leg was dropped with the ProteoWizard .NET 8 port (issue #4497),
+  and with it the extra native/managed wiring that leg needed (an explicit
+  `nironcompress.dll` copy for Parquet Zstd, an explicit `System.Memory`
+  reference).
 - **Scale**: 41 `[TestClass]` types and **492 `[TestMethod]` tests** across the
   `Osprey.Test/*.cs` files (measured). Rust 11-testing.md tabulates "~302
   tests." The larger C# count reflects extra tests written specifically to lock
@@ -60,7 +60,7 @@ several), porting the Rust crate's inline tests. The correspondence is direct:
 | `Osprey.IO` | `IOTest.cs` (64), `DiannDecoyColumnTest.cs`, `CwtCandidateCodecTest.cs` (9), `CwtCandidateLoaderTest.cs` | `osprey-io` (26) |
 | `Osprey.Chromatography` | `ChromatographyTest.cs` (13), `CalibrationTest.cs` (20), `PeakDetectorTest.cs` (9) | `osprey-chromatography` (66) |
 | `Osprey.Scoring` | `ScoringTest.cs` (40), `OspreyFeatureCalculatorsTest.cs` (9), `FragmentSelectionTest.cs` (11), `IsotopeDistributionTest.cs` | `osprey-scoring` (70) |
-| `Osprey.FDR` | `FdrTest.cs` (45), `FdrControllerTest.cs`, `ReconciliationTest.cs` (46), `MultiChargeConsensusTest.cs`, `Pass2FdrSidecarTest.cs`, `PercolatorEntryBuilderTest.cs`, `ReconciledParquetWriterTest.cs`, `GapFillTargetIdentifierTest.cs`, `MedianPolishMetricsTest.cs` | `osprey-fdr` (41) |
+| `Osprey.FDR` | `FdrTest.cs` (45), `FdrControllerTest.cs`, `ReconciliationTest.cs` (46), `MultiChargeConsensusTest.cs`, `Pass2FdrSidecarTest.cs`, `PercolatorFeatureFallbackTest.cs`, `ReconciledParquetWriterTest.cs`, `GapFillTargetIdentifierTest.cs`, `MedianPolishMetricsTest.cs` | `osprey-fdr` (41) |
 | `Osprey.ML` | `MLTest.cs` (42) | `osprey-ml` (30) |
 | `Osprey` (CLI) + `Osprey.Tasks` | `ProgramTests.cs` (62), `OspreyCommandArgsTests.cs` (6), `PipelineMembershipTest.cs`, `PerFileResumeDriverTest.cs`, `FileParallelismResolverTests.cs`, `MultiProgressReporterTest.cs`, `ArtifactPathsTest.cs` | `osprey` (main, 26–41) |
 
@@ -75,8 +75,8 @@ Additional C# test files with no direct Rust analog cover port-specific
 infrastructure: `ProgramTests.cs` (CLI `--task` argument validation — see
 15-hpc-scoring-split.md),
 `ByproductContextTest.cs`, `DiagnosticsTest.cs`, `ModelDiagnosticsDataTest.cs`
-(the `--model-diagnostics` HTML report), `FileSaverTest.cs` (the safe
-copy-and-verify NAS-write pattern), `DecoyPairingManifestTest.cs` and
+(the `--model-diagnostics` HTML report), `SimpleFileSaverTest.cs` in `Skyline/CommonTest` (the shared
+sibling-temp atomic write), `DecoyPairingManifestTest.cs` and
 `EntrapmentPairingTest.cs` (decoy/entrapment pairing — see 01-decoy-generation.md).
 
 ## 3. Parity-locked tests and the "translation-proof" register
@@ -150,7 +150,12 @@ Both rules parse only the code portion of each line (a shared `IndexOfLineCommen
 string-literal-aware scanner, `CodeInspectionTest.cs:260`) so a comment that
 mentions the forbidden pattern does not trip the rule.
 
-## 5. Standing gate 1 — `regression.ps1` (golden + resume + HPC chain at 1e-9)
+## 5. Standing gate 1 — `regression.ps1` (golden + FDR bounds + HPC chain at 1e-9)
+
+Pipeline behavior (resume, rehydrate, task boundaries, sidecar contracts, diagnostics
+regeneration) is checked in `Osprey.Test/SubsetPipelineTest.cs` on subset data on every
+commit, not here (#4728). `-Dataset Stellar` runs the golden only; resume and the chain
+run at full size on StellarLibDecoy and StellarGenDecoyEntrap.
 
 `Osprey/../regression.ps1` (`regression.ps1:1`) is the overnight end-to-end
 correctness gate, wired to the scheduled TeamCity "Osprey Windows .NET
@@ -164,6 +169,13 @@ full pipeline on two reference datasets — **Stellar** (unit resolution) and
 under a per-run timestamped `TestResults/regression-<stamp>` via `--work-dir`
 (`regression.ps1:142-145,229-231`). It then asserts a no-copy invariant that the
 read-only data dir is byte-for-byte untouched (`regression.ps1:277-293,477-481`).
+
+The two acquisitions are searched four ways (`Stellar`, `StellarLibDecoy`,
+`StellarGenDecoyEntrap`, `Astral`; see the dataset table in `Regression/README.md`), and a change to decoy
+construction can be **inert on Stellar and visible only on Astral**: the Stellar library
+has no selenocysteine peptides, so a decoy rule that touches only `U`-containing sequences
+produces a byte-identical Stellar golden and a red Astral one. Run `-Dataset All` before
+merging any decoy-generation change, whatever the Stellar leg says.
 
 It runs three complementary correctness legs, all at a **1e-9 tolerance**
 (`regression.ps1:114`, `-Tolerance` default):
@@ -179,9 +191,8 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   (`Regression/README.md:56`) — machine-independent. Refresh only on an
   intentional reviewed change with `-CreateGolden` (`regression.ps1:48-50,483-488`).
   Golden tables under `osprey-regression.data/*/tables/` include RefSpectra,
-  RetentionTimes, Peak­Boundaries, Osprey{Run,Experiment}Scores,
-  OspreyCoefficients, Proteins, PeakDigest (per-spectrum SHA-256), and
-  OspreyMetadata.
+  RetentionTimes, RefSpectraProteins, Modifications, Proteins,
+  SpectrumSourceFiles, PeakDigest (per-spectrum SHA-256), and LibMetadata.
 - **mode 3 — HPC 4-task worker-chain self-consistency**
   (`regression.ps1:502-522`, `Invoke-HpcChain` at `regression.ps1:338`). Runs the
   distributed `--task` pipeline `PerFileScoring → FirstPassFDR → PerFileRescoring
@@ -200,7 +211,7 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   that resume depends on.
 
 Version pinning: the daily build stamps a changing `YEAR.ORDINAL.BRANCH.DOY`
-version, but the golden compares the `osprey_version` metadata cell exactly, so
+version, but the golden compares the `osprey.version` metadata cell exactly, so
 the harness pins `OSPREY_VERSION_OVERRIDE = '26.1.1.0'` (`regression.ps1:133`,
 honored at `Osprey.Core/OspreyVersion.cs:93`) to keep the stamp deterministic.
 Any mismatch emits a TeamCity `buildProblem` and a non-zero exit
@@ -209,9 +220,26 @@ Any mismatch emits a TeamCity `buildProblem` and a non-zero exit
 `Regression/RegressionData.ps1` — self-contained, with **no dependency on the
 sibling `ai/` checkout** (`regression.ps1:38-41`, `Regression/README.md:4-7`).
 
-Switches: `-Dataset {Stellar|Astral|All}` (`regression.ps1:103`), `-CreateGolden`,
+Switches: `-Dataset {Stellar|StellarLibDecoy|StellarGenDecoyEntrap|Astral|All}`
+(`regression.ps1:259-260`), `-CreateGolden`,
 `-SkipResume` (mode-2 off), `-SkipHpcChain` (mode-3 off), `-NoBuild`, `-Threads`
-(default 16), `-TeamCity`, `-KeepOutput`, `-Tolerance` (default 1e-9).
+(default 16), `-TeamCity`, `-KeepOutput`, `-CleanOutput`, `-KeepRunDirs` (default 1),
+`-Tolerance` (default 1e-9).
+
+Run output is cleaned **before** a run, never after. A local run retains its final
+products under `TestResults/regression-<stamp>` (`<dataset>/straight`, the phase 3/4
+outputs, `chain/logs` — a passing run's files have readers: a later A/B, a memory profile,
+the streamed diagnostics HTML), but the staged input **copies** (the phase-1 mzML copies,
+the per-worker `spectra.bin` / library / derived-library copies) are always deleted as they are
+consumed. The next run's startup prune, before it creates its own root, keeps the most
+recent `-KeepRunDirs` completed sets (default 1), so the disk holds KeepRunDirs+1 sets
+between runs — two by default; `-KeepRunDirs 0` keeps only the current run's output. The
+prune skips a live run dir, and a dir without a completion stamp does not count toward the
+keep. Only `-TeamCity` (the shared agent is disk-bound; it implies `-CleanOutput` and, unless
+`-KeepRunDirs` is given, keep-none) or an explicit `-CleanOutput` deletes as it goes;
+`-KeepOutput` overrides both and retains everything, the input copies included.
+`regression-parallel.ps1` makes one `regression.ps1` invocation per dataset and forwards
+`-KeepRunDirs` (default = the number of datasets), `-KeepOutput` and `-CleanOutput`.
 
 ## 6. Standing gate 2 — `Test-PerfGate.ps1` (interleaved A/B wall-time)
 
@@ -258,14 +286,16 @@ exercised *by* the gates but documented in their own stage docs.
 
 | Switch | Default | Effect |
 |---|---|---|
-| `-Dataset` | `All` | `Stellar` (unit, fast), `Astral` (hram, large), or `All` |
+| `-Dataset` | `All` | `Stellar` (unit, fast), `StellarLibDecoy` (library decoys + entrapment), `StellarGenDecoyEntrap` (generated decoys vs entrapment), `Astral` (hram, large), or `All` (`regression.ps1:259-260`) |
 | `-CreateGolden` | off | Capture/refresh `osprey-regression.data/` instead of comparing (reviewed changes only) |
 | `-SkipResume` | off | Skip mode-2 resume self-consistency leg |
 | `-SkipHpcChain` | off | Skip mode-3 HPC 4-task worker-chain leg |
 | `-NoBuild` | off | Reuse existing Release binary |
 | `-Threads` | 16 | `--threads` per run |
 | `-TeamCity` | off | Emit TeamCity `progressMessage`/`buildProblem` |
-| `-KeepOutput` | off | Retain the run's scratch (default deletes as it goes) |
+| `-KeepOutput` | off | Retain everything, staged input copies included (a local run already keeps its final products; this forces retention under `-TeamCity` / `-CleanOutput`) |
+| `-CleanOutput` | off (implied by `-TeamCity`) | Delete the run's scratch as it goes; `-KeepOutput` wins |
+| `-KeepRunDirs` | 1 | Completed run dirs the **next** run's startup prune keeps, so the disk holds KeepRunDirs+1 sets between runs; 0 keeps only the current run |
 | `-Tolerance` | `1e-9` | Numeric tolerance for all three legs |
 
 `Test-PerfGate.ps1` parameters:
@@ -287,7 +317,7 @@ Environment variables that affect testing:
 
 | Env var | Where | Effect |
 |---|---|---|
-| `OSPREY_VERSION_OVERRIDE` | `OspreyVersion.cs:93`; set by `regression.ps1:133` | Pins the logical version string so the golden's `osprey_version` cell stays deterministic |
+| `OSPREY_VERSION_OVERRIDE` | `OspreyVersion.cs:93`; set by `regression.ps1:133` | Pins the logical version string so the golden's `osprey.version` cell stays deterministic |
 | `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` | `OspreyEnvironment.cs:104`; used `IOTest.cs:2082` | When set, the sidecar round-trip test copies its output there for a byte-compare against the Rust sibling test |
 | `OSPREY_CROSS_IMPL_RECONCILIATION_OUT` | `OspreyEnvironment.cs:112` | Same, for the reconciliation sidecar |
 | `OSPREY_DUMP_STAGE7_PROTEIN_FDR` | set by `regression.ps1:244` | Emits the Stage 7 protein-FDR dump that mode 1 diffs against the golden |
@@ -330,7 +360,7 @@ flags: `// Array.Sort OK: <reason>` (`CodeInspectionTest.cs:94`) and
   runner availability — lines 487-509) predicated on the external Python mokapot
   tool. The C# port has a native managed Percolator SVM and no Python mokapot
   dependency, so those Mokapot-specific tests do not exist in `Osprey.Test`
-  (the `FdrMethod` enum retains a `Mokapot` value but it is not wired to the CLI).
+  (the never-wired `FdrMethod.Mokapot` value was deleted, #4543).
   Evidence: `FdrTest.cs` tests the native Percolator path; no `MokapotTest.cs`
   exists under `Osprey.Test/`. See 07-fdr-control.md. Severity: minor.
 

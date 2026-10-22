@@ -263,7 +263,7 @@ namespace TestPerf
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Extract Chromatograms page");
 
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             if (SearchFiles.Count() > 1)
             {
@@ -456,7 +456,7 @@ namespace TestPerf
                 RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
             }
 
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // SearchEngine changed to MSFragger automatically due to changing to DIA workflow: handle download dialogs if necessary
             if (RedownloadTools || HasMissingDependencies)

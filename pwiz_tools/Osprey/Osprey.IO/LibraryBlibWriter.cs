@@ -1,0 +1,171 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Core;
+
+namespace pwiz.Osprey.IO
+{
+    /// <summary>
+    /// Writes a loaded spectral library as a BiblioSpec <c>.blib</c> that Skyline reads and Osprey
+    /// searches back: one spectrum per library precursor (targets and any decoys the library
+    /// supplies) in the form <see cref="BlibSpectrum"/> gives the search output too. The search
+    /// output adds per-run rows; a library has one <c>RetentionTimes</c> row per spectrum holding
+    /// its library retention time, where Skyline reads library retention times from, with no peak
+    /// boundaries.
+    ///
+    /// <para>What survives the round trip: precursor m/z, charge, retention time, fragment m/z
+    /// and intensity (both stored at the precision Osprey holds them, though the reader scales
+    /// intensities to a base peak of 1, as a DIA-NN library already is), and proteins. Fragment
+    /// ion types are not stored - the reader computes them from m/z, as Skyline does. A modification mass is written with at most four decimals; a known
+    /// modification reads back as its exact mass. Library decoys are recognized by their protein
+    /// accession prefix, which is how <c>--decoys-in-library</c> finds them in a blib, so a decoy
+    /// whose accessions carry none of the decoy prefixes (a DIA-NN library flags it in a
+    /// <c>Decoy</c> column) is written with the first prefix added.</para>
+    /// </summary>
+    public static class LibraryBlibWriter
+    {
+        // Spectra prepared in parallel per block, then inserted in order, so memory holds one
+        // block of compressed peaks rather than the whole library.
+        private const int BLOCK_SIZE = 10000;
+
+        private const string DEFAULT_DECOY_PREFIX = @"DECOY_";
+
+        /// <summary>
+        /// Write <paramref name="entries"/> to a new blib at <paramref name="path"/>, replacing any
+        /// file there only once the new one is complete. <paramref name="librarySource"/> names the
+        /// library the entries were loaded from, recorded as the spectrum source.
+        /// <paramref name="decoyPrefixes"/> are the accession prefixes that mark a library decoy
+        /// (a search's defaults when none are given), and <paramref name="commandLine"/> the
+        /// command that made the library, recorded in its metadata when given.
+        /// <paramref name="libraryHash"/> is the validity hash a library derived from a .tsv
+        /// source is reused by (<see cref="OspreyBlibWriter.KEY_LIBRARY_HASH"/>), recorded when
+        /// given. With <paramref name="prefixDecoyAccessions"/> a decoy no prefix marks gets one,
+        /// so a search of the export recognizes it; the derived library passes false and keeps
+        /// every accession as loaded, since its <c>DecoyPairs</c> table marks the decoys and a
+        /// later run must read the entries the parse made. Returns the number of spectra written.
+        /// </summary>
+        public static int Write(string path, IReadOnlyList<LibraryEntry> entries, string librarySource,
+            int nThreads = 0, IList<string> decoyPrefixes = null, string commandLine = null, string libraryHash = null,
+            bool prefixDecoyAccessions = true)
+        {
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = nThreads > 0 ? nThreads : Environment.ProcessorCount
+            };
+            // No prefixes given: the ones a search recognizes by default.
+            var prefixes = decoyPrefixes ?? new OspreyConfig().DecoyPrefixes;
+            string decoyPrefix = prefixes.FirstOrDefault(p => !string.IsNullOrEmpty(p)) ?? DEFAULT_DECOY_PREFIX;
+            using (var writer = new OspreyBlibWriter(path))
+            {
+                writer.BeginBatch();
+                string sourceName = Path.GetFileName(librarySource);
+                long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
+                var block = new BlibSpectrum[BLOCK_SIZE];
+                var refIds = new long[entries.Count];
+                using (var progress = new ProgressReporter(
+                           string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
+                               entries.Count, path),
+                           entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                {
+                    for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
+                    {
+                        int count = Math.Min(BLOCK_SIZE, entries.Count - start);
+                        int blockStart = start;
+                        Parallel.For(0, count, parallelOptions, i =>
+                        {
+                            var entry = entries[blockStart + i];
+                            block[i] = BlibSpectrum.FromLibraryEntry(entry,
+                                prefixDecoyAccessions ? DecoyAccessions(entry, prefixes, decoyPrefix) : null);
+                        });
+                        for (int i = 0; i < count; i++)
+                        {
+                            double rt = entries[start + i].RetentionTime;
+                            long refId = writer.AddSpectrum(block[i], rt, rt, rt, 0.0, fileId, 1);
+                            writer.AddRetentionTime(refId, fileId, rt, null, null, 0.0, true);
+                            refIds[start + i] = refId;
+                        }
+                        progress.Report(start + count);
+                    }
+                }
+                WriteDecoyPairs(writer, entries, refIds);
+                writer.CommitBatch();
+                writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
+                writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_SOURCE, sourceName);
+                if (commandLine != null)
+                    writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, commandLine);
+                if (libraryHash != null)
+                    writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_HASH, libraryHash);
+                writer.Complete();
+            }
+            return entries.Count;
+        }
+
+        /// <summary>
+        /// The accessions to write for a decoy that no prefix already marks: each one with
+        /// <paramref name="decoyPrefix"/> added, or the prefix and the sequence when it has none.
+        /// Null (keep the entry's own) for a target or an already-marked decoy.
+        /// </summary>
+        private static IReadOnlyList<string> DecoyAccessions(LibraryEntry entry, IList<string> prefixes, string decoyPrefix)
+        {
+            if (!entry.IsDecoy || entry.LooksLikeLibraryDecoy(prefixes))
+                return null;
+            if (entry.ProteinIds == null || entry.ProteinIds.Count == 0)
+                return new[] { decoyPrefix + entry.Sequence };
+            return entry.ProteinIds.Select(accession => decoyPrefix + accession).ToArray();
+        }
+
+        /// <summary>
+        /// The <c>DecoyPairs</c> rows of a library with a decoy or entrapment design: one per
+        /// entry, with its pairing id, its side, the entrapment partition from the accessions,
+        /// and for a decoy the load paired (its id is the target's with the decoy bit) its
+        /// target. Written so the exported blib searches back with no manifest, as the loaded
+        /// library did. A plain library - no decoys, no entrapment - writes none: its pairing
+        /// ids are each peptide's own, numbered the same at every load.
+        /// </summary>
+        private static void WriteDecoyPairs(OspreyBlibWriter writer, IReadOnlyList<LibraryEntry> entries, long[] refIds)
+        {
+            // Generated decoys are not in the loaded library the export writes, so a decoy here
+            // is a supplied one.
+            if (!entries.Any(e => e.IsDecoy || EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+                return;
+            var targetIndexById = new Dictionary<uint, int>();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (!entries[i].IsDecoy)
+                    targetIndexById[entries[i].Id] = i;
+            }
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                long? targetRefId = entry.IsDecoy && (entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 &&
+                                    targetIndexById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex)
+                    ? refIds[targetIndex] : null;
+                writer.AddDecoyPair(refIds[i], entry.IsDecoy, EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                    (int)entry.PairingId, targetRefId);
+            }
+        }
+    }
+}

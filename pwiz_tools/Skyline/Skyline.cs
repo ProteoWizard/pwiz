@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -204,9 +202,6 @@ namespace pwiz.Skyline
 
             DocumentUIChangedEvent += AutoTrainCompleted;
 
-            checkForUpdatesMenuItem.Visible =
-                checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
-
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
             {
@@ -260,8 +255,6 @@ namespace pwiz.Skyline
             // Load any file the user may have double-clicked on to run this application
             if (args == null || args.Length == 0)
             {
-                var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-                args = (activationArgs != null ? activationArgs.ActivationData : null);
             }
             if (args != null && args.Length != 0)
             {
@@ -1145,7 +1138,7 @@ namespace pwiz.Skyline
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             e.Cancel = false;
 
@@ -1206,13 +1199,13 @@ namespace pwiz.Skyline
             
             DestroyAllChromatogramsGraph();
             DestroyFilesTreeForm(); // Stop FileSystemWatchers and their threads
-            base.OnClosing(e);
+            base.OnFormClosing(e);
 
             foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
                 control?.DisconnectHandlers();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _immediateWindowWarningListener.Dispose();
             _chromatogramManager.Dispose();
@@ -1246,7 +1239,7 @@ namespace pwiz.Skyline
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             // ReSharper restore LocalizableElement
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -2860,7 +2853,9 @@ namespace pwiz.Skyline
 
             private readonly SkylineWindow _parent;
             public string Title { get { return _tool.Title; } }
-            public string Command { get { return _tool.Command; } }
+            // Not "Command": .NET 8's ToolStripItem has a Command property of its own (an ICommand to bind
+            // to), and a tool's command line is a different thing entirely.
+            public string ToolCommand { get { return _tool.Command; } }
 
             private void HandleClick(object sender, EventArgs e)
             {
@@ -3126,11 +3121,6 @@ namespace pwiz.Skyline
 
         public void CheckForUpdate()
         {
-            // Make sure the document is saved before doing this since it could
-            // restart the application
-            if (Dirty)
-                SaveDocument();
-
             UpgradeManager.CheckForUpdateAsync(this, false);
         }
 

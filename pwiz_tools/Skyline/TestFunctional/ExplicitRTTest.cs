@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
             
             // These test files are some of our oldest small molecule docs, let's see if we can roundtrip them
             AssertEx.Serializable(doc, 3, AssertEx.DocumentCloned);
-            ImportResultsAsync(filenames.Select(f => f + ExtensionTestContext.ExtMzml).ToArray(), null, null, filenames.Length > 1 ? false : (bool?) null);
+            ImportResultsAsync(filenames.Select(f => f + ExtensionTestContext.ExtMzml).ToArray(), null, null, filenames.Length > 1 ? false : null);
             var document = WaitForDocumentChangeLoaded(doc);
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var infos = new List<ChromatogramGroupInfo[]>();

@@ -1032,11 +1032,161 @@
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelFilename" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="comboRedundantSpectra" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="labelRT" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100,AutoSize,0" /&gt;&lt;Rows Styles="AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
+  <data name="flowAddAllOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="flowAddAllOptions.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="flowAddAllOptions.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="btnAdd.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="btnAdd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="btnAdd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnAdd.Text" xml:space="preserve">
+    <value>&amp;Add</value>
+  </data>
+  <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
+    <value>btnAdd</value>
+  </data>
+  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
+    <value>flowAddAllOptions</value>
+  </data>
+  <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnAddAll.Location" type="System.Drawing.Point, System.Drawing">
+    <value>81, 0</value>
+  </data>
+  <data name="btnAddAll.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 0, 3, 0</value>
+  </data>
+  <data name="btnAddAll.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddAll.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnAddAll.Text" xml:space="preserve">
+    <value>A&amp;dd All...</value>
+  </data>
+  <data name="&gt;&gt;btnAddAll.Name" xml:space="preserve">
+    <value>btnAddAll</value>
+  </data>
+  <data name="&gt;&gt;btnAddAll.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddAll.Parent" xml:space="preserve">
+    <value>flowAddAllOptions</value>
+  </data>
+  <data name="&gt;&gt;btnAddAll.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelGlobalCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelGlobalCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>159, 5</value>
+  </data>
+  <data name="labelGlobalCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 5, 0, 0</value>
+  </data>
+  <data name="labelGlobalCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>71, 13</value>
+  </data>
+  <data name="labelGlobalCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelGlobalCutoff.Text" xml:space="preserve">
+    <value>&amp;Global cutoff:</value>
+  </data>
+  <data name="&gt;&gt;labelGlobalCutoff.Name" xml:space="preserve">
+    <value>labelGlobalCutoff</value>
+  </data>
+  <data name="&gt;&gt;labelGlobalCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelGlobalCutoff.Parent" xml:space="preserve">
+    <value>flowAddAllOptions</value>
+  </data>
+  <data name="&gt;&gt;labelGlobalCutoff.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboQValueLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>233, 1</value>
+  </data>
+  <data name="comboQValueLevel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 1, 3, 0</value>
+  </data>
+  <data name="comboQValueLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 21</value>
+  </data>
+  <data name="comboQValueLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="comboQValueLevel.ToolTip" xml:space="preserve">
+    <value>The experiment-wide value Add All filters on</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Name" xml:space="preserve">
+    <value>comboQValueLevel</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Parent" xml:space="preserve">
+    <value>flowAddAllOptions</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="textQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>349, 2</value>
+  </data>
+  <data name="textQValueCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 2, 3, 0</value>
+  </data>
+  <data name="textQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>45, 20</value>
+  </data>
+  <data name="textQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="textQValueCutoff.ToolTip" xml:space="preserve">
+    <value>Add All adds only library entries whose experiment-wide value is at or below this cutoff. Leave empty to add every entry.</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Name" xml:space="preserve">
+    <value>textQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Parent" xml:space="preserve">
+    <value>flowAddAllOptions</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="cbAssociateProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>163, 36</value>
+    <value>400, 3</value>
+  </data>
+  <data name="cbAssociateProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 0</value>
   </data>
   <data name="cbAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>119, 21</value>
@@ -1054,64 +1204,34 @@
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbAssociateProteins.Parent" xml:space="preserve">
-    <value>panel2</value>
+    <value>flowAddAllOptions</value>
   </data>
   <data name="&gt;&gt;cbAssociateProteins.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>5</value>
   </data>
-  <data name="btnAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="btnAdd.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="flowAddAllOptions.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 33</value>
   </data>
-  <data name="btnAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="flowAddAllOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>522, 24</value>
   </data>
-  <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
+  <data name="flowAddAllOptions.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="btnAdd.Text" xml:space="preserve">
-    <value>&amp;Add</value>
+  <data name="flowAddAllOptions.WrapContents" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
-    <value>btnAdd</value>
+  <data name="&gt;&gt;flowAddAllOptions.Name" xml:space="preserve">
+    <value>flowAddAllOptions</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;flowAddAllOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
+  <data name="&gt;&gt;flowAddAllOptions.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="btnAddAll.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="btnAddAll.Location" type="System.Drawing.Point, System.Drawing">
-    <value>81, 33</value>
-  </data>
-  <data name="btnAddAll.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnAddAll.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnAddAll.Text" xml:space="preserve">
-    <value>A&amp;dd All...</value>
-  </data>
-  <data name="&gt;&gt;btnAddAll.Name" xml:space="preserve">
-    <value>btnAddAll</value>
-  </data>
-  <data name="&gt;&gt;btnAddAll.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddAll.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnAddAll.ZOrder" xml:space="preserve">
-    <value>3</value>
+  <data name="&gt;&gt;flowAddAllOptions.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -1138,7 +1258,7 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="panel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Bottom</value>

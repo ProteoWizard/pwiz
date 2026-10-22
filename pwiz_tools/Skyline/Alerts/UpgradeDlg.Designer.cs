@@ -32,7 +32,6 @@ namespace pwiz.Skyline.Alerts
             this.btnLater = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.linkReleaseNotes = new System.Windows.Forms.LinkLabel();
-            this.labelDetailAutomatic = new System.Windows.Forms.Label();
             this.labelDirections = new System.Windows.Forms.Label();
             this.labelDetail = new System.Windows.Forms.Label();
             this.labelRelease = new System.Windows.Forms.Label();
@@ -55,7 +54,6 @@ namespace pwiz.Skyline.Alerts
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.BackColor = System.Drawing.SystemColors.Window;
             this.panel1.Controls.Add(this.linkReleaseNotes);
-            this.panel1.Controls.Add(this.labelDetailAutomatic);
             this.panel1.Controls.Add(this.labelDirections);
             this.panel1.Controls.Add(this.labelDetail);
             this.panel1.Controls.Add(this.labelRelease);
@@ -68,12 +66,7 @@ namespace pwiz.Skyline.Alerts
             this.linkReleaseNotes.Name = "linkReleaseNotes";
             this.linkReleaseNotes.TabStop = true;
             this.linkReleaseNotes.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkReleaseNotes_LinkClicked);
-            // 
-            // labelDetailAutomatic
-            // 
-            resources.ApplyResources(this.labelDetailAutomatic, "labelDetailAutomatic");
-            this.labelDetailAutomatic.Name = "labelDetailAutomatic";
-            // 
+            //
             // labelDirections
             // 
             resources.ApplyResources(this.labelDirections, "labelDirections");
@@ -144,7 +137,6 @@ namespace pwiz.Skyline.Alerts
         private System.Windows.Forms.Label labelDirections;
         private System.Windows.Forms.Button btnInstall;
         private System.Windows.Forms.CheckBox cbAtStartup;
-        private System.Windows.Forms.Label labelDetailAutomatic;
         private System.Windows.Forms.LinkLabel linkReleaseNotes;
     }
 }

@@ -1054,6 +1054,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // Decoy options enabled only for DIA
                     ImportFastaControl.RequirePrecursorTransition = WorkflowType != Workflow.dia;
                     ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia && !HasPeakBoundaries;
+                    ImportFastaControl.UpdateQValueFilterControls();
                 }
                     break;
 
@@ -1785,7 +1786,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 TransitionSettings.FullScan.PrecursorMassAnalyzer, precursorRes,
                 TransitionSettings.FullScan.PrecursorMassAnalyzer == FullScanMassAnalyzerType.orbitrap ||
                 TransitionSettings.FullScan.PrecursorMassAnalyzer == FullScanMassAnalyzerType.ft_icr ?
-                    FullScanSettingsControl.HARDKLOR_PRECURSOR_RES_MZ : (double?)null);
+                    FullScanSettingsControl.HARDKLOR_PRECURSOR_RES_MZ : null);
             var newTransitionSettings = Document.Settings.TransitionSettings.ChangeFullScan(newFullScanSettings);
             var docNew = Document.ChangeSettings(Document.Settings.ChangeTransitionSettings(newTransitionSettings));
             SetDocument(docNew, Document);

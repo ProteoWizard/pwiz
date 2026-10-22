@@ -27,13 +27,19 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using pwiz.CLI.cv;
-using pwiz.CLI.data;
-using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
-using seems.Misc;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Params;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+using Pwiz.SeeMS.Misc;
+using Pwiz.Data.MsData.Processing;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	public delegate void ChromatogramListCellClickHandler( object sender, ChromatogramListCellClickEventArgs e );
 	public delegate void ChromatogramListCellDoubleClickHandler( object sender, ChromatogramListCellDoubleClickEventArgs e );
@@ -80,7 +86,7 @@ namespace seems
             IntPtr dummy = gridView.Handle;
             chromatogramList = new Dictionary<int, Chromatogram>();
 
-            typeDataGridViewTextBoxColumn.ToolTipText = new CVTermInfo( CVID.MS_chromatogram_type ).def;
+            typeDataGridViewTextBoxColumn.ToolTipText = new CVTermInfo( CVID.MS_chromatogram_type ).Def;
 		}
 
         private void gridView_DataBindingComplete( object sender, DataGridViewBindingCompleteEventArgs e )
@@ -93,17 +99,17 @@ namespace seems
         {
             chromatogramList[chromatogram.Index] = chromatogram;
 
-            pwiz.CLI.msdata.Chromatogram c = chromatogram.Element;
+            Pwiz.Data.MsData.Spectra.Chromatogram c = chromatogram.Element;
             DataProcessing dp = chromatogram.DataProcessing;
             if( dp == null )
-                dp = c.dataProcessing;
+                dp = c.DataProcessing;
 
-            var type = c.cvParamChild(CVID.MS_chromatogram_type);
-            if (type.cvid == CVID.CVID_Unknown) // No specific chromatogram type given, try generic
-                type = c.cvParam(CVID.MS_chromatogram);
-            row.Type = type.name;
-            row.DataPoints = c.defaultArrayLength;
-            row.DpId = ( dp == null || dp.id.Length == 0 ? "unknown" : dp.id );
+            var type = c.Params.CvParamChild(CVID.MS_chromatogram_type);
+            if (type.Cvid == CVID.CVID_Unknown) // No specific chromatogram type given, try generic
+                type = c.Params.CvParam(CVID.MS_chromatogram);
+            row.Type = type.Name;
+            row.DataPoints = (ulong) c.DefaultArrayLength;
+            row.DpId = ( dp == null || dp.Id.Length == 0 ? "unknown" : dp.Id );
         }
 
         public void Add( Chromatogram chromatogram )
@@ -155,7 +161,7 @@ namespace seems
             UpdateRow( rowIndex, null );
         }
 
-        public void UpdateRow( int rowIndex, ChromatogramList chromatogramList )
+        public void UpdateRow( int rowIndex, IChromatogramList chromatogramList )
         {
             ChromatogramDataSet.ChromatogramTableRow row = ( chromatogramBindingSource[rowIndex] as DataRowView ).Row as ChromatogramDataSet.ChromatogramTableRow;
 

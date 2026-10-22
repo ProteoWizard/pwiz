@@ -118,7 +118,7 @@ namespace pwiz.Osprey.Test
             string okPath = WriteTempBlib(AT_MINIMUM);
             try
             {
-                var loader = new BlibLoader();
+                var loader = new BlibLoader(FragmentToleranceConfig.UnitResolution(0.5));
                 var ex = Assert.ThrowsException<InvalidDataException>(() => loader.Load(shortPath));
                 StringAssert.Contains(ex.Message, TOO_SHORT);
 
@@ -162,10 +162,10 @@ namespace pwiz.Osprey.Test
                     new LibraryFragment { Mz = 200.0, RelativeIntensity = 0.8f }
                 }
             };
-            using (var writer = new BlibWriter(path))
+            using (var writer = new OspreyBlibWriter(path))
             {
                 writer.AddSpectrum(entry, @"test.mzML", 10.5);
-                writer.FinalizeDatabase();
+                writer.Complete();
             }
             return path;
         }

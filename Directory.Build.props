@@ -1,0 +1,179 @@
+<Project>
+
+  <!-- Optional per-user overrides (gitignored). Drop in $(IAgreeToVendorLicenses), local
+       NuGet feed creds, etc. Created by i-agree-to-the-vendor-licenses.bat in the repo root. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
+
+  <!-- $(PwizTargetIsWindows): the platform the OUTPUT will run on, as opposed to $(OS), the one
+       building it. Imported here rather than beside its consumers because every pwiz project
+       that stages a native payload is single-TFM plain net10.0, so the TFM rule in
+       that file can never apply and an early import loses nothing. AFTER the user props, so a
+       cross-target pin dropped in there counts as explicit the same way -p: does. -->
+  <Import Project="$(MSBuildThisFileDirectory)pwiz_tools\Shared\Lib\PwizTargetPlatform.props" Condition="'$(PwizTargetPlatformPropsImported)' != 'true'" />
+
+  <!-- ============================================================
+       Path anchors. MSBuild auto-discovers Directory.Build.props by
+       walking up the directory tree from every project file, so the
+       properties below are inherited by every csproj/vcxproj under
+       pwiz/, build/, examples/, scripts/installer/ with no opt-in needed. The
+       pwiz tools under pwiz_tools/ (BiblioSpec, Commandline, MSConvertGUI,
+       SeeMS, BullseyeSharp) chain to this file through a one-line
+       Directory.Build.props of their own, because pwiz_tools/Directory.Build.props
+       is Skyline's and must not apply to them.
+
+       The anchor for everything is $(MSBuildThisFileDirectory) — by
+       definition the directory holding THIS file, which IS the repo
+       root. Every other path is derived from that, so adding a new
+       csproj at any depth needs only `$(PwizRepoRoot)<thing>`.
+       ============================================================ -->
+  <!-- x64 is the platform every Windows build of pwiz-sharp uses: Pwiz.sln's x64 configurations,
+       build.bat, the installer, Skyline and Osprey all pass it, so they share one bin\x64\<Config>
+       tree, and every vendor SDK is x64-only anyway. AnyCPU stays listed for builds that pass no
+       platform (build.sh on Linux, a bare `dotnet build`). Declared here so Visual Studio accepts
+       Pwiz.sln mapping these projects to x64; a project that sets its own Platforms keeps them. -->
+  <PropertyGroup>
+    <Platforms Condition="'$(Platforms)' == ''">AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Repo root with a trailing separator: use it as a bare prefix, `$(PwizRepoRoot)pwiz`.
+         $(PwizRepoDir) is the same directory without the separator, for command lines where a
+         trailing backslash would escape the closing quote (GetFullPath of "dir\." rather than
+         TrimEndingDirectorySeparator, which the .NET Framework MSBuild that builds the vcxprojs
+         does not have). -->
+    <PwizRepoRoot>$(MSBuildThisFileDirectory)</PwizRepoRoot>
+    <PwizRepoDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory).'))</PwizRepoDir>
+
+    <!-- $(PwizPrebuiltNativeShimDir) is the public knob; $(_PwizPrebuiltNativeShimDir) is the
+         same value guaranteed to end in a separator, so consumers can concatenate:
+         $(_PwizPrebuiltNativeShimDir)Foo.dll.
+
+         It has to be a SECOND property rather than a normalisation in place. A value that
+         arrives via -p: is a global property, and MSBuild silently ignores any PropertyGroup
+         that tries to redefine one - so normalising the public name looked correct and did
+         nothing. Callers also cannot simply pass the trailing separator themselves, because
+         a command-line value ending in a backslash makes MSBuild read the following quote
+         as escaped. Empty stays empty, so either name still doubles as the opt-in flag. -->
+    <_PwizPrebuiltNativeShimDir Condition="'$(PwizPrebuiltNativeShimDir)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PwizPrebuiltNativeShimDir)'))</_PwizPrebuiltNativeShimDir>
+
+    <!-- pwiz/ — the library: src/ and test/ projects, plus the data the library and its
+         tests consume in place: data/common/*.obo (embedded CVs), data/vendor_readers/
+         (vendor test fixtures + reference mzMLs), analysis/spectrum_processing/*.data. -->
+    <PwizRoot>$(PwizRepoRoot)pwiz</PwizRoot>
+
+    <!-- pwiz_tools/ — Skyline, Shared, Osprey and the pwiz tools. -->
+    <PwizToolsRoot>$(PwizRepoRoot)pwiz_tools</PwizToolsRoot>
+
+    <!-- libraries/ — 7za.exe / 7zz / bsdtar.exe and the msparser, zlib, expat archives. -->
+    <PwizLibrariesPath>$(PwizRepoRoot)libraries</PwizLibrariesPath>
+
+    <!-- The 7-Zip extractor used by the vendor ExtractVendorAssemblies targets. 7za.exe is a
+         Windows PE binary, so non-Windows builds use the Linux 7zz that ships alongside it in
+         libraries/ (tracked with its executable bit). Defined centrally so a project only has
+         to reference $(SevenZaExe); a project that hardcodes 7za.exe cannot build off-Windows.
+         Forward slashes throughout: Windows 7-Zip accepts them, Linux requires them. -->
+    <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)/7za.exe</SevenZaExe>
+    <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/7zz</SevenZaExe>
+
+    <!-- Vendor support is not one switch once Linux is in scope. Thermo's SDK is managed
+         ThermoFisher.CommonCore (cross-platform), but Waters/Agilent/Bruker/Sciex/Shimadzu/
+         Mobilion wrap native Windows DLLs and cannot load off-Windows at all. Projects that
+         pull in a native-SDK vendor must gate on $(NativeVendorsAvailable); projects that
+         only need Thermo can keep using $(IAgreeToVendorLicenses).
+
+         Gated on the TARGET, not the host: these SDKs are part of the shipped payload, so what
+         decides whether they can be there is the platform the build output will run on. A
+         Windows-targeted build from a Linux host still needs them compiled in, and a
+         Linux-targeted build from Windows still must not have them. -->
+    <NativeVendorsAvailable Condition="'$(IAgreeToVendorLicenses)' == 'true' AND '$(PwizTargetIsWindows)' == 'true'">true</NativeVendorsAvailable>
+
+    <!-- vendor-assemblies/ — destination of vendor SDK 7z extraction
+         (Bruker.csproj / Sciex.csproj / etc. ExtractVendorAssemblies targets
+         unpack into here, MobilionShim.vcxproj's MBI SDK lives here, etc.). -->
+    <PwizVendorAssembliesPath>$(PwizRepoRoot)vendor-assemblies</PwizVendorAssembliesPath>
+
+    <!-- vendor-archives/ — the encrypted vendor SDK archives (vendor_api_*.7z), the
+         Sciex Wiff2 deps and the UIMF SDK DLL. Tracked build inputs, not a cache. -->
+    <PwizVendorArchivesPath>$(PwizRepoRoot)vendor-archives</PwizVendorArchivesPath>
+
+    <!-- scripts/installer/build — Inno Setup output dir. -->
+    <PwizInstallerBuildDir>$(PwizRepoRoot)scripts\installer\build</PwizInstallerBuildDir>
+
+    <!-- example_data/ — tiny round-trip fixtures (tiny.pwiz.1.1.mz5/
+         .mzMLb/.mzML) used by MsData.Tests' CppWritten identify/read tests. -->
+    <PwizExampleDataPath>$(PwizRepoRoot)example_data</PwizExampleDataPath>
+  </PropertyGroup>
+
+  <!-- SDK-style projects glob their whole directory. Every pwiz module keeps its test project in a
+       test/ subdirectory (Test/ for MSConvertGUI) and the vendor readers / analysis modules keep
+       their fixtures in *.data/ directories, so exclude both from the default items globally. -->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);test/**;Test/**;**/*.data/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Keep the build warning-free. Demote a warning with NoWarn, with a comment saying why.
+         A developer build promotes warnings to errors, so a new one fails where it was written.
+         TeamCity and the SkylineNightly build (build.bat no-warnings-as-errors) do not: a
+         promoted warning stops the build before any test runs, and not every warning comes from
+         the commit being built. There tcinspect.ps1 (pwiz_tools/Skyline/tcinspect.ps1 for
+         Skyline) logs every restore and build warning and fails its own GitHub status instead,
+         leaving the build green. Pass -p:PwizWarningsAsErrors=false to build like CI.
+         TreatWarningsAsErrors covers compiler, analyzer and NuGet diagnostics. MSBuild task
+         warnings are promoted by code, not wholesale: the git version-stamping Execs rely on
+         ContinueOnError, which logs a failed git as a warning that must stay soft.
+         MSB3568: duplicate .resx resource name. MSB3277: conflicting versions of a referenced
+         assembly. MSB3245: a reference that could not be resolved.
+         The NuGet advisories (NU1901-NU1904) are never errors, even here: they are published
+         overnight against a package nobody changed, and would fail every developer's restore
+         the next morning. -->
+    <PwizWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == '' and '$(TEAMCITY_VERSION)' == ''">true</PwizWarningsAsErrors>
+    <TreatWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">true</TreatWarningsAsErrors>
+    <MSBuildWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <!-- .NET 9+ defaults NuGetAuditMode to "all" (transitive). "direct" restores the
+         net8 default. This does NOT make the transitive advisories go away - they
+         are real and tracked separately; see the net10 TODO. -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
+    <!-- NU1510: new in .NET 10 (package pruning). Flags PackageReferences that the
+         shared framework now provides. -->
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>ProteoWizard</Company>
+    <Product>pwiz-sharp</Product>
+    <Copyright>Copyright (c) ProteoWizard</Copyright>
+    <Authors>ProteoWizard Contributors</Authors>
+  </PropertyGroup>
+
+  <!-- Assembly version, Jam-free. Scheme mirrors pwiz cpp's generate-version.jam:
+       major.minor.{YY}{DDD}, where {YY}{DDD} is the two-digit year and 3-digit
+       day-of-year of the git commit date. The actual date-stamped value is set by
+       SetPwizSharpVersion in Directory.Build.targets (which reads the git date via
+       build\PwizVersion.targets); the placeholder below (DDD sentinel 000) is what a
+       design-time/eval-only build sees before that target runs.
+       "(automated build)" for CI (build.bat sets AutomatedBuild=true), else
+       "(developer build)". -->
+  <PropertyGroup>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_BuildKindSuffix>
+    <_BuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_BuildKindSuffix>
+    <PwizSharpVersionMajor>4</PwizSharpVersionMajor>
+    <PwizSharpVersionMinor>0</PwizSharpVersionMinor>
+    <Version Condition="'$(Version)' == ''">$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).0</Version>
+    <!-- We append the short git hash to InformationalVersion ourselves (Jam-style
+         "-<hash>"); suppress the SDK's automatic "+<full sha>" so it isn't doubled. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+</Project>
