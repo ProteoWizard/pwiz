@@ -21,11 +21,14 @@
         <parameters>
           <param name="script.content"><![CDATA[REM Rebuild a past C++-era master commit for the monthly release archive (#4899).
 REM Jamroot.jam stamps the version date and git SHA from HEAD, so HEAD must be the
-REM seed commit itself, on a branch named master as in the original build.
+REM seed commit itself, on a branch named master as in the original build. The VCS
+REM root enforces a depth-1 clone of the PR head, so fetch the seed commit by SHA;
+REM depth 1 is enough because the date and SHA both come from HEAD's own commit.
 if "%seed.commit%"=="" (
   echo ##teamcity[buildProblem description='seed.commit is not set']
   exit /b 1
 )
+git fetch --depth=1 --no-tags origin %seed.commit% || exit /b 1
 git checkout -f -B master %seed.commit% || exit /b 1
 git clean -ffdxq || exit /b 1
 git log -1 --format=fuller]]></param>
