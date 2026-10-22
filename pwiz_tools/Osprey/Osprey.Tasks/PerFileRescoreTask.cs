@@ -204,12 +204,50 @@ namespace pwiz.Osprey.Tasks
         // for files that had no reconciliation work). ValidityKey adds the
         // reconciliation parameter hash because the rescored content
         // depends on it.
+        //
+        // Inputs are what a node rescoring its runs must be given, doc 00's "Boundary 2 -> 3"
+        // made checkable. Per run: the spectra cache Stage 6 streams its MS2 from (no data file -
+        // there is no mzML fallback), the Stage 4 parquet the run is rehydrated from, the
+        // calibration (mass calibration is required; the RT calibration plans the run), and the
+        // run's 1st-pass FDR sidecar. Analysis-wide, the four files FirstPassFDR wrote for every
+        // node: the experiment sidecar (Stage 6's compaction reads its q-values), the retained
+        // base_id summary (fatal when absent), the frozen 1st-pass model the pass-2 worker scores
+        // with (both pass-2 modes are frozen, so it is unconditional), and under protein-compact
+        // the stratum it competes within.
+        //
+        // Under --demux a multiplexed run streams <stem>.demux.spectra.bin instead of the plain
+        // cache, which the configuration alone cannot tell; the plain cache is what is declared.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
-            if (ctx.Config.InputFiles == null) yield break;
-            foreach (var input in ctx.Config.InputFiles)
+            var config = ctx.Config;
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(config))
+                yield return libraryInput;
+            if (config.InputFiles == null) yield break;
+            foreach (var input in config.InputFiles)
+            {
+                yield return SpectraCache.GetCachePath(input);
+                yield return ParquetScoreCache.GetScoresPath(input);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
                 yield return FdrScoresSidecar.Pass1Path(input);
-            if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+            }
+            string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
+            string experimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib, siblingPath,
+                FdrScoresSidecar.Pass.FirstPass);
+            if (!string.IsNullOrEmpty(experimentPath))
+                yield return experimentPath;
+            string retainedSummary = RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath);
+            if (!string.IsNullOrEmpty(retainedSummary))
+                yield return retainedSummary;
+            string modelPath = FirstPassModelIO.PathFor(config);
+            if (!string.IsNullOrEmpty(modelPath))
+                yield return modelPath;
+            if (OspreyEnvironment.Pass2ProteinCompact)
+            {
+                string stratumPath = FirstPassModelIO.StratumPathFor(config);
+                if (!string.IsNullOrEmpty(stratumPath))
+                    yield return stratumPath;
+            }
+            if (config.Reconciliation != null && config.Reconciliation.Enabled)
             {
                 string consensusPath = Stage6ConsensusFile.PathFor(ctx.Config);
                 if (!string.IsNullOrEmpty(consensusPath))

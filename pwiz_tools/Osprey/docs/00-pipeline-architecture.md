@@ -844,7 +844,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<library-leaf>.blib` (derived library; a `.tsv` source only) | experiment cache | library load, any task | all tasks | ship it, or rebuild locally - it is the finished library in the transfer format, validated by its own `osprey.library_hash` row, and the `.libcache` it replaced is read for one release where one is left |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
-| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
+| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `FirstPassFDR`, `PerFileRescoring` | with the run, to every leg before `SecondPassFDR` |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product, carrying the run's share of the report's Model tab (`FeatureSums`) | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `FirstPassFDR`'s pay-later report; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
@@ -944,12 +944,13 @@ the worker's inputs changed, `PerFileRescoring`'s own validity fails, the driver
 it, and it rewrites the binary - and with it the stamp, in the same commit. A stamp that
 survives is one whose producer was legitimately skipped as already done.
 
-**`<stem>.calibration.json` is read on every leg, not just the rescore.** Besides RT
-calibration for Stage 6, it carries the isolation-scheme windows that give the gap-fill
-m/z filter its per-run coverage - which is how a `SecondPassFDR` node with no mzML still
-gets that coverage. It is read behind a `File.Exists`, so an orchestrator that leaves it
-behind does not get an error: gap-fill filtering silently changes. That is the P13-shaped
-hazard this document warns about, in the contract itself.
+**`<stem>.calibration.json` is read by the join before the rescore, not just the rescore.**
+Besides RT calibration for Stage 6, it carries the isolation-scheme windows that give the
+gap-fill m/z filter its per-run coverage, and `FirstPassFDR` plans the cross-run consensus
+from its RT calibration. It is read behind a `File.Exists`, so an orchestrator that leaves it
+behind does not get an error: the consensus silently changes. That is the P13-shaped hazard
+this document warns about, in the contract itself. `SecondPassFDR` needs none: gap-fill is
+planned in the rescore, and mode 3 of `regression.ps1` withholds the file from that node.
 
 **A per-run plan is a per-run product, and nothing cross-run rides in it.** Each run's
 `<stem>.reconciliation.json` holds that run's actions, gap-fill targets and refined
@@ -1222,10 +1223,9 @@ are functions of all runs:
 - the library, and `-i` naming the runs whose parquets it reads
 
 `.calibration.json` must travel, which is easy to get wrong because the join reads
-parquets rather than spectra. It supplies RT calibration and the isolation-scheme windows
-behind the gap-fill m/z filter, and it is read on this leg and the `SecondPassFDR` leg as
-well as the rescore. It is read behind a `File.Exists`: leaving it out produces no error,
-just different gap-fill filtering.
+parquets rather than spectra. It supplies the RT calibration the cross-run consensus is
+planned from, and it is read on this leg as well as the rescore. It is read behind a
+`File.Exists`: leaving it out produces no error, just a different consensus.
 
 `<stem>.spectra.bin` does not need to travel - the join reads parquets, not spectra. Leave
 the caches on the scoring nodes unless the raw data was deleted after staging, in which
@@ -1287,7 +1287,6 @@ Per run, for **every** run in the cohort:
 - `<stem>.reconciliation.json` - written by the rescore node, read here for the gap-fill
   entry ids on the Stage-7 fold. Part of the worker's answer: a run whose plan is missing or
   carries another stamp than its reconciled parquet is refused, like a missing 2nd-pass file
-- `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`

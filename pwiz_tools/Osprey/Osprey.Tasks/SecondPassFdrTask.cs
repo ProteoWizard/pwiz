@@ -122,8 +122,9 @@ namespace pwiz.Osprey.Tasks
             // run while declaring it nowhere is worse than declaring it wrongly, because an
             // orchestrator building a node's shipping list from Inputs omits it, hands over
             // every run, and fails at the top of Stage 7 with the whole load already paid for.
-            // regression.ps1 only survives that today by relaying the file between phase dirs by
-            // hand. Provenance only, like its siblings - the driver validates by output stamp.
+            // regression.ps1's HPC chain stages each node from these declarations, so it fails
+            // the same way. Provenance only to the driver, like its siblings - it validates by
+            // output stamp.
             string retainedSummary = RetainedBaseIdSidecar.PathFor(
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config));
             if (!string.IsNullOrEmpty(retainedSummary))
@@ -137,6 +138,43 @@ namespace pwiz.Osprey.Tasks
                 // competition: the transfer competes nothing.
                 if (OspreyEnvironment.Pass2ProteinCompact)
                     yield return Pass2CompetitionDecoys.PathFor(input);
+                // The run's plan, which the worker writes beside its answer under the same stamp:
+                // the gap-fill entry ids are read from it, and a run whose plan is missing is
+                // refused as unanswered (Pass2FdrSidecar.HasWorkerStamp).
+                yield return ReconciliationFile.PathForInput(input);
+            }
+
+            // NOT the per-run .calibration.json. PerFileScoring's rehydrate reads it behind a
+            // File.Exists on every node that starts after Stage 4, but only into the RT
+            // calibrations and isolation windows that FirstPassFDR's consensus and
+            // PerFileRescoring's planner consume - nothing this task runs. A SecondPassFDR node
+            // given none produces the same blib and sidecars, which mode 3 of regression.ps1
+            // proves by withholding it.
+
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
+
+            // The frozen 1st-pass model and its stratum, under protein-compact only: that fold
+            // re-competes each run's records inside the stratum and refuses to run without both
+            // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
+            // needs neither: it reloads a model it finds, and nothing on its path reads it.
+            if (OspreyEnvironment.Pass2ProteinCompact)
+            {
+                string modelPath = FirstPassModelIO.PathFor(ctx.Config);
+                if (!string.IsNullOrEmpty(modelPath))
+                    yield return modelPath;
+                string stratumPath = FirstPassModelIO.StratumPathFor(ctx.Config);
+                if (!string.IsNullOrEmpty(stratumPath))
+                    yield return stratumPath;
+            }
+
+            // The pass-1 half of the --model-diagnostics report, which FirstPassFDR wrote because
+            // the pass-1 pool is gone by now: this task renders one page with both passes.
+            if (ctx.Config.ModelDiagnostics)
+            {
+                string pass1Diagnostics = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
+                if (!string.IsNullOrEmpty(pass1Diagnostics))
+                    yield return pass1Diagnostics;
             }
         }
 

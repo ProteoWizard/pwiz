@@ -217,11 +217,23 @@ namespace pwiz.Osprey.Tasks
         // ValidityKey adds the reconciliation parameter hash so that
         // toggling reconciliation off/on between runs invalidates the
         // prior outputs.
+        //
+        // Inputs are what a node running this task alone must be given, and nothing else: no
+        // data file and no spectra cache, since the join reads parquets. Each run's
+        // .calibration.json is one, though nothing fails without it - PerFileScoring's rehydrate
+        // reads it behind a File.Exists, for the RT calibrations the cross-run consensus is
+        // planned from, and the calibration view of --model-diagnostics reads it again. Left
+        // behind, the consensus silently changes.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return ParquetScoreCache.GetScoresPath(input);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+            }
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)

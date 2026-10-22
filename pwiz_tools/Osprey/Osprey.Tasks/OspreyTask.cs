@@ -156,10 +156,12 @@ namespace pwiz.Osprey.Tasks
         public abstract bool Rehydrate(PipelineContext ctx);
 
         /// <summary>
-        /// File paths this task reads as inputs. Documentation only: it
-        /// states what the task consumes, and nothing reads it at run time.
-        /// Default empty; tasks override to list their input files
-        /// (mzML, library, upstream sidecars, etc.).
+        /// File paths this task reads as inputs. Nothing reads it at run time, but it
+        /// is the task's file contract: <c>--task-files</c> prints it, and the test
+        /// harnesses stage an HPC node with exactly these files, so a file the task
+        /// reads and does not declare fails there. Declare every file read, under the
+        /// conditions it is read. Default empty; tasks override to list their input
+        /// files (mzML, library, upstream sidecars, etc.).
         /// </summary>
         public virtual IEnumerable<string> Inputs(PipelineContext ctx) => Array.Empty<string>();
 
