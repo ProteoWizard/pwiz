@@ -37,6 +37,7 @@ namespace pwiz.CarafeSharp.Tasks
 
         private readonly LibrarySettings _settings;
         private readonly EntrapmentFastaSettings _digest;
+        private readonly string _name;
 
         public PredictLibraryTask(LibrarySettings settings)
         {
@@ -50,12 +51,22 @@ namespace pwiz.CarafeSharp.Tasks
         /// key, so a changed entrapment ratio or seed predicts again.
         /// </summary>
         public PredictLibraryTask(LibrarySettings settings, EntrapmentFastaSettings digest)
+            : this(settings, digest, TASK_NAME)
+        {
+        }
+
+        /// <summary>
+        /// The same, under the name <paramref name="name"/>: a host that predicts more than one
+        /// library in a run tells them apart in its log and in the stamps they carry.
+        /// </summary>
+        public PredictLibraryTask(LibrarySettings settings, EntrapmentFastaSettings digest, string name)
             : this(settings)
         {
             _digest = digest;
+            _name = name;
         }
 
-        public override string Name => TASK_NAME;
+        public override string Name => _name ?? TASK_NAME;
 
         /// <summary>The peptides the last <see cref="Run"/> predicted from an in-memory digest, or null.</summary>
         public LibraryPeptides Peptides { get; private set; }

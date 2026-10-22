@@ -6,7 +6,7 @@ Build the pwiz-sharp installer (Inno Setup).
 End-to-end packaging pipeline:
   1. build/VendorPinsGenerator — bake the current vendor SDK commit pins into
      VendorSdkPins.generated.cs (no-op if pins haven't changed).
-  2. dotnet build pwiz_tools/MSConvertGUI/MsConvertGUI.csproj -c Release
+  2. dotnet build pwiz_tools/MSConvertGUI/MsConvertGUI.csproj -c Release -p:Platform=x64
      (transitively builds MsConvert, vendor projects, etc.)
   3. Stage a filtered copy of the build output (strips vendor SDK DLLs +
      debug symbols + cross-platform runtimes + BCL localization satellites)
@@ -51,10 +51,12 @@ $pwizSharp       = $PwizSharpRoot
 $msconvertGui    = Join-Path $pwizSharp "pwiz_tools/MSConvertGUI/MsConvertGUI.csproj"
 $seems           = Join-Path $pwizSharp "pwiz_tools/SeeMS/SeeMS.csproj"
 $msdiff          = Join-Path $pwizSharp "pwiz_tools/Commandline/MsDiff/src/MsDiff.csproj"
-$msconvertGuiOut = Join-Path $pwizSharp "pwiz_tools/MSConvertGUI/bin/Release/net10.0-windows"
-$seemsOut        = Join-Path $pwizSharp "pwiz_tools/SeeMS/bin/Release/net10.0-windows"
-$msconvertOut    = Join-Path $pwizSharp "pwiz_tools/Commandline/MsConvert/src/bin/Release/net10.0"
-$msdiffOut       = Join-Path $pwizSharp "pwiz_tools/Commandline/MsDiff/src/bin/Release/net10.0"
+# x64, as build.bat, Skyline and Osprey build pwiz-sharp, so the installer packages the same tree
+# the tests ran against (and reuses it instead of compiling a second copy).
+$msconvertGuiOut = Join-Path $pwizSharp "pwiz_tools/MSConvertGUI/bin/x64/Release/net10.0-windows"
+$seemsOut        = Join-Path $pwizSharp "pwiz_tools/SeeMS/bin/x64/Release/net10.0-windows"
+$msconvertOut    = Join-Path $pwizSharp "pwiz_tools/Commandline/MsConvert/src/bin/x64/Release/net10.0"
+$msdiffOut       = Join-Path $pwizSharp "pwiz_tools/Commandline/MsDiff/src/bin/x64/Release/net10.0"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"
@@ -85,13 +87,13 @@ if ($LASTEXITCODE -ne 0) { throw "VendorPinsGenerator failed (exit $LASTEXITCODE
 #    staging time).
 if (-not $SkipBuild) {
     Write-Host "`n==> dotnet build (Release)" -ForegroundColor Cyan
-    dotnet build $msconvertGui -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $msconvertGui -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "MSConvertGUI build failed (exit $LASTEXITCODE)" }
-    dotnet build $seems        -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $seems        -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "SeeMS build failed (exit $LASTEXITCODE)" }
     # Built on its own: msdiff is not in MSConvertGUI's or SeeMS's reference chain, so nothing
     # above produces it.
-    dotnet build $msdiff       -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $msdiff       -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "MsDiff build failed (exit $LASTEXITCODE)" }
 }
 

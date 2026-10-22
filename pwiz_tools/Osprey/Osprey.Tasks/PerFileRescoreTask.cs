@@ -1144,7 +1144,10 @@ namespace pwiz.Osprey.Tasks
             bool transfer = !OspreyEnvironment.Pass2ProteinCompact;
             // The competition is constrained to the stratum, and competing without one would be
             // the full-population form that was removed (#4581), not a smaller version of this.
-            if (!transfer && (sidecar.StratumBaseIds == null || sidecar.StratumBaseIds.Count == 0))
+            // An EMPTY stratum is not a missing one: no protein had 2 or more detected peptides.
+            // The competition then admits only the peaks reconciliation changed, and a run that
+            // reports nothing ends in SecondPassFDR's error saying so.
+            if (!transfer && sidecar.StratumBaseIds == null)
             {
                 throw new InvalidOperationException(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__,

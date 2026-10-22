@@ -104,7 +104,10 @@ REM # only wraps its built-in .NET runner — not the Command Line runner that
 REM # invokes this script. Without this, CI builds would produce no coverage data.
 if defined TEAMCITY_VERSION set COVERAGE=1
 
-set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+REM # x64, the platform Skyline, Osprey and the installer build pwiz-sharp with, so they all share
+REM # one bin\x64\<Config> tree and these tests run against the binaries that ship. Pwiz.sln's x64
+REM # configurations map every project to x64. Run-Tests-Parallel.ps1 passes the same platform.
+set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 if %WITHOUT_MASCOT%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:MascotSupport=false

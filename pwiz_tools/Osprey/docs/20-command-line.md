@@ -11,14 +11,15 @@ Osprey reads DIA mzML files plus a spectral library and writes a BiblioSpecLite
 runs as a standalone .NET 8 executable on Windows and Linux.
 
 ```
-osprey -i <file1.mzML ...> -l <library.tsv|.blib> -o <output.blib> [options]
-osprey -i <file1.mzML ...> --fasta <proteome.fasta> -o <output.blib> [options]
+Osprey -i path/to/file ... -l path/to/file.blib|.tsv -o path/to/file.blib [options]
+Osprey -i path/to/file ... --fasta path/to/file.fasta -o path/to/file.blib [options]
 ```
 
 The three required inputs are `-i`/`--input` (one or more mzML), a library - `-l`/`--library`
 (a DIA-NN TSV or `.blib`) or `--fasta` (a protein FASTA the library is predicted from, see
 [Library build](#library-build)) - and `-o`/`--output` (the result `.blib`). Everything else
-has a sensible default; `--resolution` is the one flag you will almost always set.
+has a sensible default; `--resolution unit` is the one a search of unit-resolution data (an ion
+trap such as Stellar) must give, since the default is `hram` and nothing detects it from the data.
 
 A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
 column the library has (a fragment charge of `1.0` or `0`, an ion type other than
@@ -34,14 +35,14 @@ list import does. Nothing is guessed for a bad value.
 
 ```bash
 # Single file, precursor + peptide FDR at 1%
-osprey -i sample.mzML -l hela.tsv -o results.blib --resolution unit
+Osprey -i sample.mzML -l hela.tsv -o results.blib --resolution unit
 
-# A replicate set, with protein-level FDR and a TSV report
-osprey -i rep1.mzML rep2.mzML rep3.mzML -l hela.blib -o results.blib \
-       --resolution unit --protein-fdr 0.01 --report results.tsv
+# A replicate set, with protein-level FDR
+Osprey -i rep1.mzML rep2.mzML rep3.mzML -l hela.blib -o results.blib \
+       --resolution unit --protein-fdr 0.01
 
 # Glob + keep derived artifacts and the spectra cache out of a read-only data dir
-osprey -i /data/stellar/*.mzML -l hela.tsv -o results.blib \
+Osprey -i /data/stellar/*.mzML -l hela.tsv -o results.blib \
        --resolution unit --work-dir /scratch/osprey_run
 ```
 
@@ -54,35 +55,35 @@ Unit resolution has no usable MS1 features, so the two MS1 PIN features evaluate
 
 ```bash
 # Single file at high resolution (10 ppm fragment tolerance is the default)
-osprey -i sample.mzML -l predicted.tsv -o results.blib --resolution hram
+Osprey -i sample.mzML -l predicted.tsv -o results.blib --resolution hram
 
 # A larger replicate set with protein FDR; score several files at once
-osprey -i /data/astral/*.mzML -l predicted.blib -o results.blib \
+Osprey -i /data/astral/*.mzML -l predicted.blib -o results.blib \
        --resolution hram --protein-fdr 0.01 --parallel-files
 
 # Tighten the fragment tolerance to 8 ppm and write the model-diagnostics report
-osprey -i sample.mzML -l predicted.tsv -o results.blib \
+Osprey -i sample.mzML -l predicted.tsv -o results.blib \
        --resolution hram --fragment-tolerance 8 --model-diagnostics
 ```
 
 HRAM turns on the MS1 precursor-coelution and isotope-cosine features and selects the
-Astral-trained defaults for the learned pick. `--resolution auto` (the default) infers
-unit vs. HRAM from the data, but passing it explicitly is clearer for batch scripts.
+Astral-trained defaults for the learned pick. `hram` is the default; the resolution is not
+inferred from the data, so a unit-resolution search must pass `--resolution unit`.
 
 ### Useful extras
 
 ```bash
 # Broaden the reconciliation pool (looser peptide gate for first-pass compaction)
-osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --reconciliation-compaction-fdr 0.05
+Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --reconciliation-compaction-fdr 0.05
 
 # Razor shared-peptide rollup for protein inference
-osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --protein-fdr 0.01 --shared-peptides razor
+Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --protein-fdr 0.01 --shared-peptides razor
 
 # Trust decoys already in the library instead of generating reverse decoys
-osprey -i *.mzML -l lib_with_decoys.tsv -o out.blib --resolution hram --decoys-in-library
+Osprey -i *.mzML -l lib_with_decoys.tsv -o out.blib --resolution hram --decoys-in-library
 
 # Timestamped, memory-stamped log to a file (for perf visualization)
-osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --timestamp --memstamp --log-file run.log
+Osprey -i *.mzML -l lib.tsv -o out.blib --resolution hram --timestamp --memstamp --log-file run.log
 ```
 
 ---
@@ -96,13 +97,13 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `-i`, `--input` | `<file1.mzML ...>` | Input mzML file(s). Variadic; also accepts positional mzML paths. |
-| `-l`, `--library` | `<library.tsv\|.blib>` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
-| `-o`, `--output` | `<output.blib>` | Output `.blib` (see [13-blib-output-schema.md](13-blib-output-schema.md)). |
-| `--work-dir` | `<dir>` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
-| `--output-dir` | `<dir>` | Directory for derived artifacts (overrides `--work-dir`). |
-| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the derived `<library-leaf>.blib` of a `.tsv` library (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
-| `--report` | `<report.tsv>` | Also write a TSV report. |
+| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads (vendor files where the vendor readers are installed). Variadic; also accepts positional paths. |
+| `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
+| `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
+| `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
+| `--output-dir` | `path/to/folder` | Directory for derived artifacts (overrides `--work-dir`). |
+| `--cache-dir` | `path/to/folder` | Where Osprey keeps the files it builds once and reuses in later searches: each run's `.spectra.bin` and, for a `.tsv` library, the `.blib` it is converted to (`hela.tsv.blib`). By default each goes beside the file it comes from, or under `--output-dir` / `--work-dir` when that folder is read-only. Give it to put them elsewhere (data and library on a read-only share, or one cache shared by several analyses). An HPC run whose `--output-dir` is away from the data should give every `--task` node the same one. |
+| `--export-library` | `path/to/file.blib` | Write the `-l` library to this path as a `.blib` and exit without searching: the same file a search caches for a `.tsv` library (`hela.tsv.blib`, through the same `LibraryBlibWriter`), with its decoys and pairing in its own `DecoyPairs` table (with `--decoys-in-library`, and `--decoy-pairing-manifest` for a `.tsv`), so it needs no manifest and searches back exactly as the original did. It differs from the cache only in recording its command line, carrying no validity hash, and prefixing decoy accessions. |
 
 ### Library build
 
@@ -113,30 +114,42 @@ executable. Three modes, chosen by the options given, on top of the search of a 
 
 | Mode | Command (shape) | What runs |
 |---|---|---|
-| search | `osprey -i runs... -l library.blib -o out.blib` | the four stages |
-| predict | `osprey -i runs... --fasta proteome.fasta -o out.blib` | predict with the pretrained models (AlphaPeptDeep MS2, Chronologer RT), then the four stages |
-| saved model | `osprey -i runs... --fasta proteome.fasta --model tuned.carafemodel -o out.blib` | as predict, with a fine-tuned model CarafeSharp's training saved |
+| search | `Osprey -i runs... -l library.blib -o out.blib` | the four stages |
+| predict | `Osprey -i runs... --fasta proteome.fasta -o out.blib` | predict with the pretrained models (AlphaPeptDeep MS2, Chronologer RT), then the four stages |
+| tune | `Osprey -i runs... --fasta proteome.fasta --training-input run2 -o out.blib` | predict with the pretrained models, search the tuning runs with the training export, fine-tune the models on it, predict again with the tuned models, then the four stages |
+| saved model | `Osprey -i runs... --fasta proteome.fasta --model out.model.zip -o out2.blib` | as predict, with a model an earlier tuned run saved (any proteome) |
 
-(A third mode, tuning the models on some of the runs first, is the next step of this work.)
+Tuning is never inferred: without `--training-input` the pretrained models (or `--model`) predict
+the library. A tuning run may be one of the `-i` runs (the lab's "search the middle file") or not
+(held-out tuning); one that is not is searched for the tuning only, absent from the result's
+`SpectrumSourceFiles` and recorded in its `LibMetadata` as `osprey.training_input`. `--model`
+with `--training-input` tunes the saved model further.
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--fasta` | `<proteome.fasta>` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library`, `--decoy-pairing-manifest` and, for now, `--task` (the HPC addressing of the library phase is still to come). |
-| `--model` | `<file.carafemodel>` | Predict with this saved fine-tuned model instead of the pretrained models. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
+| `--fasta` | `path/to/file.fasta` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library`, `--decoy-pairing-manifest` and, for now, `--task` (the HPC addressing of the library phase is still to come). |
+| `--training-input` | `path/to/file ...` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.model.zip`. The options of the **Library Tuning** section apply. |
+| `--training-input-list` | `path/to/file.txt` | A file of `--training-input` runs, one path per line (`#` comments ignored), as `--input-list` is for `-i`: a long run list can pass the Windows command-line limit and hides the other arguments. |
+| `--model` | `path/to/file.model.zip` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
 | `--device` | `gpu \| cpu` | Where the library is predicted. `gpu` (the default) falls back to the CPU with a warning when no CUDA runtime is present, as CarafeSharp does. |
 | `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
-| `--entrapment-fasta` | `<foreign.fasta>` | With `--entrapment`: the foreign-species proteome to draw from. |
+| `--entrapment-fasta` | `path/to/file.fasta` | With `--entrapment`: the foreign-species proteome to draw from. |
 
 **The library-build parameters are CarafeSharp's.** The digest (`--enzyme`, `--miss-c`,
-`--minLength`, `--maxLength`, `--clip-n-m`, `--I2L`), the modifications (`--fixMod`,
-`--varMod`, `--maxVar`), the charges and precursor m/z window (`--min-pep-charge`,
+`--min-length`, `--max-length`, `--clip-n-m`, `--i2l`), the modifications (`--fix-mod`,
+`--var-mod`, `--max-var`), the charges and precursor m/z window (`--min-pep-charge`,
 `--max-pep-charge`, `--min-pep-mz`, `--max-pep-mz`), the fragments kept
 (`--lf-frag-mz-min`, `--lf-frag-mz-max`, `--lf-top-n-frag`, `--lf-min-n-frag`,
 `--lf-frag-n-min`), the acquisition the models predict for (`--nce`, `--ms-instrument`,
 `--activation`, `--analyzer`, `--rt-max`, `--ccs`), the RT model (`--rt-model`) and the
 pretrained archive (`--pretrained`) are CarafeSharp's declarations,
 presented in Osprey's help as the sections **Library Digest** and **Library Prediction** under
-Osprey's grammar, with CarafeSharp's text and defaults. They are listed in the standard form
+Osprey's grammar, with CarafeSharp's text and defaults. The tuning options are likewise, in
+**Library Tuning**: which models train (`--tf`), Carafe's rules for the ions trained on (`--cor`,
+`--n-ion-min`, `--c-ion-min`, `--nf`, `--min-n`, `--valid`, `--no-masking`), the seed (`--seed`)
+and the training runs' RT alignment (`--rt-align`, `--rt-select`, `--rt-reference`); any of them
+without `--training-input` is refused. Their defaults are CarafeSharp's, which are Carafe's; the
+lab's workflow script passes `--cor 0.8 --n-ion-min 2 --c-ion-min 2 --valid`. They are listed in the standard form
 (`--miss-c 1`); for compatibility with Java Carafe's command lines, each is also accepted with
 Carafe's underscores (`--miss_c 1`). Any of them without `--fasta` is refused rather than
 ignored. What Osprey derives is not surfaced: CarafeSharp's `-db`, `-o`, `-lf_type`, the pairing
@@ -145,17 +158,31 @@ manifest and the model folder.
 **What a run writes**, with `-o out.blib`:
 
 ```
-out.blib              the result, with its sidecars, as for any search
-out.library.blib      the library the result was searched with (-l takes it next time)
-out.library/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
+out.blib                the result: what the search detected, with its sidecars, as for any search
+out.predicted.blib      the predicted library the result was searched with (-l takes it next time)
+out.model.zip           with --training-input: the tuned model (--model takes it next time)
+out.predicted/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
+  initial.blib          with --training-input: the library the tuning runs were searched with
+  training/             the tuning runs' search: its artifacts, <stem>.training.parquet, training.blib
+  model/                Carafe's model folder the tuning wrote, the library's input
 ```
+
+The two `.blib` files differ in what their spectra are: `out.blib` holds the precursors the
+search detected, with their observed retention times, for Skyline; `out.predicted.blib` holds a
+predicted spectrum for every precursor the search looked for, which is what makes it a library to
+search again.
 
 They land beside `out.blib`, or under `--output-dir` when it is given, as the run's other
 artifacts do. The library carries the prediction's validity stamp and the command line that
 made it (`LibMetadata`), and the search keys on the library file as it keys on any given
 library. So a re-run of the same command line predicts nothing and searches nothing; a changed
 digest or prediction option predicts the library again and the search follows; a changed `-i`
-alone searches again against the current library.
+alone searches again against the current library. With tuning, each phase checkpoints the same
+way - the training library, the tuning runs' search (its own artifacts, in `out.predicted/training/`;
+a tuning run that is also an input is parsed once, from the shared spectra cache), the model and
+the library - so a changed tuning option tunes again and predicts again without searching the
+tuning runs again, `--entrapment` changes only the final library, and a run that died resumes
+at the phase it died in.
 
 **Decoys and pairing.** The digest is made in memory from the FASTA - its targets, their
 decoys (reversed, C-terminus preserved, unique against every target, as CarafeSharp's
@@ -166,15 +193,16 @@ accessions are the proteome's, `db|accession|entry` joined by `;` across a share
 proteins, with decoys prefixed `decoy_`.
 
 Log lines: the prediction is a task like the four stages, with `[TASK] PredictLibrary:starting`
-/ `:skipping (outputs valid)` / `:done (<s>s)` in the machine channel.
+/ `:skipping (outputs valid)` / `:done (<s>s)` in the machine channel; with tuning,
+`PredictTrainingLibrary`, the four stages of the tuning runs' search and `TrainModel` come first.
 
 ### Scoring & Tolerance
 
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
-| `--resolution` | `unit \| hram \| auto` | `auto` | Resolution mode. Gates MS1 features and the default pick model; unit forces `mz 0.5` fragment tolerance. See [03-spectral-scoring.md](03-spectral-scoring.md), [06-peak-detection.md](06-peak-detection.md). |
-| `--fragment-tolerance` | `<value>` | `10` | Fragment m/z tolerance (ignored at unit resolution). |
-| `--fragment-unit` | `ppm \| mz` | `ppm` | Unit for `--fragment-tolerance`. |
+| `--resolution` | `hram \| unit` | `hram` | How spectra are scored. `hram` (Orbitrap, Astral, TOF): fine bins, the MS1 precursor features, 10 ppm fragment and precursor tolerance. `unit` (ion traps such as Stellar): coarse bins, no MS1 features, 0.5 m/z fragment and 1.0 m/z precursor tolerance. Also selects the default pick model. Not detected from the data. See [03-spectral-scoring.md](03-spectral-scoring.md), [06-peak-detection.md](06-peak-detection.md). |
+| `--fragment-tolerance` | `<number>` | `10` ppm; `0.5` m/z at `unit` | Fragment m/z tolerance, in the `--fragment-unit` unit. |
+| `--fragment-unit` | `ppm \| mz` | `ppm`; `mz` at `unit` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
 | `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) or MSX DIA with ProteoWizard's demultiplexer while the source is read, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` reads a run that is not multiplexed as acquired. With `off`, a multiplexed run is searched as acquired, with a warning suggesting `--demux auto`. Give every task of an HPC chain the same value. Osprey-only. |
 
@@ -188,7 +216,7 @@ Log lines: the prediction is a task like the four stages, with `[TASK] PredictLi
 | `--protein-fdr` | `<threshold>` | off → 0.01 gate | Enable protein-level FDR at this threshold (parsimony always runs regardless). See [08-protein-parsimony.md](08-protein-parsimony.md). |
 | `--fdr-level` | `precursor \| peptide \| both` | `precursor` | Which q-value gates the reported output. (`protein` is not a valid value.) |
 | `--shared-peptides` | `all \| razor \| unique` | `all` | Shared-peptide handling for protein inference. See [08-protein-parsimony.md](08-protein-parsimony.md). |
-| `--fdrbench` | `<input.tsv>` | off | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
+| `--fdrbench` | `path/to/file.tsv` | off | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
 | `--fdrbench-per-run` | — | off | With `--fdrbench`: one row per (precursor, run) using run-level q-values. |
 | `--fdrbench-pass` | `1 \| 2 \| both` | `2` | With `--fdrbench`: which pass to emit (2 = reported second-pass survivors; 1 = full pre-compaction first-pass pool). |
 
@@ -197,7 +225,7 @@ Log lines: the prediction is a task like the four stages, with `[TASK] PredictLi
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
-| `--decoy-pairing-manifest` | `<manifest.tsv>` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
+| `--decoy-pairing-manifest` | `path/to/file.tsv` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
 
 ### Training Export
 
@@ -216,7 +244,7 @@ Log lines: the prediction is a task like the four stages, with `[TASK] PredictLi
 | `--parallel-files-caching` | `[<N>]` | `--parallel-files` | Files whose spectra are cached concurrently (`--task SpectraCache`), overriding `--parallel-files` for that stage only. Same forms. A vendor decode is single-threaded (~20 MB/s per Thermo file), so this stage gains from far more lanes than scoring; `--threads` is not divided here. mzML parses still run one at a time, and a full run caches inside scoring at the scoring count. |
 | `--parallel-files-scoring` | `[<N>]` | `--parallel-files` | Files scored concurrently (`PerFileScoring`, Stages 1-4), overriding `--parallel-files` for that stage only. Same forms. |
 | `--parallel-files-rescoring` | `[<N>]` | `--parallel-files` | Files re-scored concurrently (`PerFileRescoring`, Stage 6, and Stage 7's per-run fold), overriding `--parallel-files` for that stage only. Same forms. Its per-file working set is a fraction of scoring's. |
-| `--threads` | `<count>` | all cores | Per-file main-search threads (INNER), divided across the files a scoring or re-scoring stage runs concurrently. |
+| `--threads` | `<integer>` | all cores | Per-file main-search threads (INNER), divided across the files a scoring or re-scoring stage runs concurrently. |
 
 Each per-file stage resolves its own count, once, from its own flag, else `--parallel-files`, else
 `OSPREY_MAX_PARALLEL_FILES` (not for caching), else one at a time, and logs a `File parallelism: N (...)` line naming
@@ -345,18 +373,18 @@ check rejects inputs whose search/library hash does not match.
 
 ```bash
 # split 1 — one process per mzML (writes <stem>.scores.parquet, <stem>.calibration.json beside each input)
-osprey --task PerFileScoring   -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+Osprey --task PerFileScoring   -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 
 # join 1 — one process over ALL runs (pass a sorted list so order is deterministic)
-osprey --task FirstPassFDR     --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+Osprey --task FirstPassFDR     --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes beside each parquet: <stem>.1st-pass.fdr_scores.bin, <stem>.reconciliation.json
 
 # split 2 — one process per file (parquet + its two sidecars co-located)
-osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes: <stem>.scores-reconciled.parquet
 
 # join 2 — one process over ALL runs, reading their reconciled parquets (writes out.blib)
-osprey --task SecondPassFDR    --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+Osprey --task SecondPassFDR    --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 ```
 
 - Every task names its runs by their **data files**, and the data file itself need not
@@ -403,8 +431,8 @@ listing on the CLI by design (these are not user-facing knobs).
 
 - **Exit codes.** A failing run returns a non-zero process exit code, so a workflow
   engine can gate on it.
-- **`--help` formats.** `osprey --help html` writes the same reference as HTML;
-  `osprey --help <Section>` prints one group (e.g. `osprey --help "FDR & Protein Inference"`).
+- **`--help` formats.** `Osprey --help html` writes the same reference as HTML;
+  `Osprey --help <Section>` prints one group (e.g. `Osprey --help "FDR & Protein Inference"`).
 - **Value validation.** Osprey's tokenizer does **not** reject values outside the listed
   set - an unrecognized `--fdr-level` value warns and falls back to the default rather than
   erroring. An unknown ARGUMENT is an error, and that includes the removed `--fdr-method`.

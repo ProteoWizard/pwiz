@@ -73,6 +73,7 @@ namespace pwiz.Osprey.Test
         private const string LIBDECOY_PAIRING_FILE = @"stellar-subset-libdecoy-pairing.tsv";
         private const string BLIB_FILE = @"output.blib";
         private const string FDR_FILE_LANES = @"OSPREY_FDR_FILE_LANES";
+        private const string DIANN_REPORTS = @"OSPREY_DIANN_REPORTS";
         private const string MZML_EXTENSION = SpectrumFileReader.EXT_MZML;
         private const string SPECTRA_CACHE_EXTENSION = SpectraCache.EXT;
         private const double TOLERANCE = 1e-9;
@@ -145,6 +146,9 @@ namespace pwiz.Osprey.Test
             string straightLog = RunAnalysis(straightDir, DataInputs(), Verifier(true));
             string log = straightLog;
             ValidateStraightThrough(straightDir, log);
+            // The DIA-NN-shaped reports are written only under OSPREY_DIANN_REPORTS.
+            Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS))));
+            Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_STATS))));
             string coldBlib = Path.Combine(straightDir, @"output_cold.blib");
             File.Copy(blib, coldBlib);
             byte[] coldHash = HashFile(blib);
@@ -260,14 +264,15 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
                 OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
             };
-            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"RefSpectra") >= MIN_LIBDECOY_PRECURSORS);
             // No decoy reaches the library, but entrapment peptides compete as targets.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"accession LIKE 'decoy_%'"));
             foreach (string pass in new[] { @"pass1", @"pass2" })
                 AssertHasRows(Path.ChangeExtension(bench, pass + @".tsv"));
-            // The protein-group and summary reports are named from the output library.
+            // The protein-group and summary reports, under OSPREY_DIANN_REPORTS, are named from
+            // the output library.
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS)));
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
@@ -816,6 +821,83 @@ namespace pwiz.Osprey.Test
                 Path.GetFileName(strays), otherPeaks, otherPeaks, 0, strayPeaks, 0));
             Assert.IsFalse(log.Contains(OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_.Split('{')[0]), log);
             Assert.AreEqual(noNumbersPrecursors, BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra"));
+        }
+
+        /// <summary>
+        /// A search that detects nothing fails with one Error: line naming the threshold nothing
+        /// passed, and writes no .blib, whichever pass comes up empty. A conservative q-value is
+        /// never 0, so a threshold of 0 passes nothing. A search in which no protein has 2 or
+        /// more detected peptides has an EMPTY protein stratum, which is a result and not a
+        /// missing input: it runs through the second pass and ends in that pass's error, not in
+        /// PerFileRescoring's refusal to run without a stratum.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetNothingPasses()
+        {
+            string library = Path.Combine(_dataDir, LIBRARY_FILE);
+
+            // Nothing passes the first pass: the run stops at the compaction gate, before the
+            // second pass spends any time.
+            string firstPassDir = CreateDir(@"nothing-first-pass");
+            string firstPassLog = RunOspreyExpecting(SearchArgs(firstPassDir, library,
+                    OspreyCommandArgs.ARG_RUN_FDR.ArgumentText, @"0",
+                    OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0",
+                    OspreyCommandArgs.ARG_RECONCILIATION_COMPACTION_FDR.ArgumentText, @"0",
+                    OspreyCommandArgs.ARG_PROTEIN_FDR.ArgumentText, @"0"),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(firstPassLog, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_,
+                library, 0.0, OspreyCommandArgs.ARG_RECONCILIATION_COMPACTION_FDR.ArgumentText,
+                0.0, OspreyCommandArgs.ARG_PROTEIN_FDR.ArgumentText));
+            Assert.IsFalse(firstPassLog.Contains(TaskLine(PerFileRescoreTask.TASK_NAME, @"starting")), firstPassLog);
+            Assert.IsFalse(File.Exists(Path.Combine(firstPassDir, BLIB_FILE)));
+
+            // The first pass keeps its candidates and nothing passes the reported set. An earlier
+            // run's .blib at the output name is removed, so nothing reads it as this run's.
+            string secondPassDir = CreateDir(@"nothing-second-pass");
+            File.WriteAllText(Path.Combine(secondPassDir, BLIB_FILE), string.Empty);
+            string secondPassLog = RunOspreyExpecting(SearchArgs(secondPassDir, library,
+                    OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(secondPassLog, string.Format(
+                OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                library, 0.0, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
+            Assert.IsFalse(File.Exists(Path.Combine(secondPassDir, BLIB_FILE)));
+
+            // One protein per peptide: no protein has 2 detected peptides, so the stratum is
+            // empty. The second pass competes only the peaks reconciliation changed, and on the
+            // subset none of them passes.
+            string singleHits = WriteLibraryCopy(@"one-protein-per-peptide.tsv", @"ProteinID", (fields, column) =>
+            {
+                fields[column] = @"sp|" + fields[1] + @"|" + fields[1] + @"_SUBSET";
+                return fields;
+            });
+            string singleHitsDir = CreateDir(@"one-protein-per-peptide");
+            string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits), Verifier(false),
+                Program.EXIT_CODE_FAILURE_TO_START);
+            // The detected-peptide count varies with the search, so the line is matched on either
+            // side of it (a string argument ignores the N0 format).
+            var stratumLine = string.Format(
+                OspreyTasksResources.FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_,
+                0, @"|", 0).Split('|');
+            Assert.IsTrue(SplitLines(singleHitsLog).Any(line => line.Contains(stratumLine[0]) && line.Contains(stratumLine[1])),
+                singleHitsLog);
+            StringAssert.Contains(singleHitsLog, string.Format(
+                OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                singleHits, 0.01, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
+            Assert.IsFalse(File.Exists(Path.Combine(singleHitsDir, BLIB_FILE)));
+        }
+
+        /// <summary>A search of every subset run against <paramref name="library"/>, writing into
+        /// <paramref name="workDir"/>, with <paramref name="extraArgs"/> after the common ones.</summary>
+        private string[] SearchArgs(string workDir, string library, params string[] extraArgs)
+        {
+            return InputArgs(DataInputs()).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
+            }).Concat(CommonArgs()).Concat(extraArgs).ToArray();
         }
 
         /// <summary>
@@ -1389,8 +1471,19 @@ namespace pwiz.Osprey.Test
             {
                 { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty },
                 { @"OSPREY_PASS2_QVALUE", string.Empty },
-                { FDR_FILE_LANES, string.Empty }
+                { FDR_FILE_LANES, string.Empty },
+                { DIANN_REPORTS, string.Empty }
             };
+        }
+
+        /// <summary><paramref name="variables"/> with the DIA-NN-shaped reports switched on.</summary>
+        private static IReadOnlyDictionary<string, string> WithDiannReports(IReadOnlyDictionary<string, string> variables)
+        {
+            var on = new Dictionary<string, string>();
+            foreach (var kvp in variables)
+                on[kvp.Key] = kvp.Value;
+            on[DIANN_REPORTS] = @"1";
+            return on;
         }
 
         /// <summary>

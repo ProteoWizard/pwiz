@@ -275,9 +275,9 @@ namespace CommonTest
         }
 
         /// <summary>
-        /// With <see cref="CommandLineGrammar.NameSeparatorsEquivalent"/> an underscore in a typed
-        /// name matches a hyphen in the declared one (Osprey and CarafeSharp, whose declarations
-        /// are hyphenated and whose users have Carafe's underscore spellings in scripts); the
+        /// With <see cref="CommandLineGrammar.NameSeparatorsEquivalent"/> an underscore or a camel-case
+        /// boundary in a typed name matches a hyphen in the declared one (Osprey and CarafeSharp, whose
+        /// declarations are hyphenated and whose users have Carafe's spellings in scripts); the
         /// declaration still spells itself with the hyphen, and without the rule the underscore
         /// spelling is an unknown argument, as Skyline's grammar has always treated it.
         /// </summary>
@@ -292,11 +292,16 @@ namespace CommonTest
             ArgUsage.ArgumentValueSeparator = @" ";
             AssertEx.AreEqual(@"--two-words", ARG_TWO_WORDS.ArgumentText);
             AssertEx.AreEqual(@"--two-words x", ARG_TWO_WORDS + @"x");
-            foreach (var spelling in new[] { @"--two-words", @"--two_words" })
+            // Carafe's camel case too (-minLength for min-length): a lower-to-upper boundary is a
+            // separator, and case is otherwise ignored.
+            foreach (var spelling in new[] { @"--two-words", @"--two_words", @"--twoWords", @"--Two_Words" })
             {
                 AssertEx.AreEqual(@"x", Parse(spelling, @"x").TwoWords, spelling);
                 AssertEx.AreEqual(@"y", Parse(spelling + @"=y").TwoWords, spelling);
             }
+            AssertEx.AreEqual(@"min-length", CommandLineGrammar.StandardName(@"minLength"));
+            AssertEx.AreEqual(@"i2l", CommandLineGrammar.StandardName(@"I2L"));
+            AssertEx.AreEqual(@"print-ptm", CommandLineGrammar.StandardName(@"printPTM"));
             // A separator matches only a separator, in the same place; an unknown name is reported as typed.
             AssertEx.AreEqual(@"unknown --two_word", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_word", @"x")).Message);
             AssertEx.AreEqual(@"unknown --twowords", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--twowords", @"x")).Message);

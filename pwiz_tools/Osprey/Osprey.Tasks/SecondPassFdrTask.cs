@@ -543,10 +543,11 @@ namespace pwiz.Osprey.Tasks
                 {
                     WriteBlibOutput(rescored, nFiles, libraryById, proteinFdr, config, ctx);
                 }
-                catch (BlibOutputException ex)
+                catch (Exception ex) when (ex is BlibOutputException || ex is UserMessageException)
                 {
                     // A user-correctable state (the .blib is locked or its folder is not
-                    // writable), so an Error: line and a failure exit, not a stack trace.
+                    // writable, or nothing passed to write), so an Error: line and a failure
+                    // exit, not a stack trace.
                     ctx.LogError(ex.Message);
                     ctx.ExitCode = 1;
                     return false;
@@ -1053,12 +1054,14 @@ namespace pwiz.Osprey.Tasks
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
 
-            // Default user-facing reports (protein groups + per-replicate/experiment
-            // summary), modeled on DIA-NN. Additive files next to the output blib, so the
-            // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
-            // protein counts re-run protein FDR per run, so this is the one place with the
-            // full per-file pool + library in hand.
-            if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
+            // The DIA-NN-shaped reports (protein groups + per-replicate/experiment summary),
+            // for comparing the two tools, under OSPREY_DIANN_REPORTS: they hold nothing the
+            // blib does not. Additive files next to the output blib, so the byte-parity gate
+            // (blib + Stage-7 dump) is unaffected. The per-replicate protein counts re-run
+            // protein FDR per run, so this is the one place with the full per-file pool +
+            // library in hand.
+            if (OspreyEnvironment.DiannReports &&
+                (config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
                 OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config,
                     ctx, ctx.LogWarning);
@@ -1201,10 +1204,16 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Stage 1 passing peptides: {0}", passingPeptides.Count);
             ctx.LogInfo(LogTag.COUNT, @"Stage 2 passing precursors: {0}", passingPrecursors.Count);
 
+            // A search that reports nothing fails rather than succeeding with an empty .blib,
+            // which only a later step could notice. An earlier run's .blib of the same name is
+            // removed, so nothing reads it as this run's result.
             if (passingEntries.Count == 0)
             {
-                ctx.LogWarning(string.Format(OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_,
-                    LibrarySource.EXT_BLIB));
+                BlibOutputWriter.RemoveOutput(config.OutputBlib);
+                throw new UserMessageException(string.Format(
+                    OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                    config.LibrarySource?.Path, config.ExperimentFdr,
+                    OspreyArgNames.Text(OspreyArgNames.EXPERIMENT_FDR), LibrarySource.EXT_BLIB));
             }
 
             // Ensure output directory exists

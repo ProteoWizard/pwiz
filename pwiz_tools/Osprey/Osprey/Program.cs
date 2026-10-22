@@ -64,17 +64,6 @@ namespace pwiz.Osprey
         internal const int EXIT_CODE_FAILURE_TO_START = 1;
         internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
 
-        // The command-line text the "not specified" errors in ValidateArgs tell the user to add.
-        // Argument names and example values, so not translated.
-        internal const string USAGE_INPUT = @"-i <file1.mzML> [file2.mzML ...]";
-        internal const string USAGE_LIBRARY = @"-l <library.tsv>";
-        internal const string USAGE_OUTPUT = @"-o <output.blib>";
-
-        /// <summary>The library's other form in the "not specified" error: the one command's FASTA.</summary>
-        internal static string UsageFasta
-        {
-            get { return OspreyCommandArgs.ARG_FASTA.ArgumentText + @" <proteome.fasta>"; }
-        }
 
         // The caller's writer (stderr from Main), kept after a --log-file swap replaces _out,
         // so an error reported before the swap still counts when the exit code is reconciled.
@@ -291,7 +280,7 @@ namespace pwiz.Osprey
                 }
 
                 OspreyConfig config;
-                LibrarySettings librarySettings;
+                LibraryBuildSettings librarySettings;
                 try
                 {
                     config = OspreyCommandArgs.ParseArgs(args, out librarySettings);
@@ -523,6 +512,11 @@ namespace pwiz.Osprey
                             : OspreyResources.Program_Run_the_pretrained_models));
                     LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
                         LibraryBuildWorkflow.LibraryPath(config), LibraryBuildWorkflow.WorkDirectory(config)));
+                    if (config.LibraryBuild.Tuning)
+                    {
+                        LogInfo(string.Format(OspreyResources.Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_,
+                            string.Join(@", ", config.LibraryBuild.TrainingInputs.Select(Path.GetFileName)), LibraryBuildWorkflow.ModelPath(config)));
+                    }
                 }
                 else
                 {
@@ -673,15 +667,26 @@ namespace pwiz.Osprey
                 // pipeline searches it. Dispatched through a class of its own, so a run that
                 // searches a given library compiles no method that reaches the predictor and
                 // never loads its native runtime.
-                if (config.LibraryBuild.Enabled)
-                    return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
+                TaskBudget.Reset();
+                try
+                {
+                    if (config.LibraryBuild.Enabled)
+                        return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
 
-                // Single entry point. The rescore worker (--task
-                // PerFileRescoring) includes only PerFileRescoreTask
-                // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
-                // ctx.Demand) populates the upstream state from the boundary files
-                // on disk.
-                return new AnalysisPipeline().Run(config, pipeline);
+                    // Single entry point. The rescore worker (--task
+                    // PerFileRescoring) includes only PerFileRescoreTask
+                    // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
+                    // ctx.Demand) populates the upstream state from the boundary files
+                    // on disk.
+                    return new AnalysisPipeline().Run(config, pipeline);
+                }
+                catch (TaskBudgetSpentException stop)
+                {
+                    // OSPREY_STOP_AFTER_TASKS: every task run so far committed its outputs, and
+                    // the next run of the same command line resumes after the last.
+                    LogInfo(LogTag.TASK, @"stop:after {0} ({1}; {2})", stop.TasksRun, stop.TaskName, @"OSPREY_STOP_AFTER_TASKS");
+                    return EXIT_CODE_SUCCESS;
+                }
             }
             catch (Exception ex)
             {
@@ -879,7 +884,7 @@ namespace pwiz.Osprey
             if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
             {
                 if (config.LibrarySource == null)
-                    return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY);
+                    return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, OspreyCommandArgs.UsageLibrary);
                 if (string.IsNullOrWhiteSpace(config.ExportLibraryBlib))
                 {
                     return string.Format(OspreyResources.Program_ValidateArgs_No_path_given_for__0__,
@@ -936,7 +941,7 @@ namespace pwiz.Osprey
                     return dupErr;
             }
 
-            string exportErr = TrainingExportError(config.TrainingExport);
+            string exportErr = TrainingExportError(config.TrainingExport, config.LibraryBuild.Tuning);
             if (exportErr != null)
                 return exportErr;
 
@@ -948,14 +953,14 @@ namespace pwiz.Osprey
             // directory that already holds each run's artifacts skips to whichever stage is
             // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
             if (!hasInputFiles)
-                return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
+                return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, OspreyCommandArgs.UsageInput);
             if (config.LibrarySource == null && !config.LibraryBuild.Enabled)
             {
                 return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_,
-                    string.Format(OspreyResources.Program_ValidateArgs__0__or__1_, USAGE_LIBRARY, UsageFasta));
+                    string.Format(OspreyResources.Program_ValidateArgs__0__or__1_, OspreyCommandArgs.UsageLibrary, OspreyCommandArgs.UsageFasta));
             }
             if (string.IsNullOrEmpty(config.OutputBlib))
-                return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, USAGE_OUTPUT);
+                return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, OspreyCommandArgs.UsageOutput);
             return null;
         }
 
@@ -1023,6 +1028,38 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
                     OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
             }
+            // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
+            // and a re-run would tune again from the last result instead of finding it current.
+            if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
+                IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__,
+                    OspreyCommandArgs.ARG_MODEL.ArgumentText, build.ModelPath, OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText);
+            }
+            if (build.OptionsWithoutTrainingInput.Count > 0)
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                    string.Join(@", ", build.OptionsWithoutTrainingInput), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
+            }
+            if (build.Tuning)
+            {
+                // A tuning run that is also an input is checked with the inputs, where a spectra
+                // cache may stand in for it; one searched for the tuning only is read here (a file,
+                // or a folder-format run such as a Bruker .d).
+                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => IsSamePath(input, run))).ToList();
+                foreach (string run in heldOut)
+                {
+                    if (!File.Exists(run) && !Directory.Exists(run))
+                        return string.Format(OspreyResources.Program_LibraryBuildError_Training_input_file_not_found___0_, run);
+                }
+                // The two analyses share the spectra cache, which is named by stem, so a tuning run
+                // must not share its stem with another tuning run or with an input.
+                string dupErr = DuplicateInputStemError(config.InputFiles.Concat(heldOut).ToList());
+                if (dupErr == null)
+                    dupErr = DuplicateInputStemError(build.TrainingInputs);
+                if (dupErr != null)
+                    return dupErr;
+            }
             return null;
         }
 
@@ -1062,9 +1099,10 @@ namespace pwiz.Osprey
         /// given without <c>--training-export</c> (or <c>--task TrainingExport</c>) they would
         /// change nothing, and a q threshold outside (0, 1] selects nothing or everything.
         /// </summary>
-        private static string TrainingExportError(TrainingExportConfig export)
+        private static string TrainingExportError(TrainingExportConfig export, bool tuning)
         {
-            if (export.HasSettingsWithoutExport)
+            // The one command's tuning search writes the export, so its settings apply there.
+            if (export.HasSettingsWithoutExport && !tuning)
             {
                 return string.Format(OspreyResources.Program_TrainingExportError__0____1__and__2__apply_only_with__3__,
                     OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText,

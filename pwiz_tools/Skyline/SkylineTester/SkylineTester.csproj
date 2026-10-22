@@ -103,8 +103,10 @@
        self-contained: the target builds and stages exactly what that zip needs.
 
        Tfm is per project, not global: SkylineNightly is net10.0-windows (WinExe)
-       while SkylineNightlyShim is plain net10.0, and both also multi-target net472,
-       so the framework has to be pinned or MSBuild builds the net472 leg too. -->
+       while SkylineNightlyShim and BlibToMs2 are plain net10.0, and build.bat drives
+       this with -f net10.0-windows, which would otherwise flow down to all three.
+       pwiz_tools/Skyline/tcinspect.ps1 pre-builds these three under its warnings
+       log; keep its list in step with this one. -->
   <ItemGroup>
     <!-- SingleFile: SkylineNightly.zip carries these two as single-file executables (see
          _StageDistroZipPrereqs). Every nightly machine already runs a .NET Framework
@@ -208,8 +210,8 @@
 
     <Message Condition="'$(_Wanted)' == 'true'" Importance="high"
              Text="Building %(DistroZipPrereq.Filename) (%(DistroZipPrereq.Tfm)) for %(DistroZipPrereq.Zip)" />
-    <!-- Restore first, and without TargetFramework: these projects are not in build.bat's
-         BUILD_TARGET list, so nothing has restored them on a clean agent and Targets="Build"
+    <!-- Restore first, and without TargetFramework: these projects are not in
+         SkylineBuild.proj, so nothing has restored them on a clean agent and Targets="Build"
          alone fails with NETSDK1004 (missing project.assets.json). NuGet wants the restore
          done for the whole project, not one TFM, hence the separate call. The
          RemoveProperties matters too: build.bat drives this with -f net10.0-windows, and

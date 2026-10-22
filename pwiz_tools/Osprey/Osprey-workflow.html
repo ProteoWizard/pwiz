@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Osprey DIA pipeline workflow</title>
+<title>Osprey workflow</title>
 <style>
   html, body {
     margin: 0;
@@ -38,25 +38,446 @@
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
-  footer {
-    max-width: 1200px;
-    margin: 20px auto 40px auto;
-    padding: 0 20px;
+  nav.contents {
+    margin: 10px 0 0 0;
+    font-size: 13px;
+  }
+  nav.contents a { color: #1565c0; margin-right: 18px; text-decoration: none; }
+  nav.contents a:hover { text-decoration: underline; }
+  section { margin: 0 0 36px 0; }
+  section h2 {
+    margin: 26px 0 6px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  section p.sub {
+    margin: 0 0 12px 0;
+    color: #616161;
+    font-size: 13px;
+  }
+  div.notes {
+    margin: 16px 0 0 0;
     color: #616161;
     font-size: 12px;
   }
-  footer code {
+  div.notes code, div.notes pre {
     background: #f5f5f5;
     padding: 1px 4px;
     border-radius: 3px;
     font-size: 11px;
   }
+  div.notes pre {
+    padding: 8px 10px;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+  div.notes table.phases, div.notes > table:not([style]) {
+    margin: 8px 0;
+    font-size: 11px;
+    border-collapse: collapse;
+  }
+  div.notes > table:not([style]) th { text-align: left; padding: 2px 12px 2px 0; border-bottom: 1px solid #888; }
+  div.notes > table:not([style]) td { padding: 2px 12px 2px 0; vertical-align: top; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Osprey DIA pipeline workflow</h1>
+  <h1>Osprey workflow</h1>
   <p class="sub">
+    One <code>Osprey</code> command from DIA runs to a BiblioSpecLite (<code>.blib</code>) result for
+    Skyline. Given a spectral library (<code>-l</code>), the command is the search pipeline of part 2.
+    Given a protein FASTA (<code>--fasta</code>), it first builds the library in the same process -
+    predicting it, tuning the models on runs first, or predicting with a saved model - and then
+    searches it with the same pipeline: part 1.
+  </p>
+  <nav class="contents">
+    <a href="#library-build">1. Building the library (--fasta)</a>
+    <a href="#search">2. The search pipeline</a>
+  </nav>
+</header>
+
+<main>
+<section id="library-build">
+<h2>1. Building the library (<code>--fasta</code>)</h2>
+<p class="sub">
+  The three ways one command goes from a protein FASTA and DIA runs to a <code>.blib</code>: one
+  column per mode, one box per phase, the file each phase leaves for the next named on the arrow.
+  Purple boxes are CarafeSharp's tasks, run in-process through the shared pipeline driver; red boxes
+  are Osprey's own four-stage analysis, drawn in full in part 2. The search with a given library
+  (<code>-l library.blib</code>) is the red box alone.
+</p>
+<svg class="pipeline" viewBox="0 0 1200 930" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="lb-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#424242"/>
+  </marker>
+  <marker id="lb-arrow-loop" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a1b9a"/>
+  </marker>
+
+  <style>
+    .title       { font-size: 24px; font-weight: 700; fill: #0d1b2a; }
+    .subtitle    { font-size: 12px; font-weight: 400; fill: #607d8b; }
+
+    .phase-label { font-size: 12px; font-weight: 600; fill: #5e35b1;
+                   text-transform: uppercase; letter-spacing: 1.5px; }
+    .phase-title { font-size: 16px; font-weight: 600; fill: #1a237e; }
+    .phase-cmd   { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 10px; fill: #37474f; }
+
+    .stage-title { font-size: 13px; font-weight: 600; fill: #263238; }
+    .stage-desc  { font-size: 11px; fill: #455a64; }
+
+    .legend-title { font-size: 11px; font-weight: 600; fill: #455a64;
+                    text-transform: uppercase; letter-spacing: 1px; }
+    .legend-label { font-size: 11px; fill: #455a64; }
+
+    .phase-bg   { fill: #fbfbfc; stroke: #cfd8dc; stroke-width: 1;
+                  stroke-dasharray: 2,2; }
+
+    .flow       { stroke: #424242; stroke-width: 2; fill: none; }
+    .flow-loop  { stroke: #6a1b9a; stroke-width: 2; fill: none;
+                  stroke-dasharray: 6,3; }
+    .flow-loop-label { font-size: 10px; fill: #6a1b9a; font-weight: 600; }
+
+    .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
+    .input-pill-opt { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2;
+                      stroke-dasharray: 5,3; }
+    .output-pill { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+
+    /* Phase boxes: whose code runs */
+    .task-carafe { fill: #ede7f6; stroke: #5e35b1; stroke-width: 1.5; }
+    .task-osprey { fill: #fce4ec; stroke: #c62828; stroke-width: 1.5; }
+    .task-role   { font-size: 10px; font-weight: 700; fill: #5e35b1;
+                   text-transform: uppercase; letter-spacing: 1px; }
+    .task-role-osprey { font-size: 10px; font-weight: 700; fill: #c62828;
+                   text-transform: uppercase; letter-spacing: 1px; }
+    .task-name   { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 10px; font-weight: 700; fill: #4527a0; }
+
+    /* The file on an arrow */
+    .file        { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 10px; fill: #a35200; font-weight: 700; }
+    .file-note   { font-size: 10px; fill: #78909c; font-style: italic; }
+    .sc-flow-sw  { fill: #ffe0b2; stroke: #a35200; stroke-width: 1; }
+  </style>
+</defs>
+
+<!-- ================================================================= -->
+<!-- TITLE + SUBTITLE                                                   -->
+<!-- ================================================================= -->
+<g transform="translate(40, 40)">
+  <text class="title">Osprey one-command workflows</text>
+  <text class="subtitle" y="22">
+    Protein FASTA + DIA runs to a .blib in one process: predict, tune, or predict with a saved model. The search itself is unchanged; the library build runs in front of it.
+  </text>
+  <text class="subtitle" y="38">
+    Phase detail: Osprey's docs/20-command-line ("Library build") and 00-pipeline-architecture; CarafeSharp's docs 02-masking, 06-saved-models, 08-command-line.
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- LEGEND                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(40, 100)">
+  <text class="legend-title">Who runs the phase</text>
+  <g transform="translate(0, 16)">
+    <rect class="task-carafe" x="0" y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">CarafeSharp's task, in Osprey's process through the shared pipeline driver</text>
+
+    <rect class="task-osprey" x="620" y="0" width="16" height="12"/>
+    <text class="legend-label" x="642" y="10">Osprey's analysis: the four stages, one output directory</text>
+
+    <rect class="sc-flow-sw" x="960" y="0" width="16" height="12"/>
+    <text class="legend-label" x="982" y="10">the checkpoint file between phases</text>
+  </g>
+</g>
+
+<!-- ================================================================= -->
+<!-- INPUTS                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(0, 150)">
+  <text class="phase-label" x="40" y="0">inputs</text>
+
+  <rect class="input-pill" x="40" y="10" width="200" height="44" rx="22"/>
+  <text class="stage-title" x="140" y="29" text-anchor="middle">Protein FASTA</text>
+  <text class="stage-desc"  x="140" y="45" text-anchor="middle">--fasta proteome.fasta</text>
+
+  <rect class="input-pill" x="260" y="10" width="200" height="44" rx="22"/>
+  <text class="stage-title" x="360" y="29" text-anchor="middle">DIA runs</text>
+  <text class="stage-desc"  x="360" y="45" text-anchor="middle">-i run1 run2 ... (.raw or mzML)</text>
+
+  <rect class="input-pill-opt" x="480" y="10" width="220" height="44" rx="22"/>
+  <text class="stage-title" x="590" y="29" text-anchor="middle">Tuning runs</text>
+  <text class="stage-desc"  x="590" y="45" text-anchor="middle">--training-input run2 ... (mode 2)</text>
+
+  <rect class="input-pill-opt" x="720" y="10" width="200" height="44" rx="22"/>
+  <text class="stage-title" x="820" y="29" text-anchor="middle">Saved model</text>
+  <text class="stage-desc"  x="820" y="45" text-anchor="middle">--model out.model.zip (mode 3)</text>
+
+  <rect class="input-pill" x="940" y="10" width="220" height="44" rx="22"/>
+  <text class="stage-title" x="1050" y="29" text-anchor="middle">Pretrained models</text>
+  <text class="stage-desc"  x="1050" y="45" text-anchor="middle">bundled: AlphaPeptDeep v1, Chronologer</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- MODE 1: PREDICT                                                    -->
+<!-- ================================================================= -->
+<g transform="translate(40, 230)">
+  <rect class="phase-bg" x="0" y="0" width="360" height="666" rx="6"/>
+  <text class="phase-label" x="20" y="22">mode 1</text>
+  <text class="phase-title" x="20" y="40">Predict</text>
+  <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
+  <text class="phase-cmd" x="20" y="71">(no -l, no --training-input, no --model)</text>
+
+  <!-- A: digest -->
+  <g transform="translate(16, 86)">
+    <rect x="0" y="0" width="328" height="66" rx="6" fill="none" stroke="#5e35b1" stroke-width="1" stroke-dasharray="4,3"/>
+    <text class="stage-title" x="12" y="17">Digest the proteome, in memory</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">no task, no file</text>
+    <text class="stage-desc" x="12" y="33">--fasta &#8594; an enumerable of peptides with their proteins,</text>
+    <text class="stage-desc" x="12" y="47">decoys and pair ids; Carafe's digest options apply</text>
+    <text class="stage-desc" x="12" y="61">seconds, so the predicted .blib is the first checkpoint</text>
+  </g>
+  <path class="flow" d="M 180 152 L 180 172" marker-end="url(#lb-arrow)"/>
+  <text class="file-note" x="188" y="166">streamed into the predictor</text>
+
+  <!-- B: predict -->
+  <g transform="translate(16, 174)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictLibrary</text>
+    <text class="stage-desc" x="12" y="45">pretrained AlphaPeptDeep MS2 + Chronologer RT (iRT)</text>
+    <text class="stage-desc" x="12" y="59">Stellar 967K precursors 3 min, Astral 6.2M 18 min (GPU)</text>
+  </g>
+  <path class="flow" d="M 180 240 L 180 524" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="376">out.predicted.blib</text>
+  <text class="file-note" x="188" y="390">no tuning phases: the library</text>
+  <text class="file-note" x="188" y="403">goes straight to the search</text>
+
+  <!-- F: search -->
+  <g transform="translate(16, 526)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search every run</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the canonical four stages</text>
+    <text class="stage-desc" x="12" y="45">scoring &#8594; 1st-pass FDR &#8594; rescoring &#8594; 2nd-pass FDR</text>
+    <text class="stage-desc" x="12" y="59">the library's own decoys (DecoyPairs); no DecoyGenerator</text>
+  </g>
+  <path class="flow" d="M 180 592 L 180 606" marker-end="url(#lb-arrow)"/>
+
+  <!-- G: output -->
+  <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
+  <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib (reusable with -l)</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- MODE 2: TUNE                                                       -->
+<!-- ================================================================= -->
+<g transform="translate(420, 230)">
+  <rect class="phase-bg" x="0" y="0" width="360" height="666" rx="6"/>
+  <text class="phase-label" x="20" y="22">mode 2</text>
+  <text class="phase-title" x="20" y="40">Tune, then predict</text>
+  <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
+  <text class="phase-cmd" x="20" y="71">       --training-input run2 [--model prior.model.zip]</text>
+
+  <!-- A: digest -->
+  <g transform="translate(16, 86)">
+    <rect x="0" y="0" width="328" height="66" rx="6" fill="none" stroke="#5e35b1" stroke-width="1" stroke-dasharray="4,3"/>
+    <text class="stage-title" x="12" y="17">Digest the proteome, in memory</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">no task, no file</text>
+    <text class="stage-desc" x="12" y="33">--fasta &#8594; an enumerable of peptides with their proteins,</text>
+    <text class="stage-desc" x="12" y="47">decoys and pair ids; entrapment-free here, quartets at the</text>
+    <text class="stage-desc" x="12" y="61">final library when --entrapment is given; seconds of CPU</text>
+  </g>
+  <path class="flow" d="M 180 152 L 180 172" marker-end="url(#lb-arrow)"/>
+  <text class="file-note" x="188" y="166">streamed into the predictor</text>
+
+  <!-- B: predict the training library -->
+  <g transform="translate(16, 174)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the training library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictTrainingLibrary</text>
+    <text class="stage-desc" x="12" y="45">pretrained models, or --model to tune a saved one further</text>
+    <text class="stage-desc" x="12" y="59">the training library: targets and decoys, no entrapment</text>
+  </g>
+  <path class="flow" d="M 180 240 L 180 260" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="254">out.predicted/initial.blib</text>
+
+  <!-- C: search the tuning runs -->
+  <g transform="translate(16, 262)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search the tuning runs</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the four stages, in out.predicted/training/</text>
+    <text class="stage-desc" x="12" y="45">four stages over --training-input, --training-export on</text>
+    <text class="stage-desc" x="12" y="59">a run also in -i is parsed once: shared spectra cache</text>
+  </g>
+  <path class="flow" d="M 180 328 L 180 348" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="342">&lt;stem&gt;.training.parquet, per run</text>
+
+  <!-- D: tune -->
+  <g transform="translate(16, 350)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Tune the models</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task TrainModel</text>
+    <text class="stage-desc" x="12" y="45">Carafe's masking on Osprey's evidence; RT, then MS2</text>
+    <text class="stage-desc" x="12" y="59">MS2 kept only when it beats the pretrained on held-out</text>
+  </g>
+  <path class="flow" d="M 180 416 L 180 436" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="430">out.model.zip</text>
+
+  <!-- E: predict the library -->
+  <g transform="translate(16, 438)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictLibrary</text>
+    <text class="stage-desc" x="12" y="45">the tuned models; RT in the tuning runs' minutes</text>
+    <text class="stage-desc" x="12" y="59">entrapment quartets here when --entrapment is given</text>
+  </g>
+  <path class="flow" d="M 180 504 L 180 524" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="518">out.predicted.blib</text>
+
+  <!-- F: search -->
+  <g transform="translate(16, 526)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search every run</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the canonical four stages</text>
+    <text class="stage-desc" x="12" y="45">scoring &#8594; 1st-pass FDR &#8594; rescoring &#8594; 2nd-pass FDR</text>
+    <text class="stage-desc" x="12" y="59">a tuning run not in -i is absent from the output</text>
+  </g>
+  <path class="flow" d="M 180 592 L 180 606" marker-end="url(#lb-arrow)"/>
+
+  <!-- G: output -->
+  <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
+  <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib + out.model.zip</text>
+</g>
+
+<!-- The tuned model of mode 2 is the saved model of mode 3 -->
+<path class="flow-loop" d="M 764 613 L 790 613 L 790 222 L 820 222 L 820 206" marker-end="url(#lb-arrow-loop)"/>
+<text class="flow-loop-label" x="791" y="440" text-anchor="middle" transform="rotate(-90 791 440)">out.model.zip is a --model next time</text>
+
+<!-- ================================================================= -->
+<!-- MODE 3: SAVED MODEL                                                -->
+<!-- ================================================================= -->
+<g transform="translate(800, 230)">
+  <rect class="phase-bg" x="0" y="0" width="360" height="666" rx="6"/>
+  <text class="phase-label" x="20" y="22">mode 3</text>
+  <text class="phase-title" x="20" y="40">Predict with a saved model</text>
+  <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
+  <text class="phase-cmd" x="20" y="71">       --model out.model.zip</text>
+
+  <!-- A: digest -->
+  <g transform="translate(16, 86)">
+    <rect x="0" y="0" width="328" height="66" rx="6" fill="none" stroke="#5e35b1" stroke-width="1" stroke-dasharray="4,3"/>
+    <text class="stage-title" x="12" y="17">Digest the proteome, in memory</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">no task, no file</text>
+    <text class="stage-desc" x="12" y="33">--fasta &#8594; an enumerable of peptides with their proteins,</text>
+    <text class="stage-desc" x="12" y="47">decoys and pair ids; any proteome, since a saved model</text>
+    <text class="stage-desc" x="12" y="61">predicts any peptides; seconds of CPU</text>
+  </g>
+  <path class="flow" d="M 180 152 L 180 172" marker-end="url(#lb-arrow)"/>
+  <text class="file-note" x="188" y="166">streamed into the predictor</text>
+
+  <!-- B: predict with the saved model -->
+  <g transform="translate(16, 174)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictLibrary</text>
+    <text class="stage-desc" x="12" y="45">the saved model's MS2 and RT weights (06-saved-models)</text>
+    <text class="stage-desc" x="12" y="59">NCE, instrument, rt_max from its training unless given</text>
+  </g>
+  <path class="flow" d="M 180 240 L 180 524" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="376">out.predicted.blib</text>
+  <text class="file-note" x="188" y="390">no tuning phases: mode 1 with</text>
+  <text class="file-note" x="188" y="403">a tuned model in place of the pretrained</text>
+
+  <!-- F: search -->
+  <g transform="translate(16, 526)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search every run</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the canonical four stages</text>
+    <text class="stage-desc" x="12" y="45">scoring &#8594; 1st-pass FDR &#8594; rescoring &#8594; 2nd-pass FDR</text>
+    <text class="stage-desc" x="12" y="59">the library's own decoys (DecoyPairs); no DecoyGenerator</text>
+  </g>
+  <path class="flow" d="M 180 592 L 180 606" marker-end="url(#lb-arrow)"/>
+
+  <!-- G: output -->
+  <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
+  <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib (reusable with -l)</text>
+</g>
+
+</svg>
+<div class="notes">
+  <p>
+    <strong>The phases and their checkpoints.</strong> Every phase is a task on the shared pipeline
+    contract (<code>PipelineTask</code> in CommonUtil) with a validity key over its settings and
+    inputs, and leaves a stamped file the next phase reads. A re-run of the same command therefore
+    skips every phase whose output is current and resumes a run that stopped at the first one that
+    is not: a change to a digest option re-runs everything, a tuning option re-tunes and
+    re-predicts without searching the tuning runs again, <code>--entrapment</code> or <code>-i</code>
+    alone re-runs only the final library and search. <code>OSPREY_STOP_AFTER_TASKS=N</code> (a
+    developer variable) ends a run cleanly after N tasks; run again and again, the command advances
+    one task at a time and re-runs nothing (<code>SubsetPipelineTest.TestSubsetLibraryBuildTunedStepwise</code>,
+    and at real scale <code>regression.ps1 -StepwiseOneCommand</code>). Addressing the library phases
+    as <code>--task</code> nodes on a cluster is still to come; <code>--fasta</code> with
+    <code>--task</code> is refused until it is.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Task</th><th>Code</th><th>Reads</th><th>Writes (the checkpoint)</th><th>Modes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Digest (inside the prediction tasks)</td><td>none</td><td>CarafeSharp <code>Digester</code> + the decoy and entrapment steps of <code>EntrapmentFastaBuilder</code></td><td><code>--fasta</code></td><td>nothing: an in-memory enumerable of peptides, proteins, decoys and pair ids that the predictor and the blib writer consume</td><td>1, 2, 3</td></tr>
+      <tr><td>Predict the training library</td><td><code>PredictTrainingLibrary</code></td><td>CarafeSharp <code>PredictLibraryTask</code></td><td>the entrapment-free digest; pretrained models or <code>--model</code></td><td><code>out.predicted/initial.blib</code></td><td>2</td></tr>
+      <tr><td>Search the tuning runs</td><td>the four stages</td><td>Osprey, its own task set and output folder</td><td><code>initial.blib</code>, <code>--training-input</code></td><td><code>out.predicted/training/&lt;stem&gt;.training.parquet</code> per run, that analysis's artifacts, <code>training.blib</code></td><td>2</td></tr>
+      <tr><td>Tune</td><td><code>TrainModel</code></td><td>CarafeSharp <code>TrainTask</code></td><td>the exports; pretrained models or <code>--model</code></td><td><code>out.model.zip</code> and Carafe's model folder <code>out.predicted/model/</code></td><td>2</td></tr>
+      <tr><td>Predict the library</td><td><code>PredictLibrary</code></td><td>CarafeSharp <code>PredictLibraryTask</code></td><td>the digest (quartets with <code>--entrapment</code>); pretrained, <code>--model</code>, or the tuned model folder</td><td><code>out.predicted.blib</code></td><td>1, 2, 3</td></tr>
+      <tr><td>Search</td><td>the canonical four</td><td>Osprey</td><td><code>out.predicted.blib</code>, <code>-i</code></td><td><code>out.blib</code> and its sidecars (part 2)</td><td>all</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>What the user gets</strong> (<code>--output-dir</code> relocates it as it relocates the search's sidecars):</p>
+<pre>out.blib                  the result: what the search detected, for Skyline (-o), sidecars as for any search
+out.predicted.blib        the predicted library it was searched with (modes 1-3); -l takes it next time
+out.model.zip             the tuned model (mode 2); --model takes it next time; CarafeSharp --model-info describes it
+out.predicted/            working files of the library build - one folder a user can delete
+  pairing.tsv             only with --entrapment: the FDRBench quartets
+  initial.blib            the training library (mode 2)
+  training/               the tuning runs' search: parquets, sidecars, the exports, training.blib
+  model/                  Carafe's model folder, which the library is predicted from (mode 2)</pre>
+
+  <p>
+    <strong>Against DIA-NN.</strong> <code>--fasta</code> with no <code>-l</code> is DIA-NN's
+    <code>--fasta --gen-spec-lib --predictor</code>; <code>-i</code> is <code>--f</code>;
+    <code>out.predicted.blib</code> is <code>--out-lib</code>. The digest and modification options are
+    CarafeSharp's (<code>--enzyme</code>, <code>--miss-c</code>, <code>--min-length</code>,
+    <code>--max-length</code>, <code>--fix-mod</code>, <code>--var-mod</code>, ...), surfaced as the
+    Library Digest, Prediction and Tuning sections of Osprey's help, where DIA-NN has
+    <code>--cut</code>, <code>--missed-cleavages</code>, <code>--min-pep-len</code>,
+    <code>--unimod4</code>, <code>--var-mods</code>. Mode 2 has no DIA-NN counterpart: its
+    <code>--reanalyse</code> builds an empirical library from a first pass and never adapts the
+    predictor. Mode 3 is what makes mode 2 reusable: tune once per instrument and method, predict any
+    proteome with the saved model after that.
+  </p>
+</div>
+</section>
+
+<section id="search">
+<h2>2. The search pipeline</h2>
+<p class="sub">
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     (<code>.blib</code>) output, drawn around the join / per-file-fan-out
     boundaries that matter for HPC distribution. The four <code>--task</code>
@@ -80,9 +501,6 @@
     detail and end-to-end performance are in the tables near the bottom of the
     page.
   </p>
-</header>
-
-<main>
 <svg class="pipeline" viewBox="0 0 1200 2900" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
@@ -563,9 +981,7 @@
 </g>
 
 </svg>
-</main>
-
-<footer>
+<div class="notes">
   <p>
     <strong>Cross-impl parity (Stellar <code>--resolution unit</code>, Astral
     <code>--resolution hram</code>):</strong>
@@ -934,6 +1350,8 @@
     above — lives in the completed TODOs at
     <code>pwiz-ai/todos/completed/TODO-*osprey*.md</code>.
   </p>
-</footer>
+</div>
+</section>
+</main>
 </body>
 </html>

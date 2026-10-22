@@ -366,7 +366,7 @@
   <text x="140" y="22" class="task-hdr-name">&#9656; CarafeSharp -i &lt;exports&gt; --ms &lt;runs&gt; --db &lt;1b peptides&gt; -o &lt;folder&gt;  (stages 4 and 5)</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">training, then the library, in one command</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.training.parquet</tspan> (one, a list, or a folder; --ms names the runs), pretrained models, or a saved --model to fine-tune further</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-flow">&lt;folder&gt;/carafe_fine_tuned_model.carafemodel</tspan> + Carafe's model folder (ms2 + rt safetensors, rt_maps.json, metrics, meta.json)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-flow">&lt;folder&gt;/carafe_fine_tuned.model.zip</tspan> + Carafe's model folder (ms2 + rt safetensors, rt_maps.json, metrics, meta.json)</text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan>--tf all|ms2|rt, --rt_align kde|none, --rt_select best|median, --seed 2024, --nce, --ms_instrument, --activation, --analyzer</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-role">end to end 1.34x (Stellar) and 1.50x (Astral) faster than Carafe + msconvert</text>
 </g>
@@ -410,7 +410,7 @@
   <path class="flow" d="M 600 346 L 600 360" marker-end="url(#arrow)"/>
 
   <rect class="st-beyond" x="80" y="362" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="382" text-anchor="middle">Save: Carafe's model folder (what --model_dir reads) and one .carafemodel file (a zip: manifest.json, the safetensors, rt_maps.json, metrics, meta)</text>
+  <text class="stage-title" x="600" y="382" text-anchor="middle">Save: Carafe's model folder (what --model_dir reads) and one .model.zip file (a zip: manifest.json, the safetensors, rt_maps.json, metrics, meta)</text>
   <text class="stage-desc"  x="600" y="396" text-anchor="middle">the manifest records what the model was trained on (instruments, activation, NCE, gradient, windows, charges, peptides, scores) for --model, --model_info and Skyline's model picker to come</text>
 </g>
 
@@ -421,7 +421,7 @@
 <!-- ================================================================= -->
 <g transform="translate(0, 2070)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; the same command, its library half; or --db &lt;1b peptides&gt; --model &lt;.carafemodel&gt;  (stage 5)</text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; the same command, its library half; or --db &lt;1b peptides&gt; --model &lt;.model.zip&gt;  (stage 5)</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">fine-tuned models</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-flow">osprey_library_db_peptides.fasta</tspan>, <tspan class="sc-flow">osprey_library_db_pairing.tsv</tspan> (--pairing_manifest), the fine-tuned models of stage 4</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-flow">osprey_new_library/carafe_spectral_library.blib</tspan>  (RT in the training gradient's minutes, or --rt_reference's run; iRT for different gradients)</text>
@@ -516,7 +516,7 @@
     <strong>What CarafeSharp adds over Carafe</strong> (blue boxes): Chronologer as the default RT
     model and its fine-tuning (<code>docs/07-chronologer.md</code>); run alignment onto the
     hydrophobic index so runs of different gradients train one model; the saved
-    <code>.carafemodel</code> that predicts any peptides later without training again
+    <code>.model.zip</code> that predicts any peptides later without training again
     (<code>docs/06-saved-models.md</code>); the <code>.blib</code> writer with peak annotations
     and whole decoy pairs; and training on Osprey's exports named directly, with no spectra read.
     What it leaves to Osprey (yellow): peak matching, XICs and boundaries, which Carafe computes

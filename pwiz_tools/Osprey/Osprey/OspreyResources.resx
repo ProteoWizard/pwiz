@@ -182,7 +182,7 @@
     <value>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: {0}. The argument tables below are generated from the command-line declarations, so they always match the build; run {1} for the same reference as text.</value>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
-    <value>Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</value>
+    <value>Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or vendor files where the vendor readers are installed) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</value>
   </data>
   <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
     <value>No help section matching '{0}' found. Use {1} to list available sections.</value>
@@ -428,13 +428,13 @@
     <value>Library Prediction</value>
   </data>
   <data name="OspreyCommandArgs_GROUP_LIBRARY_DIGEST_With__0___what_the_library_holds" xml:space="preserve">
-    <value>With {0}: what the library holds. These are CarafeSharp's options under their standard names; see its help for the full set.</value>
+    <value>With {0}: what the library holds. These are CarafeSharp's options, under their standard names.</value>
   </data>
   <data name="OspreyCommandArgs_GROUP_LIBRARY_PREDICTION_With__0___how_the_library_is_predicted" xml:space="preserve">
-    <value>With {0}: how the library is predicted.</value>
+    <value>With {0}: how the library is predicted. These are CarafeSharp's options, under their standard names.</value>
   </data>
   <data name="OspreyCommandArgs_UsageBlocks_The_library_build_options_are_listed_in_the_standard_form___0___and__for_compatibility_with_Java_Carafe_s_command_lines__also_accepted_with_its_underscores___1___" xml:space="preserve">
-    <value>The library build options are listed in the standard form ({0}) and, for compatibility with Java Carafe's command lines, also accepted with its underscores ({1}).</value>
+    <value>The library build options are listed in the standard form ({0}) and, for compatibility with Java Carafe's command lines, also accepted as Carafe spells them, with underscores or in camel case ({1}).</value>
   </data>
   <data name="Program_Run_Library__predicted_from__0__with__1_" xml:space="preserve">
     <value>Library: predicted from {0} with {1}</value>
@@ -480,5 +480,44 @@
   </data>
   <data name="LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_" xml:space="preserve">
     <value>Wrote the pairing manifest {0}</value>
+  </data>
+  <data name="OspreyCommandArgs_Group_Library_Tuning" xml:space="preserve">
+    <value>Library Tuning</value>
+  </data>
+  <data name="OspreyCommandArgs_GROUP_LIBRARY_TUNING_With__0___how_the_models_are_tuned_on_its_runs" xml:space="preserve">
+    <value>With {0}: how the models are tuned on its runs. These are CarafeSharp's options, under their standard names.</value>
+  </data>
+  <data name="Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_" xml:space="preserve">
+    <value>Tuning: the models are tuned on {0} first, and saved as {1}</value>
+  </data>
+  <data name="Program_LibraryBuildError_Training_input_file_not_found___0_" xml:space="preserve">
+    <value>Training input file not found: {0}</value>
+  </data>
+  <data name="LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_" xml:space="preserve">
+    <value>Searching the tuning runs with {0}</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__" xml:space="preserve">
+    <value>{0} names the model this run writes: {1}. Copy it, or choose another {2}.</value>
+  </data>
+  <data name="OspreyCommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
+    <value>path/to/file</value>
+  </data>
+  <data name="OspreyCommandArgs_PATH_TO_FOLDER" xml:space="preserve">
+    <value>path/to/folder</value>
+  </data>
+  <data name="OspreyCommandArgs_INT_VALUE" xml:space="preserve">
+    <value>&lt;integer&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_NUM_VALUE" xml:space="preserve">
+    <value>&lt;number&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_THRESHOLD_VALUE" xml:space="preserve">
+    <value>&lt;threshold&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_RATIO_VALUE" xml:space="preserve">
+    <value>&lt;ratio&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process" xml:space="preserve">
+    <value>{0} runs as one process: the library build and the search of its library are not split into tasks yet, and {1} with {0} is refused.</value>
   </data>
 </root>
