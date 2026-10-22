@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,8 +35,23 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     /// <summary>
     /// Abstract base class for AlphaPeptDeep and Carafe library builders so they can share code. 
     /// </summary>
-    public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
+    public abstract class AbstractDeepLibraryBuilder
     {
+        /// <summary>
+        /// The predictions a library is built from. A modification supported for these is supported
+        /// as far as the modification warning and the per-peptide messages are concerned; CCS, which
+        /// only the pretrained model predicts, is extra.
+        /// </summary>
+        public const PredictionSupport LIBRARY_PREDICTION_SUPPORT =
+            PredictionSupport.fragmentation | PredictionSupport.retention_time;
+
+        /// <summary>
+        /// The UniMod modification each document modification without a UniMod id has matched, so a
+        /// definition is matched against UniMod once rather than for every peptide carrying it.
+        /// </summary>
+        private static readonly ConcurrentDictionary<StaticMod, StaticMod> MATCHED_UNIMODS =
+            new ConcurrentDictionary<StaticMod, StaticMod>();
+
         private DateTime _nowTime = DateTime.Now;
         
         protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
@@ -210,7 +226,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         supportedModels &= ~PredictionSupport.ccs;
                 }
 
-                if (modType == null || !modType.IsSupported(PredictionSupport.all))
+                if (modType == null || !modType.IsSupported(LIBRARY_PREDICTION_SUPPORT))
                 {
                     Messages.WriteAsyncUserMessage(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
                         modifiedSequence, modAndType.Mod.Name, UnimodIdWithName(modAndType.UniModMod), ToolName);
@@ -270,7 +286,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // The models see the modification's chemistry: not its relative retention time, and not its
             // neutral losses, which the models do not predict, so an Oxidation (M) defined with its own
             // losses is UniMod's Oxidation (M) for prediction
-            return UniMod.FindMatchingStaticMod(staticMod.ChangeRelativeRT(RelativeRT.Matching), true, true);
+            return MATCHED_UNIMODS.GetOrAdd(staticMod,
+                mod => UniMod.FindMatchingStaticMod(mod.ChangeRelativeRT(RelativeRT.Matching), true, true));
         }
 
         private static string UnimodIdWithName(StaticMod uniModMod)
@@ -350,9 +367,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var modType = modificationSupport.GetModificationType(MatchUniMod(mod)?.UnimodId);
                     if (modType == null)
                         warningModSupports[mod.Name] = PredictionSupport.none;
-                    // The library's spectra and retention times are what the warning is about; CCS, which only
-                    // the pretrained model predicts, is extra, so a fine-tuned modification without it is not listed
-                    else if (!modType.IsSupported(PredictionSupport.fragmentation | PredictionSupport.retention_time))
+                    else if (!modType.IsSupported(LIBRARY_PREDICTION_SUPPORT))
                         warningModSupports[mod.Name] = modType.SupportedModels;
                 }
             }
@@ -396,24 +411,25 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <summary>
         /// This support extended by the modifications a fine-tuned model was trained on, named as
         /// CarafeSharp names them (<c>Carbamidomethyl@C</c>), each supported for fragmentation and
-        /// retention time; the CCS model stays pretrained. A modification already supported keeps its
-        /// support, and a name CarafeSharp's table or UniMod does not know adds nothing.
+        /// retention time on top of whatever the pretrained models support for it; the CCS model
+        /// stays pretrained. A name CarafeSharp's table or UniMod does not know adds nothing.
         /// </summary>
         public LibraryBuilderModificationSupport WithTrainingModifications(IEnumerable<string> modificationNames)
         {
-            var types = _modificationSupport.Values.ToList();
-            var ids = new HashSet<int>(_modificationSupport.Keys);
+            var types = new Dictionary<int, ModificationType>(_modificationSupport);
             foreach (string name in modificationNames)
             {
-                if (!ModificationTable.TryGet(name, out var definition) || definition.UnimodId <= 0 ||
-                    !ids.Add(definition.UnimodId) || UniModData.UNI_MOD_DATA.All(m => m.ID != definition.UnimodId))
-                {
+                if (!ModificationTable.TryGet(name, out var definition) || definition.UnimodId <= 0)
                     continue;
-                }
-                types.Add(AbstractDeepLibraryBuilder.GetUniModType(definition.UnimodId,
-                    PredictionSupport.fragmentation | PredictionSupport.retention_time));
+                var uniModData = UniModData.UNI_MOD_DATA.FirstOrDefault(m => m.ID == definition.UnimodId);
+                if (!uniModData.ID.HasValue)
+                    continue;
+                var support = AbstractDeepLibraryBuilder.LIBRARY_PREDICTION_SUPPORT;
+                if (types.TryGetValue(definition.UnimodId, out var existing))
+                    support |= existing.SupportedModels;
+                types[definition.UnimodId] = new ModificationType(uniModData, support);
             }
-            return new LibraryBuilderModificationSupport(types);
+            return new LibraryBuilderModificationSupport(types.Values.ToList());
         }
 
         public ModificationType GetModificationType(int? id)

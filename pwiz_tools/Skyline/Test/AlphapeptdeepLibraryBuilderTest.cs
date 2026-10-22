@@ -720,14 +720,17 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, AbstractDeepLibraryBuilder.GetWarningMods(document, AlphapeptdeepLibraryBuilder.GetModificationSupport(null)).Count);
 
             // Fine-tuned on TMT (and on a name nothing knows, which adds nothing): no warning
-            var fineTuned = pretrained.WithTrainingModifications(new[] { "TMT6plex@K", "Oxidation@M", "Unknown@A" });
+            var fineTuned = pretrained.WithTrainingModifications(new[] { "TMT6plex@K", "Oxidation@M", "GlyGly@K", "Unknown@A" });
             Assert.AreEqual(0, AbstractDeepLibraryBuilder.GetWarningMods(document, fineTuned).Count);
             var tmtType = fineTuned.GetModificationType(tmt.UnimodId);
             Assert.IsNotNull(tmtType);
-            Assert.IsTrue(tmtType.IsSupported(PredictionSupport.fragmentation | PredictionSupport.retention_time));
+            Assert.IsTrue(tmtType.IsSupported(AbstractDeepLibraryBuilder.LIBRARY_PREDICTION_SUPPORT));
             Assert.IsFalse(tmtType.IsSupported(PredictionSupport.ccs));
-            // The pretrained support stands where it is wider
+            // The pretrained support stands where it is wider (Oxidation), and widens where it is
+            // narrower (GlyGly, fragmentation only in the pretrained models)
             Assert.IsTrue(fineTuned.GetModificationType(35).IsSupported(PredictionSupport.all));
+            Assert.IsFalse(pretrained.GetModificationType(121).IsSupported(PredictionSupport.retention_time));
+            Assert.IsTrue(fineTuned.GetModificationType(121).IsSupported(AbstractDeepLibraryBuilder.LIBRARY_PREDICTION_SUPPORT));
         }
 
         /// <summary>The header and the 11 iRT standards, then the cysteine peptides carbamidomethylated.</summary>
