@@ -460,9 +460,6 @@
   <data name="Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_" xml:space="preserve">
     <value>{0} is not read with {1}: the library it builds carries its pairing.</value>
   </data>
-  <data name="Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__" xml:space="preserve">
-    <value>{0} cannot be combined with {1} yet. Run the command without {1}, then search the library it writes ({2}) with {3} and {1}.</value>
-  </data>
   <data name="Program_LibraryBuildError_FASTA_file_not_found___0_" xml:space="preserve">
     <value>FASTA file not found: {0}</value>
   </data>
@@ -517,7 +514,13 @@
   <data name="OspreyCommandArgs_RATIO_VALUE" xml:space="preserve">
     <value>&lt;ratio&gt;</value>
   </data>
-  <data name="OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process" xml:space="preserve">
-    <value>{0} runs as one process: the library build and the search of its library are not split into tasks yet, and {1} with {0} is refused.</value>
+  <data name="OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task" xml:space="preserve">
+    <value>{0} runs as one process, or task by task: {1} {2}; the four search stages with {3}; {1} {4}; {1} {5}; then the four search stages. Every node takes the same command line and its own {1}, and each task reads only what the tasks before it wrote.</value>
+  </data>
+  <data name="LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_" xml:space="preserve">
+    <value>{0} predicts the library with the tuned model {1}, which is not there. Run {2} first.</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__" xml:space="preserve">
+    <value>{0} makes a stage task a stage of the tuning runs' search: give it with {1} and one of {2}.</value>
   </data>
 </root>

@@ -197,10 +197,14 @@ namespace pwiz.Osprey.Tasks
         // stage - it chooses which candidate peak each precursor's row
         // describes - so a re-run under a different pick model must not
         // adopt these parquets.
+        //
+        // The data file is declared as the input it is, and a node that holds only its
+        // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
+        // "HPC relay checklist"), so a harness ships the cache in its place.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
-            if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
-                yield return ctx.Config.LibrarySource.Path;
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
             if (ctx.Config.InputFiles != null)
                 foreach (var input in ctx.Config.InputFiles)
                     yield return input;

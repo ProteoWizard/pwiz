@@ -440,11 +440,11 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} runs as one process: the library build and the search of its library are not split into tasks ye [rest of string was truncated]";.
+        ///   Looks up a localized string similar to {0} runs as one process, or task by task: {1} {2}; the four search stages with {3}; {1} {4}; {1} {5}; th [rest of string was truncated]";.
         /// </summary>
-        public static string OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process {
+        public static string OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task {
             get {
-                return ResourceManager.GetString("OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process", resourceCulture);
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task", resourceCulture);
             }
         }
         
@@ -812,15 +812,6 @@ namespace pwiz.Osprey {
         public static string Program_LibraryBuildError__0__can_be_used_only_with__1__ {
             get {
                 return ResourceManager.GetString("Program_LibraryBuildError__0__can_be_used_only_with__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} cannot be combined with {1} yet. Run the command without {1}, then search the library it writ [rest of string was truncated]";.
-        /// </summary>
-        public static string Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__ {
-            get {
-                return ResourceManager.GetString("Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__", resourceCulture);
             }
         }
         
@@ -1354,6 +1345,24 @@ namespace pwiz.Osprey {
         public static string Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_ {
             get {
                 return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} predicts the library with the tuned model {1}, which is not there. Run {2} first..
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} makes a stage task a stage of the tuning runs&apos; search: give it with {1} and one of {2}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__", resourceCulture);
             }
         }
     }

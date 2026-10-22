@@ -521,14 +521,6 @@
     <value>读取“{0}”的第一轮中间文件失败：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
-    <value>“{0}”需要至少 2 个输入文件（“{3}”），但只提供了 {1:N0} 个。仅当有其他运行可供协调时，它为 {2} 写入的中间文件才有用。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_" xml:space="preserve">
-    <value>“{0}”需要跨运行协调，但配置已将其关闭。仅当运行跨运行协调时，它为 {1} 写入的中间文件才有用。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_" xml:space="preserve">
     <value>写入 {0} 失败：{1}</value>
     <comment>Needs Review:New resource</comment>

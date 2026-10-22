@@ -1208,26 +1208,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} requires at least 2 input files ({3}), but {1:N0} were given. The intermediate files it writes for {2} are only useful when there are other runs to reconcile against..
-        /// </summary>
-        public static string FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____" +
-                        "input___but__1__were_given__The_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} requires cross-run reconciliation, which the configuration turns off. The intermediate files it writes for {1} are only useful when cross-run reconciliation runs..
-        /// </summary>
-        public static string FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__" +
-                        "which_the_configuration_turns_off__The_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to write {0}: {1}.
         /// </summary>
         public static string FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_ {

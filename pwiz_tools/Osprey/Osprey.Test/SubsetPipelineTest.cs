@@ -236,6 +236,17 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The same chain over ONE run: no task refuses a single input, the empty consensus leaves
+        /// PerFileRescoring no plan for the run, and the result is the one-run straight-through
+        /// search's - so the chain has one shape whatever the run count.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetHpcTaskChainOneRun()
+        {
+            AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", new[] { RUN_NAMES[1] }), @"onerun-");
+        }
+
+        /// <summary>
         /// The same chain on the Astral subset: high-resolution scoring on both sides of every
         /// task boundary.
         /// </summary>

@@ -127,7 +127,7 @@ with `--training-input` tunes the saved model further.
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--fasta` | `path/to/file.fasta` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library`, `--decoy-pairing-manifest` and, for now, `--task` (the HPC addressing of the library phase is still to come). |
+| `--fasta` | `path/to/file.fasta` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library` and `--decoy-pairing-manifest`. On a cluster each phase is a `--task` of its own (see "The library build on a cluster" below). |
 | `--training-input` | `path/to/file ...` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.model.zip`. The options of the **Library Tuning** section apply. |
 | `--training-input-list` | `path/to/file.txt` | A file of `--training-input` runs, one path per line (`#` comments ignored), as `--input-list` is for `-i`: a long run list can pass the Windows command-line limit and hides the other arguments. |
 | `--model` | `path/to/file.model.zip` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
@@ -195,6 +195,7 @@ proteins, with decoys prefixed `decoy_`.
 Log lines: the prediction is a task like the four stages, with `[TASK] PredictLibrary:starting`
 / `:skipping (outputs valid)` / `:done (<s>s)` in the machine channel; with tuning,
 `PredictTrainingLibrary`, the four stages of the tuning runs' search and `TrainModel` come first.
+Each is also a `--task` of its own on a cluster (see "The library build on a cluster").
 
 ### Scoring & Tolerance
 
@@ -255,7 +256,9 @@ None of these counts enters a validity key or changes an output byte; one lane i
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--task` | `SpectraCache \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| TrainingExport \| ModelDiagnostics` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `TrainingExport` is `--training-export` with no `--task`: a selector, not a stage, that runs the whole pipeline with the export on, so a completed run writes only its missing exports; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
+| `--task` | `SpectraCache \| PredictTrainingLibrary \| TrainModel \| PredictLibrary \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| TrainingExport \| ModelDiagnostics` | Run exactly one task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `TrainingExport` is `--training-export` with no `--task`: a selector, not a stage, that runs the whole pipeline with the export on, so a completed run writes only its missing exports; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. With `--fasta`, `PredictTrainingLibrary`, `TrainModel` and `PredictLibrary` run the library build one phase at a time, and the four stages search the library it predicts (or, with `--training-search`, the tuning runs). EVERY search task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
+| `--training-search` | — | With `--fasta` and `--training-input`: the stage `--task` selects is a stage of the tuning runs' search - over the `--training-input` runs, with `out.predicted/initial.blib`, into `out.predicted/training/`, writing the training exports `TrainModel` reads. The same four tasks for any number of tuning runs, one included. |
+| `--task-files` | — | With `--task`: print the files the task reads and writes for this command line - one line each, `input` or `output`, the task and the path, tab-separated - and exit without running it. What a node must be given and what it hands on, from the task's own declarations, for a workflow manager or a harness that stages nodes. |
 
 ### Logging
 
@@ -398,6 +401,36 @@ Osprey --task SecondPassFDR    --input-list runs.txt -l hela.tsv -o out.blib --r
 - Rehydration sidecars must travel with their parquet into each worker's working
   directory. Let the scheduler fan out (one file per split process) rather than
   `--parallel-files`, which is the single-node multi-file mode.
+
+### The library build on a cluster
+
+The one command (`--fasta`) splits the same way, one node per task, every node given the same
+command line and its own `--task`. Each task reads only what the tasks before it wrote, and each
+checkpoint is the file it writes, as in one process:
+
+```bash
+ARGS="-i s1.mzML -i s2.mzML -i s3.mzML --fasta human.fasta -o out.blib --training-input s2.mzML --resolution unit"
+Osprey --task PredictTrainingLibrary $ARGS          # out.predicted/initial.blib
+# the tuning runs' search: the four stages with --training-search, per-file stages one node per tuning run
+Osprey --task PerFileScoring   $ARGS --training-search   # (--training-input <one run> on each per-file node)
+Osprey --task FirstPassFDR     $ARGS --training-search
+Osprey --task PerFileRescoring $ARGS --training-search   # writes out.predicted/training/<stem>.training.parquet
+Osprey --task SecondPassFDR    $ARGS --training-search
+Osprey --task TrainModel       $ARGS                     # out.model.zip, out.predicted/model/
+Osprey --task PredictLibrary   $ARGS                     # out.predicted.blib (refused before TrainModel has run)
+# the output's search: the four stages against out.predicted.blib, as above
+Osprey --task PerFileScoring   $ARGS                     # (-i <one run> on each per-file node)
+...
+```
+
+The chain has one shape whatever the number of runs: with one tuning run (the lab's habit)
+`FirstPassFDR` has no other run to reconcile against, and `PerFileRescoring` still re-scores the run's
+multi-charge consensus and writes its half of the second pass. Without `--training-input` the build is
+`PredictLibrary` and the four stages. The library phases
+are single-node tasks (a GPU node, when there is one: `--device gpu`); the tuning runs' search and
+the output's search share the spectra cache, so a tuning run that is also an input is parsed once
+when both searches see the same `--cache-dir` (or `--work-dir`). `--task-files` prints any node's
+inputs and outputs.
 
 Full detail: [15-hpc-scoring-split.md](15-hpc-scoring-split.md).
 
