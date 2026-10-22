@@ -852,8 +852,10 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(firstPassLog.Contains(TaskLine(PerFileRescoreTask.TASK_NAME, @"starting")), firstPassLog);
             Assert.IsFalse(File.Exists(Path.Combine(firstPassDir, BLIB_FILE)));
 
-            // The first pass keeps its candidates and nothing passes the reported set.
+            // The first pass keeps its candidates and nothing passes the reported set. An earlier
+            // run's .blib at the output name is removed, so nothing reads it as this run's.
             string secondPassDir = CreateDir(@"nothing-second-pass");
+            File.WriteAllText(Path.Combine(secondPassDir, BLIB_FILE), string.Empty);
             string secondPassLog = RunOspreyExpecting(SearchArgs(secondPassDir, library,
                     OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
                 Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);

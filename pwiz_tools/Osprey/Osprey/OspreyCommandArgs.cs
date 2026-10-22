@@ -715,9 +715,13 @@ namespace pwiz.Osprey
             // and the run's file indices follow this list.
             foreach (string listPath in _inputListPaths)
                 _inputFiles.AddRange(ReadInputList(listPath, ARG_INPUT_LIST));
-            // --training-input-list the same way, after any --training-input.
-            foreach (string listPath in _trainingInputListPaths)
-                _config.LibraryBuild.TrainingInputs.AddRange(ReadInputList(listPath, ARG_TRAINING_INPUT_LIST));
+            // --training-input-list the same way, after any --training-input. Not read without
+            // --fasta, where ValidateArgs reports the option as needing it.
+            if (_config.LibraryBuild.Enabled)
+            {
+                foreach (string listPath in _trainingInputListPaths)
+                    _config.LibraryBuild.TrainingInputs.AddRange(ReadInputList(listPath, ARG_TRAINING_INPUT_LIST));
+            }
 
             for (int i = 0; i < _inputFiles.Count; i++)
                 _inputFiles[i] = NormalizeInputPath(_inputFiles[i]);
@@ -1015,13 +1019,17 @@ namespace pwiz.Osprey
                 renderFormat = ArgUsage.FORMAT_ASCII;          // ascii (lower-128) tables on request
             else
             {
-                // Treat as a section-name filter.
-                var group = UsageBlocks.OfType<ArgumentGroup<OspreyCommandArgs>>().FirstOrDefault(
-                    g => g.Title.IndexOf(formatType, StringComparison.OrdinalIgnoreCase) >= 0);
-                if (group == null)
+                // Treat as a section-name filter. The tables that follow a section (the enzymes
+                // and modifications after the digest options) belong to it.
+                var blocks = UsageBlocks.ToList();
+                int start = blocks.FindIndex(b => b is ArgumentGroup<OspreyCommandArgs> g &&
+                                                  g.Title.IndexOf(formatType, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (start < 0)
                     return string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,
                         formatType, ARG_HELP.ArgumentText + @" sections") + Environment.NewLine;
-                return group.ToString(USAGE_WIDTH, ArgUsage.FORMAT_NO_BORDERS);
+                for (int i = start; i < blocks.Count && (i == start || blocks[i] is TableUsageBlock); i++)
+                    sb.Append(blocks[i].ToString(USAGE_WIDTH, ArgUsage.FORMAT_NO_BORDERS));
+                return sb.ToString();
             }
 
             foreach (var block in UsageBlocks)

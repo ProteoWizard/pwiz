@@ -627,6 +627,10 @@ namespace pwiz.Osprey.Test
             string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
             StringAssert.Contains(filtered, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
+            // The enzyme and modification tables come with the digest section that refers to them.
+            string digest = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Library_Digest);
+            StringAssert.Contains(digest, EnzymeTable.All.Last().Name);
+            StringAssert.Contains(digest, CarafeModification.TopModifications.Last().Name);
 
             // unknown section: a helpful message, no crash.
             Assert.AreEqual(string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,

@@ -117,6 +117,23 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Remove an earlier run's .blib at the output name, for a run that writes none. A locked
+        /// file is reported as a <see cref="BlibOutputException"/>, as a failure to replace it is.
+        /// </summary>
+        internal static void RemoveOutput(string outputPath)
+        {
+            try
+            {
+                if (File.Exists(outputPath))
+                    File.Delete(outputPath);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                throw new BlibOutputException(outputPath, ex);
+            }
+        }
+
+        /// <summary>
         /// Open the SQLite writer on the temp file beside the output. A failure here is a
         /// user-correctable condition (the folder is not writable, or the file is locked), so
         /// it becomes a <see cref="BlibOutputException"/> naming the output rather than a raw

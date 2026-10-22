@@ -687,10 +687,7 @@ namespace pwiz.CarafeSharp.Proteome
                 digest.MaxMissedCleavages = ParseInt(ARG_MISS_C, missedCleavages);
             if (TryGet(ARG_ENZYME, out string enzyme))
             {
-                // By index, as Carafe takes it, or by any name in the table (Carafe takes NoCut).
-                digest.EnzymeIndex = int.TryParse(enzyme, NumberStyles.Integer, CultureInfo.InvariantCulture, out int index)
-                    ? index
-                    : EnzymeTable.GetIndexByName(enzyme);
+                digest.EnzymeIndex = ParseEnzyme(enzyme);
             }
             // Carafe validates the index here, through its non-specific check.
             if (EnzymeTable.IsNonSpecific(EnzymeTable.GetByIndex(digest.EnzymeIndex)))
@@ -1182,6 +1179,27 @@ namespace pwiz.CarafeSharp.Proteome
             if (!int.TryParse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int result))
                 throw new ArgumentException(string.Format(@"Invalid integer for {0}: {1}", option.ArgumentText, value));
             return result;
+        }
+
+        /// <summary>
+        /// An <see cref="ARG_ENZYME"/> value: an index into the table, as Carafe takes it, or any
+        /// name in it (Carafe takes NoCut). Anything else names the option and the table.
+        /// </summary>
+        private static int ParseEnzyme(string value)
+        {
+            var enzymes = EnzymeTable.All;
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int index) &&
+                index >= 0 && index < enzymes.Count)
+            {
+                return index;
+            }
+            for (int i = 0; i < enzymes.Count; i++)
+            {
+                if (string.Equals(enzymes[i].Name, value, StringComparison.OrdinalIgnoreCase))
+                    return i;
+            }
+            throw new ArgumentException(string.Format(@"Invalid value for {0}: {1}. Use a number or a name from the Enzymes table.",
+                ARG_ENZYME.ArgumentText, value));
         }
 
         private static long ParseLong(CarafeArgument option, string value)

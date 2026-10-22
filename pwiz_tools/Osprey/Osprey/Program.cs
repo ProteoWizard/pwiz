@@ -1028,7 +1028,7 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
                     OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
             }
-            // The tuning writes <out>.carafemodel, so tuning from it would overwrite its own input,
+            // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
             // and a re-run would tune again from the last result instead of finding it current.
             if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
                 IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))

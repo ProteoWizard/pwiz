@@ -103,6 +103,13 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model-dir", _folder, @"--tf", @"MS2" }).Warnings
                 .Any(w => w.StartsWith(@"--tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
             AssertUsageError(@"--db", @"x.fasta", @"--fix-mod", @"abc");
+            // --enzyme takes the table's number or name; anything else is an error naming the option.
+            AssertUsageError(@"--db", @"x.fasta", @"--enzyme", @"99");
+            AssertUsageError(@"--db", @"x.fasta", @"--enzyme", @"trypsin/x");
+            StringAssert.Contains(Assert.ThrowsException<ArgumentException>(() =>
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--enzyme", @"2a" })).Message, CarafeCommandLine.ARG_ENZYME.ArgumentText);
+            Assert.AreEqual(EnzymeTable.GetIndexByName(@"nocut"), CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--enzyme", @"NoCut" })
+                .LibrarySettings.Digest.EnzymeIndex);
             AssertUsageError(@"--db", @"x.fasta", @"--max-pep-charge", @"1");
             AssertUsageError(@"--db", @"x.fasta", @"--nce", @"30x");
             AssertUsageError(@"--build-entrapment-fasta", @"o.fasta", @"--db", @"i.fasta", @"--mz-filter", @"--user-var-mods", @"1");

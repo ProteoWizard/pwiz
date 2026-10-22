@@ -376,15 +376,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write TSV report to file.
-        /// </summary>
-        public static string _report {
-            get {
-                return ResourceManager.GetString("_report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resolution mode (default: {0}).
         /// </summary>
         public static string _resolution {

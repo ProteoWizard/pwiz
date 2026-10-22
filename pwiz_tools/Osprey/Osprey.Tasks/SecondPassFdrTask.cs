@@ -1205,9 +1205,11 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Stage 2 passing precursors: {0}", passingPrecursors.Count);
 
             // A search that reports nothing fails rather than succeeding with an empty .blib,
-            // which only a later step could notice.
+            // which only a later step could notice. An earlier run's .blib of the same name is
+            // removed, so nothing reads it as this run's result.
             if (passingEntries.Count == 0)
             {
+                BlibOutputWriter.RemoveOutput(config.OutputBlib);
                 throw new UserMessageException(string.Format(
                     OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
                     config.LibrarySource?.Path, config.ExperimentFdr,
