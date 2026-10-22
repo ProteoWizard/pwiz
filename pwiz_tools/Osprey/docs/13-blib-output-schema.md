@@ -201,9 +201,8 @@ Until 2026-10-15 Osprey also wrote Rust osprey's four tool tables, one row per `
 - **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
   and the library composition carries `blib_reader:2` with the fragment tolerance the typed
   peaks were computed within - in the hash of a `.tsv` library's derived `.blib`, which this
-  reader reads back, and of a `.libcache` an earlier release left ([14](14-intermediate-files.md)
-  section 7). Both carry `BlibLoader.READER_VERSION`, which also covers the modification parsing
-  below.
+  reader reads back ([14](14-intermediate-files.md) section 7). Both carry
+  `BlibLoader.READER_VERSION`, which also covers the modification parsing below.
 
 ### Library annotations are not read
 

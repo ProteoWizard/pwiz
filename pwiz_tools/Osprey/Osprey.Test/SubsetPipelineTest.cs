@@ -153,10 +153,10 @@ namespace pwiz.Osprey.Test
             File.Copy(blib, coldBlib);
             byte[] coldHash = HashFile(blib);
             // The library's finished form is kept in the work directory as a derived .blib, the
-            // library's transfer format, in place of the .libcache, which is no longer written.
+            // library's transfer format, in place of the .libcache, which is never written.
             string derivedLibrary = Path.Combine(straightDir, LIBRARY_FILE + LibraryLoader.DERIVED_LIBRARY_EXT);
             Assert.IsTrue(File.Exists(derivedLibrary), @"no derived library at " + derivedLibrary);
-            Assert.IsFalse(File.Exists(Path.Combine(straightDir, LIBRARY_FILE + LibraryCache.EXT)), @"a .libcache was written");
+            Assert.IsFalse(File.Exists(Path.Combine(straightDir, LIBRARY_FILE + LibraryLoader.RETIRED_CACHE_EXT)), @"a .libcache was written");
             int libraryPrecursors = BlibComparer.CountRows(derivedLibrary, @"RefSpectra");
             AssertHasLine(log, string.Format(OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
                 libraryPrecursors, derivedLibrary));

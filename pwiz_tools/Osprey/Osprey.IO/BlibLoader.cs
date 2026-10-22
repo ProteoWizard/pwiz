@@ -62,9 +62,9 @@ namespace pwiz.Osprey.IO
         /// six-decimal table. 2: every peak is typed from m/z (<see cref="FragmentTyping"/>),
         /// where version 1 left every peak Unknown, and modification text is read residue- and
         /// precision-aware (<see cref="IdentifyModification"/>). Every blib reads differently
-        /// under it, so the library composition term (in the hash of a .tsv's derived .blib, and
-        /// of a <c>.libcache</c>) and the task-key term both carry it for every blib, and a
-        /// change to either moves both by editing this one value.
+        /// under it, so the library composition term (in the hash of a .tsv's derived .blib)
+        /// and the task-key term both carry it for every blib, and a change to either moves
+        /// both by editing this one value.
         /// </summary>
         public const string READER_VERSION = @"4";
 
@@ -181,8 +181,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// The library composition term of a blib read by this reader: its version and the
         /// tolerance it types within, which the typed fragments carry. In the hash of every
-        /// library this reader reads back - a .tsv's derived .blib among them - and of a
-        /// <c>.libcache</c> of a blib source.
+        /// library this reader reads back, a .tsv's derived .blib among them.
         /// </summary>
         public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)
         {

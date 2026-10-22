@@ -121,18 +121,6 @@
     <value>ライブラリファイルが空です：ヘッダー行がありません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
-    <value>ライブラリキャッシュを読み込み中（{0:N0}個のプリカーサー）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
-    <value>ライブラリキャッシュを書き込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
-    <value>ライブラリキャッシュが破損しています（不明なニュートラルロスタグ{0}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
     <value>重複するライブラリプリカーサーを統合中</value>
     <comment>Needs Review:New resource</comment>
@@ -149,20 +137,8 @@
     <value>ライブラリプリカーサーID{0}：</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
-    <value>ライブラリキャッシュの読み込みに失敗しました：{0}。代わりにライブラリファイルを読み取ります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
-    <value>ライブラリキャッシュ「{0}」は別のバージョンのソースライブラリから構築されています。古いキャッシュを無視し、ソースから再構築します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
     <value>{0:N0}個のライブラリプリカーサーを読み込みました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
-    <value>キャッシュ「{1}」から{0:N0}個のライブラリプリカーサーを読み込みました</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
@@ -171,10 +147,6 @@
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
     <value>サポートされていないライブラリ形式：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
-    <value>{1:N0}個のライブラリデコイのうち{0:N0}個をターゲットとペアにしました（{2:F1}%、ライブラリキャッシュから）。{3:N0}個のデコイと{4:N0}個のターゲットにはパートナーがありません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">

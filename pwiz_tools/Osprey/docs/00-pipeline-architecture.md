@@ -383,7 +383,7 @@ end would force a resumed run to redo every phase it had already completed.
 
 ## Principles
 
-Fifteen rules, in four groups. The first group makes the pipeline decomposable, the
+Eighteen rules, in four groups. The first group makes the pipeline decomposable, the
 second bounds its memory, the third makes its files trustworthy, and the fourth makes
 an interrupted run resumable. Each is stated as a rule with the reason it exists,
 because a rule whose reason is not recorded gets optimised away.
@@ -815,6 +815,22 @@ writing later from those artifacts, writes the same file. P16's two-part test ap
 unchanged: the pay-later leg must re-score nothing, and its parquet must be byte-identical to
 the one written with the flag up front.
 
+**P18. A cache is rebuilt from its source, never upgraded or imported in place; a renamed
+cache format removes its predecessor.** A cache (`.spectra.bin`, the derived
+`<library-leaf>.blib`) exists to save a re-read of something the run still has, and its
+validity is a hash of that source plus the reader's term. When the format changes, the old file
+fails that check and the source is read again - a `.spectra.bin` after a schema change is
+rebuilt from the raw file, and fails without it, rather than converted. That is the whole
+mechanism, and there is no second one: no "read the old format for one release" path, no
+converter, no honouring of a predecessor that happens to be valid. Such a path is a second
+reader of the same data, with its own bugs, whose output is trusted exactly as much as the
+first's for the one release in which it saves a user one re-parse. When a cache format
+changes NAME rather than version (the derived `.blib` replaced the `.libcache`), a version
+bump no longer retires the old file, so the new format's writer does what an overwrite would
+have done: once the new file is in place it deletes the old one at exactly the path the old
+writer used, logs the file, and touches nothing else - no sweep. The derived library did this
+wrong first (a `.libcache` was read first "for one release"), which is why the rule is here.
+
 ---
 
 ## The sidecar file contract
@@ -841,7 +857,7 @@ node running that task needs a copy, whatever batch it was handed.
 
 | File | Scope / kind | Written by | Read by | Relay |
 |---|---|---|---|---|
-| `<library-leaf>.blib` (derived library; a `.tsv` source only) | experiment cache | library load, any task | all tasks | ship it, or rebuild locally - it is the finished library in the transfer format, validated by its own `osprey.library_hash` row, and the `.libcache` it replaced is read for one release where one is left |
+| `<library-leaf>.blib` (derived library; a `.tsv` source only) | experiment cache | library load, any task | all tasks | ship it, or rebuild locally - it is the finished library in the transfer format, validated by its own `osprey.library_hash` row (P18: a `.libcache` left by the reload cache it replaced is deleted, never read) |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `FirstPassFDR`, `PerFileRescoring` | with the run, to every leg before `SecondPassFDR` |
@@ -1038,7 +1054,7 @@ both defaulting to "beside the input file":
 | Setting | Sets | Holds |
 |---|---|---|
 | `--output-dir` | `ArtifactPaths.OutputDir` | products: scores parquet, calibration JSON, FDR sidecars, reconciliation JSON |
-| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, the derived `<library-leaf>.blib` (and a `.libcache` an earlier release left) |
+| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, the derived `<library-leaf>.blib` |
 | `--work-dir` | both | the single-flag form |
 
 This is the product/cache split from the contract table made operational. `ResolveOutputDir`
