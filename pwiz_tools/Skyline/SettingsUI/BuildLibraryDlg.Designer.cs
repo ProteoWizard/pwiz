@@ -62,6 +62,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.comboCarafeModel = new System.Windows.Forms.ComboBox();
             this.labelCarafeModel = new System.Windows.Forms.Label();
+            this.labelModWarning = new System.Windows.Forms.Label();
             this.tabFilesSource = new System.Windows.Forms.TabPage();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
@@ -297,6 +298,7 @@ namespace pwiz.Skyline.SettingsUI
             // groupAlphaOptions
             //
             resources.ApplyResources(this.groupAlphaOptions, "groupAlphaOptions");
+            this.groupAlphaOptions.Controls.Add(this.labelModWarning);
             this.groupAlphaOptions.Controls.Add(this.cbUseGpu);
             this.groupAlphaOptions.Controls.Add(this.labelCarafeModel);
             this.groupAlphaOptions.Controls.Add(this.comboCarafeModel);
@@ -322,6 +324,14 @@ namespace pwiz.Skyline.SettingsUI
             //
             resources.ApplyResources(this.labelCarafeModel, "labelCarafeModel");
             this.labelCarafeModel.Name = "labelCarafeModel";
+            //
+            // labelModWarning
+            //
+            resources.ApplyResources(this.labelModWarning, "labelModWarning");
+            this.labelModWarning.AutoEllipsis = true;
+            this.labelModWarning.ForeColor = System.Drawing.Color.DarkRed;
+            this.labelModWarning.Name = "labelModWarning";
+            this.labelModWarning.Visible = false;
             // 
             // tabFilesSource
             // 
@@ -440,6 +450,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.ComboBox comboCarafeModel;
         private System.Windows.Forms.Label labelCarafeModel;
+        private System.Windows.Forms.Label labelModWarning;
         private System.Windows.Forms.TabPage tabKoinaSource;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;

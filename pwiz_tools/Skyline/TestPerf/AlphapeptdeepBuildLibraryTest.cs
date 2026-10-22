@@ -159,17 +159,20 @@ namespace TestPerf
                     buildLibraryDlg.IrtStandard = iRTtype;
             });
 
-            RunUI(buildLibraryDlg.OkWizardPage);
+            // The modification Carafe knows only in part is flagged as soon as the source is chosen,
+            // and asked about before the form closes, so Cancel would return to it
+            RunUI(() => Assert.AreEqual(
+                string.Format(SettingsUIResources.BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_, @"Phospho (ST)"),
+                buildLibraryDlg.ModificationWarning));
+            var limitedModelAlert = ShowDialog<AlertDlg>(buildLibraryDlg.OkWizardPage);
+            Assert.AreEqual(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)), limitedModelAlert.Message);
+            OkDialog(limitedModelAlert, limitedModelAlert.OkDialog);
 
             WaitForCondition(() => buildLibraryDlg.Builder != null);
 
             var alphaPeptDeepBuilder = (AlphapeptdeepLibraryBuilder) buildLibraryDlg.Builder;
             Assert.IsNotNull(alphaPeptDeepBuilder);
             string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
-
-            var limitedModelAlert = WaitForOpenForm<AlertDlg>();
-            Assert.AreEqual(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)), limitedModelAlert.Message);
-            OkDialog(limitedModelAlert, limitedModelAlert.OkDialog);
             if (iRTtype != null)
             {
                 VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());

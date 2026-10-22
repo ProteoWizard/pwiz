@@ -85,6 +85,13 @@ namespace pwiz.SkylineTest
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
             TestGetWarningMods(document, new[] { "Acetyl (N-term)" }); // 1 warning is generated
 
+            // An older document's own definition of Carbamidomethyl (C) - its formula on C, under its own
+            // name and with no UniMod id - is recognized by its definition: no warning, and the peptides
+            // predict with Carbamidomethyl@C instead of being skipped
+            document = CreateTestOldCarbamidomethylDocument();
+            TestGetWarningMods(document, Array.Empty<string>());
+            TestGetPrecursorTable(document, OLD_CARBAMIDOMETHYL_PRECURSOR_TABLE_ANSWER);
+
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
             TestValidateModifications_Limited_Support();
@@ -673,6 +680,27 @@ namespace pwiz.SkylineTest
         {
             return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
+
+        /// <summary>
+        /// Cysteine peptides under an older document's definition of carbamidomethylation: the
+        /// formula of Carbamidomethyl (C) on C, under its own name and with no UniMod id.
+        /// </summary>
+        private SrmDocument CreateTestOldCarbamidomethylDocument()
+        {
+            var document = CreateTestSimpleDocument(new[] { new Peptide("CELVISK"), new Peptide("LIVECSK") });
+            var oldCarbamidomethyl = new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3NO");
+            var peptideSettings = document.Settings.PeptideSettings;
+            return document.ChangeSettings(document.Settings.ChangePeptideSettings(peptideSettings.ChangeModifications(
+                peptideSettings.Modifications.ChangeStaticModifications(new[] { oldCarbamidomethyl }))));
+        }
+
+        /// <summary>The header and the 11 iRT standards, then the cysteine peptides carbamidomethylated.</summary>
+        private IEnumerable<string> OLD_CARBAMIDOMETHYL_PRECURSOR_TABLE_ANSWER =>
+            SIMPLE_PRECURSOR_TABLE_ANSWER.Take(12).Concat(new[]
+            {
+                "CELVISK\tCarbamidomethyl@C\t1\t2",
+                "LIVECSK\tCarbamidomethyl@C\t5\t2"
+            });
 
         private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {

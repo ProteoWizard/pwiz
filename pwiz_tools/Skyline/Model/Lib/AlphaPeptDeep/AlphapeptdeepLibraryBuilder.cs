@@ -111,6 +111,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         };
 
         /// <summary>
+        /// The pretrained models' modification support, for a form to ask about a document's
+        /// modifications before a builder exists.
+        /// </summary>
+        public static readonly LibraryBuilderModificationSupport MODEL_MODIFICATION_SUPPORT =
+            new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
+
+        /// <summary>
         /// The pinned AlphaPeptDeep pretrained models, which the build places beside the Skyline assembly.
         /// </summary>
         public static string PretrainedModelsPath =>
@@ -182,7 +189,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
+            LibraryBuilderModificationSupport = MODEL_MODIFICATION_SUPPORT;
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");

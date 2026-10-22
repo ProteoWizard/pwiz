@@ -664,6 +664,30 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;labelCarafeModel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="labelModWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelModWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 88</value>
+  </data>
+  <data name="labelModWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>308, 13</value>
+  </data>
+  <data name="labelModWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.Name" xml:space="preserve">
+    <value>labelModWarning</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="groupAlphaOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -671,7 +695,7 @@ you can append more spectra in the future.</value>
     <value>3, 3</value>
   </data>
   <data name="groupAlphaOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>320, 92</value>
+    <value>320, 108</value>
   </data>
   <data name="groupAlphaOptions.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

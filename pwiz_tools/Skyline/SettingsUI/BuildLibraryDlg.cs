@@ -295,12 +295,21 @@ namespace pwiz.Skyline.SettingsUI
             if (!carafeModel.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, carafeModel.FilePath))
                 return false;
 
-            Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
+            var builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
                 CarafeModelPath = carafeModel.FilePath,
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu
             };
+            // Asked here, while this form is still up, so that Cancel returns to it rather than to
+            // Peptide Settings with everything chosen here gone
+            string warning = builder.GetWarning();
+            if (!string.IsNullOrEmpty(warning) &&
+                MultiButtonMsgDlg.Show(this, warning, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+            {
+                return false;
+            }
+            Builder = builder;
             // Not when this session already loaded a runtime, which decides the box
             if (TorchRuntimes.CanChooseRuntime)
                 Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
@@ -471,6 +480,30 @@ namespace pwiz.Skyline.SettingsUI
         public string CarafeModelPath
         {
             get { return CarafeModel.FilePath; }
+        }
+
+        /// <summary>
+        /// Says, as soon as Carafe is chosen, which of the document's modifications the pretrained
+        /// models do not know or support only in part, so the user does not learn it from the
+        /// question asked when the build starts.
+        /// </summary>
+        private void UpdateModificationWarning()
+        {
+            var warningMods = AbstractDeepLibraryBuilder.GetWarningMods(_documentUiContainer.DocumentUI,
+                AlphapeptdeepLibraryBuilder.MODEL_MODIFICATION_SUPPORT);
+            labelModWarning.Visible = warningMods.Count > 0;
+            if (warningMods.Count > 0)
+            {
+                string mods = warningMods.Keys.OrderBy(name => name).CommaSeparateListItems();
+                labelModWarning.Text = string.Format(SettingsUIResources.BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_, mods);
+                helpTip.SetToolTip(labelModWarning, AbstractDeepLibraryBuilder.GetWarning(warningMods));
+            }
+        }
+
+        /// <summary>The modifications the pretrained models do not know or support only in part, as shown; for tests.</summary>
+        public string ModificationWarning
+        {
+            get { return labelModWarning.Visible ? labelModWarning.Text : null; }
         }
 
         /// <summary>The combo's Add..., for tests: opens the model editor and adds its model to the list.</summary>
@@ -1063,6 +1096,7 @@ namespace pwiz.Skyline.SettingsUI
                     // for the other library sources
                     UpdateUseGpu();
                     var unused = CarafeModelDriver;
+                    UpdateModificationWarning();
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 }
                 else // must be Koina

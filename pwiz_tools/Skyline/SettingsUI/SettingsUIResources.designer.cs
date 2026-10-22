@@ -380,6 +380,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Limited or no support for: {0}.
+        /// </summary>
+        public static string BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Looking for an NVIDIA GPU.
         /// </summary>
         public static string BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU {
