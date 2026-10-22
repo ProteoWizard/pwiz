@@ -309,6 +309,38 @@ namespace pwiz.Osprey.Core
         public DemuxMode DemuxMode { get; set; } = DemuxMode.off;
 
         /// <summary>
+        /// Who centroids profile spectra (<c>--centroid</c>): the vendor library, as msconvert's
+        /// "peakPicking vendor" does, or Centrix, Osprey's lasso centroider for ion trap profile
+        /// data. Enters the search hash only when not vendor, so existing caches and goldens are
+        /// unaffected.
+        /// </summary>
+        public CentroidMode CentroidMode { get; set; } = CentroidMode.vendor;
+
+        /// <summary>
+        /// With Centrix, the MS1 profile peak sigma in Th (<c>--centrix-sigma-ms1</c>). The default
+        /// is the Thermo Stellar's survey scan (1/15 Th points). Ion trap peaks have a narrow core and
+        /// broad wings, so a sigma fitted to them depends on how much of the peak the fit sees (on the
+        /// Stellar MS2, 0.31 Th from three points to 0.61 Th from eleven); it is a setting rather than
+        /// a measurement for that reason.
+        /// </summary>
+        public double CentrixSigmaMs1 { get; set; } = DEFAULT_CENTRIX_SIGMA_MS1;
+
+        /// <summary>
+        /// With Centrix, the MS2 profile peak sigma in Th (<c>--centrix-sigma-ms2</c>). The default is
+        /// the Thermo Stellar's MS2 (0.2 Th points), its half-maximum width of 0.77 Th.
+        /// </summary>
+        public double CentrixSigmaMs2 { get; set; } = DEFAULT_CENTRIX_SIGMA_MS2;
+
+        public const double DEFAULT_CENTRIX_SIGMA_MS1 = 0.2;
+        public const double DEFAULT_CENTRIX_SIGMA_MS2 = 0.33;
+
+        /// <summary>
+        /// With Centrix, solve each region's lasso exactly by its active set rather than by
+        /// Centrix's own coordinate descent (<c>--centrix-solver</c>).
+        /// </summary>
+        public bool CentrixActiveSet { get; set; }
+
+        /// <summary>
         /// Protein-level FDR threshold. Optional on the command line
         /// (<c>--protein-fdr</c>); when unset, <see cref="EffectiveProteinFdr"/>
         /// falls back to <see cref="DefaultProteinFdr"/>. To match Rust osprey
@@ -632,6 +664,18 @@ namespace pwiz.Osprey.Core
         All,
         Razor,
         Unique
+    }
+
+    /// <summary>
+    /// Who centroids profile spectra. Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum CentroidMode
+    {
+        /// <summary>The vendor library's centroiding; the default.</summary>
+        vendor,
+
+        /// <summary>Centrix, the non-negative lasso centroider for unit-resolution (ion trap) profile data.</summary>
+        centrix,
     }
 
     /// <summary>

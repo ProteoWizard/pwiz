@@ -1330,6 +1330,9 @@
   <data name="ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_" xml:space="preserve">
     <value>Spectra cache stale or invalid; re-parsing the input.</value>
   </data>
+  <data name="ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2" xml:space="preserve">
+    <value>Centroided the profile spectra with Centrix: peak sigma {0:F3} Th for MS1, {1:F3} Th for MS2</value>
+  </data>
   <data name="ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_" xml:space="preserve">
     <value>Streaming spectra from cache: {0}</value>
   </data>

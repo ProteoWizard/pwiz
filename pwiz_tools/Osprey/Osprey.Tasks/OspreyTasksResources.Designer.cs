@@ -3981,7 +3981,17 @@ namespace pwiz.Osprey.Tasks {
                         "recursor_candidates_of_every_run_in_memory_at_once_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Centroided the profile spectra with Centrix: peak sigma {0:F3} Th for MS1, {1:F3} Th for MS2.
+        /// </summary>
+        public static string ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2 {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix_" +
+                        "_peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Could not index the spectra cache for &apos;{0}&apos;. Per-file scoring reads MS/MS spectra from &apos;{1}&apos;; make sure that folder is writable (the {2} and {3} files are written to the same place)..
         /// </summary>

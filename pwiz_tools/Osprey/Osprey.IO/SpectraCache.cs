@@ -310,8 +310,9 @@ namespace pwiz.Osprey.IO
             // Preserve the historical filename ("{stem}.spectra.bin", the same
             // result Path.ChangeExtension produced); only the directory is
             // redirected by ArtifactPaths (beside the data file by default, else
-            // the configured cache/output dir).
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT;
+            // the configured cache/output dir), and the processing tag inserted when
+            // Osprey centroided the spectra itself.
+            string fileName = TaggedStem(inputFile) + EXT;
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
@@ -346,8 +347,16 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string GetDemuxCachePath(string inputFile)
         {
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + ".demux.spectra.bin";
+            string fileName = TaggedStem(inputFile) + ".demux.spectra.bin";
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
+        }
+
+        /// <summary>The input's file name stem, with <see cref="ArtifactPaths.SpectraCacheTag"/> appended when set.</summary>
+        private static string TaggedStem(string inputFile)
+        {
+            string stem = Path.GetFileNameWithoutExtension(inputFile);
+            string tag = ArtifactPaths.SpectraCacheTag;
+            return string.IsNullOrEmpty(tag) ? stem : stem + @"." + tag;
         }
 
         #region Private helpers

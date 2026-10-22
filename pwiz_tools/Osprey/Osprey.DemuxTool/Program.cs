@@ -46,10 +46,10 @@ namespace pwiz.Osprey.DemuxTool
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered|none]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
-            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" +
+            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
             @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
-            @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]";
+            @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]"; // Arg literal OK: DemuxTool's own option vocabulary
 
         private static int Main(string[] args)
         {
@@ -276,7 +276,7 @@ namespace pwiz.Osprey.DemuxTool
                         // Where the joint solve's time goes, summed over threads, logged at the end.
                         JointDemuxProfile.Enabled = true;
                         break;
-                    case @"--centroid":
+                    case @"--centroid": // Arg literal OK: DemuxTool's own option vocabulary
                         // events: the profile centroided keeping every single ion event; vendor: the
                         // vendor library's centroids (the default for a vendor file); centrix: the profile
                         // read, and the output spectra centroided by the Centrix lasso (a linear ion trap's).
@@ -289,7 +289,7 @@ namespace pwiz.Osprey.DemuxTool
                         // Centrix: the MS2 profile peak's sigma, in Th (default 0.33, the Stellar's).
                         centrixMs2.SigmaTh = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
-                    case @"--centrix-sigma-ms1":
+                    case @"--centrix-sigma-ms1": // Arg literal OK: DemuxTool's own option vocabulary
                         // Centrix: the MS1 profile peak's sigma, in Th (default the MS2 sigma).
                         centrixSigmaMs1 = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
@@ -549,6 +549,8 @@ namespace pwiz.Osprey.DemuxTool
                 property.SetValue(parameters, text.Split(',').Select(v => double.Parse(v, CultureInfo.InvariantCulture)).ToArray());
             else if (property.PropertyType.IsArray)
                 return false;
+            else if (property.PropertyType.IsEnum)
+                property.SetValue(parameters, Enum.Parse(property.PropertyType, text));
             else
                 property.SetValue(parameters, Convert.ChangeType(text, property.PropertyType, CultureInfo.InvariantCulture));
             Console.WriteLine(@"Setting: {0}", assignment);

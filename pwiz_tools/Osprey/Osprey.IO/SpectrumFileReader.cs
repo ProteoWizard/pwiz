@@ -25,7 +25,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Pwiz.Data.MsData.Readers;
+using pwiz.Osprey.Centroid;
 using pwiz.Osprey.Core;
 using pwiz.ProteowizardWrapper;
 
@@ -74,6 +76,9 @@ namespace pwiz.Osprey.IO
         private const string OSPREY_SOLUTION = @"Osprey.sln";
         private const string BJAM_VENDOR_LICENSES = @"bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses";
 
+        // Centrix: spectra read, then centroided in parallel, this many at a time.
+        private const int CENTROID_BATCH = 512;
+
         private static int _vendorFailuresReported;
 
         /// <summary>
@@ -81,13 +86,25 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static SpectrumFileResult LoadAllSpectra(string path)
         {
+            return LoadAllSpectra(path, null);
+        }
+
+        /// <summary>
+        /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file; with
+        /// <paramref name="centroiding"/>, profile spectra are read as acquired, vendor files included, and
+        /// centroided by Centrix as they are read. Spectra the file holds centroided pass through.
+        /// </summary>
+        public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding)
+        {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
             int unsortedCount = 0;
+            double sigmaMs1 = double.NaN, sigmaMs2 = double.NaN;
 
             ReportVendorRegistrationFailures();
 
-            bool vendorFormat = IsVendorFormat(path);
+            // Centroiding the profile ourselves means asking the vendor library for none.
+            bool vendorFormat = IsVendorFormat(path) && centroiding == null;
             try
             {
                 // Every argument that differs from the wrapper's default is Osprey's read
@@ -141,11 +158,37 @@ namespace pwiz.Osprey.IO
                                string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count,
                                string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
-                        for (int i = 0; i < count; i++)
+                        if (centroiding == null)
                         {
-                            AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
-                                ref unsortedCount);
-                            progress.Report(i + 1);
+                            for (int i = 0; i < count; i++)
+                            {
+                                AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
+                                    ref unsortedCount);
+                                progress.Report(i + 1);
+                            }
+                        }
+                        else
+                        {
+                            var centroiders = CreateCentroiders(centroiding);
+                            sigmaMs1 = centroiding.Ms1.SigmaTh;
+                            sigmaMs2 = centroiding.Ms2.SigmaTh;
+                            // Read in order, centroided in parallel a batch at a time: Centrix costs several
+                            // times the read, and each spectrum is centroided on its own.
+                            var batch = new MsDataSpectrum[CENTROID_BATCH];
+                            var parallel = new ParallelOptions { MaxDegreeOfParallelism = centroiding.Threads };
+                            for (int start = 0; start < count; start += CENTROID_BATCH)
+                            {
+                                int size = Math.Min(CENTROID_BATCH, count - start);
+                                for (int k = 0; k < size; k++)
+                                    batch[k] = msData.GetSpectrum(start + k);
+                                Parallel.For(0, size, parallel, k => CentroidProfile(batch[k], centroiders));
+                                for (int k = 0; k < size; k++)
+                                {
+                                    AddSpectrum(batch[k], start + k, ms2Spectra, ms1Spectra, ref unsortedCount);
+                                    batch[k] = null;
+                                }
+                                progress.Report(start + size);
+                            }
                         }
                     }
                 }
@@ -182,7 +225,11 @@ namespace pwiz.Osprey.IO
                     path, MSBUILD_VENDOR_LICENSES, OSPREY_SOLUTION, BJAM_VENDOR_LICENSES, CMD_MSCONVERT), ex);
             }
 
-            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);
+            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount)
+            {
+                CentroidSigmaMs1 = sigmaMs1,
+                CentroidSigmaMs2 = sigmaMs2,
+            };
         }
 
         /// <summary>
@@ -259,6 +306,32 @@ namespace pwiz.Osprey.IO
             if (string.Equals(ext, @".gz", StringComparison.OrdinalIgnoreCase))
                 ext = Path.GetExtension(Path.GetFileNameWithoutExtension(path));
             return string.Equals(ext, EXT_MZML, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>The Centrix centroider of each MS level, index 1 for MS1 and 2 for every MS2 and above.</summary>
+        private static CentrixCentroider[] CreateCentroiders(CentroidingOptions centroiding)
+        {
+            return new[] { null, new CentrixCentroider(centroiding.Ms1), new CentrixCentroider(centroiding.Ms2) };
+        }
+
+        /// <summary>A profile spectrum's peaks replaced by its Centrix centroids; any other spectrum unchanged.</summary>
+        private static void CentroidProfile(MsDataSpectrum spectrum, CentrixCentroider[] centroiders)
+        {
+            if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||
+                spectrum.Intensities == null || spectrum.Intensities.Length != spectrum.Mzs.Length)
+            {
+                return;
+            }
+            var centroids = centroiders[Math.Min(spectrum.Level, 2)].Centroid(spectrum.Mzs, spectrum.Intensities);
+            var mzs = new double[centroids.Count];
+            var intensities = new double[centroids.Count];
+            for (int i = 0; i < centroids.Count; i++)
+            {
+                mzs[i] = centroids[i].Mz;
+                intensities[i] = centroids[i].Intensity;
+            }
+            spectrum.SetArrays(mzs, intensities);
+            spectrum.Centroided = true;
         }
 
         private static void AddSpectrum(MsDataSpectrum spectrum, int spectrumIndex,
@@ -349,6 +422,12 @@ namespace pwiz.Osprey.IO
         public List<Spectrum> Ms2Spectra { get; private set; }
         public List<MS1Spectrum> Ms1Spectra { get; private set; }
         public int UnsortedSpectrumCount { get; private set; }
+
+        /// <summary>The peak sigma, Th, Centrix centroided MS1 with; NaN when it did not centroid.</summary>
+        public double CentroidSigmaMs1 { get; set; } = double.NaN;
+
+        /// <summary>The peak sigma, Th, Centrix centroided MS2 with; NaN when it did not centroid.</summary>
+        public double CentroidSigmaMs2 { get; set; } = double.NaN;
 
         public SpectrumFileResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
         {

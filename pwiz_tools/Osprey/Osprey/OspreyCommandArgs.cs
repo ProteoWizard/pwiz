@@ -138,10 +138,23 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_DEMUX = new OspreyArgument(OspreyArgNames.DEMUX,
             new[] { @"off", @"auto" }, (c, p) => c._config.DemuxMode =
                 p.Value.ToLowerInvariant() == @"auto" ? DemuxMode.auto : DemuxMode.off) { DescriptionArgs = () => new object[] { @"off" } };
+        public static readonly OspreyArgument ARG_CENTROID = new OspreyArgument(OspreyArgNames.CENTROID,
+            new[] { @"vendor", @"centrix" }, (c, p) => c._config.CentroidMode =
+                p.Value.ToLowerInvariant() == @"centrix" ? CentroidMode.centrix : CentroidMode.vendor) { DescriptionArgs = () => new object[] { @"vendor" } };
+        public static readonly OspreyArgument ARG_CENTRIX_SIGMA_MS1 = new OspreyArgument(OspreyArgNames.CENTRIX_SIGMA_MS1,
+            () => @"<Th>", (c, p) => c._config.CentrixSigmaMs1 = ParseDouble(p))
+            { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText, OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS1 } };
+        public static readonly OspreyArgument ARG_CENTRIX_SIGMA_MS2 = new OspreyArgument(OspreyArgNames.CENTRIX_SIGMA_MS2,
+            () => @"<Th>", (c, p) => c._config.CentrixSigmaMs2 = ParseDouble(p))
+            { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText, OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS2 } };
+        public static readonly OspreyArgument ARG_CENTRIX_SOLVER = new OspreyArgument(OspreyArgNames.CENTRIX_SOLVER,
+            new[] { @"descent", @"active-set" }, (c, p) => c._config.CentrixActiveSet = p.Value.ToLowerInvariant() == @"active-set")
+            { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText, @"descent" } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_SCORING =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Scoring_Tolerance, true,
-                ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_NO_PREFILTER, ARG_DEMUX);
+                ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_NO_PREFILTER, ARG_DEMUX, ARG_CENTROID,
+                ARG_CENTRIX_SIGMA_MS1, ARG_CENTRIX_SIGMA_MS2, ARG_CENTRIX_SOLVER);
 
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",

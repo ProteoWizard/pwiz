@@ -41,6 +41,12 @@ namespace pwiz.Osprey.Centroid
     /// </summary>
     public sealed class CentrixCentroider
     {
+        /// <summary>
+        /// The version of this centroider's output. Raise it with any change that moves a centroid, so the spectra caches
+        /// written with the previous version are rebuilt rather than reused.
+        /// </summary>
+        public const int ALGORITHM_VERSION = 1;
+
         /// <summary>Spectra whose detected spacing is within this fraction of the cached basis's reuse it.</summary>
         private const double SPACING_REUSE_TOLERANCE = 1e-6;
 
@@ -140,8 +146,7 @@ namespace pwiz.Osprey.Centroid
                 double lambda = p.LambdaFactor * refined.NoiseAt(region.CenterMz);
                 if (!NeedsRefit(fit.Lambda, lambda, p.LambdaChangeThreshold))
                     continue;
-                var beta = NonNegativeLasso.Solve(fit.Aty, basis.GramRow, lambda, fit.Beta, p.MaxIterations, p.Tolerance,
-                    out _, out _);
+                var beta = Solve(fit.Aty, basis.GramRow, lambda, fit.Beta);
                 centroids.RemoveAll(c => c.Mz >= region.MzStart && c.Mz <= region.MzEnd);
                 AddCentroids(beta, fit.Grid, basis, centroids);
             }
@@ -193,8 +198,7 @@ namespace pwiz.Osprey.Centroid
                 for (int j = 0; j < columns; j++)
                     aty[j] += a[row + j] * y;
             }
-            var beta = NonNegativeLasso.Solve(aty, basis.GramRow, lambda, null, _parameters.MaxIterations,
-                _parameters.Tolerance, out _, out _);
+            var beta = Solve(aty, basis.GramRow, lambda, null);
             bool any = false;
             foreach (double b in beta)
                 any |= b > 0;
@@ -211,6 +215,22 @@ namespace pwiz.Osprey.Centroid
                 residuals[i] = intensity[region.Start + i] - fitted;
             }
             return new RegionFit(index, grid, aty, beta, lambda, (mz[region.Start] + mz[region.End]) / 2, residuals);
+        }
+
+        /// <summary>
+        /// A region's lasso by the chosen solver; an active-set solve that fails numerically falls back to coordinate
+        /// descent.
+        /// </summary>
+        private double[] Solve(double[] aty, double[] gramRow, double lambda, double[] warmStart)
+        {
+            if (_parameters.Solver == CentrixSolver.active_set)
+            {
+                var beta = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, warmStart, out _);
+                if (beta != null)
+                    return beta;
+            }
+            return NonNegativeLasso.Solve(aty, gramRow, lambda, warmStart, _parameters.MaxIterations, _parameters.Tolerance,
+                out _, out _);
         }
 
         private static void AddCentroids(double[] beta, double[] grid, CentrixBasis basis,

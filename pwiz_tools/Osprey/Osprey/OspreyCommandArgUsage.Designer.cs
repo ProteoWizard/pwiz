@@ -70,6 +70,42 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With {0} centrix: the MS1 profile peak sigma in Th (default: {1}, a Thermo Stellar&apos;s).
+        /// </summary>
+        public static string _centrix_sigma_ms1 {
+            get {
+                return ResourceManager.GetString("_centrix_sigma_ms1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} centrix: the MS2 profile peak sigma in Th (default: {1}, a Thermo Stellar&apos;s).
+        /// </summary>
+        public static string _centrix_sigma_ms2 {
+            get {
+                return ResourceManager.GetString("_centrix_sigma_ms2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} centrix: how each region of a spectrum is fitted. descent: Centrix&apos;s own coordinate descent; active-set: the exact optimum of the same fit, several times faster (default: {1}).
+        /// </summary>
+        public static string _centrix_solver {
+            get {
+                return ResourceManager.GetString("_centrix_solver", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Who centroids profile spectra: the vendor library, or Centrix, a lasso centroider for ion trap (unit resolution) profile data that separates peaks closer than 1 Th. Centrix reads the profile even from a vendor file, and its spectra are cached apart from the vendor-centroided ones (default: {0}).
+        /// </summary>
+        public static string _centroid {
+            get {
+                return ResourceManager.GetString("_centroid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to FDRBench 5-column pairing manifest (TSV), used with {0}.
         /// </summary>
         public static string _decoy_pairing_manifest {
@@ -95,7 +131,7 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_demux", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Write developer diagnostic dump files, for comparison with the Rust implementation.
         /// </summary>

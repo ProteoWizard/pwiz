@@ -36,6 +36,12 @@ namespace pwiz.Osprey.Centroid
         public const int CHECK_FREQUENCY = 10;
 
         /// <summary>
+        /// The active-set solve stops when no coefficient's rho exceeds lambda by more than this fraction of the
+        /// largest A'y: far below a profile's precision, far above the rounding of the small solves.
+        /// </summary>
+        public const double ACTIVE_SET_TOLERANCE = 1e-11;
+
+        /// <summary>
         /// The solution, from zeros or from a warm start (copied, not changed). Iterations and convergence are
         /// returned for tests and diagnostics.
         /// </summary>
@@ -112,6 +118,115 @@ namespace pwiz.Osprey.Centroid
         }
 
         /// <summary>
+        /// The exact solution of the same problem, written as <c>min 1/2 b'Gb - (A'y - lambda)'b</c> subject to b &gt;= 0
+        /// and solved by Lawson and Hanson's active-set method: the passive set (coefficients above zero) is solved
+        /// exactly, stepping back to feasibility whenever a solve leaves one at or below zero, and the coefficient whose
+        /// rho most exceeds lambda joins it, until none does. That is the point coordinate descent converges to, reached
+        /// in about as many small solves as there are peaks rather than hundreds of sweeps. A warm start's coefficients
+        /// above zero start the passive set. Null when a passive system is not numerically positive definite or the
+        /// set cycles, for the caller to fall back to <see cref="Solve"/>.
+        /// </summary>
+        public static double[] SolveActiveSet(double[] aty, double[] gramRow, double lambda, double[] warmStart,
+            out int iterations)
+        {
+            int n = aty.Length;
+            iterations = 0;
+            var beta = new double[n];
+            if (n == 0)
+                return beta;
+
+            var c = new double[n];
+            double scale = 0;
+            for (int j = 0; j < n; j++)
+            {
+                c[j] = aty[j] - lambda;
+                scale = Math.Max(scale, Math.Abs(aty[j]));
+            }
+            double tolerance = ACTIVE_SET_TOLERANCE * scale;
+            var passive = new List<int>();
+            var isPassive = new bool[n];
+            if (warmStart != null)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if (warmStart[j] > 0)
+                    {
+                        beta[j] = warmStart[j];
+                        passive.Add(j);
+                        isPassive[j] = true;
+                    }
+                }
+            }
+
+            int maxIterations = 4 * n + 20;
+            while (iterations < maxIterations)
+            {
+                iterations++;
+                // Optimal on the passive set: each solve that leaves a coefficient at or below zero is taken only as
+                // far as the first coefficient it zeroes, which leaves the set.
+                while (passive.Count > 0)
+                {
+                    var s = SolvePassive(passive, c, gramRow);
+                    if (s == null)
+                        return null;
+                    double alpha = 1;
+                    int leaving = -1;
+                    for (int p = 0; p < passive.Count; p++)
+                    {
+                        if (s[p] > 0)
+                            continue;
+                        double current = beta[passive[p]];
+                        double step = current > 0 ? current / (current - s[p]) : 0;
+                        if (step < alpha)
+                        {
+                            alpha = step;
+                            leaving = p;
+                        }
+                    }
+                    if (leaving < 0)
+                    {
+                        for (int p = 0; p < passive.Count; p++)
+                            beta[passive[p]] = s[p];
+                        break;
+                    }
+                    for (int p = 0; p < passive.Count; p++)
+                        beta[passive[p]] += alpha * (s[p] - beta[passive[p]]);
+                    beta[passive[leaving]] = 0;
+                    for (int p = passive.Count - 1; p >= 0; p--)
+                    {
+                        if (beta[passive[p]] <= 0)
+                        {
+                            beta[passive[p]] = 0;
+                            isPassive[passive[p]] = false;
+                            passive.RemoveAt(p);
+                        }
+                    }
+                }
+
+                // The coefficient outside the set whose rho exceeds lambda the most, ties to the lowest index.
+                int entering = -1;
+                double most = tolerance;
+                for (int j = 0; j < n; j++)
+                {
+                    if (isPassive[j])
+                        continue;
+                    double w = c[j] - GramDot(j, beta, gramRow, passive);
+                    if (w > most)
+                    {
+                        most = w;
+                        entering = j;
+                    }
+                }
+                if (entering < 0)
+                    return beta;
+                int at = passive.BinarySearch(entering);
+                passive.Insert(~at, entering);
+                isPassive[entering] = true;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// One centroid per coefficient above zero, at its position, moved to the vertex of the parabola through the
         /// logarithms of it and its neighbors when both neighbors are above zero, the parabola opens downward and the
         /// vertex is within half a spacing. The intensity is the coefficient; <see cref="CentrixBasis.AreaScale"/>
@@ -162,6 +277,65 @@ namespace pwiz.Osprey.Centroid
             for (int k = lo; k < hi; k++)
                 dot += gramRow[Math.Abs(k - j)] * beta[k];
             return aty[j] - dot + gramRow[0] * beta[j];
+        }
+
+        /// <summary><c>(G b)_j</c> over the passive coefficients, the only ones above zero.</summary>
+        private static double GramDot(int j, double[] beta, double[] gramRow, List<int> passive)
+        {
+            double dot = 0;
+            foreach (int k in passive)
+            {
+                int d = Math.Abs(k - j);
+                if (d < gramRow.Length)
+                    dot += gramRow[d] * beta[k];
+            }
+            return dot;
+        }
+
+        /// <summary>
+        /// The solution of <c>G_PP s = c_P</c> by Cholesky factorization, ordered as the passive set; null when a pivot
+        /// is not positive, that is, when the set's peaks are too nearly dependent to solve in double precision.
+        /// </summary>
+        private static double[] SolvePassive(List<int> passive, double[] c, double[] gramRow)
+        {
+            int m = passive.Count;
+            var l = new double[m * m];
+            for (int i = 0; i < m; i++)
+            {
+                for (int k = 0; k <= i; k++)
+                {
+                    int d = Math.Abs(passive[i] - passive[k]);
+                    double sum = d < gramRow.Length ? gramRow[d] : 0;
+                    for (int t = 0; t < k; t++)
+                        sum -= l[i * m + t] * l[k * m + t];
+                    if (i == k)
+                    {
+                        if (!(sum > 0))
+                            return null;
+                        l[i * m + i] = Math.Sqrt(sum);
+                    }
+                    else
+                    {
+                        l[i * m + k] = sum / l[k * m + k];
+                    }
+                }
+            }
+            var s = new double[m];
+            for (int i = 0; i < m; i++)
+            {
+                double sum = c[passive[i]];
+                for (int t = 0; t < i; t++)
+                    sum -= l[i * m + t] * s[t];
+                s[i] = sum / l[i * m + i];
+            }
+            for (int i = m - 1; i >= 0; i--)
+            {
+                double sum = s[i];
+                for (int t = i + 1; t < m; t++)
+                    sum -= l[t * m + i] * s[t];
+                s[i] = sum / l[i * m + i];
+            }
+            return s;
         }
     }
 }

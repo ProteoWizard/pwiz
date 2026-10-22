@@ -100,6 +100,18 @@
   <data name="_cache_dir" xml:space="preserve">
     <value>Directory for the {0} cache (overrides {1})</value>
   </data>
+  <data name="_centrix_sigma_ms1" xml:space="preserve">
+    <value>With {0} centrix: the MS1 profile peak sigma in Th (default: {1}, a Thermo Stellar's)</value>
+  </data>
+  <data name="_centrix_sigma_ms2" xml:space="preserve">
+    <value>With {0} centrix: the MS2 profile peak sigma in Th (default: {1}, a Thermo Stellar's)</value>
+  </data>
+  <data name="_centrix_solver" xml:space="preserve">
+    <value>With {0} centrix: how each region of a spectrum is fitted. descent: Centrix's own coordinate descent; active-set: the exact optimum of the same fit, several times faster (default: {1})</value>
+  </data>
+  <data name="_centroid" xml:space="preserve">
+    <value>Who centroids profile spectra: the vendor library, or Centrix, a lasso centroider for ion trap (unit resolution) profile data that separates peaks closer than 1 Th. Centrix reads the profile even from a vendor file, and its spectra are cached apart from the vendor-centroided ones (default: {0})</value>
+  </data>
   <data name="_decoy_pairing_manifest" xml:space="preserve">
     <value>FDRBench 5-column pairing manifest (TSV), used with {0}</value>
   </data>

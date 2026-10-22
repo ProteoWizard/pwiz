@@ -47,6 +47,10 @@ namespace pwiz.Osprey.Core
         public const string VERBOSE = @"verbose";
         public const string TRAINING_EXPORT = @"training-export";
         public const string DEMUX = @"demux";
+        public const string CENTROID = @"centroid";
+        public const string CENTRIX_SIGMA_MS1 = @"centrix-sigma-ms1";
+        public const string CENTRIX_SIGMA_MS2 = @"centrix-sigma-ms2";
+        public const string CENTRIX_SOLVER = @"centrix-solver";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)

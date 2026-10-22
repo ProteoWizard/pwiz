@@ -205,7 +205,7 @@ namespace pwiz.Osprey.Tasks
             var parseStopwatch = Stopwatch.StartNew();
             try
             {
-                mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile);
+                mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile, ProfileCentroiding.CreateOptions(ctx.Config));
             }
             finally
             {
@@ -213,6 +213,12 @@ namespace pwiz.Osprey.Tasks
                     s_mzmlReadGate.Release();
             }
             double parseSeconds = parseStopwatch.Elapsed.TotalSeconds;
+            if (!double.IsNaN(mzmlResult.CentroidSigmaMs2))
+            {
+                ctx.LogInfo(string.Format(
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2,
+                    mzmlResult.CentroidSigmaMs1, mzmlResult.CentroidSigmaMs2));
+            }
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
             try

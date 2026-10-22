@@ -20,6 +20,18 @@
 
 namespace pwiz.Osprey.Centroid
 {
+    /// <summary>How each region's lasso is solved.</summary>
+    public enum CentrixSolver
+    {
+        /// <summary>Centrix's coordinate descent, stopped at a tolerance or an iteration cap: Rust Centrix's centroids.</summary>
+        coordinate_descent,
+        /// <summary>
+        /// The exact optimum of the same problem, by an active-set (Lawson-Hanson) solve of its few nonzero coefficients:
+        /// the same centroids where coordinate descent converges, the converged ones where it stops at its cap.
+        /// </summary>
+        active_set,
+    }
+
     /// <summary>
     /// Settings of <see cref="CentrixCentroider"/>. The defaults are those of Rust Centrix (maccoss/centrix), so the
     /// same peak sigma gives the same centroids.
@@ -44,6 +56,9 @@ namespace pwiz.Osprey.Centroid
 
         /// <summary>The lasso penalty, as this many noise sigmas.</summary>
         public double LambdaFactor { get; set; } = 3;
+
+        /// <summary>The lasso solver; coordinate descent, Centrix's own, by default.</summary>
+        public CentrixSolver Solver { get; set; } = CentrixSolver.coordinate_descent;
 
         /// <summary>Coordinate descent sweeps before a solve stops unconverged.</summary>
         public int MaxIterations { get; set; } = 2000;

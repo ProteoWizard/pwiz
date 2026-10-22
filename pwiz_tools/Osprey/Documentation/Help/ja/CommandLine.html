@@ -38,6 +38,10 @@ a { color: #1565c0; }
 <tr><td><nobr>--fragment-unit</nobr> &lt;ppm | mz&gt;</td><td>フラグメント許容誤差の単位（デフォルト：ppm）</td></tr>
 <tr><td><nobr>--no-prefilter</nobr></td><td>共溶出シグナルのプレフィルタを無効にします</td></tr>
 <tr><td><nobr>--demux</nobr> &lt;off | auto&gt;</td><td>Demultiplex <nobr>overlapping-window</nobr> (staggered) DIA to its narrow bins before searching (default: off)</td></tr>
+<tr><td><nobr>--centroid</nobr> &lt;vendor | centrix&gt;</td><td>Who centroids profile spectra: the vendor library, or Centrix, a lasso centroider for ion trap (unit resolution) profile data that separates peaks closer than 1 Th. Centrix reads the profile even from a vendor file, and its spectra are cached apart from the <nobr>vendor-centroided</nobr> ones (default: vendor)</td></tr>
+<tr><td><nobr>--centrix-sigma-ms1</nobr>&nbsp;&lt;Th&gt;</td><td>With <nobr>--centroid</nobr> centrix: the MS1 profile peak sigma in Th (default: 0.2, a Thermo Stellar&#39;s)</td></tr>
+<tr><td><nobr>--centrix-sigma-ms2</nobr>&nbsp;&lt;Th&gt;</td><td>With <nobr>--centroid</nobr> centrix: the MS2 profile peak sigma in Th (default: 0.33, a Thermo Stellar&#39;s)</td></tr>
+<tr><td><nobr>--centrix-solver</nobr> &lt;descent | <nobr>active-set</nobr>&gt;</td><td>With <nobr>--centroid</nobr> centrix: how each region of a spectrum is fitted. descent: Centrix&#39;s own coordinate descent; <nobr>active-set</nobr>: the exact optimum of the same fit, several times faster (default: descent)</td></tr>
 </table>
 <div class="RowType">FDRとタンパク質推定</div>
 <table>

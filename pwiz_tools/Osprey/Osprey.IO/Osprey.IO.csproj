@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <!-- Centrix, for profile spectra Osprey centroids itself (CentroidingOptions). -->
+    <ProjectReference Include="..\Osprey.Centroid\Osprey.Centroid.csproj" />
   </ItemGroup>
 
   <!-- ProteoWizard, as the ONLY spectrum reader (issue #4497), reached through the

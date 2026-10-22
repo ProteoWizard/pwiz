@@ -25,7 +25,9 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Centroid;
+using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -208,6 +210,66 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestCentrixActiveSet()
+        {
+            // On random regions of Stellar-like peaks (sigma 0.33 Th on a 0.2 Th grid, neighbors correlated 0.91), the
+            // active-set solution meets the lasso's optimality conditions, which coordinate descent only approaches: no
+            // negative coefficient, rho equal to lambda wherever a coefficient is above zero, and no more than lambda
+            // where it is zero. Its objective is never worse than coordinate descent's at Centrix's settings.
+            const double sigma = 0.33, spacing = 0.2;
+            var random = new Random(4711);
+            var gramRow = CentrixBasis.ComputeGramRow(sigma, spacing);
+            int capped = 0;
+            for (int trial = 0; trial < 300; trial++)
+            {
+                int n = random.Next(5, 41);
+                var mz = Enumerable.Range(0, n).Select(i => 500 + i * spacing).ToArray();
+                var peaks = Enumerable.Range(0, random.Next(1, 5))
+                    .Select(_ => (500 + random.NextDouble() * (n - 1) * spacing, Math.Pow(10, 2 + 3 * random.NextDouble())))
+                    .ToArray();
+                double noise = 5 + 50 * random.NextDouble();
+                var y = GaussianProfile(mz, sigma, peaks).Select(v => Math.Max(0, v + noise * (random.NextDouble() - 0.5))).ToArray();
+                var basis = new CentrixBasis(sigma, spacing, 0);
+                var a = basis.DesignMatrix(mz, 0, n, mz);
+                var aty = new double[n];
+                for (int i = 0; i < n; i++)
+                {
+                    for (int j = 0; j < n; j++)
+                        aty[j] += a[i * n + j] * y[i];
+                }
+                double lambda = 3 * noise;
+
+                var exact = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, null, out _);
+                Assert.IsNotNull(exact, "trial " + trial);
+                double scale = aty.Max(v => Math.Abs(v));
+                for (int j = 0; j < n; j++)
+                {
+                    Assert.IsTrue(exact[j] >= 0);
+                    double excess = NonNegativeLasso.Rho(j, exact, aty, gramRow) - gramRow[0] * exact[j] - lambda;
+                    if (exact[j] > 0)
+                        Assert.AreEqual(0, excess / scale, 1e-9, "trial " + trial + " coefficient " + j);
+                    else
+                        Assert.IsTrue(excess / scale <= 1e-9, "trial " + trial + " coefficient " + j);
+                }
+
+                var descent = NonNegativeLasso.Solve(aty, gramRow, lambda, null, 2000, 1e-6, out _, out bool converged);
+                if (!converged)
+                    capped++;
+                Assert.IsTrue(Objective(exact, aty, gramRow, lambda) <= Objective(descent, aty, gramRow, lambda) + 1e-9 * scale * scale,
+                    "trial " + trial);
+
+                // From a warm start (here the coordinate descent solution at a larger penalty) it reaches the same optimum.
+                var warm = NonNegativeLasso.Solve(aty, gramRow, 1.3 * lambda, null, 2000, 1e-6, out _, out _);
+                var fromWarm = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, warm, out _);
+                Assert.IsNotNull(fromWarm);
+                for (int j = 0; j < n; j++)
+                    Assert.AreEqual(exact[j], fromWarm[j], 1e-7 * scale, "trial " + trial + " warm " + j);
+            }
+            // The regime the active set exists for: some of these coordinate descent leaves at its cap.
+            Assert.IsTrue(capped > 0, "no trial reached the coordinate descent cap");
+        }
+
+        [TestMethod]
         public void TestCentrixRustGolden()
         {
             // Real profile spectra, read by Osprey's reader, centroided as Rust Centrix centroided them: the same number
@@ -260,6 +322,80 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(closeFraction >= GOLDEN_MIN_CLOSE_FRACTION, closeFraction.ToString(CultureInfo.InvariantCulture));
         }
 
+        [TestMethod]
+        public void TestCentrixInOsprey()
+        {
+            // Vendor centroiding is the default and leaves the search hash, the task keys and the cache name unchanged.
+            var config = new OspreyConfig();
+            Assert.AreEqual(CentroidMode.vendor, config.CentroidMode);
+            string vendorHash = config.Identity.SearchParameterHash();
+            Assert.IsNull(ProfileCentroiding.CreateOptions(config));
+            Assert.IsNull(ProfileCentroiding.CacheTag(config));
+            Assert.AreEqual(string.Empty, ProfileCentroiding.ValidityKeySuffix(config));
+
+            // --centroid centrix and its settings; each setting changes the hash and the cache tag.
+            var parsed = OspreyCommandArgs.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_CENTROID + @"centrix",
+                OspreyCommandArgs.ARG_CENTRIX_SIGMA_MS2 + @"0.33", OspreyCommandArgs.ARG_CENTRIX_SOLVER + @"active-set"));
+            Assert.AreEqual(CentroidMode.centrix, parsed.CentroidMode);
+            Assert.AreEqual(0.33, parsed.CentrixSigmaMs2);
+            Assert.AreEqual(OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS1, parsed.CentrixSigmaMs1);
+            Assert.IsTrue(parsed.CentrixActiveSet);
+            config.CentroidMode = CentroidMode.centrix;
+            string centrixHash = config.Identity.SearchParameterHash();
+            string centrixTag = ProfileCentroiding.CacheTag(config);
+            Assert.AreNotEqual(vendorHash, centrixHash);
+            StringAssert.Matches(centrixTag, new System.Text.RegularExpressions.Regex(@"^centrix-[0-9a-f]{8}$"));
+            StringAssert.Contains(ProfileCentroiding.ValidityKeySuffix(config), ProfileCentroiding.Descriptor(config));
+            config.CentrixActiveSet = true;
+            Assert.AreNotEqual(centrixHash, config.Identity.SearchParameterHash());
+            Assert.AreNotEqual(centrixTag, ProfileCentroiding.CacheTag(config));
+            config.CentrixActiveSet = false;
+            config.CentrixSigmaMs2 = 0.3;
+            Assert.AreNotEqual(centrixTag, ProfileCentroiding.CacheTag(config));
+            config.CentrixSigmaMs2 = OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS2;
+            config.CentroidMode = CentroidMode.vendor;
+            Assert.AreEqual(vendorHash, config.Identity.SearchParameterHash());
+
+            // The tag names the spectra cache, and the demultiplexed one, apart from the vendor-centroided ones.
+            string source = Path.Combine(Path.GetTempPath(), @"run.raw");
+            string vendorCache = SpectraCache.GetCachePath(source);
+            try
+            {
+                ArtifactPaths.SpectraCacheTag = centrixTag;
+                string centrixCache = SpectraCache.GetCachePath(source);
+                Assert.AreEqual(Path.GetDirectoryName(vendorCache), Path.GetDirectoryName(centrixCache));
+                Assert.AreEqual(@"run." + centrixTag + SpectraCache.EXT, Path.GetFileName(centrixCache));
+                StringAssert.EndsWith(SpectraCache.GetDemuxCachePath(source), @"run." + centrixTag + @".demux" + SpectraCache.EXT);
+            }
+            finally
+            {
+                ArtifactPaths.SpectraCacheTag = null;
+            }
+            Assert.AreEqual(vendorCache, SpectraCache.GetCachePath(source));
+
+            // The reader centroids the profile it reads into Rust Centrix's centroids, in parallel.
+            string folder = Path.Combine(IOTest.FindPwizRoot(), GOLDEN_FOLDER);
+            var golden = ReadGolden(Path.Combine(folder, GOLDEN_FILE));
+            string input = GOLDEN_INPUTS[0];
+            var options = new CentroidingOptions(new CentrixParams { SigmaTh = GOLDEN_SIGMA_MS1 },
+                new CentrixParams { SigmaTh = GOLDEN_SIGMA_MS2 }, 4);
+            var read = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, input), options);
+            Assert.AreEqual(GOLDEN_SIGMA_MS2, read.CentroidSigmaMs2);
+            var spectra = read.Ms1Spectra.Select((s, i) => (Level: 1, Ordinal: i, s.Mzs, s.Intensities))
+                .Concat(read.Ms2Spectra.Select((s, i) => (Level: 2, Ordinal: i, s.Mzs, s.Intensities))).ToList();
+            Assert.AreEqual(16, spectra.Count);
+            foreach (var spectrum in spectra)
+            {
+                var expected = golden[(input, spectrum.Level, spectrum.Ordinal)];
+                Assert.AreEqual(expected.Count, spectrum.Mzs.Length);
+                for (int k = 0; k < expected.Count; k++)
+                {
+                    Assert.AreEqual(expected[k].Mz, spectrum.Mzs[k], GOLDEN_MZ_TOLERANCE);
+                    Assert.AreEqual(expected[k].Intensity, spectrum.Intensities[k], GOLDEN_INTENSITY_TOLERANCE * expected[k].Intensity);
+                }
+            }
+        }
+
         /// <summary>The golden's centroids by (input file, MS level, ordinal among that level's spectra), in file order.</summary>
         private static Dictionary<(string, int, int), List<(double Mz, double Intensity)>> ReadGolden(string path)
         {
@@ -276,6 +412,25 @@ namespace pwiz.Osprey.Test
                 list.Add((double.Parse(fields[3], CultureInfo.InvariantCulture), double.Parse(fields[4], CultureInfo.InvariantCulture)));
             }
             return golden;
+        }
+
+        /// <summary>The lasso objective in Gram form, <c>1/2 b'Gb - b'A'y + lambda sum(b)</c>.</summary>
+        private static double Objective(double[] beta, double[] aty, double[] gramRow, double lambda)
+        {
+            double value = 0;
+            for (int j = 0; j < beta.Length; j++)
+            {
+                double gb = aty[j] - NonNegativeLasso.Rho(j, beta, aty, gramRow) + gramRow[0] * beta[j];
+                value += 0.5 * beta[j] * gb - beta[j] * aty[j] + lambda * beta[j];
+            }
+            return value;
+        }
+
+        /// <summary>Gaussian peaks of a sigma, in double precision.</summary>
+        private static double[] GaussianProfile(double[] mz, double sigma, (double Center, double Amplitude)[] peaks)
+        {
+            return mz.Select(m => peaks.Sum(p => p.Amplitude * Math.Exp(-(m - p.Center) * (m - p.Center) / (2 * sigma * sigma))))
+                .ToArray();
         }
 
         /// <summary>Gaussian peaks of the test sigma, summed in single precision as a profile's intensities are.</summary>

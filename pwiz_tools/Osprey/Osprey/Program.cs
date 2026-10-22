@@ -325,6 +325,8 @@ namespace pwiz.Osprey
                 // (each artifact in its input file's own directory).
                 ArtifactPaths.OutputDir = config.OutputDir;
                 ArtifactPaths.CacheDir = config.CacheDir;
+                // Spectra Osprey centroided itself are cached under their own name.
+                ArtifactPaths.SpectraCacheTag = ProfileCentroiding.CacheTag(config);
 
                 string err = ValidateArgs(config);
                 if (err != null)
