@@ -132,9 +132,13 @@ namespace pwiz.Osprey.Test
 
                 // The inputs alone are the output's search alone: every library-build phase and the
                 // tuning search are current, and in the output's search the remaining runs' scoring
-                // is too, so only the experiment-wide stages run again.
+                // is too, so only the experiment-wide stages run again. What runs is checked here,
+                // not what passes: two windows of two runs searched with a one-epoch tuning detect
+                // nothing at 1% on some machines (the CPU changes the tuned weights), and a search
+                // that detects nothing fails, so every precursor is reported.
                 string fewer = RunOsprey(TunedArgs(fasta, workDir, inputs.Take(2), tuningRuns)
-                    .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).ToArray(), Verifier(false));
+                    .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7", OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1" }).ToArray(),
+                    Verifier(false));
                 string fewerBuild = SplitAtSearch(fewer, out string fewerSearch);
                 AssertTasks(fewerBuild, TUNING_PHASES.Concat(ALL_TASKS), Array.Empty<string>());
                 AssertTasks(fewerSearch, new[] { PerFileScoringTask.TASK_NAME }, new[] { SecondPassFdrTask.TASK_NAME });
