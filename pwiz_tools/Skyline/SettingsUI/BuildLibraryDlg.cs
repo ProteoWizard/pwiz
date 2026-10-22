@@ -303,8 +303,6 @@ namespace pwiz.Skyline.SettingsUI
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu
             };
-            if (carafeModelPath.Length > 0)
-                AddRecentCarafeModel(carafeModelPath);
             // Not when this session already loaded a runtime, which decides the box
             if (TorchRuntimes.CanChooseRuntime)
                 Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
@@ -338,13 +336,42 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Shows the runtime this session already predicted with, which it cannot change, or else checks
         /// Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is installed.
+        /// Finding the GPU loads the NVIDIA driver and initializes CUDA, which can take a moment, so
+        /// the first time that runs on a background thread with the box disabled until it returns.
         /// </summary>
         private void UpdateUseGpu()
         {
             var runtimes = TorchRuntimes;
-            SetUseGpu(runtimes.CanChooseRuntime
-                ? runtimes.CanUseCuda && runtimes.IsCudaInstalled && Settings.Default.AlphaPeptDeepUseGpu
-                : LibTorchRuntime.Loaded.IsCuda);
+            if (!runtimes.CanChooseRuntime)
+            {
+                SetUseGpu(LibTorchRuntime.Loaded.IsCuda);
+                return;
+            }
+            if (!runtimes.IsCudaDriverFound)
+            {
+                cbUseGpu.Enabled = false;
+                ActionUtil.RunAsync(() =>
+                {
+                    var unused = runtimes.CudaDriver;
+                    try
+                    {
+                        BeginInvoke(new Action(() =>
+                        {
+                            // Unless the runtimes were replaced meanwhile, which updated the box itself
+                            if (!ReferenceEquals(runtimes, _torchRuntimes))
+                                return;
+                            cbUseGpu.Enabled = true;
+                            UpdateUseGpu();
+                        }));
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // The dialog closed before the driver was found
+                    }
+                }, @"Find the CUDA driver");
+                return;
+            }
+            SetUseGpu(runtimes.CanUseCuda && runtimes.IsCudaInstalled && Settings.Default.AlphaPeptDeepUseGpu);
         }
 
         private void cbUseGpu_CheckedChanged(object sender, EventArgs e)
@@ -480,9 +507,10 @@ namespace pwiz.Skyline.SettingsUI
 
         /// <summary>
         /// Puts <paramref name="path"/> first in the recently used models, keeping at most
-        /// <see cref="MAX_RECENT_CARAFE_MODELS"/>.
+        /// <see cref="MAX_RECENT_CARAFE_MODELS"/>. Called once a library has been built with the
+        /// model, so the list offers models that produced a library.
         /// </summary>
-        private static void AddRecentCarafeModel(string path)
+        public static void AddRecentCarafeModel(string path)
         {
             var recent = Settings.Default.CarafeModelList;
             recent.RemoveAll(recentPath => string.Equals(recentPath, path, StringComparison.OrdinalIgnoreCase));

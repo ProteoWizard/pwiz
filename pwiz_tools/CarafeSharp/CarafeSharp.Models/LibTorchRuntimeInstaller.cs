@@ -106,7 +106,15 @@ namespace pwiz.CarafeSharp.Models
                 {
                     continue;
                 }
-                entry.ExtractToFile(Path.Combine(StagingDirectory, parts[3]), true);
+                // The last part must be a plain file name: one with a separator the split did not see
+                // (a backslash) or a parent reference would extract outside the staging folder
+                string fileName = parts[3];
+                if (fileName != Path.GetFileName(fileName) || fileName == @"." || fileName == @"..")
+                {
+                    throw new InvalidDataException(string.Format(@"The package {0} holds {1}, which is not a file name.",
+                        package, entry.FullName));
+                }
+                entry.ExtractToFile(Path.Combine(StagingDirectory, fileName), true);
             }
         }
 

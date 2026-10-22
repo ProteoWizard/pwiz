@@ -43,6 +43,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         private CudaDriver _cudaDriver;
         private bool _cudaDriverFound;
+        private string _applicationDirectory;
+        private string _runtimesDirectory;
+        private LibTorchRuntimeInstaller _cudaInstaller;
+        private bool _cudaInstallerRead;
 
         public TorchRuntimes()
         {
@@ -58,12 +62,28 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// The folder of the Skyline executable, whose torch folder holds the CPU runtime and the
         /// list of the CUDA runtime's packages.
         /// </summary>
-        public string ApplicationDirectory { get; set; }
+        public string ApplicationDirectory
+        {
+            get { return _applicationDirectory; }
+            set
+            {
+                _applicationDirectory = value;
+                _cudaInstallerRead = false;
+            }
+        }
 
         /// <summary>
         /// Where downloaded runtimes are installed.
         /// </summary>
-        public string RuntimesDirectory { get; set; }
+        public string RuntimesDirectory
+        {
+            get { return _runtimesDirectory; }
+            set
+            {
+                _runtimesDirectory = value;
+                _cudaInstallerRead = false;
+            }
+        }
 
         /// <summary>
         /// The NuGet flat container the CUDA runtime's packages are downloaded from.
@@ -91,23 +111,40 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
+        /// <summary>
+        /// Whether <see cref="CudaDriver"/> has been found or set, so asking for it will not load
+        /// the driver now.
+        /// </summary>
+        public bool IsCudaDriverFound => _cudaDriverFound;
+
         public LibTorchRuntime CpuRuntime => new LibTorchRuntime(Path.Combine(ApplicationDirectory, TORCH_FOLDER, CPU_FOLDER));
 
         /// <summary>
-        /// Installs the CUDA runtime, or null when this build lists no CUDA runtime packages.
+        /// Installs the CUDA runtime, or null when this build lists no CUDA runtime packages. Read
+        /// once from the package list, until a folder changes.
         /// </summary>
         public LibTorchRuntimeInstaller CudaInstaller
         {
             get
             {
-                string torchDirectory = Path.Combine(ApplicationDirectory, TORCH_FOLDER);
-                if (!Directory.Exists(torchDirectory))
-                    return null;
-                string packageSetPath = Directory.EnumerateFiles(torchDirectory, @"*" + PACKAGE_SET_SUFFIX).SingleOrDefault();
-                if (packageSetPath == null)
-                    return null;
-                return new LibTorchRuntimeInstaller(LibTorchPackageSet.Read(packageSetPath), RuntimesDirectory);
+                if (!_cudaInstallerRead)
+                {
+                    _cudaInstaller = ReadCudaInstaller();
+                    _cudaInstallerRead = true;
+                }
+                return _cudaInstaller;
             }
+        }
+
+        private LibTorchRuntimeInstaller ReadCudaInstaller()
+        {
+            string torchDirectory = Path.Combine(ApplicationDirectory, TORCH_FOLDER);
+            if (!Directory.Exists(torchDirectory))
+                return null;
+            string packageSetPath = Directory.EnumerateFiles(torchDirectory, @"*" + PACKAGE_SET_SUFFIX).SingleOrDefault();
+            if (packageSetPath == null)
+                return null;
+            return new LibTorchRuntimeInstaller(LibTorchPackageSet.Read(packageSetPath), RuntimesDirectory);
         }
 
         public bool CanUseCuda => CudaDriver?.CanRunLibTorch ?? false;

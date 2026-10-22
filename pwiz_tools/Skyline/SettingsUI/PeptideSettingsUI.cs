@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -838,6 +839,8 @@ namespace pwiz.Skyline.SettingsUI
 
             CompleteLibraryBuild(buildState);
 
+            if (builder is AlphapeptdeepLibraryBuilder { CarafeModelPath: not null } alphaBuilder)
+                BuildLibraryDlg.AddRecentCarafeModel(alphaBuilder.CarafeModelPath);
             Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
             _driverLibrary.LoadList();
             var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);

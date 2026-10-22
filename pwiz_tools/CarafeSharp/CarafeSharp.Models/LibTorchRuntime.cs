@@ -77,8 +77,6 @@ namespace pwiz.CarafeSharp.Models
                     return;
                 }
                 CheckTorchSharpFindsNoOtherLibTorch();
-                // Before loading: a load that fails partway has still put some of these libraries in the process
-                Loaded = this;
                 LoadLibraries();
             }
         }
@@ -86,7 +84,11 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>
         /// Loads the libraries in passes, because a library whose dependencies have not been
         /// found yet can load once they are. Only libtorch itself has to load: TorchSharp also
-        /// tolerates optional CUDA libraries that do not.
+        /// tolerates optional CUDA libraries that do not. This runtime counts as
+        /// <see cref="Loaded"/> from the first library that loads: a load that fails partway has
+        /// still put some of these libraries in the process, while one that put none there - a
+        /// missing or empty folder - leaves the process free to load another runtime and report
+        /// the real error again.
         /// </summary>
         private void LoadLibraries()
         {
@@ -102,6 +104,7 @@ namespace pwiz.CarafeSharp.Models
                     try
                     {
                         NativeLibrary.Load(path);
+                        Loaded = this;
                         remaining.Remove(path);
                         errors.Remove(path);
                         loadedAny = true;

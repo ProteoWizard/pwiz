@@ -116,6 +116,32 @@ namespace pwiz.CarafeSharp.Test
             Install(installer, packageFiles);
             Assert.IsTrue(installer.IsInstalled);
             CollectionAssert.AreEqual(splitBytes, File.ReadAllBytes(Path.Combine(installer.RuntimeDirectory, SPLIT_LIBRARY)));
+
+            TestEntryNameOutsideNativeFolderRefused();
+        }
+
+        /// <summary>
+        /// A package entry whose last part is not a plain file name - a backslash the forward-slash
+        /// split leaves in place, or a parent reference - would extract outside the staging folder,
+        /// so it is refused before anything is written.
+        /// </summary>
+        private void TestEntryNameOutsideNativeFolderRefused()
+        {
+            var packageFiles = new Dictionary<string, string>
+            {
+                { @"slip", MakePackage(@"slip", (@"runtimes/win-x64/native/..\" + SMALL_LIBRARY, MakeBytes(100, 3))) },
+                { @"parent", MakePackage(@"parent", (@"runtimes/win-x64/native/..", MakeBytes(100, 4))) },
+            };
+            var packageSet = WritePackageSetFile(packageFiles);
+            var installer = new LibTorchRuntimeInstaller(packageSet, Path.Combine(_folder, @"runtimes-slip"));
+            installer.Begin();
+            foreach (var package in packageSet.Packages)
+            {
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    installer.AddPackage(package, GetPackageFile(packageFiles, package)), package.Id);
+            }
+            Assert.IsFalse(File.Exists(Path.Combine(installer.RuntimesDirectory, SMALL_LIBRARY)));
+            installer.Abandon();
         }
 
         private static void Install(LibTorchRuntimeInstaller installer, Dictionary<string, string> packageFiles)
