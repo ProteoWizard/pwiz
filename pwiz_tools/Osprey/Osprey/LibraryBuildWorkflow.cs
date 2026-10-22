@@ -398,6 +398,10 @@ namespace pwiz.Osprey
             }
             inputs = task.Inputs(ctx).Where(path => path != null).ToList();
             outputs = task.Outputs(ctx).Where(path => path != null).ToList();
+            // After a tuning the prediction reads the model folder, and on its own it requires the
+            // tuning's checkpoint, the model file, beside it (see Run).
+            if (phase == PREDICT_LIBRARY_TASK && _settings.Training != null)
+                inputs.Add(ModelPath(_config));
             // The pairing manifest is written beside the library it pairs, after the prediction.
             if (phase == PREDICT_LIBRARY_TASK && _config.LibraryBuild.Entrapment)
                 outputs.Add(Path.Combine(WorkDirectory(_config), PAIRING_FILE_NAME));
@@ -487,11 +491,13 @@ namespace pwiz.Osprey
         /// (<paramref name="trainingSearch"/>'s output directory) and resolves the spectra cache as
         /// the output's search resolves it, so a run both analyses read is parsed once and a run
         /// without <c>--output-dir</c> never probes the data directory. For the search in one
-        /// process and for a stage node of it alike.
+        /// process and for a stage node of it alike; <paramref name="createDirectory"/> false for a
+        /// <c>--task-files</c> query, which creates nothing.
         /// </summary>
-        public static IDisposable EnterTrainingSearch(OspreyConfig trainingSearch)
+        public static IDisposable EnterTrainingSearch(OspreyConfig trainingSearch, bool createDirectory = true)
         {
-            Directory.CreateDirectory(trainingSearch.OutputDir);
+            if (createDirectory)
+                Directory.CreateDirectory(trainingSearch.OutputDir);
             string outputDir = ArtifactPaths.OutputDir;
             var cacheScope = ArtifactPaths.ResolveCacheAs(outputDir);
             ArtifactPaths.OutputDir = trainingSearch.OutputDir;

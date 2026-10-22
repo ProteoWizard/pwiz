@@ -361,15 +361,29 @@ namespace pwiz.Osprey.Test
                 .Concat(LibraryBuildArgs(fasta, refusalDir, inputs)).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
             StringAssert.Contains(noRuns, string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
                 OspreyArgNames.TaskText(LibraryBuildWorkflow.TRAIN_MODEL_TASK), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText));
-            // The tuning runs' search, whole or one of its stages, and nothing else.
+            // The tuning runs' search is that search, whole or one of its stages, never a library
+            // phase or a selector.
             foreach (string task in new[] { LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, TrainingExportTask.TASK_NAME })
             {
-                var args = TunedArgs(fasta, refusalDir, inputs, inputs).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText });
-                if (task != null)
-                    args = new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, task }.Concat(args);
+                var args = new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, task }
+                    .Concat(TunedArgs(fasta, refusalDir, inputs, inputs)).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText });
                 StringAssert.Contains(RunOspreyExpecting(args.ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START),
                     OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText);
             }
+            // A stage node is given what its task reads, which is not the FASTA; and a --task-files
+            // query names a node's files before it has any, creating nothing.
+            string absentFasta = Path.Combine(_testDir, @"absent.fasta");
+            string queryDir = Path.Combine(_testDir, @"library-build-hpc-query");
+            var query = RunOsprey(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.PREDICT_LIBRARY_TASK }
+                .Concat(TunedArgs(absentFasta, queryDir, inputs, inputs))
+                .Concat(new[] { OspreyCommandArgs.ARG_TASK_FILES.ArgumentText }).ToArray(), Verifier(false));
+            StringAssert.Contains(query, Path.Combine(queryDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + CarafeModelFile.EXTENSION));
+            Assert.IsFalse(Directory.Exists(queryDir), queryDir);
+            // ... and without -o there is nothing to name the files after.
+            StringAssert.Contains(RunOspreyExpecting(InputArgs(inputs).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_TASK.ArgumentText, PerFileScoringTask.TASK_NAME, OspreyCommandArgs.ARG_FASTA.ArgumentText, fasta
+            }).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START), OspreyCommandArgs.UsageOutput);
             // ... over the tuning runs, which the run must name.
             string noTuning = RunOspreyExpecting(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, PerFileScoringTask.TASK_NAME }
                 .Concat(LibraryBuildArgs(fasta, refusalDir, inputs)).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText }).ToArray(),

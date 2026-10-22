@@ -343,9 +343,16 @@ namespace pwiz.Osprey
                 if (!ReferenceEquals(analysis, config))
                 {
                     if (config.LibraryBuild.TrainingSearch)
-                        trainingSearchScope = LibraryBuildWorkflow.EnterTrainingSearch(analysis);
+                        trainingSearchScope = LibraryBuildWorkflow.EnterTrainingSearch(analysis, !config.PrintTaskFiles);
                     config = analysis;
                 }
+
+                // --task-files describes the task and runs nothing, so it is answered here: before
+                // --log-file takes the output (the list is what the caller reads), before any
+                // directory is created and before anything is checked on disk - a node's files are
+                // what a harness asks about before the node has them.
+                if (config.PrintTaskFiles)
+                    return PrintTaskFiles(config, pipeline, librarySettings);
 
                 // Apply per-line output decoration and optional log-file redirection now
                 // that args have validated (an invalid command line stays on stderr and
@@ -392,11 +399,6 @@ namespace pwiz.Osprey
                 // HPC-worker behavior -- wrapper scripts routinely pass a placeholder
                 // --output -- so it is NOT warned about. The settings block below
                 // reports the real per-file parquet output for this task instead.
-
-                // --task-files describes the task and runs nothing, so it is settled before anything
-                // is checked on disk: a node's files are what it asks about before it has them.
-                if (config.PrintTaskFiles)
-                    return PrintTaskFiles(config, pipeline, librarySettings);
 
                 // --export-library reads the library and nothing else, so it is settled before the
                 // inputs are checked: a reused search command line may name inputs that moved.
@@ -975,7 +977,12 @@ namespace pwiz.Osprey
                 return null;
             }
             if (config.LibraryBuild.Enabled && (config.SelectedTask != null || config.LibraryBuild.TrainingSearch))
+            {
+                // Every file of the one command is named after the output.
+                if (string.IsNullOrEmpty(config.OutputBlib))
+                    return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, OspreyCommandArgs.UsageOutput);
                 analysis = config = LibraryBuildWorkflow.StageConfig(config);
+            }
 
             // --export-library converts the library and exits: it needs the library and nothing
             // else, whatever else the command line holds, so nothing below may refuse it.
@@ -1124,9 +1131,18 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
                     OspreyArgNames.TaskText(build.Phase), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
             }
-            if (!File.Exists(build.FastaPath))
+            // The files are checked where they are read: the whole command, the predictions (the
+            // FASTA, the saved model; the final one the foreign FASTA too) and the tuning (the saved
+            // model). A stage node, the tuning runs' search and a --task-files query read none of
+            // them, and a node is given only what its task reads.
+            bool whole = config.SelectedTask == null && build.Phase == null && !build.TrainingSearch;
+            bool predicts = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.PREDICT_TRAINING_LIBRARY ||
+                                                       build.Phase == LibraryBuildConfig.PREDICT_LIBRARY);
+            bool tunes = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.TRAIN_MODEL);
+            bool predictsOutputLibrary = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.PREDICT_LIBRARY);
+            if (predicts && !File.Exists(build.FastaPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.FastaPath);
-            if (build.ModelPath != null && !File.Exists(build.ModelPath))
+            if ((predicts || tunes) && build.ModelPath != null && !File.Exists(build.ModelPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_Model_file_not_found___0_, build.ModelPath);
             if (build.EntrapmentFastaPath != null)
             {
@@ -1135,7 +1151,7 @@ namespace pwiz.Osprey
                     return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
                         OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
                 }
-                if (!File.Exists(build.EntrapmentFastaPath))
+                if (predictsOutputLibrary && !File.Exists(build.EntrapmentFastaPath))
                     return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.EntrapmentFastaPath);
             }
             if (build.EntrapmentRatio.HasValue &&
