@@ -674,6 +674,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No precursor passed the first pass against {0}: none has a run-level peptide q-value at or below {1} [rest of string was truncated]";.
+        /// </summary>
+        public static string FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot locate the first-pass intermediate files for &apos;{0}&apos;..
         /// </summary>
         public static string FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___ {
@@ -3612,12 +3621,11 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No precursors pass the FDR threshold. Writing an empty {0}..
+        ///   Looks up a localized string similar to No precursor passed the second pass against {0}: none has an experiment-level q-value at or below {1 [rest of string was truncated]";.
         /// </summary>
-        public static string SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_ {
+        public static string SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_ {
             get {
-                return ResourceManager.GetString("SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_a" +
-                        "n_empty__blib_", resourceCulture);
+                return ResourceManager.GetString("SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_", resourceCulture);
             }
         }
         

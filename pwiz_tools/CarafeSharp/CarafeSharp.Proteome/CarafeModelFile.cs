@@ -34,8 +34,10 @@ using pwiz.Common.SystemUtil;
 namespace pwiz.CarafeSharp.Proteome
 {
     /// <summary>
-    /// A fine-tuned model saved as one file (<c>.carafemodel</c>), to predict libraries of any
-    /// peptides from later with <c>-model</c>, without training again. It is a zip holding:
+    /// A fine-tuned model saved as one file (<c>.model.zip</c>), to predict libraries of any
+    /// peptides from later with <c>-model</c>, without training again. A file is recognized by its
+    /// manifest's format, not its name, so one saved as <c>.carafemodel</c> (the name before
+    /// 2026-10) still opens. It is a ZIP archive holding:
     /// <list type="bullet">
     /// <item><c>manifest.json</c>: the format, what wrote it and when, which models were
     /// fine-tuned and which are used, the pretrained archive the training started from, what the
@@ -53,8 +55,10 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public sealed class CarafeModelFile
     {
-        public const string EXTENSION = @".carafemodel";
-        public const string DEFAULT_FILE_NAME = @"carafe_fine_tuned_model" + EXTENSION;
+        public const string EXTENSION = @".model.zip";
+        /// <summary>The name model files had before 2026-10. They still open, and a folder of them still lists.</summary>
+        public const string LEGACY_EXTENSION = @".carafemodel";
+        public const string DEFAULT_FILE_NAME = @"carafe_fine_tuned" + EXTENSION;
         public const string MANIFEST_ENTRY = @"manifest.json";
         /// <summary>
         /// The format written: carafemodel-1 with each model's network, release and start named
@@ -66,6 +70,25 @@ namespace pwiz.CarafeSharp.Proteome
         /// which is the one its <c>rt.safetensors</c> holds, else AlphaPeptDeep's.
         /// </summary>
         public const string FORMAT_1 = @"carafemodel-1";
+
+        /// <summary>
+        /// The search patterns that list a folder's model files, under either name: a reader that
+        /// offers the models in a folder lists both, so files saved before the rename stay listed.
+        /// </summary>
+        public static IEnumerable<string> FilePatterns
+        {
+            get { return new[] { @"*" + EXTENSION, @"*" + LEGACY_EXTENSION }; }
+        }
+
+        /// <summary>
+        /// True when <paramref name="path"/> is named as a model file, under either name. The name
+        /// is only a hint: <see cref="Open"/> recognizes a model file by its manifest.
+        /// </summary>
+        public static bool IsModelFileName(string path)
+        {
+            return path.EndsWith(EXTENSION, StringComparison.OrdinalIgnoreCase) ||
+                   path.EndsWith(LEGACY_EXTENSION, StringComparison.OrdinalIgnoreCase);
+        }
 
         /// <summary>
         /// Saves the models <paramref name="trained"/> predicts with for <paramref name="trainingType"/>

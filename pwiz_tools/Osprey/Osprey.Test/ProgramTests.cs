@@ -562,7 +562,7 @@ namespace pwiz.Osprey.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, Program.USAGE_INPUT),
+            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, OspreyCommandArgs.UsageInput),
                 Program.ValidateArgs(config));
         }
 

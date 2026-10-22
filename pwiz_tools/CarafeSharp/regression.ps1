@@ -67,7 +67,7 @@
     CarafeSharp arguments added to the run, for sensitivity checks: an option given here
     replaces the default's value (CarafeSharp takes the first occurrence of an option, so
     they are merged, not appended). Items are split at whitespace, so from pwsh -File write
-    -ExtraArgs "-cor 0.7"; from PowerShell, -ExtraArgs '-cor','0.7' works too.
+    -ExtraArgs "--cor 0.7"; from PowerShell, -ExtraArgs '--cor','0.7' works too.
 
 
 .PARAMETER CompareRun
@@ -99,7 +99,7 @@
 .EXAMPLE
     pwsh -File pwiz_tools/CarafeSharp/regression.ps1                       # CPU run against the golden
 .EXAMPLE
-    pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -NoBuild -ExtraArgs "-lf_top_n_frag 19" -RunName top19
+    pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -NoBuild -ExtraArgs "--lf-top-n-frag 19" -RunName top19
 .EXAMPLE
     pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -CreateGolden         # from a clean tree
 #>
@@ -124,7 +124,7 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# pwsh -File passes -ExtraArgs "-cor 0.7" as one string, and cannot pass a value that starts
+# pwsh -File passes -ExtraArgs "--cor 0.7" as one string, and cannot pass a value that starts
 # with '-' on its own, so each item is split at whitespace.
 $ExtraArgs = @($ExtraArgs | ForEach-Object { $_ -split '\s+' } | Where-Object { $_ })
 
@@ -190,20 +190,20 @@ $device = if ($Torch -eq 'cuda') { 'gpu' } else { 'cpu' }
 
 # The library arguments of the CarafeSharp workflow's stage 4-5 (ai/scripts/CarafeSharp/
 # Run-CarafeSharpWorkflow.ps1), with this dataset's tolerances and m/z window. CarafeSharp
-# reports the XIC options (-itol, -rf, ...) as ignored: Osprey's export decides them.
+# reports the XIC options (--itol, --rf, ...) as ignored: Osprey's export decides them.
 function Get-LibraryArguments {
     return @(
-        '-fdr', '0.01', '-itol', $config.Itol, '-itolu', $config.ItolUnit,
-        '-rf', '-rf_rt_win', 'auto', '-cor', '0.8', '-min_mz', '200',
-        '-n_ion_min', '2', '-c_ion_min', '2', '-mode', 'general', '-device', $device,
-        '-enzyme', 'NoCut', '-miss_c', '1', '-fixMod', '1', '-varMod', '0', '-maxVar', '1', '-clip_n_m',
-        '-minLength', '7', '-maxLength', '35',
-        '-min_pep_mz', $config.MinPeptideMz, '-max_pep_mz', $config.MaxPeptideMz,
-        '-min_pep_charge', '2', '-max_pep_charge', '3',
-        '-lf_frag_mz_min', '200', '-lf_frag_mz_max', '1960', '-lf_top_n_frag', '20',
-        '-lf_min_n_frag', '2', '-lf_frag_n_min', '2', '-lf_type', 'blib',
-        '-se', 'Osprey', '-decoy_prefix', 'decoy_', '-nm', '-nf', '4', '-min_n', '4',
-        '-valid', '-na', '0', '-fast')
+        '--fdr', '0.01', '--itol', $config.Itol, '--itolu', $config.ItolUnit,
+        '--rf', '--rf-rt-win', 'auto', '--cor', '0.8', '--min-mz', '200',
+        '--n-ion-min', '2', '--c-ion-min', '2', '--mode', 'general', '--device', $device,
+        '--enzyme', 'NoCut', '--miss-c', '1', '--fix-mod', '1', '--var-mod', '0', '--max-var', '1', '--clip-n-m',
+        '--min-length', '7', '--max-length', '35',
+        '--min-pep-mz', $config.MinPeptideMz, '--max-pep-mz', $config.MaxPeptideMz,
+        '--min-pep-charge', '2', '--max-pep-charge', '3',
+        '--lf-frag-mz-min', '200', '--lf-frag-mz-max', '1960', '--lf-top-n-frag', '20',
+        '--lf-min-n-frag', '2', '--lf-frag-n-min', '2', '--lf-type', 'blib',
+        '--se', 'Osprey', '--decoy-prefix', 'decoy_', '--nm', '--nf', '4', '--min-n', '4',
+        '--valid', '--na', '0', '--fast')
 }
 
 function Write-Step([string]$Message) {
@@ -584,8 +584,8 @@ if (-not $CompareRun) {
 
     $exportFolder = Split-Path -Parent $exportFile.Path
     $runFile = Join-Path $exportFolder $config.RunFile
-    $cliArgs = @('-db', $subsetFasta, '-i', $exportFolder, '-ms', $runFile, '-o', $outFolder,
-        '-pairing_manifest', $subsetPairing) + $arguments + @('-tf', 'all')
+    $cliArgs = @('--db', $subsetFasta, '--i', $exportFolder, '--ms', $runFile, '--o', $outFolder,
+        '--pairing-manifest', $subsetPairing) + $arguments + @('--tf', 'all')
 
     $info.subset_rule = "the pair groups whose peptide_pair_index is a multiple of $subsetModulus, with all their members"
     $info.subset_groups = $subset.Groups

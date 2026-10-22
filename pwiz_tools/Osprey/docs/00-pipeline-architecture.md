@@ -280,7 +280,7 @@ entrapment included) and the search - and the second takes the first's product,
 tuning runs' search (an Osprey analysis over a derived config: the tuning runs, the initial
 library, `--training-export`, and `<out>.predicted/training/` as its `--output-dir`), and
 `TrainModel` (CarafeSharp's `TrainTask` on the exports, writing the model folder
-`<out>.predicted/model/` and `<out>.carafemodel`); the final `PredictLibrary` then predicts from
+`<out>.predicted/model/` and `<out>.model.zip`); the final `PredictLibrary` then predicts from
 that folder, as CarafeSharp's own training does right after the fine-tune.
 
 The two analyses run in one process, so each gets its own task set (`OspreyTasks.Create()`): a
@@ -517,7 +517,7 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 durable artifact that does not appear there is a defect.
 
 **"Durable artifact" is not narrowed to what the pipeline reads back.** The Stage-7
-reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on) commit
+reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (under `OSPREY_DIANN_REPORTS`) commit
 through `SimpleFileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
 previous run's report or none, never a half-written one. Because nothing downstream reads
 them and the blib has not been written yet when they run, a report that cannot be written

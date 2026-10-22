@@ -1433,10 +1433,6 @@
     <value>{0}：{1}の書き込みをスキップします（レポートのみ）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
-    <value>FDR閾値を通過したプリカーサーがありません。空の{0}を書き込みます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_across__0__runs_to__3_" xml:space="preserve">
     <value>{0:N0}個のランにわたる{2:N0}個のピークを含む{1:N0}個のライブラリスペクトルを{3}に書き込みました</value>
     <comment>Needs Review:New resource</comment>

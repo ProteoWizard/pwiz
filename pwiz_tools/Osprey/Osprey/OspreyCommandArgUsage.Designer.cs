@@ -376,15 +376,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write TSV report to file.
-        /// </summary>
-        public static string _report {
-            get {
-                return ResourceManager.GetString("_report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resolution mode (default: {0}).
         /// </summary>
         public static string _resolution {
@@ -480,6 +471,15 @@ namespace pwiz.Osprey {
         public static string _training_input {
             get {
                 return ResourceManager.GetString("_training_input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input_list {
+            get {
+                return ResourceManager.GetString("_training_input_list", resourceCulture);
             }
         }
         

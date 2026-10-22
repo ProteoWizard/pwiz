@@ -703,7 +703,7 @@ namespace pwiz.Osprey.Tasks
             prebuiltProjections = null;
 
             if (survivors == null)
-                return false;  // StopAfterStage5 sidecar failure; ExitCode already set
+                return false;  // A sidecar failure, or nothing passed the first pass; ExitCode already set
             perFileEntries = survivors;
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
@@ -2290,6 +2290,19 @@ namespace pwiz.Osprey.Tasks
                 out var rowsPerBaseId);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
+            // Nothing survived the gate, so the second pass has no precursor to search and the
+            // run can only end in an empty .blib. Fail here, naming the gate, rather than spend
+            // the rest of the run producing output that only a later step would notice.
+            if (firstPassBaseIds.Count == 0)
+            {
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_,
+                    config.LibrarySource?.Path, config.ReconciliationCompactionFdr,
+                    OspreyArgNames.Text(OspreyArgNames.RECONCILIATION_COMPACTION_FDR),
+                    config.EffectiveProteinFdr, OspreyArgNames.Text(OspreyArgNames.PROTEIN_FDR)));
+                ctx.ExitCode = 1;
+                return null;
+            }
             _firstPassBaseIds = firstPassBaseIds;
 
             // The survivor LOADER, not a survivor buffer. Collecting every file's survivors

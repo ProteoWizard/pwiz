@@ -50,7 +50,7 @@ namespace pwiz.Osprey
     /// with <c>--entrapment</c>, its entrapment peptides included), so no peptide FASTA, no
     /// pairing manifest and no TSV sit between the phases. The library lands beside the output, as
     /// <c>&lt;out&gt;.predicted.blib</c>, where <c>-l</c> takes it next time, and the tuned model as
-    /// <c>&lt;out&gt;.carafemodel</c>, where <c>--model</c> takes it; the working files go under
+    /// <c>&lt;out&gt;.model.zip</c>, where <c>--model</c> takes it; the working files go under
     /// <c>&lt;out&gt;.predicted/</c>. All follow <c>--output-dir</c> as the run's other artifacts do.
     /// Every phase checkpoints in the file it writes, stamped, so a re-run skips each phase whose
     /// inputs and settings are unchanged and resumes a run that died at the first one that is not.
@@ -118,7 +118,7 @@ namespace pwiz.Osprey
             return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
         }
 
-        /// <summary>The model the tuning writes: <c>&lt;out&gt;.carafemodel</c>.</summary>
+        /// <summary>The model the tuning writes: <c>&lt;out&gt;.model.zip</c>.</summary>
         public static string ModelPath(OspreyConfig config)
         {
             return Path.Combine(BaseDirectory(config), OutputStem(config) + CarafeModelFile.EXTENSION);
@@ -210,7 +210,7 @@ namespace pwiz.Osprey
         /// <summary>
         /// The three phases of <c>--training-input</c> before the final prediction: the training
         /// library (never with entrapment), the search of the tuning runs with the training export,
-        /// and the tuning on the exports, which writes the model folder and <c>&lt;out&gt;.carafemodel</c>.
+        /// and the tuning on the exports, which writes the model folder and <c>&lt;out&gt;.model.zip</c>.
         /// </summary>
         private int RunTuning(TrainingSettings training, string workDirectory)
         {
@@ -270,7 +270,7 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// The library is predicted from the model folder, so a current <c>&lt;out&gt;.carafemodel</c>
+        /// The library is predicted from the model folder, so a current <c>&lt;out&gt;.model.zip</c>
         /// whose folder no longer holds the files it packed, byte for byte (the working files deleted
         /// with the model kept, or rewritten by a later tuning that died before it saved its model),
         /// is discarded, and the tuning runs again from the exports, rather than skipping the tuning
@@ -324,7 +324,6 @@ namespace pwiz.Osprey
             config.OutputBlib = Path.Combine(trainingDirectory, TRAINING_OUTPUT_FILE_NAME);
             config.OutputDir = trainingDirectory;
             // What the user asked of the run is the final search's; this one writes what the tuning reads.
-            config.OutputReport = null;
             config.OutputFdrBench = null;
             config.ModelDiagnostics = false;
             // Not the one command's analysis: its result was not searched with tuned models.

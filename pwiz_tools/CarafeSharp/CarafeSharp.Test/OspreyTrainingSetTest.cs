@@ -282,7 +282,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(8 / 20.1, rt[@"SAMPLERK"].RtNorm, 1e-12);
             rt = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { RtMax = 30 }).Rt.ToDictionary(e => e.Peptide.Sequence);
             Assert.AreEqual(5 / 30.0, rt[@"PEPTIDEK"].RtNorm, 1e-12);
-            Assert.AreEqual(30.0, CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-rt_max", @"30" }).TrainingSettings.RtMax);
+            Assert.AreEqual(30.0, CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet", @"--rt-max", @"30" }).TrainingSettings.RtMax);
 
             string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpMeta_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);
@@ -347,35 +347,35 @@ namespace pwiz.CarafeSharp.Test
 
             // Carafe's code defaults when the options are absent; training exports named directly
             // train without -ms, which Carafe could never have read.
-            settings = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-tf", @"ms2" }).TrainingSettings;
+            settings = CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet", @"--tf", @"ms2" }).TrainingSettings;
             Assert.AreEqual(TrainingSettings.DEFAULT_CORRELATION, settings.MinCorrelation);
             Assert.AreEqual(0, settings.LowOrdinalB);
             Assert.IsFalse(settings.RequireTopIonValid);
             Assert.IsTrue(settings.TrainMs2);
             Assert.IsFalse(settings.TrainRt);
             Assert.IsNull(settings.Library);
-            Assert.AreEqual(CarafeCommandMode.train, CarafeCommandLine.Parse(new[] { @"-i", Path.GetTempPath() }).Mode);
+            Assert.AreEqual(CarafeCommandMode.train, CarafeCommandLine.Parse(new[] { @"--i", Path.GetTempPath() }).Mode);
             // Carafe trains only with -ms: -i without it is a library run, as the GUI's initial library is.
             Assert.AreEqual(CarafeCommandMode.predict_library,
-                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-i", @"osprey.blib" }).Mode);
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--i", @"osprey.blib" }).Mode);
 
             // -ms2_model: the MS2 model fine-tuning starts from.
-            Assert.AreEqual(@"m.pt", ParseExport(@"-ms2_model", @"m.pt").TrainingSettings.Ms2Model);
+            Assert.AreEqual(@"m.pt", ParseExport(@"--ms2-model", @"m.pt").TrainingSettings.Ms2Model);
             // -seed is Carafe's Integer.parseInt, and numpy rejects a negative seed.
-            Assert.AreEqual(7u, ParseExport(@"-seed", @"7").TrainingSettings.Seed);
-            AssertThrows<ArgumentException>(() => ParseExport(@"-seed", @"-1"));
-            AssertThrows<ArgumentException>(() => ParseExport(@"-seed", @"4294967296"));
+            Assert.AreEqual(7u, ParseExport(@"--seed", @"7").TrainingSettings.Seed);
+            AssertThrows<ArgumentException>(() => ParseExport(@"--seed", @"-1"));
+            AssertThrows<ArgumentException>(() => ParseExport(@"--seed", @"4294967296"));
             // A flag given a value is an error, as it is to Carafe's option parser.
-            AssertThrows<ArgumentException>(() => ParseExport(@"-valid=false"));
-            AssertThrows<ArgumentException>(() => ParseExport(@"-device", @"tpu"));
-            AssertThrows<NotSupportedException>(() => ParseExport(@"-ai_version", @"v1"));
-            AssertThrows<NotSupportedException>(() => ParseExport(@"-user_var_mods", @"x"));
-            AssertThrows<NotSupportedException>(() => ParseExport(@"-mod2mass", @"x"));
+            AssertThrows<ArgumentException>(() => ParseExport(@"--valid=false"));
+            AssertThrows<ArgumentException>(() => ParseExport(@"--device", @"tpu"));
+            AssertThrows<NotSupportedException>(() => ParseExport(@"--ai-version", @"v1"));
+            AssertThrows<NotSupportedException>(() => ParseExport(@"--user-var-mods", @"x"));
+            AssertThrows<NotSupportedException>(() => ParseExport(@"--mod2mass", @"x"));
 
-            AssertThrows<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-ms", @"run.mzML" }));
-            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"report.tsv", @"-ms", @"run.mzML", @"-se", @"DIA-NN" }));
-            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"x.blib", @"-ms", @"run.mzML", @"-na", @"2" }));
-            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"x.blib", @"-ms", @"run.mzML", @"-tf", @"test" }));
+            AssertThrows<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--ms", @"run.mzML" }));
+            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--i", @"report.tsv", @"--ms", @"run.mzML", @"--se", @"DIA-NN" }));
+            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--i", @"x.blib", @"--ms", @"run.mzML", @"--na", @"2" }));
+            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--i", @"x.blib", @"--ms", @"run.mzML", @"--tf", @"test" }));
 
             // Training checks the library FASTA, then opens the pretrained models, before it
             // reads any export.
@@ -385,14 +385,14 @@ namespace pwiz.CarafeSharp.Test
             {
                 string fasta = Path.Combine(folder, @"library.fasta");
                 string zip = Path.Combine(folder, @"pretrained_models.zip");
-                var trainer = new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", Path.Combine(folder, @"osprey.blib"),
-                    @"-ms", @"run.mzML", @"-o", folder, @"-db", fasta, @"-pretrained", zip }).TrainingSettings, null);
+                var trainer = new ModelTrainer(CarafeCommandLine.Parse(new[] { @"--i", Path.Combine(folder, @"osprey.blib"),
+                    @"--ms", @"run.mzML", @"--o", folder, @"--db", fasta, @"--pretrained", zip }).TrainingSettings, null);
                 Assert.AreEqual(fasta, Assert.ThrowsException<FileNotFoundException>(() => trainer.Run()).FileName);
                 File.WriteAllText(fasta, ">P1\nPEPTIDEK\n");
                 Assert.AreEqual(zip, Assert.ThrowsException<FileNotFoundException>(() => trainer.Run()).FileName);
                 string ms2Model = Path.Combine(folder, @"ms2_model.pt");
-                var fromMs2Model = new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", Path.Combine(folder, @"osprey.blib"),
-                    @"-ms", @"run.mzML", @"-o", folder, @"-db", fasta, @"-pretrained", zip, @"-ms2_model", ms2Model }).TrainingSettings, null);
+                var fromMs2Model = new ModelTrainer(CarafeCommandLine.Parse(new[] { @"--i", Path.Combine(folder, @"osprey.blib"),
+                    @"--ms", @"run.mzML", @"--o", folder, @"--db", fasta, @"--pretrained", zip, @"--ms2-model", ms2Model }).TrainingSettings, null);
                 Assert.AreEqual(ms2Model, Assert.ThrowsException<FileNotFoundException>(() => fromMs2Model.Run()).FileName);
             }
             finally
@@ -523,7 +523,7 @@ namespace pwiz.CarafeSharp.Test
                 // A run that mixes either is refused, naming what it mixes; the option decides for all of it.
                 var mixedActivation = Assert.ThrowsException<InvalidDataException>(() => Activation(@"Thermo", @"Stellar", @"{""HCD"":150,""CID"":50}"));
                 StringAssert.Contains(mixedActivation.Message, @"beam-CID (150) and reCID (50)");
-                StringAssert.Contains(mixedActivation.Message, @"-activation");
+                StringAssert.Contains(mixedActivation.Message, @"--activation");
                 var mixedAnalyzer = Assert.ThrowsException<InvalidDataException>(() =>
                     Analyzer(@"Orbitrap Eclipse", @"{""quadrupole orbitrap"":150,""radial ejection linear ion trap"":50}"));
                 StringAssert.Contains(mixedAnalyzer.Message, @"LIT (50) and Orbitrap (150)");
@@ -642,7 +642,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>A training command line on an export named directly, plus <paramref name="options"/>.</summary>
         private static CarafeCommandLine ParseExport(params string[] options)
         {
-            return CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet" }.Concat(options).ToArray());
+            return CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet" }.Concat(options).ToArray());
         }
 
         private static void AssertThrows<T>(Action action) where T : Exception

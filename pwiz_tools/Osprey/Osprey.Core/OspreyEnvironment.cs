@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
             @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
-            @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
+            @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
             @"OSPREY_DUMP_COASSIGN_ROWS", @"OSPREY_DUMP_CONSENSUS", @"OSPREY_DUMP_CWT_PATH",
             @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
@@ -919,6 +919,17 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
+
+        /// <summary>
+        /// OSPREY_DIANN_REPORTS: also write <c>&lt;output&gt;.protein_groups.tsv</c> and
+        /// <c>&lt;output&gt;.stats.tsv</c>, the search's results in the shape of DIA-NN's
+        /// <c>pg_matrix</c> and <c>stats.tsv</c>, for comparing the two tools. Off by default:
+        /// they hold nothing the output .blib does not, and nothing in Osprey reads them.
+        /// Re-read on every access, so a test can switch it per command line with
+        /// <see cref="OverrideVariables"/>.
+        /// </summary>
+        public static bool DiannReports =>
+            IsSetAndNotZero(@"OSPREY_DIANN_REPORTS");
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default

@@ -64,17 +64,6 @@ namespace pwiz.Osprey
         internal const int EXIT_CODE_FAILURE_TO_START = 1;
         internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
 
-        // The command-line text the "not specified" errors in ValidateArgs tell the user to add.
-        // Argument names and example values, so not translated.
-        internal const string USAGE_INPUT = @"-i <file1.mzML> [file2.mzML ...]";
-        internal const string USAGE_LIBRARY = @"-l <library.tsv>";
-        internal const string USAGE_OUTPUT = @"-o <output.blib>";
-
-        /// <summary>The library's other form in the "not specified" error: the one command's FASTA.</summary>
-        internal static string UsageFasta
-        {
-            get { return OspreyCommandArgs.ARG_FASTA.ArgumentText + @" <proteome.fasta>"; }
-        }
 
         // The caller's writer (stderr from Main), kept after a --log-file swap replaces _out,
         // so an error reported before the swap still counts when the exit code is reconciled.
@@ -895,7 +884,7 @@ namespace pwiz.Osprey
             if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
             {
                 if (config.LibrarySource == null)
-                    return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY);
+                    return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, OspreyCommandArgs.UsageLibrary);
                 if (string.IsNullOrWhiteSpace(config.ExportLibraryBlib))
                 {
                     return string.Format(OspreyResources.Program_ValidateArgs_No_path_given_for__0__,
@@ -964,14 +953,14 @@ namespace pwiz.Osprey
             // directory that already holds each run's artifacts skips to whichever stage is
             // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
             if (!hasInputFiles)
-                return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
+                return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, OspreyCommandArgs.UsageInput);
             if (config.LibrarySource == null && !config.LibraryBuild.Enabled)
             {
                 return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_,
-                    string.Format(OspreyResources.Program_ValidateArgs__0__or__1_, USAGE_LIBRARY, UsageFasta));
+                    string.Format(OspreyResources.Program_ValidateArgs__0__or__1_, OspreyCommandArgs.UsageLibrary, OspreyCommandArgs.UsageFasta));
             }
             if (string.IsNullOrEmpty(config.OutputBlib))
-                return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, USAGE_OUTPUT);
+                return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, OspreyCommandArgs.UsageOutput);
             return null;
         }
 
@@ -1039,7 +1028,7 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
                     OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
             }
-            // The tuning writes <out>.carafemodel, so tuning from it would overwrite its own input,
+            // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
             // and a re-run would tune again from the last result instead of finding it current.
             if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
                 IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
