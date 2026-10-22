@@ -46,7 +46,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--centroid-output SEP]";
+            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--centroid-output SEP] [--thin N]";
 
         private static int Main(string[] args)
         {
@@ -222,6 +222,10 @@ namespace pwiz.Osprey.DemuxTool
                         // Staggered profile input on a uniform m/z grid (ion trap): centroid each demultiplexed spectrum,
                         // centroids closer than this many Th merged.
                         centroidSeparation = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--thin":
+                        // Staggered, for measuring how sampling matters: keep only every N-th cycle's MS2 spectra.
+                        options.ThinCycles = int.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--elution-param":
                         // Any scalar setting of the elution fit by its property name, for tuning.

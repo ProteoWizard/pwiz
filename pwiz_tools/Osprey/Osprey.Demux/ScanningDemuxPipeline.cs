@@ -53,6 +53,12 @@ namespace pwiz.Osprey.Demux
         public double FillTimeIonScale { get; set; }
 
         /// <summary>
+        /// Staggered data, for measuring how sampling matters: when above 1, only every this many cycles' MS2 spectra
+        /// are demultiplexed and written (a cycle being one pass of every window set); the others are dropped.
+        /// </summary>
+        public int ThinCycles { get; set; } = 1;
+
+        /// <summary>
         /// Staggered data: fit each fragment channel's elution with chromatographic peaks of this shape to apportion
         /// each observation (<see cref="ElutionDemultiplexer"/>), instead of interpolating each window's own series.
         /// Null interpolates.

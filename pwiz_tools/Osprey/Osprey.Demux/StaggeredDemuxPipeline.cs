@@ -44,6 +44,7 @@ namespace pwiz.Osprey.Demux
         private readonly double[] _intensityPerIon;   // intensity units of one ion, by input index
         private readonly int[] _cycleOfMs2;           // the cycle it belongs to
         private readonly Dictionary<int, int> _ms2OfSpectrum = new Dictionary<int, int>();
+        private readonly HashSet<int> _thinnedOut = new HashSet<int>();   // MS2 spectra dropped by ThinCycles
         private readonly List<(int Spectrum, int Bin)> _output = new List<(int, int)>();
         private readonly Dictionary<(int, int), int> _outputOf = new Dictionary<(int, int), int>();
         private readonly int _cycles;
@@ -72,6 +73,8 @@ namespace pwiz.Osprey.Demux
                 ms2.Add(k);
                 times.Add(info.Time);
             }
+            if (options.ThinCycles > 1)
+                Thin(ms2, times, windows, options.ThinCycles, minimumBinWidth);
             _ms2Spectra = ms2.ToArray();
             _ms2Time = times.ToArray();
             for (int i = 0; i < _ms2Spectra.Length; i++)
@@ -99,6 +102,8 @@ namespace pwiz.Osprey.Demux
 
             for (int k = 0; k < source.Count; k++)
             {
+                if (_thinnedOut.Contains(k))
+                    continue;
                 if (!_ms2OfSpectrum.TryGetValue(k, out int i))
                 {
                     _output.Add((k, -1));
@@ -175,6 +180,44 @@ namespace pwiz.Osprey.Demux
         /// <summary>Nothing is kept between batches: each reads its own cycles and context.</summary>
         public override void Forget(int firstCycle)
         {
+        }
+
+        /// <summary>
+        /// Keeps the MS2 spectra of every <paramref name="every"/>-th cycle only (cycles as the plan counts them: a
+        /// window's repeat ends one), and records the rest as dropped.
+        /// </summary>
+        private void Thin(List<int> ms2, List<double> times, List<IsolationWindow> windows, int every,
+            double minimumBinWidth)
+        {
+            var scheme = DemuxSchemeDetector.Detect(windows, minimumBinWidth);
+            var seen = new HashSet<int>();
+            int cycle = 0;
+            var keep = new bool[ms2.Count];
+            for (int i = 0; i < ms2.Count; i++)
+            {
+                if (!seen.Add(scheme.WindowOfSpectrum[i]))
+                {
+                    cycle++;
+                    seen.Clear();
+                    seen.Add(scheme.WindowOfSpectrum[i]);
+                }
+                keep[i] = cycle % every == 0;
+                if (!keep[i])
+                    _thinnedOut.Add(ms2[i]);
+            }
+            int n = 0;
+            for (int i = 0; i < keep.Length; i++)
+            {
+                if (!keep[i])
+                    continue;
+                ms2[n] = ms2[i];
+                times[n] = times[i];
+                windows[n] = windows[i];
+                n++;
+            }
+            ms2.RemoveRange(n, ms2.Count - n);
+            times.RemoveRange(n, times.Count - n);
+            windows.RemoveRange(n, windows.Count - n);
         }
 
         /// <summary>Reads every MS2 spectrum of a batch's padded cycles and makes one solve per block and group of bins.</summary>
