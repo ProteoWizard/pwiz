@@ -29,7 +29,7 @@ namespace pwiz.Osprey.Demux
     /// every run measured, lies on one such grid (step 9.786595e-5), so the same sample index means the
     /// same m/z in every spectrum.
     /// </summary>
-    public sealed class TofGrid
+    public sealed class TofGrid : IProfileGrid
     {
         /// <summary>A point farther than this from its sample (in samples) is not on the grid.</summary>
         public const double MAX_OFF_GRID = 0.05;

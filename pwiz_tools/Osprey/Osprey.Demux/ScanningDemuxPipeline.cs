@@ -53,6 +53,25 @@ namespace pwiz.Osprey.Demux
         public double FillTimeIonScale { get; set; }
 
         /// <summary>
+        /// Staggered profile data on a linear grid (an ion trap's), with <see cref="Joint"/>: the profile peak's sigma,
+        /// in Th, which the joint solve's Gaussian takes (Thermo Stellar MS2: 0.327 Th, at every m/z).
+        /// </summary>
+        public double LinearPeakSigmaTh { get; set; } = 0.33;
+
+        /// <summary>
+        /// Staggered joint solve: split each acquired spectrum's observed profile among its bins by the fitted peaks of
+        /// each bin, then centroid each bin's share with the same solve (one bin to one position), rather than writing
+        /// the fitted peaks themselves, which carry the errors of the interpolated windows.
+        /// </summary>
+        public bool JointApportion { get; set; } = true;
+
+        /// <summary>
+        /// With <see cref="JointApportion"/>: centroid each bin's share with the joint solve; false writes the shares
+        /// as profile, for a centroider of its own (Centrix).
+        /// </summary>
+        public bool JointCentroid { get; set; } = true;
+
+        /// <summary>
         /// Staggered data, for measuring how sampling matters: when above 1, only every this many cycles' MS2 spectra
         /// are demultiplexed and written (a cycle being one pass of every window set); the others are dropped.
         /// </summary>

@@ -43,6 +43,10 @@ namespace pwiz.Osprey.Demux
         private readonly double[] _ms2Time;           // its time, in minutes
         private readonly double[] _intensityPerIon;   // intensity units of one ion, by input index
         private readonly int[] _cycleOfMs2;           // the cycle it belongs to
+        private readonly int[] _passOfMs2;            // the pass it belongs to: one set of windows tiling the range
+        private readonly Dictionary<int, double> _passPerIon = new Dictionary<int, double>();   // joint: a pass's ion scale
+        private readonly TextWriter _log;
+        private LinearGrid _grid;                     // joint: the profile grid, from the first batch
         private readonly Dictionary<int, int> _ms2OfSpectrum = new Dictionary<int, int>();
         private readonly HashSet<int> _thinnedOut = new HashSet<int>();   // MS2 spectra dropped by ThinCycles
         private readonly List<(int Spectrum, int Bin)> _output = new List<(int, int)>();
@@ -53,6 +57,7 @@ namespace pwiz.Osprey.Demux
         {
             _source = source;
             _options = options;
+            _log = log;
             var ms2 = new List<int>();
             var times = new List<double>();
             var windows = new List<IsolationWindow>();
@@ -97,6 +102,26 @@ namespace pwiz.Osprey.Demux
                 _cycleOfMs2[i] = cycle;
             }
             _cycles = _ms2Spectra.Length > 0 ? cycle + 1 : 0;
+
+            // A pass is one set of windows tiling the range, acquired in ascending order: a window below the one
+            // before it starts the next pass. The joint solve demultiplexes pass by pass, each in ions at the
+            // median fill time of its spectra (the ion trap's intensities are rates).
+            _passOfMs2 = new int[_ms2Spectra.Length];
+            int pass = 0;
+            for (int i = 1; i < _ms2Spectra.Length; i++)
+            {
+                if (windows[i].Center < windows[i - 1].Center)
+                    pass++;
+                _passOfMs2[i] = pass;
+            }
+            if (options.Joint)
+            {
+                foreach (var group in Enumerable.Range(0, _ms2Spectra.Length).GroupBy(i => _passOfMs2[i]))
+                {
+                    var scales = group.Select(i => _intensityPerIon[_ms2Spectra[i]]).OrderBy(v => v).ToArray();
+                    _passPerIon[group.Key] = scales[scales.Length / 2];
+                }
+            }
             log.WriteLine(@"Scheme: {0}, {1} windows into {2} bins, {3}-fold", Scheme.Kind, Scheme.Windows.Count,
                 Scheme.Bins.Count, Scheme.OverlapFactor);
 
@@ -239,6 +264,28 @@ namespace pwiz.Osprey.Demux
 
             var work = new List<DemuxWork>();
             int binCount = Scheme.Bins.Count, contextBins = Math.Max(2, Scheme.OverlapFactor * 2);
+            if (_options.Joint)
+            {
+                var grid = GridOf(peaks);
+                for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
+                {
+                    int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
+                    int lo = Math.Max(padLo, k0 - _options.CyclePad), hi = Math.Min(padHi, k1 + _options.CyclePad);
+                    for (int g0 = 0; g0 < binCount; g0 += _options.GroupBins)
+                    {
+                        int g1 = Math.Min(binCount - 1, g0 + _options.GroupBins - 1);
+                        var unit = MakeJointUnit(inBlock, peaks, grid, lo, hi, k0, k1, g0, g1, contextBins, out var observed);
+                        if (unit == null)
+                            continue;
+                        var parameters = _options.JointParameters;
+                        bool centroid = _options.JointCentroid;
+                        work.Add(new DemuxWork(_options.JointApportion
+                            ? (Func<ScanningUnitResult>)(() => SolveJointApportioned(unit, observed, parameters, grid, centroid))
+                            : () => JointDemultiplexer.DemuxUnit(unit, parameters, grid), unit.Mz.Length));
+                    }
+                }
+                return work;
+            }
             for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
             {
                 int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
@@ -261,6 +308,11 @@ namespace pwiz.Osprey.Demux
         public override void LayOut(int firstCycle, int lastCycle, ScanningUnitResult[] results,
             IDictionary<int, (double[] Mz, double[] Ions)> peaks)
         {
+            if (_options.Joint)
+            {
+                LayOutJoint(firstCycle, lastCycle, results, peaks);
+                return;
+            }
             var demuxed = new Dictionary<(int, int), List<ScanningPeak>>();
             var through = new Dictionary<int, List<ScanningPeak>>();
             foreach (var result in results)
@@ -287,6 +339,278 @@ namespace pwiz.Osprey.Demux
                     peaks[_outputOf[(k, b)]] = (mz, ions);
                 }
             }
+        }
+
+        /// <summary>
+        /// The joint solve's output: each MS2 spectrum's bins take their centroids from its own pass, in ions at the
+        /// pass's fill time, converted to the spectrum's own.
+        /// </summary>
+        private void LayOutJoint(int firstCycle, int lastCycle, ScanningUnitResult[] results,
+            IDictionary<int, (double[] Mz, double[] Ions)> peaks)
+        {
+            var byPassBin = new Dictionary<(int, int), List<ScanningPeak>>();
+            foreach (var result in results)
+            {
+                foreach (var p in result.Demultiplexed)
+                    Add(byPassBin, (p.Cycle, p.Bin), p);
+            }
+            var none = new List<ScanningPeak>();
+            for (int i = 0; i < _ms2Spectra.Length; i++)
+            {
+                if (_cycleOfMs2[i] < firstCycle || _cycleOfMs2[i] > lastCycle)
+                    continue;
+                int k = _ms2Spectra[i], pass = _passOfMs2[i];
+                var w = Scheme.Windows[Scheme.WindowOfSpectrum[i]];
+                for (int b = w.FirstBin; b <= w.LastBin; b++)
+                {
+                    int output = _outputOf[(k, b)];
+                    var list = byPassBin.TryGetValue((pass, b), out var found) ? found : none;
+                    var ordered = list.OrderBy(p => p.Mz).ToArray(); // Array.Sort OK: OrderBy is stable
+                    double scale = _passPerIon[pass] / IntensityPerIon(output);
+                    peaks[output] = (ordered.Select(p => p.Mz).ToArray(), ordered.Select(p => p.Ions * scale).ToArray());
+                }
+            }
+        }
+
+        /// <summary>
+        /// One joint solve's input: for each pass of the block, every window covering the unit's bins, those of the
+        /// pass as acquired and the others interpolated (makima, sample by sample, in rates) to the pass's time: a
+        /// pseudo-sweep in which every window is seen at once, as a ZT Scan sweep is. All in ions at the pass's fill
+        /// time. Null when the block has no core pass in these bins.
+        /// </summary>
+        private ScanningUnit MakeJointUnit(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, LinearGrid grid,
+            int lo, int hi, int k0, int k1, int g0, int g1, int contextBins, out bool[] observed)
+        {
+            observed = null;
+            int col0 = Math.Max(0, g0 - contextBins), col1 = Math.Min(Scheme.Bins.Count - 1, g1 + contextBins);
+            var columnBins = Enumerable.Range(col0, col1 - col0 + 1).ToArray();
+            var rowWindows = Enumerable.Range(0, Scheme.Windows.Count)
+                .Where(w => Scheme.Windows[w].LastBin >= col0 && Scheme.Windows[w].FirstBin <= col1).ToArray();
+            var rowOfWindow = new Dictionary<int, int>();
+            for (int r = 0; r < rowWindows.Length; r++)
+                rowOfWindow[rowWindows[r]] = r;
+            var a = new double[rowWindows.Length, columnBins.Length];
+            for (int r = 0; r < rowWindows.Length; r++)
+            {
+                for (int j = 0; j < columnBins.Length; j++)
+                    a[r, j] = Scheme.Windows[rowWindows[r]].Covers(columnBins[j]) ? 1 : 0;
+            }
+
+            // Each row's acquisitions in the padded block, in time order; the core passes and their times.
+            var acquisitions = rowWindows.Select(w => new List<int>()).ToArray();
+            var passTimes = new SortedDictionary<int, List<double>>();
+            foreach (int i in inBlock)
+            {
+                if (_cycleOfMs2[i] < lo || _cycleOfMs2[i] > hi || !rowOfWindow.TryGetValue(Scheme.WindowOfSpectrum[i], out int r))
+                    continue;
+                acquisitions[r].Add(i);
+                if (_cycleOfMs2[i] < k0 || _cycleOfMs2[i] > k1)
+                    continue;
+                if (!passTimes.TryGetValue(_passOfMs2[i], out var times))
+                {
+                    times = new List<double>();
+                    passTimes[_passOfMs2[i]] = times;
+                }
+                times.Add(_ms2Time[i]);
+            }
+            if (passTimes.Count == 0)
+                return null;
+            var passes = passTimes.Keys.ToArray();
+            var passTime = passes.Select(p => passTimes[p].OrderBy(t => t).ElementAt(passTimes[p].Count / 2)).ToArray();
+
+            // Each row's rates by grid sample, over its acquisitions.
+            var rowTimes = new double[rowWindows.Length][];
+            var rowRates = new Dictionary<long, double[]>[rowWindows.Length];
+            for (int r = 0; r < rowWindows.Length; r++)
+            {
+                var list = acquisitions[r];
+                rowTimes[r] = list.Select(i => _ms2Time[i]).ToArray();
+                rowRates[r] = new Dictionary<long, double[]>();
+                for (int q = 0; q < list.Count; q++)
+                {
+                    var (m, v) = peaks[list[q]];
+                    double perIon = _intensityPerIon[_ms2Spectra[list[q]]];
+                    for (int p = 0; p < m.Length; p++)
+                    {
+                        long sample = grid.Index(m[p]);
+                        if (!rowRates[r].TryGetValue(sample, out var series))
+                        {
+                            series = new double[list.Count];
+                            rowRates[r][sample] = series;
+                        }
+                        series[q] += v[p] * perIon;
+                    }
+                }
+            }
+
+            var mz = new List<double>();
+            var ions = new List<double>();
+            var row = new List<int>();
+            var cycle = new List<int>();
+            var acquiredPoint = new List<bool>();
+            for (int c = 0; c < passes.Length; c++)
+            {
+                double perIonRef = _passPerIon[passes[c]];
+                for (int r = 0; r < rowWindows.Length; r++)
+                {
+                    var times = rowTimes[r];
+                    if (times.Length == 0)
+                        continue;
+                    int acquired = acquisitions[r].FindIndex(i => _passOfMs2[i] == passes[c]);
+                    foreach (var entry in rowRates[r].OrderBy(e => e.Key))
+                    {
+                        double rate = acquired >= 0
+                            ? entry.Value[acquired]
+                            : Math.Max(0, RtInterpolator.Interpolate(RtInterpolation.makima, times, entry.Value, times.Length, passTime[c]));
+                        if (rate <= 0)
+                            continue;
+                        mz.Add(grid.Mz(entry.Key));
+                        ions.Add(rate / perIonRef);
+                        row.Add(r);
+                        cycle.Add(c);
+                        acquiredPoint.Add(acquired >= 0);
+                    }
+                }
+            }
+            observed = acquiredPoint.ToArray();
+            return new ScanningUnit(a, rowWindows.Select(w => Scheme.Windows[w].FirstBin).ToArray(), columnBins, passes, g0, g1,
+                passes[0], passes[passes.Length - 1])
+            {
+                Mz = mz.ToArray(),
+                Ions = ions.ToArray(),
+                Row = row.ToArray(),
+                Cycle = cycle.ToArray(),
+            };
+        }
+
+        /// <summary>
+        /// The joint solve with the measurements kept: the pseudo-sweeps are fitted for each bin's peaks (coefficients
+        /// on the grid); each acquired spectrum's profile is split among the unit's own bins its window covers by those
+        /// bins' fitted profiles at each sample (equally where none is fitted); and each bin's share is centroided by
+        /// the same solve with one bin to one position. Centroids are keyed by bin and pass.
+        /// </summary>
+        private static ScanningUnitResult SolveJointApportioned(ScanningUnit unit, bool[] observed, JointDemuxParams parameters,
+            LinearGrid grid, bool centroid)
+        {
+            var coefficients = parameters.Copy();
+            coefficients.KeepCoefficients = true;
+            var fit = JointDemultiplexer.DemuxUnit(unit, coefficients, grid);
+
+            // Each (pass, column)'s coefficients by grid sample.
+            var columnOf = new Dictionary<int, int>();
+            for (int j = 0; j < unit.ColumnBins.Length; j++)
+                columnOf[unit.ColumnBins[j]] = j;
+            var beta = new Dictionary<(int, int), Dictionary<long, double>>();
+            foreach (var p in fit.Demultiplexed)
+            {
+                var key = (p.Cycle, columnOf[p.Bin]);
+                if (!beta.TryGetValue(key, out var map))
+                {
+                    map = new Dictionary<long, double>();
+                    beta[key] = map;
+                }
+                map[grid.Index(p.Mz)] = p.Ions;
+            }
+            var kernel = parameters.PeakAt(500);
+            int half = kernel.Length / 2;
+
+            // The core bins, one row and one position each, and the acquired points apportioned among them.
+            var coreBins = unit.ColumnBins.Where(b => b >= unit.FirstCoreBin && b <= unit.LastCoreBin).ToArray();
+            var coreIndex = new Dictionary<int, int>();
+            for (int i = 0; i < coreBins.Length; i++)
+                coreIndex[coreBins[i]] = i;
+            var identity = new double[coreBins.Length, coreBins.Length];
+            for (int i = 0; i < coreBins.Length; i++)
+                identity[i, i] = 1;
+            var mz = new List<double>();
+            var ions = new List<double>();
+            var row = new List<int>();
+            var cycle = new List<int>();
+            var covered = new List<int>();
+            var fitted = new List<double>();
+            for (int p = 0; p < unit.Mz.Length; p++)
+            {
+                if (!observed[p])
+                    continue;
+                int r = unit.Row[p], c = unit.Cycle[p];
+                long sample = grid.Index(unit.Mz[p]);
+                covered.Clear();
+                fitted.Clear();
+                double total = 0;
+                for (int j = 0; j < unit.ColumnBins.Length; j++)
+                {
+                    if (unit.Transmission[r, j] <= 0)
+                        continue;
+                    double f = 0;
+                    if (beta.TryGetValue((unit.Cycles[c], j), out var map))
+                    {
+                        for (int d = -half; d <= half; d++)
+                        {
+                            if (map.TryGetValue(sample - d, out double b))
+                                f += kernel[d + half] * b;
+                        }
+                    }
+                    covered.Add(j);
+                    fitted.Add(f);
+                    total += f;
+                }
+                for (int n = 0; n < covered.Count; n++)
+                {
+                    int bin = unit.ColumnBins[covered[n]];
+                    if (!coreIndex.TryGetValue(bin, out int core))
+                        continue;
+                    double share = total > 0 ? fitted[n] / total : 1.0 / covered.Count;
+                    if (share <= 0)
+                        continue;
+                    mz.Add(unit.Mz[p]);
+                    ions.Add(unit.Ions[p] * share);
+                    row.Add(core);
+                    cycle.Add(c);
+                }
+            }
+            if (!centroid)
+            {
+                var profile = new ScanningUnitResult { IonsIn = fit.IonsIn };
+                for (int n = 0; n < mz.Count; n++)
+                    profile.Demultiplexed.Add(new ScanningPeak(coreBins[row[n]], unit.Cycles[cycle[n]], mz[n], ions[n]));
+                return profile;
+            }
+            var shares = new ScanningUnit(identity, coreBins, coreBins, unit.Cycles, unit.FirstCoreBin, unit.LastCoreBin,
+                unit.FirstCoreCycle, unit.LastCoreCycle)
+            {
+                Mz = mz.ToArray(),
+                Ions = ions.ToArray(),
+                Row = row.ToArray(),
+                Cycle = cycle.ToArray(),
+            };
+            var result = JointDemultiplexer.DemuxUnit(shares, parameters, grid);
+            result.IonsIn = fit.IonsIn;
+            return result;
+        }
+
+        /// <summary>
+        /// The joint solve's profile grid, taken once from the first spectrum with enough points, and the Gaussian
+        /// peak it fits in grid samples.
+        /// </summary>
+        private LinearGrid GridOf(Dictionary<int, (double[] Mz, double[] Ions)> peaks)
+        {
+            if (_grid != null)
+                return _grid;
+            foreach (var (mz, _) in peaks.OrderBy(e => e.Key).Select(e => e.Value))
+            {
+                if (mz.Length < 1000)
+                    continue;
+                _grid = LinearGrid.Detect(mz);
+                if (_grid == null)
+                    throw new InvalidOperationException(@"The joint solve needs profile spectra on one linear grid.");
+                double sigma = _options.LinearPeakSigmaTh / _grid.Step;
+                _options.JointParameters.PeakSigmaSamples = new[] { sigma };
+                _options.JointParameters.PeakSigmaMz = new[] { 500.0 };
+                _log.WriteLine(@"Profile grid: step {0:F4} Th; peak sigma {1:F3} Th = {2:F2} samples", _grid.Step,
+                    _options.LinearPeakSigmaTh, sigma);
+                return _grid;
+            }
+            throw new InvalidOperationException(@"The joint solve found no profile spectrum to take the grid from.");
         }
 
         private InterpolatedUnit MakeUnit(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, int lo, int hi,

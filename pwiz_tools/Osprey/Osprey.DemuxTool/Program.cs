@@ -46,7 +46,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--thin N]" +
+            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
             @" [--remultiplex K]";
 
         private static int Main(string[] args)
@@ -63,7 +63,7 @@ namespace pwiz.Osprey.DemuxTool
                 bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz" ||
                     option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile" ||
                     option == @"--joint" || option == @"--joint-relaxed" || option == @"--solve-profile" ||
-                    option == @"--joint-keep-active";
+                    option == @"--joint-keep-active" || option == @"--joint-fitted" || option == @"--joint-profile";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -226,6 +226,18 @@ namespace pwiz.Osprey.DemuxTool
                         staggered = true;
                         schemeSet = true;
                         break;
+                    case @"--joint-profile":
+                        // Staggered joint solve: write each bin's apportioned profile, for another centroider.
+                        options.JointCentroid = false;
+                        break;
+                    case @"--joint-fitted":
+                        // Staggered joint solve: write the fitted peaks themselves instead of apportioning the measured profile.
+                        options.JointApportion = false;
+                        break;
+                    case @"--peak-sigma-th":
+                        // Staggered joint solve on an ion trap's linear grid: the profile peak's sigma, in Th.
+                        options.LinearPeakSigmaTh = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
                     case @"--thin":
                         // Staggered, for measuring how sampling matters: keep only every N-th cycle's MS2 spectra.
                         options.ThinCycles = int.Parse(value, CultureInfo.InvariantCulture);
@@ -270,11 +282,11 @@ namespace pwiz.Osprey.DemuxTool
             // is local: larger blocks solve less context per bin kept (48 bins keep 48 of 68 positions, 16
             // keep 16 of 36) and leave fewer block edges.
             if (options.Joint && !groupBinsSet)
-                options.GroupBins = 48;
+                options.GroupBins = staggered ? 16 : 48;
             // On the ZT Scan slice MS1 centroided by the joint solve found 3-7% more peptides than the vendor's
             // centroids (DIA-NN's tolerance pinned), at a CV 0.002-0.003 worse.
             if (options.Joint && !ms1Set)
-                options.JointMs1 = true;
+                options.JointMs1 = !staggered;
             // A vendor reader serves concurrent requests, and decoding and centroiding its spectra is the slowest
             // step of a run read serially (about 2.6 s a sweep for a ZT Scan .wiff2).
             if (!readThreadsSet && input != null && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))

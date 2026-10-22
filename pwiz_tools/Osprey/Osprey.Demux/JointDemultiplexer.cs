@@ -143,6 +143,12 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public int BlockPoints { get; set; } = 1;
 
+        /// <summary>
+        /// Write each positive coefficient as it is (at its grid point's m/z) instead of centroiding each position's
+        /// runs of them: for a caller that uses the fitted peaks themselves, such as staggered apportioning.
+        /// </summary>
+        public bool KeepCoefficients { get; set; }
+
         /// <summary>A copy, to change without changing these (arrays are replaced, not changed, so shared).</summary>
         public JointDemuxParams Copy()
         {
@@ -319,7 +325,7 @@ namespace pwiz.Osprey.Demux
         /// Demultiplexes one block of profile data. The unit's points are profile samples (zeros dropped),
         /// their intensities in ions; each must lie on <paramref name="grid"/>.
         /// </summary>
-        public static ScanningUnitResult DemuxUnit(ScanningUnit unit, JointDemuxParams parameters, TofGrid grid)
+        public static ScanningUnitResult DemuxUnit(ScanningUnit unit, JointDemuxParams parameters, IProfileGrid grid)
         {
             var result = new ScanningUnitResult();
             int rows = unit.RowBins.Length, cycles = unit.Cycles.Length, columns = unit.ColumnBins.Length;
@@ -345,6 +351,10 @@ namespace pwiz.Osprey.Demux
             }
 
             var solver = new ChunkSolver(unit.Transmission, parameters);
+            // With the coefficients kept, every column's: a caller apportioning by them needs the context's too.
+            var allColumns = new bool[columns];
+            for (int j = 0; j < columns; j++)
+                allColumns[j] = true;
             int margin = 2 * parameters.PeakHalfWidth + 2;
             var kept = new List<(int Column, long Sample, double Beta)>();
             for (int c = 0; c < cycles; c++)
@@ -372,10 +382,21 @@ namespace pwiz.Osprey.Demux
                         continue;
                     double centerMz = grid.Mz(0.5 * (core0 + core1));
                     solver.Solve(points, start, end, lo, hi, parameters.PeakAt(centerMz));
-                    solver.Keep(core0, core1, coreColumn, kept);
+                    solver.Keep(core0, core1, parameters.KeepCoefficients ? allColumns : coreColumn, kept);
                     result.ChannelsSolved++;
                 }
-                Centroid(kept, unit, c, grid, parameters.MinOutputIons, result.Demultiplexed);
+                if (parameters.KeepCoefficients)
+                {
+                    foreach (var (column, sample, beta) in kept)
+                    {
+                        if (beta > 0)
+                            result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[column], unit.Cycles[c], grid.Mz(sample), beta));
+                    }
+                }
+                else
+                {
+                    Centroid(kept, unit, c, grid, parameters.MinOutputIons, result.Demultiplexed);
+                }
             }
             return result;
         }
@@ -385,7 +406,7 @@ namespace pwiz.Osprey.Demux
         /// positive coefficient is one peak, at its coefficient-weighted m/z, carrying their sum.
         /// </summary>
         private static void Centroid(List<(int Column, long Sample, double Beta)> kept, ScanningUnit unit, int c,
-            TofGrid grid, double minOutputIons, List<ScanningPeak> output)
+            IProfileGrid grid, double minOutputIons, List<ScanningPeak> output)
         {
             kept.Sort((a, b) => a.Column != b.Column ? a.Column.CompareTo(b.Column) : a.Sample.CompareTo(b.Sample)); // Array.Sort OK: (column, sample) is unique
             int k = 0;
