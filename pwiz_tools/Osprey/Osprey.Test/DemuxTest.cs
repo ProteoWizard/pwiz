@@ -495,103 +495,56 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// MEASUREMENT (temporary, not for commit): how well each bin's value is recovered at every pass, by
-        /// overlap factor and peak width in passes, apex region separately. Writes a table to the path in
-        /// OSPREY_DEMUX_MEASURE_OUT and does nothing without it.
+        /// The elution fit (<see cref="ElutionDemultiplexer"/>) on runs whose peaks are only a few passes wide, where
+        /// each window's own series (one sample every k passes) is too sparse to interpolate: a fragment from one bin
+        /// is recovered exactly at every pass, the output does not depend on the thread count, and at 4-fold overlap
+        /// it beats the interpolating engine by an order of magnitude. Also the unit-resolution fragment channels it
+        /// is used with: matched in Th on a linear axis.
         /// </summary>
         [TestMethod]
-        public void TestDemuxPassRateMeasurement()
+        public void TestDemuxElutionFit()
         {
-            string outPath = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_MEASURE_OUT");
-            if (string.IsNullOrEmpty(outPath))
-                return;
-            var lines = new List<string> { "k\tengine\tfwhm_passes\tunique_apex_mae\tunique_apex_max\tunique_all_mae\tshared_apex_mae\tshared_all_mae\tleak" };
-            foreach (int k in new[] { 2, 3, 4 })
+            foreach (var (k, fwhmPasses) in new[] { (2, 2.0), (3, 2.0), (4, 3.0) })
             {
-                foreach (double fwhmPasses in new[] { 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0 })
-                {
-                    double sigmaCycles = fwhmPasses / 2.3548 / k;
-                    var cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, k);
-                    var run = BuildRun(new RunOptions
-                    {
-                        Cycle = cycle,
-                        Cycles = Math.Max(30, (int)Math.Ceiling(12 * sigmaCycles + 12)),
-                        ElutionSigmaCycles = sigmaCycles,
-                    });
-                    double fwhmSeconds = 2.3548 * sigmaCycles * cycle.Count * SCAN_MINUTES * 60;
-                    foreach (string arm in new[] { @"weighted", @"msconvert", @"elution" })
-                    {
-                        var parameters = new DemuxParams { Threads = 4 };
-                        if (arm == @"msconvert")
-                            parameters.Engine = DemuxEngine.msconvert;
-                        if (arm == @"elution")
-                            parameters.Elution = new ElutionDemuxParams { FwhmSeconds = fwhmSeconds };
-                        var result = Demultiplexer.Demultiplex(run.Spectra, parameters);
-                        var stats = PassRateErrors(result, run);
-                        lines.Add(string.Join("\t", k, arm, fwhmPasses.ToString(CultureInfo.InvariantCulture),
-                            stats.UniqueApex.ToString(@"F4", CultureInfo.InvariantCulture),
-                            stats.UniqueApexMax.ToString(@"F4", CultureInfo.InvariantCulture),
-                            stats.UniqueAll.ToString(@"F4", CultureInfo.InvariantCulture),
-                            stats.SharedApex.ToString(@"F4", CultureInfo.InvariantCulture),
-                            stats.SharedAll.ToString(@"F4", CultureInfo.InvariantCulture),
-                            stats.Leak.ToString(@"F4", CultureInfo.InvariantCulture)));
-                    }
-                }
+                var run = BuildElutingRun(k, fwhmPasses, out double fwhmSeconds);
+                var fit = new ElutionDemuxParams { FwhmSeconds = fwhmSeconds };
+                var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 4, Elution = fit });
+                var errors = PassRateErrors(result, run);
+                string label = string.Format(CultureInfo.InvariantCulture, @"k={0}, FWHM {1} passes", k, fwhmPasses);
+                Assert.IsTrue(errors.UniqueApexMax < 1e-4,
+                    string.Format(CultureInfo.InvariantCulture, @"{0}: max apex error {1:P3}", label, errors.UniqueApexMax));
+                Assert.IsTrue(errors.Leak < 0.02,
+                    string.Format(CultureInfo.InvariantCulture, @"{0}: leak {1:P3}", label, errors.Leak));
+                AssertIdentical(result, Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 1, Elution = fit }));
             }
-            File.WriteAllLines(outPath, lines);
-        }
 
-        private static (double UniqueApex, double UniqueApexMax, double UniqueAll, double SharedApex, double SharedAll, double Leak)
-            PassRateErrors(DemuxResult result, SyntheticRun run)
-        {
-            double uApex = 0, uApexMax = 0, uAll = 0, sApex = 0, sAll = 0, leak = 0, total = 0;
-            int nuApex = 0, nuAll = 0, nsApex = 0, nsAll = 0;
-            foreach (var spectrum in result.Spectra)
+            // Measured: k=4 with peaks two passes wide, apex error 0.9% against 28% interpolated, leak 0.5% against 30%.
+            var k4 = BuildElutingRun(4, 2.0, out double k4Fwhm);
+            var fitted = PassRateErrors(Demultiplexer.Demultiplex(k4.Spectra,
+                new DemuxParams { Threads = 4, Elution = new ElutionDemuxParams { FwhmSeconds = k4Fwhm } }), k4);
+            var interpolated = PassRateErrors(Demultiplexer.Demultiplex(k4.Spectra, new DemuxParams { Threads = 4 }), k4);
+            Assert.IsTrue(fitted.UniqueApex * 10 < interpolated.UniqueApex,
+                string.Format(CultureInfo.InvariantCulture, @"k=4 apex error {0:P2} against {1:P2} interpolated",
+                    fitted.UniqueApex, interpolated.UniqueApex));
+            Assert.IsTrue(fitted.Leak * 10 < interpolated.Leak,
+                string.Format(CultureInfo.InvariantCulture, @"k=4 leak {0:P2} against {1:P2} interpolated", fitted.Leak,
+                    interpolated.Leak));
+
+            // Unit-resolution channels: three fragments 1 and 1.5 Th apart, each centroid off by up to +/-0.25 Th.
+            var random = new Random(11);
+            var nominal = new[] { 500.0, 501.0, 502.5 };
+            var mz = new double[300];
+            var ions = new double[300];
+            for (int i = 0; i < mz.Length; i++)
             {
-                int bin = BinOf(run.Bins, spectrum.IsolationWindow.Center);
-                double level = run.Profile(bin, spectrum.RetentionTime);
-                var observed = new Dictionary<double, double>();
-                for (int p = 0; p < spectrum.Mzs.Length; p++)
-                {
-                    total += spectrum.Intensities[p];
-                    double nominal = run.Truth[bin].Keys.FirstOrDefault(mz => Math.Abs(mz - spectrum.Mzs[p]) <= mz * 10e-6);
-                    if (nominal == 0)
-                        leak += spectrum.Intensities[p];
-                    else
-                        observed[nominal] = spectrum.Intensities[p];
-                }
-                foreach (var peak in run.Truth[bin])
-                {
-                    observed.TryGetValue(peak.Key, out double value);
-                    double error = Math.Abs(value - peak.Value * level) / peak.Value;
-                    bool shared = peak.Key == SHARED_FRAGMENT_MZ;
-                    if (shared)
-                    {
-                        sAll += error;
-                        nsAll++;
-                    }
-                    else
-                    {
-                        uAll += error;
-                        nuAll++;
-                    }
-                    if (level < 0.5)
-                        continue;
-                    if (shared)
-                    {
-                        sApex += error;
-                        nsApex++;
-                    }
-                    else
-                    {
-                        uApex += error;
-                        uApexMax = Math.Max(uApexMax, error);
-                        nuApex++;
-                    }
-                }
+                mz[i] = nominal[i % 3] + (2 * random.NextDouble() - 1) * 0.25;
+                ions[i] = 10;
             }
-            return (uApex / Math.Max(1, nuApex), uApexMax, uAll / Math.Max(1, nuAll), sApex / Math.Max(1, nsApex),
-                sAll / Math.Max(1, nsAll), leak / Math.Max(total, 1e-30));
+            var channel = new int[mz.Length];
+            Assert.AreEqual(3, FragmentChannelFinder.FindLinear(mz, ions, 0.4, 8, channel));
+            for (int i = 0; i < mz.Length; i++)
+                Assert.AreEqual(i % 3, channel[i], string.Format(CultureInfo.InvariantCulture, @"peak at {0:F3}", mz[i]));
+            Assert.IsTrue(FragmentChannelFinder.Find(mz, ions, 10, 8, channel) > 3, @"10 ppm channels split them");
         }
 
         /// <summary>
@@ -1126,6 +1079,81 @@ namespace pwiz.Osprey.Test
                 }
             }
             return new SyntheticRun(spectra, bins, truth, profile);
+        }
+
+        /// <summary>
+        /// A k-fold staggered run, every bin eluting as a Gaussian <paramref name="fwhmPasses"/> passes wide (a pass
+        /// being one set of windows tiling the range), and that FWHM in seconds.
+        /// </summary>
+        private static SyntheticRun BuildElutingRun(int k, double fwhmPasses, out double fwhmSeconds)
+        {
+            double sigmaCycles = fwhmPasses / 2.3548 / k;
+            var cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, k);
+            fwhmSeconds = 2.3548 * sigmaCycles * cycle.Count * SCAN_MINUTES * 60;
+            return BuildRun(new RunOptions
+            {
+                Cycle = cycle,
+                Cycles = Math.Max(30, (int)Math.Ceiling(12 * sigmaCycles + 12)),
+                ElutionSigmaCycles = sigmaCycles,
+            });
+        }
+
+        /// <summary>
+        /// Recovery of each bin's truth at every pass: mean and max error at the apex (truth at least half its apex)
+        /// of fragments unique to one bin, as a fraction of their apex; the same for the fragment several bins share;
+        /// and the leak, the fraction of the output in bins without such a fragment.
+        /// </summary>
+        private static (double UniqueApex, double UniqueApexMax, double UniqueAll, double SharedApex, double SharedAll, double Leak)
+            PassRateErrors(DemuxResult result, SyntheticRun run)
+        {
+            double uApex = 0, uApexMax = 0, uAll = 0, sApex = 0, sAll = 0, leak = 0, total = 0;
+            int nuApex = 0, nuAll = 0, nsApex = 0, nsAll = 0;
+            foreach (var spectrum in result.Spectra)
+            {
+                int bin = BinOf(run.Bins, spectrum.IsolationWindow.Center);
+                double level = run.Profile(bin, spectrum.RetentionTime);
+                var observed = new Dictionary<double, double>();
+                for (int p = 0; p < spectrum.Mzs.Length; p++)
+                {
+                    total += spectrum.Intensities[p];
+                    double nominal = run.Truth[bin].Keys.FirstOrDefault(mz => Math.Abs(mz - spectrum.Mzs[p]) <= mz * 10e-6);
+                    if (nominal == 0)
+                        leak += spectrum.Intensities[p];
+                    else
+                        observed[nominal] = spectrum.Intensities[p];
+                }
+                foreach (var peak in run.Truth[bin])
+                {
+                    observed.TryGetValue(peak.Key, out double value);
+                    double error = Math.Abs(value - peak.Value * level) / peak.Value;
+                    bool shared = peak.Key == SHARED_FRAGMENT_MZ;
+                    if (shared)
+                    {
+                        sAll += error;
+                        nsAll++;
+                    }
+                    else
+                    {
+                        uAll += error;
+                        nuAll++;
+                    }
+                    if (level < 0.5)
+                        continue;
+                    if (shared)
+                    {
+                        sApex += error;
+                        nsApex++;
+                    }
+                    else
+                    {
+                        uApex += error;
+                        uApexMax = Math.Max(uApexMax, error);
+                        nuApex++;
+                    }
+                }
+            }
+            return (uApex / Math.Max(1, nuApex), uApexMax, uAll / Math.Max(1, nuAll), sApex / Math.Max(1, nsApex),
+                sAll / Math.Max(1, nsAll), leak / Math.Max(total, 1e-30));
         }
 
         private static double MaxRelativeError(DemuxResult result, SyntheticRun run,
