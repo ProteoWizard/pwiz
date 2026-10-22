@@ -32,6 +32,7 @@ using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TorchSharp;
 
@@ -100,7 +101,42 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         protected override string ToolName => ALPHAPEPTDEEP;
 
-        protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
+        private LibraryBuilderModificationSupport _modificationSupport;
+        private string _carafeModelPath;
+
+        /// <summary>
+        /// The pretrained models' support, extended by what the fine-tuned model, if one is given, was
+        /// trained on.
+        /// </summary>
+        protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport
+        {
+            get { return _modificationSupport ??= GetModificationSupport(CarafeModelPath); }
+        }
+
+        /// <summary>
+        /// The modifications the models support when predicting with the fine-tuned model file at
+        /// <paramref name="carafeModelPath"/>, or the pretrained models' when it is null: the
+        /// pretrained set plus the modifications the file says it was trained on. A file that cannot
+        /// be read adds nothing; the build reports it.
+        /// </summary>
+        public static LibraryBuilderModificationSupport GetModificationSupport(string carafeModelPath)
+        {
+            if (string.IsNullOrEmpty(carafeModelPath))
+                return MODEL_MODIFICATION_SUPPORT;
+            try
+            {
+                var training = CarafeModelFile.ReadDescription(carafeModelPath).Training;
+                if (training?.Modifications == null)
+                    return MODEL_MODIFICATION_SUPPORT;
+                return MODEL_MODIFICATION_SUPPORT.WithTrainingModifications(training.Modifications.Keys);
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                return MODEL_MODIFICATION_SUPPORT;
+            }
+        }
 
         internal static List<ModificationType> MODEL_SUPPORTED_UNIMODS = new List<ModificationType>
         {
@@ -134,7 +170,15 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// the collision energy, instrument, activation and analyzer it was trained on, with the kind of
         /// RT model it names.
         /// </summary>
-        public string CarafeModelPath { get; set; }
+        public string CarafeModelPath
+        {
+            get { return _carafeModelPath; }
+            set
+            {
+                _carafeModelPath = value;
+                _modificationSupport = null;
+            }
+        }
 
         /// <summary>
         /// The libtorch runtimes to predict with.
@@ -189,7 +233,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            LibraryBuilderModificationSupport = MODEL_MODIFICATION_SUPPORT;
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
                 throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");

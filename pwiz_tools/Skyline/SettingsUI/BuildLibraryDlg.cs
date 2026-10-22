@@ -462,7 +462,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboCarafeModel_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // Add, Edit current and Edit list reload the list, which fires this event again from
+            // within the driver's handling; the warning follows whichever model ends up chosen
+            if (CarafeModelDriver.IsInSelectedIndexChangedEvent)
+                return;
             CarafeModelDriver.SelectedIndexChangedEvent(sender, e);
+            UpdateModificationWarning();
         }
 
         /// <summary>
@@ -489,8 +494,10 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void UpdateModificationWarning()
         {
+            // What the chosen model supports: the pretrained models' modifications, and a fine-tuned
+            // model's training modifications with them
             var warningMods = AbstractDeepLibraryBuilder.GetWarningMods(_documentUiContainer.DocumentUI,
-                AlphapeptdeepLibraryBuilder.MODEL_MODIFICATION_SUPPORT);
+                AlphapeptdeepLibraryBuilder.GetModificationSupport(CarafeModel.FilePath));
             labelModWarning.Visible = warningMods.Count > 0;
             if (warningMods.Count > 0)
             {

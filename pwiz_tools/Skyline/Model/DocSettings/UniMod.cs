@@ -240,23 +240,27 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Searches for a UniMod modification by modification definition.
+        /// Searches for a UniMod modification by modification definition. With
+        /// <paramref name="ignoreLosses"/>, neither side's neutral losses take part in the match, for
+        /// a caller to which only the modification's formula, amino acids and terminus matter.
         /// </summary>
-        public static StaticMod FindMatchingStaticMod(StaticMod modToMatch, bool structural)
-        {       
+        public static StaticMod FindMatchingStaticMod(StaticMod modToMatch, bool structural, bool ignoreLosses = false)
+        {
             var dict = structural ? DictStructuralModNames : DictIsotopeModNames;
             var hiddenDict = structural ? DictHiddenStructuralModNames : DictHiddenIsotopeModNames;
-            foreach (StaticMod mod in dict.Values)
-            {
-                if (mod.Equivalent(modToMatch))
-                    return mod;
-            }
-            foreach (StaticMod mod in hiddenDict.Values)
-            {
-                if (mod.Equivalent(modToMatch))
-                    return mod;
-            }
-            return null;
+            var mods = dict.Values.Concat(hiddenDict.Values);
+            if (!ignoreLosses)
+                return mods.FirstOrDefault(mod => mod.Equivalent(modToMatch));
+            // A loss-only modification (Water Loss (D, E, S, T)) has nothing left to match without its losses
+            if (!modToMatch.HasMod)
+                return null;
+            modToMatch = WithoutLosses(modToMatch);
+            return mods.Where(mod => mod.HasMod).FirstOrDefault(mod => WithoutLosses(mod).Equivalent(modToMatch));
+        }
+
+        private static StaticMod WithoutLosses(StaticMod mod)
+        {
+            return mod.HasLoss ? mod.ChangeLosses(null) : mod;
         }
 
         public static bool ValidateID(StaticMod mod)
