@@ -974,7 +974,7 @@ namespace pwiz.Osprey
                     return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, OspreyCommandArgs.UsageOutput);
                 return null;
             }
-            if (config.LibraryBuild.Enabled && config.SelectedTask != null)
+            if (config.LibraryBuild.Enabled && (config.SelectedTask != null || config.LibraryBuild.TrainingSearch))
                 analysis = config = LibraryBuildWorkflow.StageConfig(config);
 
             // --export-library converts the library and exits: it needs the library and nothing
@@ -1064,11 +1064,12 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The run predicts its library before searching it: the one command whole, or one of its
-        /// library phases. A stage task of it searches what the phases predicted, as any search does.
+        /// library phases. A stage task of it, or the tuning runs' search, searches what the phases
+        /// predicted, as any search does (the derived analysis has no library build of its own).
         /// </summary>
         private static bool BuildsLibrary(OspreyConfig config)
         {
-            return config.LibraryBuild.Enabled && config.SelectedTask == null;
+            return config.LibraryBuild.Enabled && config.SelectedTask == null && !config.LibraryBuild.TrainingSearch;
         }
 
         /// <summary>
@@ -1109,10 +1110,11 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_,
                     OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, fastaArg);
             }
-            // --training-search addresses a stage of the tuning runs' search, so it needs a stage.
-            if (build.TrainingSearch && (config.SelectedTask == null || !config.Pipeline.Contains(config.SelectedTask)))
+            // --training-search is the tuning runs' search, whole or one of its stages: not a library
+            // phase, nor a selector that is not a stage.
+            if (build.TrainingSearch && (build.Phase != null || (config.SelectedTask != null && !config.Pipeline.Contains(config.SelectedTask))))
             {
-                return string.Format(OspreyResources.Program_LibraryBuildError__0__selects_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__,
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__runs_the_tuning_runs__search__alone__or_with__1__one_of_its_stages___2__,
                     OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText, OspreyCommandArgs.ARG_TASK.ArgumentText,
                     string.Join(@", ", config.Pipeline.Select(t => t.Name)));
             }

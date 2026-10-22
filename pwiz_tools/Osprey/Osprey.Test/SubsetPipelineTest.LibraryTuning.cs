@@ -334,6 +334,16 @@ namespace pwiz.Osprey.Test
                 // Each library phase's node again: its output is current.
                 foreach (string phase in TUNING_PHASES)
                     Assert.AreEqual(0, TaskNames(Node(phase, inputs, inputs, false, @"skipping"), @"starting").Count);
+
+                // The tuning runs' search as one node, the form a single tuning run takes (its
+                // FirstPassFDR cannot be a task of its own): over the nodes' files the scoring and
+                // the first pass are current, the rescoring runs again in process (see above), and
+                // the result is unchanged.
+                string wholeSearch = RunOsprey(TunedArgs(fasta, chainDir, inputs, inputs)
+                    .Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText }).ToArray(), Verifier(false));
+                AssertTasks(wholeSearch, ALL_TASKS.Take(2), new[] { PerFileRescoreTask.TASK_NAME });
+                Assert.IsFalse(HasLine(wholeSearch, TaskLine(PredictLibraryTask.TASK_NAME, string.Empty)), wholeSearch);
+                AssertBlibsEqual(straight.TrainingOutput, chain.TrainingOutput);
             }
 
             // The refusals, each a designed usage error.
@@ -351,8 +361,8 @@ namespace pwiz.Osprey.Test
                 .Concat(LibraryBuildArgs(fasta, refusalDir, inputs)).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
             StringAssert.Contains(noRuns, string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
                 OspreyArgNames.TaskText(LibraryBuildWorkflow.TRAIN_MODEL_TASK), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText));
-            // The tuning runs' search names a stage of it.
-            foreach (string task in new[] { null, LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, TrainingExportTask.TASK_NAME })
+            // The tuning runs' search, whole or one of its stages, and nothing else.
+            foreach (string task in new[] { LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, TrainingExportTask.TASK_NAME })
             {
                 var args = TunedArgs(fasta, refusalDir, inputs, inputs).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText });
                 if (task != null)

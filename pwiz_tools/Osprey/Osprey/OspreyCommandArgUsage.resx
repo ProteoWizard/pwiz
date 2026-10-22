@@ -245,7 +245,7 @@
     <value>With {0}: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of {1}: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as {2}, which {3} takes next time. The options of the Library Tuning section apply.</value>
   </data>
   <data name="_training_search" xml:space="preserve">
-    <value>With {0} and {1}: the stage {2} selects is a stage of the tuning runs' search, not the output's: it searches the {1} runs with the library {3} predicts, writes into {4}, and writes the training exports {5} reads. Give it to every node of that search and the same command line without it to the others.</value>
+    <value>With {0} and {1}: the stage {2} selects is a stage of the tuning runs' search, not the output's: it searches the {1} runs with the library {3} predicts, writes into {4}, and writes the training exports {5} reads. Give it to every node of that search and the same command line without it to the others. Without {2} it runs that whole search, as one node: what a single tuning run needs, since its FirstPassFDR cannot be a task of its own.</value>
   </data>
   <data name="_training_input_list" xml:space="preserve">
     <value>With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long list of runs on the command line can pass the Windows command-line limit and hides the other arguments.</value>

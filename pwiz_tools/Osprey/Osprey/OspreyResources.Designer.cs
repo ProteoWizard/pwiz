@@ -1358,11 +1358,11 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} selects a stage of the tuning runs&apos; search: give it with {1} and one of {2}..
+        ///   Looks up a localized string similar to {0} runs the tuning runs&apos; search: alone, or with {1} one of its stages ({2})..
         /// </summary>
-        public static string Program_LibraryBuildError__0__selects_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__ {
+        public static string Program_LibraryBuildError__0__runs_the_tuning_runs__search__alone__or_with__1__one_of_its_stages___2__ {
             get {
-                return ResourceManager.GetString("Program_LibraryBuildError__0__selects_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__", resourceCulture);
+                return ResourceManager.GetString("Program_LibraryBuildError__0__runs_the_tuning_runs__search__alone__or_with__1__one_of_its_stages___2__", resourceCulture);
             }
         }
     }

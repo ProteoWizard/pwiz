@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Tasks;
@@ -177,7 +178,9 @@ namespace pwiz.Osprey
         /// <summary>
         /// The analysis a stage task selected with <c>--task</c> runs in a <c>--fasta</c> run: the
         /// tuning runs' search with <c>--training-search</c>, else the search of the output, each
-        /// derived from the run's configuration as the phases in one process derive it.
+        /// derived from the run's configuration as the phases in one process derive it. With
+        /// <c>--training-search</c> and no <c>--task</c>, the tuning runs' whole search: one node,
+        /// as a single tuning run needs (its <c>FirstPassFDR</c> cannot be a task of its own).
         /// </summary>
         public static OspreyConfig StageConfig(OspreyConfig config)
         {
@@ -381,6 +384,18 @@ namespace pwiz.Osprey
         {
             var task = PhaseTask(phase);
             var ctx = new CarafeContext(new[] { task }, TextWriter.Null, TextWriter.Null);
+            if (phase == TRAIN_MODEL_TASK)
+            {
+                // The tuning finds its exports by scanning the search's folder, which a node asking
+                // what to stage does not have yet: each tuning run's export, where the search wrote it.
+                var training = _settings.Training;
+                inputs = _config.LibraryBuild.TrainingInputs
+                    .Select(run => Path.Combine(TrainingDirectory(_config), Path.GetFileNameWithoutExtension(run) + TrainingExportParquet.EXT))
+                    .Concat(new[] { training.BaseModel, training.Ms2Model, training.PretrainedModels })
+                    .Where(path => path != null).ToList();
+                outputs = task.Outputs(ctx).Where(path => path != null).Concat(new[] { training.OutputDirectory }).ToList();
+                return;
+            }
             inputs = task.Inputs(ctx).Where(path => path != null).ToList();
             outputs = task.Outputs(ctx).Where(path => path != null).ToList();
             // The pairing manifest is written beside the library it pairs, after the prediction.
