@@ -180,6 +180,15 @@ namespace pwiz.Skyline.Controls.Databinding {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exporting report &apos;{0}&apos;.
+        /// </summary>
+        public static string ExportLiveReportDlg_ExportReport_Exporting_report___0__ {
+            get {
+                return ResourceManager.GetString("ExportLiveReportDlg_ExportReport_Exporting_report___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Preview: .
         /// </summary>
         public static string ExportLiveReportDlg_ShowPreview_Preview__ {
