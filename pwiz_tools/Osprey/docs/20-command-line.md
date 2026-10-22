@@ -257,7 +257,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--task` | `SpectraCache \| PredictTrainingLibrary \| TrainModel \| PredictLibrary \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| TrainingExport \| ModelDiagnostics` | Run exactly one task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `TrainingExport` is `--training-export` with no `--task`: a selector, not a stage, that runs the whole pipeline with the export on, so a completed run writes only its missing exports; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. With `--fasta`, `PredictTrainingLibrary`, `TrainModel` and `PredictLibrary` run the library build one phase at a time, and the four stages search the library it predicts (or, with `--training-search`, the tuning runs). EVERY search task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
-| `--training-search` | — | With `--fasta` and `--training-input`: the stage `--task` selects is a stage of the tuning runs' search - over the `--training-input` runs, with `out.predicted/initial.blib`, into `out.predicted/training/`, writing the training exports `TrainModel` reads. Without `--task`, the whole of that search on one node - what a single tuning run needs, since `--task FirstPassFDR` refuses one input. |
+| `--training-search` | — | With `--fasta` and `--training-input`: the stage `--task` selects is a stage of the tuning runs' search - over the `--training-input` runs, with `out.predicted/initial.blib`, into `out.predicted/training/`, writing the training exports `TrainModel` reads. The same four tasks for any number of tuning runs, one included. |
 | `--task-files` | — | With `--task`: print the files the task reads and writes for this command line - one line each, `input` or `output`, the task and the path, tab-separated - and exit without running it. What a node must be given and what it hands on, from the task's own declarations, for a workflow manager or a harness that stages nodes. |
 
 ### Logging
@@ -423,8 +423,9 @@ Osprey --task PerFileScoring   $ARGS                     # (-i <one run> on each
 ...
 ```
 
-With one tuning run (the lab's habit) the tuning runs' search is one node, `Osprey $ARGS --training-search`
-with no `--task`: `--task FirstPassFDR` refuses a single input. Without `--training-input` the build is
+The chain has one shape whatever the number of runs: with one tuning run (the lab's habit)
+`FirstPassFDR` has no other run to reconcile against, and `PerFileRescoring` still re-scores the run's
+multi-charge consensus and writes its half of the second pass. Without `--training-input` the build is
 `PredictLibrary` and the four stages. The library phases
 are single-node tasks (a GPU node, when there is one: `--device gpu`); the tuning runs' search and
 the output's search share the spectra cache, so a tuning run that is also an input is parsed once

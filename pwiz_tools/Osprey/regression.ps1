@@ -3057,12 +3057,8 @@ foreach ($name in $selected) {
                 $m14Nodes.Add(@('PredictLibrary', $inputs.Mzmls, @($m14Tuning), $false))
             }
             $runs = if ($training) { @($m14Tuning) } else { $inputs.Mzmls }
-            # One tuning run is one node: --task FirstPassFDR refuses a single input, so the tuning
-            # runs' search runs whole (--training-search with no --task).
-            if ($training -and @($runs).Count -lt 2) {
-                $m14Nodes.Add(@($null, $inputs.Mzmls, @($runs), $true))
-                continue
-            }
+            # The same four stages for any number of runs: Stellar tunes on one, whose FirstPassFDR
+            # has no other run to reconcile against.
             foreach ($stage in @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')) {
                 $perFile = $stage -eq 'PerFileScoring' -or $stage -eq 'PerFileRescoring'
                 # A list, not a pipeline: PowerShell unrolls a one-element array of arrays.
@@ -3080,14 +3076,11 @@ foreach ($name in $selected) {
         foreach ($node in $m14Nodes) {
             $nodeIndex++
             $task = $node[0]
-            $label = if ($task) { $task } else { 'TrainingSearch' }
-            Write-Progress-Tc "${name}: mode14 node $nodeIndex/$($m14Nodes.Count) $label$(if ($node[3] -and $task) { ' (training search)' })"
-            $nodeArgs = @(Get-OneCommandArgs -Mzmls $node[1] -Fasta $m14Fasta -TuningRuns $node[2] `
+            Write-Progress-Tc "${name}: mode14 node $nodeIndex/$($m14Nodes.Count) $task$(if ($node[3]) { ' (training search)' })"
+            $nodeArgs = @('--task', $task) + (Get-OneCommandArgs -Mzmls $node[1] -Fasta $m14Fasta -TuningRuns $node[2] `
                 -Resolution $cfg.Resolution -WorkDir $m14Dir)
-            if ($task) { $nodeArgs = @('--task', $task) + $nodeArgs }
             if ($node[3]) { $nodeArgs += '--training-search' }
-            # A whole search is not one task, so it has no single declaration to print.
-            $declared = if ($task) { Get-DeclaredTaskFiles -WorkDir $m14Dir -CliArgs $nodeArgs } else { @() }
+            $declared = Get-DeclaredTaskFiles -WorkDir $m14Dir -CliArgs $nodeArgs
             # A declared data file is satisfied by its spectra cache, as on a staged node.
             foreach ($f in @($declared | Where-Object { $_.Kind -eq 'input' })) {
                 $cache = Join-Path $m14Dir ([IO.Path]::GetFileNameWithoutExtension($f.Path) + '.spectra.bin')
@@ -3095,15 +3088,14 @@ foreach ($name in $selected) {
                     $m14Issues.Add("node $nodeIndex ${task}: declared input missing before it ran: $($f.Path)")
                 }
             }
-            $logName = 'node{0:D2}_{1}.log' -f $nodeIndex, $label
+            $logName = 'node{0:D2}_{1}.log' -f $nodeIndex, $task
             $sw = [Diagnostics.Stopwatch]::StartNew()
             Invoke-OspreyTaskRun -WorkDir $m14Dir -CliArgs $nodeArgs -LogName $logName
             $sw.Stop()
             $m14Wall += $sw.Elapsed
             $text = Get-Content -Raw -LiteralPath (Join-Path $m14Dir $logName)
             $started = @([regex]::Matches($text, '\[TASK\] (\w+):starting') | ForEach-Object { $_.Groups[1].Value })
-            $expected = if ($task) { $task } else { 'PerFileScoring,FirstPassFDR,PerFileRescoring,SecondPassFDR' }
-            if (($started -join ',') -ne $expected) { $m14Issues.Add("node $nodeIndex ${label}: ran [$($started -join ', ')] ($logName)") }
+            if (($started -join ',') -ne $task) { $m14Issues.Add("node $nodeIndex ${task}: ran [$($started -join ', ')] ($logName)") }
             foreach ($f in @($declared | Where-Object { $_.Kind -eq 'output' })) {
                 if (-not (Test-Path -LiteralPath $f.Path)) { $m14Issues.Add("node $nodeIndex ${task}: declared output not written: $($f.Path)") }
             }

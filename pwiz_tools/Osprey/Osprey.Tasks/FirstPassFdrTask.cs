@@ -99,13 +99,10 @@ namespace pwiz.Osprey.Tasks
             string err = base.ValidateSelection(config);
             if (err != null)
                 return err;
-            if (config.InputFiles.Count < 2)
-            {
-                return string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                    OspreyArgNames.TaskText(Name), config.InputFiles.Count, PerFileRescoreTask.TASK_NAME,
-                    OspreyArgNames.Text(OspreyArgNames.INPUT));
-            }
+            // One input is a search like any other: with no other run to reconcile against, the
+            // consensus is empty, PerFileRescoring has no plan for the run and says so, and the
+            // chain is the same four tasks whatever the run count - so a workflow manager need not
+            // count the runs to choose its shape (the one command's single tuning run).
             if (!config.Reconciliation.Enabled)
             {
                 return string.Format(

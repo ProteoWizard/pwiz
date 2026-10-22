@@ -520,7 +520,7 @@
   <data name="LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_" xml:space="preserve">
     <value>{0} predicts the library with the tuned model {1}, which is not there. Run {2} first.</value>
   </data>
-  <data name="Program_LibraryBuildError__0__runs_the_tuning_runs__search__alone__or_with__1__one_of_its_stages___2__" xml:space="preserve">
-    <value>{0} runs the tuning runs' search: alone, or with {1} one of its stages ({2}).</value>
+  <data name="Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__" xml:space="preserve">
+    <value>{0} makes a stage task a stage of the tuning runs' search: give it with {1} and one of {2}.</value>
   </data>
 </root>

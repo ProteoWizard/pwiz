@@ -436,21 +436,15 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstPassFdrRejectsSingleFile()
+        public void TestValidateFirstPassFdrAcceptsSingleFile()
         {
-            // FirstPassFDR writes the Stage 5 -> Stage 6 boundary pair, only
-            // meaningful with siblings; a single-file run errors fast.
+            // One run is a chain like any other (the one command's single tuning run): the
+            // consensus is empty and PerFileRescoring has no plan for the run, but no task refuses.
             var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "only.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, string.Format(
-                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, 1, PerFileRescoreTask.TASK_NAME,
-                OspreyCommandArgs.ARG_INPUT.ArgumentText));
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]

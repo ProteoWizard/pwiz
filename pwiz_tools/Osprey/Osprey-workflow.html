@@ -509,6 +509,9 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <p>
     Modes 1 and 3 are the last two lines: <code>--task PredictLibrary</code>, then the four stage
     tasks. A node whose checkpoint is already current does nothing, as in the in-process run.
+    The chain has this shape whatever the number of tuning runs: with one (the lab's habit) its
+    <code>FirstPassFDR</code> node has no other run to reconcile against, and its <code>PerFileRescoring</code> node still
+    re-scores the run's multi-charge consensus and writes its half of the second pass.
   </p>
 </div>
 

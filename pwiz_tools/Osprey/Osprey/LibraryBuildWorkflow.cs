@@ -178,9 +178,7 @@ namespace pwiz.Osprey
         /// <summary>
         /// The analysis a stage task selected with <c>--task</c> runs in a <c>--fasta</c> run: the
         /// tuning runs' search with <c>--training-search</c>, else the search of the output, each
-        /// derived from the run's configuration as the phases in one process derive it. With
-        /// <c>--training-search</c> and no <c>--task</c>, the tuning runs' whole search: one node,
-        /// as a single tuning run needs (its <c>FirstPassFDR</c> cannot be a task of its own).
+        /// derived from the run's configuration as the phases in one process derive it.
         /// </summary>
         public static OspreyConfig StageConfig(OspreyConfig config)
         {
