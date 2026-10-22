@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using pwiz.Osprey.Centroid;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Demux
@@ -47,6 +48,7 @@ namespace pwiz.Osprey.Demux
         private readonly Dictionary<int, double> _passPerIon = new Dictionary<int, double>();   // joint: a pass's ion scale
         private readonly TextWriter _log;
         private LinearGrid _grid;                     // joint: the profile grid, from the first batch
+        private CentrixCentroider _centrix;           // joint: centroids each bin's share, on the grid
         private readonly Dictionary<int, int> _ms2OfSpectrum = new Dictionary<int, int>();
         private readonly HashSet<int> _thinnedOut = new HashSet<int>();   // MS2 spectra dropped by ThinCycles
         private readonly List<(int Spectrum, int Bin)> _output = new List<(int, int)>();
@@ -278,9 +280,10 @@ namespace pwiz.Osprey.Demux
                         if (unit == null)
                             continue;
                         var parameters = _options.JointParameters;
-                        bool centroid = _options.JointCentroid;
+                        var centrix = _options.JointCentroid ? _centrix : null;
+                        var passPerIon = _passPerIon;
                         work.Add(new DemuxWork(_options.JointApportion
-                            ? (Func<ScanningUnitResult>)(() => SolveJointApportioned(unit, observed, parameters, grid, centroid))
+                            ? (Func<ScanningUnitResult>)(() => SolveJointApportioned(unit, observed, parameters, grid, centrix, passPerIon))
                             : () => JointDemultiplexer.DemuxUnit(unit, parameters, grid), unit.Mz.Length));
                     }
                 }
@@ -486,11 +489,11 @@ namespace pwiz.Osprey.Demux
         /// <summary>
         /// The joint solve with the measurements kept: the pseudo-sweeps are fitted for each bin's peaks (coefficients
         /// on the grid); each acquired spectrum's profile is split among the unit's own bins its window covers by those
-        /// bins' fitted profiles at each sample (equally where none is fitted); and each bin's share is centroided by
-        /// the same solve with one bin to one position. Centroids are keyed by bin and pass.
+        /// bins' fitted profiles at each sample (equally where none is fitted); and each bin's share in each pass is
+        /// centroided by Centrix, or kept as profile when there is no centroider. Peaks are keyed by bin and pass.
         /// </summary>
         private static ScanningUnitResult SolveJointApportioned(ScanningUnit unit, bool[] observed, JointDemuxParams parameters,
-            LinearGrid grid, bool centroid)
+            LinearGrid grid, CentrixCentroider centrix, IReadOnlyDictionary<int, double> passPerIon)
         {
             var coefficients = parameters.Copy();
             coefficients.KeepCoefficients = true;
@@ -519,9 +522,6 @@ namespace pwiz.Osprey.Demux
             var coreIndex = new Dictionary<int, int>();
             for (int i = 0; i < coreBins.Length; i++)
                 coreIndex[coreBins[i]] = i;
-            var identity = new double[coreBins.Length, coreBins.Length];
-            for (int i = 0; i < coreBins.Length; i++)
-                identity[i, i] = 1;
             var mz = new List<double>();
             var ions = new List<double>();
             var row = new List<int>();
@@ -568,23 +568,35 @@ namespace pwiz.Osprey.Demux
                     cycle.Add(c);
                 }
             }
-            if (!centroid)
+            var result = new ScanningUnitResult { IonsIn = fit.IonsIn };
+            if (centrix == null)
             {
-                var profile = new ScanningUnitResult { IonsIn = fit.IonsIn };
                 for (int n = 0; n < mz.Count; n++)
-                    profile.Demultiplexed.Add(new ScanningPeak(coreBins[row[n]], unit.Cycles[cycle[n]], mz[n], ions[n]));
-                return profile;
+                    result.Demultiplexed.Add(new ScanningPeak(coreBins[row[n]], unit.Cycles[cycle[n]], mz[n], ions[n]));
+                return result;
             }
-            var shares = new ScanningUnit(identity, coreBins, coreBins, unit.Cycles, unit.FirstCoreBin, unit.LastCoreBin,
-                unit.FirstCoreCycle, unit.LastCoreCycle)
+            // Each bin's share in each pass, as the profile spectrum it would be written as: in m/z order, in the pass's
+            // intensity units, since Centrix's noise model is of an instrument's intensities, not of ions.
+            var shares = new SortedDictionary<(int, int), List<int>>();
+            for (int n = 0; n < mz.Count; n++)
             {
-                Mz = mz.ToArray(),
-                Ions = ions.ToArray(),
-                Row = row.ToArray(),
-                Cycle = cycle.ToArray(),
-            };
-            var result = JointDemultiplexer.DemuxUnit(shares, parameters, grid);
-            result.IonsIn = fit.IonsIn;
+                if (!shares.TryGetValue((row[n], cycle[n]), out var points))
+                {
+                    points = new List<int>();
+                    shares[(row[n], cycle[n])] = points;
+                }
+                points.Add(n);
+            }
+            foreach (var ((core, c), points) in shares)
+            {
+                int pass = unit.Cycles[c];
+                double perIon = passPerIon[pass];
+                var ordered = points.OrderBy(n => mz[n]).ToArray(); // Array.Sort OK: OrderBy is stable
+                var x = ordered.Select(n => mz[n]).ToArray();
+                var y = ordered.Select(n => ions[n] * perIon).ToArray();
+                foreach (var (m, v) in centrix.Centroid(x, y))
+                    result.Demultiplexed.Add(new ScanningPeak(coreBins[core], pass, m, v / perIon));
+            }
             return result;
         }
 
@@ -606,6 +618,10 @@ namespace pwiz.Osprey.Demux
                 double sigma = _options.LinearPeakSigmaTh / _grid.Step;
                 _options.JointParameters.PeakSigmaSamples = new[] { sigma };
                 _options.JointParameters.PeakSigmaMz = new[] { 500.0 };
+                var centrix = _options.Centrix.Copy();
+                centrix.SigmaTh = _options.LinearPeakSigmaTh;
+                centrix.GridSpacingTh = _grid.Step;
+                _centrix = new CentrixCentroider(centrix);
                 _log.WriteLine(@"Profile grid: step {0:F4} Th; peak sigma {1:F3} Th = {2:F2} samples", _grid.Step,
                     _options.LinearPeakSigmaTh, sigma);
                 return _grid;

@@ -58,7 +58,9 @@ namespace pwiz.Osprey.DemuxTool
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false, noDemux = false, centrix = false;
             var options = new ScanningDemuxOptions();
-            var centrixMs2 = new CentrixParams();
+            // The staggered joint solve's Centrix settings serve --centroid centrix too; the joint solve takes its sigma
+            // from --peak-sigma-th.
+            var centrixMs2 = options.Centrix;
             double centrixSigmaMs1 = 0;
             for (int i = 0; i < args.Length; i++)
             {

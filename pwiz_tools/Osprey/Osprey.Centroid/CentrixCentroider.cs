@@ -89,18 +89,21 @@ namespace pwiz.Osprey.Centroid
                 x[i] = mz[i];
                 y[i] = intensity[i];
             }
-            var basis = BasisFor(x);
-            if (basis == null)
-                return;
-            foreach (var (m, v) in Centroid(x, y, basis))
+            foreach (var (m, v) in Centroid(x, y))
             {
                 centroidMz.Add(m);
                 centroidIntensity.Add(v);
             }
         }
 
-        /// <summary>The centroids of one spectrum, ascending in m/z, on a given basis.</summary>
-        public List<(double Mz, double Intensity)> Centroid(double[] mz, double[] intensity, CentrixBasis basis)
+        /// <summary>The centroids of one profile spectrum (as above, the arrays the same length), ascending in m/z.</summary>
+        public List<(double Mz, double Intensity)> Centroid(double[] mz, double[] intensity)
+        {
+            var basis = mz.Length >= 3 ? BasisFor(mz) : null;
+            return basis != null ? Centroid(mz, intensity, basis) : new List<(double Mz, double Intensity)>();
+        }
+
+        private List<(double Mz, double Intensity)> Centroid(double[] mz, double[] intensity, CentrixBasis basis)
         {
             var p = _parameters;
             int n = mz.Length;
@@ -152,7 +155,7 @@ namespace pwiz.Osprey.Centroid
         /// spectrum with no spacing of its own (half its gaps zero) takes the cached one, as Centrix would give it
         /// its first spectrum's; null when there is none yet.
         /// </summary>
-        public CentrixBasis BasisFor(double[] mz)
+        private CentrixBasis BasisFor(double[] mz)
         {
             var basis = _basis;
             if (_parameters.GridSpacingTh > 0)

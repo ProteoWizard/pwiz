@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using pwiz.Osprey.Centroid;
 
 namespace pwiz.Osprey.Demux
 {
@@ -60,16 +61,22 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>
         /// Staggered joint solve: split each acquired spectrum's observed profile among its bins by the fitted peaks of
-        /// each bin, then centroid each bin's share with the same solve (one bin to one position), rather than writing
-        /// the fitted peaks themselves, which carry the errors of the interpolated windows.
+        /// each bin, then centroid each bin's share, rather than writing the fitted peaks themselves, which carry the
+        /// errors of the interpolated windows.
         /// </summary>
         public bool JointApportion { get; set; } = true;
 
         /// <summary>
-        /// With <see cref="JointApportion"/>: centroid each bin's share with the joint solve; false writes the shares
-        /// as profile, for a centroider of its own (Centrix).
+        /// With <see cref="JointApportion"/>: centroid each bin's share with Centrix (<see cref="Centrix"/>); false
+        /// writes the shares as profile, for a centroider of its own.
         /// </summary>
         public bool JointCentroid { get; set; } = true;
+
+        /// <summary>
+        /// With <see cref="JointCentroid"/>: the settings of the Centrix lasso that centroids each bin's share. Its peak
+        /// sigma is <see cref="LinearPeakSigmaTh"/> and its grid spacing the profile's, whatever is set here.
+        /// </summary>
+        public CentrixParams Centrix { get; set; } = new CentrixParams();
 
         /// <summary>
         /// Staggered data, for measuring how sampling matters: when above 1, only every this many cycles' MS2 spectra
