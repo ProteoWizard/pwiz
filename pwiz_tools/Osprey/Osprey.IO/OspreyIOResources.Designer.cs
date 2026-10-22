@@ -247,34 +247,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading library cache ({0:N0} precursors).
-        /// </summary>
-        public static string LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_ {
-            get {
-                return ResourceManager.GetString("LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Writing library cache.
-        /// </summary>
-        public static string LibraryCacheStatus_SaveCache_Writing_library_cache {
-            get {
-                return ResourceManager.GetString("LibraryCacheStatus_SaveCache_Writing_library_cache", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The library cache is damaged (unknown neutral loss tag {0})..
-        /// </summary>
-        public static string LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_ {
-            get {
-                return ResourceManager.GetString("LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag_" +
-                        "_0____Delete_it_to_rebuild_it_from_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Merging duplicate library precursors.
         /// </summary>
         public static string LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors {
@@ -342,15 +314,24 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to load the library cache: {0}. Reading the library file instead..
+        ///   Looks up a localized string similar to Failed to remove the library cache &apos;{0}&apos;: {1}.
         /// </summary>
-        public static string LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_ {
+        public static string LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_fil" +
-                        "e_instead_", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Removed the library cache &apos;{0}&apos;: the derived library replaces it..
+        /// </summary>
+        public static string LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_lib" +
+                        "rary_replaces_it_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failed to read the derived library &apos;{0}&apos;: {1} Reading the library file instead..
         /// </summary>
@@ -371,30 +352,11 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library cache &apos;{0}&apos; was built from a different version of the source library; ignoring the stale cache and rebuilding from source..
-        /// </summary>
-        public static string LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_" +
-                        "source_library__ignoring_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Loaded {0:N0} library precursors.
         /// </summary>
         public static string LibraryLoader_Load_Loaded__0__library_precursors {
             get {
                 return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loaded {0:N0} library precursors from cache &apos;{1}&apos;.
-        /// </summary>
-        public static string LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__", resourceCulture);
             }
         }
 
@@ -472,16 +434,6 @@ namespace pwiz.Osprey.IO {
         public static string LibraryLoader_Load_Unsupported_library_format___0_ {
             get {
                 return ResourceManager.GetString("LibraryLoader_Load_Unsupported_library_format___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the library cache). {3:N0} decoys and {4:N0} targets have no partner..
-        /// </summary>
-        public static string LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their" +
-                        "_targets___2____from_the_library_cache____3__", resourceCulture);
             }
         }
         
