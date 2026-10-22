@@ -379,6 +379,14 @@ namespace pwiz.Skyline.SettingsUI {
             }
         }
 
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for an NVIDIA GPU.
+        /// </summary>
+        public static string BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU", resourceCulture);
+            }
+        }
 
         /// <summary>
         ///   Looks up a localized string similar to Access violation attempting to write to {0}..

@@ -337,7 +337,7 @@ namespace pwiz.Skyline.SettingsUI
         /// Shows the runtime this session already predicted with, which it cannot change, or else checks
         /// Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is installed.
         /// Finding the GPU loads the NVIDIA driver and initializes CUDA, which can take a moment, so
-        /// the first time that runs on a background thread with the box disabled until it returns.
+        /// the first time that runs behind an indeterminate wait, shown if it takes long.
         /// </summary>
         private void UpdateUseGpu()
         {
@@ -349,27 +349,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (!runtimes.IsCudaDriverFound)
             {
-                cbUseGpu.Enabled = false;
-                ActionUtil.RunAsync(() =>
+                using var longWaitDlg = new LongWaitDlg(allowCancel: false)
+                {
+                    Message = SettingsUIResources.BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU
+                };
+                longWaitDlg.PerformWork(this, 500, () =>
                 {
                     var unused = runtimes.CudaDriver;
-                    try
-                    {
-                        BeginInvoke(new Action(() =>
-                        {
-                            // Unless the runtimes were replaced meanwhile, which updated the box itself
-                            if (!ReferenceEquals(runtimes, _torchRuntimes))
-                                return;
-                            cbUseGpu.Enabled = true;
-                            UpdateUseGpu();
-                        }));
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // The dialog closed before the driver was found
-                    }
-                }, @"Find the CUDA driver");
-                return;
+                });
             }
             SetUseGpu(runtimes.CanUseCuda && runtimes.IsCudaInstalled && Settings.Default.AlphaPeptDeepUseGpu);
         }

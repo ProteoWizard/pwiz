@@ -1268,6 +1268,9 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_InstallCudaRuntime_Download" xml:space="preserve">
     <value>Download</value>
   </data>
+  <data name="BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU" xml:space="preserve">
+    <value>Looking for an NVIDIA GPU</value>
+  </data>
   <data name="BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_" xml:space="preserve">
     <value>Failed to download the NVIDIA CUDA runtime.</value>
   </data>
