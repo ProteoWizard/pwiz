@@ -317,22 +317,17 @@ namespace pwiz.Osprey.Core
         public CentroidMode CentroidMode { get; set; } = CentroidMode.vendor;
 
         /// <summary>
-        /// With Centrix, the MS1 profile peak sigma in Th (<c>--centrix-sigma-ms1</c>). The default
-        /// is the Thermo Stellar's survey scan (1/15 Th points). Ion trap peaks have a narrow core and
-        /// broad wings, so a sigma fitted to them depends on how much of the peak the fit sees (on the
-        /// Stellar MS2, 0.31 Th from three points to 0.61 Th from eleven); it is a setting rather than
-        /// a measurement for that reason.
+        /// With Centrix, the MS1 profile peak sigma in Th (<c>--centrix-sigma-ms1</c>); 0, the default,
+        /// measures it from the run: one species' peak width, no wider than the broadest peak of the
+        /// scan rate the point spacing identifies.
         /// </summary>
-        public double CentrixSigmaMs1 { get; set; } = DEFAULT_CENTRIX_SIGMA_MS1;
+        public double CentrixSigmaMs1 { get; set; }
 
         /// <summary>
-        /// With Centrix, the MS2 profile peak sigma in Th (<c>--centrix-sigma-ms2</c>). The default is
-        /// the Thermo Stellar's MS2 (0.2 Th points), its half-maximum width of 0.77 Th.
+        /// With Centrix, the MS2 profile peak sigma in Th (<c>--centrix-sigma-ms2</c>); 0, the default,
+        /// measures it from the run as for MS1.
         /// </summary>
-        public double CentrixSigmaMs2 { get; set; } = DEFAULT_CENTRIX_SIGMA_MS2;
-
-        public const double DEFAULT_CENTRIX_SIGMA_MS1 = 0.2;
-        public const double DEFAULT_CENTRIX_SIGMA_MS2 = 0.33;
+        public double CentrixSigmaMs2 { get; set; }
 
         /// <summary>
         /// With Centrix, solve each region's lasso exactly by its active set rather than by

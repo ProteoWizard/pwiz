@@ -28,14 +28,28 @@ using pwiz.Osprey.IO;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Osprey's own centroiding of profile spectra (<c>--centroid centrix</c>), as the rest of the pipeline sees it: the
-    /// reader's settings, the tag that keeps its spectra cache apart from the vendor-centroided one, and the term that
-    /// makes every task's output depend on it. All three are empty for vendor centroiding, so nothing about a default run
-    /// changes.
+    /// Osprey's own centroiding of profile spectra (<c>--centroid centrix</c>, Centrix in <c>Osprey.Centroid</c>), as
+    /// the rest of the pipeline sees it. All three of its parts are empty for vendor centroiding, the default, so
+    /// nothing about a default run, its caches, hashes or goldens, changes.
+    /// <list type="bullet">
+    /// <item><see cref="CreateOptions"/>: the reader's settings (<c>SpectrumFileReader.LoadAllSpectra</c>).</item>
+    /// <item><see cref="CacheTag"/>: inserted into the spectra cache's name by <c>Program</c> through
+    /// <see cref="ArtifactPaths.SpectraCacheTag"/>, so the Centrix spectra live in
+    /// <c>{stem}.centrix-{hash}.spectra.bin</c> (and <c>{stem}.centrix-{hash}.demux.spectra.bin</c>) beside, never in
+    /// place of, the vendor-centroided <c>{stem}.spectra.bin</c>. Every reader of the cache, Stage 6's rescore and the
+    /// training export included, goes through <c>SpectraCache.GetCachePath</c> and so finds the same file. The cache
+    /// stays a function of its source file: different settings, a different name.</item>
+    /// <item><see cref="ValidityKeySuffix"/>: added to every task's validity key (<c>OspreyTask.ValidityKey</c>), so
+    /// scores computed from one centroiding are never reused for another. The search hash (<c>SearchIdentity</c>)
+    /// records the settings too, but cannot see the algorithm version.</item>
+    /// </list>
     /// </summary>
     public static class ProfileCentroiding
     {
-        /// <summary>The reader's Centrix settings, or null for vendor centroiding.</summary>
+        /// <summary>
+        /// The reader's Centrix settings, or null for vendor centroiding. A sigma of 0 (the default) is measured from
+        /// the run by the reader; the solver applies to both MS levels; Centrix's other settings keep their defaults.
+        /// </summary>
         public static CentroidingOptions CreateOptions(OspreyConfig config)
         {
             if (config.CentroidMode == CentroidMode.vendor)

@@ -270,6 +270,20 @@ way silently left the top bin unscored.
 vendor parse takes. The `.spectra.bin` is never altered by demultiplexing, so it stays a pure
 function of the raw file.
 
+### Centrix-centroided cache (`<stem>.centrix-<hash>.spectra.bin`)
+
+With `--centroid centrix` the spectra are Osprey's own centroids of the profile, not the vendor's
+([24-profile-centroiding.md](24-profile-centroiding.md)), so they are cached under their own name,
+in the plain VERSION 4 format: `<stem>.centrix-<hash>.spectra.bin`, and with `--demux auto`
+`<stem>.centrix-<hash>.demux.spectra.bin`. The hash is the first 8 hex digits of the SHA-256 of
+the centroiding descriptor (`ProfileCentroiding.Descriptor`: `CentrixCentroider.ALGORITHM_VERSION`
+and every setting), so different settings or a new algorithm version give a different file and
+never reuse an old one. `Program` sets the tag once on `ArtifactPaths.SpectraCacheTag`, and
+`SpectraCache.GetCachePath` / `GetDemuxCachePath` insert it, so every reader (Stage 6's rescore,
+the training export) finds the same file. Each cache stays a function of its source file and its
+settings; the vendor-centroided `<stem>.spectra.bin` beside it is untouched. The descriptor also
+enters every task's validity key (`;centroid=...`).
+
 ---
 
 ## 3. Scores parquet cache (`<stem>.scores.parquet`)

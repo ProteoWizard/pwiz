@@ -34,7 +34,8 @@ mixes several precursor bins in known proportions:
   Waters SONAR;
 - Thermo MSX (random multiplexed co-isolation);
 - comb (parallel isolation) acquisitions;
-- profile-domain demultiplexing with Osprey's own centroiding, for the Stellar.
+- profile-domain demultiplexing with Osprey's own centroiding, for the Stellar
+  ([Stellar profile data](#stellar-profile-data-linear-ion-trap), in `Osprey.DemuxTool` for now).
 
 See [Status and limitations](#status-and-limitations).
 
@@ -283,7 +284,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--scheme` | `scanning` | `scanning` (ZT Scan; needs `--kernel`) or `staggered` |
+| `--scheme` | `scanning` | `scanning` (ZT Scan; needs `--kernel`), `staggered`, or `none` (no demultiplexing: the input as read, centroided with `--centroid centrix`) |
 | `--kernel` | - | the measured transmission profile (see [below](#the-transmission-zt-scan)) |
 | `--layout` | `centered:5` | ZT Scan output layout: `centered:k`, `tiled:k` or `framed:k:m` |
 | `--min-out` | 0.2 | ZT Scan: solved intensities below this many ions are not written |
@@ -310,6 +311,17 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--raw` | off | ZT Scan: write the selected spectra as acquired (a control arm) |
 | `--cycles`, `--mz` | all | restrict to sweeps `first:last` (0-based) and precursor m/z `low:high` |
 | `--threads` | all | the output does not depend on it |
+| `--centroid centrix` | vendor | read the profile and centroid the output with Centrix, MS1 and MS2 (with `--joint`, MS2 is centroided inside the joint solve) ([24](24-profile-centroiding.md)) |
+| `--centrix-sigma S`, `--centrix-sigma-ms1 S` | measured | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, measured from the input |
+| `--centrix-param Name=Value` | - | any `CentrixParams` setting (`Solver=active_set` among them); also the joint solve's Centrix |
+| `--channel-th T` | ppm | staggered: fragment channels matched within T Th on a linear axis (unit resolution) |
+| `--fill-time-ions S` | off | staggered, rate intensities (ion trap): ions = intensity x fill time (ms) / S |
+| `--peak-sigma-th S` | measured | staggered `--joint` on a linear grid: the profile peak sigma, Th |
+| `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
+| `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
+| `--elution-fwhm S`, `--elution-param Name=Value` | off | staggered: split by each channel's elution fitted with peaks of FWHM S seconds, and its tuning |
+| `--thin N` | 1 | staggered: keep only every N-th cycle's MS2, to measure what sampling costs |
+| `--remultiplex K` | - | sum a narrow-window run into K-fold staggered windows and write them undemultiplexed: the truth benchmark's input |
 
 For staggered data the tool and `--demux auto` run the same pipeline (`StaggeredDemuxPipeline`),
 the tool on the file, Osprey on the spectra it has parsed. For ZT Scan the tool is for evaluation
@@ -713,6 +725,68 @@ cores: 6,438 s, a 16.8 GB mzML, against 14.4 min of acquisition. The solve took 
 block passes 53%, gradient checks 31%, weights and curvature 11%. Reading and writing are hidden behind
 it.
 
+### Stellar profile data (linear ion trap)
+
+The Thermo Stellar's staggered methods (the 2026-10-09 window-width HeLa set: `4Th-50pctOverlap`, k=2,
+2 Th bins; `4Th-SuperOverlap`, k=4, 1 Th bins) acquire each offset window set in its own pass over
+the range, about 1.2 s a pass mid-run. Their profile is on a uniform 0.2 Th grid (MS2 at 200 kTh/s),
+and their intensities are rates: ions = intensity x fill time (ms) / 1000, which `--fill-time-ions
+1000` applies spectrum by spectrum. Every bin is observed in every pass, through a different window;
+only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
+one demultiplexed spectrum per bin per pass.
+
+Two ways through `Osprey.DemuxTool --scheme staggered`:
+- **Channels on the centroids or the profile** (`--channel-th 0.09 --fill-time-ions 1000`, with
+  `--profile` for the profile): the per-channel demultiplexer of the sections above, its fragment
+  channels matched in Th on a linear axis rather than in ppm, each window's series interpolated
+  (makima) to the target's time. Centroid it afterward with `--centroid centrix`.
+- **The joint solve on the profile** (`--joint --fill-time-ions 1000`), `StaggeredDemuxPlan` with
+  `JointDemultiplexer` on a `LinearGrid`:
+  1. *Passes.* A window below the one before starts a new pass; each pass is scaled to ions at the
+     median fill time of its spectra.
+  2. *Pseudo-sweeps.* For each pass of a block, every window covering the unit's bins, as a ZT Scan
+     sweep sees them at once: the pass's own acquisitions as measured, the others interpolated
+     (makima, grid point by grid point, in rates) to the pass's time.
+  3. *The fit.* The joint solve fits each bin's Gaussian peaks on the 0.2 Th grid. The peak sigma is
+     `--peak-sigma-th`, else measured from the run's MS2 (`CentrixCalibration`, see
+     [24-profile-centroiding.md](24-profile-centroiding.md#the-peak-sigma)).
+  4. *The split.* Each acquired spectrum's measured profile is split among the bins its window covers
+     by those bins' fitted peaks at each grid point (equally where none was fitted). The fit decides
+     the split; the measurements are what is written.
+  5. *Centroiding.* Each bin's share in each pass is centroided by Centrix, in the pass's intensity
+     units ([24](24-profile-centroiding.md)).
+  6. *Layout.* Each acquired MS2 becomes one spectrum per bin of its window, with that bin's centroids
+     from the spectrum's own pass, at the spectrum's intensity scale.
+
+  `--joint-profile` writes step 4's shares as profile instead of centroiding them, and
+  `--joint-fitted` writes the fitted peaks themselves instead of splitting the measurements. MS1
+  passes through unless `--centroid centrix` centroids it too.
+
+**The truth benchmark.** `--remultiplex K` sums a 2 Th run's adjacent narrow windows into K-fold
+staggered windows (each window's ions added through its own fill time), so a demultiplexer's output
+can be scored against the narrow spectra it should recover (pwiz-ai `scripts/Osprey/Demux/eval_remux.py`:
+cosine on a 0.05 Th grid blurred by 0.3 Th; median, ion-weighted median, 10th percentile; 6,000
+spectra of a 2 Th run, RT 6.7-7.6 min). It is pessimistic on sampling: a summed window returns every
+k x 2.4 s, against 4.7 s for the real SuperOverlap's, and is twice as wide.
+
+| k | No demux (median) | Makima split + Centrix | Joint split + Centrix |
+|---|---|---|---|
+| 2 | 0.735 | 0.979 / 0.983 / 0.877 | 0.982 / 0.985 / 0.926 |
+| 3 | 0.507 | 0.950 / 0.961 / 0.706 | 0.959 / 0.967 / 0.798 |
+| 4 | 0.389 | 0.917 / 0.934 / 0.603 | 0.930 / 0.942 / 0.684 |
+
+Writing the fitted peaks instead scores 0.944 at k=2, and centroiding the split with the joint
+solve's own one-bin lasso 0.954: the fit carries the errors of the interpolated windows, and
+Centrix centroids demultiplexed spectra more stably. `--thin N` keeps every N-th cycle, to measure
+what sampling costs. Searches of the real methods are recorded in the pwiz-ai TODO
+`TODO-20261021_osprey_stellar_demux.md`.
+
+**Spectra to leave out.** The Stellar stores its Adaptive RT spectra under a zoom-scan annotation
+("Z" in the filter string), but the window-width runs carry "Z" on every DIA MS2 too, so the
+annotation cannot be used to drop anything. Adaptive RT spectra are 20 or 50 m/z wide, and Stellar
+DIA never exceeds 10 m/z; the isolation width is how to recognize them, and nothing filters them yet
+([24](24-profile-centroiding.md#the-stellars-filter-strings-z-and-adaptive-rt)).
+
 ### Determinism
 
 - The rules are the overlap demultiplexer's: index order everywhere, ties to the lowest index, and
@@ -904,8 +978,11 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
   nominal width, while the quadrupole transmits about ten times that, so they need the measured
   transmission of the per-channel demultiplexer rather than 0/1 windows. Waters SONAR has not been
   tried.
-- **Unit-resolution data** (Stellar centroids) is demultiplexed with the same fixed 10 ppm channel
-  tolerance, which is not right for it and has not been validated.
+- **Unit-resolution data** (Stellar centroids) is demultiplexed by `--demux auto` with the same
+  fixed 10 ppm channel tolerance, which is not right for it and has not been validated.
+  `Osprey.DemuxTool` matches channels in Th (`--channel-th`) and demultiplexes the Stellar's profile
+  with the joint solve ([Stellar profile data](#stellar-profile-data-linear-ion-trap)); neither is in
+  `--demux auto` yet.
 - **Isotope envelopes straddle narrow bins.** A precursor's M+1 and M+2 can fall in the bin above
   its monoisotopic one. Scoring still looks only in the bin that contains the monoisotopic m/z.
 - **No fragment coupling.** In both demultiplexers each fragment channel is solved on its own;

@@ -61,7 +61,7 @@ namespace pwiz.Osprey.DemuxTool
             // The staggered joint solve's Centrix settings serve --centroid centrix too; the joint solve takes its sigma
             // from --peak-sigma-th.
             var centrixMs2 = options.Centrix;
-            double centrixSigmaMs1 = 0;
+            double centrixSigmaMs1 = 0, centrixSigmaMs2 = 0;
             for (int i = 0; i < args.Length; i++)
             {
                 // Every option but the switches takes a value.
@@ -286,11 +286,11 @@ namespace pwiz.Osprey.DemuxTool
                             profile = true;
                         break;
                     case @"--centrix-sigma":
-                        // Centrix: the MS2 profile peak's sigma, in Th (default 0.33, the Stellar's).
-                        centrixMs2.SigmaTh = double.Parse(value, CultureInfo.InvariantCulture);
+                        // Centrix: the MS2 profile peak's sigma, in Th (default: measured from the input).
+                        centrixSigmaMs2 = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--centrix-sigma-ms1": // Arg literal OK: DemuxTool's own option vocabulary
-                        // Centrix: the MS1 profile peak's sigma, in Th (default the MS2 sigma).
+                        // Centrix: the MS1 profile peak's sigma, in Th (default: measured from the input).
                         centrixSigmaMs1 = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--centrix-param":
@@ -436,7 +436,9 @@ namespace pwiz.Osprey.DemuxTool
             }
             if (noDemux)
             {
-                msd.Run.SpectrumList = centrix ? CentrixCentroided(spectra, centrixMs2, centrixSigmaMs1) : spectra;
+                msd.Run.SpectrumList = centrix
+                    ? CentrixCentroided(spectra, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2)
+                    : spectra;
                 WriteMzml(msd, output);
                 Console.WriteLine(@"Wrote {0} in {1:F0} s", output, stopwatch.Elapsed.TotalSeconds);
                 return 0;
@@ -457,7 +459,7 @@ namespace pwiz.Osprey.DemuxTool
             }
             // The demultiplexed profile centroided as it is written.
             if (centrix)
-                msd.Run.SpectrumList = CentrixCentroided(msd.Run.SpectrumList, centrixMs2, centrixSigmaMs1);
+                msd.Run.SpectrumList = CentrixCentroided(msd.Run.SpectrumList, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2);
 
             WriteMzml(msd, output);
 
@@ -509,15 +511,45 @@ namespace pwiz.Osprey.DemuxTool
         }
 
         /// <summary>
-        /// The spectra's profiles centroided by Centrix, MS1 with its own peak sigma (the MS2 sigma when not given) and
-        /// MS2 with the settings, as Centrix keeps a sigma per MS level.
+        /// The spectra's profiles centroided by Centrix with the settings, MS1 and MS2 each with its own peak sigma, as a
+        /// linear ion trap scans them at their own rates. A sigma not given (0) is measured from the source's profile
+        /// spectra, sampled across the run before any demultiplexing (<see cref="CentrixCalibration"/>).
         /// </summary>
-        private static ISpectrumList CentrixCentroided(ISpectrumList spectra, CentrixParams ms2, double sigmaMs1)
+        private static ISpectrumList CentrixCentroided(ISpectrumList spectra, ISpectrumList source, CentrixParams settings,
+            double sigmaMs1, double sigmaMs2)
         {
-            var ms1 = ms2.Copy();
-            if (sigmaMs1 > 0)
-                ms1.SigmaTh = sigmaMs1;
-            Console.WriteLine(@"Centrix centroiding: sigma {0} Th (MS1 {1} Th)", ms2.SigmaTh, ms1.SigmaTh);
+            if (!(sigmaMs1 > 0) || !(sigmaMs2 > 0))
+            {
+                var calibrator = new CentrixSigmaCalibrator();
+                foreach (int i in CentrixSigmaCalibrator.SampleIndices(source.Count))
+                {
+                    var spectrum = source.GetSpectrum(i, true);
+                    int level = spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
+                    var mz = spectrum.GetMZArray()?.Data;
+                    var intensity = spectrum.GetIntensityArray()?.Data;
+                    if (level < 1 || spectrum.Params.HasCVParam(CVID.MS_centroid_spectrum) || mz == null || intensity == null)
+                        continue;
+                    calibrator.Add(level, mz, intensity);
+                }
+                for (int level = 1; level <= 2; level++)
+                {
+                    var rate = calibrator.ScanRate(level);
+                    Console.WriteLine(@"Centrix MS{0} peak width: {1} isolated peaks{2}", level, calibrator.PeakCount(level),
+                        rate != null
+                            ? string.Format(CultureInfo.InvariantCulture, @"; {0} kTh/s scan rate, broadest peak {1} Th FWHM",
+                                rate.KThPerSecond, rate.MaxFwhmTh)
+                            : string.Empty);
+                }
+                if (!(sigmaMs1 > 0))
+                    sigmaMs1 = calibrator.Sigma(1);
+                if (!(sigmaMs2 > 0))
+                    sigmaMs2 = calibrator.Sigma(2);
+            }
+            var ms1 = settings.Copy();
+            ms1.SigmaTh = sigmaMs1;
+            var ms2 = settings.Copy();
+            ms2.SigmaTh = sigmaMs2;
+            Console.WriteLine(@"Centrix centroiding: sigma {0:F3} Th MS1, {1:F3} Th MS2", sigmaMs1, sigmaMs2);
             spectra = new SpectrumList_PeakPicker(spectra, new CentrixPeakDetector(ms1), false, @"1");
             return new SpectrumList_PeakPicker(spectra, new CentrixPeakDetector(ms2), false, @"2-");
         }

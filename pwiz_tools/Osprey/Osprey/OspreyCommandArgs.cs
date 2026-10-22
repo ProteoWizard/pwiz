@@ -142,11 +142,9 @@ namespace pwiz.Osprey
             new[] { @"vendor", @"centrix" }, (c, p) => c._config.CentroidMode =
                 p.Value.ToLowerInvariant() == @"centrix" ? CentroidMode.centrix : CentroidMode.vendor) { DescriptionArgs = () => new object[] { @"vendor" } };
         public static readonly OspreyArgument ARG_CENTRIX_SIGMA_MS1 = new OspreyArgument(OspreyArgNames.CENTRIX_SIGMA_MS1,
-            () => @"<Th>", (c, p) => c._config.CentrixSigmaMs1 = ParseDouble(p))
-            { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText, OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS1 } };
+            () => @"<Th>", (c, p) => c._config.CentrixSigmaMs1 = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText } };
         public static readonly OspreyArgument ARG_CENTRIX_SIGMA_MS2 = new OspreyArgument(OspreyArgNames.CENTRIX_SIGMA_MS2,
-            () => @"<Th>", (c, p) => c._config.CentrixSigmaMs2 = ParseDouble(p))
-            { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText, OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS2 } };
+            () => @"<Th>", (c, p) => c._config.CentrixSigmaMs2 = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText } };
         public static readonly OspreyArgument ARG_CENTRIX_SOLVER = new OspreyArgument(OspreyArgNames.CENTRIX_SOLVER,
             new[] { @"descent", @"active-set" }, (c, p) => c._config.CentrixActiveSet = p.Value.ToLowerInvariant() == @"active-set")
             { DescriptionArgs = () => new object[] { ARG_CENTROID.ArgumentText, @"descent" } };

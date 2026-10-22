@@ -76,7 +76,8 @@ namespace pwiz.Osprey.IO
         private const string OSPREY_SOLUTION = @"Osprey.sln";
         private const string BJAM_VENDOR_LICENSES = @"bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses";
 
-        // Centrix: spectra read, then centroided in parallel, this many at a time.
+        // Centrix: spectra read, then centroided in parallel, this many at a time. Reading stays sequential (the
+        // reader's forward walk); centroiding costs several times the read.
         private const int CENTROID_BATCH = 512;
 
         private static int _vendorFailuresReported;
@@ -90,9 +91,19 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file; with
-        /// <paramref name="centroiding"/>, profile spectra are read as acquired, vendor files included, and
-        /// centroided by Centrix as they are read. Spectra the file holds centroided pass through.
+        /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file. With
+        /// <paramref name="centroiding"/> (<c>--centroid centrix</c>), Osprey centroids profile spectra itself:
+        /// <list type="bullet">
+        /// <item>A vendor file is opened without vendor peak picking, so its profile is what is read.</item>
+        /// <item>Any peak sigma not given is first measured from profile spectra sampled across the file
+        /// (<see cref="CreateCentroiders"/>).</item>
+        /// <item>Spectra are read in file order and centroided by Centrix in parallel, <see cref="CENTROID_BATCH"/> at a
+        /// time, each on its own, so the result does not depend on the thread count.</item>
+        /// <item>Spectra the file holds centroided pass through unchanged.</item>
+        /// </list>
+        /// The sigmas used are returned on the result, for the log. The caller (<c>ScoringTaskShared</c>) caches the
+        /// spectra under a name tagged with the settings (<see cref="ArtifactPaths.SpectraCacheTag"/>), never in place of
+        /// the vendor-centroided cache.
         /// </summary>
         public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding)
         {
@@ -169,9 +180,7 @@ namespace pwiz.Osprey.IO
                         }
                         else
                         {
-                            var centroiders = CreateCentroiders(centroiding);
-                            sigmaMs1 = centroiding.Ms1.SigmaTh;
-                            sigmaMs2 = centroiding.Ms2.SigmaTh;
+                            var centroiders = CreateCentroiders(msData, centroiding, out sigmaMs1, out sigmaMs2);
                             // Read in order, centroided in parallel a batch at a time: Centrix costs several
                             // times the read, and each spectrum is centroided on its own.
                             var batch = new MsDataSpectrum[CENTROID_BATCH];
@@ -308,13 +317,45 @@ namespace pwiz.Osprey.IO
             return string.Equals(ext, EXT_MZML, StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>The Centrix centroider of each MS level, index 1 for MS1 and 2 for every MS2 and above.</summary>
-        private static CentrixCentroider[] CreateCentroiders(CentroidingOptions centroiding)
+        /// <summary>
+        /// The Centrix centroider of each MS level, index 1 for MS1 and 2 for every MS2 and above: a linear ion trap
+        /// scans the two at their own rates, so each has its own peak sigma. A sigma not given (0) is measured from
+        /// profile spectra sampled evenly across the run, up to <see cref="CentrixSigmaCalibrator.SAMPLE_SPECTRA"/> of
+        /// them read before the main pass (<see cref="CentrixSigmaCalibrator"/>, <see cref="CentrixCalibration"/>).
+        /// </summary>
+        private static CentrixCentroider[] CreateCentroiders(MsDataFileImpl msData, CentroidingOptions centroiding,
+            out double sigmaMs1, out double sigmaMs2)
         {
-            return new[] { null, new CentrixCentroider(centroiding.Ms1), new CentrixCentroider(centroiding.Ms2) };
+            var ms1 = centroiding.Ms1.Copy();
+            var ms2 = centroiding.Ms2.Copy();
+            if (!(ms1.SigmaTh > 0) || !(ms2.SigmaTh > 0))
+            {
+                var calibrator = new CentrixSigmaCalibrator();
+                foreach (int i in CentrixSigmaCalibrator.SampleIndices(msData.SpectrumCount))
+                {
+                    var spectrum = msData.GetSpectrum(i);
+                    if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||
+                        spectrum.Intensities == null)
+                    {
+                        continue;
+                    }
+                    calibrator.Add(spectrum.Level, spectrum.Mzs, spectrum.Intensities);
+                }
+                if (!(ms1.SigmaTh > 0))
+                    ms1.SigmaTh = calibrator.Sigma(1);
+                if (!(ms2.SigmaTh > 0))
+                    ms2.SigmaTh = calibrator.Sigma(2);
+            }
+            sigmaMs1 = ms1.SigmaTh;
+            sigmaMs2 = ms2.SigmaTh;
+            return new[] { null, new CentrixCentroider(ms1), new CentrixCentroider(ms2) };
         }
 
-        /// <summary>A profile spectrum's peaks replaced by its Centrix centroids; any other spectrum unchanged.</summary>
+        /// <summary>
+        /// A profile spectrum's peaks replaced by its Centrix centroids, and the spectrum marked centroided; any other
+        /// spectrum unchanged. The centroids' intensities are their peaks' summed intensities, about 3.4 times the
+        /// height a Stellar vendor centroid reports, so absolute intensities differ between the two modes.
+        /// </summary>
         private static void CentroidProfile(MsDataSpectrum spectrum, CentrixCentroider[] centroiders)
         {
             if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||

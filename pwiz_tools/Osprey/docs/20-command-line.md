@@ -111,6 +111,10 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--fragment-unit` | `ppm \| mz` | `ppm` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
 | `--demux` | `off`, `auto` | `off` | Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` leaves a non-overlapping run as acquired. With `off`, a run whose windows overlap is refused, since searching it as acquired scores every precursor in more than one window. Osprey-only. |
+| `--centroid` | `vendor`, `centrix` | `vendor` | Who centroids profile spectra. `centrix` reads the profile, from a vendor file too, and centroids it with Centrix, a non-negative lasso for ion trap (unit resolution) profile data that separates peaks closer than 1 Th; its spectra are cached as `<stem>.centrix-<hash>.spectra.bin`, beside the vendor-centroided cache (see [24-profile-centroiding.md](24-profile-centroiding.md)). Osprey-only. |
+| `--centrix-sigma-ms1` | `<Th>` | measured | With `--centroid centrix`: the MS1 profile peak sigma. Absent or 0: measured from the run, one species' peak width, no wider than the broadest peak of its scan rate. |
+| `--centrix-sigma-ms2` | `<Th>` | measured | The same for MS2. |
+| `--centrix-solver` | `descent`, `active-set` | `descent` | With `--centroid centrix`: Centrix's own coordinate descent, or the exact active-set solve of the same fit, several times faster. |
 
 ### FDR & Protein Inference
 

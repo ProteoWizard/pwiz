@@ -32,8 +32,20 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for <see cref="CentrixCentroider"/> and its parts, ported from Rust Centrix's own unit tests (the sigma
-    /// and spacing of a 125 kTh/s ion trap MS2 scan, about two points per sigma), plus the checks a port needs.
+    /// Tests for Centrix in <c>Osprey.Centroid</c> and its use by Osprey (<c>docs/24-profile-centroiding.md</c>):
+    /// <list type="bullet">
+    /// <item><see cref="TestCentrixBasis"/>, <see cref="TestCentrixLasso"/>, <see cref="TestCentrixNoiseAndRegions"/>,
+    /// <see cref="TestCentrixCentroider"/>: Rust Centrix's own unit tests, ported (the sigma and spacing of a
+    /// 125 kTh/s ion trap MS2 scan, about two points per sigma), plus checks a port needs (the Gram row's truncation).</item>
+    /// <item><see cref="TestCentrixActiveSet"/>: the exact solver meets the lasso's optimality conditions where
+    /// coordinate descent only approaches them.</item>
+    /// <item><see cref="TestCentrixCalibration"/>: the scan rate from the point spacing, the peak-width measurement,
+    /// and the sigma measured on real Stellar spectra.</item>
+    /// <item><see cref="TestCentrixRustGolden"/>: the port against Rust Centrix's centroids of real Stellar spectra,
+    /// the test that keeps it a port (<c>Data/Centrix/README.md</c>).</item>
+    /// <item><see cref="TestCentrixInOsprey"/>: <c>--centroid centrix</c> through the CLI, the search hash, the task
+    /// keys, the spectra cache's name and the reader.</item>
+    /// </list>
     /// </summary>
     [TestClass]
     public class CentrixTest
@@ -270,6 +282,58 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestCentrixCalibration()
+        {
+            // The point spacing identifies a linear ion trap's scan rate, and with it the broadest peak.
+            Assert.AreEqual(200, LinearIonTrapScanRate.FromSpacing(0.2).KThPerSecond);
+            Assert.AreEqual(67, LinearIonTrapScanRate.FromSpacing(1.0 / 15).KThPerSecond);
+            Assert.AreEqual(125, LinearIonTrapScanRate.FromSpacing(0.125).KThPerSecond);
+            Assert.AreEqual(33, LinearIonTrapScanRate.FromSpacing(1.0 / 30).KThPerSecond);
+            Assert.IsNull(LinearIonTrapScanRate.FromSpacing(0.1));
+            Assert.AreEqual(0.6 / CentrixCalibration.FWHM_PER_SIGMA, LinearIonTrapScanRate.FromSpacing(1.0 / 15).MaxSigmaTh, 1e-12);
+
+            // An isolated Gaussian's width is recovered wherever it falls between grid points; two species 0.4 Th apart
+            // read as one wider peak; a peak with a point missing is not measured.
+            const double sigma = 0.3, spacing = 0.2;
+            var mz = Enumerable.Range(0, 200).Select(i => 400 + i * spacing).ToArray();
+            for (double center = 410; center < 410.2; center += 0.05)
+            {
+                var widths = new List<double>();
+                CentrixCalibration.AddPeakWidths(mz, GaussianProfile(mz, sigma, new[] { (center, 1000.0) }), widths);
+                Assert.AreEqual(1, widths.Count);
+                Assert.AreEqual(sigma * CentrixCalibration.FWHM_PER_SIGMA, widths[0], 0.03 * sigma * CentrixCalibration.FWHM_PER_SIGMA);
+            }
+            var doublet = new List<double>();
+            CentrixCalibration.AddPeakWidths(mz, GaussianProfile(mz, sigma, new[] { (420.0, 1000.0), (420.4, 1000.0) }), doublet);
+            Assert.AreEqual(1, doublet.Count);
+            Assert.IsTrue(doublet[0] > 1.2 * sigma * CentrixCalibration.FWHM_PER_SIGMA);
+            var gapped = GaussianProfile(mz, sigma, new[] { (430.0, 1000.0) });
+            var withGap = new List<double>();
+            CentrixCalibration.AddPeakWidths(mz.Where((_, i) => i != 149).ToArray(), gapped.Where((_, i) => i != 149).ToArray(), withGap);
+            Assert.AreEqual(0, withGap.Count);
+
+            // The width is the narrow side of the peaks' widths, no wider than the scan rate's broadest; with too few
+            // peaks, the broadest; without a scan rate either, Centrix's fallback.
+            var rate = LinearIonTrapScanRate.FromSpacing(0.2);
+            var many = Enumerable.Range(0, 100).Select(i => 0.6 + 0.01 * i).ToList();
+            Assert.AreEqual(many[(int)(CentrixCalibration.WIDTH_QUANTILE * 99)] / CentrixCalibration.FWHM_PER_SIGMA,
+                CentrixCalibration.EstimateSigma(many, rate), 1e-12);
+            var wide = Enumerable.Range(0, 100).Select(_ => 5.0).ToList();
+            Assert.AreEqual(rate.MaxSigmaTh, CentrixCalibration.EstimateSigma(wide, rate));
+            Assert.AreEqual(rate.MaxSigmaTh, CentrixCalibration.EstimateSigma(new List<double> { 0.7 }, rate));
+            Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, CentrixCalibration.EstimateSigma(new List<double>(), null));
+
+            // On real Stellar profile spectra, read by Osprey with no sigma given: MS2 (200 kTh/s, 0.2 Th points) measures
+            // about 0.3 Th, narrower than the broadest 0.85; the two MS1 (67 kTh/s) hold too few isolated peaks, so take
+            // that scan rate's broadest.
+            string folder = Path.Combine(IOTest.FindPwizRoot(), GOLDEN_FOLDER);
+            var read = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, GOLDEN_INPUTS[0]),
+                new CentroidingOptions(new CentrixParams { SigmaTh = 0 }, new CentrixParams { SigmaTh = 0 }, 4));
+            Assert.AreEqual(0.30, read.CentroidSigmaMs2, 0.04);
+            Assert.AreEqual(LinearIonTrapScanRate.FromSpacing(1.0 / 15).MaxSigmaTh, read.CentroidSigmaMs1, 1e-12);
+        }
+
+        [TestMethod]
         public void TestCentrixRustGolden()
         {
             // Real profile spectra, read by Osprey's reader, centroided as Rust Centrix centroided them: the same number
@@ -338,7 +402,7 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_CENTRIX_SIGMA_MS2 + @"0.33", OspreyCommandArgs.ARG_CENTRIX_SOLVER + @"active-set"));
             Assert.AreEqual(CentroidMode.centrix, parsed.CentroidMode);
             Assert.AreEqual(0.33, parsed.CentrixSigmaMs2);
-            Assert.AreEqual(OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS1, parsed.CentrixSigmaMs1);
+            Assert.AreEqual(0, parsed.CentrixSigmaMs1);
             Assert.IsTrue(parsed.CentrixActiveSet);
             config.CentroidMode = CentroidMode.centrix;
             string centrixHash = config.Identity.SearchParameterHash();
@@ -352,7 +416,7 @@ namespace pwiz.Osprey.Test
             config.CentrixActiveSet = false;
             config.CentrixSigmaMs2 = 0.3;
             Assert.AreNotEqual(centrixTag, ProfileCentroiding.CacheTag(config));
-            config.CentrixSigmaMs2 = OspreyConfig.DEFAULT_CENTRIX_SIGMA_MS2;
+            config.CentrixSigmaMs2 = 0;
             config.CentroidMode = CentroidMode.vendor;
             Assert.AreEqual(vendorHash, config.Identity.SearchParameterHash());
 

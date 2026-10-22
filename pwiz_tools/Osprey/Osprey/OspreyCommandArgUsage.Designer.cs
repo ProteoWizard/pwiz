@@ -70,7 +70,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0} centrix: the MS1 profile peak sigma in Th (default: {1}, a Thermo Stellar&apos;s).
+        ///   Looks up a localized string similar to With {0} centrix: the MS1 profile peak sigma in Th (default: measured from the run, one species&apos; peak width, no wider than its scan rate&apos;s broadest peak).
         /// </summary>
         public static string _centrix_sigma_ms1 {
             get {
@@ -79,7 +79,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0} centrix: the MS2 profile peak sigma in Th (default: {1}, a Thermo Stellar&apos;s).
+        ///   Looks up a localized string similar to With {0} centrix: the MS2 profile peak sigma in Th (default: measured from the run, one species&apos; peak width, no wider than its scan rate&apos;s broadest peak).
         /// </summary>
         public static string _centrix_sigma_ms2 {
             get {

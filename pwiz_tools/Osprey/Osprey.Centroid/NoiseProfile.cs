@@ -26,7 +26,9 @@ namespace pwiz.Osprey.Centroid
     /// <summary>
     /// A spectrum's baseline and noise sigma. First rough, from order statistics of all its intensities; then refined
     /// along m/z from the residuals of the first pass's fits and the points outside every region, so the second
-    /// pass's penalty follows the noise where it changes.
+    /// pass's penalty follows the noise where it changes. The rough estimate counts every point given, so a profile
+    /// with its zero points dropped (as the joint demultiplexer's shares are) reads a higher noise, and a higher
+    /// penalty, than the same profile with them; both are as Centrix computes it.
     /// </summary>
     public sealed class NoiseProfile
     {

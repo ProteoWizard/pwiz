@@ -1,8 +1,10 @@
 # Centrix test fixture: Thermo Stellar profile spectra and Rust Centrix's centroids
 
-Used by `CentrixTest.TestCentrixRustGolden`. Real ion trap profile spectra and the centroids Rust Centrix
-(maccoss/centrix) gives them, so the C# port in `Osprey.Centroid` is held to the Rust implementation on real data:
-the same number of centroids in every spectrum, each at the same m/z and intensity.
+Used by `CentrixTest.TestCentrixRustGolden`, and by `TestCentrixInOsprey` (the reader's `--centroid centrix` path
+against the same golden) and `TestCentrixCalibration` (the peak sigma measured from real spectra). Real ion trap
+profile spectra and the centroids Rust Centrix (maccoss/centrix) gives them, so the C# port in `Osprey.Centroid` is
+held to the Rust implementation on real data: the same number of centroids in every spectrum, each at the same m/z
+and intensity. What Centrix is and how Osprey uses it: `pwiz_tools/Osprey/docs/24-profile-centroiding.md`.
 
 | File | What it is |
 |---|---|

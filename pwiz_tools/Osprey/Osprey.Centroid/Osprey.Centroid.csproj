@@ -9,7 +9,10 @@
     <InternalsVisibleTo Include="Osprey.Test" />
   </ItemGroup>
 
-  <!-- Deliberately depends on nothing: the centroider takes a profile spectrum's points in and hands
+  <!-- Centrix, the non-negative lasso centroider for linear ion trap profile spectra, ported from
+       maccoss/centrix (CentrixCentroider), with its peak-width calibration (CentrixCalibration). See
+       docs/24-profile-centroiding.md.
+       Deliberately depends on nothing: the centroider takes a profile spectrum's points in and hands
        centroids back, so the reader, the demultiplexers and later pwiz-sharp can all share it. -->
 
 </Project>

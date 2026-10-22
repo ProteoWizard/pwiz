@@ -28,6 +28,10 @@ namespace pwiz.Osprey.Centroid
     /// matrix is the peak at grid position j sampled at the region's points,
     /// <c>A[i, j] = exp(-(mz[i] - grid[j])^2 / (2 sigma^2))</c>, and on a uniform grid the Gram matrix A'A is
     /// Toeplitz, so only its first row is kept: <c>G[i, j] = GramRow[|i - j|]</c>.
+    /// <para>The basis positions are <c>GridOffset + k * GridSpacing</c>, the spacing the profile's own; Centrix uses an
+    /// offset of 0, so the positions need not fall on the data points (the Stellar's are at 200.2 + k * 0.2, which
+    /// they do). A coefficient's amplitude is the peak's height; <see cref="AreaScale"/> makes it the summed intensity
+    /// a centroid reports.</para>
     /// </summary>
     public sealed class CentrixBasis
     {

@@ -56,6 +56,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 21 | [user-facing-text](21-user-facing-text.md) | Vocabulary for the log, warnings and errors - the only UI Osprey has: which developer terms never appear in user text and what replaces them. |
 | 22 | [training-export](22-training-export.md) | The `--training-export` product of `PerFileRescoring` and the schema of `<stem>.training.parquet` - the contract CarafeSharp reads: every identified target's full b/y ladder with per-ion interference evidence from Osprey's own boundaries, median polish and shared-peak logic. |
 | 23 | [demultiplexing](23-demultiplexing.md) | `--demux auto` for overlapping-window (staggered) DIA: where it runs in the pipeline, the `.demux.spectra.bin` it writes, the algorithm and how it differs from msconvert's, validation. Then the per-channel demultiplexer for staggered and SCIEX ZT Scan data (`Osprey.DemuxTool`): the measured quadrupole transmission, fragment channels, the Poisson-weighted solve, output layouts, and results. The roadmap to other compressed-sampling schemes. |
+| 24 | [profile-centroiding](24-profile-centroiding.md) | `--centroid centrix`: Centrix, the non-negative lasso centroider for ion trap profile data (a port of maccoss/centrix), the peak sigma measured from the scan rate and the run, the two solvers, fidelity to Rust Centrix, the tagged spectra cache, and the Stellar's "Z" filter strings. |
 
 ## Supplementary
 

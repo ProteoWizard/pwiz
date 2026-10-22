@@ -491,6 +491,12 @@ namespace pwiz.Osprey.Demux
         /// on the grid); each acquired spectrum's profile is split among the unit's own bins its window covers by those
         /// bins' fitted profiles at each sample (equally where none is fitted); and each bin's share in each pass is
         /// centroided by Centrix, or kept as profile when there is no centroider. Peaks are keyed by bin and pass.
+        /// <para>The fit decides the split but is not written itself: the fitted peaks carry the errors of the windows
+        /// interpolated to the pass (scored 0.944 against truth at k=2, where the split measurements centroided by
+        /// Centrix score 0.982). Centrix, rather than the joint solve's own one-bin lasso, centroids the shares: it is
+        /// the more stable of the two on demultiplexed spectra (0.979 against 0.944 on the same makima splits). Run
+        /// in-process this gives exactly what writing the shares as profile and centroiding them with Rust Centrix
+        /// gave (k=2 truth benchmark, median cosine 0.982 either way).</para>
         /// </summary>
         private static ScanningUnitResult SolveJointApportioned(ScanningUnit unit, bool[] observed, JointDemuxParams parameters,
             LinearGrid grid, CentrixCentroider centrix, IReadOnlyDictionary<int, double> passPerIon)
@@ -576,7 +582,10 @@ namespace pwiz.Osprey.Demux
                 return result;
             }
             // Each bin's share in each pass, as the profile spectrum it would be written as: in m/z order, in the pass's
-            // intensity units, since Centrix's noise model is of an instrument's intensities, not of ions.
+            // intensity units, since Centrix's noise model is of an instrument's intensities, not of ions (its noise
+            // sigma is floored at 1). The shares hold only the positive points the unit was built from; Centrix reads
+            // them as the profile-writing path wrote them, which is what the benchmark numbers above were measured on.
+            // Centroid intensities go back to ions at the pass's scale for the layout.
             var shares = new SortedDictionary<(int, int), List<int>>();
             for (int n = 0; n < mz.Count; n++)
             {
@@ -601,8 +610,10 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// The joint solve's profile grid, taken once from the first spectrum with enough points, and the Gaussian
-        /// peak it fits in grid samples.
+        /// The joint solve's profile grid, taken once from the first spectrum with enough points, and the peak sigma
+        /// that both the joint solve's Gaussian and Centrix use: <see cref="ScanningDemuxOptions.LinearPeakSigmaTh"/>
+        /// when given, else measured from the run (<see cref="MeasurePeakSigma"/>). Also makes the Centrix centroider of
+        /// each bin's share, on this grid's spacing.
         /// </summary>
         private LinearGrid GridOf(Dictionary<int, (double[] Mz, double[] Ions)> peaks)
         {
@@ -615,18 +626,47 @@ namespace pwiz.Osprey.Demux
                 _grid = LinearGrid.Detect(mz);
                 if (_grid == null)
                     throw new InvalidOperationException(@"The joint solve needs profile spectra on one linear grid.");
-                double sigma = _options.LinearPeakSigmaTh / _grid.Step;
+                double sigmaTh = _options.LinearPeakSigmaTh > 0 ? _options.LinearPeakSigmaTh : MeasurePeakSigma();
+                double sigma = sigmaTh / _grid.Step;
                 _options.JointParameters.PeakSigmaSamples = new[] { sigma };
                 _options.JointParameters.PeakSigmaMz = new[] { 500.0 };
                 var centrix = _options.Centrix.Copy();
-                centrix.SigmaTh = _options.LinearPeakSigmaTh;
+                centrix.SigmaTh = sigmaTh;
                 centrix.GridSpacingTh = _grid.Step;
                 _centrix = new CentrixCentroider(centrix);
                 _log.WriteLine(@"Profile grid: step {0:F4} Th; peak sigma {1:F3} Th = {2:F2} samples", _grid.Step,
-                    _options.LinearPeakSigmaTh, sigma);
+                    sigmaTh, sigma);
                 return _grid;
             }
             throw new InvalidOperationException(@"The joint solve found no profile spectrum to take the grid from.");
+        }
+
+        /// <summary>
+        /// The MS2 profile peak sigma, Th, measured from MS2 spectra sampled across the run (<see cref="CentrixCalibration"/>):
+        /// one species' peak width, no wider than the broadest peak of the scan rate the point spacing identifies. The
+        /// spectra are the acquired, multiplexed ones, whose peaks merge more species than a narrow window's, so it reads
+        /// a little wider than the narrow-window run would (Stellar: 0.331 Th summing two 2 Th windows, 0.340 summing
+        /// four, against 0.309 for the 2 Th windows themselves).
+        /// </summary>
+        private double MeasurePeakSigma()
+        {
+            var calibrator = new CentrixSigmaCalibrator();
+            foreach (int n in CentrixSigmaCalibrator.SampleIndices(_ms2Spectra.Length))
+            {
+                if (calibrator.IsComplete(2))
+                    break;
+                int k = _ms2Spectra[n];
+                _source.Read(k, out var mz, out var intensity);
+                if (mz != null && intensity != null)
+                    calibrator.Add(2, mz, intensity);
+                _source.Release(k);
+            }
+            var scanRate = calibrator.ScanRate(2);
+            _log.WriteLine(@"Peak width: {0} isolated MS2 peaks{1}", calibrator.PeakCount(2), scanRate != null
+                ? string.Format(CultureInfo.InvariantCulture, @"; {0} kTh/s scan rate, broadest peak {1} Th FWHM",
+                    scanRate.KThPerSecond, scanRate.MaxFwhmTh)
+                : string.Empty);
+            return calibrator.Sigma(2);
         }
 
         private InterpolatedUnit MakeUnit(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, int lo, int hi,

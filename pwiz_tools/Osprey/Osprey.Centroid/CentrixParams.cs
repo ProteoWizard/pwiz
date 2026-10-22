@@ -20,28 +20,43 @@
 
 namespace pwiz.Osprey.Centroid
 {
-    /// <summary>How each region's lasso is solved.</summary>
+    /// <summary>
+    /// How each region's lasso is solved (<see cref="NonNegativeLasso"/>). The basis peaks of neighboring grid points
+    /// correlate strongly (0.91 at a Stellar's 1.65 points per sigma), so coordinate descent converges slowly: on 6,000
+    /// Stellar MS2 spectra it averaged 347 sweeps a region and stopped at its 2,000-sweep cap in 6% of them.
+    /// </summary>
     public enum CentrixSolver
     {
-        /// <summary>Centrix's coordinate descent, stopped at a tolerance or an iteration cap: Rust Centrix's centroids.</summary>
+        /// <summary>
+        /// Centrix's coordinate descent, stopped at a tolerance or an iteration cap: Rust Centrix's centroids. The
+        /// default, so Osprey's output stays comparable to Centrix's.
+        /// </summary>
         coordinate_descent,
         /// <summary>
         /// The exact optimum of the same problem, by an active-set (Lawson-Hanson) solve of its few nonzero coefficients:
-        /// the same centroids where coordinate descent converges, the converged ones where it stops at its cap.
+        /// the same centroids where coordinate descent converges, the converged ones where it stops at its cap. Several
+        /// times faster; on the Stellar 8.5% of centroids move by more than 1e-4 against coordinate descent, and scores
+        /// against truth are unchanged (<c>docs/24-profile-centroiding.md</c>).
         /// </summary>
         active_set,
     }
 
     /// <summary>
-    /// Settings of <see cref="CentrixCentroider"/>. The defaults are those of Rust Centrix (maccoss/centrix), so the
-    /// same peak sigma gives the same centroids.
+    /// Settings of <see cref="CentrixCentroider"/>. Every default but <see cref="SigmaTh"/> is Rust Centrix's
+    /// (maccoss/centrix), so the same peak sigma gives the same centroids. The meaning of each is in
+    /// <see cref="CentrixCentroider"/>'s summary and the classes it names.
     /// </summary>
     public sealed class CentrixParams
     {
         /// <summary>
-        /// The sigma of a profile peak, in Th. Centrix calibrates it from the filter string or a wavelet scan of the
-        /// first spectra; neither is ported, since both mis-read the Stellar (the scan rate letter gives 0.849 and the
-        /// wavelet 0.61, where the peaks measure 0.327), so the caller gives it.
+        /// The sigma of one species' profile peak, in Th: the instrument's resolution, which a linear ion trap's scan
+        /// rate sets (<see cref="LinearIonTrapScanRate"/>). Must be positive for <see cref="CentrixCentroider"/>.
+        /// Osprey's callers pass 0 to mean "measure it" and replace it with <see cref="CentrixCalibration"/>'s estimate
+        /// before constructing the centroider. The default is that estimate for a Thermo Stellar's MS2 at 200 kTh/s
+        /// (0.31 Th from the narrow-window runs, 0.33 from summed staggered windows), for callers that build these
+        /// settings directly. Centrix's own calibration is not ported: the Stellar's MS2 filter strings carry no scan
+        /// rate code it knows (they read "Z", which the Stellar uses to mark Adaptive RT spectra), and its wavelet fit
+        /// reads the broad wings of these peaks as width (0.61 Th).
         /// </summary>
         public double SigmaTh { get; set; } = 0.33;
 
@@ -60,10 +75,16 @@ namespace pwiz.Osprey.Centroid
         /// <summary>The lasso solver; coordinate descent, Centrix's own, by default.</summary>
         public CentrixSolver Solver { get; set; } = CentrixSolver.coordinate_descent;
 
-        /// <summary>Coordinate descent sweeps before a solve stops unconverged.</summary>
+        /// <summary>
+        /// Coordinate descent sweeps before a solve stops unconverged. Centrix hardcodes 2000, and the tolerance below,
+        /// in its centroider (its <c>--max-lasso-iter</c> and <c>--lasso-tol</c> options are not read there).
+        /// </summary>
         public int MaxIterations { get; set; } = 2000;
 
-        /// <summary>A solve has converged when no coefficient moved by this much in a sweep.</summary>
+        /// <summary>
+        /// Coordinate descent has converged when no coefficient moved by this much in a sweep. Absolute, in the input's
+        /// intensity units, as Centrix's is.
+        /// </summary>
         public double Tolerance { get; set; } = 1e-6;
 
         /// <summary>A region is solved again with the refined noise when its penalty changes by more than this fraction.</summary>

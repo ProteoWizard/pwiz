@@ -24,9 +24,9 @@ using System.Collections.Generic;
 namespace pwiz.Osprey.Centroid
 {
     /// <summary>
-    /// Centroids a profile spectrum sampled on a uniform m/z grid (a linear ion trap's) as Centrix (maccoss/centrix)
-    /// does: each region of signal is fitted with Gaussian peaks of a known sigma, one per grid point, by a
-    /// non-negative lasso, which separates peaks closer than one Th that a one-peak-per-maximum centroider merges.
+    /// Centroids a profile spectrum sampled on a uniform m/z grid (a linear ion trap's) as Centrix does: each region of
+    /// signal is fitted with Gaussian peaks of a known sigma, one candidate per grid point, by a non-negative lasso,
+    /// which separates peaks closer than one Th that a one-peak-per-maximum centroider (the vendor's) merges into one.
     /// <list type="number">
     /// <item>Pass 1: a rough noise estimate sets the penalty; each signal region is solved, keeping A'y, the solution
     /// and its residuals.</item>
@@ -36,14 +36,33 @@ namespace pwiz.Osprey.Centroid
     /// <item>Each coefficient above zero is a centroid, placed between grid points by a parabola through its
     /// neighbors' logarithms, with intensity the sum of its peak's samples; centroids closer than sigma merge.</item>
     /// </list>
-    /// A port, so that the same settings give Centrix's centroids. Thread-safe: an instance holds only settings and
-    /// the basis of the last grid spacing it saw.
+    /// <para><b>Origin and fidelity.</b> A port of Rust Centrix (maccoss/centrix, at 39370f1): with the same settings
+    /// and the coordinate-descent solver it gives Rust's centroids, which
+    /// <c>CentrixTest.TestCentrixRustGolden</c> pins on real Stellar spectra
+    /// (<c>Osprey.Test/Data/Centrix/README.md</c>). Two deliberate differences, neither visible in that test: A'y is
+    /// summed in index order where Rust calls BLAS, which moves 0.02% of centroids by up to 4e-4 Th when a solve
+    /// stops at its tolerance a sweep apart; and the grid spacing is detected per spectrum (a basis kept per spacing)
+    /// where Rust takes the first spectrum's of each MS level. Not ported: Centrix's sigma calibration (filter-string
+    /// scan rate, wavelet fit), which misreads the Stellar; <see cref="CentrixCalibration"/> replaces it.</para>
+    /// <para><b>Settings that matter.</b> The peak sigma (<see cref="CentrixParams.SigmaTh"/>) is the instrument's
+    /// resolution, set by the scan rate; measure it with <see cref="CentrixCalibration"/>. The solver
+    /// (<see cref="CentrixParams.Solver"/>): Centrix's coordinate descent, or the exact active-set solve, several times
+    /// faster (6,000 Stellar spectra: 18-31 s against 64-169 s, file I/O included) and equal on the truth benchmark. Intensities must be in the instrument's units (the noise
+    /// estimate floors its sigma at 1, which suits an ion trap's rates and not a count of ions).</para>
+    /// <para><b>Users.</b> Osprey's reader with <c>--centroid centrix</c> (<c>SpectrumFileReader</c>), the staggered
+    /// joint demultiplexer, on each bin's share of the measured profile (<c>StaggeredDemuxPlan</c>), and
+    /// <c>Osprey.DemuxTool --centroid centrix</c>.</para>
+    /// <para>Thread-safe: an instance holds only its settings and the basis of the last grid spacing it saw, replaced
+    /// by reference. Raise <see cref="ALGORITHM_VERSION"/> with any change that moves a centroid.</para>
     /// </summary>
     public sealed class CentrixCentroider
     {
         /// <summary>
-        /// The version of this centroider's output. Raise it with any change that moves a centroid, so the spectra caches
-        /// written with the previous version are rebuilt rather than reused.
+        /// The version of this centroider's output, part of the name of the spectra caches Osprey writes with it
+        /// (<c>ProfileCentroiding.CacheTag</c>) and of every task's validity key. Raise it with any change that moves a
+        /// centroid, so the caches and scores computed from the previous version's centroids are rebuilt rather than
+        /// reused; a change to <see cref="CentrixParams"/> defaults counts. The Rust golden test must still pass, or the
+        /// change must be one Rust Centrix made too, with the golden regenerated from it.
         /// </summary>
         public const int ALGORITHM_VERSION = 1;
 
@@ -63,8 +82,10 @@ namespace pwiz.Osprey.Centroid
         }
 
         /// <summary>
-        /// The spacing of a profile spectrum's points: the median gap. Centrix takes it from the first spectrum of each
-        /// MS level; a basis is built per spacing here, and reused while the spacing stays the same.
+        /// The spacing of a profile spectrum's points: the median gap (0.125 for fewer than two points, Centrix's default).
+        /// A linear ion trap's firmware fixes it per scan rate (<see cref="LinearIonTrapScanRate"/>), so it also
+        /// identifies the scan rate. Centrix takes it from the first spectrum of each MS level; here a basis is built per
+        /// spacing and reused while the spacing stays the same.
         /// </summary>
         public static double DetectGridSpacing(IReadOnlyList<double> mz)
         {
@@ -79,8 +100,9 @@ namespace pwiz.Osprey.Centroid
 
         /// <summary>
         /// The centroids of one profile spectrum (m/z ascending, zero points present or not), appended to the lists in
-        /// ascending m/z. The intensity of a centroid is the integrated intensity of its peak, the units of the
-        /// input's.
+        /// ascending m/z. The intensity of a centroid is the integrated intensity of its peak, the sum of its profile
+        /// samples in the input's units (about 3.4 times the peak height a vendor centroid reports on the Stellar).
+        /// This overload copies the lists, for callers holding pwiz-sharp's (<c>IPeakDetector</c>).
         /// </summary>
         public void Centroid(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, List<double> centroidMz,
             List<double> centroidIntensity)
@@ -109,6 +131,7 @@ namespace pwiz.Osprey.Centroid
             return basis != null ? Centroid(mz, intensity, basis) : new List<(double Mz, double Intensity)>();
         }
 
+        /// <summary>The two passes of the class summary on one spectrum, with its basis.</summary>
         private List<(double Mz, double Intensity)> Centroid(double[] mz, double[] intensity, CentrixBasis basis)
         {
             var p = _parameters;
@@ -233,6 +256,7 @@ namespace pwiz.Osprey.Centroid
                 out _, out _);
         }
 
+        /// <summary>A solution's centroids, each coefficient's amplitude made an integrated intensity.</summary>
         private static void AddCentroids(double[] beta, double[] grid, CentrixBasis basis,
             List<(double Mz, double Intensity)> centroids)
         {
@@ -271,7 +295,8 @@ namespace pwiz.Osprey.Centroid
 
         /// <summary>
         /// Centroids closer than minSeparation to the one before (as merged so far) joined into it: intensities summed,
-        /// m/z their intensity-weighted mean.
+        /// m/z their intensity-weighted mean. Two Gaussians closer than sigma cannot be told apart at two points per
+        /// sigma, and the lasso does split one peak between neighboring grid points; Centrix merges at sigma for that.
         /// </summary>
         private static List<(double Mz, double Intensity)> Merge(List<(double Mz, double Intensity)> sorted,
             double minSeparation)

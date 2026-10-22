@@ -24,11 +24,22 @@ using System.Collections.Generic;
 namespace pwiz.Osprey.Centroid
 {
     /// <summary>
-    /// Minimizes <c>1/2 |y - A b|^2 + lambda |b|_1</c> subject to b &gt;= 0 by coordinate descent, from A'y and the
-    /// Toeplitz first row of A'A (<see cref="CentrixBasis.GramRow"/>). Each update is the soft threshold
+    /// The non-negative lasso of one signal region: minimizes <c>1/2 |y - A b|^2 + lambda |b|_1</c> subject to
+    /// b &gt;= 0, from A'y and the Toeplitz first row of A'A (<see cref="CentrixBasis.GramRow"/>). Note that Centrix uses
+    /// the analytic Gram of the infinite grid, not A'A of the region's own points, so a region's edge columns are
+    /// treated as whole peaks; both solvers here solve that same problem.
+    /// <para><see cref="Solve"/> is Centrix's coordinate descent. Each update is the soft threshold
     /// <c>b_j = max(0, rho_j - lambda) / G[j, j]</c>, where <c>rho_j = (A'y)_j - sum_{k != j} G[j, k] b_k</c>.
     /// Only the active set is swept: coefficients above zero or whose rho exceeds lambda. Every
-    /// <see cref="CHECK_FREQUENCY"/> sweeps the rest are checked for a KKT violation a neighbor's change opened.
+    /// <see cref="CHECK_FREQUENCY"/> sweeps the rest are checked for a KKT violation a neighbor's change opened. It
+    /// stops when no coefficient moves by the tolerance, or at the iteration cap; with neighboring columns correlated
+    /// 0.91 the cap is reached in about 6% of Stellar regions, which then keep an unconverged solution.</para>
+    /// <para><see cref="SolveActiveSet"/> reaches the same problem's exact optimum, which coordinate descent converges
+    /// to, by solving the few nonzero coefficients directly. Its passive systems are ill-conditioned for runs of
+    /// adjacent coefficients (condition number about 1e9 for 20 adjacent at the Stellar's MS2 spacing, 2e11 for 10 at
+    /// its MS1 spacing), which Cholesky in double precision still solves; a failed factorization returns null and the
+    /// caller falls back to coordinate descent. <c>CentrixTest.TestCentrixActiveSet</c> checks its optimality
+    /// conditions on random regions.</para>
     /// </summary>
     public static class NonNegativeLasso
     {

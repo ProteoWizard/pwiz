@@ -26,7 +26,8 @@ namespace pwiz.Osprey.IO
     /// <summary>
     /// How <see cref="SpectrumFileReader"/> centroids profile spectra itself, with Centrix
     /// (<see cref="CentrixCentroider"/>), instead of asking the vendor library to: the settings for MS1 and for MS2,
-    /// and the threads that centroid in parallel while the file is read.
+    /// and the threads that centroid in parallel while the file is read. A sigma of 0 is measured from the run
+    /// (<see cref="CentrixCalibration"/>).
     /// </summary>
     public sealed class CentroidingOptions
     {
