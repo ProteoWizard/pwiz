@@ -46,12 +46,14 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--centroid-output SEP] [--thin N]";
+            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--centroid-output SEP] [--thin N]" +
+            @" [--remultiplex K]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
             double centroidSeparation = 0;
+            int remultiplex = 0;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false;
             var options = new ScanningDemuxOptions();
@@ -223,6 +225,13 @@ namespace pwiz.Osprey.DemuxTool
                         // centroids closer than this many Th merged.
                         centroidSeparation = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
+                    case @"--remultiplex":
+                        // A narrow-window run summed into K-fold staggered windows, written without demultiplexing: the
+                        // input of a demultiplexing test whose truth is the narrow run.
+                        remultiplex = int.Parse(value, CultureInfo.InvariantCulture);
+                        staggered = true;
+                        schemeSet = true;
+                        break;
                     case @"--thin":
                         // Staggered, for measuring how sampling matters: keep only every N-th cycle's MS2 spectra.
                         options.ThinCycles = int.Parse(value, CultureInfo.InvariantCulture);
@@ -391,6 +400,13 @@ namespace pwiz.Osprey.DemuxTool
             }
             ScanningDemuxSpectrumList scanning = null;
             StaggeredDemuxSpectrumList stepped = null;
+            if (remultiplex > 1)
+            {
+                msd.Run.SpectrumList = new RemultiplexSpectrumList(spectra, remultiplex, Console.Out);
+                WriteMzml(msd, output);
+                Console.WriteLine(@"Wrote {0} in {1:F0} s", output, stopwatch.Elapsed.TotalSeconds);
+                return 0;
+            }
             if (staggered)
             {
                 stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out, centroidSeparation);
@@ -406,14 +422,7 @@ namespace pwiz.Osprey.DemuxTool
                     scanning.Count);
             }
 
-            var config = new WriteConfig { Format = WriteFormat.Mzml };
-            config.EncoderConfig.Precision = BinaryPrecision.Bits32;
-            config.EncoderConfig.PrecisionOverrides[CVID.MS_m_z_array] = BinaryPrecision.Bits64;
-            config.EncoderConfig.PrecisionOverrides[CVID.MS_time_array] = BinaryPrecision.Bits64;
-            config.EncoderConfig.Compression = BinaryCompression.Zlib;
-            string partial = output + @".partial";
-            MSDataFile.Write(msd, partial, config);
-            File.Move(partial, output, true);
+            WriteMzml(msd, output);
 
             long channels = stepped?.Channels ?? scanning.Channels;
             long solved = stepped?.ChannelsSolved ?? scanning.ChannelsSolved;
@@ -460,6 +469,19 @@ namespace pwiz.Osprey.DemuxTool
                 used++;
             }
             return IonCalibration.CountsPerIon(intensities, out fit);
+        }
+
+        /// <summary>Writes the mzML through a partial file, so an interrupted run leaves no output that looks finished.</summary>
+        private static void WriteMzml(MSData msd, string output)
+        {
+            var config = new WriteConfig { Format = WriteFormat.Mzml };
+            config.EncoderConfig.Precision = BinaryPrecision.Bits32;
+            config.EncoderConfig.PrecisionOverrides[CVID.MS_m_z_array] = BinaryPrecision.Bits64;
+            config.EncoderConfig.PrecisionOverrides[CVID.MS_time_array] = BinaryPrecision.Bits64;
+            config.EncoderConfig.Compression = BinaryCompression.Zlib;
+            string partial = output + @".partial";
+            MSDataFile.Write(msd, partial, config);
+            File.Move(partial, output, true);
         }
 
         /// <summary>Sets a scalar property of a solve's settings from Name=Value.</summary>
