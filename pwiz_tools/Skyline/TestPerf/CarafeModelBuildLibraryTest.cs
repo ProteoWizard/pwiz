@@ -87,6 +87,8 @@ namespace TestPerf
             {
                 buildLibraryDlg.LibraryName = libraryName;
                 buildLibraryDlg.LibraryPath = libraryPath;
+                // Predict on the CPU, whatever GPU this computer has
+                buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 buildLibraryDlg.AlphaPeptDeep = true;
             });
             var chooserDlg = ShowDialog<CarafeModelChooserDlg>(buildLibraryDlg.ShowCarafeModelDlg);
@@ -134,6 +136,7 @@ namespace TestPerf
             buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() =>
             {
+                buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 buildLibraryDlg.AlphaPeptDeep = true;
                 var recentModel = buildLibraryDlg.RecentCarafeModels.Single();
                 Assert.AreEqual(modelPath, recentModel.Path);

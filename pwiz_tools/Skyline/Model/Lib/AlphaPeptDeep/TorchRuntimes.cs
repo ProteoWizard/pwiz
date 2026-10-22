@@ -53,9 +53,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             ApplicationDirectory = Path.GetDirectoryName(typeof(TorchRuntimes).Assembly.Location);
             RuntimesDirectory = ToolDescriptionHelpers.GetToolsDirectory();
             PackageSource = LibTorchPackageSet.NUGET_PACKAGE_SOURCE;
-            // Tests predict on the CPU, so their results do not depend on the computer, unless one sets CudaDriver
-            if (Program.UnitTest)
-                CudaDriver = null;
         }
 
         /// <summary>
@@ -92,6 +89,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         /// <summary>
         /// The NVIDIA driver, or null when the computer has none. Found when first asked for, unless set.
+        /// A test that predicts sets it to null, so its results do not depend on the computer; nothing
+        /// here tells a test from a Skyline a developer runs through the test harness.
         /// </summary>
         public CudaDriver CudaDriver
         {

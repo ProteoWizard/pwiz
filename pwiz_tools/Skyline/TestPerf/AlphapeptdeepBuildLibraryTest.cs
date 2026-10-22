@@ -115,6 +115,7 @@ namespace TestPerf
             {
                 buildLibraryDlg.LibraryName = "No peptides prediction";
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
+                buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
 
                 // Focusing the radio button checks it, as clicking it does, and showing the AlphaPeptDeep
                 // page must not take the focus from it
@@ -151,6 +152,8 @@ namespace TestPerf
             {
                 buildLibraryDlg.LibraryName = libraryName;
                 buildLibraryDlg.LibraryPath = libraryPath;
+                // Predict on the CPU, whatever GPU this computer has, so the library compares with the baselines
+                buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 buildLibraryDlg.AlphaPeptDeep = true;
                 if (iRTtype != null)
                     buildLibraryDlg.IrtStandard = iRTtype;
