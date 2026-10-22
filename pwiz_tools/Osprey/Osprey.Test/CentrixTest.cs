@@ -21,9 +21,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Centroid;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Test
 {
@@ -36,6 +38,21 @@ namespace pwiz.Osprey.Test
     {
         private const double SIGMA = 0.340;
         private const double SPACING = 0.125;
+
+        // Rust Centrix's centroids of real Stellar profile spectra (Data/Centrix/README.md), and the settings it ran with.
+        private const string GOLDEN_FOLDER = @"pwiz_tools/Osprey/Osprey.Test/Data/Centrix";
+        private const string GOLDEN_FILE = @"stellar-centrix-rust.golden.tsv";
+        private static readonly string[] GOLDEN_INPUTS = { @"stellar-2th-profile-slice.mzML", @"stellar-joint-split-slice.mzML" };
+        private const double GOLDEN_SIGMA_MS1 = 0.2;
+        private const double GOLDEN_SIGMA_MS2 = 0.33;
+        // On these spectra the port agrees with Rust to 1e-11 Th and to float precision in intensity. Rust sums A'y with
+        // BLAS and the port in index order, and over 6,000 such spectra 0.02% of centroids (solves stopped by the 1e-6
+        // absolute tolerance a sweep apart) differ by up to 4e-4 Th and 0.4%, which these tolerances allow; a change
+        // to the algorithm moves far more of them, by far more.
+        private const double GOLDEN_MZ_TOLERANCE = 1e-3;
+        private const double GOLDEN_INTENSITY_TOLERANCE = 0.01;
+        private const double GOLDEN_CLOSE = 1e-4;
+        private const double GOLDEN_MIN_CLOSE_FRACTION = 0.999;
 
         [TestMethod]
         public void TestCentrixBasis()
@@ -188,6 +205,77 @@ namespace pwiz.Osprey.Test
             var detecting = new CentrixCentroider(new CentrixParams { SigmaTh = SIGMA });
             var detected = Centroids(detecting, 494.0, 160, (500.0, 10000.0), (500.625, 10000.0));
             Assert.AreEqual(Describe(pair), Describe(detected));
+        }
+
+        [TestMethod]
+        public void TestCentrixRustGolden()
+        {
+            // Real profile spectra, read by Osprey's reader, centroided as Rust Centrix centroided them: the same number
+            // of centroids in every spectrum, each at Rust's m/z and intensity within the summation-order tolerance.
+            string folder = Path.Combine(IOTest.FindPwizRoot(), GOLDEN_FOLDER);
+            var golden = ReadGolden(Path.Combine(folder, GOLDEN_FILE));
+            var centroiders = new Dictionary<int, CentrixCentroider>
+            {
+                { 1, new CentrixCentroider(new CentrixParams { SigmaTh = GOLDEN_SIGMA_MS1 }) },
+                { 2, new CentrixCentroider(new CentrixParams { SigmaTh = GOLDEN_SIGMA_MS2 }) },
+            };
+            int spectra = 0, compared = 0, close = 0;
+            double worstMz = 0, worstIntensity = 0;
+            foreach (string input in GOLDEN_INPUTS)
+            {
+                var read = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, input));
+                var profiles = read.Ms1Spectra.Select((s, i) => (Level: 1, Ordinal: i, s.Mzs, s.Intensities))
+                    .Concat(read.Ms2Spectra.Select((s, i) => (Level: 2, Ordinal: i, s.Mzs, s.Intensities)));
+                foreach (var profile in profiles)
+                {
+                    var key = (input, profile.Level, profile.Ordinal);
+                    var expected = golden.TryGetValue(key, out var list) ? list : new List<(double Mz, double Intensity)>();
+                    golden.Remove(key);
+                    var actual = centroiders[profile.Level].Centroid(profile.Mzs,
+                        profile.Intensities.Select(v => (double)v).ToArray());
+                    string where = string.Format(CultureInfo.InvariantCulture, @"{0} MS{1} spectrum {2}", input,
+                        profile.Level, profile.Ordinal);
+                    Assert.AreEqual(expected.Count, actual.Count, where + @" centroid count");
+                    for (int k = 0; k < actual.Count; k++)
+                    {
+                        double mzError = Math.Abs(actual[k].Mz - expected[k].Mz);
+                        double intensityError = Math.Abs(actual[k].Intensity - expected[k].Intensity) / expected[k].Intensity;
+                        worstMz = Math.Max(worstMz, mzError);
+                        worstIntensity = Math.Max(worstIntensity, intensityError);
+                        Assert.IsTrue(mzError <= GOLDEN_MZ_TOLERANCE && intensityError <= GOLDEN_INTENSITY_TOLERANCE,
+                            string.Format(CultureInfo.InvariantCulture, @"{0} centroid {1}: {2:F5}:{3:F0} against Rust's {4:F5}:{5:F0}",
+                                where, k, actual[k].Mz, actual[k].Intensity, expected[k].Mz, expected[k].Intensity));
+                        if (mzError <= GOLDEN_CLOSE && intensityError <= GOLDEN_CLOSE)
+                            close++;
+                        compared++;
+                    }
+                    spectra++;
+                }
+            }
+            Assert.AreEqual(0, golden.Count, @"Golden spectra the fixture did not have: " + string.Join(@", ", golden.Keys));
+            Assert.AreEqual(30, spectra);
+            double closeFraction = (double)close / compared;
+            Console.WriteLine(@"{0} centroids of {1} spectra; {2:P3} within {3} of Rust; worst {4:E2} Th, {5:P3}", compared, spectra,
+                closeFraction, GOLDEN_CLOSE, worstMz, worstIntensity);
+            Assert.IsTrue(closeFraction >= GOLDEN_MIN_CLOSE_FRACTION, closeFraction.ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>The golden's centroids by (input file, MS level, ordinal among that level's spectra), in file order.</summary>
+        private static Dictionary<(string, int, int), List<(double Mz, double Intensity)>> ReadGolden(string path)
+        {
+            var golden = new Dictionary<(string, int, int), List<(double Mz, double Intensity)>>();
+            foreach (string line in File.ReadLines(path).Skip(1))
+            {
+                var fields = line.Split('\t');
+                var key = (fields[0], int.Parse(fields[1], CultureInfo.InvariantCulture), int.Parse(fields[2], CultureInfo.InvariantCulture));
+                if (!golden.TryGetValue(key, out var list))
+                {
+                    list = new List<(double Mz, double Intensity)>();
+                    golden[key] = list;
+                }
+                list.Add((double.Parse(fields[3], CultureInfo.InvariantCulture), double.Parse(fields[4], CultureInfo.InvariantCulture)));
+            }
+            return golden;
         }
 
         /// <summary>Gaussian peaks of the test sigma, summed in single precision as a profile's intensities are.</summary>
