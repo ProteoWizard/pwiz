@@ -30,6 +30,9 @@ if "%seed.commit%"=="" (
 )
 git fetch --depth=1 --no-tags origin %seed.commit% || exit /b 1
 git checkout -f -B master %seed.commit% || exit /b 1
+REM Match the submodules to the seed commit too; tcbuild.bat fails a build that leaves the
+REM tree dirty, and a submodule left at the PR head's commit shows as modified
+git submodule update --init --recursive --force --depth 1 || exit /b 1
 git clean -ffdxq || exit /b 1
 git log -1 --format=fuller]]></param>
           <param name="teamcity.step.mode" value="default" />
