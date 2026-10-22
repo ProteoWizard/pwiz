@@ -318,7 +318,9 @@
        EncyclopeDIA demultiplexing conversions, expecting msconvert.exe next to Skyline in the bin
        dir (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the
        _DeployBundledToolOutputs target above deploys its output. net8-only: the net472 build gets
-       the native msconvert from the Jam toolchain. -->
+       the native msconvert from the Jam toolchain. That deployment also brings msconvert's wiff2\
+       folder, which Skyline's own in-process .wiff2 reading depends on; see
+       Shared\Lib\SciexWiff2Staging.targets. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
