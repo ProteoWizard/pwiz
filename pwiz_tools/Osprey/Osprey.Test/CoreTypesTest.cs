@@ -398,7 +398,7 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(config.RtCalibration.Enabled);
             Assert.AreEqual(10.0, config.FragmentTolerance.Tolerance, TOLERANCE);
             Assert.AreEqual(ToleranceUnit.Ppm, config.FragmentTolerance.Unit);
-            Assert.AreEqual(ResolutionMode.Auto, config.ResolutionMode);
+            Assert.AreEqual(ResolutionMode.HRAM, config.ResolutionMode);
             Assert.AreEqual(DecoyMethod.Reverse, config.DecoyMethod);
             Assert.IsTrue(config.PrefilterEnabled);
             Assert.AreEqual(0.01, config.ExperimentFdr, TOLERANCE);

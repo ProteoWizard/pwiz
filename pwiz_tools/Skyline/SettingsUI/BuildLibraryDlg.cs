@@ -449,7 +449,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// A .carafemodel file of models fine-tuned by CarafeSharp, to predict with in place of the
+        /// A .model.zip file of models fine-tuned by CarafeSharp, to predict with in place of the
         /// pretrained AlphaPeptDeep models, or empty for the pretrained models.
         /// </summary>
         public string CarafeModelPath

@@ -272,19 +272,36 @@ that is the node that writes it.
 "Library build") does not add a stage. The pipeline stays the fixed four-element list above; what
 runs before it is a **workflow** (`LibraryBuildWorkflow`, in the executable): a sequence of phases,
 each a CarafeSharp task run in-process through the shared `PipelineDriver`, or an Osprey analysis
-over a derived config. Today the phases are two - `PredictLibrary` (CarafeSharp's task, over a
-digest of the FASTA made in memory, decoys and entrapment included) and the search - and the
-second takes the first's product, `<out>.library.blib`, as its `-l`.
+over a derived config. With the pretrained models or a saved one the phases are two -
+`PredictLibrary` (CarafeSharp's task, over a digest of the FASTA made in memory, decoys and
+entrapment included) and the search - and the second takes the first's product,
+`<out>.predicted.blib`, as its `-l`. With `--training-input` three come first:
+`PredictTrainingLibrary` (the same task, entrapment-free, into `<out>.predicted/initial.blib`), the
+tuning runs' search (an Osprey analysis over a derived config: the tuning runs, the initial
+library, `--training-export`, and `<out>.predicted/training/` as its `--output-dir`), and
+`TrainModel` (CarafeSharp's `TrainTask` on the exports, writing the model folder
+`<out>.predicted/model/` and `<out>.model.zip`); the final `PredictLibrary` then predicts from
+that folder, as CarafeSharp's own training does right after the fine-tune.
+
+The two analyses run in one process, so each gets its own task set (`OspreyTasks.Create()`): a
+task instance carries what one analysis hands between its stages (`PerFileRescoring`'s survivor
+plan, which `SecondPassFDR` rebuilds against), and the output's search must not inherit the tuning
+search's. The tuning search's artifacts are named by run like any analysis's, so they live in
+their own `--output-dir`; the spectra cache, which depends only on the input file, is shared.
 
 The phase boundary is a file, like every task boundary here (P10): the library carries the
 prediction task's validity stamp inside itself, so a re-run skips the prediction when its FASTA,
 settings and models are unchanged, and the search keys on the library file by name, size and
 mtime as it keys on any library, so a re-predicted library re-runs the search and a changed `-i`
 alone does not re-predict. Nothing passes between the phases in memory, and no peptide FASTA,
-pairing manifest or TSV sits between them. The prediction's log lines are the pipeline's
-(`[TASK] PredictLibrary:starting` and the rest), so a log reader sees one run. The library phase
-is a single-node task; its HPC addressing (`--task PredictLibrary`) is not in place yet, and
-`--fasta` with `--task` is refused until it is.
+pairing manifest or TSV sits between them. The library phases' log lines are the pipeline's
+(`[TASK] PredictLibrary:starting` and the rest), so a log reader sees one run. The library phases
+are single-node tasks, each a `--task` of its own on a cluster (`--task PredictTrainingLibrary`,
+`TrainModel`, `PredictLibrary`); the two analyses are addressed by their stages, the tuning runs'
+with `--training-search`, and a stage node derives its analysis from the one command line
+exactly as the workflow does in one process (`LibraryBuildWorkflow.StageConfig`). Each task's
+files are what it declares (`--task-files` prints them), and a phase's checkpoint is the file it
+writes, so a node needs only what the tasks before it wrote.
 
 ### Scatter and barrier: what a join may hold
 
@@ -504,7 +521,7 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 durable artifact that does not appear there is a defect.
 
 **"Durable artifact" is not narrowed to what the pipeline reads back.** The Stage-7
-reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on) commit
+reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (under `OSPREY_DIANN_REPORTS`) commit
 through `SimpleFileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
 previous run's report or none, never a half-written one. Because nothing downstream reads
 them and the blib has not been written yet when they run, a report that cannot be written
@@ -827,7 +844,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<library-leaf>.blib` (derived library; a `.tsv` source only) | experiment cache | library load, any task | all tasks | ship it, or rebuild locally - it is the finished library in the transfer format, validated by its own `osprey.library_hash` row, and the `.libcache` it replaced is read for one release where one is left |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
-| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
+| `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `FirstPassFDR`, `PerFileRescoring` | with the run, to every leg before `SecondPassFDR` |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product, carrying the run's share of the report's Model tab (`FeatureSums`) | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `FirstPassFDR`'s pay-later report; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
@@ -927,12 +944,13 @@ the worker's inputs changed, `PerFileRescoring`'s own validity fails, the driver
 it, and it rewrites the binary - and with it the stamp, in the same commit. A stamp that
 survives is one whose producer was legitimately skipped as already done.
 
-**`<stem>.calibration.json` is read on every leg, not just the rescore.** Besides RT
-calibration for Stage 6, it carries the isolation-scheme windows that give the gap-fill
-m/z filter its per-run coverage - which is how a `SecondPassFDR` node with no mzML still
-gets that coverage. It is read behind a `File.Exists`, so an orchestrator that leaves it
-behind does not get an error: gap-fill filtering silently changes. That is the P13-shaped
-hazard this document warns about, in the contract itself.
+**`<stem>.calibration.json` is read by the join before the rescore, not just the rescore.**
+Besides RT calibration for Stage 6, it carries the isolation-scheme windows that give the
+gap-fill m/z filter its per-run coverage, and `FirstPassFDR` plans the cross-run consensus
+from its RT calibration. It is read behind a `File.Exists`, so an orchestrator that leaves it
+behind does not get an error: the consensus silently changes. That is the P13-shaped hazard
+this document warns about, in the contract itself. `SecondPassFDR` needs none: gap-fill is
+planned in the rescore, and mode 3 of `regression.ps1` withholds the file from that node.
 
 **A per-run plan is a per-run product, and nothing cross-run rides in it.** Each run's
 `<stem>.reconciliation.json` holds that run's actions, gap-fill targets and refined
@@ -1205,10 +1223,9 @@ are functions of all runs:
 - the library, and `-i` naming the runs whose parquets it reads
 
 `.calibration.json` must travel, which is easy to get wrong because the join reads
-parquets rather than spectra. It supplies RT calibration and the isolation-scheme windows
-behind the gap-fill m/z filter, and it is read on this leg and the `SecondPassFDR` leg as
-well as the rescore. It is read behind a `File.Exists`: leaving it out produces no error,
-just different gap-fill filtering.
+parquets rather than spectra. It supplies the RT calibration the cross-run consensus is
+planned from, and it is read on this leg as well as the rescore. It is read behind a
+`File.Exists`: leaving it out produces no error, just a different consensus.
 
 `<stem>.spectra.bin` does not need to travel - the join reads parquets, not spectra. Leave
 the caches on the scoring nodes unless the raw data was deleted after staging, in which
@@ -1270,7 +1287,6 @@ Per run, for **every** run in the cohort:
 - `<stem>.reconciliation.json` - written by the rescore node, read here for the gap-fill
   entry ids on the Stage-7 fold. Part of the worker's answer: a run whose plan is missing or
   carries another stamp than its reconciled parquet is refused, like a missing 2nd-pass file
-- `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`

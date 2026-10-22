@@ -376,15 +376,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write TSV report to file.
-        /// </summary>
-        public static string _report {
-            get {
-                return ResourceManager.GetString("_report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resolution mode (default: {0}).
         /// </summary>
         public static string _resolution {
@@ -475,6 +466,33 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With {0}: tune the models on these runs before the library is predicted. The runs are searched with  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input {
+            get {
+                return ResourceManager.GetString("_training_input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input_list {
+            get {
+                return ResourceManager.GetString("_training_input_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} and {1}: the stage {2} selects is a stage of the tuning runs&apos; search, not the output&apos;s: i [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _training_search {
+            get {
+                return ResourceManager.GetString("_training_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show more detail (e.g. per-fold Percolator iterations) that is hidden by default.
         /// </summary>
         public static string _verbose {
@@ -498,6 +516,15 @@ namespace pwiz.Osprey {
         public static string _work_dir {
             get {
                 return ResourceManager.GetString("_work_dir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: print the files the task reads and writes for this command line, one per line as input or  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _task_files {
+            get {
+                return ResourceManager.GetString("_task_files", resourceCulture);
             }
         }
     }

@@ -126,7 +126,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    paths.AddRange(Directory.EnumerateFiles(folder, @"*" + CarafeModelFile.EXTENSION).OrderBy(path => path));
+                    // Both spellings: .model.zip, and .carafemodel from before the rename
+                    paths.AddRange(CarafeModelFile.FilePatterns
+                        .SelectMany(pattern => Directory.EnumerateFiles(folder, pattern))
+                        .OrderBy(path => path));
                 }
                 catch (Exception x) when (x is IOException || x is UnauthorizedAccessException)
                 {

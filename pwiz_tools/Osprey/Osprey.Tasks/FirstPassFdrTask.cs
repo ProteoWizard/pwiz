@@ -89,31 +89,11 @@ namespace pwiz.Osprey.Tasks
             config.StopAfterStage5 = true;
         }
 
-        /// <summary>
-        /// The Stage 5 -> Stage 6 boundary file pair is only meaningful with 2+ siblings
-        /// to reconcile against and reconciliation enabled, so both are rejected early on
-        /// top of the shared input / library / output requirement.
-        /// </summary>
-        public override string ValidateSelection(OspreyConfig config)
-        {
-            string err = base.ValidateSelection(config);
-            if (err != null)
-                return err;
-            if (config.InputFiles.Count < 2)
-            {
-                return string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                    OspreyArgNames.TaskText(Name), config.InputFiles.Count, PerFileRescoreTask.TASK_NAME,
-                    OspreyArgNames.Text(OspreyArgNames.INPUT));
-            }
-            if (!config.Reconciliation.Enabled)
-            {
-                return string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                    OspreyArgNames.TaskText(Name), PerFileRescoreTask.TASK_NAME);
-            }
-            return null;
-        }
+        // No ValidateSelection of its own: the shared input / library / output requirement is all
+        // it needs. Stage 5 trains the first-pass model and computes the first-pass q-values for
+        // any number of runs, one included, with or without reconciliation, which only adds the
+        // consensus PerFileRescoring plans from; so the chain is the same four tasks whatever the
+        // run count, and a workflow manager need not count the runs to choose its shape.
 
         /// <summary>
         /// The first join writes per-run intermediate files and the analysis-wide ones beside
@@ -217,11 +197,23 @@ namespace pwiz.Osprey.Tasks
         // ValidityKey adds the reconciliation parameter hash so that
         // toggling reconciliation off/on between runs invalidates the
         // prior outputs.
+        //
+        // Inputs are what a node running this task alone must be given, and nothing else: no
+        // data file and no spectra cache, since the join reads parquets. Each run's
+        // .calibration.json is one, though nothing fails without it - PerFileScoring's rehydrate
+        // reads it behind a File.Exists, for the RT calibrations the cross-run consensus is
+        // planned from, and the calibration view of --model-diagnostics reads it again. Left
+        // behind, the consensus silently changes.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return ParquetScoreCache.GetScoresPath(input);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+            }
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -703,7 +695,7 @@ namespace pwiz.Osprey.Tasks
             prebuiltProjections = null;
 
             if (survivors == null)
-                return false;  // StopAfterStage5 sidecar failure; ExitCode already set
+                return false;  // A sidecar failure, or nothing passed the first pass; ExitCode already set
             perFileEntries = survivors;
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
@@ -2290,6 +2282,19 @@ namespace pwiz.Osprey.Tasks
                 out var rowsPerBaseId);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
+            // Nothing survived the gate, so the second pass has no precursor to search and the
+            // run can only end in an empty .blib. Fail here, naming the gate, rather than spend
+            // the rest of the run producing output that only a later step would notice.
+            if (firstPassBaseIds.Count == 0)
+            {
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_,
+                    config.LibrarySource?.Path, config.ReconciliationCompactionFdr,
+                    OspreyArgNames.Text(OspreyArgNames.RECONCILIATION_COMPACTION_FDR),
+                    config.EffectiveProteinFdr, OspreyArgNames.Text(OspreyArgNames.PROTEIN_FDR)));
+                ctx.ExitCode = 1;
+                return null;
+            }
             _firstPassBaseIds = firstPassBaseIds;
 
             // The survivor LOADER, not a survivor buffer. Collecting every file's survivors

@@ -160,6 +160,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Searching the tuning runs with {0}.
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Wrote the pairing manifest {0}.
         /// </summary>
         public static string LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_ {
@@ -337,7 +346,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
+        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or vendor files where the vendor readers are installed) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
         /// </summary>
         public static string OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab {
             get {
@@ -431,6 +440,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} runs as one process, or task by task: {1} {2}; the four search stages with {3}; {1} {4}; {1} {5}; th [rest of string was truncated]";.
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library Build.
         /// </summary>
         public static string OspreyCommandArgs_Group_Library_Build {
@@ -476,6 +494,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library Tuning.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Library_Tuning {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Library_Tuning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: how the models are tuned on its runs. These are CarafeSharp's options under their standard names..
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_LIBRARY_TUNING_With__0___how_the_models_are_tuned_on_its_runs {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_LIBRARY_TUNING_With__0___how_the_models_are_tuned_on_its_runs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Logging.
         /// </summary>
         public static string OspreyCommandArgs_Group_Logging {
@@ -512,6 +548,51 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;integer&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_INT_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_INT_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;number&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_NUM_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_NUM_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/file.
+        /// </summary>
+        public static string OspreyCommandArgs_PATH_TO_FILE_path_to_file {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_PATH_TO_FILE_path_to_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/folder.
+        /// </summary>
+        public static string OspreyCommandArgs_PATH_TO_FOLDER {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_PATH_TO_FOLDER", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;ratio&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_RATIO_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_RATIO_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} file not found: {1}.
         /// </summary>
         public static string OspreyCommandArgs_ReadInputList__0__file_not_found___1_ {
@@ -526,6 +607,15 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_ {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;threshold&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_THRESHOLD_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_THRESHOLD_VALUE", resourceCulture);
             }
         }
         
@@ -726,15 +816,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} cannot be combined with {1} yet. Run the command without {1}, then search the library it writ [rest of string was truncated]";.
-        /// </summary>
-        public static string Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__ {
-            get {
-                return ResourceManager.GetString("Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} is not read with {1}: the library it builds carries its pairing..
         /// </summary>
         public static string Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_ {
@@ -749,6 +830,15 @@ namespace pwiz.Osprey {
         public static string Program_LibraryBuildError__0__must_be_in___1____2__ {
             get {
                 return ResourceManager.GetString("Program_LibraryBuildError__0__must_be_in___1____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} names the model this run writes: {1}. Copy it, or choose another {2}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__", resourceCulture);
             }
         }
         
@@ -776,6 +866,15 @@ namespace pwiz.Osprey {
         public static string Program_LibraryBuildError_Model_file_not_found___0_ {
             get {
                 return ResourceManager.GetString("Program_LibraryBuildError_Model_file_not_found___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training input file not found: {0}.
+        /// </summary>
+        public static string Program_LibraryBuildError_Training_input_file_not_found___0_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError_Training_input_file_not_found___0_", resourceCulture);
             }
         }
         
@@ -1102,6 +1201,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tuning: the models are tuned on {0} first, and saved as {1}.
+        /// </summary>
+        public static string Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Saved {0:N0} library precursors to {1}.
         /// </summary>
         public static string Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_ {
@@ -1237,6 +1345,24 @@ namespace pwiz.Osprey {
         public static string Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_ {
             get {
                 return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} predicts the library with the tuned model {1}, which is not there. Run {2} first..
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} makes a stage task a stage of the tuning runs&apos; search: give it with {1} and one of {2}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__makes_a_stage_task_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__", resourceCulture);
             }
         }
     }

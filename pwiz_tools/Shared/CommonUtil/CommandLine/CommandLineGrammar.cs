@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace pwiz.Common.CommandLine
 {
@@ -113,10 +114,12 @@ namespace pwiz.Common.CommandLine
         public StrayTokenPolicy StrayTokens { get; init; } = StrayTokenPolicy.ignore;
 
         /// <summary>
-        /// True when an underscore and a hyphen are the same character in an option's name, so
-        /// <c>--miss_c</c> names the declaration spelled <c>miss-c</c>. Osprey and CarafeSharp
-        /// spell their names with hyphens and accept the underscore spelling Carafe's recorded
-        /// command lines use, with no alias per option; false (the default) matches names exactly.
+        /// True when an underscore, a hyphen and a lower-to-upper case boundary are the same
+        /// separator in an option's name, and case is otherwise ignored, so <c>--miss_c</c> names
+        /// the declaration spelled <c>miss-c</c> and <c>-minLength</c> the one spelled
+        /// <c>min-length</c>. Osprey and CarafeSharp spell their names with hyphens and accept
+        /// the underscore and camel-case spellings Carafe's recorded command lines use, with no
+        /// alias per option; false (the default) matches names exactly.
         /// </summary>
         public bool NameSeparatorsEquivalent { get; init; }
 
@@ -159,26 +162,34 @@ namespace pwiz.Common.CommandLine
         /// <summary>
         /// True when <paramref name="typed"/>, the name as it was typed, names the declaration
         /// <paramref name="declared"/>: exactly, or with <see cref="NameSeparatorsEquivalent"/>
-        /// with every underscore read as a hyphen.
+        /// when both read the same as <see cref="StandardName"/> spells them.
         /// </summary>
         public bool NamesMatch(string declared, string typed)
         {
             if (string.Equals(declared, typed, StringComparison.Ordinal))
                 return true;
-            if (!NameSeparatorsEquivalent || declared.Length != typed.Length)
-                return false;
-            for (int i = 0; i < declared.Length; i++)
-            {
-                char d = declared[i], t = typed[i];
-                if (d != t && !(IsSeparator(d) && IsSeparator(t)))
-                    return false;
-            }
-            return true;
+            return NameSeparatorsEquivalent &&
+                   string.Equals(StandardName(declared), StandardName(typed), StringComparison.Ordinal);
         }
 
-        private static bool IsSeparator(char c)
+        /// <summary>
+        /// <paramref name="name"/> in the standard spelling: lower case, with a hyphen for every
+        /// underscore and before every upper-case letter that follows a lower-case one
+        /// (<c>minLength</c> and <c>min_length</c> are <c>min-length</c>; <c>I2L</c> is <c>i2l</c>).
+        /// </summary>
+        public static string StandardName(string name)
         {
-            return c == '-' || c == '_';
+            var sb = new StringBuilder(name.Length + 4);
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (c == '_')
+                    c = '-';
+                else if (char.IsUpper(c) && i > 0 && char.IsLower(name[i - 1]))
+                    sb.Append('-');
+                sb.Append(char.ToLowerInvariant(c));
+            }
+            return sb.ToString();
         }
     }
 }

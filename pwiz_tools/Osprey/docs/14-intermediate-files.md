@@ -853,7 +853,7 @@ written or reused. Defaults from `Osprey/OspreyCommandArgs.cs` + `Osprey.Core/Os
 | `--output-dir <dir>` | unset | Sets `ArtifactPaths.OutputDir` (scores parquet, calibration JSON, FDR sidecars, reconciliation JSON) |
 | `--cache-dir <dir>` | unset | Sets `ArtifactPaths.CacheDir`, which holds `.spectra.bin` **and** the derived `<library-leaf>.blib` (`LibraryLoader` routes the derived library, and a `.libcache` an earlier release left, through it too); a shared cache dir lets analyses reuse one parse |
 | `--task <T>` | unset (in-process) | `FirstPassFDR`/`SecondPassFDR` trigger `ValidateScoresParquetGroup`; `SecondPassFDR` sets `ExpectReconciledInput` (requires `osprey.reconciled = "true"`). See 15-hpc-scoring-split.md |
-| `--resolution {unit\|hram\|auto}` | `auto` | Folded into `SearchParameterHash` ⇒ changing it invalidates `.scores.parquet` and (via the task key) recalibration |
+| `--resolution {hram\|unit}` | `hram` | Folded into `SearchParameterHash` ⇒ changing it invalidates `.scores.parquet` and (via the task key) recalibration |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; unit-res forces mz 0.5 | Folded into `SearchParameterHash` |
 | `--no-prefilter` | prefilter on | Folded into `SearchParameterHash` |
 | decoy flags (`--decoys-in-library`, `--decoy-pairing-manifest`, decoy method/prefixes/pair-min-fraction) | Reverse; DECOY_/rev_/decoy_; 0.80 | All folded into `SearchParameterHash` |

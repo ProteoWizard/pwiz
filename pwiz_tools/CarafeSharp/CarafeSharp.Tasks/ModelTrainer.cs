@@ -186,7 +186,7 @@ namespace pwiz.CarafeSharp.Tasks
 
             // The fine-tuned model as one file, to predict later libraries from with -model.
             // The acquisition columns of the MS2 model it holds; the pretrained model has the default ones.
-            string modelFile = Path.Combine(_settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
+            string modelFile = ModelFilePath(_settings);
             var trained = CarafeModelDirectory.Open(_settings.OutputDirectory, true);
             string ms2File = trained.GetMs2ModelPath(_settings.TrainingType);
             var acquisition = ms2File != null && ModelFiles.IsSafetensors(ms2File)
@@ -208,6 +208,12 @@ namespace pwiz.CarafeSharp.Tasks
                 _settings.Library.PreferSafetensors = true;
                 new LibraryGenerator(_settings.Library, _log, pretrained) { Stamp = Stamp }.Run();
             }
+        }
+
+        /// <summary>The fine-tuned model file a run with <paramref name="settings"/> writes.</summary>
+        public static string ModelFilePath(TrainingSettings settings)
+        {
+            return settings.ModelFile ?? Path.Combine(settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
         }
 
         /// <summary>

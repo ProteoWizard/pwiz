@@ -98,9 +98,10 @@ namespace TestPerf
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
-            // The new document loads the libraries in the default settings in the background. Let that
-            // finish, or CheckForFileLocks moves the test folder while a library is still being opened.
+            // The new document starts loading the libraries in the last-used settings, and the
+            // library loader closes their files only after the loaded document is published
             WaitForDocumentLoaded();
+            WaitForBackgroundLoaders();
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }

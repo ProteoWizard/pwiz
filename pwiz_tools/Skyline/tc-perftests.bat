@@ -55,13 +55,6 @@ REM # PR perf agent). Lives next to this script; TestRunner reads it via skip=@f
 set SKIPLIST=%SCRIPT_DIR%\tc-perftests-skiplist.txt
 pushd "%SCRIPT_DIR%"
 
-REM # The perf/tutorial config shares its checkout on the CI agent, so a concurrent build can leave
-REM # a stale generated Net8Version.g.cs in Skyline's obj; compiled alongside the freshly stamped one
-REM # it yields CS0579 'Duplicate AssemblyVersionAttribute' and fails the build. Reset Skyline's obj
-REM # so the version-stamping target (Skyline.csproj StampNet8InformationalVersion) regenerates it
-REM # from a clean incremental state. Cheap relative to the hours-long test run.
-if exist "%SCRIPT_DIR%\obj" rmdir /s /q "%SCRIPT_DIR%\obj"
-
 set EXIT=0
 set CONFIG=Release
 set IAGREE=0
@@ -98,7 +91,9 @@ if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     goto error
 )
 
-set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+REM # x64, as build.bat builds it, so the perf and tutorial tests run against the same binaries
+REM # as the per-commit tests and the shipped build, not an AnyCPU copy under bin\<Config>.
+set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 
@@ -112,7 +107,9 @@ REM # Skyline.csproj pulls in every ProjectReference (BiblioSpec, CommonMsData,
 REM # ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp vendor + BiblioSpec
 REM # tool projects, ...). TestPerf/TestTutorial add the two suites (and copy
 REM # TestUtil/TestFunctional into their own output). TestRunner is the harness.
-set BUILD_TARGET=Skyline.csproj TestPerf\TestPerf.csproj TestTutorial\TestTutorial.csproj TestRunner\TestRunner.csproj
+REM # SkylineBuild.proj builds them in one MSBuild session, the way build.bat builds
+REM # the full set; its Perf set is this list.
+set BUILD_TARGET=SkylineBuild.proj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
@@ -130,11 +127,10 @@ if %EXIT% NEQ 0 (
     set ERROR_TEXT=
 )
 
-for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
-if %EXIT% NEQ 0 goto error
-
-for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
-if %EXIT% NEQ 0 goto error
+REM # Restore and build in one dotnet build. No -f - see SkylineBuild.proj.
+echo ##teamcity[progressMessage 'dotnet build %BUILD_TARGET% (%CONFIG%)']
+dotnet build "%BUILD_TARGET%" -nologo %MSBUILD_PROPS% -p:SkylineBuildSet=Perf
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %BUILD_TARGET% failed" & goto error)
 
 REM # ------------------------------------------------------------------------
 REM # Stage step. Merge Skyline + TestRunner + TestPerf + TestTutorial into one
@@ -199,18 +195,6 @@ if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error
 :tests_done
 popd
 exit /b 0
-
-:restore_one
-echo ##teamcity[progressMessage 'dotnet restore %~1']
-dotnet restore "%~1" %MSBUILD_PROPS%
-if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet restore %~1 failed")
-goto :eof
-
-:build_one
-echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
-dotnet build "%~1" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS%
-if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
-goto :eof
 
 REM # Stage one project into %STAGE_DIR%. The first call (STAGE_FIRST=1) bundles the
 REM # portable .NET runtime; the rest pass -NoRuntime to skip re-staging it.

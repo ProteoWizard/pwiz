@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 using pwiz.Common.Pipeline;
@@ -32,20 +31,31 @@ namespace pwiz.CarafeSharp.Tasks
     /// model as a <c>.carafemodel</c>, and with <c>-db</c> the library predicted from it. Both
     /// carry the stamp, so a re-run on the same exports, models and settings is skipped.
     /// </summary>
-    internal sealed class TrainTask : CarafeTask
+    public sealed class TrainTask : CarafeTask
     {
         public const string TASK_NAME = @"Train";
 
         private readonly TrainingSettings _settings;
+        private readonly string _name;
         // The locator scans -i and reads each export's footer; once per task, not once per Inputs enumeration.
         private TrainingExportSelection _selection;
 
         public TrainTask(TrainingSettings settings)
+            : this(settings, TASK_NAME)
         {
-            _settings = settings;
         }
 
-        public override string Name => TASK_NAME;
+        /// <summary>The same, under the name a host's log and stamps give it.</summary>
+        public TrainTask(TrainingSettings settings, string name)
+        {
+            _settings = settings;
+            _name = name;
+        }
+
+        public override string Name => _name ?? TASK_NAME;
+
+        /// <summary>Changes the fine-tuning options before the run; for a host's tests, which cannot afford a full fine-tune.</summary>
+        public Action<FineTuneOptions> ConfigureFineTune { get; set; }
 
         public override IEnumerable<string> Inputs(TaskContext ctx)
         {
@@ -65,7 +75,7 @@ namespace pwiz.CarafeSharp.Tasks
 
         public override IEnumerable<string> Outputs(TaskContext ctx)
         {
-            yield return Path.Combine(_settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
+            yield return ModelTrainer.ModelFilePath(_settings);
             // The library goes into the training output folder (ModelTrainer sets that).
             string blib = _settings.Library != null ? PredictLibraryTask.BlibOutput(_settings.Library, _settings.OutputDirectory) : null;
             if (blib != null)
@@ -82,13 +92,14 @@ namespace pwiz.CarafeSharp.Tasks
             // The stamp first, before the run touches a setting, so it carries the key the next
             // run's resume check computes.
             var stamp = OutputStamp(ctx);
-            new ModelTrainer(_settings, Context(ctx).Output) { Stamp = stamp }.Run();
+            new ModelTrainer(_settings, Context(ctx).Output) { Stamp = stamp, ConfigureFineTune = ConfigureFineTune }.Run();
             return true;
         }
 
         public override string Completion(TimeSpan elapsed)
         {
-            return @"Time used for training and spectral library generation: " + Seconds(elapsed) + @" s.";
+            return (_settings.Library != null ? @"Time used for training and spectral library generation: " : @"Time used for training: ") +
+                   Seconds(elapsed) + @" s.";
         }
     }
 }

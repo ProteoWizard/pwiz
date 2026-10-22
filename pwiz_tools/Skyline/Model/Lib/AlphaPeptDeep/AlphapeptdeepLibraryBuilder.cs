@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public LibrarySpec LibrarySpec { get; private set; }
 
         /// <summary>
-        /// A model CarafeSharp fine-tuned on a set of runs and saved as a .carafemodel file, to predict
+        /// A model CarafeSharp fine-tuned on a set of runs and saved as a .model.zip file, to predict
         /// with in place of the pretrained models, or null for the pretrained models. It predicts for
         /// the collision energy, instrument, activation and analyzer it was trained on, with the kind of
         /// RT model it names.
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     RtMax = settings.RtMax,
                     ChronologerDirectory = Path.Combine(BundledFilesDirectory, ChronologerFiles.BUNDLED_RELATIVE_DIRECTORY),
                 }.Load();
-                // A .carafemodel holds no CCS model, as CarafeSharp does not fine-tune it
+                // A fine-tuned model file holds no CCS model, as CarafeSharp does not fine-tune it
                 using var ccs = CcsModel.FromPretrained(pretrained, device);
                 // A model of a fraction of the gradient gives minutes on the training runs' gradient, as CarafeSharp
                 // writes them; the pretrained models' predictions, and a Chronologer's hydrophobic index, give iRT
