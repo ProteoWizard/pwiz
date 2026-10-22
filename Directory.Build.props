@@ -27,6 +27,15 @@
        root. Every other path is derived from that, so adding a new
        csproj at any depth needs only `$(PwizRepoRoot)<thing>`.
        ============================================================ -->
+  <!-- x64 is the platform every Windows build of pwiz-sharp uses: Pwiz.sln's x64 configurations,
+       build.bat, the installer, Skyline and Osprey all pass it, so they share one bin\x64\<Config>
+       tree, and every vendor SDK is x64-only anyway. AnyCPU stays listed for builds that pass no
+       platform (build.sh on Linux, a bare `dotnet build`). Declared here so Visual Studio accepts
+       Pwiz.sln mapping these projects to x64; a project that sets its own Platforms keeps them. -->
+  <PropertyGroup>
+    <Platforms Condition="'$(Platforms)' == ''">AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- Repo root with a trailing separator: use it as a bare prefix, `$(PwizRepoRoot)pwiz`.
          $(PwizRepoDir) is the same directory without the separator, for command lines where a

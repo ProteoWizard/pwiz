@@ -210,8 +210,8 @@
 
     <Message Condition="'$(_Wanted)' == 'true'" Importance="high"
              Text="Building %(DistroZipPrereq.Filename) (%(DistroZipPrereq.Tfm)) for %(DistroZipPrereq.Zip)" />
-    <!-- Restore first, and without TargetFramework: these projects are not in build.bat's
-         BUILD_TARGET list, so nothing has restored them on a clean agent and Targets="Build"
+    <!-- Restore first, and without TargetFramework: these projects are not in
+         SkylineBuild.proj, so nothing has restored them on a clean agent and Targets="Build"
          alone fails with NETSDK1004 (missing project.assets.json). NuGet wants the restore
          done for the whole project, not one TFM, hence the separate call. The
          RemoveProperties matters too: build.bat drives this with -f net10.0-windows, and

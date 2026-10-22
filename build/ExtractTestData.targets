@@ -31,9 +31,10 @@
     -k it does the right thing (skips existing files without overwriting), but it reports
     each skip as a warning and then exits with status 1 ("Error exit delayed from previous
     errors"). Set IgnoreExitCode="true" to swallow that — an actual extraction failure
-    would also produce missing files, which the tests would surface immediately. The
-    Inputs/Outputs incremental build skips the call entirely when the archive hasn't
-    changed since the sentinel was touched.
+    would also produce missing files, which the tests would surface immediately.
+
+    The extraction itself is in ExtractTestDataArchive.proj, run once per archive per build
+    and stamped once per archive; see that file for why. This target only asks for it.
     -->
 
   <ItemGroup>
@@ -44,39 +45,30 @@
 
   <Target Name="ExtractVendorTestData"
           BeforeTargets="BeforeBuild"
-          Condition="'@(VendorTestArchives)' != ''"
-          Inputs="@(VendorTestArchives)"
-          Outputs="$(IntermediateOutputPath)vendor-test-data.extracted">
-    <PropertyGroup>
-      <!-- libraries/bsdtar.exe is a Windows PE; running it off-Windows fails with
-           "Exec format error", and because IgnoreExitCode swallows that while the sentinel
-           below still gets touched, the extraction silently never happens and the fixtures
-           just aren't there. Use the system tar elsewhere. GNU tar's -k errors on existing
-           files rather than skipping (the reason bsdtar is used on Windows at all), so ask
-           for the skip-old-files flag instead, which is the skip-quietly spelling. -->
-      <_TarExe Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\libraries\bsdtar.exe</_TarExe>
-      <_TarKeepArgs Condition="'$(OS)' == 'Windows_NT'">-xkf</_TarKeepArgs>
-      <_TarExe Condition="'$(OS)' != 'Windows_NT'">tar</_TarExe>
-      <_TarKeepArgs Condition="'$(OS)' != 'Windows_NT'">--skip-old-files -xf</_TarKeepArgs>
-    </PropertyGroup>
-    <!-- An archive a checkout does not carry is not an error; skip it rather than failing
-         the build over a vendor this machine was never going to test. -->
-    <MakeDir Directories="@(VendorTestArchives->'%(Parent)');$(IntermediateOutputPath)" />
-    <Message Importance="high" Text="Extracting %(VendorTestArchives.Identity) -&gt; %(VendorTestArchives.Parent)"
-             Condition="Exists('%(VendorTestArchives.Identity)')" />
-    <Exec Command="&quot;$(_TarExe)&quot; $(_TarKeepArgs) &quot;%(VendorTestArchives.Identity)&quot; -C &quot;%(VendorTestArchives.Parent)&quot;"
-          Condition="Exists('%(VendorTestArchives.Identity)')"
-          IgnoreExitCode="true"
-          IgnoreStandardErrorWarningFormat="true">
-      <Output TaskParameter="ExitCode" PropertyName="_TarExitCode" />
-    </Exec>
-    <!-- Windows bsdtar 2.7 exits 1 just for reporting skipped files, so its exit code says
-         nothing; GNU tar exits 0 in skip-old-files mode unless something really went wrong.
-         With several archives the Exec batches and this holds the last one's code, which is
-         enough to notice a broken extraction on Linux; the tests name the missing data anyway. -->
-    <Warning Condition="'$(OS)' != 'Windows_NT' and '$(_TarExitCode)' != '' and '$(_TarExitCode)' != '0'"
-             Text="Extracting vendor test data failed (exit $(_TarExitCode)); fixtures will be missing and their tests will report Inconclusive." />
-    <Touch Files="$(IntermediateOutputPath)vendor-test-data.extracted" AlwaysCreate="true" />
+          Condition="'@(VendorTestArchives)' != ''">
+    <!-- Callers spell the same archive differently (TestData\..\..\..\pwiz\... and
+         $(PwizRoot)\data\...), and global properties are compared as text, so normalize both
+         paths to full paths or the requests would not be recognized as the same one. No
+         trailing separator on Parent either: it would escape the closing quote of tar's -C
+         argument. -->
+    <ItemGroup>
+      <_VendorTestArchiveRequest Include="@(VendorTestArchives->'%(FullPath)')" />
+      <!-- No Parent means the archive's own folder, which is where every archive extracts. -->
+      <_VendorTestArchiveRequest Condition="'%(Parent)' == ''">
+        <Parent>%(RootDir)%(Directory)</Parent>
+      </_VendorTestArchiveRequest>
+      <_VendorTestArchiveRequest>
+        <ExtractProperties>Archive=%(FullPath);Parent=$([System.IO.Path]::GetFullPath('%(Parent)').TrimEnd('\').TrimEnd('/'))</ExtractProperties>
+      </_VendorTestArchiveRequest>
+    </ItemGroup>
+    <!-- RemoveProperties drops the caller's own global properties, which the MSBuild task
+         would otherwise pass along: a test project built for another TargetFramework,
+         Configuration or Platform would make a second, concurrent instance of the same
+         archive's extraction. The extraction depends on none of them. -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)ExtractTestDataArchive.proj"
+             Targets="Extract"
+             Properties="%(_VendorTestArchiveRequest.ExtractProperties)"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained;Configuration;Platform;ShouldUnsetParentConfigurationAndPlatform;IAgreeToVendorLicenses;AutomatedBuild" />
   </Target>
 
 </Project>
