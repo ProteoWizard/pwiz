@@ -75,6 +75,11 @@ namespace pwiz.Osprey.DemuxTool
             get { return _pipeline.IonsPassedThrough; }
         }
 
+        public double IonsUnexplained
+        {
+            get { return _pipeline.IonsUnexplained; }
+        }
+
         public override int Count
         {
             get { return _pipeline.OutputCount; }

@@ -300,6 +300,12 @@ namespace pwiz.Osprey.Demux
         public int Sources { get; set; }
         public double IonsIn { get; set; }
         public double IonsPassedThrough { get; set; }
+
+        /// <summary>
+        /// Ions of solved channels' observed peaks that no fitted signal explains (the elution fit), dropped or, with
+        /// <see cref="ElutionDemuxParams.ShareUnexplained"/>, shared equally among the spectrum's bins.
+        /// </summary>
+        public double IonsUnexplained { get; set; }
     }
 
     /// <summary>

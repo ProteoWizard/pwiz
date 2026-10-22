@@ -417,6 +417,11 @@ namespace pwiz.Osprey.DemuxTool
             double passed = stepped?.IonsPassedThrough ?? scanning.IonsPassedThrough;
             Console.WriteLine(@"Wrote {0} in {1:F0} s: {2:N0} channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through",
                 output, stopwatch.Elapsed.TotalSeconds, channels, solved, passed / Math.Max(ionsIn, 1e-30), ionsIn);
+            if (stepped != null && options.Elution != null)
+            {
+                Console.WriteLine(@"Elution fit: {0:P2} of the ions unexplained ({1})", stepped.IonsUnexplained / Math.Max(ionsIn, 1e-30),
+                    options.Elution.ShareUnexplained ? @"shared equally among their spectrum's bins" : @"dropped");
+            }
             if (JointDemuxProfile.Enabled)
             {
                 Console.WriteLine(JointDemuxProfile.Summary());

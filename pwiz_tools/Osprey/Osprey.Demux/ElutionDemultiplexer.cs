@@ -50,6 +50,12 @@ namespace pwiz.Osprey.Demux
         /// <summary>The weight floor, in ions, before any peak is fitted (the observations' own counts weight them).</summary>
         public double InitialFloorIons { get; set; } = 1;
 
+        /// <summary>
+        /// An observed peak whose window has no fitted signal at its time (a fragment too weak for any peak to clear
+        /// <see cref="MinGain"/>) is shared equally among the spectrum's bins, as a pass-through peak is; false drops it.
+        /// </summary>
+        public bool ShareUnexplained { get; set; }
+
         /// <summary>Peak sigma, in minutes (the unit of spectrum times).</summary>
         public double SigmaMinutes
         {
@@ -62,9 +68,9 @@ namespace pwiz.Osprey.Demux
             get
             {
                 var ic = CultureInfo.InvariantCulture;
-                return string.Format(ic, @"elution_fwhm_s={0};apex_step_sigmas={1};reach_sigmas={2};min_gain={3};max_peaks={4};initial_floor_ions={5}",
+                return string.Format(ic, @"elution_fwhm_s={0};apex_step_sigmas={1};reach_sigmas={2};min_gain={3};max_peaks={4};initial_floor_ions={5};share_unexplained={6}",
                     FwhmSeconds.ToString(@"R", ic), ApexStepSigmas.ToString(@"R", ic), ReachSigmas.ToString(@"R", ic),
-                    MinGain.ToString(@"R", ic), MaxPeaks, InitialFloorIons.ToString(@"R", ic));
+                    MinGain.ToString(@"R", ic), MaxPeaks, InitialFloorIons.ToString(@"R", ic), ShareUnexplained);
             }
         }
     }
@@ -180,7 +186,13 @@ namespace pwiz.Osprey.Demux
                     foreach (int s in observedOutputs)
                     {
                         int nc = fit.Evaluate(unit.OutputRow[s], unit.OutputTime[s], x, cols);
-                        ScanningDemultiplexer.Apportion(unit, keep, observed[s], s, nc, x, cols, result.Demultiplexed);
+                        double total = 0;
+                        for (int jj = 0; jj < nc; jj++)
+                            total += unit.Transmission[unit.OutputRow[s], cols[jj]] * x[jj];
+                        if (total > 0)
+                            ScanningDemultiplexer.Apportion(unit, keep, observed[s], s, nc, x, cols, result.Demultiplexed);
+                        else
+                            Unexplained(unit, keep, ownOutput, observed[s], s, elution.ShareUnexplained, result);
                         observed[s].Clear();
                     }
                     observedOutputs.Clear();
@@ -196,6 +208,37 @@ namespace pwiz.Osprey.Demux
                 k = end;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Observed peaks of output spectrum <paramref name="s"/> that no fitted signal explains: counted once (by the
+        /// unit that owns the spectrum's pass-through) and, when sharing, split equally among its window's bins.
+        /// </summary>
+        private static void Unexplained(InterpolatedUnit unit, bool[] keep, Dictionary<int, bool> ownOutput,
+            List<int> observed, int s, bool share, ScanningUnitResult result)
+        {
+            int r = unit.OutputRow[s], columns = unit.ColumnBins.Length;
+            if (ownOutput.TryGetValue(unit.OutputSpectrum[s], out bool own) && own)
+            {
+                foreach (int i in observed)
+                    result.IonsUnexplained += unit.Ions[i];
+            }
+            if (!share)
+                return;
+            int bins = 0;
+            for (int j = 0; j < columns; j++)
+            {
+                if (unit.Transmission[r, j] >= 0.5)
+                    bins++;
+            }
+            foreach (int i in observed)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    if (keep[s * columns + j])
+                        result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[j], unit.OutputSpectrum[s], unit.Mz[i], unit.Ions[i] / bins));
+                }
+            }
         }
 
         /// <summary>

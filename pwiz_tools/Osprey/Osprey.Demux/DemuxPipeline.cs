@@ -171,6 +171,7 @@ namespace pwiz.Osprey.Demux
         public long ChannelsSolved { get; private set; }
         public double IonsIn { get; private set; }
         public double IonsPassedThrough { get; private set; }
+        public double IonsUnexplained { get; private set; }
 
         /// <summary>Output spectra, in the order they are written.</summary>
         public int OutputCount
@@ -223,6 +224,7 @@ namespace pwiz.Osprey.Demux
                 ChannelsSolved += result.ChannelsSolved;
                 IonsIn += result.IonsIn;
                 IonsPassedThrough += result.IonsPassedThrough;
+                IonsUnexplained += result.IonsUnexplained;
             }
             _plan.LayOut(firstCycle, lastCycle, batch.Results, _built);
             if (batch.Results.Length > 0)
