@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -512,18 +513,24 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
-        /// The fine-tuned Carafe model files AlphaPeptDeep libraries were last built with, most recent first.
+        /// The Carafe models Build Library offers: the pretrained AlphaPeptDeep models first, then the
+        /// fine-tuned model files the user added under names of their own.
         /// </summary>
         [UserScopedSettingAttribute]
-        public List<string> CarafeModelList
+        public CarafeModelList CarafeModelList
         {
             get
             {
-                if (this[@"CarafeModelList"] == null)
-                    CarafeModelList = new List<string>();
-                return (List<string>)this[@"CarafeModelList"];
+                var list = this[typeof(CarafeModelList).Name] as CarafeModelList;
+                if (list == null)
+                {
+                    list = new CarafeModelList();
+                    list.AddDefaults();
+                    CarafeModelList = list;
+                }
+                return list;
             }
-            set { this[@"CarafeModelList"] = value; }
+            set { this[typeof(CarafeModelList).Name] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -2020,6 +2027,61 @@ namespace pwiz.Skyline.Properties
 
         public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
             settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(ResolveKeys(keys)));
+    }
+
+    /// <summary>
+    /// The Carafe models Build Library predicts with: the pretrained AlphaPeptDeep models, the
+    /// default that is always first and cannot be edited, and the fine-tuned model files the user
+    /// added. Its list editor is a grid of what each model was trained on rather than the generic
+    /// name list, so the models can be compared.
+    /// </summary>
+    public sealed class CarafeModelList : SettingsList<CarafeModelSpec>
+    {
+        public override IEnumerable<CarafeModelSpec> GetDefaults(int revisionIndex)
+        {
+            return new[] { CarafeModelSpec.DEFAULT };
+        }
+
+        public override int ExcludeDefaults { get { return 1; } }
+
+        public override string GetDisplayName(CarafeModelSpec item)
+        {
+            if (item.IsDefault)
+                return PropertiesResources.CarafeModelList_GetDisplayName_Default__AlphaPeptDeep_;
+            return CarafeModelChoice.GetDisplayName(item);
+        }
+
+        public override CarafeModelSpec EditItem(Control owner, CarafeModelSpec item,
+            IEnumerable<CarafeModelSpec> existing, object tag)
+        {
+            using (var editModel = new EditCarafeModelDlg(existing ?? this))
+            {
+                editModel.ModelSpec = item;
+                if (editModel.ShowDialog(owner) == DialogResult.OK)
+                    return editModel.ModelSpec;
+
+                return null;
+            }
+        }
+
+        public override CarafeModelSpec CopyItem(CarafeModelSpec item)
+        {
+            return (CarafeModelSpec)item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<CarafeModelSpec> EditList(Control owner, object tag)
+        {
+            using (var dlg = new CarafeModelListDlg(this))
+            {
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                    return dlg.GetAllEdited().ToArray();
+                return null;
+            }
+        }
+
+        public override string Title { get { return PropertiesResources.CarafeModelList_Title_Edit_Carafe_Models; } }
+
+        public override string Label { get { return PropertiesResources.CarafeModelList_Label_Models; } }
     }
 
     [LlmName("Background Proteomes")]
@@ -4331,7 +4393,7 @@ namespace pwiz.Skyline.Properties
 
         #region IListEditor<T> Members
 
-        public IEnumerable<TItem> EditList(Control owner, object tag)
+        public virtual IEnumerable<TItem> EditList(Control owner, object tag)
         {
             using (var dlg = new EditListDlg<SettingsListBase<TItem>, TItem>(this, tag))
             {

@@ -457,16 +457,34 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to The file {0} does not exist..
         /// </summary>
-        public static string BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_ {
+        public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_ {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_", resourceCulture);
+                return ResourceManager.GetString("EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuned Carafe models.
+        /// </summary>
+        public static string EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The model {0} already exists..
+        /// </summary>
+        public static string EditCarafeModelDlg_OkDialog_The_model__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_OkDialog_The_model__0__already_exists_", resourceCulture);
             }
         }
 
         /// <summary>
         ///   Looks up a localized string similar to The file {0} is not a valid fine-tuned Carafe model..
         /// </summary>
-        public static string BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
+        public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
             }
@@ -511,38 +529,11 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to precursor m/z {0}.
-        /// </summary>
-        public static string CarafeModelChoice_GetDetails_precursor_m_z__0_ {
-            get {
-                return ResourceManager.GetString("CarafeModelChoice_GetDetails_precursor_m_z__0_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to {0}-{1}.
         /// </summary>
         public static string CarafeModelChoice_PrecursorMzRange__0___1_ {
             get {
                 return ResourceManager.GetString("CarafeModelChoice_PrecursorMzRange__0___1_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Choose a folder of fine-tuned Carafe models.
-        /// </summary>
-        public static string CarafeModelChooserDlg_ChooseFolder_Choose_a_folder_of_fine_tuned_Carafe_models {
-            get {
-                return ResourceManager.GetString("CarafeModelChooserDlg_ChooseFolder_Choose_a_folder_of_fine_tuned_Carafe_models", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to saved {0}.
-        /// </summary>
-        public static string CarafeModelChoice_GetDetails_saved__0_ {
-            get {
-                return ResourceManager.GetString("CarafeModelChoice_GetDetails_saved__0_", resourceCulture);
             }
         }
 

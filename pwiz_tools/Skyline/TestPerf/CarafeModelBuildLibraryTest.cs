@@ -24,10 +24,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -81,6 +82,7 @@ namespace TestPerf
             string modelPath = TestFilesDir.GetTestPath("AstralFineTuned.carafemodel");
             Assert.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(modelPath).RtModel);
 
+            const string modelName = "Astral 24 min";
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() =>
@@ -90,27 +92,58 @@ namespace TestPerf
                 // Predict on the CPU, whatever GPU this computer has
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 buildLibraryDlg.AlphaPeptDeep = true;
+                // The list starts with the pretrained models alone
+                Assert.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
             });
-            var chooserDlg = ShowDialog<CarafeModelChooserDlg>(buildLibraryDlg.ShowCarafeModelDlg);
-            RunLongNativeDlg<NativeFolderBrowserDialog>(chooserDlg.ChooseFolder, dlg =>
-            {
-                dlg.SetValue(@"Folder", TestFilesDir.FullPath);
-                dlg.DismissWithAcceptButton();
-            });
+
+            // Edit list... shows the grid of models, empty; its Add... takes a name and a file and
+            // shows what the file was trained on
+            var listDlg = ShowDialog<CarafeModelListDlg>(buildLibraryDlg.EditCarafeModelList);
+            RunUI(() => Assert.AreEqual(0, listDlg.Models.Count));
+            var editDlg = ShowDialog<EditCarafeModelDlg>(listDlg.AddItem);
             RunUI(() =>
             {
-                Assert.AreEqual(TestFilesDir.FullPath, chooserDlg.FolderPath);
-                var model = chooserDlg.Models.Single();
-                Assert.AreEqual(modelPath, model.Path);
-                Assert.AreEqual(@"Thermo Orbitrap Astral", model.Instrument);
-                Assert.AreEqual(24, model.GradientMinutes.Value, 0.1);
-                Assert.AreEqual(25, model.Nce);
-                Assert.AreEqual(1, model.TrainingRunCount);
-                Assert.IsTrue(model.RtR2 > 0.99);
-                chooserDlg.SelectedModelPath = modelPath;
+                editDlg.ModelName = modelName;
+                editDlg.ModelPath = modelPath;
+                AssertEx.Contains(editDlg.Details, @"Thermo Orbitrap Astral");
             });
-            OkDialog(chooserDlg, chooserDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(modelPath, buildLibraryDlg.CarafeModelPath));
+            // A name already in the list is refused
+            OkDialog(editDlg, editDlg.OkDialog);
+            RunUI(() =>
+            {
+                var model = listDlg.Models.Single();
+                Assert.AreEqual(modelName, model.Name);
+                Assert.AreEqual(modelPath, model.FilePath);
+            });
+            var editAgainDlg = ShowDialog<EditCarafeModelDlg>(listDlg.AddItem);
+            RunUI(() =>
+            {
+                editAgainDlg.ModelName = modelName;
+                editAgainDlg.ModelPath = modelPath;
+            });
+            RunDlg<MessageDlg>(editAgainDlg.OkDialog, dlg =>
+            {
+                AssertEx.AreComparableStrings(SettingsUIResources.EditCarafeModelDlg_OkDialog_The_model__0__already_exists_, dlg.Message);
+                dlg.OkDialog();
+            });
+            OkDialog(editAgainDlg, editAgainDlg.CancelDialog);
+            OkDialog(listDlg, listDlg.OkDialog);
+
+            // The list's one model is offered and chosen, with what it was trained on in its name
+            RunUI(() =>
+            {
+                var choice = CarafeModelChoice.Read(modelPath);
+                Assert.IsNotNull(choice);
+                Assert.AreEqual(@"Thermo Orbitrap Astral", choice.Instrument);
+                Assert.AreEqual(24, choice.GradientMinutes.Value, 0.1);
+                Assert.AreEqual(25, choice.Nce);
+                Assert.AreEqual(1, choice.TrainingRunCount);
+                Assert.IsTrue(choice.RtR2 > 0.99);
+                var models = Settings.Default.CarafeModelList;
+                Assert.AreEqual(2, models.Count);
+                buildLibraryDlg.CarafeModel = models[1];
+                Assert.AreEqual(modelPath, buildLibraryDlg.CarafeModelPath);
+            });
 
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
@@ -131,18 +164,49 @@ namespace TestPerf
                     string.Format(@"{0}: predicted {1:F2} min, measured {2:F2} min", peptide.Sequence, predicted, peptide.RetentionTime));
             }
 
-            // The next library build offers the model again, with what it was trained on
+            // The next library build offers the model again, by name, and the combo's own Add...
+            // adds a second one, which Edit list... can remove
             peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() =>
             {
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 buildLibraryDlg.AlphaPeptDeep = true;
-                var recentModel = buildLibraryDlg.RecentCarafeModels.Single();
-                Assert.AreEqual(modelPath, recentModel.Path);
-                Assert.AreEqual(@"Thermo Orbitrap Astral", recentModel.Instrument);
-                StringAssert.Contains(recentModel.Details, string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
-                    24.ToString(LocalizationHelper.CurrentCulture)));
+                var models = Settings.Default.CarafeModelList;
+                Assert.AreEqual(modelName, models[1].Name);
+                AssertEx.Contains(models.GetDisplayName(models[1]), modelName, @"Thermo Orbitrap Astral",
+                    string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient, 24.ToString(LocalizationHelper.CurrentCulture)));
+                buildLibraryDlg.CarafeModel = models[1];
+                Assert.AreEqual(modelPath, buildLibraryDlg.CarafeModelPath);
+            });
+            const string secondName = "Astral copy";
+            RunDlg<EditCarafeModelDlg>(buildLibraryDlg.AddCarafeModel, dlg =>
+            {
+                dlg.ModelName = secondName;
+                dlg.ModelPath = modelPath;
+                dlg.OkDialog();
+            });
+            RunUI(() =>
+            {
+                Assert.AreEqual(secondName, buildLibraryDlg.CarafeModel.Name);
+                Assert.AreEqual(3, Settings.Default.CarafeModelList.Count);
+            });
+            RunDlg<CarafeModelListDlg>(buildLibraryDlg.EditCarafeModelList, dlg =>
+            {
+                Assert.AreEqual(2, dlg.Models.Count);
+                dlg.SelectItem(secondName);
+                dlg.RemoveItem();
+                Assert.AreEqual(modelName, dlg.Models.Single().Name);
+                dlg.OkDialog();
+            });
+            RunUI(() =>
+            {
+                var models = Settings.Default.CarafeModelList;
+                Assert.AreEqual(2, models.Count);
+                // The chosen model was removed, so the choice falls back to the default
+                Assert.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
+                buildLibraryDlg.CarafeModel = models[1];
+                Assert.AreEqual(modelName, buildLibraryDlg.CarafeModel.Name);
             });
             OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
             OkDialog(peptideSettings, peptideSettings.CancelDialog);

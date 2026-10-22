@@ -23,7 +23,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.CarafeSharp.Models;
-using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -105,11 +104,9 @@ namespace pwiz.Skyline.SettingsUI
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
 
-        public const int MAX_RECENT_CARAFE_MODELS = 10;
-
         private TorchRuntimes _torchRuntimes;
         private bool _updatingUseGpu;
-        private bool _recentCarafeModelsLoaded;
+        private SettingsListComboDriver<CarafeModelSpec> _driverCarafeModel;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -293,13 +290,14 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            string carafeModelPath = CarafeModelPath.Trim();
-            if (carafeModelPath.Length > 0 && !ValidateCarafeModel(carafeModelPath))
+            // A model added to the list some time ago may have been moved or damaged since
+            var carafeModel = CarafeModel;
+            if (!carafeModel.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, carafeModel.FilePath))
                 return false;
 
             Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
-                CarafeModelPath = carafeModelPath.Length > 0 ? carafeModelPath : null,
+                CarafeModelPath = carafeModel.FilePath,
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu
             };
@@ -435,119 +433,56 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Opens the fine-tuned model file, which checks its contents, so that a missing or damaged
-        /// file is reported here rather than after the build starts.
+        /// The Carafe model list behind the Model combo: the pretrained AlphaPeptDeep models first,
+        /// then the user's fine-tuned models, then Add, Edit current and Edit list, as the settings
+        /// lists are offered everywhere else in Skyline. Filled the first time the Carafe source is
+        /// shown, since each model's display name reads its file.
         /// </summary>
-        private bool ValidateCarafeModel(string path)
-        {
-            if (!File.Exists(path))
-            {
-                _helper.ShowTextBoxError(comboCarafeModel,
-                    SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_, path);
-                return false;
-            }
-            try
-            {
-                CarafeModelFile.Open(path);
-                return true;
-            }
-            catch (Exception x)
-            {
-                if (ExceptionUtil.IsProgrammingDefect(x))
-                    throw;
-                MessageDlg.ShowWithException(this,
-                    string.Format(SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_, path), x);
-                comboCarafeModel.Focus();
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// A .model.zip file of models fine-tuned by CarafeSharp, to predict with in place of the
-        /// pretrained AlphaPeptDeep models, or empty for the pretrained models.
-        /// </summary>
-        public string CarafeModelPath
-        {
-            get { return comboCarafeModel.Text; }
-            set { comboCarafeModel.Text = value; }
-        }
-
-        /// <summary>
-        /// The fine-tuned models libraries were recently built with, most recent first, which the model
-        /// list offers with what each was trained on. Files that are gone or unreadable are left out.
-        /// </summary>
-        public IList<CarafeModelChoice> RecentCarafeModels
+        private SettingsListComboDriver<CarafeModelSpec> CarafeModelDriver
         {
             get
             {
-                if (!_recentCarafeModelsLoaded)
+                if (_driverCarafeModel == null)
                 {
-                    string text = comboCarafeModel.Text;
-                    comboCarafeModel.Items.AddRange(Settings.Default.CarafeModelList
-                        .Select(CarafeModelChoice.Read).Where(choice => choice != null).Cast<object>().ToArray());
-                    comboCarafeModel.Text = text;
-                    _recentCarafeModelsLoaded = true;
+                    _driverCarafeModel = new SettingsListComboDriver<CarafeModelSpec>(comboCarafeModel, Settings.Default.CarafeModelList);
+                    _driverCarafeModel.LoadList(null);
                 }
-                return comboCarafeModel.Items.Cast<CarafeModelChoice>().ToList();
+                return _driverCarafeModel;
             }
         }
 
-        /// <summary>
-        /// Puts <paramref name="path"/> first in the recently used models, keeping at most
-        /// <see cref="MAX_RECENT_CARAFE_MODELS"/>. Called once a library has been built with the
-        /// model, so the list offers models that produced a library.
-        /// </summary>
-        public static void AddRecentCarafeModel(string path)
+        private void comboCarafeModel_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var recent = Settings.Default.CarafeModelList;
-            recent.RemoveAll(recentPath => string.Equals(recentPath, path, StringComparison.OrdinalIgnoreCase));
-            recent.Insert(0, path);
-            if (recent.Count > MAX_RECENT_CARAFE_MODELS)
-                recent.RemoveRange(MAX_RECENT_CARAFE_MODELS, recent.Count - MAX_RECENT_CARAFE_MODELS);
+            CarafeModelDriver.SelectedIndexChangedEvent(sender, e);
         }
 
         /// <summary>
-        /// Lists the recent models, and sizes the list to show them, before it drops down: the list
-        /// is sized before the combo box says it is dropping down, and a combo box of variable height
-        /// items does not size it from them.
+        /// The model to predict with: the default, the pretrained AlphaPeptDeep models, or a
+        /// fine-tuned model from the list. Setting it selects that model in the combo.
         /// </summary>
-        private void UpdateCarafeModelDropDownSize()
+        public CarafeModelSpec CarafeModel
         {
-            var models = RecentCarafeModels;
-            using var graphics = comboCarafeModel.CreateGraphics();
-            int width = models.Select(model => model.MeasureWidth(graphics, comboCarafeModel.Font))
-                .Append(comboCarafeModel.Width).Max() + SystemInformation.VerticalScrollBarWidth;
-            comboCarafeModel.DropDownWidth = Math.Min(width, Screen.FromControl(this).WorkingArea.Width);
-            int visibleCount = Math.Max(1, Math.Min(models.Count, comboCarafeModel.MaxDropDownItems));
-            comboCarafeModel.DropDownHeight = visibleCount * CarafeModelChoice.MeasureHeight(comboCarafeModel.Font) +
-                                              2 * SystemInformation.BorderSize.Height;
+            get { return CarafeModelDriver.SelectedItem ?? CarafeModelSpec.DEFAULT; }
+            // The driver selects by the combo's text, which is the display name, not the key
+            set { CarafeModelDriver.LoadList(Settings.Default.CarafeModelList.GetDisplayName(value)); }
         }
 
-        private void comboCarafeModel_MeasureItem(object sender, MeasureItemEventArgs e)
+        /// <summary>The chosen model's file, or null for the pretrained models.</summary>
+        public string CarafeModelPath
         {
-            e.ItemHeight = CarafeModelChoice.MeasureHeight(comboCarafeModel.Font);
+            get { return CarafeModel.FilePath; }
         }
 
-        private void comboCarafeModel_DrawItem(object sender, DrawItemEventArgs e)
+        /// <summary>The combo's Add..., for tests: opens the model editor and adds its model to the list.</summary>
+        public void AddCarafeModel()
         {
-            if (e.Index >= 0 && comboCarafeModel.Items[e.Index] is CarafeModelChoice model)
-                model.Draw(e);
+            CarafeModelDriver.AddItem();
         }
 
-        private void btnCarafeModelBrowse_Click(object sender, EventArgs e)
+        /// <summary>The combo's Edit list..., for tests: opens the grid of models.</summary>
+        public void EditCarafeModelList()
         {
-            ShowCarafeModelDlg();
-        }
-
-        /// <summary>
-        /// Shows the fine-tuned models in a folder, and those recently used, with what each was trained
-        /// on, and takes the one chosen.
-        /// </summary>
-        public void ShowCarafeModelDlg()
-        {
-            using var dlg = new CarafeModelChooserDlg(CarafeModelPath.Trim());
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-                CarafeModelPath = dlg.SelectedModelPath;
+            CarafeModelDriver.EditList();
         }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
@@ -1124,9 +1059,10 @@ namespace pwiz.Skyline.SettingsUI
                 if (radioAlphaSource.Checked)
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
-                    // Only now, so the NVIDIA driver is not loaded for the other library sources
+                    // Only now, so the NVIDIA driver is not loaded and the model files are not read
+                    // for the other library sources
                     UpdateUseGpu();
-                    UpdateCarafeModelDropDownSize();
+                    var unused = CarafeModelDriver;
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 }
                 else // must be Koina

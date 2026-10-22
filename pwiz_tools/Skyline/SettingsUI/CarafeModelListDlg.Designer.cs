@@ -1,6 +1,6 @@
 namespace pwiz.Skyline.SettingsUI
 {
-    partial class CarafeModelChooserDlg
+    partial class CarafeModelListDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -28,18 +28,15 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CarafeModelChooserDlg));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CarafeModelListDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.labelFolder = new System.Windows.Forms.Label();
-            this.textFolder = new System.Windows.Forms.TextBox();
-            this.btnFolder = new System.Windows.Forms.Button();
             this.gridModels = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.colFileName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colInstrument = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colGradient = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPrecursorMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -49,28 +46,15 @@ namespace pwiz.Skyline.SettingsUI
             this.colMs2Cosine = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRtR2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSaved = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnEdit = new System.Windows.Forms.Button();
+            this.btnRemove = new System.Windows.Forms.Button();
+            this.btnUp = new System.Windows.Forms.Button();
+            this.btnDown = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.gridModels)).BeginInit();
             this.SuspendLayout();
-            //
-            // labelFolder
-            //
-            resources.ApplyResources(this.labelFolder, "labelFolder");
-            this.labelFolder.Name = "labelFolder";
-            //
-            // textFolder
-            //
-            resources.ApplyResources(this.textFolder, "textFolder");
-            this.textFolder.Name = "textFolder";
-            this.textFolder.ReadOnly = true;
-            //
-            // btnFolder
-            //
-            resources.ApplyResources(this.btnFolder, "btnFolder");
-            this.btnFolder.Name = "btnFolder";
-            this.btnFolder.UseVisualStyleBackColor = true;
-            this.btnFolder.Click += new System.EventHandler(this.btnFolder_Click);
             //
             // gridModels
             //
@@ -80,7 +64,7 @@ namespace pwiz.Skyline.SettingsUI
             this.gridModels.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.gridModels.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridModels.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colFileName,
+            this.colName,
             this.colInstrument,
             this.colGradient,
             this.colPrecursorMz,
@@ -98,11 +82,11 @@ namespace pwiz.Skyline.SettingsUI
             this.gridModels.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridModels_CellDoubleClick);
             this.gridModels.SelectionChanged += new System.EventHandler(this.gridModels_SelectionChanged);
             //
-            // colFileName
+            // colName
             //
-            resources.ApplyResources(this.colFileName, "colFileName");
-            this.colFileName.Name = "colFileName";
-            this.colFileName.ReadOnly = true;
+            resources.ApplyResources(this.colName, "colName");
+            this.colName.Name = "colName";
+            this.colName.ReadOnly = true;
             //
             // colInstrument
             //
@@ -170,6 +154,41 @@ namespace pwiz.Skyline.SettingsUI
             this.colSaved.Name = "colSaved";
             this.colSaved.ReadOnly = true;
             //
+            // btnAdd
+            //
+            resources.ApplyResources(this.btnAdd, "btnAdd");
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            //
+            // btnEdit
+            //
+            resources.ApplyResources(this.btnEdit, "btnEdit");
+            this.btnEdit.Name = "btnEdit";
+            this.btnEdit.UseVisualStyleBackColor = true;
+            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
+            //
+            // btnRemove
+            //
+            resources.ApplyResources(this.btnRemove, "btnRemove");
+            this.btnRemove.Name = "btnRemove";
+            this.btnRemove.UseVisualStyleBackColor = true;
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            //
+            // btnUp
+            //
+            resources.ApplyResources(this.btnUp, "btnUp");
+            this.btnUp.Name = "btnUp";
+            this.btnUp.UseVisualStyleBackColor = true;
+            this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
+            //
+            // btnDown
+            //
+            resources.ApplyResources(this.btnDown, "btnDown");
+            this.btnDown.Name = "btnDown";
+            this.btnDown.UseVisualStyleBackColor = true;
+            this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
+            //
             // btnOk
             //
             resources.ApplyResources(this.btnOk, "btnOk");
@@ -184,7 +203,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             //
-            // CarafeModelChooserDlg
+            // CarafeModelListDlg
             //
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
@@ -192,27 +211,25 @@ namespace pwiz.Skyline.SettingsUI
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
+            this.Controls.Add(this.btnDown);
+            this.Controls.Add(this.btnUp);
+            this.Controls.Add(this.btnRemove);
+            this.Controls.Add(this.btnEdit);
+            this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.gridModels);
-            this.Controls.Add(this.btnFolder);
-            this.Controls.Add(this.textFolder);
-            this.Controls.Add(this.labelFolder);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "CarafeModelChooserDlg";
+            this.Name = "CarafeModelListDlg";
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.gridModels)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Label labelFolder;
-        private System.Windows.Forms.TextBox textFolder;
-        private System.Windows.Forms.Button btnFolder;
         private pwiz.Skyline.Controls.DataGridViewEx gridModels;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colFileName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colInstrument;
         private System.Windows.Forms.DataGridViewTextBoxColumn colGradient;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorMz;
@@ -222,6 +239,11 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.DataGridViewTextBoxColumn colMs2Cosine;
         private System.Windows.Forms.DataGridViewTextBoxColumn colRtR2;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSaved;
+        private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.Button btnEdit;
+        private System.Windows.Forms.Button btnRemove;
+        private System.Windows.Forms.Button btnUp;
+        private System.Windows.Forms.Button btnDown;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
     }

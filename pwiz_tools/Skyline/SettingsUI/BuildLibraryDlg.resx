@@ -613,33 +613,6 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;cbUseGpu.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnCarafeModelBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnCarafeModelBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>285, 59</value>
-  </data>
-  <data name="btnCarafeModelBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 23</value>
-  </data>
-  <data name="btnCarafeModelBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="btnCarafeModelBrowse.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelBrowse.Name" xml:space="preserve">
-    <value>btnCarafeModelBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelBrowse.Parent" xml:space="preserve">
-    <value>groupAlphaOptions</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeModelBrowse.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="comboCarafeModel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -647,7 +620,7 @@ you can append more spectra in the future.</value>
     <value>9, 60</value>
   </data>
   <data name="comboCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>270, 21</value>
+    <value>305, 21</value>
   </data>
   <data name="comboCarafeModel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -677,7 +650,7 @@ you can append more spectra in the future.</value>
     <value>1</value>
   </data>
   <data name="labelCarafeModel.Text" xml:space="preserve">
-    <value>&amp;Fine-tuned Carafe model (optional):</value>
+    <value>&amp;Model:</value>
   </data>
   <data name="&gt;&gt;labelCarafeModel.Name" xml:space="preserve">
     <value>labelCarafeModel</value>
@@ -704,7 +677,7 @@ you can append more spectra in the future.</value>
     <value>0</value>
   </data>
   <data name="groupAlphaOptions.Text" xml:space="preserve">
-    <value>AlphaPeptDeep Options</value>
+    <value>Carafe Options</value>
   </data>
   <data name="&gt;&gt;groupAlphaOptions.Name" xml:space="preserve">
     <value>groupAlphaOptions</value>
@@ -728,7 +701,7 @@ you can append more spectra in the future.</value>
     <value>3</value>
   </data>
   <data name="tabAlphaSource.Text" xml:space="preserve">
-    <value>AlphaPeptDeep</value>
+    <value>Carafe</value>
   </data>
   <data name="&gt;&gt;tabAlphaSource.Name" xml:space="preserve">
     <value>tabAlphaSource</value>
@@ -930,7 +903,7 @@ library will be created.</value>
     <value>1</value>
   </data>
   <data name="radioAlphaSource.Text" xml:space="preserve">
-    <value>AlphaPept&amp;Deep</value>
+    <value>&amp;Carafe</value>
   </data>
   <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
     <value>radioAlphaSource</value>

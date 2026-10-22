@@ -20,30 +20,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
-    /// A recently used fine-tuned Carafe model in the Build Library model list, described by what
-    /// it was trained on, so a user can pick the model that matches the instrument and method the
-    /// library is for. Its text is its path, which the editable list shows once it is chosen.
+    /// What a fine-tuned Carafe model file says it was trained on - instrument, gradient,
+    /// precursor m/z, NCE, fragmentation, training runs, held-out scores and date - read from the
+    /// file for the model list's display names and the grid that edits the list, so a user can
+    /// pick the model that matches the instrument and method the library is for.
     /// </summary>
     public class CarafeModelChoice
     {
-        private const int LINE_COUNT = 3;
-        private const int PADDING = 3;
-
         /// <summary>
-        /// The choice for the model file at <paramref name="path"/>, or null when the file is missing
-        /// or is not a fine-tuned Carafe model.
+        /// The description of the model file at <paramref name="path"/>, or null when the file is
+        /// missing or is not a fine-tuned Carafe model.
         /// </summary>
         public static CarafeModelChoice Read(string path)
         {
@@ -57,6 +54,18 @@ namespace pwiz.Skyline.SettingsUI
                     throw;
                 return null;
             }
+        }
+
+        /// <summary>
+        /// The name a list shows for <paramref name="spec"/>: its name, with the instrument,
+        /// gradient and NCE its file records when the file can be read, as the enzyme list shows
+        /// each enzyme with its cleavage.
+        /// </summary>
+        public static string GetDisplayName(CarafeModelSpec spec)
+        {
+            var choice = spec.IsDefault ? null : Read(spec.FilePath);
+            string summary = choice?.Summary;
+            return string.IsNullOrEmpty(summary) ? spec.Name : TextUtil.SpaceSeparate(spec.Name, @"(" + summary + @")");
         }
 
         private CarafeModelChoice(CarafeModelFile model)
@@ -83,15 +92,9 @@ namespace pwiz.Skyline.SettingsUI
                 RtR2 = rtR2;
             if (DateTime.TryParse(model.Created, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var saved))
                 Saved = saved.ToLocalTime();
-            Details = GetDetails();
         }
 
         public string Path { get; }
-
-        public string FileName
-        {
-            get { return System.IO.Path.GetFileName(Path); }
-        }
 
         /// <summary>The instrument the training runs were acquired on, as their files name it.</summary>
         public string Instrument { get; }
@@ -114,41 +117,13 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>The fine-tuned MS2 model's cosine similarity on held-out spectra, if the file records it.</summary>
         public double? Ms2Cosine { get; }
 
-        /// <summary>The fine-tuned RT model's R² on held-out peptides, if the file records it.</summary>
+        /// <summary>The fine-tuned RT model's R2 on held-out peptides, if the file records it.</summary>
         public double? RtR2 { get; }
 
         /// <summary>When the model was saved, local time.</summary>
         public DateTime? Saved { get; }
 
-        /// <summary>
-        /// The gradient, precursor m/z range, NCE, fragmentation and analyzer a library predicted with
-        /// the model takes, and when the model was saved.
-        /// </summary>
-        public string Details { get; }
-
-        public string Title
-        {
-            get
-            {
-                return string.IsNullOrEmpty(Instrument) ? FileName : TextUtil.ColonSeparate(FileName, Instrument);
-            }
-        }
-
-        public override string ToString()
-        {
-            return Path;
-        }
-
-        private static string GetInstrument(CarafeModelFile model)
-        {
-            var runInstruments = (model.Training?.Runs ?? Array.Empty<CarafeModelTrainingRun>())
-                .Select(run => TextUtil.TextSeparate(@" ", run.InstrumentVendor, run.InstrumentModel))
-                .Where(instrument => instrument.Length > 0)
-                .Distinct().ToList();
-            return runInstruments.Count > 0 ? runInstruments.CommaSeparateListItems() : model.Instrument;
-        }
-
-        /// <summary>The precursor m/z range as the model list and grid show it, or null when unknown.</summary>
+        /// <summary>The precursor m/z range as the grid shows it, or null when unknown.</summary>
         public string PrecursorMzRange
         {
             get
@@ -161,62 +136,35 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private string GetDetails()
-        {
-            var culture = LocalizationHelper.CurrentCulture;
-            var parts = new List<string>();
-            if (GradientMinutes.HasValue)
-            {
-                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
-                    GradientMinutes.Value.ToString(@"0.#", culture)));
-            }
-            if (PrecursorMzRange != null)
-                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_precursor_m_z__0_, PrecursorMzRange));
-            parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_NCE__0_, Nce.ToString(@"0.#", culture)));
-            if (Fragmentation.Length > 0)
-                parts.Add(Fragmentation);
-            if (Saved.HasValue)
-                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_saved__0_, Saved.Value.ToString(@"d", culture)));
-            return parts.CommaSeparateListItems();
-        }
-
-        public static int MeasureHeight(Font font)
-        {
-            return LINE_COUNT * font.Height + 2 * PADDING;
-        }
-
-        public int MeasureWidth(Graphics graphics, Font font)
-        {
-            using var boldFont = new Font(font, FontStyle.Bold);
-            var widths = new[]
-            {
-                TextRenderer.MeasureText(graphics, Title, boldFont).Width,
-                TextRenderer.MeasureText(graphics, Details, font).Width,
-                TextRenderer.MeasureText(graphics, Path, font).Width,
-            };
-            return widths.Max() + 2 * PADDING;
-        }
-
         /// <summary>
-        /// Draws the model in the list: its file name and instrument in bold, what a library takes
-        /// from it, and its path in gray.
+        /// The instrument, gradient and NCE, comma separated: what tells one model from another
+        /// in a list of names.
         /// </summary>
-        public void Draw(DrawItemEventArgs e)
+        public string Summary
         {
-            e.DrawBackground();
-            bool selected = (e.State & DrawItemState.Selected) != 0;
-            var foreColor = selected ? SystemColors.HighlightText : SystemColors.WindowText;
-            var pathColor = selected ? SystemColors.HighlightText : SystemColors.GrayText;
-            var flags = TextFormatFlags.Left | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine;
-            int lineHeight = e.Font.Height;
-            var line = new Rectangle(e.Bounds.Left + PADDING, e.Bounds.Top + PADDING, e.Bounds.Width - 2 * PADDING, lineHeight);
-            using (var boldFont = new Font(e.Font, FontStyle.Bold))
-                TextRenderer.DrawText(e.Graphics, Title, boldFont, line, foreColor, flags);
-            line.Offset(0, lineHeight);
-            TextRenderer.DrawText(e.Graphics, Details, e.Font, line, foreColor, flags);
-            line.Offset(0, lineHeight);
-            TextRenderer.DrawText(e.Graphics, Path, e.Font, line, pathColor, flags | TextFormatFlags.PathEllipsis);
-            e.DrawFocusRectangle();
+            get
+            {
+                var culture = LocalizationHelper.CurrentCulture;
+                var parts = new List<string>();
+                if (!string.IsNullOrEmpty(Instrument))
+                    parts.Add(Instrument);
+                if (GradientMinutes.HasValue)
+                {
+                    parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
+                        GradientMinutes.Value.ToString(@"0.#", culture)));
+                }
+                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_NCE__0_, Nce.ToString(@"0.#", culture)));
+                return parts.CommaSeparateListItems();
+            }
+        }
+
+        private static string GetInstrument(CarafeModelFile model)
+        {
+            var runInstruments = (model.Training?.Runs ?? Array.Empty<CarafeModelTrainingRun>())
+                .Select(run => TextUtil.TextSeparate(@" ", run.InstrumentVendor, run.InstrumentModel))
+                .Where(instrument => instrument.Length > 0)
+                .Distinct().ToList();
+            return runInstruments.Count > 0 ? runInstruments.CommaSeparateListItems() : model.Instrument;
         }
     }
 }
