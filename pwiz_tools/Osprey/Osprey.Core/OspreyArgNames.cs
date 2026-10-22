@@ -56,6 +56,8 @@ namespace pwiz.Osprey.Core
         public const string FASTA = @"fasta";
         public const string TRAINING_INPUT = @"training-input";
         public const string TRAINING_INPUT_LIST = @"training-input-list";
+        public const string TRAINING_SEARCH = @"training-search";
+        public const string TASK_FILES = @"task-files";
         public const string MODEL = @"model";
         public const string DEVICE = @"device";
         public const string ENTRAPMENT = @"entrapment";

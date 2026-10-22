@@ -168,10 +168,12 @@ a { color: #1565c0; }
 <tr><td><nobr>--parallel-files-rescoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>re-scored</nobr> concurrently (PerFileRescoring, and the <nobr>second-pass</nobr> <nobr>per-file</nobr> phases), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
 </table>
 <div class="RowType">分布式 / HPC</div>
-<p>--fasta runs as one process: the library build and the search of its library are not split into tasks yet, and --task with --fasta is refused.</p>
+<p>--fasta runs as one process, or task by task: --task PredictTrainingLibrary; the four search stages with --training-search; --task TrainModel; --task PredictLibrary; then the four search stages. Every node takes the same command line and its own --task, and each task reads only what the tasks before it wrote.</p>
 <table>
 <tr><th>参数</th><th>描述</th></tr>
-<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | TrainingExport | ModelDiagnostics&gt;</td><td>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。SpectraCache 准备 .spectra.bin 缓存；TrainingExport 写入“<nobr>--training-export</nobr>”parquet 文件（对已完成的运行仅写入缺失的文件）；ModelDiagnostics 仅为已完成的运行重新生成“<nobr>--model-diagnostics</nobr>”报告，不写入其他输出。</td></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PredictTrainingLibrary | TrainModel | PredictLibrary | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | TrainingExport | ModelDiagnostics&gt;</td><td>HPC: run exactly one task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; TrainingExport writes the <nobr>--training-export</nobr> parquets, and on a COMPLETED run only the missing ones; ModelDiagnostics regenerates only the <nobr>--model-diagnostics</nobr> report for a COMPLETED run, writing no other output. With <nobr>--fasta</nobr>, PredictTrainingLibrary, TrainModel and PredictLibrary run the library build one phase at a time, and the four search stages search the library it predicts, or with <nobr>--training-search</nobr> the tuning runs.</td></tr>
+<tr><td><nobr>--training-search</nobr></td><td>With <nobr>--fasta</nobr> and <nobr>--training-input</nobr>: the stage <nobr>--task</nobr> selects is a stage of the tuning runs&#39; search, not the output&#39;s: it searches the <nobr>--training-input</nobr> runs with the library PredictTrainingLibrary predicts, writes into &lt;output&gt;.predicted/training/, and writes the training exports TrainModel reads. Give it to every node of that search and the same command line without it to the others.</td></tr>
+<tr><td><nobr>--task-files</nobr></td><td>With <nobr>--task</nobr>: print the files the task reads and writes for this command line, one per line as input or output, the task and the path, and exit without running it: what a node must be given and what it hands on.</td></tr>
 </table>
 <div class="RowType">日志</div>
 <table>

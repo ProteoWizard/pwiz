@@ -296,8 +296,12 @@ mtime as it keys on any library, so a re-predicted library re-runs the search an
 alone does not re-predict. Nothing passes between the phases in memory, and no peptide FASTA,
 pairing manifest or TSV sits between them. The library phases' log lines are the pipeline's
 (`[TASK] PredictLibrary:starting` and the rest), so a log reader sees one run. The library phases
-are single-node tasks; their HPC addressing (`--task PredictLibrary` and the rest) is not in place
-yet, and `--fasta` with `--task` is refused until it is.
+are single-node tasks, each a `--task` of its own on a cluster (`--task PredictTrainingLibrary`,
+`TrainModel`, `PredictLibrary`); the two analyses are addressed by their stages, the tuning runs'
+with `--training-search`, and a stage node derives its analysis from the one command line
+exactly as the workflow does in one process (`LibraryBuildWorkflow.StageConfig`). Each task's
+files are what it declares (`--task-files` prints them), and a phase's checkpoint is the file it
+writes, so a node needs only what the tasks before it wrote.
 
 ### Scatter and barrier: what a join may hold
 

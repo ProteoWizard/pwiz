@@ -266,6 +266,108 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// The tuned one command as a cluster runs it: every node the same command line and its own
+        /// <c>--task</c>, the library phases by name, the tuning runs' search by its stages with
+        /// <c>--training-search</c>, and each per-file stage one node per run. Each node runs exactly
+        /// its task; a prediction that comes before the tuning it needs is refused; the result is the
+        /// straight-through run's; and each library phase's node run again finds its output current.
+        /// (A whole run over the nodes' files re-runs the rescoring: a PerFileRescoring node cannot
+        /// release library fragments and records that in its outputs' key, so an in-process run,
+        /// which can, does not take them as its own. That is the search's rule, with or without
+        /// <c>--fasta</c>.)
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetLibraryBuildTunedHpcChain()
+        {
+            string fasta = WriteSubsetProteinFasta();
+            var inputs = DataInputs().ToArray();
+            using (ShortFineTune())
+            {
+                string straightDir = CreateDir(@"library-build-hpc-straight");
+                RunOsprey(TunedArgs(fasta, straightDir, inputs, inputs).ToArray(), Verifier(false));
+
+                string chainDir = CreateDir(@"library-build-hpc-chain");
+                var chain = new TunedProducts(chainDir);
+                // One node: the command line every node takes, with its own runs and task.
+                string Node(string task, IEnumerable<string> nodeInputs, IEnumerable<string> nodeTuningRuns, bool trainingSearch = false,
+                    string state = @"starting")
+                {
+                    var args = new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, task }
+                        .Concat(TunedArgs(fasta, chainDir, nodeInputs, nodeTuningRuns));
+                    if (trainingSearch)
+                        args = args.Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText });
+                    string log = RunOsprey(args.ToArray(), Verifier(false));
+                    CollectionAssert.AreEqual(new[] { task }, TaskNames(log, state), log);
+                    return log;
+                }
+                // A search, one node per run for the per-file stages.
+                void Search(bool trainingSearch)
+                {
+                    foreach (string task in ALL_TASKS)
+                    {
+                        bool perFile = task == PerFileScoringTask.TASK_NAME || task == PerFileRescoreTask.TASK_NAME;
+                        foreach (var runs in perFile ? inputs.Select(run => new[] { run }) : new[] { inputs })
+                            Node(task, trainingSearch ? inputs : runs, trainingSearch ? runs : inputs, trainingSearch);
+                    }
+                }
+
+                string trainingLibraryLog = Node(LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK, inputs, inputs);
+                StringAssert.Contains(trainingLibraryLog, string.Format(OspreyResources.Program_Run_Output___0_, chain.TrainingLibrary));
+                Search(true);
+                Assert.IsTrue(File.Exists(chain.TrainingOutput), chain.TrainingOutput);
+                // The final prediction before the tuning has nothing to predict with.
+                string early = RunOspreyExpecting(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.PREDICT_LIBRARY_TASK }
+                    .Concat(TunedArgs(fasta, chainDir, inputs, inputs)).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+                StringAssert.Contains(early, string.Format(OspreyResources.LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_,
+                    OspreyArgNames.TaskText(LibraryBuildWorkflow.PREDICT_LIBRARY_TASK), chain.Model, OspreyArgNames.TaskText(LibraryBuildWorkflow.TRAIN_MODEL_TASK)));
+                Node(LibraryBuildWorkflow.TRAIN_MODEL_TASK, inputs, inputs);
+                Node(LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, inputs, inputs);
+                Search(false);
+
+                var straight = new TunedProducts(straightDir);
+                AssertSameSpectra(straight.TrainingLibrary, chain.TrainingLibrary);
+                AssertSameSpectra(straight.Library, chain.Library);
+                AssertBlibsEqual(straight.TrainingOutput, chain.TrainingOutput);
+                AssertBlibsEqual(straight.Output, chain.Output);
+
+                // Each library phase's node again: its output is current.
+                foreach (string phase in TUNING_PHASES)
+                    Assert.AreEqual(0, TaskNames(Node(phase, inputs, inputs, false, @"skipping"), @"starting").Count);
+            }
+
+            // The refusals, each a designed usage error.
+            string refusalDir = CreateDir(@"library-build-hpc-refusals");
+            // A library phase without the FASTA it builds from.
+            string noFasta = RunOspreyExpecting(InputArgs(inputs).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.PREDICT_LIBRARY_TASK,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(refusalDir, BLIB_FILE),
+            }).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(noFasta, string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                OspreyArgNames.TaskText(LibraryBuildWorkflow.PREDICT_LIBRARY_TASK), OspreyCommandArgs.ARG_FASTA.ArgumentText));
+            // The tuning phases without the runs to tune on.
+            string noRuns = RunOspreyExpecting(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.TRAIN_MODEL_TASK }
+                .Concat(LibraryBuildArgs(fasta, refusalDir, inputs)).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(noRuns, string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                OspreyArgNames.TaskText(LibraryBuildWorkflow.TRAIN_MODEL_TASK), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText));
+            // The tuning runs' search names a stage of it.
+            foreach (string task in new[] { null, LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, TrainingExportTask.TASK_NAME })
+            {
+                var args = TunedArgs(fasta, refusalDir, inputs, inputs).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText });
+                if (task != null)
+                    args = new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, task }.Concat(args);
+                StringAssert.Contains(RunOspreyExpecting(args.ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START),
+                    OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText);
+            }
+            // ... over the tuning runs, which the run must name.
+            string noTuning = RunOspreyExpecting(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, PerFileScoringTask.TASK_NAME }
+                .Concat(LibraryBuildArgs(fasta, refusalDir, inputs)).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText }).ToArray(),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(noTuning, string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText, OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText));
+        }
+
         /// <summary>The tasks a log's <c>[TASK]</c> lines name in <paramref name="state"/>, in order.</summary>
         private static List<string> TaskNames(string log, string state)
         {

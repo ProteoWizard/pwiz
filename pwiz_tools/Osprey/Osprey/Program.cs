@@ -241,6 +241,7 @@ namespace pwiz.Osprey
                 return EXIT_CODE_FAILURE_TO_START;
             }
 
+            IDisposable trainingSearchScope = null;
             try
             {
                 // Scan args for the HPC task selector up front so error
@@ -269,7 +270,10 @@ namespace pwiz.Osprey
                 // can ask whether it IS the selection by reference.
                 var tasks = OspreyTasks.Create();
                 OspreyTask selectedTask = null;
-                if (taskName != null)
+                // The one command's library phases are tasks of its workflow, not of the pipeline:
+                // a phase selects no stage, and the workflow runs it alone.
+                string libraryPhase = taskName != null ? LibraryBuildConfig.FindPhase(taskName) : null;
+                if (taskName != null && libraryPhase == null)
                 {
                     string taskErr = ResolveTask(taskName, tasks, out selectedTask);
                     if (taskErr != null)
@@ -317,6 +321,7 @@ namespace pwiz.Osprey
                 // same thing.
                 var pipeline = tasks.PipelineFor(selectedTask);
                 config.SelectTask(selectedTask, pipeline);
+                config.LibraryBuild.Phase = libraryPhase;
 
                 // Apply the output / cache directory overrides process-wide so
                 // every per-file artifact path helper (scores parquet, spectra
@@ -326,11 +331,20 @@ namespace pwiz.Osprey
                 ArtifactPaths.OutputDir = config.OutputDir;
                 ArtifactPaths.CacheDir = config.CacheDir;
 
-                string err = ValidateArgs(config);
+                string err = ValidateArgs(config, out var analysis);
                 if (err != null)
                 {
                     LogError(err);
                     return EXIT_CODE_FAILURE_TO_START;
+                }
+                // A stage node of the one command (--fasta with a stage --task) runs the analysis the
+                // workflow derives: the output's search, or with --training-search the tuning runs'
+                // search, which writes into a folder of its own and reads the output's spectra cache.
+                if (!ReferenceEquals(analysis, config))
+                {
+                    if (config.LibraryBuild.TrainingSearch)
+                        trainingSearchScope = LibraryBuildWorkflow.EnterTrainingSearch(analysis);
+                    config = analysis;
                 }
 
                 // Apply per-line output decoration and optional log-file redirection now
@@ -379,6 +393,11 @@ namespace pwiz.Osprey
                 // --output -- so it is NOT warned about. The settings block below
                 // reports the real per-file parquet output for this task instead.
 
+                // --task-files describes the task and runs nothing, so it is settled before anything
+                // is checked on disk: a node's files are what it asks about before it has them.
+                if (config.PrintTaskFiles)
+                    return PrintTaskFiles(config, pipeline, librarySettings);
+
                 // --export-library reads the library and nothing else, so it is settled before the
                 // inputs are checked: a reused search command line may name inputs that moved.
                 if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
@@ -399,7 +418,9 @@ namespace pwiz.Osprey
                 // task instead.
                 int cacheOnlyInputs = 0;
                 int artifactOnlyInputs = 0;
-                foreach (string inputFile in config.InputFiles)
+                // A library phase reads none of them: the predictions read the FASTA and the models,
+                // the tuning the tuning runs' exports.
+                foreach (string inputFile in config.LibraryBuild.Phase == null ? config.InputFiles : new List<string>())
                 {
                     // A directory counts as present. Several vendor formats ARE
                     // directories (Agilent .d, Bruker .d, Waters .raw), so testing
@@ -502,7 +523,7 @@ namespace pwiz.Osprey
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
                 LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
                 LogInfo(string.Format(OspreyResources.Program_Run_Input_files___0_, config.InputFiles.Count));
-                if (config.LibraryBuild.Enabled)
+                if (BuildsLibrary(config))
                 {
                     // The one command: the library is predicted before the search, so the banner
                     // names what it is predicted from and where it will be.
@@ -537,6 +558,10 @@ namespace pwiz.Osprey
                         : OspreyResources.Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_,
                         config.SelectedTask.Name));
                 }
+                else if (config.LibraryBuild.Phase != null)
+                {
+                    LogInfo(string.Format(OspreyResources.Program_Run_Task___0___single_task_run_, config.LibraryBuild.Phase));
+                }
                 // A task that writes something other than the blib - per-file parquets,
                 // per-file spectra caches, the diagnostics report alone - names its real
                 // output, so the log does not read as if the --output blib were being
@@ -544,7 +569,9 @@ namespace pwiz.Osprey
                 // the export on, whose parquets the training export line names; every other
                 // selectable task describes its own output.
                 LogInfo(string.Format(OspreyResources.Program_Run_Output___0_,
-                    config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
+                    config.LibraryBuild.Phase != null
+                        ? LibraryBuildWorkflow.PhaseOutput(config)
+                        : config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
                 LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
@@ -670,7 +697,7 @@ namespace pwiz.Osprey
                 TaskBudget.Reset();
                 try
                 {
-                    if (config.LibraryBuild.Enabled)
+                    if (BuildsLibrary(config))
                         return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
 
                     // Single entry point. The rescore worker (--task
@@ -694,6 +721,51 @@ namespace pwiz.Osprey
                 // defect is the whole exception, so an empty message or a wrapper's
                 // InnerException cannot hide the cause. Usage errors do not reach here; the
                 // parser's catch above reports them as the one-line messages they are.
+                LogError(DescribeFailure(ex, OspreyResources.Program_Run_Fatal_error___0_));
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+            finally
+            {
+                trainingSearchScope?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <c>--task-files</c>: the files the selected task reads and writes for this command line,
+        /// one line each - <c>input</c> or <c>output</c>, the task, the path - as the task declares
+        /// them (<see cref="pwiz.Common.Pipeline.PipelineTask.Inputs"/>, <see cref="pwiz.Common.Pipeline.PipelineTask.Outputs"/>). A stage of
+        /// the pipeline is one task; a selector that runs several (<c>ModelDiagnostics</c>,
+        /// <c>TrainingExport</c>) lists each stage it includes; a library phase of the one command is
+        /// its CarafeSharp task. The declarations read the configuration and nothing on disk, so a
+        /// harness asks before it stages the node.
+        /// </summary>
+        private static int PrintTaskFiles(OspreyConfig config, IReadOnlyList<OspreyTask> pipeline, LibraryBuildSettings librarySettings)
+        {
+            void Print(string kind, string task, IEnumerable<string> paths)
+            {
+                foreach (string path in paths.Where(path => !string.IsNullOrEmpty(path)))
+                    LogInfo(kind + '\t' + task + '\t' + Path.GetFullPath(path));
+            }
+            try
+            {
+                string phase = config.LibraryBuild.Phase;
+                if (phase != null)
+                {
+                    new LibraryBuildWorkflow(config, librarySettings).PhaseFiles(phase, out var inputs, out var outputs);
+                    Print(@"input", phase, inputs);
+                    Print(@"output", phase, outputs);
+                    return EXIT_CODE_SUCCESS;
+                }
+                var ctx = new PipelineContext(config, pipeline, LogInfo, LogWarning, LogError);
+                foreach (var task in pipeline.Where(config.Includes))
+                {
+                    Print(@"input", task.Name, task.Inputs(ctx));
+                    Print(@"output", task.Name, task.Outputs(ctx));
+                }
+                return EXIT_CODE_SUCCESS;
+            }
+            catch (Exception ex)
+            {
                 LogError(DescribeFailure(ex, OspreyResources.Program_Run_Fatal_error___0_));
                 return EXIT_CODE_FAILURE_TO_START;
             }
@@ -852,7 +924,7 @@ namespace pwiz.Osprey
             if (task != null)
                 return null;
             return string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
-                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(@", ", tasks.All.Select(t => t.Name)));
+                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(@", ", OspreyCommandArgs.ARG_TASK.Values));
         }
 
         /// <summary>
@@ -871,13 +943,39 @@ namespace pwiz.Osprey
         /// </summary>
         internal static string ValidateArgs(OspreyConfig config)
         {
+            return ValidateArgs(config, out _);
+        }
+
+        /// <summary>
+        /// <see cref="ValidateArgs(OspreyConfig)"/>, with the configuration the run then executes:
+        /// <paramref name="config"/> itself, except for a stage task of the one command, which runs
+        /// the analysis the workflow derives (<see cref="LibraryBuildWorkflow.StageConfig"/>) and is
+        /// validated as that analysis.
+        /// </summary>
+        internal static string ValidateArgs(OspreyConfig config, out OspreyConfig analysis)
+        {
+            analysis = config;
             // The one command's own rules first: with --fasta the library is built, so a given
-            // library, an export of one, a pairing manifest and (in this release) a --task leg
-            // are all refused, and a library-build option without --fasta changes nothing and
-            // is refused too, rather than silently ignored.
+            // library, an export of one and a pairing manifest are all refused, and a
+            // library-build option without --fasta changes nothing and is refused too, rather
+            // than silently ignored.
             string buildErr = LibraryBuildError(config);
             if (buildErr != null)
                 return buildErr;
+            if (config.PrintTaskFiles && config.SelectedTask == null && config.LibraryBuild.Phase == null)
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
+                    OspreyCommandArgs.ARG_TASK_FILES.ArgumentText, OspreyCommandArgs.ARG_TASK.ArgumentText);
+            }
+            if (config.LibraryBuild.Phase != null)
+            {
+                // A library phase writes beside the output and reads no input file.
+                if (string.IsNullOrEmpty(config.OutputBlib))
+                    return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, OspreyCommandArgs.UsageOutput);
+                return null;
+            }
+            if (config.LibraryBuild.Enabled && config.SelectedTask != null)
+                analysis = config = LibraryBuildWorkflow.StageConfig(config);
 
             // --export-library converts the library and exits: it needs the library and nothing
             // else, whatever else the command line holds, so nothing below may refuse it.
@@ -965,6 +1063,15 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
+        /// The run predicts its library before searching it: the one command whole, or one of its
+        /// library phases. A stage task of it searches what the phases predicted, as any search does.
+        /// </summary>
+        private static bool BuildsLibrary(OspreyConfig config)
+        {
+            return config.LibraryBuild.Enabled && config.SelectedTask == null;
+        }
+
+        /// <summary>
         /// The one command's rules (<see cref="LibraryBuildConfig"/>): null when they hold, else the
         /// error. The files the build reads are checked here, before any work, as the inputs and the
         /// library are below.
@@ -974,6 +1081,11 @@ namespace pwiz.Osprey
             var build = config.LibraryBuild;
             if (!build.Enabled)
             {
+                if (build.Phase != null)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                        OspreyArgNames.TaskText(build.Phase), OspreyCommandArgs.ARG_FASTA.ArgumentText);
+                }
                 if (build.OptionsWithoutFasta.Count > 0)
                 {
                     return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
@@ -997,16 +1109,18 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_,
                     OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, fastaArg);
             }
-            if (config.SelectedTask != null)
+            // --training-search addresses a stage of the tuning runs' search, so it needs a stage.
+            if (build.TrainingSearch && (config.SelectedTask == null || !config.Pipeline.Contains(config.SelectedTask)))
             {
-                // The output path is checked below this, so the library it would name is spelled
-                // as the help spells it when -o is missing.
-                string libraryPath = string.IsNullOrEmpty(config.OutputBlib)
-                    ? LibraryBuildWorkflow.LIBRARY_EXAMPLE
-                    : LibraryBuildWorkflow.LibraryPath(config);
-                return string.Format(OspreyResources.Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__,
-                    fastaArg, OspreyCommandArgs.ARG_TASK.ArgumentText, libraryPath,
-                    OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText);
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__selects_a_stage_of_the_tuning_runs__search__give_it_with__1__and_one_of__2__,
+                    OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText, OspreyCommandArgs.ARG_TASK.ArgumentText,
+                    string.Join(@", ", config.Pipeline.Select(t => t.Name)));
+            }
+            // The training library and the tuning exist only with the tuning runs.
+            if (!build.Tuning && (build.Phase == LibraryBuildConfig.PREDICT_TRAINING_LIBRARY || build.Phase == LibraryBuildConfig.TRAIN_MODEL))
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                    OspreyArgNames.TaskText(build.Phase), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
             }
             if (!File.Exists(build.FastaPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.FastaPath);
@@ -1045,9 +1159,11 @@ namespace pwiz.Osprey
             {
                 // A tuning run that is also an input is checked with the inputs, where a spectra
                 // cache may stand in for it; one searched for the tuning only is read here (a file,
-                // or a folder-format run such as a Bruker .d).
+                // or a folder-format run such as a Bruker .d). A task of the one command reads them
+                // as its analysis reads its inputs, if at all: a node is given only what its task reads.
                 var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => IsSamePath(input, run))).ToList();
-                foreach (string run in heldOut)
+                bool runsWhole = config.SelectedTask == null && build.Phase == null;
+                foreach (string run in runsWhole ? heldOut : new List<string>())
                 {
                     if (!File.Exists(run) && !Directory.Exists(run))
                         return string.Format(OspreyResources.Program_LibraryBuildError_Training_input_file_not_found___0_, run);

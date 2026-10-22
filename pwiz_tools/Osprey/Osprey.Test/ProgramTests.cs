@@ -579,7 +579,13 @@ namespace pwiz.Osprey.Test
         public void TestResolveTask()
         {
             var tasks = OspreyTasks.Create();
-            Assert.AreEqual(tasks.All.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            // The task set and the one command's library phases, which are tasks of its workflow.
+            Assert.AreEqual(tasks.All.Count + LibraryBuildConfig.PHASES.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            foreach (string phase in LibraryBuildConfig.PHASES)
+            {
+                Assert.AreEqual(phase, LibraryBuildConfig.FindPhase(phase.ToLowerInvariant()));
+                Assert.IsNull(tasks.FindByName(phase), phase + @" is not a stage");
+            }
             foreach (var expected in tasks.All)
             {
                 Assert.IsNull(Program.ResolveTask(expected.Name, tasks, out OspreyTask task));
@@ -587,12 +593,13 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
                     string.Format(@"{0} must appear in the {1} values exactly once", expected.Name, OspreyCommandArgs.ARG_TASK.ArgumentText));
             }
-            // The four canonical stages and the two selector-only tasks, by the constants the
-            // classes declare, so a task dropped from the list fails here by name.
-            CollectionAssert.AreEquivalent(
+            // The four canonical stages, the two selector-only tasks and the library phases, by the
+            // constants the classes declare, so a task dropped from the list fails here by name.
+            CollectionAssert.AreEqual(
                 new[]
                 {
-                    SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                    SpectraCacheTask.TASK_NAME, LibraryBuildConfig.PREDICT_TRAINING_LIBRARY, LibraryBuildConfig.TRAIN_MODEL,
+                    LibraryBuildConfig.PREDICT_LIBRARY, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
                     PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
                     ModelDiagnosticsTask.TASK_NAME
                 },
@@ -605,7 +612,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ResolveTask(@"Bogus", tasks, out OspreyTask none);
             Assert.IsNull(none);
             Assert.AreEqual(string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
-                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", string.Join(@", ", tasks.All.Select(t => t.Name))), err);
+                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", string.Join(@", ", OspreyCommandArgs.ARG_TASK.Values)), err);
         }
 
         [TestMethod]

@@ -484,6 +484,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With {0} and {1}: the stage {2} selects is a stage of the tuning runs&apos; search, not the output&apos;s: i [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _training_search {
+            get {
+                return ResourceManager.GetString("_training_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show more detail (e.g. per-fold Percolator iterations) that is hidden by default.
         /// </summary>
         public static string _verbose {
@@ -507,6 +516,15 @@ namespace pwiz.Osprey {
         public static string _work_dir {
             get {
                 return ResourceManager.GetString("_work_dir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: print the files the task reads and writes for this command line, one per line as input or  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _task_files {
+            get {
+                return ResourceManager.GetString("_task_files", resourceCulture);
             }
         }
     }

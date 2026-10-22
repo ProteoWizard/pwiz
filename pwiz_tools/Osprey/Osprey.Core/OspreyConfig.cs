@@ -288,6 +288,12 @@ namespace pwiz.Osprey.Core
         public bool PerfStats { get; set; }
 
         /// <summary>
+        /// --task-files: print the files the selected task reads and writes for this command line,
+        /// as the task declares them, and exit without running it. Runtime-only.
+        /// </summary>
+        public bool PrintTaskFiles { get; set; }
+
+        /// <summary>
         /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
         /// per-fold Percolator training iterations, which the default log collapses to one
         /// line per round). Runtime-only.

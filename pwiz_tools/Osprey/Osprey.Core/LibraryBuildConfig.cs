@@ -18,7 +18,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -32,6 +34,30 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public sealed class LibraryBuildConfig
     {
+        /// <summary>The library phase that predicts the library the tuning runs are searched with.</summary>
+        public const string PREDICT_TRAINING_LIBRARY = @"PredictTrainingLibrary";
+
+        /// <summary>The library phase that tunes the models on the tuning runs' training exports.</summary>
+        public const string TRAIN_MODEL = @"TrainModel";
+
+        /// <summary>The library phase that predicts the library the output is searched with.</summary>
+        public const string PREDICT_LIBRARY = @"PredictLibrary";
+
+        /// <summary>
+        /// The library phases <c>--task</c> can select, in the order the one command runs them. They
+        /// are not stages of the search pipeline: each is a single-node task of the workflow above it.
+        /// </summary>
+        public static readonly IReadOnlyList<string> PHASES = new[] { PREDICT_TRAINING_LIBRARY, TRAIN_MODEL, PREDICT_LIBRARY };
+
+        /// <summary>
+        /// The library phase named <paramref name="name"/> (case-insensitive, as <c>--task</c> matches
+        /// the stages), in its canonical spelling, or null when no phase has that name.
+        /// </summary>
+        public static string FindPhase(string name)
+        {
+            return PHASES.FirstOrDefault(phase => string.Equals(phase, name, StringComparison.OrdinalIgnoreCase));
+        }
+
         /// <summary>The protein FASTA to predict the library from (<c>--fasta</c>), or null for a run that searches a given library.</summary>
         public string FastaPath { get; set; }
 
@@ -62,6 +88,18 @@ namespace pwiz.Osprey.Core
 
         /// <summary>A foreign-species FASTA to draw entrapment peptides from (<c>--entrapment-fasta</c>), or null to shuffle.</summary>
         public string EntrapmentFastaPath { get; set; }
+
+        /// <summary>
+        /// The library phase this run is (<c>--task</c> naming one of <see cref="PHASES"/>), which it
+        /// runs alone, or null for a run that is not one of them.
+        /// </summary>
+        public string Phase { get; set; }
+
+        /// <summary>
+        /// The stage task selected with <c>--task</c> is a stage of the tuning runs' search
+        /// (<c>--training-search</c>), not of the output's.
+        /// </summary>
+        public bool TrainingSearch { get; set; }
 
         /// <summary>
         /// The library-build options given on a command line with no <c>--fasta</c>, as typed, for

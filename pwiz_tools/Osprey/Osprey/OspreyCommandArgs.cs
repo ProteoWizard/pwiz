@@ -304,11 +304,16 @@ namespace pwiz.Osprey
             })).ToArray();
         }
 
-        /// <summary>Records one of Osprey's own library-build options, and that it was given.</summary>
-        private void SetLibraryBuildOption(NameValuePair p, Action<LibraryBuildConfig> set)
+        /// <summary>
+        /// Records one of Osprey's own library-build options, and that it was given; <paramref name="tuning"/>
+        /// for one that needs <see cref="ARG_TRAINING_INPUT"/>.
+        /// </summary>
+        private void SetLibraryBuildOption(NameValuePair p, Action<LibraryBuildConfig> set, bool tuning = false)
         {
             set(_config.LibraryBuild);
             _libraryBuildOptionsSeen.Add(p.Match.ArgumentText);
+            if (tuning)
+                _tuningOptionsSeen.Add(p.Match.ArgumentText);
         }
 
         // --- Scoring & Tolerance ----------------------------------------------------------
@@ -433,13 +438,16 @@ namespace pwiz.Osprey
         // full parse; the tokenizer here only consumes its value (and rejects a missing one).
         // Declared so it appears in help.
         // The value list IS the task list, in its --help order, so the help and the
-        // resolution cannot disagree; six trivial constructions, once, at type init.
+        // resolution cannot disagree; seven trivial constructions, once, at type init. The one
+        // command's library phases come after the data-staging step, in the order the one command
+        // runs them: before the search stages, which with --fasta search the library they predict.
         // A missing task name lists the tasks: Program reads this argument first, so that error is
         // the user's only guide to the names.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(OspreyArgNames.TASK,
-            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true)
+            TaskNames(), (c, p) => true)
             {
-                DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText },
+                DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText,
+                    ARG_FASTA.ArgumentText, LibraryBuildConfig.PREDICT_TRAINING_LIBRARY, LibraryBuildConfig.TRAIN_MODEL, LibraryBuildConfig.PREDICT_LIBRARY, ARG_TRAINING_SEARCH.ArgumentText },
                 MissingValueMessage = argText => string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
                     ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values))
             };
@@ -449,10 +457,38 @@ namespace pwiz.Osprey
         // what let --task ModelDiagnostics join the pipeline and demand state a diagnostics
         // fold never publishes. Every task now takes -i and derives its parquets from the
         // input stem, which is the direction every other sidecar already derives in.
+        // The tuning runs' search, addressed on a cluster: the stage --task selects is that
+        // search's, which the one command derives from --training-input as it does in one process.
+        public static readonly OspreyArgument ARG_TRAINING_SEARCH = new OspreyArgument(OspreyArgNames.TRAINING_SEARCH,
+            (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingSearch = true, true))
+            {
+                DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, ARG_TRAINING_INPUT.ArgumentText, ARG_TASK.ArgumentText,
+                    LibraryBuildConfig.PREDICT_TRAINING_LIBRARY, LibraryBuildWorkflow.TRAINING_FOLDER_EXAMPLE, LibraryBuildConfig.TRAIN_MODEL }
+            };
+        // The selected task's file contract, as it declares it, for whatever stages a node's files:
+        // a cluster's workflow manager, or the regression's own chain.
+        public static readonly OspreyArgument ARG_TASK_FILES = new OspreyArgument(OspreyArgNames.TASK_FILES,
+            (c, p) => c._config.PrintTaskFiles = true)
+            { DescriptionArgs = () => new object[] { ARG_TASK.ArgumentText } };
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_HPC =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Distributed_HPC, true,
-                ARG_TASK)
-            { Preamble = () => string.Format(OspreyResources.OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process, ARG_FASTA.ArgumentText, ARG_TASK.ArgumentText) };
+                ARG_TASK, ARG_TRAINING_SEARCH, ARG_TASK_FILES)
+            {
+                Preamble = () => string.Format(OspreyResources.OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process_or_task_by_task,
+                    ARG_FASTA.ArgumentText, ARG_TASK.ArgumentText, LibraryBuildConfig.PREDICT_TRAINING_LIBRARY,
+                    ARG_TRAINING_SEARCH.ArgumentText, LibraryBuildConfig.TRAIN_MODEL, LibraryBuildConfig.PREDICT_LIBRARY)
+            };
+
+        /// <summary>
+        /// The <c>--task</c> values in <c>--help</c> order: the data-staging step, the one command's
+        /// library phases, then the rest of the task set.
+        /// </summary>
+        private static string[] TaskNames()
+        {
+            var names = OspreyTasks.Create().All.Select(t => t.Name).ToList();
+            names.InsertRange(names.IndexOf(SpectraCacheTask.TASK_NAME) + 1, LibraryBuildConfig.PHASES);
+            return names.ToArray();
+        }
 
         // --- Performance ------------------------------------------------------------------
         // OUTER vs INNER parallelism, kept deliberately separate. --parallel-files is the

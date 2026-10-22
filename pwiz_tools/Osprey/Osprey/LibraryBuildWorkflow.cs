@@ -59,6 +59,13 @@ namespace pwiz.Osprey
     /// TorchSharp and its native runtime load when a prediction or the tuning runs and never for a
     /// run that searches a given library: nothing on the <c>-l</c> path references this class.
     /// </para>
+    /// <para>
+    /// On a cluster each phase is a task of its own (<c>--task</c>): the three library phases by
+    /// name (<see cref="LibraryBuildConfig.PHASES"/>), each run alone, and the two analyses by their
+    /// stages, the tuning runs' with <c>--training-search</c>. Every node takes the same command
+    /// line, so a stage node searches the analysis this class derives from it
+    /// (<see cref="StageConfig"/>), exactly as the phases in one process do.
+    /// </para>
     /// </summary>
     internal sealed class LibraryBuildWorkflow
     {
@@ -81,10 +88,13 @@ namespace pwiz.Osprey
         public const string MODEL_FOLDER = @"model";
 
         /// <summary>The phase that predicts the library the tuning runs are searched with.</summary>
-        public const string PREDICT_TRAINING_LIBRARY_TASK = @"PredictTrainingLibrary";
+        public const string PREDICT_TRAINING_LIBRARY_TASK = LibraryBuildConfig.PREDICT_TRAINING_LIBRARY;
 
         /// <summary>The phase that tunes the models on the training exports.</summary>
-        public const string TRAIN_MODEL_TASK = @"TrainModel";
+        public const string TRAIN_MODEL_TASK = LibraryBuildConfig.TRAIN_MODEL;
+
+        /// <summary>The phase that predicts the library the output is searched with.</summary>
+        public const string PREDICT_LIBRARY_TASK = LibraryBuildConfig.PREDICT_LIBRARY;
 
         /// <summary>The library as the help spells it, after the output's stem.</summary>
         public const string LIBRARY_EXAMPLE = @"<output>" + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB;
@@ -95,8 +105,15 @@ namespace pwiz.Osprey
         /// <summary>The pairing manifest as the help spells it.</summary>
         public const string PAIRING_FILE_EXAMPLE = PREDICTED_SUFFIX_EXAMPLE + PAIRING_FILE_NAME;
 
+        /// <summary>The tuning runs' search folder as the help spells it.</summary>
+        public const string TRAINING_FOLDER_EXAMPLE = PREDICTED_SUFFIX_EXAMPLE + TRAINING_FOLDER + @"/";
+
         private readonly OspreyConfig _config;
         private readonly LibraryBuildSettings _settings;
+        // The library the output is searched with: the tuning's (its settings carry it until the
+        // tuning phase takes it off, since the tuning predicts no library of its own), else the one
+        // predicted with the pretrained models or --model.
+        private readonly LibrarySettings _outputLibrary;
 
         /// <param name="config">The run's configuration, whose <see cref="OspreyConfig.LibraryBuild"/> is on.</param>
         /// <param name="settings">What to predict and tune, as the command line interpreted it.</param>
@@ -104,6 +121,7 @@ namespace pwiz.Osprey
         {
             _config = config;
             _settings = settings;
+            _outputLibrary = settings.Training?.Library ?? settings.Library;
         }
 
         /// <summary>
@@ -130,6 +148,80 @@ namespace pwiz.Osprey
             return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_SUFFIX);
         }
 
+        /// <summary>The library the tuning runs are searched with: <c>&lt;out&gt;.predicted/initial.blib</c>.</summary>
+        public static string TrainingLibraryPath(OspreyConfig config)
+        {
+            return Path.Combine(WorkDirectory(config), TRAINING_LIBRARY_FILE_NAME);
+        }
+
+        /// <summary>The folder of the tuning runs' search: <c>&lt;out&gt;.predicted/training/</c>.</summary>
+        public static string TrainingDirectory(OspreyConfig config)
+        {
+            return Path.Combine(WorkDirectory(config), TRAINING_FOLDER);
+        }
+
+        /// <summary>What a library phase selected with <c>--task</c> writes, for the startup line that names the output.</summary>
+        public static string PhaseOutput(OspreyConfig config)
+        {
+            switch (config.LibraryBuild.Phase)
+            {
+                case PREDICT_TRAINING_LIBRARY_TASK:
+                    return TrainingLibraryPath(config);
+                case TRAIN_MODEL_TASK:
+                    return ModelPath(config);
+                default:
+                    return LibraryPath(config);
+            }
+        }
+
+        /// <summary>
+        /// The analysis a stage task selected with <c>--task</c> runs in a <c>--fasta</c> run: the
+        /// tuning runs' search with <c>--training-search</c>, else the search of the output, each
+        /// derived from the run's configuration as the phases in one process derive it.
+        /// </summary>
+        public static OspreyConfig StageConfig(OspreyConfig config)
+        {
+            return config.LibraryBuild.TrainingSearch ? TrainingSearchConfig(config) : OutputSearchConfig(config);
+        }
+
+        /// <summary>The search of the output: the inputs, with the library the run predicts and the pairing its <c>DecoyPairs</c> table carries.</summary>
+        private static OspreyConfig OutputSearchConfig(OspreyConfig config)
+        {
+            var search = config.ShallowClone();
+            search.LibrarySource = LibrarySource.FromPath(LibraryPath(config));
+            search.DecoysInLibrary = true;
+            return search;
+        }
+
+        /// <summary>
+        /// The search of the tuning runs: the four stages over <c>--training-input</c>, with the
+        /// training library, into a folder of their own, writing each run's training export. Not
+        /// the one command's analysis, whose result was not searched with tuned models, so its
+        /// library build is off; and what the user asked of the run's result (FDRBench input,
+        /// diagnostics) is the output's search's.
+        /// </summary>
+        private static OspreyConfig TrainingSearchConfig(OspreyConfig config)
+        {
+            string trainingDirectory = TrainingDirectory(config);
+            var search = config.ShallowClone();
+            search.InputFiles = new List<string>(config.LibraryBuild.TrainingInputs);
+            search.LibrarySource = LibrarySource.FromPath(TrainingLibraryPath(config));
+            search.DecoysInLibrary = true;
+            search.OutputBlib = Path.Combine(trainingDirectory, TRAINING_OUTPUT_FILE_NAME);
+            search.OutputDir = trainingDirectory;
+            search.OutputFdrBench = null;
+            search.ModelDiagnostics = false;
+            search.LibraryBuild = new LibraryBuildConfig();
+            search.TrainingExport = new TrainingExportConfig
+            {
+                Enabled = true,
+                MaxQ = config.TrainingExport.MaxQ,
+                ClaimantQ = config.TrainingExport.ClaimantQ,
+                WriteXics = config.TrainingExport.WriteXics,
+            };
+            return search;
+        }
+
         /// <summary>
         /// Where the products land: <c>--output-dir</c> when given, as the run's other artifacts,
         /// else beside the output blib, which is where a user reuses them from.
@@ -146,35 +238,55 @@ namespace pwiz.Osprey
             return Path.GetFileNameWithoutExtension(config.OutputBlib);
         }
 
-        /// <summary>Runs the phases in order; the exit code of the first that fails, else the search's.</summary>
+        /// <summary>
+        /// Runs the phases in order; the exit code of the first that fails, else the search's. A
+        /// library phase selected with <c>--task</c> (<see cref="LibraryBuildConfig.Phase"/>) runs
+        /// alone, reading what the phases before it wrote.
+        /// </summary>
         public int Run(IReadOnlyList<OspreyTask> pipeline)
         {
+            string phase = _config.LibraryBuild.Phase;
             string libraryPath = LibraryPath(_config);
-            string workDirectory = WorkDirectory(_config);
             var training = _settings.Training;
-            // Without tuning the library is predicted with the pretrained models or --model; with it,
-            // from the models the tuning writes.
-            var library = training?.Library ?? _settings.Library;
-            PrepareLibrary(library, libraryPath, workDirectory);
             try
             {
                 if (training != null)
                 {
-                    CheckRtReference(library, training);
-                    int tuningExit = RunTuning(training, workDirectory);
-                    if (tuningExit != 0)
-                        return tuningExit;
-                    // Predicted as CarafeSharp's training predicts it right after the fine-tune: from
-                    // the folder the tuning wrote, which is the prediction's input, so a new tuning
-                    // predicts the library again.
-                    library.ModelDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
-                    library.PreferSafetensors = true;
+                    CheckRtReference(_outputLibrary, training);
+                    if (phase == null || phase == PREDICT_TRAINING_LIBRARY_TASK)
+                    {
+                        int exitCode = RunPhase(PhaseTask(PREDICT_TRAINING_LIBRARY_TASK));
+                        if (exitCode != 0 || phase != null)
+                            return exitCode;
+
+                        Program.LogInfo(string.Format(OspreyResources.LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_, TrainingLibraryPath(_config)));
+                        Program.LogInfo(string.Empty);
+                        exitCode = RunTrainingSearch();
+                        if (exitCode != 0)
+                            return exitCode;
+                        Program.LogInfo(string.Empty);
+                    }
+                    if (phase == null || phase == TRAIN_MODEL_TASK)
+                    {
+                        var tune = PhaseTask(TRAIN_MODEL_TASK);
+                        DiscardModelWithoutFolder(training.ModelFile, training.OutputDirectory);
+                        int exitCode = RunPhase(tune);
+                        if (exitCode != 0 || phase != null)
+                            return exitCode;
+                    }
+                    // On its own the prediction needs the tuning's checkpoint, the model it saves last.
+                    if (phase != null && !File.Exists(ModelPath(_config)))
+                    {
+                        Program.LogError(string.Format(OspreyResources.LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_,
+                            OspreyArgNames.TaskText(phase), ModelPath(_config), OspreyArgNames.TaskText(TRAIN_MODEL_TASK)));
+                        return Program.EXIT_CODE_FAILURE_TO_START;
+                    }
                 }
 
-                var predict = new PredictLibraryTask(library, DigestSettings(library, _config.LibraryBuild.Entrapment));
-                int exitCode = RunPhase(predict);
-                if (exitCode != 0)
-                    return exitCode;
+                var predict = (PredictLibraryTask)PhaseTask(PREDICT_LIBRARY_TASK);
+                int predictExit = RunPhase(predict);
+                if (predictExit != 0)
+                    return predictExit;
                 // The pairing manifest for FDRBench, which reads the entrapment pairing from the
                 // file; Osprey itself reads it from the library's DecoyPairs table. Written when the
                 // prediction ran, and when a skipped prediction (the library is current) finds no
@@ -183,14 +295,16 @@ namespace pwiz.Osprey
                 // library.
                 if (_config.LibraryBuild.Entrapment)
                 {
-                    string pairingPath = Path.Combine(workDirectory, PAIRING_FILE_NAME);
+                    string pairingPath = Path.Combine(WorkDirectory(_config), PAIRING_FILE_NAME);
                     if (predict.Peptides != null || !File.Exists(pairingPath))
                     {
-                        var peptides = predict.Peptides ?? LibraryPeptides.Build(DigestSettings(library, true), TextWriter.Null);
+                        var peptides = predict.Peptides ?? LibraryPeptides.Build(DigestSettings(_outputLibrary, true), TextWriter.Null);
                         peptides.WriteManifest(pairingPath);
                         Program.LogInfo(string.Format(OspreyResources.LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_, pairingPath));
                     }
                 }
+                if (phase != null)
+                    return predictExit;
             }
             catch (Exception ex) when (!(ex is TaskBudgetSpentException))
             {
@@ -202,45 +316,76 @@ namespace pwiz.Osprey
             Program.LogInfo(string.Empty);
             // The search reads the library it was given like any other: with its decoys and the
             // pairing its DecoyPairs table carries.
-            _config.LibrarySource = LibrarySource.FromPath(libraryPath);
-            _config.DecoysInLibrary = true;
-            return new AnalysisPipeline().Run(_config, pipeline);
+            return new AnalysisPipeline().Run(OutputSearchConfig(_config), pipeline);
         }
 
         /// <summary>
-        /// The three phases of <c>--training-input</c> before the final prediction: the training
-        /// library (never with entrapment), the search of the tuning runs with the training export,
-        /// and the tuning on the exports, which writes the model folder and <c>&lt;out&gt;.model.zip</c>.
+        /// The CarafeSharp task that runs the library phase <paramref name="phase"/>, with the
+        /// settings it reads and writes derived from the run's configuration: the one place both a
+        /// run and the file list of a <c>--task</c> node (<see cref="PhaseFiles"/>) get them from.
+        /// <list type="bullet">
+        /// <item><see cref="PREDICT_TRAINING_LIBRARY_TASK"/>: the library the tuning runs are searched
+        /// with, never with entrapment, predicted with the pretrained models or <c>--model</c>.</item>
+        /// <item><see cref="TRAIN_MODEL_TASK"/>: the tuning on the tuning runs' exports, which writes
+        /// the model folder and <c>&lt;out&gt;.model.zip</c> and predicts no library of its own: the
+        /// final prediction is a phase of its own, so a change to the entrapment or the inputs never
+        /// tunes again.</item>
+        /// <item><see cref="PREDICT_LIBRARY_TASK"/>: the library the output is searched with, from the
+        /// tuned model folder after a tuning, as CarafeSharp's training predicts it right after the
+        /// fine-tune (so a new tuning predicts the library again), else from the pretrained models or
+        /// <c>--model</c>.</item>
+        /// </list>
         /// </summary>
-        private int RunTuning(TrainingSettings training, string workDirectory)
+        private PipelineTask PhaseTask(string phase)
         {
-            var trainingLibrary = _settings.Library;
-            string trainingLibraryPath = Path.Combine(workDirectory, TRAINING_LIBRARY_FILE_NAME);
-            PrepareLibrary(trainingLibrary, trainingLibraryPath, workDirectory);
-            // The training-run RT reference names a run whose minutes the tuned models map to; the
-            // models this library is predicted with have no such map.
-            trainingLibrary.RtReference = null;
-            int exitCode = RunPhase(new PredictLibraryTask(trainingLibrary, DigestSettings(trainingLibrary, false), PREDICT_TRAINING_LIBRARY_TASK));
-            if (exitCode != 0)
-                return exitCode;
+            string workDirectory = WorkDirectory(_config);
+            var training = _settings.Training;
+            switch (phase)
+            {
+                case PREDICT_TRAINING_LIBRARY_TASK:
+                {
+                    var trainingLibrary = _settings.Library;
+                    PrepareLibrary(trainingLibrary, TrainingLibraryPath(_config), workDirectory);
+                    // The training-run RT reference names a run whose minutes the tuned models map
+                    // to; the models this library is predicted with have no such map.
+                    trainingLibrary.RtReference = null;
+                    return new PredictLibraryTask(trainingLibrary, DigestSettings(trainingLibrary, false), PREDICT_TRAINING_LIBRARY_TASK);
+                }
+                case TRAIN_MODEL_TASK:
+                    training.Library = null;
+                    training.Identifications = TrainingDirectory(_config);
+                    training.MsFiles = _config.LibraryBuild.TrainingInputs.Select(Path.GetFullPath).ToArray();
+                    training.OutputDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
+                    training.ModelFile = ModelPath(_config);
+                    return new TrainTask(training, TRAIN_MODEL_TASK) { ConfigureFineTune = ConfigureFineTuneForTests };
+                default:
+                {
+                    var library = _outputLibrary;
+                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
+                    if (training != null)
+                    {
+                        library.ModelDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
+                        library.PreferSafetensors = true;
+                    }
+                    return new PredictLibraryTask(library, DigestSettings(library, _config.LibraryBuild.Entrapment));
+                }
+            }
+        }
 
-            string trainingDirectory = Path.Combine(workDirectory, TRAINING_FOLDER);
-            Program.LogInfo(string.Format(OspreyResources.LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_, trainingLibraryPath));
-            Program.LogInfo(string.Empty);
-            exitCode = RunTrainingSearch(trainingLibraryPath, trainingDirectory);
-            if (exitCode != 0)
-                return exitCode;
-            Program.LogInfo(string.Empty);
-
-            // The tuning predicts no library of its own: the final prediction is a phase of its own,
-            // so a change to the entrapment or the inputs never tunes again.
-            training.Library = null;
-            training.Identifications = trainingDirectory;
-            training.MsFiles = _config.LibraryBuild.TrainingInputs.Select(Path.GetFullPath).ToArray();
-            training.OutputDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
-            training.ModelFile = ModelPath(_config);
-            DiscardModelWithoutFolder(training.ModelFile, training.OutputDirectory);
-            return RunPhase(new TrainTask(training, TRAIN_MODEL_TASK) { ConfigureFineTune = ConfigureFineTuneForTests });
+        /// <summary>
+        /// The files the library phase <paramref name="phase"/> reads and writes, as its task
+        /// declares them, for <c>--task-files</c>: what a cluster stages on the node and collects
+        /// from it.
+        /// </summary>
+        public void PhaseFiles(string phase, out IList<string> inputs, out IList<string> outputs)
+        {
+            var task = PhaseTask(phase);
+            var ctx = new CarafeContext(new[] { task }, TextWriter.Null, TextWriter.Null);
+            inputs = task.Inputs(ctx).Where(path => path != null).ToList();
+            outputs = task.Outputs(ctx).Where(path => path != null).ToList();
+            // The pairing manifest is written beside the library it pairs, after the prediction.
+            if (phase == PREDICT_LIBRARY_TASK && _config.LibraryBuild.Entrapment)
+                outputs.Add(Path.Combine(WorkDirectory(_config), PAIRING_FILE_NAME));
         }
 
         /// <summary>
@@ -304,53 +449,56 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The four stages over the tuning runs, with the training library, into a folder of their
-        /// own, writing each run's training export. Its artifacts are per run and named by the run,
-        /// so a tuning run that is also an input keeps two sets, one per library; the spectra cache
-        /// is the one both analyses read.
+        /// own, writing each run's training export (<see cref="TrainingSearchConfig"/>). Its artifacts
+        /// are per run and named by the run, so a tuning run that is also an input keeps two sets,
+        /// one per library; the spectra cache is the one both analyses read.
         /// <para>
         /// The stages are a task set of their own: a task holds what one analysis hands from one of
         /// its stages to the next (PerFileRescoring's survivor plan, which SecondPassFDR rebuilds
         /// against), so the output's search must not inherit this one's.
         /// </para>
         /// </summary>
-        private int RunTrainingSearch(string trainingLibraryPath, string trainingDirectory)
+        private int RunTrainingSearch()
         {
-            var config = _config.ShallowClone();
+            var config = TrainingSearchConfig(_config);
             var pipeline = OspreyTasks.Create().PipelineFor(null);
             config.SelectTask(null, pipeline);
-            config.InputFiles = new List<string>(_config.LibraryBuild.TrainingInputs);
-            config.LibrarySource = LibrarySource.FromPath(trainingLibraryPath);
-            config.DecoysInLibrary = true;
-            config.OutputBlib = Path.Combine(trainingDirectory, TRAINING_OUTPUT_FILE_NAME);
-            config.OutputDir = trainingDirectory;
-            // What the user asked of the run is the final search's; this one writes what the tuning reads.
-            config.OutputFdrBench = null;
-            config.ModelDiagnostics = false;
-            // Not the one command's analysis: its result was not searched with tuned models.
-            config.LibraryBuild = new LibraryBuildConfig();
-            config.TrainingExport = new TrainingExportConfig
-            {
-                Enabled = true,
-                MaxQ = _config.TrainingExport.MaxQ,
-                ClaimantQ = _config.TrainingExport.ClaimantQ,
-                WriteXics = _config.TrainingExport.WriteXics,
-            };
-            Directory.CreateDirectory(trainingDirectory);
+            using (EnterTrainingSearch(config))
+                return new AnalysisPipeline().Run(config, pipeline);
+        }
 
+        /// <summary>
+        /// Until disposed, writes the artifacts into the tuning runs' search folder
+        /// (<paramref name="trainingSearch"/>'s output directory) and resolves the spectra cache as
+        /// the output's search resolves it, so a run both analyses read is parsed once and a run
+        /// without <c>--output-dir</c> never probes the data directory. For the search in one
+        /// process and for a stage node of it alike.
+        /// </summary>
+        public static IDisposable EnterTrainingSearch(OspreyConfig trainingSearch)
+        {
+            Directory.CreateDirectory(trainingSearch.OutputDir);
             string outputDir = ArtifactPaths.OutputDir;
-            // The cache resolves as the output's search resolves it, so a run both analyses read is
-            // parsed once and a run without --output-dir never probes the data directory.
-            using (ArtifactPaths.ResolveCacheAs(outputDir))
+            var cacheScope = ArtifactPaths.ResolveCacheAs(outputDir);
+            ArtifactPaths.OutputDir = trainingSearch.OutputDir;
+            return new ScopeExit(() =>
             {
-                ArtifactPaths.OutputDir = trainingDirectory;
-                try
-                {
-                    return new AnalysisPipeline().Run(config, pipeline);
-                }
-                finally
-                {
-                    ArtifactPaths.OutputDir = outputDir;
-                }
+                ArtifactPaths.OutputDir = outputDir;
+                cacheScope.Dispose();
+            });
+        }
+
+        private sealed class ScopeExit : IDisposable
+        {
+            private readonly Action _exit;
+
+            public ScopeExit(Action exit)
+            {
+                _exit = exit;
+            }
+
+            public void Dispose()
+            {
+                _exit();
             }
         }
 
