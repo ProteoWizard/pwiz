@@ -132,6 +132,12 @@ namespace pwiz.Osprey.Demux
         public int BlockBins { get; set; } = DEFAULT_BLOCK_BINS;
 
         /// <summary>
+        /// Weighted engine: apportion each observation by each channel's elution fitted with chromatographic peaks
+        /// (<see cref="ElutionDemultiplexer"/>) instead of interpolating each window's own series. Null interpolates.
+        /// </summary>
+        public ElutionDemuxParams Elution { get; set; }
+
+        /// <summary>
         /// Intensity of one ion, for the weighted engine: its weights and its channel and output
         /// thresholds are in ions.
         /// </summary>

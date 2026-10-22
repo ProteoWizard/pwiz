@@ -32,12 +32,14 @@ namespace pwiz.Osprey.Demux
     /// <summary>What a demultiplexing pipeline needs to know of one acquired spectrum, without its points.</summary>
     public readonly struct DemuxSpectrumInfo
     {
-        public DemuxSpectrumInfo(int msLevel, bool hasWindow, IsolationWindow window, double time)
+        public DemuxSpectrumInfo(int msLevel, bool hasWindow, IsolationWindow window, double time,
+            double injectionTime = double.NaN)
         {
             MsLevel = msLevel;
             HasWindow = hasWindow;
             Window = window;
             Time = time;
+            InjectionTime = injectionTime;
         }
 
         public int MsLevel { get; }
@@ -50,6 +52,9 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>Scan start time, in minutes.</summary>
         public double Time { get; }
+
+        /// <summary>Ion injection (fill) time, in milliseconds; NaN when the file does not report it.</summary>
+        public double InjectionTime { get; }
 
         /// <summary>The isolation window's target m/z; 0 without a window.</summary>
         public double Target

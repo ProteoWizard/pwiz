@@ -40,6 +40,7 @@ namespace pwiz.Osprey.Demux
         private readonly ScanningDemuxOptions _options;
         private readonly int[] _ms2Spectra;           // input index of each MS2, in acquisition order
         private readonly double[] _ms2Time;           // its time, in minutes
+        private readonly double[] _intensityPerIon;   // intensity units of one ion, by input index
         private readonly int[] _cycleOfMs2;           // the cycle it belongs to
         private readonly Dictionary<int, int> _ms2OfSpectrum = new Dictionary<int, int>();
         private readonly List<(int Spectrum, int Bin)> _output = new List<(int, int)>();
@@ -53,9 +54,13 @@ namespace pwiz.Osprey.Demux
             var ms2 = new List<int>();
             var times = new List<double>();
             var windows = new List<IsolationWindow>();
+            _intensityPerIon = new double[source.Count];
             for (int k = 0; k < source.Count; k++)
             {
                 var info = source.Describe(k);
+                _intensityPerIon[k] = options.FillTimeIonScale > 0 && info.InjectionTime > 0
+                    ? options.FillTimeIonScale / info.InjectionTime
+                    : options.CountsPerIon;
                 if (info.MsLevel == 1)
                     continue;
                 windows.Add(info.Window);
@@ -138,6 +143,12 @@ namespace pwiz.Osprey.Demux
             return Scheme.Bins[_output[output].Bin];
         }
 
+        /// <summary>The intensity of one ion in an output spectrum: its acquired spectrum's.</summary>
+        public double IntensityPerIon(int output)
+        {
+            return _intensityPerIon[_output[output].Spectrum];
+        }
+
         /// <summary>A demultiplexed spectrum's place among its window's bins, from 0.</summary>
         public int PartOf(int output)
         {
@@ -184,7 +195,10 @@ namespace pwiz.Osprey.Demux
                 {
                     int g1 = Math.Min(binCount - 1, g0 + _options.GroupBins - 1);
                     var unit = MakeUnit(inBlock, peaks, lo, hi, k0, k1, g0, g1, contextBins);
-                    work.Add(new DemuxWork(() => ScanningDemultiplexer.DemuxInterpolatedUnit(unit, _options.Parameters),
+                    var elution = _options.Elution;
+                    work.Add(new DemuxWork(elution != null
+                        ? (Func<ScanningUnitResult>)(() => ElutionDemultiplexer.DemuxUnit(unit, _options.Parameters, elution))
+                        : () => ScanningDemultiplexer.DemuxInterpolatedUnit(unit, _options.Parameters),
                         unit.Mz.Length));
                 }
             }
@@ -299,6 +313,7 @@ namespace pwiz.Osprey.Demux
             _source.Read(k, out var mzData, out var intensityData);
             var mzs = new List<double>();
             var values = new List<double>();
+            double perIon = _intensityPerIon[k];
             if (mzData != null && intensityData != null)
             {
                 int count = Math.Min(mzData.Count, intensityData.Count);
@@ -307,7 +322,7 @@ namespace pwiz.Osprey.Demux
                     if (intensityData[i] <= 0)
                         continue;
                     mzs.Add(mzData[i]);
-                    values.Add(intensityData[i] / _options.CountsPerIon);
+                    values.Add(intensityData[i] / perIon);
                 }
             }
             _source.Release(k);
@@ -373,6 +388,12 @@ namespace pwiz.Osprey.Demux
         public DemuxBin BinOf(int index)
         {
             return _staggered.BinOf(index);
+        }
+
+        /// <summary>The intensity of one ion in an output spectrum, to write its peaks in the input's units.</summary>
+        public double IntensityPerIon(int index)
+        {
+            return _staggered.IntensityPerIon(index);
         }
 
         /// <summary>A demultiplexed spectrum's place among its window's bins, from 0 (its id's demux= suffix).</summary>

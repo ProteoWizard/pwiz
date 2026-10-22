@@ -38,8 +38,6 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public static DemuxResult Run(IReadOnlyList<Spectrum> ms2Spectra, DemuxParams parameters)
         {
-            if (!parameters.ChannelToleranceIsPpm)
-                throw new NotSupportedException(@"The weighted demultiplexer matches fragment channels in ppm only.");
             var options = CreateOptions(parameters);
             var pipeline = new StaggeredDemuxPipeline(new SpectraSource(ms2Spectra), options, TextWriter.Null,
                 parameters.MinimumBinWidth);
@@ -50,8 +48,9 @@ namespace pwiz.Osprey.Demux
                 var bin = pipeline.BinOf(index);
                 var (mz, ions) = pipeline.Peaks(index);
                 var intensities = new float[ions.Length];
+                double perIon = pipeline.IntensityPerIon(index);
                 for (int i = 0; i < ions.Length; i++)
-                    intensities[i] = (float)(ions[i] * options.CountsPerIon);
+                    intensities[i] = (float)(ions[i] * perIon);
                 spectra.Add(new Spectrum
                 {
                     ScanNumber = target.ScanNumber,
@@ -82,7 +81,11 @@ namespace pwiz.Osprey.Demux
                 Threads = Math.Max(1, parameters.Threads),
                 CountsPerIon = parameters.CountsPerIon,
             };
-            options.Parameters.ChannelTolerancePpm = parameters.ChannelTolerance;
+            if (parameters.ChannelToleranceIsPpm)
+                options.Parameters.ChannelTolerancePpm = parameters.ChannelTolerance;
+            else
+                options.Parameters.ChannelToleranceTh = parameters.ChannelTolerance;
+            options.Elution = parameters.Elution;
             return options;
         }
 
@@ -91,12 +94,13 @@ namespace pwiz.Osprey.Demux
         {
             var ic = CultureInfo.InvariantCulture;
             var p = options.Parameters;
+            string elution = options.Elution != null ? @";" + options.Elution.Descriptor : string.Empty;
             return string.Format(ic,
                 @"block_cycles={0};cycle_pad={1};group_bins={2};min_channel_ions={3};min_channel_cells={4};" +
                 @"poisson_weights={5};weight_floor_ions={6};min_output_ions={7}",
                 options.BlockCycles, options.CyclePad, options.GroupBins, p.MinChannelIons.ToString(@"R", ic),
                 p.MinChannelCells, p.PoissonWeights, p.WeightFloorIons.ToString(@"R", ic),
-                p.MinOutputIons.ToString(@"R", ic));
+                p.MinOutputIons.ToString(@"R", ic)) + elution;
         }
 
         /// <summary>A run's MS2 spectra in memory as a demultiplexing source.</summary>

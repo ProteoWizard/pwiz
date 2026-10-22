@@ -495,6 +495,106 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// MEASUREMENT (temporary, not for commit): how well each bin's value is recovered at every pass, by
+        /// overlap factor and peak width in passes, apex region separately. Writes a table to the path in
+        /// OSPREY_DEMUX_MEASURE_OUT and does nothing without it.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxPassRateMeasurement()
+        {
+            string outPath = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_MEASURE_OUT");
+            if (string.IsNullOrEmpty(outPath))
+                return;
+            var lines = new List<string> { "k\tengine\tfwhm_passes\tunique_apex_mae\tunique_apex_max\tunique_all_mae\tshared_apex_mae\tshared_all_mae\tleak" };
+            foreach (int k in new[] { 2, 3, 4 })
+            {
+                foreach (double fwhmPasses in new[] { 1.5, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0 })
+                {
+                    double sigmaCycles = fwhmPasses / 2.3548 / k;
+                    var cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, k);
+                    var run = BuildRun(new RunOptions
+                    {
+                        Cycle = cycle,
+                        Cycles = Math.Max(30, (int)Math.Ceiling(12 * sigmaCycles + 12)),
+                        ElutionSigmaCycles = sigmaCycles,
+                    });
+                    double fwhmSeconds = 2.3548 * sigmaCycles * cycle.Count * SCAN_MINUTES * 60;
+                    foreach (string arm in new[] { @"weighted", @"msconvert", @"elution" })
+                    {
+                        var parameters = new DemuxParams { Threads = 4 };
+                        if (arm == @"msconvert")
+                            parameters.Engine = DemuxEngine.msconvert;
+                        if (arm == @"elution")
+                            parameters.Elution = new ElutionDemuxParams { FwhmSeconds = fwhmSeconds };
+                        var result = Demultiplexer.Demultiplex(run.Spectra, parameters);
+                        var stats = PassRateErrors(result, run);
+                        lines.Add(string.Join("\t", k, arm, fwhmPasses.ToString(CultureInfo.InvariantCulture),
+                            stats.UniqueApex.ToString(@"F4", CultureInfo.InvariantCulture),
+                            stats.UniqueApexMax.ToString(@"F4", CultureInfo.InvariantCulture),
+                            stats.UniqueAll.ToString(@"F4", CultureInfo.InvariantCulture),
+                            stats.SharedApex.ToString(@"F4", CultureInfo.InvariantCulture),
+                            stats.SharedAll.ToString(@"F4", CultureInfo.InvariantCulture),
+                            stats.Leak.ToString(@"F4", CultureInfo.InvariantCulture)));
+                    }
+                }
+            }
+            File.WriteAllLines(outPath, lines);
+        }
+
+        private static (double UniqueApex, double UniqueApexMax, double UniqueAll, double SharedApex, double SharedAll, double Leak)
+            PassRateErrors(DemuxResult result, SyntheticRun run)
+        {
+            double uApex = 0, uApexMax = 0, uAll = 0, sApex = 0, sAll = 0, leak = 0, total = 0;
+            int nuApex = 0, nuAll = 0, nsApex = 0, nsAll = 0;
+            foreach (var spectrum in result.Spectra)
+            {
+                int bin = BinOf(run.Bins, spectrum.IsolationWindow.Center);
+                double level = run.Profile(bin, spectrum.RetentionTime);
+                var observed = new Dictionary<double, double>();
+                for (int p = 0; p < spectrum.Mzs.Length; p++)
+                {
+                    total += spectrum.Intensities[p];
+                    double nominal = run.Truth[bin].Keys.FirstOrDefault(mz => Math.Abs(mz - spectrum.Mzs[p]) <= mz * 10e-6);
+                    if (nominal == 0)
+                        leak += spectrum.Intensities[p];
+                    else
+                        observed[nominal] = spectrum.Intensities[p];
+                }
+                foreach (var peak in run.Truth[bin])
+                {
+                    observed.TryGetValue(peak.Key, out double value);
+                    double error = Math.Abs(value - peak.Value * level) / peak.Value;
+                    bool shared = peak.Key == SHARED_FRAGMENT_MZ;
+                    if (shared)
+                    {
+                        sAll += error;
+                        nsAll++;
+                    }
+                    else
+                    {
+                        uAll += error;
+                        nuAll++;
+                    }
+                    if (level < 0.5)
+                        continue;
+                    if (shared)
+                    {
+                        sApex += error;
+                        nsApex++;
+                    }
+                    else
+                    {
+                        uApex += error;
+                        uApexMax = Math.Max(uApexMax, error);
+                        nuApex++;
+                    }
+                }
+            }
+            return (uApex / Math.Max(1, nuApex), uApexMax, uAll / Math.Max(1, nuAll), sApex / Math.Max(1, nsApex),
+                sAll / Math.Max(1, nsAll), leak / Math.Max(total, 1e-30));
+        }
+
+        /// <summary>
         /// The pipeline wiring around the demultiplexer, through the same entry point Stages 1-4
         /// and --task SpectraCache use: the demux-off guard, building and then reusing the
         /// demultiplexed cache, searching from it alone, rebuilding it when its settings change,

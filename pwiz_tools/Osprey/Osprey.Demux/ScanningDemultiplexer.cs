@@ -29,6 +29,12 @@ namespace pwiz.Osprey.Demux
         /// <summary>How far a peak may lie from its fragment channel's center, in ppm.</summary>
         public double ChannelTolerancePpm { get; set; } = 10;
 
+        /// <summary>
+        /// Staggered data: when positive, fragment channels are matched in Th on a linear m/z axis instead of in ppm,
+        /// as unit-resolution (ion trap) centroids need.
+        /// </summary>
+        public double ChannelToleranceTh { get; set; }
+
         /// <summary>A channel with fewer ions over its block passes through undemultiplexed.</summary>
         public double MinChannelIons { get; set; } = 8;
 
@@ -533,29 +539,10 @@ namespace pwiz.Osprey.Demux
             int peaks = unit.Mz.Length;
             int rows = unit.RowTimes.Length, outputs = unit.OutputRow.Length, columns = unit.ColumnBins.Length;
             var a = unit.Transmission;
-
-            // Which bins each output spectrum keeps (its window's, within the block's own bins), and
-            // which spectra this block owns the pass-through peaks of: those whose window's first
-            // bin is one of the block's own, so exactly one block passes each through.
-            var keep = new bool[outputs * columns];
-            var ownOutput = new Dictionary<int, bool>();
-            for (int s = 0; s < outputs; s++)
-            {
-                int r = unit.OutputRow[s];
-                int firstBin = int.MaxValue;
-                for (int j = 0; j < columns; j++)
-                {
-                    if (a[r, j] < 0.5)
-                        continue;
-                    firstBin = Math.Min(firstBin, unit.ColumnBins[j]);
-                    keep[s * columns + j] = unit.ColumnBins[j] >= unit.FirstCoreBin && unit.ColumnBins[j] <= unit.LastCoreBin;
-                }
-                ownOutput[unit.OutputSpectrum[s]] = firstBin >= unit.FirstCoreBin && firstBin <= unit.LastCoreBin;
-            }
+            OutputOwnership(unit, out var keep, out var ownOutput);
 
             var channel = new int[peaks];
-            result.Channels = FragmentChannelFinder.Find(unit.Mz, unit.Ions, parameters.ChannelTolerancePpm,
-                parameters.MinChannelIons, channel);
+            result.Channels = FindChannels(unit.Mz, unit.Ions, parameters, channel);
             var order = new long[peaks];
             for (int i = 0; i < peaks; i++)
                 order[i] = (long)(channel[i] + 1) * peaks + i;
@@ -739,13 +726,47 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
+        /// Which bins each output spectrum of a staggered unit keeps (its window's, within the block's own bins), and
+        /// which spectra the unit owns the pass-through peaks of: those whose window's first bin is one of the block's
+        /// own, so exactly one block passes each through.
+        /// </summary>
+        internal static void OutputOwnership(InterpolatedUnit unit, out bool[] keep, out Dictionary<int, bool> ownOutput)
+        {
+            var a = unit.Transmission;
+            int outputs = unit.OutputRow.Length, columns = unit.ColumnBins.Length;
+            keep = new bool[outputs * columns];
+            ownOutput = new Dictionary<int, bool>();
+            for (int s = 0; s < outputs; s++)
+            {
+                int r = unit.OutputRow[s];
+                int firstBin = int.MaxValue;
+                for (int j = 0; j < columns; j++)
+                {
+                    if (a[r, j] < 0.5)
+                        continue;
+                    firstBin = Math.Min(firstBin, unit.ColumnBins[j]);
+                    keep[s * columns + j] = unit.ColumnBins[j] >= unit.FirstCoreBin && unit.ColumnBins[j] <= unit.LastCoreBin;
+                }
+                ownOutput[unit.OutputSpectrum[s]] = firstBin >= unit.FirstCoreBin && firstBin <= unit.LastCoreBin;
+            }
+        }
+
+        /// <summary>A staggered unit's fragment channels, in Th when the settings give a Th tolerance, else in ppm.</summary>
+        internal static int FindChannels(double[] mz, double[] ions, ScanningDemuxParams parameters, int[] channel)
+        {
+            return parameters.ChannelToleranceTh > 0
+                ? FragmentChannelFinder.FindLinear(mz, ions, parameters.ChannelToleranceTh, parameters.MinChannelIons, channel)
+                : FragmentChannelFinder.Find(mz, ions, parameters.ChannelTolerancePpm, parameters.MinChannelIons, channel);
+        }
+
+        /// <summary>
         /// Splits each observed peak of output spectrum <paramref name="s"/> among the bins of its
         /// window by the solution's shares, (transmission x solved intensity) over their sum, at the
         /// peak's own m/z, as pwiz's demultiplexer does. A spectrum's bins then sum to what was
         /// acquired, no peak is invented, and no m/z moves; a solution of zero over the window
         /// drops the peak.
         /// </summary>
-        private static void Apportion(InterpolatedUnit unit, bool[] keep, List<int> observed, int s, int nc, double[] x,
+        internal static void Apportion(InterpolatedUnit unit, bool[] keep, List<int> observed, int s, int nc, double[] x,
             int[] cols, List<ScanningPeak> output)
         {
             int r = unit.OutputRow[s], columns = unit.ColumnBins.Length;
@@ -768,7 +789,7 @@ namespace pwiz.Osprey.Demux
             }
         }
 
-        private static bool OwnsPassThrough(InterpolatedUnit unit, Dictionary<int, bool> ownOutput, int peak)
+        internal static bool OwnsPassThrough(InterpolatedUnit unit, Dictionary<int, bool> ownOutput, int peak)
         {
             int spectrum = unit.RowSpectra[unit.Row[peak]][unit.Acquisition[peak]];
             return ownOutput.TryGetValue(spectrum, out bool own) && own;

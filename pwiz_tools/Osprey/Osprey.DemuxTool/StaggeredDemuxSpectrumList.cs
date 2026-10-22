@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Pwiz.Analysis;
@@ -35,14 +36,23 @@ namespace pwiz.Osprey.DemuxTool
     /// </summary>
     internal sealed class StaggeredDemuxSpectrumList : SpectrumListWrapper
     {
-        private readonly ScanningDemuxOptions _options;
         private readonly StaggeredDemuxPipeline _pipeline;
+        private readonly double _centroidSeparation;
 
-        public StaggeredDemuxSpectrumList(ISpectrumList inner, ScanningDemuxOptions options, TextWriter log)
+        /// <param name="inner">The acquisition.</param>
+        /// <param name="options">The solve's settings.</param>
+        /// <param name="log">Where the scheme and each batch are logged.</param>
+        /// <param name="centroidSeparation">
+        /// Profile input on a uniform m/z grid (an ion trap's): when positive, each demultiplexed spectrum is centroided
+        /// (<see cref="EventCentroider.CentroidLinear"/>), centroids closer than this many Th merged. Zero writes the
+        /// demultiplexed points as they are.
+        /// </param>
+        public StaggeredDemuxSpectrumList(ISpectrumList inner, ScanningDemuxOptions options, TextWriter log,
+            double centroidSeparation = 0)
             : base(inner)
         {
-            _options = options;
             _pipeline = new StaggeredDemuxPipeline(new PwizDemuxSource(inner), options, log);
+            _centroidSeparation = centroidSeparation;
         }
 
         public long Channels
@@ -100,8 +110,19 @@ namespace pwiz.Osprey.DemuxTool
                 return spectrum;
             var (mz, ions) = _pipeline.Peaks(index);
             var counts = new double[ions.Length];
+            double perIon = _pipeline.IntensityPerIon(index);
             for (int i = 0; i < ions.Length; i++)
-                counts[i] = ions[i] * _options.CountsPerIon;
+                counts[i] = ions[i] * perIon;
+            if (_centroidSeparation > 0)
+            {
+                var centroidMz = new List<double>();
+                var centroidIntensity = new List<double>();
+                EventCentroider.CentroidLinear(mz, counts, _centroidSeparation, centroidMz, centroidIntensity);
+                mz = centroidMz.ToArray();
+                counts = centroidIntensity.ToArray();
+                spectrum.Params.CVParams.RemoveAll(p => p.Cvid == CVID.MS_profile_spectrum);
+                spectrum.Params.Set(CVID.MS_centroid_spectrum);
+            }
             spectrum.SetMZIntensityArrays(mz, counts, CVID.MS_number_of_detector_counts);
             return spectrum;
         }

@@ -46,6 +46,20 @@ namespace pwiz.Osprey.Demux
         public double CountsPerIon { get; set; } = 100;
 
         /// <summary>
+        /// Staggered data whose intensities are rates (an ion trap's, normalized by its fill time): when positive, the
+        /// intensity x injection time (ms) of one ion, so each spectrum's ions follow its own fill time. Spectra without
+        /// an injection time keep <see cref="CountsPerIon"/>.
+        /// </summary>
+        public double FillTimeIonScale { get; set; }
+
+        /// <summary>
+        /// Staggered data: fit each fragment channel's elution with chromatographic peaks of this shape to apportion
+        /// each observation (<see cref="ElutionDemultiplexer"/>), instead of interpolating each window's own series.
+        /// Null interpolates.
+        /// </summary>
+        public ElutionDemuxParams Elution { get; set; }
+
+        /// <summary>
         /// Demultiplex and centroid profile spectra in one solve (<see cref="JointDemultiplexer"/>) instead of
         /// demultiplexing centroids channel by channel. Needs profile input on one TOF grid.
         /// </summary>

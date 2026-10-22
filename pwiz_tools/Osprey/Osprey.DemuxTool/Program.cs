@@ -45,11 +45,13 @@ namespace pwiz.Osprey.DemuxTool
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
-            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]";
+            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
+            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--centroid-output SEP]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
+            double centroidSeparation = 0;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false;
             var options = new ScanningDemuxOptions();
@@ -203,10 +205,37 @@ namespace pwiz.Osprey.DemuxTool
                         options.GroupBins = int.Parse(value, CultureInfo.InvariantCulture);
                         groupBinsSet = true;
                         break;
+                    case @"--channel-th":
+                        // Staggered: fragment channels matched within this many Th on a linear axis (unit resolution).
+                        options.Parameters.ChannelToleranceTh = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--fill-time-ions":
+                        // Staggered, rate intensities (ion trap): intensity x injection time (ms) of one ion.
+                        options.FillTimeIonScale = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--elution-fwhm":
+                        // Staggered: apportion by each channel's elution fitted with peaks of this FWHM (seconds).
+                        options.Elution ??= new ElutionDemuxParams();
+                        options.Elution.FwhmSeconds = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--centroid-output":
+                        // Staggered profile input on a uniform m/z grid (ion trap): centroid each demultiplexed spectrum,
+                        // centroids closer than this many Th merged.
+                        centroidSeparation = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--elution-param":
+                        // Any scalar setting of the elution fit by its property name, for tuning.
+                        options.Elution ??= new ElutionDemuxParams();
+                        if (!SetParameter(options.Elution, value))
+                        {
+                            Console.Error.WriteLine(@"Unknown elution setting: {0}", value);
+                            return 1;
+                        }
+                        break;
                     case @"--joint-param":
                         // Any scalar setting of the joint solve by its property name, for tuning; a table of numbers
                         // (PeakSigmaSamples, MergeSigmaSamples) as comma-separated values.
-                        if (!SetJointParameter(options.JointParameters, value))
+                        if (!SetParameter(options.JointParameters, value))
                         {
                             Console.Error.WriteLine(@"Unknown joint setting: {0}", value);
                             return 1;
@@ -260,6 +289,18 @@ namespace pwiz.Osprey.DemuxTool
                     options.JointParameters.L1Z, options.JointParameters.Relaxed ? @", relaxed" : string.Empty,
                     options.JointParameters.MinOutputIons)
                 : SolveSettings(options.Parameters));
+            if (staggered)
+            {
+                Console.WriteLine(@"Staggered: {0}; channels {1}; ions {2}", options.Elution != null
+                        ? @"elution fit, " + options.Elution.Descriptor
+                        : @"interpolated windows",
+                    options.Parameters.ChannelToleranceTh > 0
+                        ? options.Parameters.ChannelToleranceTh.ToString(CultureInfo.InvariantCulture) + @" Th"
+                        : options.Parameters.ChannelTolerancePpm.ToString(CultureInfo.InvariantCulture) + @" ppm",
+                    options.FillTimeIonScale > 0
+                        ? @"intensity x fill time / " + options.FillTimeIonScale.ToString(CultureInfo.InvariantCulture)
+                        : @"intensity / " + options.CountsPerIon.ToString(CultureInfo.InvariantCulture));
+            }
 
             // pwiz-sharp's default reader list holds only the open formats; vendor readers are
             // appended, as Osprey's own reader does on load.
@@ -341,7 +382,7 @@ namespace pwiz.Osprey.DemuxTool
             StaggeredDemuxSpectrumList stepped = null;
             if (staggered)
             {
-                stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out);
+                stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out, centroidSeparation);
                 msd.Run.SpectrumList = stepped;
                 Console.WriteLine(@"Indexed in {0:F0} s; writing {1} spectra", stopwatch.Elapsed.TotalSeconds, stepped.Count);
             }
@@ -377,7 +418,6 @@ namespace pwiz.Osprey.DemuxTool
             return 0;
         }
 
-        /// <summary>Sets a scalar property of the joint solve's settings from Name=Value.</summary>
         /// <summary>
         /// The counts per ion of the source's MS2 spectra, estimated from the lowest levels of up to 50 of them from
         /// the middle of the run on, read as they come from the source (profile for a vendor file). NaN, with a fit
@@ -406,12 +446,13 @@ namespace pwiz.Osprey.DemuxTool
             return IonCalibration.CountsPerIon(intensities, out fit);
         }
 
-        private static bool SetJointParameter(JointDemuxParams parameters, string assignment)
+        /// <summary>Sets a scalar property of a solve's settings from Name=Value.</summary>
+        private static bool SetParameter(object parameters, string assignment)
         {
             int equals = assignment.IndexOf('=');
             if (equals <= 0)
                 return false;
-            var property = typeof(JointDemuxParams).GetProperty(assignment.Substring(0, equals));
+            var property = parameters.GetType().GetProperty(assignment.Substring(0, equals));
             if (property == null || !property.CanWrite)
                 return false;
             string text = assignment.Substring(equals + 1);
@@ -421,7 +462,7 @@ namespace pwiz.Osprey.DemuxTool
                 return false;
             else
                 property.SetValue(parameters, Convert.ChangeType(text, property.PropertyType, CultureInfo.InvariantCulture));
-            Console.WriteLine(@"Joint setting: {0}", assignment);
+            Console.WriteLine(@"Setting: {0}", assignment);
             return true;
         }
 

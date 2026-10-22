@@ -42,6 +42,9 @@ namespace pwiz.Osprey.Demux
         /// <summary>Half-width of the histogram smoothing, in 1 ppm bins.</summary>
         public const int SMOOTHING_HALF_WIDTH = 4;
 
+        /// <summary>Histogram bin width of <see cref="FindLinear"/>, in Th.</summary>
+        public const double LINEAR_BIN_TH = 0.01;
+
         /// <summary>
         /// Assigns each peak to a channel, or to -1 when no channel center lies within
         /// <paramref name="tolerancePpm"/> of it.
@@ -56,19 +59,41 @@ namespace pwiz.Osprey.Demux
         /// <returns>The number of channels, indexed in increasing m/z.</returns>
         public static int Find(double[] mz, double[] ions, double tolerancePpm, double minIons, int[] channel)
         {
-            int count = mz.Length;
+            // 1 ppm bins on a log m/z axis.
+            var key = new long[mz.Length];
+            for (int i = 0; i < mz.Length; i++)
+                key[i] = (long)Math.Floor(Math.Log(mz[i]) * 1e6);
+            return FindByKey(key, ions, tolerancePpm, SMOOTHING_HALF_WIDTH, minIons, channel);
+        }
+
+        /// <summary>
+        /// As <see cref="Find"/>, but on a linear m/z axis with a tolerance in Th, for unit-resolution centroids, whose
+        /// m/z error is about constant in Th: bins of <see cref="LINEAR_BIN_TH"/>, smoothed over a quarter of the
+        /// tolerance (at least <see cref="SMOOTHING_HALF_WIDTH"/> bins).
+        /// </summary>
+        public static int FindLinear(double[] mz, double[] ions, double toleranceTh, double minIons, int[] channel)
+        {
+            var key = new long[mz.Length];
+            for (int i = 0; i < mz.Length; i++)
+                key[i] = (long)Math.Floor(mz[i] / LINEAR_BIN_TH);
+            double toleranceBins = toleranceTh / LINEAR_BIN_TH;
+            int smoothing = Math.Max(SMOOTHING_HALF_WIDTH, (int)Math.Round(toleranceBins / 4));
+            return FindByKey(key, ions, toleranceBins, smoothing, minIons, channel);
+        }
+
+        /// <summary>The histogram channels of peaks given as integer histogram bins, the tolerance in bins.</summary>
+        private static int FindByKey(long[] key, double[] ions, double tolerance, int smoothingHalfWidth, double minIons,
+            int[] channel)
+        {
+            int count = key.Length;
             if (count == 0)
                 return 0;
 
-            // 1 ppm bins on a log m/z axis, and the peaks sorted by bin with the peak index as the
-            // tie-breaker, packed into one key so a plain sort is stable.
-            var key = new long[count];
+            // The peaks sorted by bin with the peak index as the tie-breaker, packed into one key so a plain sort is
+            // stable.
             var order = new long[count];
             for (int i = 0; i < count; i++)
-            {
-                key[i] = (long)Math.Floor(Math.Log(mz[i]) * 1e6);
                 order[i] = key[i] * count + i;
-            }
             Array.Sort(order); // Array.Sort OK: keys are unique (bin * count + index)
 
             // Distinct bins and the ions in each.
@@ -93,9 +118,9 @@ namespace pwiz.Osprey.Demux
             var smooth = new double[bins];
             for (int b = 0, lo = 0, hi = 0; b < bins; b++)
             {
-                while (binKey[lo] < binKey[b] - SMOOTHING_HALF_WIDTH)
+                while (binKey[lo] < binKey[b] - smoothingHalfWidth)
                     lo++;
-                while (hi < bins && binKey[hi] <= binKey[b] + SMOOTHING_HALF_WIDTH)
+                while (hi < bins && binKey[hi] <= binKey[b] + smoothingHalfWidth)
                     hi++;
                 smooth[b] = prefix[hi] - prefix[lo];
             }
@@ -118,7 +143,7 @@ namespace pwiz.Osprey.Demux
             SortByValueThenIndex(rank, rankedBins);
 
             // Greedy maxima, each claiming the bins within the tolerance of it.
-            int radius = (int)Math.Ceiling(tolerancePpm);
+            int radius = (int)Math.Ceiling(tolerance);
             var taken = new bool[bins];
             var centers = new long[candidates];
             int channels = 0;
@@ -154,7 +179,7 @@ namespace pwiz.Osprey.Demux
                     best = hi;
                     bestDistance = centers[hi] - key[i];
                 }
-                if (best >= 0 && bestDistance <= tolerancePpm)
+                if (best >= 0 && bestDistance <= tolerance)
                     channel[i] = best;
             }
             return channels;

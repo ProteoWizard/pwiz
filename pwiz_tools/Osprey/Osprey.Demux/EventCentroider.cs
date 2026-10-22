@@ -68,7 +68,53 @@ namespace pwiz.Osprey.Demux
                 int start = i++;
                 while (i < n && intensity[i] > 0 && Math.Sqrt(mz[i]) - Math.Sqrt(mz[i - 1]) <= maxGap)
                     i++;
-                AddRun(mz, intensity, start, i, centroidMz, centroidIntensity);
+                AddRun(mz, intensity, start, i, VALLEY_FRACTION, centroidMz, centroidIntensity);
+            }
+        }
+
+        /// <summary>
+        /// Centroids a profile sampled uniformly in m/z (an ion trap's): every local maximum is one centroid, a run
+        /// split at each valley between maxima, and centroids closer than <paramref name="minSeparation"/> (Th) merged
+        /// into one at their intensity-weighted m/z. Unit-resolution peaks one Th apart leave a valley at about 0.9 of
+        /// their height, which <see cref="Centroid"/>'s half-height rule would merge.
+        /// </summary>
+        public static void CentroidLinear(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, double minSeparation,
+            List<double> centroidMz, List<double> centroidIntensity)
+        {
+            centroidMz.Clear();
+            centroidIntensity.Clear();
+            int n = Math.Min(mz.Count, intensity.Count);
+            if (n == 0)
+                return;
+            double maxGap = GAP_STEPS * LinearStep(mz, n);
+            var runMz = new List<double>();
+            var runIntensity = new List<double>();
+            int i = 0;
+            while (i < n)
+            {
+                if (intensity[i] <= 0)
+                {
+                    i++;
+                    continue;
+                }
+                int start = i++;
+                while (i < n && intensity[i] > 0 && mz[i] - mz[i - 1] <= maxGap)
+                    i++;
+                AddRun(mz, intensity, start, i, 1.0, runMz, runIntensity);
+            }
+            // Merge neighbors closer than the separation, in m/z order.
+            for (int c = 0; c < runMz.Count; c++)
+            {
+                int last = centroidMz.Count - 1;
+                if (last >= 0 && runMz[c] - centroidMz[last] < minSeparation)
+                {
+                    double sum = centroidIntensity[last] + runIntensity[c];
+                    centroidMz[last] = (centroidMz[last] * centroidIntensity[last] + runMz[c] * runIntensity[c]) / sum;
+                    centroidIntensity[last] = sum;
+                    continue;
+                }
+                centroidMz.Add(runMz[c]);
+                centroidIntensity.Add(runIntensity[c]);
             }
         }
 
@@ -91,12 +137,28 @@ namespace pwiz.Osprey.Demux
             return gaps[gaps.Count / 2];
         }
 
+        /// <summary>The sampling step of a profile uniform in m/z: the median gap between consecutive points.</summary>
+        private static double LinearStep(IReadOnlyList<double> mz, int n)
+        {
+            var gaps = new List<double>(n);
+            for (int i = 1; i < n; i++)
+            {
+                double gap = mz[i] - mz[i - 1];
+                if (gap > 0)
+                    gaps.Add(gap);
+            }
+            if (gaps.Count == 0)
+                return double.MaxValue;
+            gaps.Sort(); // Array.Sort OK: primitive values sorted only for their median
+            return gaps[gaps.Count / 2];
+        }
+
         /// <summary>
         /// Adds the centroids of points [start, end): one per peak, the run split at each valley
-        /// deeper than <see cref="VALLEY_FRACTION"/> of the smaller of the maxima it separates.
+        /// deeper than <paramref name="valleyFraction"/> of the smaller of the maxima it separates.
         /// </summary>
         private static void AddRun(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, int start, int end,
-            List<double> centroidMz, List<double> centroidIntensity)
+            double valleyFraction, List<double> centroidMz, List<double> centroidIntensity)
         {
             int segmentStart = start;
             int top = -1;  // the current segment's highest maximum
@@ -115,7 +177,7 @@ namespace pwiz.Osprey.Demux
                         if (intensity[v] < intensity[valley])
                             valley = v;
                     }
-                    if (intensity[valley] < VALLEY_FRACTION * Math.Min(intensity[top], intensity[k]))
+                    if (intensity[valley] < valleyFraction * Math.Min(intensity[top], intensity[k]))
                     {
                         Emit(mz, intensity, segmentStart, valley + 1, centroidMz, centroidIntensity);
                         segmentStart = valley + 1;
