@@ -46,13 +46,12 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--centroid-output SEP] [--thin N]" +
+            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--thin N]" +
             @" [--remultiplex K]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
-            double centroidSeparation = 0;
             int remultiplex = 0;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false;
@@ -220,11 +219,6 @@ namespace pwiz.Osprey.DemuxTool
                         options.Elution ??= new ElutionDemuxParams();
                         options.Elution.FwhmSeconds = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
-                    case @"--centroid-output":
-                        // Staggered profile input on a uniform m/z grid (ion trap): centroid each demultiplexed spectrum,
-                        // centroids closer than this many Th merged.
-                        centroidSeparation = double.Parse(value, CultureInfo.InvariantCulture);
-                        break;
                     case @"--remultiplex":
                         // A narrow-window run summed into K-fold staggered windows, written without demultiplexing: the
                         // input of a demultiplexing test whose truth is the narrow run.
@@ -364,13 +358,6 @@ namespace pwiz.Osprey.DemuxTool
             {
                 Console.WriteLine(@"Warning: MS1 passes through as read (profile, for profile input); only a vendor file is centroided.");
             }
-            else if (staggered && profile && centroidSeparation > 0 && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
-            {
-                // Staggered profile demultiplexing centroids its own MS2 output; MS1 takes the vendor's centroids, so
-                // the file written holds only centroids.
-                spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1");
-                Console.WriteLine(@"Vendor centroiding (MS1; MS2 profile, demultiplexed then centroided): {0}", input);
-            }
             else if (!profile && options.JointMs1 && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
                 // The channel solve on the vendor's MS2 centroids, MS1 centroided by the joint solve.
@@ -409,7 +396,7 @@ namespace pwiz.Osprey.DemuxTool
             }
             if (staggered)
             {
-                stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out, centroidSeparation);
+                stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out);
                 msd.Run.SpectrumList = stepped;
                 Console.WriteLine(@"Indexed in {0:F0} s; writing {1} spectra", stopwatch.Elapsed.TotalSeconds, stepped.Count);
             }
