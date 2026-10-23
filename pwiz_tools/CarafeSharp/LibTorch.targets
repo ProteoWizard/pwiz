@@ -1,10 +1,11 @@
 <Project>
 
   <!-- The libtorch native runtime for projects that opt in with UseLibTorch=true: CarafeSharp's
-       executable and test project, and Osprey's, whose executable predicts libraries through
-       CarafeSharp.Tasks. The managed TorchSharp reference is in CarafeSharp.Models, which needs
-       no native files to compile. The backend properties come from LibTorch.props, which both
-       trees' Directory.Build.props import. -->
+       executable and test project, which let TorchSharp load the natives it finds beside itself.
+       Osprey and Skyline choose their runtime when they run instead (LibTorchRuntimeLayout.targets)
+       and opt in to the models alone with UseCarafeModels=true. The managed TorchSharp reference is
+       in CarafeSharp.Models, which needs no native files to compile. The backend properties come
+       from LibTorch.props, which both trees' Directory.Build.props import. -->
   <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cpu' AND '$(CarafeSharpTargetIsWindows)' == 'true'">
     <PackageReference Include="libtorch-cpu-win-x64" Version="$(LibTorchVersion)" />
   </ItemGroup>
@@ -21,7 +22,7 @@
   <!-- The AlphaPeptDeep v1 pretrained models Carafe 2.2 uses, committed in models/alphapeptdeep-v1
        (its README.md has the provenance), placed beside the executable and the test assembly, where
        PretrainedModels.DefaultPath looks for them. -->
-  <ItemGroup Condition="'$(UseLibTorch)' == 'true'">
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' OR '$(UseCarafeModels)' == 'true'">
     <None Include="$(MSBuildThisFileDirectory)models\alphapeptdeep-v1\pretrained_models.zip"
           Link="models\alphapeptdeep-v1\pretrained_models.zip"
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
@@ -32,7 +33,7 @@
 
   <!-- The Chronologer retention-time model, committed in models/chronologer-20220601193755 (its
        README.md has the provenance), placed where ChronologerFiles.DefaultDirectory looks for it. -->
-  <ItemGroup Condition="'$(UseLibTorch)' == 'true'">
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' OR '$(UseCarafeModels)' == 'true'">
     <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\Chronologer_20220601193755.pt"
           Link="models\chronologer-20220601193755\Chronologer_20220601193755.pt"
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />

@@ -7,9 +7,10 @@
     <GenerateProgramFile>true</GenerateProgramFile>
     <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>
-    <!-- The libtorch native runtime and the pretrained models, so the one-command library build
-         runs in-process in SubsetPipelineTest. -->
-    <UseLibTorch>true</UseLibTorch>
+    <!-- The libtorch runtime (torch\cpu) and the pretrained models come with the Osprey project's
+         output, so the one-command library build runs in-process in SubsetPipelineTest the way
+         Osprey.exe runs it: the runtime chosen and loaded by LibTorchRuntimes, never found beside
+         TorchSharp.dll. -->
   </PropertyGroup>
 
   <ItemGroup>

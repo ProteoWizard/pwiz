@@ -730,7 +730,160 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_USAGE___0_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to no NVIDIA GPU was found; predicting on the GPU needs an NVIDIA GPU and its driver.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_no_NVIDIA_GPU_was_found__predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_no_NVIDIA_GPU_was_found__predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the NVIDIA CUDA runtime is not installed in {0}; run {1} to download it (about {2} GB).
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_CUDA_runtime_is_not_installed_in__0___run__1__to_download_it__about__2__GB_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_CUDA_runtime_is_not_installed_in__0___run__1__to_download_it__about__2__GB_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the NVIDIA driver supports CUDA {0}, but predicting on the GPU needs a driver for CUDA {1} or later.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the {0} has compute capability {1}, but predicting on the GPU needs {2} or later.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_the__0__has_compute_capability__1___but_predicting_on_the_GPU_needs__2__or_later {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_the__0__has_compute_capability__1___but_predicting_on_the_GPU_needs__2__or_later", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to this build of Osprey lists no NVIDIA CUDA runtime packages.
+        /// </summary>
+        public static string OspreyTorchRuntimes_DescribeGpuUnavailable_this_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_DescribeGpuUnavailable_this_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the NVIDIA CUDA runtime, package {0} of {1}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_GetDownloadingMessage_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_GetDownloadingMessage_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installing the NVIDIA CUDA runtime.
+        /// </summary>
+        public static string OspreyTorchRuntimes_GetInstallingMessage_Installing_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_GetInstallingMessage_Installing_the_NVIDIA_CUDA_runtime", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the NVIDIA CUDA runtime (about {0} GB) into {1}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_Downloading_the_NVIDIA_CUDA_runtime__about__0__GB__into__1_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_Downloading_the_NVIDIA_CUDA_runtime__about__0__GB__into__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to install the NVIDIA CUDA runtime: {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_Failed_to_install_the_NVIDIA_CUDA_runtime___0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_Failed_to_install_the_NVIDIA_CUDA_runtime___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installed the NVIDIA CUDA runtime in {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_Installed_the_NVIDIA_CUDA_runtime_in__0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_Installed_the_NVIDIA_CUDA_runtime_in__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NVIDIA CUDA runtime is already installed in {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_The_NVIDIA_CUDA_runtime_is_already_installed_in__0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_The_NVIDIA_CUDA_runtime_is_already_installed_in__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This build of Osprey lists no NVIDIA CUDA runtime packages to download..
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_This_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages_to_download_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_This_build_of_Osprey_lists_no_NVIDIA_CUDA_runtime_packages_to_download_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This computer cannot predict on the GPU ({0}); the runtime is installed all the same, for a computer that can..
+        /// </summary>
+        public static string OspreyTorchRuntimes_Install_This_computer_cannot_predict_on_the_GPU___0___the_runtime_is_installed_all_the_same__for_a_computer_that_can_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Install_This_computer_cannot_predict_on_the_GPU___0___the_runtime_is_installed_all_the_same__for_a_computer_that_can_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NVIDIA GPU.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_NVIDIA_GPU", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the CPU.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_Predicting_on_the_CPU {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_Predicting_on_the_CPU", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the CPU: {0}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_Predicting_on_the_CPU___0_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_Predicting_on_the_CPU___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the GPU ({0}) with the NVIDIA CUDA runtime in {1}.
+        /// </summary>
+        public static string OspreyTorchRuntimes_Load_Predicting_on_the_GPU___0___with_the_NVIDIA_CUDA_runtime_in__1_ {
+            get {
+                return ResourceManager.GetString("OspreyTorchRuntimes_Load_Predicting_on_the_GPU___0___with_the_NVIDIA_CUDA_runtime_in__1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to off.
         /// </summary>

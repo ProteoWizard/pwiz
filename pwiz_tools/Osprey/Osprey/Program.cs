@@ -288,6 +288,10 @@ namespace pwiz.Osprey
                 try
                 {
                     config = OspreyCommandArgs.ParseArgs(args, out librarySettings);
+                    // --install-cuda-runtime is a command of its own: the download, then exit, with
+                    // no inputs, no output and no search to validate.
+                    if (config.LibraryBuild.InstallCudaRuntime)
+                        return new OspreyTorchRuntimes(config.LibraryBuild).Install();
                     CanonicalizeOutputPaths(config);
                 }
                 catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException ||

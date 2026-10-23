@@ -115,6 +115,7 @@ namespace pwiz.Osprey
         // tuning phase takes it off, since the tuning predicts no library of its own), else the one
         // predicted with the pretrained models or --model.
         private readonly LibrarySettings _outputLibrary;
+        private bool _torchLoaded;
 
         /// <param name="config">The run's configuration, whose <see cref="OspreyConfig.LibraryBuild"/> is on.</param>
         /// <param name="settings">What to predict and tune, as the command line interpreted it.</param>
@@ -534,10 +535,27 @@ namespace pwiz.Osprey
         }
 
         /// <summary>One library phase through the shared driver, with Osprey's <c>[TASK]</c> lines.</summary>
-        private static int RunPhase(PipelineTask task)
+        private int RunPhase(PipelineTask task)
         {
+            LoadTorchRuntime();
             var tasks = new[] { task };
             return new LibraryPhaseDriver().Run(tasks, new CarafeContext(tasks, CommandOutput.Out, CommandOutput.Out));
+        }
+
+        /// <summary>
+        /// Loads the libtorch runtime the library phases predict with, before the first of them, and
+        /// settles the device they run on from the runtime loaded: a process keeps the first libtorch
+        /// it loads, so the choice is made once, here, and logged.
+        /// </summary>
+        private void LoadTorchRuntime()
+        {
+            if (_torchLoaded)
+                return;
+            string device = new OspreyTorchRuntimes(_config.LibraryBuild).Load(_config.LibraryBuild.Device);
+            _settings.Library.Device = device;
+            if (_settings.Training != null)
+                _settings.Training.Device = device;
+            _torchLoaded = true;
         }
 
         /// <summary>

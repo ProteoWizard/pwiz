@@ -145,6 +145,9 @@
   <data name="_input_list" xml:space="preserve">
     <value>File of input paths, one per line (# comments ignored). Bounded alternative to a long {0} list.</value>
   </data>
+  <data name="_install_cuda_runtime" xml:space="preserve">
+    <value>Download the NVIDIA CUDA runtime (about {0} GB from nuget.org, checked against the hashes this build was tested with) into the {1} folder and exit, so that {2} can predict on the GPU. Needs nothing else on the command line.</value>
+  </data>
   <data name="_library" xml:space="preserve">
     <value>Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or, for comparing with DIA-NN, a library in the {1} format DIA-NN imports, such as Java Carafe writes for it. Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library's own decoys are used: a {0} pairs them from its own table, and a {1} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pairing manifest) or by composition.</value>
   </data>
@@ -205,6 +208,9 @@
   <data name="_timestamp" xml:space="preserve">
     <value>Prefix each output line with {0}</value>
   </data>
+  <data name="_torch_runtimes" xml:space="preserve">
+    <value>The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: {2}). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder.</value>
+  </data>
   <data name="_training_export" xml:space="preserve">
     <value>Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing.</value>
   </data>
@@ -233,7 +239,7 @@
     <value>With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) instead of the pretrained models. With {2}, the tuning starts from it.</value>
   </data>
   <data name="_device" xml:space="preserve">
-    <value>With {0}: where the library is predicted, {1} (falling back to the CPU with a warning when no CUDA runtime is present) or {2} (default: {1}).</value>
+    <value>With {0}: where the library is predicted, {1} (default: the GPU when this computer has an NVIDIA GPU that can use the CUDA runtime and the runtime is installed, see {4}, else the CPU), {2} (the GPU, falling back to the CPU with the reason logged) or {3}. The log names the device every library phase ran on.</value>
   </data>
   <data name="_entrapment" xml:space="preserve">
     <value>With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1), shuffled from the target or, with {2}, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as {3}.</value>

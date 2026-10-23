@@ -77,8 +77,22 @@ namespace pwiz.Osprey.Core
         /// <summary>A saved fine-tuned model to predict with (<c>--model</c>), or null for the pretrained models.</summary>
         public string ModelPath { get; set; }
 
-        /// <summary>Where the library is predicted (<c>--device</c>: gpu or cpu), or null for CarafeSharp's default.</summary>
+        /// <summary>
+        /// Where the library is predicted (<c>--device</c>: auto, gpu or cpu), or null for auto: the GPU
+        /// when this computer has one that can use the NVIDIA CUDA runtime and the runtime is installed,
+        /// else the CPU. The device the phases run on is settled when the runtime is loaded.
+        /// </summary>
         public string Device { get; set; }
+
+        /// <summary>
+        /// The folder of installed libtorch runtimes (<c>--torch-runtimes</c>): where the CUDA runtime
+        /// is downloaded to and looked for. Null for Osprey's own folder under the user's local
+        /// application data; Skyline passes its Tools folder, so one download serves both.
+        /// </summary>
+        public string TorchRuntimesDirectory { get; set; }
+
+        /// <summary>Download and install the NVIDIA CUDA runtime, then exit (<c>--install-cuda-runtime</c>).</summary>
+        public bool InstallCudaRuntime { get; set; }
 
         /// <summary>Add entrapment peptides to the library (<c>--entrapment</c>).</summary>
         public bool Entrapment { get; set; }

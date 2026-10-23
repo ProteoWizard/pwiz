@@ -1,0 +1,42 @@
+<Project>
+
+  <!-- The libtorch runtime layout of an application that chooses its libtorch when it runs, rather
+       than letting TorchSharp load the one beside it: the CPU runtime ships in torch\cpu and the CUDA
+       runtime (about 2.5 GB to download, 4 GB installed) is downloaded from nuget.org the first time
+       the application predicts on a computer with a GPU that can use it. Neither is beside the
+       executable, where TorchSharp would find it by itself; the application loads the one it chooses
+       (pwiz.CarafeSharp.Models.LibTorchRuntime, through pwiz.CarafeSharp.Tasks.LibTorchRuntimes).
+       The CUDA package is restored only to write the list of its part packages and their hashes
+       (LibTorchPackageSet.targets), which the download is checked against. Skyline and Osprey import
+       this; CarafeSharp.exe and the test projects keep TorchSharp's own loading (UseLibTorch in
+       LibTorch.targets). The runtime is the build host's, or the RuntimeIdentifier's: win-x64 or
+       linux-x64. -->
+  <Import Project="$(MSBuildThisFileDirectory)LibTorch.props" Condition="'$(LibTorchVersion)' == ''" />
+
+  <PropertyGroup>
+    <LibTorchRuntimeRid Condition="'$(CarafeSharpTargetIsWindows)' == 'true'">win-x64</LibTorchRuntimeRid>
+    <LibTorchRuntimeRid Condition="'$(CarafeSharpTargetIsWindows)' != 'true'">linux-x64</LibTorchRuntimeRid>
+    <LibTorchCpuPackageId>libtorch-cpu-$(LibTorchRuntimeRid)</LibTorchCpuPackageId>
+    <LibTorchPackageSetId>libtorch-cuda-12.8-$(LibTorchRuntimeRid)</LibTorchPackageSetId>
+    <LibTorchPackageSetVersion>$(LibTorchVersion)</LibTorchPackageSetVersion>
+    <LibTorchPackageSetFile>torch\$(LibTorchPackageSetId).packages.txt</LibTorchPackageSetFile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)LibTorchPackageSet.targets" />
+
+  <ItemGroup>
+    <PackageReference Include="$(LibTorchCpuPackageId)" Version="$(LibTorchVersion)" ExcludeAssets="all" />
+    <PackageReference Include="$(LibTorchPackageSetId)" Version="$(LibTorchVersion)" ExcludeAssets="all" />
+    <Content Include="$(NuGetPackageRoot)$(LibTorchCpuPackageId)\$(LibTorchVersion)\runtimes\$(LibTorchRuntimeRid)\native\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>torch\cpu\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)$(LibTorchCpuPackageId)\$(LibTorchVersion)\LICENSE-LIBTORCH.txt"
+             Condition="Exists('$(NuGetPackageRoot)$(LibTorchCpuPackageId)\$(LibTorchVersion)\LICENSE-LIBTORCH.txt')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>torch\cpu\LICENSE-LIBTORCH.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>
