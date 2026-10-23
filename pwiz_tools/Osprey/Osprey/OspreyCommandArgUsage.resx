@@ -209,7 +209,7 @@
     <value>Prefix each output line with {0}</value>
   </data>
   <data name="_torch_runtimes" xml:space="preserve">
-    <value>The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: {2}). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder.</value>
+    <value>The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: Osprey\torch under the user's local application data folder). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder.</value>
   </data>
   <data name="_training_export" xml:space="preserve">
     <value>Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing.</value>

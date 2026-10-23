@@ -439,7 +439,7 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: {2}). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder..
+        ///   Looks up a localized string similar to The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: Osprey\torch under the user's local application data folder). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder..
         /// </summary>
         public static string _torch_runtimes {
             get {

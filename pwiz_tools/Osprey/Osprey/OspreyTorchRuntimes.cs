@@ -201,8 +201,9 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Writes the download's progress to the log: each message once, then the percent at every
-        /// tenth, since a 2.5 GB download reports thousands of times.
+        /// Writes the download's progress to the log: each package's message once, then the overall
+        /// percent at every tenth. The HTTP client reports every chunk, appending the bytes so far
+        /// to the message on lines of its own, so the message's first line is what names the package.
         /// </summary>
         private sealed class ConsoleProgressMonitor : IProgressMonitor
         {
@@ -215,11 +216,11 @@ namespace pwiz.Osprey
 
             public UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
-                if (status.Message != _message)
+                string message = status.Message?.Split('\n')[0].TrimEnd();
+                if (!string.IsNullOrEmpty(message) && message != _message)
                 {
-                    _message = status.Message;
-                    _lastTenth = 0;
-                    Program.LogInfo(_message);
+                    _message = message;
+                    Program.LogInfo(message);
                 }
                 int tenth = status.PercentComplete / 10;
                 if (tenth > _lastTenth && status.PercentComplete < 100)
