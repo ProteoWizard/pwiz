@@ -27,7 +27,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Proteome;
@@ -83,22 +82,22 @@ namespace pwiz.Osprey
         // hands a flag a value or a fixed-list argument a value it does not list.
         static OspreyCommandArgs()
         {
-            // The grammar and the provider are process-wide, and CarafeSharp's declarations
-            // install theirs when their type initializes. Osprey hosts those declarations, so its
-            // field initializers already touch that type before this body runs; run its type
-            // initializer here explicitly, so Osprey's grammar and provider are installed LAST
-            // whatever order the fields are initialized in.
-            RuntimeHelpers.RunClassConstructor(typeof(CarafeCommandLine).TypeHandle);
-            ArgUsage.Grammar = GRAMMAR;
-            ArgUsage.Provider = new OspreyArgUsageProvider();
-            // Osprey's grammar is space-separated (--name value); --name=value is accepted too, but
-            // the generated help renders "--name <value>", the form every example uses, and a
-            // token built from an instance is "--name value" for the same reason.
-            ArgUsage.ArgumentValueSeparator = @" ";
-            // ParseInt / ParseDouble read numbers in the invariant culture, so a number a
-            // test joins to an argument must render that way too. When Osprey's locale
-            // handling is designed, this moves with the parsers.
-            ArgUsage.ValueFormatProvider = CultureInfo.InvariantCulture;
+            // The settings are process-wide, and Osprey owns its process. The CarafeSharp
+            // declarations Osprey hosts parse under Osprey's grammar; Carafe's own is installed
+            // only by CarafeSharp.exe.
+            ArgUsage.Install(new ArgUsageSettings
+            {
+                Grammar = GRAMMAR,
+                Provider = new OspreyArgUsageProvider(),
+                // Osprey's grammar is space-separated (--name value); --name=value is accepted too,
+                // but the generated help renders "--name <value>", the form every example uses, and
+                // a token built from an instance is "--name value" for the same reason.
+                ArgumentValueSeparator = @" ",
+                // ParseInt / ParseDouble read numbers in the invariant culture, so a number a test
+                // joins to an argument must render that way too. When Osprey's locale handling is
+                // designed, this moves with the parsers.
+                ValueFormatProvider = CultureInfo.InvariantCulture,
+            });
         }
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
