@@ -34,6 +34,7 @@ using namespace System::Collections::Generic;
 #include "WiffFile.hpp"
 #endif
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include <algorithm>
 using namespace SCIEX::Apis::Data::v1;
 using namespace SCIEX::Apis::Data::v1::Contracts;
 using namespace SCIEX::Apis::Data::v1::Types;
@@ -170,6 +171,10 @@ struct Experiment2Impl : public Experiment
     virtual void getTIC(std::vector<double>& times, std::vector<double>& intensities) const;
     virtual void getBPC(std::vector<double>& times, std::vector<double>& intensities) const;
 
+    /// The monitored m/z of each mass range of a "Q1MI" experiment, in mass range order: the
+    /// centre of its isolation window. Empty for any other experiment, or if a range has none.
+    const vector<double>& q1MultipleIonMzs() const;
+
     const WiffFile2Impl* wiffFile_;
     gcroot<IExperiment^> msExperiment;
     int sample, period, experiment;
@@ -189,6 +194,8 @@ struct Experiment2Impl : public Experiment
     void initializeBPC() const;
     mutable bool initializedTIC_;
     mutable bool initializedBPC_;
+    mutable bool initializedQ1MultipleIonMzs_;
+    mutable vector<double> q1MultipleIonMzs_;
     mutable pwiz::util::BinaryData<double> cycleTimes_;
     mutable pwiz::util::BinaryData<double> cycleIntensities_;
     //mutable vector<double> basePeakMZs_;
@@ -217,7 +224,7 @@ struct Spectrum2Impl : public Spectrum
 
     virtual double getStartTime() const { return scanTime; }
 
-    virtual bool getDataIsContinuous() const { return true; }
+    virtual bool getDataIsContinuous() const { return experiment->experimentType != SIM && experiment->experimentType != MRM; }
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const;
     virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
@@ -288,6 +295,16 @@ struct Spectrum2Impl : public Spectrum
 
         lastSpectrum = msSpectrum;
         return msSpectrum;
+    }
+
+    /// A SIM ("Q1MI") spectrum is one measured intensity per monitored ion, already a centroid:
+    /// the SDK's centroider turns it into an empty spectrum, and framing zeros would break the
+    /// point-per-mass-range m/z mapping, so it is never asked for either.
+    ISpectrum^ getSpectrumForData(bool doCentroid, bool ignoreZeroIntensityPoints) const
+    {
+        if (experiment->experimentType == SIM)
+            return getSpectrumWithOptions(false, false);
+        return getSpectrumWithOptions(!ignoreZeroIntensityPoints, doCentroid);
     }
 
     ISpectrum^ getLastSpectrum() const
@@ -537,7 +554,8 @@ ExperimentPtr WiffFile2Impl::getExperiment(int sample, int period, int experimen
 
 
 Experiment2Impl::Experiment2Impl(const WiffFile2Impl* wiffFile, int sample, int period, int experiment)
-: wiffFile_(wiffFile), sample(sample), period(period), experiment(experiment), initializedTIC_(false), initializedBPC_(false)
+: wiffFile_(wiffFile), sample(sample), period(period), experiment(experiment), initializedTIC_(false), initializedBPC_(false),
+  initializedQ1MultipleIonMzs_(false)
 {
     try
     {
@@ -587,9 +605,35 @@ void Experiment2Impl::initializeBPC() const
     CATCH_AND_FORWARD
 }
 
+const vector<double>& Experiment2Impl::q1MultipleIonMzs() const
+{
+    if (initializedQ1MultipleIonMzs_)
+        return q1MultipleIonMzs_;
+
+    try
+    {
+        // Marked initialized only once the SDK has answered, so a failed read is retried.
+        vector<double> mzs;
+        auto massRanges = msExperiment->ScanType == "Q1MI" ? (cli::array<IMassRangeInfo^>^) msExperiment->MassRanges : nullptr;
+        for (int i = 0; massRanges != nullptr && i < massRanges->Length; ++i)
+        {
+            if (massRanges[i] == nullptr || massRanges[i]->IsolationWindow == nullptr)
+            {
+                mzs.clear();
+                break;
+            }
+            mzs.push_back((massRanges[i]->IsolationWindow->Start + massRanges[i]->IsolationWindow->End) / 2);
+        }
+        q1MultipleIonMzs_.swap(mzs);
+        initializedQ1MultipleIonMzs_ = true;
+        return q1MultipleIonMzs_;
+    }
+    CATCH_AND_FORWARD
+}
+
 size_t Experiment2Impl::getSIMSize() const
 {
-    try {return 0;} CATCH_AND_FORWARD
+    try {return q1MultipleIonMzs().size();} CATCH_AND_FORWARD
 }
 
 void Experiment2Impl::getSIM(size_t index, Target& target) const
@@ -599,19 +643,19 @@ void Experiment2Impl::getSIM(size_t index, Target& target) const
         if (experimentType != SIM)
             return;
 
-        if (index >= 0)
+        const vector<double>& mzs = q1MultipleIonMzs();
+        if (index >= mzs.size())
             throw std::out_of_range("[Experiment::getSIM()] index out of range");
 
-        /*SIMMassRange^ transition = (SIMMassRange^) msExperiment->Details->MassRangeInfo[index];
-
+        // The SDK's mass ranges carry no dwell time, collision energy, schedule or compound name.
         target.type = TargetType_SIM;
-        target.Q1 = transition->Mass;
-        target.dwellTime = transition->DwellTime;
-        // TODO: store RTWindow?
-
-        // TODO: use NaN to indicate these values should be considered missing?
+        target.Q1 = mzs[index];
+        target.Q3 = 0;
+        target.dwellTime = 0;
         target.collisionEnergy = 0;
-        target.declusteringPotential = 0;*/
+        target.declusteringPotential = 0;
+        target.startTime = target.endTime = 0;
+        target.compoundID.clear();
     }
     CATCH_AND_FORWARD
 }
@@ -646,8 +690,34 @@ void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times
 {
     try
     {
-        if (index >= 0 && index >= 0)
+        // Only "Q1MI" SIM experiments have transitions on wiff2.
+        if (index >= getSIMSize())
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
+
+        auto xicRequest = wiffFile_->DataReader()->RequestFactory->CreateMrmXicReadRequest();
+        xicRequest->SampleId = wiffFile_->msSample->Id;
+        xicRequest->ExperimentId = msExperiment->Id;
+        auto massIndexes = gcnew List<int>();
+        massIndexes->Add((int) index);
+        xicRequest->MassIndexes = massIndexes;
+
+        times.clear();
+        intensities.clear();
+        basePeakX = basePeakY = 0;
+        auto xicReader = wiffFile_->DataReader()->GetMrmXic(xicRequest);
+        if (!xicReader->MoveNext())
+            return;
+        auto xic = xicReader->GetCurrent();
+        if (xic == nullptr || xic->XValues == nullptr || xic->YValues == nullptr)
+            return;
+        ToBinaryData(xic->XValues, times);
+        ToBinaryData(xic->YValues, intensities);
+        for (size_t i = 0; i < intensities.size(); ++i)
+            if (intensities[i] > basePeakY)
+            {
+                basePeakX = times[i];
+                basePeakY = intensities[i];
+            }
     }
     CATCH_AND_FORWARD
 }
@@ -661,6 +731,20 @@ void Experiment2Impl::getAcquisitionMassRange(double& startMz, double& stopMz) c
             auto massRanges = (cli::array<IMassRangeInfo^>^) msExperiment->MassRanges;
             startMz = massRanges[0]->SelectionWindow->Start;
             stopMz = massRanges[0]->SelectionWindow->End;
+
+            // A "Q1MI" experiment's selection window is unbounded (0 to double.MaxValue); report
+            // the span of the isolation windows Q1 actually transmitted.
+            const vector<double>& mzs = q1MultipleIonMzs();
+            if (!mzs.empty() && stopMz >= System::Double::MaxValue)
+            {
+                startMz = massRanges[0]->IsolationWindow->Start;
+                stopMz = massRanges[0]->IsolationWindow->End;
+                for (int i = 1; i < massRanges->Length; ++i)
+                {
+                    startMz = (std::min)(startMz, (double) massRanges[i]->IsolationWindow->Start);
+                    stopMz = (std::max)(stopMz, (double) massRanges[i]->IsolationWindow->End);
+                }
+            }
         }
         else
             startMz = stopMz = 0;
@@ -681,10 +765,15 @@ ExperimentType Experiment2Impl::getExperimentType() const
 {
     try
     {
+        // "TOFMS" / "TOFMSMS" are what the ZenoTOF writes. Triple-quad style acquisitions (e.g. a
+        // compound optimization) report "ProductIon" for their MS2 experiments and "Q1MI" (Q1
+        // multiple ion) for single-point Q1 monitoring, which is SIM, as in the legacy WIFF SDK.
         if (msExperiment->ScanType == "TOFMS")
             return ExperimentType::MS;
-        if (msExperiment->ScanType == "TOFMSMS")
+        if (msExperiment->ScanType == "TOFMSMS" || msExperiment->ScanType == "ProductIon")
             return ExperimentType::Product;
+        if (msExperiment->ScanType == "Q1MI")
+            return ExperimentType::SIM;
         if (msExperiment->ScanType == "MRM")
             return ExperimentType::MRM;
         if (msExperiment->ScanType == "SIM")
@@ -836,7 +925,7 @@ size_t Spectrum2Impl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoint
 {
     try
     {
-        return getSpectrumWithOptions(!ignoreZeroIntensityPoints, doCentroid)->XValues->Length;
+        return getSpectrumForData(doCentroid, ignoreZeroIntensityPoints)->XValues->Length;
     }
     CATCH_AND_FORWARD
 }
@@ -845,9 +934,16 @@ void Spectrum2Impl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz,
 {
     try
     {
-        auto spectrum = getSpectrumWithOptions(!ignoreZeroIntensityPoints, doCentroid);
+        auto spectrum = getSpectrumForData(doCentroid, ignoreZeroIntensityPoints);
         ToBinaryData(spectrum->XValues, mz);
         ToBinaryData(spectrum->YValues, intensities);
+
+        // A "Q1MI" (Q1 multiple ion) spectrum has one point per mass range, which the SDK reports
+        // at m/z 0; put each at its ion's m/z. Anything that does not fit that shape is left as is.
+        const vector<double>& ionMzs = experiment->q1MultipleIonMzs();
+        if (!ionMzs.empty() && ionMzs.size() == mz.size() &&
+            std::all_of(mz.begin(), mz.end(), [](double x) { return x == 0; }))
+            std::copy(ionMzs.begin(), ionMzs.end(), mz.begin());
     }
     CATCH_AND_FORWARD
 }

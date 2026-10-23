@@ -581,8 +581,12 @@ namespace seems
         {
             get
             {
+                // A line needs two points: a profile spectrum of a single point would draw
+                // nothing at all, so draw it as a stick. Element is metadata only, where a reader
+                // may report 0 for an unknown point count, so only an explicit 1 counts.
                 CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
-                if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum )
+                if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum &&
+                    Element.defaultArrayLength != 1 )
                     return pwiz.MSGraph.MSGraphItemDrawMethod.line;
                 else
                     return pwiz.MSGraph.MSGraphItemDrawMethod.stick;

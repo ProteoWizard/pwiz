@@ -284,10 +284,11 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 
             ExperimentType experimentType = msExperiment->getExperimentType();
 
+            // wiff2 SIM is read only from "Q1MI" experiments, the ones with SIM targets
             if (bal::iends_with(wifffile_->getWiffPath(), "wiff2") &&
-                (experimentType == MRM || experimentType == SIM))
+                (experimentType == MRM || (experimentType == SIM && msExperiment->getSIMSize() == 0)))
             {
-                warn_once("WARNING: the WIFF2 reader does not support SIM/MRM chromatograms or spectra; point at the WIFF file instead");
+                warn_once("WARNING: the WIFF2 reader does not support MRM or non-Q1MI SIM chromatograms or spectra; point at the WIFF file instead");
                 continue;
             }
 
