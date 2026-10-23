@@ -299,9 +299,9 @@ namespace pwiz.Skyline.SettingsUI
             //
             resources.ApplyResources(this.groupAlphaOptions, "groupAlphaOptions");
             this.groupAlphaOptions.Controls.Add(this.labelModWarning);
-            this.groupAlphaOptions.Controls.Add(this.cbUseGpu);
             this.groupAlphaOptions.Controls.Add(this.labelCarafeModel);
             this.groupAlphaOptions.Controls.Add(this.comboCarafeModel);
+            this.groupAlphaOptions.Controls.Add(this.cbUseGpu);
             this.groupAlphaOptions.Name = "groupAlphaOptions";
             this.groupAlphaOptions.TabStop = false;
             //
