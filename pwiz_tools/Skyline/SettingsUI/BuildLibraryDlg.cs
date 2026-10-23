@@ -356,10 +356,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (!runtimes.IsCudaDriverFound)
             {
-                using var longWaitDlg = new LongWaitDlg(allowCancel: false)
-                {
-                    Message = SettingsUIResources.BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU
-                };
+                using var longWaitDlg = new LongWaitDlg(allowCancel: false);
+                longWaitDlg.Message = SettingsUIResources.BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU;
                 longWaitDlg.PerformWork(this, 500, () =>
                 {
                     var unused = runtimes.CudaDriver;

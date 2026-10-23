@@ -107,14 +107,18 @@ namespace pwiz.CarafeSharp.Models
                     continue;
                 }
                 // The last part must be a plain file name: one with a separator the split did not see
-                // (a backslash) or a parent reference would extract outside the staging folder
-                string fileName = parts[3];
-                if (fileName != Path.GetFileName(fileName) || fileName == @"." || fileName == @"..")
+                // (a backslash) or a parent reference would extract outside the staging folder, so the
+                // destination is checked to lie inside it as well
+                string fileName = Path.GetFileName(parts[3]);
+                string stagingDirectory = Path.GetFullPath(StagingDirectory);
+                string destination = Path.GetFullPath(Path.Combine(stagingDirectory, fileName));
+                if (fileName != parts[3] || fileName == @"." || fileName == @".." ||
+                    !destination.StartsWith(stagingDirectory + Path.DirectorySeparatorChar, StringComparison.Ordinal))
                 {
                     throw new InvalidDataException(string.Format(@"The package {0} holds {1}, which is not a file name.",
                         package, entry.FullName));
                 }
-                entry.ExtractToFile(Path.Combine(StagingDirectory, fileName), true);
+                entry.ExtractToFile(destination, true);
             }
         }
 

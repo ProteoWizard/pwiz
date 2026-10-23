@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var dict = structural ? DictStructuralModNames : DictIsotopeModNames;
             var hiddenDict = structural ? DictHiddenStructuralModNames : DictHiddenIsotopeModNames;
-            var mods = dict.Values.Concat(hiddenDict.Values);
+            var mods = dict.Values.Concat(hiddenDict.Values).ToArray();
             var match = mods.FirstOrDefault(mod => mod.Equivalent(modToMatch));
             // A loss-only modification (Water Loss (D, E, S, T)) has nothing left to match without its losses
             if (match != null || !ignoreLosses || !modToMatch.HasMod)

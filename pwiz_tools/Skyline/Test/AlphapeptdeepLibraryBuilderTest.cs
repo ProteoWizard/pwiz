@@ -135,7 +135,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetWarningMods"/>
+        /// Test of <see cref="AbstractDeepLibraryBuilder.GetWarningMods()"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> that may generate warnings about modifications.</param>
         /// <param name="expectedWarningMods">List of modifications for which warnings should be generated.</param>

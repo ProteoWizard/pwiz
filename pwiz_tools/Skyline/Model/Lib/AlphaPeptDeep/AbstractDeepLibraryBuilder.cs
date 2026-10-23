@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // neutral losses, which the models do not predict, so an Oxidation (M) defined with its own
             // losses is UniMod's Oxidation (M) for prediction
             return MATCHED_UNIMODS.GetOrAdd(staticMod,
-                mod => UniMod.FindMatchingStaticMod(mod.ChangeRelativeRT(RelativeRT.Matching), true, true));
+                documentMod => UniMod.FindMatchingStaticMod(documentMod.ChangeRelativeRT(RelativeRT.Matching), true, true));
         }
 
         private static string UnimodIdWithName(StaticMod uniModMod)
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         /// <summary>
         /// The warning about building with modifications the models do not know or support only in
-        /// part, from <see cref="GetWarningMods(SrmDocument,LibraryBuilderModificationSupport)"/>, or
+        /// part, from the static <c>GetWarningMods</c> over a document and a modification support, or
         /// null when there are none. With <paramref name="ask"/> it ends with the question a build
         /// asks before it starts; without, it is the statement alone, for a tooltip.
         /// </summary>
