@@ -6,12 +6,15 @@
     <AssemblyName>Osprey</AssemblyName>
     <!-- Declares longPathAware for native code in the process; see the file's comment. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- The libtorch native runtime and CarafeSharp's pretrained models, for the one-command
-         library build (the fasta option), which predicts the library in-process through
-         CarafeSharp.Tasks. They load only when a library is predicted; a search of a given
-         library never touches them. -->
-    <UseLibTorch>true</UseLibTorch>
+    <!-- CarafeSharp's pretrained models, for the one-command library build (the fasta option),
+         which predicts the library in-process through CarafeSharp.Tasks. The libtorch runtime is
+         laid out by the import below: the CPU runtime in torch\cpu and the list of the CUDA
+         runtime's packages, which Osprey downloads on request (LibTorchRuntimes). Both load only
+         when a library is predicted; a search of a given library never touches them. -->
+    <UseCarafeModels>true</UseCarafeModels>
   </PropertyGroup>
+
+  <Import Project="..\..\CarafeSharp\LibTorchRuntimeLayout.targets" />
 
   <ItemGroup>
     <InternalsVisibleTo Include="Osprey.Test" />

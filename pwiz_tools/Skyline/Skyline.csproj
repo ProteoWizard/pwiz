@@ -308,35 +308,15 @@
 
   <!-- AlphaPeptDeep library prediction runs in process through CarafeSharp's TorchSharp port of the
        peptdeep MS2 and RT models (pwiz_tools\CarafeSharp). Skyline ships the CPU libtorch in torch\cpu
-       and downloads the CUDA libtorch (about 2.5 GB, 4 GB installed) from nuget.org the first time it
-       predicts on a computer with a GPU that can use it. Neither is beside the executable, where
-       TorchSharp would find it by itself: AlphapeptdeepLibraryBuilder loads the one it chooses
-       (LibTorchRuntime). The CUDA package is restored only to write the list of its part packages and
-       their hashes (LibTorchPackageSet.targets), which the download is checked against. The libtorch
-       version must match the one CarafeSharp's Directory.Build.props pairs with its TorchSharp version. -->
-  <PropertyGroup>
-    <SkylineLibTorchVersion>2.10.0</SkylineLibTorchVersion>
-    <LibTorchPackageSetId>libtorch-cuda-12.8-win-x64</LibTorchPackageSetId>
-    <LibTorchPackageSetVersion>$(SkylineLibTorchVersion)</LibTorchPackageSetVersion>
-    <LibTorchPackageSetFile>torch\$(LibTorchPackageSetId).packages.txt</LibTorchPackageSetFile>
-  </PropertyGroup>
-  <Import Project="..\CarafeSharp\LibTorchPackageSet.targets" />
+       and downloads the CUDA libtorch the first time it predicts on a computer with a GPU that can use
+       it; the layout, shared with Osprey, is CarafeSharp's LibTorchRuntimeLayout.targets, and
+       AlphapeptdeepLibraryBuilder loads the runtime it chooses (TorchRuntimes). The libtorch version
+       is the one CarafeSharp's LibTorch.props pairs with its TorchSharp version. -->
+  <Import Project="..\CarafeSharp\LibTorchRuntimeLayout.targets" />
   <ItemGroup>
     <ProjectReference Include="..\CarafeSharp\CarafeSharp.Models\CarafeSharp.Models.csproj" />
     <!-- Reads the fine-tuned models CarafeSharp saves as .model.zip files -->
     <ProjectReference Include="..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
-    <PackageReference Include="libtorch-cpu-win-x64" Version="$(SkylineLibTorchVersion)" ExcludeAssets="all" />
-    <PackageReference Include="$(LibTorchPackageSetId)" Version="$(SkylineLibTorchVersion)" ExcludeAssets="all" />
-    <Content Include="$(NuGetPackageRoot)libtorch-cpu-win-x64\$(SkylineLibTorchVersion)\runtimes\win-x64\native\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>torch\cpu\%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)libtorch-cpu-win-x64\$(SkylineLibTorchVersion)\LICENSE-LIBTORCH.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>torch\cpu\LICENSE-LIBTORCH.txt</Link>
-      <Visible>false</Visible>
-    </Content>
     <!-- The pinned AlphaPeptDeep v1 pretrained models, beside the executable where
          AlphapeptdeepLibraryBuilder looks for them. -->
     <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\pretrained_models.zip">
