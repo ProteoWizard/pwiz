@@ -4,20 +4,20 @@
 #
 # The monthly release of Core Windows x86_64 (bt83) is the successful default-branch build that
 # finished last in its month. On the first of the next month this script pins that build, which
-# exempts its installers from TeamCity's artifact cleanup, and tags it release-YYYY-MM-DD (the date
-# it finished), which marks it as a release. A release can also be made between months, with
-# --latest; it is permanent too, so people can depend on it, and the month still gets its regular
-# release when it ends. The archive seed builds of months before 2026-10 are tagged release-YYYY-MM;
-# they ran on a PR branch with a seed.commit parameter.
+# exempts its installers from TeamCity's artifact cleanup, and tags it release-YYYY-MM, which marks
+# it as that month's release. A release can also be made between months, with --latest; it is tagged
+# release-YYYY-MM-DD (the date its build finished, with -2, -3, ... for a later release the same
+# day). It is permanent too, so people can depend on it, and the month still gets its regular
+# release when it ends. The archive seed builds of months before 2026-10 are month releases that
+# ran on a PR branch with a seed.commit parameter.
 #
 # The script then writes the metadata the download page reads, for the TeamCity config to upload
 # beside releases/bt83.xml:
 #
 #   bt83-monthly.xml   the newest release, in the same format as bt83.xml
-#   bt83-archive.json  every release, newest first:
+#   bt83-archive.json  every release, newest first (a month's release after its mid-month ones):
 #                      {"releases": [{"release", "version", "buildId", "commit", "artifacts"}]}
-#                      where release is the tag's date, YYYY-MM-DD (or YYYY-MM for a seed), with
-#                      -2, -3, ... for a later release on a day that already has one
+#                      where release is the tag's YYYY-MM, YYYY-MM-DD or YYYY-MM-DD-N
 #
 # A release is any pinned, successful bt83 build on any branch with a release tag. Releasing a build
 # that is already a release does nothing, so the script is safe to rerun. A build without
@@ -79,38 +79,39 @@ def main():
     releases = find_releases(teamcity)
     if args.latest:
         build = newest_successful_build(teamcity)
+        name = unused_release_name(releases, finish_date(build)) if build else None
         description = "the latest successful build"
     else:
         month = args.month or previous_month(teamcity.server_time())
         if not re.match(r"^\d{4}-\d{2}$", month):
             parser.error("--month must be YYYY-MM, not '%s'" % month)
         if month in releases:
-            print("%s was released by its archive seed build %s" % (month, releases[month]["buildId"]))
+            print("%s is already released as build %s" % (month, releases[month]["buildId"]))
             build = None
         else:
             build = last_successful_build_of_month(teamcity, month)
             if build is None:
                 print("##teamcity[buildProblem description='No successful %s build finished in %s']" % (BUILD_TYPE, month))
                 sys.exit(1)
+        name = month
         description = "the last successful build of %s" % month
 
     if build is not None:
-        release(teamcity, releases, build, description, args.dry_run)
+        release(teamcity, releases, build, name, description, args.dry_run)
         if not args.dry_run:
             releases = find_releases(teamcity)
     write_metadata(args.output_dir, releases, teamcity)
 
 
-def release(teamcity, releases, build, description, dry_run):
+def release(teamcity, releases, build, name, description, dry_run):
     holder = next((r for r in releases.values() if r["buildId"] == build["id"]), None)
     if holder:
         print("Build %s, %s, is already release %s" % (build["id"], description, holder["release"]))
         return
     # A build whose installers were never built, or already cleaned up, would publish an empty release
-    if not any(INSTALLER.match(name) for name in teamcity.artifact_names(build["id"])):
+    if not any(INSTALLER.match(artifact) for artifact in teamcity.artifact_names(build["id"])):
         print("##teamcity[buildProblem description='Build %s, %s, has no installers to release']" % (build["id"], description))
         sys.exit(1)
-    name = unused_release_name(releases, finish_date(build))
     tag = "release-" + name
     print("%s and tag build %s (%s, finished %s), %s, as %s" % ("Dry run: would pin" if dry_run else "Pinning",
           build["id"], build.get("number"), build.get("finishDate"), description, tag))
@@ -200,7 +201,8 @@ def finish_date(build):
 
 
 def unused_release_name(releases, date):
-    """Returns date, or date-2, date-3, ... for a later release on a day that already has one."""
+    """Returns the name for a mid-month release on date: date, or date-2, date-3, ... for a later
+    release on a day that already has one."""
     name, number = date, 1
     while name in releases:
         number += 1
@@ -209,9 +211,13 @@ def unused_release_name(releases, date):
 
 
 def release_order(name):
-    # YYYY-MM (seed), YYYY-MM-DD and YYYY-MM-DD-N compared as numbers, so 2026-11-30-2 follows
-    # 2026-11-30 and 2026-10-22 follows 2026-09
-    return tuple(int(part) for part in name.split("-"))
+    # A month's YYYY-MM release comes at the end of the month, after its YYYY-MM-DD releases; a
+    # later release the same day (YYYY-MM-DD-N) follows that day's first. So, oldest to newest:
+    # 2026-09, 2026-10-22, 2026-10-31, 2026-10-31-2, 2026-10
+    parts = [int(part) for part in name.split("-")]
+    if len(parts) == 2:
+        return (parts[0], parts[1], 99, 0)
+    return (parts[0], parts[1], parts[2], parts[3] if len(parts) > 3 else 1)
 
 
 def parse_teamcity_time(text):
