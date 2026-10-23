@@ -553,6 +553,7 @@ namespace pwiz.Osprey
                 return;
             string device = new OspreyTorchRuntimes(_config.LibraryBuild).Load(_config.LibraryBuild.Device);
             _settings.Library.Device = device;
+            _outputLibrary.Device = device;
             if (_settings.Training != null)
                 _settings.Training.Device = device;
             _torchLoaded = true;

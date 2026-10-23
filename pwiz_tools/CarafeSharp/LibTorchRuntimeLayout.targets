@@ -2,7 +2,7 @@
 
   <!-- The libtorch runtime layout of an application that chooses its libtorch when it runs, rather
        than letting TorchSharp load the one beside it: the CPU runtime ships in torch\cpu and the CUDA
-       runtime (about 2.5 GB to download, 4 GB installed) is downloaded from nuget.org the first time
+       runtime (about 2.9 GB to download, 4 GB installed) is downloaded from nuget.org the first time
        the application predicts on a computer with a GPU that can use it. Neither is beside the
        executable, where TorchSharp would find it by itself; the application loads the one it chooses
        (pwiz.CarafeSharp.Models.LibTorchRuntime, through pwiz.CarafeSharp.Tasks.LibTorchRuntimes).
@@ -14,6 +14,10 @@
   <Import Project="$(MSBuildThisFileDirectory)LibTorch.props" Condition="'$(LibTorchVersion)' == ''" />
 
   <PropertyGroup>
+    <!-- An output folder built before this layout holds libtorch beside TorchSharp.dll; LibTorch.targets
+         removes it before every build (so does a project that only receives this layout's output, by
+         setting the property itself). -->
+    <RemoveLibTorchBesideTorchSharp>true</RemoveLibTorchBesideTorchSharp>
     <LibTorchRuntimeRid Condition="'$(CarafeSharpTargetIsWindows)' == 'true'">win-x64</LibTorchRuntimeRid>
     <LibTorchRuntimeRid Condition="'$(CarafeSharpTargetIsWindows)' != 'true'">linux-x64</LibTorchRuntimeRid>
     <LibTorchCpuPackageId>libtorch-cpu-$(LibTorchRuntimeRid)</LibTorchCpuPackageId>

@@ -219,9 +219,11 @@ namespace pwiz.CarafeSharp.Models
         {
             var installer = CudaInstaller;
             var packages = installer.PackageSet.Packages;
+            long totalSize = installer.PackageSet.TotalSize;
+            if (packages.Count == 0 || totalSize <= 0)
+                throw new InvalidDataException(string.Format(@"The package list of {0} names no packages with a size.", installer.PackageSet.Name));
             // One segment per package, sized by the package, ending at its share of the total, but at
             // least 1% long, since segment ends must increase
-            long totalSize = installer.PackageSet.TotalSize;
             long sizeSoFar = 0;
             int previousEnd = 0;
             var segmentEnds = packages.Select(package => previousEnd =

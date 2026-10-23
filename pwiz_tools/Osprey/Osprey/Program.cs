@@ -289,9 +289,15 @@ namespace pwiz.Osprey
                 {
                     config = OspreyCommandArgs.ParseArgs(args, out librarySettings);
                     // --install-cuda-runtime is a command of its own: the download, then exit, with
-                    // no inputs, no output and no search to validate.
+                    // no inputs, no output and no search to validate - but with --log-file honoured,
+                    // since a cluster's login node keeps the record there.
                     if (config.LibraryBuild.InstallCudaRuntime)
+                    {
+                        if (!OpenOutput(config))
+                            return EXIT_CODE_FAILURE_TO_START;
+                        CommandOutput.Out = _out;
                         return new OspreyTorchRuntimes(config.LibraryBuild).Install();
+                    }
                     CanonicalizeOutputPaths(config);
                 }
                 catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException ||
@@ -361,24 +367,8 @@ namespace pwiz.Osprey
                 // Apply per-line output decoration and optional log-file redirection now
                 // that args have validated (an invalid command line stays on stderr and
                 // creates no file). All logging funnels through _out (see Log* methods).
-                _out.IsTimeStamped = config.IsTimeStamped;
-                _out.IsMemStamped = config.IsMemStamped;
-                if (!string.IsNullOrEmpty(config.LogFilePath))
-                {
-                    try
-                    {
-                        _out = new CommandStatusWriter(new StreamWriter(config.LogFilePath))
-                        {
-                            IsTimeStamped = config.IsTimeStamped,
-                            IsMemStamped = config.IsMemStamped
-                        };
-                    }
-                    catch (Exception ex)
-                    {
-                        LogError(string.Format(OspreyResources.Program_Run_Failed_to_open_log_file__0____1_, config.LogFilePath, ex.Message));
-                        return EXIT_CODE_FAILURE_TO_START;
-                    }
-                }
+                if (!OpenOutput(config))
+                    return EXIT_CODE_FAILURE_TO_START;
 
                 // Point the Core output seam at _out: below-exe layers (FDR, IO) and LogInfo emit
                 // through the same CommandStatusWriter (stamps + --log-file). Whether a tagged
@@ -1302,6 +1292,32 @@ namespace pwiz.Osprey
             if (config.SelectedTask?.IsPerFileWorker == true)
                 return 0;
             return hasInputFiles ? config.InputFiles.Count : 0;
+        }
+
+        /// <summary>
+        /// Applies the per-line stamps to the output and, with <c>--log-file</c>, redirects it to the
+        /// file. False, with the error logged, when the file cannot be opened.
+        /// </summary>
+        private static bool OpenOutput(OspreyConfig config)
+        {
+            _out.IsTimeStamped = config.IsTimeStamped;
+            _out.IsMemStamped = config.IsMemStamped;
+            if (string.IsNullOrEmpty(config.LogFilePath))
+                return true;
+            try
+            {
+                _out = new CommandStatusWriter(new StreamWriter(config.LogFilePath))
+                {
+                    IsTimeStamped = config.IsTimeStamped,
+                    IsMemStamped = config.IsMemStamped
+                };
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogError(string.Format(OspreyResources.Program_Run_Failed_to_open_log_file__0____1_, config.LogFilePath, ex.Message));
+                return false;
+            }
         }
 
         internal static void LogInfo(string message)
