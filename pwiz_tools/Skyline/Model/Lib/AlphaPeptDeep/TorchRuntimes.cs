@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.Skyline.Model.Tools;
