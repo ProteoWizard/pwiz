@@ -10,7 +10,7 @@
       <option name="executionTimeoutMin" value="15" />
     </options>
     <parameters>
-      <param name="release.latest" value="" spec="checkbox checkedValue='--latest' uncheckedValue='' label='Release the latest build now' description='Release the newest successful build, e.g. between months; it stays a permanent release, and its month still gets its regular release when it ends' display='normal'" />
+      <param name="release.latest" value="" spec="checkbox checkedValue='--latest' uncheckedValue='' label='Release the latest build now' description='Release the newest successful build now as a daily release (tagged release-daily-YYYY-MM-DD-sha); it stays a permanent release, and its month still gets its regular release when it ends' display='normal'" />
       <param name="release.month" value="" spec="text label='Release month' description='YYYY-MM whose last build to release; leave empty for the previous month' validationMode='any' display='normal'" />
     </parameters>
     <build-runners order="pip_upgrade_certifi, Publish_monthly_release, Dry_run_monthly_release, Upload_monthly_release_metadata">
