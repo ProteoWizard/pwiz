@@ -26,6 +26,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -59,8 +60,11 @@ namespace pwiz.Skyline.Controls
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
-            _imageList.Images.Add(Resources.Protein);   // 16bpp
-            _imageList.Images.Add(Resources.Peptide);   // 4bpp
+            // The 16x16 icons are a 96-DPI design, added at the pixel size for the DPI by
+            // DpiUtil.GetIcon (issue #4599); no control exists yet, so the system DPI is used
+            ImageListScaler.PrepareForDpi(null, _imageList);
+            AddImage(nameof(Resources.Protein), Resources.Protein);   // 16bpp
+            AddImage(nameof(Resources.Peptide), Resources.Peptide);   // 4bpp
             _hideOnLoseFocus = hideOnLoseFocus;
         }
 
@@ -258,7 +262,9 @@ namespace pwiz.Skyline.Controls
 
         public void AutoResize()
         {
-            int dx = TextRenderer.MeasureText(TextBox.Text, TextBox.Font, new Size(TextBox.Height, MaximumWidth)).Width + 8;
+            // MeasureText's proposedSize is (width, height); the arguments were transposed,
+            // a latent bug even at 96 DPI (issue #4599).
+            int dx = TextRenderer.MeasureText(TextBox.Text, TextBox.Font, new Size(MaximumWidth, TextBox.Height)).Width + DpiUtil.Scale(TextBox, 8);
             dx = Math.Max(dx, MinimumWidth);
             dx = Math.Min(dx, MaximumWidth);
             TextBox.Width = dx;
@@ -707,6 +713,11 @@ namespace pwiz.Skyline.Controls
 
         public event Action<StatementCompletionItem> SelectionMade;
         public event Action TextBoxLoseFocus;
+
+        private void AddImage(string name, Image image)
+        {
+            _imageList.Images.Add(DpiUtil.GetIcon(null, name, image, Color.Magenta));
+        }
     }
 
     public class StatementCompletionItem

@@ -110,8 +110,24 @@ namespace pwiz.SkylineTestUtil
                 if (cornerRadius != CORNER_TOOL_WINDOW_WINDOWS11)
                     cornerRadius = 0;   // No arched corners on interior borders
             }
-            return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius, excludeRect);
+            // In a DPI-aware process the window frame scales: the border is ceil(factor) pixels
+            // (2 at 150% and 200%, 3 at 300%) and the corner radius scales with it. The thicker
+            // border is also lighter: on a white background its top edge (least affected by the
+            // drop shadow) measures #B7B7B7 at 150%, 200% and 300%. Interior borders of docked
+            // forms are drawn by DigitalRune and stay 1px.
+            var factor = DpiUtil.GetFactor(null);
+            var borderWidth = 1;
+            if (factor > 1 && rect.Height > 1 && color != INTERIOR_BORDER_COLOR)
+            {
+                borderWidth = (int) Math.Ceiling(factor - 0.01);
+                cornerRadius = (int) Math.Round(cornerRadius * factor);
+                if (color == STANDARD_BORDER_COLOR)
+                    color = HIGH_DPI_BORDER_COLOR;
+            }
+            return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius, excludeRect, borderWidth);
         }
+
+        private static readonly Color HIGH_DPI_BORDER_COLOR = Color.FromArgb(0xB7, 0xB7, 0xB7);
 
         private static IDictionary<Color, int> GetColorCounts(Bitmap bmp, Rectangle rect)
         {
@@ -122,14 +138,14 @@ namespace pwiz.SkylineTestUtil
         }
 
         private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
-            Rectangle? excludeRect)
+            Rectangle? excludeRect, int borderWidth = 1)
         {
             return IsWindows11() && cornerRadius != 0
-                ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect)
-                : bmp.CleanupBorder10(color, rect, excludeRect);
+                ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect, borderWidth)
+                : bmp.CleanupBorder10(color, rect, excludeRect, borderWidth);
         }
 
-        private static Bitmap CleanupBorder10(this Bitmap bmp, Color color, Rectangle rect, Rectangle? excludeRect)
+        private static Bitmap CleanupBorder10(this Bitmap bmp, Color color, Rectangle rect, Rectangle? excludeRect, int borderWidth)
         {
             using var g = Graphics.FromImage(bmp);
             ExcludeClip(g, excludeRect);
@@ -138,7 +154,10 @@ namespace pwiz.SkylineTestUtil
             if (rect.Height == 1)
                 g.DrawLine(pen, rect.Location, new Point(rect.Right, rect.Top));
             else
-                g.DrawRectangle(pen, rect.X, rect.Y, rect.Width - 1, rect.Height - 1);
+            {
+                for (var i = 0; i < borderWidth; i++)
+                    g.DrawRectangle(pen, rect.X + i, rect.Y + i, rect.Width - 1 - 2 * i, rect.Height - 1 - 2 * i);
+            }
             return bmp;
         }
 
@@ -149,7 +168,7 @@ namespace pwiz.SkylineTestUtil
         // meaningful visual difference at normal scale. Left the original implementation, but
         // this API may be useful if future OS changes require revisiting corner rendering.
         private static Bitmap CleanupBorder11(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
-            Rectangle? excludeRect)
+            Rectangle? excludeRect, int borderWidth)
         {
             var result = new Bitmap(bmp.Width, bmp.Height);
 
@@ -166,19 +185,23 @@ namespace pwiz.SkylineTestUtil
             g.FillRectangle(controlBrush, rect);
             g.ResetClip();
 
-            using var pathDrawing = new GraphicsPath();
-            rect.Width--;   // Pens draw right and below the rectangle
-            rect.Height--;
-            AddRoundedRectangle(pathDrawing, rect, cornerRadius);
             using var pen = new Pen(color);
             ExcludeClip(g, excludeRect);
-            g.DrawPath(pen, pathDrawing);
-            rect.Width++;
-            rect.Height++;
+            for (var i = 0; i < borderWidth; i++)
+            {
+                // Concentric 1px outlines, each inset one pixel with a correspondingly smaller radius
+                var rectRing = rect;
+                rectRing.Inflate(-i, -i);
+                rectRing.Width--;   // Pens draw right and below the rectangle
+                rectRing.Height--;
+                using var pathDrawing = new GraphicsPath();
+                AddRoundedRectangle(pathDrawing, rectRing, Math.Max(1, cornerRadius - i));
+                g.DrawPath(pen, pathDrawing);
+            }
 
             // Draw the image within the curved shape just drawn
             using var pathClipping = new GraphicsPath();
-            rect.Inflate(-1, -1);
+            rect.Inflate(-borderWidth, -borderWidth);
             // Corner transparency is very tricky. So, it is necessary to clip the corner
             // areas slightly further in then their true edges.
             AddRoundedRectangle(pathClipping, rect, cornerRadius + cornerRadius/2);

@@ -68,7 +68,13 @@ namespace pwiz.Skyline.Alerts
                 libraryGridView.Hide();
             }
 
-            Height = labelLibInfo.Height + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + 70;
+            // The table lays its children out at their preferred width even when that exceeds the
+            // dialog, which clipped the OK button once the grid grew with the DPI; follow the content.
+            int contentWidth = tableLayoutPanel1.GetPreferredSize(System.Drawing.Size.Empty).Width + Width - ClientSize.Width;
+            if (Width < contentWidth)
+                Width = contentWidth;
+            // The other terms are already DPI-scaled; the 70 (margins and window frame) is not.
+            Height = labelLibInfo.Height + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + DpiUtil.Scale(this, 70);
         }
 
         private BindingList<Row> Rows => libraryGridView.DataSource as BindingList<Row>;

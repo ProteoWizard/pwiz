@@ -520,8 +520,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (rectDrifted)
             {
                 var paneRect = _mobilogramPane.Rect;
-                float chartX = paneRect.X + _mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace;
-                float chartRight = paneRect.Right - _mobilogramPane.Margin.Right;
+                float chartX = GetMobilogramChartX(paneRect);
+                float chartRight = paneRect.Right - _mobilogramPane.Margin.Right * _mobilogramPane.CalcScaleFactor();
                 float chartW = Math.Max(1, chartRight - chartX);
                 _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
             }
@@ -707,12 +707,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 var heat = _heatMapPane.CalcChartRect(g);
                 if (stick.Width <= 0 || heat.Width <= 0)
                     return;
-                stickReserve = stick.X - _stickSpectrumPane.Rect.X - _stickSpectrumPane.Margin.Left;
-                heatReserve = heat.X - _heatMapPane.Rect.X - _heatMapPane.Margin.Left;
+                // Chart rects are in pixels, but Margin and MinSpace are in points that
+                // ZedGraph multiplies by the scale factor (not 1 on a high-DPI display).
+                stickReserve = GetYAxisReserve(_stickSpectrumPane, stick);
+                heatReserve = GetYAxisReserve(_heatMapPane, heat);
             }
             float reserve = Math.Max(stickReserve, heatReserve);
             _stickSpectrumPane.YAxis.MinSpace = reserve;
             _heatMapPane.YAxis.MinSpace = reserve;
+        }
+
+        /// <summary>
+        /// Y-axis space left of the chart rect, in the unscaled points that
+        /// <see cref="Axis.MinSpace"/> is expressed in.
+        /// </summary>
+        private static float GetYAxisReserve(GraphPane pane, RectangleF chartRect)
+        {
+            float scaleFactor = pane.CalcScaleFactor();
+            return (chartRect.X - pane.Rect.X) / scaleFactor - pane.Margin.Left;
         }
 
         private void AlignMobilogramChartToHeatmap()
@@ -742,11 +754,21 @@ namespace pwiz.Skyline.Controls.Graphs
             // Offset chartX by Y-axis space so labels have room to render on the left.
             // Extend chart all the way to the pane's right edge so the mobilogram chart
             // butts up against the heatmap pane's Y-axis area — minimizes visible gap.
-            float chartX = paneRect.X + _mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace;
-            float chartRight = paneRect.Right - _mobilogramPane.Margin.Right;
+            float chartX = GetMobilogramChartX(paneRect);
+            float chartRight = paneRect.Right - _mobilogramPane.Margin.Right * _mobilogramPane.CalcScaleFactor();
             float chartW = Math.Max(1, chartRight - chartX);
             _mobilogramPane.Chart.Rect = new RectangleF(chartX, heat.Y, chartW, heat.Height);
             // Setting Rect flips IsRectAuto to false automatically
+        }
+
+        /// <summary>
+        /// Left edge of the mobilogram chart rect: the pane's left margin plus its Y-axis
+        /// space, both scaled from points to pixels the way ZedGraph's own layout does.
+        /// </summary>
+        private float GetMobilogramChartX(RectangleF paneRect)
+        {
+            float scaleFactor = _mobilogramPane.CalcScaleFactor();
+            return paneRect.X + (_mobilogramPane.Margin.Left + _mobilogramPane.YAxis.MinSpace) * scaleFactor;
         }
 
         private MSGraphPane CreateMobilogramPane(HeatMapGraphPane heatMap)

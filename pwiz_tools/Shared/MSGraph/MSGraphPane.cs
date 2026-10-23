@@ -308,8 +308,11 @@ namespace pwiz.MSGraph
             TextObj baseTextObj = new TextObj( baseLabel, 0, 0 );
             baseTextObj.FontSpec.Border.IsVisible = false;
             baseTextObj.FontSpec.Fill.IsVisible = false;
+            // Measure at the pane's scale factor, which is what the labels are drawn at.
+            // It includes the display DPI scaling, so it is not always 1.
+            float scaleFactor = CalcScaleFactor();
             PointF[] pts = baseTextObj.FontSpec.GetBox( g, baseLabel, 0, 0,
-                                AlignH.Center, AlignV.Bottom, 1.0f, new SizeF() );
+                                AlignH.Center, AlignV.Bottom, scaleFactor, new SizeF() );
             float baseLabelWidth = pts[1].X - pts[0].X;
             float baseLabelHeight = pts[2].Y - pts[0].Y;
             baseLabelWidth = (float) xAxis.Scale.ReverseTransform( xAxis.Scale.Transform( 0 ) + baseLabelWidth );
@@ -388,7 +391,7 @@ namespace pwiz.MSGraph
                     var i = annotationsPrioritized[annotation];
                     PointPair pt = fullList[maxIndexList[i]];
                     float yPixel = yAxis.Scale.Transform(pt.Y);
-                    var shift = pt.Y < 0 ? 5 : -5;
+                    var shift = (pt.Y < 0 ? 5 : -5) * scaleFactor;
                     double labelY = yAxis.Scale.ReverseTransform(yPixel + shift);
 
                     if (!AllowCurveOverlap)
@@ -511,6 +514,9 @@ namespace pwiz.MSGraph
                 }
 
                 double yMaxRequired = 0;
+                // Labels are drawn at the pane's scale factor, which includes the display DPI
+                // scaling - measuring them at 1 would reserve too little room above the data.
+                float scaleFactor = CalcScaleFactor();
                 foreach (var kvp in _manualLabels)
                 {
                     TextObj text = kvp.Key;
@@ -521,7 +527,7 @@ namespace pwiz.MSGraph
                     {
                         double axisHeight = YAxis.Scale.Max - YAxis.Scale.Min;
 
-                        PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, text.Location.AlignH, text.Location.AlignV, 1.0f,
+                        PointF[] pts = text.FontSpec.GetBox(g, text.Text, 0, 0, text.Location.AlignH, text.Location.AlignV, scaleFactor,
                             new SizeF());
                         float pixelShift = 0;
                         var rectPeak = _labelBoundsCache.GetLabelBounds(text, this, g);
@@ -533,7 +539,7 @@ namespace pwiz.MSGraph
                             if (Math.Min(rectID.Right, rectPeak.Right) - Math.Max(rectID.Left, rectPeak.Left) > 0 &&
                                 Math.Min(rectID.Bottom, rectPeak.Bottom) - Math.Max(rectID.Top, rectPeak.Top) > 0)
                             {
-                                pixelShift = Math.Max(rectID.Height + 7, pixelShift);   // 7 pixel gap between labels
+                                pixelShift = Math.Max(rectID.Height + 7 * scaleFactor, pixelShift);   // 7 pixel gap between labels (at 96 DPI)
                             }
                         }
                         double y2Pos = yAxis.Scale.ReverseTransform(pts[2].Y);
