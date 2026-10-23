@@ -109,10 +109,10 @@ points per Th on the 1000 / rate pattern of the others.
 **How it is measured** (`CentrixCalibration`, `CentrixSigmaCalibrator`), for each MS level apart:
 1. The scan rate from the point spacing of the level's first profile spectrum
    (`LinearIonTrapScanRate.FromSpacing`).
-2. In each sampled spectrum, the isolated intense peaks: local maxima above the spectrum's 99th
-   percentile whose intensity falls without rising again to half the apex on both sides, over
-   points with none missing between them. Each one's full width at half maximum, the apex taken
-   from the log-parabola through its top three points.
+2. In each of 3,000 spectra spread evenly over the run, the isolated intense peaks: local maxima
+   above the spectrum's 99th percentile whose intensity falls without rising again, or reaching
+   zero, to half the apex on both sides, over points with none missing between them. Each one's
+   full width at half maximum, the apex taken from the log-parabola through its top three points.
 3. The sigma is the widths' lower quartile / 2.3548, no wider than the scan rate's broadest. With
    under 20 peaks it is the scan rate's broadest; with no scan rate either, 0.34 Th, Centrix's
    fallback.
@@ -129,7 +129,15 @@ points per Th on the 1000 / rate pattern of the others.
 - *The lower quartile, not the mode.* The MS2 widths form a plateau from 0.70 to 0.85 Th, so their
   mode (a half-sample mode was tried) moved by 6% between samples of 3,000 peaks; the lower
   quartile moved by 0.6%.
-- *Sampled across the run.* The first spectra of a run read 4% wider than the whole.
+- *Spikes left out.* An ion trap ejects each ion at one instant, so a peak of a few ions lands on
+  one or two points with zeros beside it, narrower than the peak shape the scan rate gives. On the
+  Stellar's MS2, read through Thermo's library, a quarter of the profile points are zeros and such
+  spikes are a third of the intense local maxima. Counted, they pull the lower quartile from 0.72
+  to 0.63 Th (sigma 0.305 to 0.266 Th over a whole 2 Th run). A reader that drops the zeros leaves
+  a gap instead, which is rejected the same way, so the width does not depend on the reader.
+- *Sampled across the run, every sample used.* A first version stopped at 3,000 peaks, all from
+  the run's first minutes, and with the spikes counted read sigma 0.21 Th where the whole run reads
+  0.29. Over a whole run the sample gives 10,000 to 15,000 peaks.
 - *Not chosen by identifications.* At unit resolution those depend on mass accuracy, a separate
   question from the peak width.
 

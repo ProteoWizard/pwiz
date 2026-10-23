@@ -311,6 +311,15 @@ namespace pwiz.Osprey.Test
             var withGap = new List<double>();
             CentrixCalibration.AddPeakWidths(mz.Where((_, i) => i != 149).ToArray(), gapped.Where((_, i) => i != 149).ToArray(), withGap);
             Assert.AreEqual(0, withGap.Count);
+            // A few ions' spike, falling to zero before half its apex, is not measured, with its zeros present or not.
+            var spike = new double[mz.Length];
+            spike[99] = 80;
+            spike[100] = 100;
+            spike[101] = 70;
+            var spikeWidths = new List<double>();
+            CentrixCalibration.AddPeakWidths(mz, spike, spikeWidths);
+            CentrixCalibration.AddPeakWidths(mz.Where((_, i) => spike[i] > 0).ToArray(), spike.Where(v => v > 0).ToArray(), spikeWidths);
+            Assert.AreEqual(0, spikeWidths.Count);
 
             // The width is the narrow side of the peaks' widths, no wider than the scan rate's broadest; with too few
             // peaks, the broadest; without a scan rate either, Centrix's fallback.

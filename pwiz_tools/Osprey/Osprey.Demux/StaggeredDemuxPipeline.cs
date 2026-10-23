@@ -653,8 +653,6 @@ namespace pwiz.Osprey.Demux
             var calibrator = new CentrixSigmaCalibrator();
             foreach (int n in CentrixSigmaCalibrator.SampleIndices(_ms2Spectra.Length))
             {
-                if (calibrator.IsComplete(2))
-                    break;
                 int k = _ms2Spectra[n];
                 _source.Read(k, out var mz, out var intensity);
                 if (mz != null && intensity != null)

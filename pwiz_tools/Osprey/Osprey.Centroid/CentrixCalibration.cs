@@ -104,8 +104,13 @@ namespace pwiz.Osprey.Centroid
     /// effects move it, both left unmodeled: it rises with apex height, from 0.63 Th in the weakest fifth of peaks to
     /// 0.81 Th in the strongest (space charge, or more merged species among the larger peaks); and spectra of summed
     /// windows read wider (sigma 0.309 Th for the 2 Th windows, 0.331 and 0.340 for two and four of them summed), since
-    /// more of their peaks are merged species. The run's first spectra read 4% wider than the whole, so callers sample
-    /// across the run (<see cref="CentrixSigmaCalibrator.SampleIndices"/>). MS1 (67 kTh/s): sigma 0.170 Th.</para>
+    /// more of their peaks are merged species. MS1 (67 kTh/s): sigma 0.170 Th.</para>
+    /// <para>Whole runs read through Thermo's library, where a quarter of the profile points are zeros, agree once
+    /// spikes that reach zero are left out (<see cref="AddPeakWidths"/>): 3,000 spectra across a 2 Th run give 14,000
+    /// peaks and sigma 0.305 Th, and across a run of overlapping 4 Th windows 10,600 peaks and 0.310 Th. Counting
+    /// the spikes, the same runs give 0.266 and 0.285 Th, and the first 3,000 peaks, all from the run's first minutes,
+    /// only 0.174 and 0.213 Th. The early part of a run is not the whole, so every sampled spectrum is used
+    /// (<see cref="CentrixSigmaCalibrator.SampleIndices"/>).</para>
     /// </summary>
     public static class CentrixCalibration
     {
@@ -146,9 +151,9 @@ namespace pwiz.Osprey.Centroid
         /// <summary>
         /// Adds the FWHM, Th, of each isolated intense peak of a profile spectrum (m/z ascending, zero points present or
         /// not): a local maximum above <see cref="PEAK_QUANTILE"/> of the spectrum's intensities whose intensity falls
-        /// without rising again to half its apex on both sides, over points adjacent on the profile grid. The apex is the
-        /// vertex of the log-parabola through the top three points, so a peak sampled off its center is not read as
-        /// wider; the crossings are interpolated linearly.
+        /// without rising again, or reaching zero, to half its apex on both sides, over points adjacent on the profile
+        /// grid. The apex is the vertex of the log-parabola through the top three points, so a peak sampled off its
+        /// center is not read as wider; the crossings are interpolated linearly.
         /// </summary>
         public static void AddPeakWidths(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, List<double> fwhms)
         {
@@ -182,6 +187,14 @@ namespace pwiz.Osprey.Centroid
                 while (right < n - 1 && intensity[right + 1] < intensity[right] && intensity[right] > half)
                     right++;
                 if (intensity[left] > half || intensity[right] > half || !Contiguous(mz, left, right, maxStep))
+                    continue;
+                // A peak that falls to zero before half its apex is a few ions' spike, not the peak shape the scan
+                // rate gives: an ion trap ejects each ion at one instant, so a handful of them land on one or two
+                // points with nothing beside them. On the Stellar's MS2 they are a third of the intense local maxima,
+                // and counting them moves the lower quartile from 0.72 Th to 0.63, narrower than the species' peaks.
+                // A reader that drops zero points leaves a gap there instead, which the contiguity check above
+                // rejects, so the widths do not depend on whether the zeros are present.
+                if (!(intensity[left] > 0) || !(intensity[right] > 0))
                     continue;
                 double mzLeft = mz[left] + (half - intensity[left]) / (intensity[left + 1] - intensity[left]) *
                     (mz[left + 1] - mz[left]);
@@ -219,15 +232,17 @@ namespace pwiz.Osprey.Centroid
     /// <summary>
     /// Collects the peak widths of a run's profile spectra, MS1 apart from MS2 and above, since a linear ion trap scans
     /// them at their own rates, and gives each level's sigma (<see cref="CentrixCalibration.EstimateSigma"/>) and scan
-    /// rate, taken from the point spacing of the level's first spectrum. The caller should offer spectra from across the
-    /// run: on the Stellar the run's first spectra read 4% wider than the whole.
+    /// rate, taken from the point spacing of the level's first spectrum. The caller offers the spectra of
+    /// <see cref="SampleIndices"/>, spread across the run, and every one is measured: the run's first minutes are not
+    /// the whole (on the Stellar, the first 3,000 peaks read sigma 0.21 Th where the whole run reads 0.29, spikes
+    /// counted).
     /// </summary>
     public sealed class CentrixSigmaCalibrator
     {
-        /// <summary>Peaks enough for a level's width: their lower quartile varies by 0.6% between such samples (Stellar MS2).</summary>
-        public const int TARGET_PEAKS = 3000;
-
-        /// <summary>Spectra a run is sampled at, evenly spaced, for its widths.</summary>
+        /// <summary>
+        /// Spectra a run is sampled at, evenly spaced, for its widths: on the Stellar's MS2, 10,000 to 15,000 isolated
+        /// peaks, whose lower quartile varies by 0.6% between samples of 3,000.
+        /// </summary>
         public const int SAMPLE_SPECTRA = 3000;
 
         private readonly List<double>[] _fwhms = { new List<double>(), new List<double>() };
@@ -245,17 +260,9 @@ namespace pwiz.Osprey.Centroid
         public void Add(int msLevel, IReadOnlyList<double> mz, IReadOnlyList<double> intensity)
         {
             int level = Slot(msLevel);
-            if (_fwhms[level].Count >= TARGET_PEAKS)
-                return;
             if (double.IsNaN(_spacing[level]) && mz.Count >= 2)
                 _spacing[level] = CentrixCentroider.DetectGridSpacing(mz);
             CentrixCalibration.AddPeakWidths(mz, intensity, _fwhms[level]);
-        }
-
-        /// <summary>Whether a level has <see cref="TARGET_PEAKS"/> widths.</summary>
-        public bool IsComplete(int msLevel)
-        {
-            return _fwhms[Slot(msLevel)].Count >= TARGET_PEAKS;
         }
 
         /// <summary>The widths collected for a level.</summary>
