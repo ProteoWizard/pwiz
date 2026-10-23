@@ -612,22 +612,20 @@ const vector<double>& Experiment2Impl::q1MultipleIonMzs() const
 
     try
     {
-        initializedQ1MultipleIonMzs_ = true;
-        if (msExperiment->ScanType != "Q1MI")
-            return q1MultipleIonMzs_;
-
-        auto massRanges = (cli::array<IMassRangeInfo^>^) msExperiment->MassRanges;
-        if (massRanges == nullptr)
-            return q1MultipleIonMzs_;
-
+        // Marked initialized only once the SDK has answered, so a failed read is retried.
         vector<double> mzs;
-        for (int i = 0; i < massRanges->Length; ++i)
+        auto massRanges = msExperiment->ScanType == "Q1MI" ? (cli::array<IMassRangeInfo^>^) msExperiment->MassRanges : nullptr;
+        for (int i = 0; massRanges != nullptr && i < massRanges->Length; ++i)
         {
             if (massRanges[i] == nullptr || massRanges[i]->IsolationWindow == nullptr)
-                return q1MultipleIonMzs_;
+            {
+                mzs.clear();
+                break;
+            }
             mzs.push_back((massRanges[i]->IsolationWindow->Start + massRanges[i]->IsolationWindow->End) / 2);
         }
         q1MultipleIonMzs_.swap(mzs);
+        initializedQ1MultipleIonMzs_ = true;
         return q1MultipleIonMzs_;
     }
     CATCH_AND_FORWARD
