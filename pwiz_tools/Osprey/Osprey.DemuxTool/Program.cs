@@ -48,7 +48,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--ions-per-second] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
+            @" [--channel-th T] [--ions] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
             @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]"; // Arg literal OK: DemuxTool's own option vocabulary
 
         private static int Main(string[] args)
@@ -70,7 +70,7 @@ namespace pwiz.Osprey.DemuxTool
                     option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile" ||
                     option == @"--joint" || option == @"--joint-relaxed" || option == @"--solve-profile" ||
                     option == @"--joint-keep-active" || option == @"--joint-fitted" || option == @"--joint-profile" ||
-                    option == @"--ions-per-second";
+                    option == @"--ions";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -219,8 +219,9 @@ namespace pwiz.Osprey.DemuxTool
                         // Staggered: fragment channels matched within this many Th on a linear axis (unit resolution).
                         options.Parameters.ChannelToleranceTh = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
-                    case @"--ions-per-second":
-                        // Staggered: intensities are ions per second (a Thermo ion trap's), so ions = intensity x fill time.
+                    case @"--ions":
+                        // Intensities are ions per second (a Thermo ion trap's): solved and written as ions, intensity x
+                        // fill time, since a measurement's precision is set by the ions it counted.
                         options.IntensityIsIonsPerSecond = true;
                         break;
                     case @"--elution-fwhm":
@@ -440,6 +441,8 @@ namespace pwiz.Osprey.DemuxTool
                 msd.Run.SpectrumList = centrix
                     ? CentrixCentroided(spectra, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2)
                     : spectra;
+                if (options.IntensityIsIonsPerSecond)
+                    msd.Run.SpectrumList = IonCounts(msd.Run.SpectrumList);
                 WriteMzml(msd, output);
                 Console.WriteLine(@"Wrote {0} in {1:F0} s", output, stopwatch.Elapsed.TotalSeconds);
                 return 0;
@@ -461,6 +464,9 @@ namespace pwiz.Osprey.DemuxTool
             // The demultiplexed profile centroided as it is written.
             if (centrix)
                 msd.Run.SpectrumList = CentrixCentroided(msd.Run.SpectrumList, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2);
+            // Written as ions, after centroiding, which works in the instrument's units.
+            if (options.IntensityIsIonsPerSecond)
+                msd.Run.SpectrumList = IonCounts(msd.Run.SpectrumList);
 
             WriteMzml(msd, output);
 
@@ -509,6 +515,16 @@ namespace pwiz.Osprey.DemuxTool
                 used++;
             }
             return IonCalibration.CountsPerIon(intensities, out fit);
+        }
+
+        /// <summary>
+        /// The spectra written as ions (<see cref="IonCountSpectrumList"/>): each spectrum's intensities, ions per second,
+        /// times its fill time.
+        /// </summary>
+        private static ISpectrumList IonCounts(ISpectrumList spectra)
+        {
+            Console.WriteLine(@"Writing ions: intensity (ions/s) x each spectrum's fill time");
+            return new IonCountSpectrumList(spectra);
         }
 
         /// <summary>

@@ -315,7 +315,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--centrix-sigma S`, `--centrix-sigma-ms1 S` | measured | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, measured from the input |
 | `--centrix-param Name=Value` | - | any `CentrixParams` setting (`Solver=active_set` among them); also the joint solve's Centrix |
 | `--channel-th T` | ppm | staggered: fragment channels matched within T Th on a linear axis (unit resolution) |
-| `--ions-per-second` | off | staggered: intensities are ions per second (a Thermo ion trap's), so ions = intensity x fill time |
+| `--ions` | off | intensities are ions per second (a Thermo ion trap's): solved and written as ions, intensity x fill time |
 | `--peak-sigma-th S` | measured | staggered `--joint` on a linear grid: the profile peak sigma, Th |
 | `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
 | `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
@@ -730,17 +730,20 @@ it.
 The Thermo Stellar's staggered methods (the 2026-10-09 window-width HeLa set: `4Th-50pctOverlap`, k=2,
 2 Th bins; `4Th-SuperOverlap`, k=4, 1 Th bins) acquire each offset window set in its own pass over
 the range, about 1.2 s a pass mid-run. Their profile is on a uniform 0.2 Th grid (MS2 at 200 kTh/s),
-and their intensities are ions per second: ions = intensity x fill time, which `--ions-per-second`
-applies spectrum by spectrum. Every bin is observed in every pass, through a different window;
+and their intensities are ions per second: ions = intensity x fill time, which `--ions` applies
+spectrum by spectrum. The solve works in ions, and with `--ions` the output is written in ions too,
+after any centroiding (Centrix expects the instrument's units): a measurement's precision is set by
+the ions it counted, which a rate hides. Each spectrum keeps its fill time, so the rate can be
+recovered. Every bin is observed in every pass, through a different window;
 only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
 one demultiplexed spectrum per bin per pass.
 
 Two ways through `Osprey.DemuxTool --scheme staggered`:
-- **Channels on the centroids or the profile** (`--channel-th 0.09 --ions-per-second`, with
+- **Channels on the centroids or the profile** (`--channel-th 0.09 --ions`, with
   `--profile` for the profile): the per-channel demultiplexer of the sections above, its fragment
   channels matched in Th on a linear axis rather than in ppm, each window's series interpolated
   (makima) to the target's time. Centroid it afterward with `--centroid centrix`.
-- **The joint solve on the profile** (`--joint --ions-per-second`), `StaggeredDemuxPlan` with
+- **The joint solve on the profile** (`--joint --ions`), `StaggeredDemuxPlan` with
   `JointDemultiplexer` on a `LinearGrid`:
   1. *Passes.* A window below the one before starts a new pass; each pass is scaled to ions at the
      median fill time of its spectra.

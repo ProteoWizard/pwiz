@@ -17,7 +17,8 @@ profile mode, MacCoss lab), spectra 30000-35999 converted with ProteoWizard msco
 (`--filter "index [30000,35999]" -z --mz64 --inten32`). The profile slice is spectra 0, 240, 460, 922, 1384, 1845,
 2307, 2769, 3012, 3229, 3691, 4153, 4614, 5076, 5538 and 5999 of that conversion. The joint-split slice is the
 same positions less the two MS1 (all MS2), taken after re-multiplexing the conversion into 4 Th windows (`Osprey.DemuxTool --remultiplex
-2`) and demultiplexing those with `--scheme staggered --joint --joint-profile --ions-per-second`. Spectra are
+2`) and demultiplexing those with `--scheme staggered --joint --joint-profile --fill-time-ions 1000`
+(an option since replaced by `--ions`, which also writes ions rather than ions per second). Spectra are
 copied byte for byte by `slice_mzml.py`.
 
 Golden made with Rust Centrix 0.1.0 at maccoss/centrix 39370f1, built in WSL (`cargo build --release`):
