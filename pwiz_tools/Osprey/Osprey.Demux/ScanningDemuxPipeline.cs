@@ -47,11 +47,11 @@ namespace pwiz.Osprey.Demux
         public double CountsPerIon { get; set; } = 100;
 
         /// <summary>
-        /// Staggered data whose intensities are rates (an ion trap's, normalized by its fill time): when positive, the
-        /// intensity x injection time (ms) of one ion, so each spectrum's ions follow its own fill time. Spectra without
-        /// an injection time keep <see cref="CountsPerIon"/>.
+        /// Staggered data whose intensities are ions per second, as a Thermo ion trap reports them: each spectrum's
+        /// ions are its intensity x its injection (fill) time in seconds, so each follows its own fill time. Spectra
+        /// without an injection time keep <see cref="CountsPerIon"/>.
         /// </summary>
-        public double FillTimeIonScale { get; set; }
+        public bool IntensityIsIonsPerSecond { get; set; }
 
         /// <summary>
         /// Staggered profile data on a linear grid (an ion trap's), with <see cref="Joint"/>: the profile peak's sigma,

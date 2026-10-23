@@ -48,7 +48,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--fill-time-ions S] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
+            @" [--channel-th T] [--ions-per-second] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
             @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]"; // Arg literal OK: DemuxTool's own option vocabulary
 
         private static int Main(string[] args)
@@ -69,7 +69,8 @@ namespace pwiz.Osprey.DemuxTool
                 bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz" ||
                     option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile" ||
                     option == @"--joint" || option == @"--joint-relaxed" || option == @"--solve-profile" ||
-                    option == @"--joint-keep-active" || option == @"--joint-fitted" || option == @"--joint-profile";
+                    option == @"--joint-keep-active" || option == @"--joint-fitted" || option == @"--joint-profile" ||
+                    option == @"--ions-per-second";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -218,9 +219,9 @@ namespace pwiz.Osprey.DemuxTool
                         // Staggered: fragment channels matched within this many Th on a linear axis (unit resolution).
                         options.Parameters.ChannelToleranceTh = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
-                    case @"--fill-time-ions":
-                        // Staggered, rate intensities (ion trap): intensity x injection time (ms) of one ion.
-                        options.FillTimeIonScale = double.Parse(value, CultureInfo.InvariantCulture);
+                    case @"--ions-per-second":
+                        // Staggered: intensities are ions per second (a Thermo ion trap's), so ions = intensity x fill time.
+                        options.IntensityIsIonsPerSecond = true;
                         break;
                     case @"--elution-fwhm":
                         // Staggered: apportion by each channel's elution fitted with peaks of this FWHM (seconds).
@@ -344,8 +345,8 @@ namespace pwiz.Osprey.DemuxTool
                     options.Parameters.ChannelToleranceTh > 0
                         ? options.Parameters.ChannelToleranceTh.ToString(CultureInfo.InvariantCulture) + @" Th"
                         : options.Parameters.ChannelTolerancePpm.ToString(CultureInfo.InvariantCulture) + @" ppm",
-                    options.FillTimeIonScale > 0
-                        ? @"intensity x fill time / " + options.FillTimeIonScale.ToString(CultureInfo.InvariantCulture)
+                    options.IntensityIsIonsPerSecond
+                        ? @"intensity (ions/s) x fill time"
                         : @"intensity / " + options.CountsPerIon.ToString(CultureInfo.InvariantCulture));
             }
 

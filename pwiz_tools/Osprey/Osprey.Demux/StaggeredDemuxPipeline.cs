@@ -38,6 +38,9 @@ namespace pwiz.Osprey.Demux
     /// </summary>
     internal sealed class StaggeredDemuxPlan : DemuxPlan
     {
+        /// <summary>Injection times are in milliseconds; an ion trap's intensities are ions per second.</summary>
+        private const double MS_PER_SECOND = 1000;
+
         private readonly IDemuxSource _source;
         private readonly ScanningDemuxOptions _options;
         private readonly int[] _ms2Spectra;           // input index of each MS2, in acquisition order
@@ -71,8 +74,9 @@ namespace pwiz.Osprey.Demux
             for (int k = 0; k < source.Count; k++)
             {
                 var info = infos[k];
-                _intensityPerIon[k] = options.FillTimeIonScale > 0 && info.InjectionTime > 0
-                    ? options.FillTimeIonScale / info.InjectionTime
+                // Ions per second over a fill time in ms: one ion is 1000 / fill time intensity units.
+                _intensityPerIon[k] = options.IntensityIsIonsPerSecond && info.InjectionTime > 0
+                    ? MS_PER_SECOND / info.InjectionTime
                     : options.CountsPerIon;
                 if (info.MsLevel == 1)
                     continue;
