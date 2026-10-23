@@ -284,10 +284,9 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 
             ExperimentType experimentType = msExperiment->getExperimentType();
 
-            if (bal::iends_with(wifffile_->getWiffPath(), "wiff2") &&
-                (experimentType == MRM || experimentType == SIM))
+            if (bal::iends_with(wifffile_->getWiffPath(), "wiff2") && experimentType == MRM)
             {
-                warn_once("WARNING: the WIFF2 reader does not support SIM/MRM chromatograms or spectra; point at the WIFF file instead");
+                warn_once("WARNING: the WIFF2 reader does not support MRM chromatograms or spectra; point at the WIFF file instead");
                 continue;
             }
 

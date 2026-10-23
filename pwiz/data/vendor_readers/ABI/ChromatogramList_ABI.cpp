@@ -415,7 +415,13 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                 idToIndexMap_[ie.id] = ie.index;
             }
 
-            for (int iiii = 0; iiii < (int)msExperiment->getSIMSize(); ++iiii)
+            // A wiff2 file read with simAsSpectra gets no SIM chromatograms: its SIM experiments
+            // sit beside full-scan ones (a compound optimization's Q1MI scan with its product ion
+            // scans), and a reader seeing any SIM chromatogram may take the file for one to read
+            // as chromatograms only - Skyline does - and never read the product ion spectra.
+            // Legacy WIFF keeps both.
+            bool skipSim = config_.simAsSpectra && bal::iends_with(wifffile_->getWiffPath(), ".wiff2");
+            for (int iiii = 0; !skipSim && iiii < (int)msExperiment->getSIMSize(); ++iiii)
             {
                 msExperiment->getSIM(iiii, target);
 
