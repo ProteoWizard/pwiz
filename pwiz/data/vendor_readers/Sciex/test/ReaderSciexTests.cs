@@ -6,7 +6,7 @@ namespace Pwiz.Vendor.Sciex.Tests;
 /// End-to-end harness tests modeled on pwiz C++ <c>Reader_ABI_Test.cpp</c>: each
 /// <c>.wiff</c> / <c>.wiff2</c> fixture is read through <see cref="Reader_Sciex"/>, normalized
 /// via <see cref="VendorReaderTestHarness"/>, and diffed against the sibling reference mzML
-/// shipped with the pwiz test tree. Method names preserve the fixture filename's casing
+/// in <c>Reader_Sciex_Test.data/</c>. Method names preserve the fixture filename's casing
 /// (with <c>.</c> / <c>-</c> normalized to <c>_</c>) so grepping a fixture name lands on
 /// the test.
 /// </summary>
@@ -88,7 +88,7 @@ public class ReaderSciexTests
         // The other legacy-WIFF fixtures in this file (PressureTrace1, Enolase,
         // 50uMpyrone) are SRM/SIM only — vendor peak picking is a no-op on stick
         // spectra. 201208-378803.wiff (the BiblioSpec PRG2012 fixture, copied into
-        // this project's Reference/ override) is the only legacy `.wiff` with profile
+        // Reader_Sciex_Test.data/) is the only legacy `.wiff` with profile
         // MS2 data that actually exercises the peak-array branch.
         var ctx = SetUp("201208-378803.wiff");
         if (ctx is null) return;
@@ -215,17 +215,6 @@ public class ReaderSciexTests
 
     private static FixtureRunContext? SetUp(string fixtureFileName)
     {
-        // pwiz-sharp-only fixtures live under <test-bin>/Reference/. Cpp-tree fixtures
-        // live under pwiz/data/vendor_readers/Sciex/Reader_Sciex_Test.data/. Prefer the
-        // override location so we can ship pwiz-sharp-only data without retriggering
-        // the cpp vendor TC configs; fall back to the cpp tree for everything else.
-        string overrideRoot = Path.Combine(AppContext.BaseDirectory, "Reference");
-        if (File.Exists(Path.Combine(overrideRoot, fixtureFileName)))
-        {
-            return new FixtureRunContext(new Reader_Sciex(), overrideRoot,
-                new IsNamedRawFile(fixtureFileName), fixtureFileName);
-        }
-
         string? root = FindTestDataRoot();
         if (root is null) { Assert.Inconclusive("Sciex test data tree not found."); return null; }
         if (!File.Exists(Path.Combine(root, fixtureFileName)))
