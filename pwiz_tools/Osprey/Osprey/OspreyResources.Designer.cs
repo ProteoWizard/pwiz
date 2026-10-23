@@ -1075,7 +1075,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} asks for the GPU, but {1}.
+        /// </summary>
+        public static string Program_Run__0__asks_for_the_GPU__but__1_ {
+            get {
+                return ResourceManager.GetString("Program_Run__0__asks_for_the_GPU__but__1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one..
         /// </summary>

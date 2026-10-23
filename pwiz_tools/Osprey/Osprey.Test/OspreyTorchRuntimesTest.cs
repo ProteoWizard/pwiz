@@ -89,6 +89,17 @@ namespace pwiz.Osprey.Test
                         folder, OspreyArgNames.Text(OspreyArgNames.INSTALL_CUDA_RUNTIME), downloadSize),
                     torch.DescribeGpuUnavailable(CudaUnavailability.none));
 
+                // --device gpu is a requirement: with a usable GPU and no runtime the check names the
+                // install, with no driver it names the driver, and auto or cpu is never refused
+                Assert.AreEqual(torch.DescribeGpuUnavailable(CudaUnavailability.none), torch.CheckGpu(OspreyTorchRuntimes.DEVICE_GPU));
+                Assert.IsNull(torch.CheckGpu(OspreyTorchRuntimes.DEVICE_AUTO));
+                Assert.IsNull(torch.CheckGpu(null));
+                Assert.IsNull(torch.CheckGpu(OspreyTorchRuntimes.DEVICE_CPU));
+                torch.Runtimes.CudaDriver = null;
+                Assert.AreEqual(OspreyResources.OspreyTorchRuntimes_DescribeGpuUnavailable_no_NVIDIA_GPU_was_found__predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver,
+                    torch.CheckGpu(OspreyTorchRuntimes.DEVICE_GPU));
+                torch.Runtimes.CudaDriver = new CudaDriver(CudaDriver.MIN_LIBTORCH_DRIVER_VERSION, CudaDriver.MIN_LIBTORCH_COMPUTE_CAPABILITY, @"Test GPU");
+
                 // The CPU runtime loads from the torch folder beside the executable, never from beside
                 // TorchSharp.dll, and cpu is what the library phases get; auto with no CUDA runtime
                 // installed lands on the CPU too

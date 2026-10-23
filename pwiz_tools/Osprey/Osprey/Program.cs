@@ -364,6 +364,21 @@ namespace pwiz.Osprey
                 if (config.PrintTaskFiles)
                     return PrintTaskFiles(config, pipeline, librarySettings);
 
+                // --device gpu is a requirement, not a wish: a run that cannot predict on the GPU fails
+                // here, before anything is written, saying what to do - a slow run on the CPU would
+                // need troubleshooting instead. A stage node of the chain predicts nothing and is not
+                // asked; a library phase node is.
+                if (config.LibraryBuild.Enabled && config.SelectedTask == null)
+                {
+                    string gpuErr = new OspreyTorchRuntimes(config.LibraryBuild).CheckGpu(config.LibraryBuild.Device);
+                    if (gpuErr != null)
+                    {
+                        LogError(string.Format(OspreyResources.Program_Run__0__asks_for_the_GPU__but__1_,
+                            OspreyCommandArgs.ARG_DEVICE.ArgumentText + @" " + OspreyTorchRuntimes.DEVICE_GPU, gpuErr));
+                        return EXIT_CODE_FAILURE_TO_START;
+                    }
+                }
+
                 // Apply per-line output decoration and optional log-file redirection now
                 // that args have validated (an invalid command line stays on stderr and
                 // creates no file). All logging funnels through _out (see Log* methods).

@@ -239,7 +239,7 @@
     <value>With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) instead of the pretrained models. With {2}, the tuning starts from it.</value>
   </data>
   <data name="_device" xml:space="preserve">
-    <value>With {0}: where the library is predicted, {1} (default: the GPU when this computer has an NVIDIA GPU that can use the CUDA runtime and the runtime is installed, see {4}, else the CPU), {2} (the GPU, falling back to the CPU with the reason logged) or {3}. The log names the device every library phase ran on.</value>
+    <value>With {0}: where the library is predicted, {1} (default: the GPU when this computer has an NVIDIA GPU that can use the CUDA runtime and the runtime is installed, see {4}, else the CPU), {2} (the GPU; a run that cannot use it fails before it starts, saying why) or {3}. The log names the device every library phase ran on.</value>
   </data>
   <data name="_entrapment" xml:space="preserve">
     <value>With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1), shuffled from the target or, with {2}, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as {3}.</value>

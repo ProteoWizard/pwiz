@@ -74,8 +74,26 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
+        /// Why a run asking for the GPU (<paramref name="device"/> gpu) cannot have it, or null when it
+        /// can, or when it asks for auto or the CPU. Answered before the run starts, from the driver and
+        /// the installed runtimes alone, so a run that would end up on the CPU fails at once and says
+        /// what to do instead of running slowly and needing troubleshooting.
+        /// </summary>
+        public string CheckGpu(string device)
+        {
+            if (!string.Equals(device, DEVICE_GPU, StringComparison.OrdinalIgnoreCase))
+                return null;
+            var unavailability = _runtimes.GetCudaUnavailability();
+            if (unavailability == CudaUnavailability.none && _runtimes.IsCudaInstalled)
+                return null;
+            return DescribeGpuUnavailable(unavailability);
+        }
+
+        /// <summary>
         /// Loads the runtime for the device asked for (auto, gpu or cpu; null is auto), logs the choice
-        /// with its reason, and returns the device the library phases predict on: gpu or cpu.
+        /// with its reason, and returns the device the library phases predict on: gpu or cpu. A run
+        /// asking for the GPU has passed <see cref="CheckGpu"/> by now; the fallback below stands for
+        /// a host that did not ask.
         /// </summary>
         public string Load(string device)
         {
