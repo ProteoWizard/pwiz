@@ -390,8 +390,7 @@ namespace pwiz.Osprey.Test
             var commaDecimal = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
             var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
-            string ospreySeparator = ArgUsage.ArgumentValueSeparator;
-            var ospreyProvider = ArgUsage.ValueFormatProvider;
+            var osprey = ArgUsage.Current;
             var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
             try
             {
@@ -402,17 +401,15 @@ namespace pwiz.Osprey.Test
 
                 // A host that parses in the current culture leaves the provider unset and gets
                 // the value the way its user would type it.
-                ArgUsage.ValueFormatProvider = null;
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ArgumentValueSeparator = osprey.ArgumentValueSeparator });
                 Assert.AreEqual(argTolerance.ArgumentText + @" 0,5", argTolerance + 0.5);
-                ArgUsage.ValueFormatProvider = ospreyProvider;
 
-                ArgUsage.ArgumentValueSeparator = @"=";
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ValueFormatProvider = osprey.ValueFormatProvider });
                 Assert.AreEqual(argThreads.ArgumentText + @"=8", argThreads + 8);
             }
             finally
             {
-                ArgUsage.ArgumentValueSeparator = ospreySeparator;
-                ArgUsage.ValueFormatProvider = ospreyProvider;
+                ArgUsage.Install(osprey);
                 System.Threading.Thread.CurrentThread.CurrentCulture = culture;
             }
 

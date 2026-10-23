@@ -115,17 +115,32 @@ namespace pwiz.CarafeSharp.Proteome
         private const string EXT_FASTA = @".fasta";
         private const string EXT_TSV = @".tsv";
 
-        // Install the grammar and the text the help renderer and the parser's errors need
-        // before any argument text is built.
-        static CarafeCommandLine()
+        /// <summary>
+        /// Carafe's grammar and the text the help renderer and the parser's errors need. Carafe's
+        /// grammar is space-separated (--name value), so the help renders "--name &lt;value&gt;", and
+        /// a token built from an instance (ARG_DB + "x.fasta") is too; the settings read numbers
+        /// as Java does, in the invariant culture.
+        /// </summary>
+        private static readonly ArgUsageSettings ARG_USAGE = new ArgUsageSettings
         {
-            ArgUsage.Grammar = GRAMMAR;
-            ArgUsage.Provider = new CarafeArgUsageProvider();
-            // Carafe's grammar is space-separated (--name value), so the help renders
-            // "--name <value>", and a token built from an instance (ARG_DB + "x.fasta") is too.
-            ArgUsage.ArgumentValueSeparator = @" ";
-            // The settings read numbers as Java does, in the invariant culture.
-            ArgUsage.ValueFormatProvider = CultureInfo.InvariantCulture;
+            Grammar = GRAMMAR,
+            Provider = new CarafeArgUsageProvider(),
+            ArgumentValueSeparator = @" ",
+            ValueFormatProvider = CultureInfo.InvariantCulture,
+        };
+
+        /// <summary>
+        /// Installs <see cref="ARG_USAGE"/> on the process-wide seams, which only CarafeSharp.exe
+        /// (its Main) and CarafeSharp's tests do: the program that owns the process installs the
+        /// grammar its command line parses under. Hosted in Skyline and Osprey, these declarations
+        /// run under the host's settings; Osprey parses the options it hosts under its own grammar.
+        /// Installed once at this type's initialization, as it was, Carafe's grammar decided how
+        /// Skyline parsed its next command line as soon as Skyline had read a model file, and kept
+        /// the first of a repeated argument where Skyline keeps the last.
+        /// </summary>
+        public static void InstallGrammar()
+        {
+            ArgUsage.Install(ARG_USAGE);
         }
 
         // --- Modes and files ---------------------------------------------------------------

@@ -145,15 +145,6 @@
   <data name="LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_" xml:space="preserve">
     <value>Writing {0:N0} library precursors to {1}</value>
   </data>
-  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
-    <value>Loading library cache ({0:N0} precursors)</value>
-  </data>
-  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
-    <value>Writing library cache</value>
-  </data>
-  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
-    <value>The library cache is damaged (unknown neutral loss tag {0}).</value>
-  </data>
   <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
     <value>Merging duplicate library precursors</value>
   </data>
@@ -166,8 +157,11 @@
   <data name="LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__" xml:space="preserve">
     <value>Library precursor ID {0}:</value>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
-    <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
+  <data name="LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_" xml:space="preserve">
+    <value>Failed to remove the library cache '{0}': {1}</value>
+  </data>
+  <data name="LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_" xml:space="preserve">
+    <value>Removed the library cache '{0}': the derived library replaces it.</value>
   </data>
   <data name="LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_" xml:space="preserve">
     <value>Failed to read the derived library '{0}': {1} Reading the library file instead.</value>
@@ -175,14 +169,8 @@
   <data name="LibraryLoader_Load_Failed_to_save_the_derived_library___0_" xml:space="preserve">
     <value>Failed to save the derived library: {0}</value>
   </data>
-  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
-    <value>Library cache '{0}' was built from a different version of the source library; ignoring the stale cache and rebuilding from source.</value>
-  </data>
   <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
     <value>Loaded {0:N0} library precursors</value>
-  </data>
-  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
-    <value>Loaded {0:N0} library precursors from cache '{1}'</value>
   </data>
   <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__" xml:space="preserve">
     <value>Loaded {0:N0} library precursors from the derived library '{1}'</value>
@@ -198,9 +186,6 @@
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
     <value>Unsupported library format: {0}</value>
-  </data>
-  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
-    <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the library cache). {3:N0} decoys and {4:N0} targets have no partner.</value>
   </data>
   <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
     <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} targets have no partner.</value>
