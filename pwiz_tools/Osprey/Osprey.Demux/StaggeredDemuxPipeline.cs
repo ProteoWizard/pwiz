@@ -49,6 +49,7 @@ namespace pwiz.Osprey.Demux
         private readonly int[] _cycleOfMs2;           // the cycle it belongs to
         private readonly int[] _passOfMs2;            // the pass it belongs to: one set of windows tiling the range
         private readonly Dictionary<int, double> _passPerIon = new Dictionary<int, double>();   // joint: a pass's ion scale
+        private readonly double _referencePerIon;     // per-channel, fill-time data: the run's one ion scale, or NaN
         private readonly TextWriter _log;
         private LinearGrid _grid;                     // joint: the profile grid, from the first batch
         private CentrixCentroider _centrix;           // joint: centroids each bin's share, on the grid
@@ -127,6 +128,17 @@ namespace pwiz.Osprey.Demux
                     var scales = group.Select(i => _intensityPerIon[_ms2Spectra[i]]).OrderBy(v => v).ToArray();
                     _passPerIon[group.Key] = scales[scales.Length / 2];
                 }
+            }
+            // The per-channel solve combines spectra, interpolating each window's channels between its acquisitions and
+            // solving them together, so with fill times that vary it must see them all on one scale: ions per second
+            // times the run's median fill time (as the joint solve uses its pass's). Each spectrum's peaks are put on it
+            // as read, and each output spectrum's are taken back to its own (LayOut). A constant counts per ion needs
+            // no conversion, and none is made.
+            _referencePerIon = double.NaN;
+            if (options.IntensityIsIonsPerSecond && !options.Joint && _ms2Spectra.Length > 0)
+            {
+                var scales = _ms2Spectra.Select(k => _intensityPerIon[k]).OrderBy(v => v).ToArray();
+                _referencePerIon = scales[scales.Length / 2];
             }
             log.WriteLine(@"Scheme: {0}, {1} windows into {2} bins, {3}-fold", Scheme.Kind, Scheme.Windows.Count,
                 Scheme.Bins.Count, Scheme.OverlapFactor);
@@ -343,6 +355,13 @@ namespace pwiz.Osprey.Demux
                 {
                     ScanningLayout.Assemble(shared, demuxed.TryGetValue((k, b), out var dem) ? dem : none,
                         out double[] mz, out double[] ions);
+                    if (!double.IsNaN(_referencePerIon))
+                    {
+                        // From the run's ion scale to this spectrum's own.
+                        double scale = _referencePerIon / _intensityPerIon[k];
+                        for (int p = 0; p < ions.Length; p++)
+                            ions[p] *= scale;
+                    }
                     peaks[_outputOf[(k, b)]] = (mz, ions);
                 }
             }
@@ -723,10 +742,12 @@ namespace pwiz.Osprey.Demux
                         outputSpectrum.Add(_ms2Spectra[i]);
                     }
                     var (m, v) = peaks[i];
+                    // This spectrum's ions on the run's scale, when fill times vary (see _referencePerIon).
+                    double toReference = double.IsNaN(_referencePerIon) ? 1 : _intensityPerIon[_ms2Spectra[i]] / _referencePerIon;
                     for (int p = 0; p < m.Length; p++)
                     {
                         mz.Add(m[p]);
-                        ions.Add(v[p]);
+                        ions.Add(double.IsNaN(_referencePerIon) ? v[p] : v[p] * toReference);
                         row.Add(r);
                         acquisition.Add(q);
                     }

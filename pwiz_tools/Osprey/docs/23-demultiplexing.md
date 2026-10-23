@@ -741,7 +741,13 @@ Two ways through `Osprey.DemuxTool --scheme staggered`:
 - **Channels on the centroids or the profile** (`--channel-th 0.09 --ions`, with
   `--profile` for the profile): the per-channel demultiplexer of the sections above, its fragment
   channels matched in Th on a linear axis rather than in ppm, each window's series interpolated
-  (makima) to the target's time. Centroid it afterward with `--centroid centrix`.
+  (makima) to the target's time. Centroid it afterward with `--centroid centrix`. With `--ions`,
+  every spectrum's peaks enter the solve on one scale, ions per second times the run's median fill
+  time, and each output spectrum is taken back to its own fill time. Until 2026-10-23 each spectrum
+  kept its own ions, so series of spectra with different fill times were interpolated and solved
+  together unconverted: the same rates at fill times varying 100-fold changed the output by up to
+  37% of the largest rate (now 0.04%, `TestStaggeredChannelFillTimeInvariance`). The makima arms
+  before then carry that error.
 - **The joint solve on the profile** (`--joint --ions`), `StaggeredDemuxPlan` with
   `JointDemultiplexer` on a `LinearGrid`:
   1. *Passes.* A window below the one before starts a new pass; each pass is scaled to ions at the

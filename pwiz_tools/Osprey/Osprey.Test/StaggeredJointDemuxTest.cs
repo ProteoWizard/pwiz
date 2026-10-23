@@ -141,6 +141,38 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The per-channel solve (makima interpolation of each window's channels, not the joint solve) combines spectra
+        /// in ions per second too: the same rates at fill times varying 100-fold give the same output, its profile
+        /// channels matched within 0.09 Th as on the Stellar.
+        /// </summary>
+        [TestMethod]
+        public void TestStaggeredChannelFillTimeInvariance()
+        {
+            // Without the baseline, which only the joint solve needs (its grid is found from a spectrum's points), and
+            // which the per-channel solve would take as thousands of channels.
+            var uniform = Demultiplex(new StaggeredProfileRun(false, -1, false), Channels());
+            var varied = Demultiplex(new StaggeredProfileRun(true, -1, false), Channels());
+            Assert.AreEqual(uniform.Count, varied.Count);
+            double scale = uniform.Where(o => o.Rates.Length > 0).Max(o => o.Rates.Max());
+            double worst = 0;
+            for (int output = 0; output < uniform.Count; output++)
+            {
+                if (uniform[output].Bin < 2 || uniform[output].Bin >= BINS - 2)
+                    continue;
+                var a = BySample(uniform[output]);
+                var b = BySample(varied[output]);
+                foreach (long sample in a.Keys.Union(b.Keys))
+                {
+                    a.TryGetValue(sample, out double rateA);
+                    b.TryGetValue(sample, out double rateB);
+                    worst = Math.Max(worst, Math.Abs(rateA - rateB) / scale);
+                }
+            }
+            Console.WriteLine(@"worst rate difference {0:E2} of the largest", worst);
+            Assert.IsTrue(worst < 2e-3, worst.ToString(@"E2"));
+        }
+
+        /// <summary>
         /// One output spectrum per bin of every acquired spectrum, in order, whatever it holds: an acquired spectrum of
         /// zeros gives empty spectra in place, not missing ones. And the output does not depend on the thread count.
         /// </summary>
@@ -181,6 +213,17 @@ namespace pwiz.Osprey.Test
                 Threads = 2,
             };
             options.JointParameters.L1Z = l1Z;
+            return options;
+        }
+
+        private static ScanningDemuxOptions Channels()
+        {
+            var options = new ScanningDemuxOptions
+            {
+                IntensityIsIonsPerSecond = true,
+                Threads = 2,
+            };
+            options.Parameters.ChannelToleranceTh = 0.09;
             return options;
         }
 
@@ -268,7 +311,8 @@ namespace pwiz.Osprey.Test
         /// each spectrum its windows' precursors' fragments as profile on the 0.2 Th grid over a low baseline, a quarter of
         /// the points zero. Intensities
         /// are rates (ions per second); the fill time is constant or varies from 0.2 to 20 ms between spectra, which
-        /// changes the ions counted but not the rates. One MS2 spectrum may be all zeros, baseline included.
+        /// changes the ions counted but not the rates. One MS2 spectrum may be all zeros, baseline included; the baseline
+        /// may be left out.
         /// </summary>
         private sealed class StaggeredProfileRun : IDemuxSource
         {
@@ -276,10 +320,12 @@ namespace pwiz.Osprey.Test
             private const int SPECTRA_PER_CYCLE = MS2_PER_CYCLE + 1;
 
             private readonly bool _variedFill;
+            private readonly bool _baseline;
 
-            public StaggeredProfileRun(bool variedFill, int emptyIndex)
+            public StaggeredProfileRun(bool variedFill, int emptyIndex, bool baseline = true)
             {
                 _variedFill = variedFill;
+                _baseline = baseline;
                 EmptyIndex = emptyIndex;
             }
 
@@ -323,7 +369,7 @@ namespace pwiz.Osprey.Test
                 for (int i = 0; i < GRID_POINTS; i++)
                 {
                     mzs[i] = GRID_START + i * SPACING;
-                    values[i] = index == EmptyIndex ? 0 : Baseline(i);
+                    values[i] = index == EmptyIndex || !_baseline ? 0 : Baseline(i);
                 }
                 if (Window(index, out var window) && index != EmptyIndex)
                 {
