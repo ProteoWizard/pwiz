@@ -61,8 +61,12 @@ namespace TestPerf
         public override bool AuditLogCompareLogs => false;
 
         [TestMethod]
-        public void TestDiaToSrmTutorial()
+        public void TestDiaToSrmTutorialDraft()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at / regenerate tutorial screenshots.
             // IsPauseForScreenShots = true;
             CoverShotName = "DIAtoSRM";
