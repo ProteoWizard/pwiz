@@ -241,7 +241,7 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Download the NVIDIA CUDA runtime (about {0} GB from nuget.org, checked against the hashes this build was tested with) into the {1} folder and exit, so that {2} can predict on the GPU. Needs nothing else on the command line..
+        ///   Looks up a localized string similar to Download the NVIDIA CUDA runtime from nuget.org (several GB; the size is logged first, and every package is checked against the hashes this build was tested with) into the {0} folder and exit, so that {1} can predict on the GPU. Needs nothing else on the command line..
         /// </summary>
         public static string _install_cuda_runtime {
             get {

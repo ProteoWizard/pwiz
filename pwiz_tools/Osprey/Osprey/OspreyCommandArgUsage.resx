@@ -146,7 +146,7 @@
     <value>File of input paths, one per line (# comments ignored). Bounded alternative to a long {0} list.</value>
   </data>
   <data name="_install_cuda_runtime" xml:space="preserve">
-    <value>Download the NVIDIA CUDA runtime (about {0} GB from nuget.org, checked against the hashes this build was tested with) into the {1} folder and exit, so that {2} can predict on the GPU. Needs nothing else on the command line.</value>
+    <value>Download the NVIDIA CUDA runtime from nuget.org (several GB; the size is logged first, and every package is checked against the hashes this build was tested with) into the {0} folder and exit, so that {1} can predict on the GPU. Needs nothing else on the command line.</value>
   </data>
   <data name="_library" xml:space="preserve">
     <value>Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or, for comparing with DIA-NN, a library in the {1} format DIA-NN imports, such as Java Carafe writes for it. Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library's own decoys are used: a {0} pairs them from its own table, and a {1} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pairing manifest) or by composition.</value>

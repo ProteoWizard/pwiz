@@ -216,14 +216,15 @@ namespace pwiz.Osprey
             { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, @"auto", @"gpu", @"cpu", ARG_INSTALL_CUDA_RUNTIME.ArgumentText } };
         // Where the CUDA runtime lives and how it gets there. Neither needs --fasta: the install is
         // a command of its own, and the folder is where it installs to as well as where a library
-        // phase looks. The help describes the default folder in words, since the generated help
-        // pages are checked in and the folder is the user's; the download size is read at help time.
+        // phase looks. The help names neither the default folder (the user's) nor the download's
+        // size (the build's: the Linux package set is a gigabyte larger than Windows'), since the
+        // generated help pages are checked in; both are in the log when they matter.
         public static readonly OspreyArgument ARG_TORCH_RUNTIMES = new OspreyArgument(OspreyArgNames.TORCH_RUNTIMES,
             PATH_TO_FOLDER, (c, p) => c._config.LibraryBuild.TorchRuntimesDirectory = p.Value)
             { DescriptionArgs = () => new object[] { ARG_INSTALL_CUDA_RUNTIME.ArgumentText, ARG_DEVICE.ArgumentText } };
         public static readonly OspreyArgument ARG_INSTALL_CUDA_RUNTIME = new OspreyArgument(OspreyArgNames.INSTALL_CUDA_RUNTIME,
             (c, p) => c._config.LibraryBuild.InstallCudaRuntime = true)
-            { DescriptionArgs = () => new object[] { OspreyTorchRuntimes.DescribeDownloadSize(), ARG_TORCH_RUNTIMES.ArgumentText, ARG_DEVICE.ArgumentText } };
+            { DescriptionArgs = () => new object[] { ARG_TORCH_RUNTIMES.ArgumentText, ARG_DEVICE.ArgumentText } };
         public static readonly OspreyArgument ARG_ENTRAPMENT = new OspreyArgument(OspreyArgNames.ENTRAPMENT,
             RATIO_VALUE, (c, p) => c.SetLibraryBuildOption(p, b =>
             {

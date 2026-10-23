@@ -83,7 +83,7 @@ namespace pwiz.Osprey.Test
                 torch.Runtimes.CudaDriver = new CudaDriver(CudaDriver.MIN_LIBTORCH_DRIVER_VERSION, CudaDriver.MIN_LIBTORCH_COMPUTE_CAPABILITY, @"Test GPU");
                 Assert.AreEqual(CudaUnavailability.none, torch.Runtimes.GetCudaUnavailability());
                 Assert.IsFalse(torch.Runtimes.IsCudaInstalled);
-                string downloadSize = OspreyTorchRuntimes.DescribeDownloadSize();
+                string downloadSize = OspreyTorchRuntimes.FormatGigabytes(torch.Runtimes.CudaInstaller.PackageSet.TotalSize);
                 Assert.IsTrue(double.Parse(downloadSize, CultureInfo.CurrentCulture) > 1, downloadSize);
                 Assert.AreEqual(string.Format(OspreyResources.OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_CUDA_runtime_is_not_installed_in__0___run__1__to_download_it__about__2__GB_,
                         folder, OspreyArgNames.Text(OspreyArgNames.INSTALL_CUDA_RUNTIME), downloadSize),

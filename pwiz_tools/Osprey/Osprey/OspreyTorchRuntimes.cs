@@ -43,8 +43,6 @@ namespace pwiz.Osprey
         public const string DEVICE_CPU = @"cpu";
 
         private const string OSPREY_FOLDER = @"Osprey";
-        // What the CUDA runtime's packages add up to, for the help of a build that lists none
-        private const long NOMINAL_DOWNLOAD_SIZE = 2_900_000_000;
 
         private readonly LocalizedRuntimes _runtimes;
 
@@ -66,18 +64,14 @@ namespace pwiz.Osprey
         public static string DefaultRuntimesDirectory =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), OSPREY_FOLDER, LibTorchRuntimes.TORCH_FOLDER);
 
-        /// <summary>
-        /// The CUDA runtime's download size in GB, as the help states it, from the package list this
-        /// build carries. Invariant, since the generated help pages are checked in.
-        /// </summary>
-        public static string DescribeDownloadSize()
-        {
-            var runtimes = new OspreyTorchRuntimes((string)null)._runtimes;
-            return FormatGigabytes(runtimes.CudaInstaller?.PackageSet.TotalSize ?? NOMINAL_DOWNLOAD_SIZE, CultureInfo.InvariantCulture);
-        }
-
         /// <summary>The runtimes themselves, for a test to set the driver.</summary>
         public LibTorchRuntimes Runtimes => _runtimes;
+
+        /// <summary>The CUDA runtime's download size in GB, as the log states it.</summary>
+        public static string FormatGigabytes(long bytes)
+        {
+            return (bytes / 1e9).ToString(@"0.0", CultureInfo.CurrentCulture);
+        }
 
         /// <summary>
         /// Loads the runtime for the device asked for (auto, gpu or cpu; null is auto), logs the choice
@@ -133,7 +127,7 @@ namespace pwiz.Osprey
                     DescribeGpuUnavailable(unavailability)));
             }
             Program.LogInfo(string.Format(OspreyResources.OspreyTorchRuntimes_Install_Downloading_the_NVIDIA_CUDA_runtime__about__0__GB__into__1_,
-                FormatGigabytes(installer.PackageSet.TotalSize, CultureInfo.CurrentCulture), installer.RuntimeDirectory));
+                FormatGigabytes(installer.PackageSet.TotalSize), installer.RuntimeDirectory));
             try
             {
                 IProgressStatus status = new ProgressStatus();
@@ -172,13 +166,8 @@ namespace pwiz.Osprey
                     // None: the GPU could be used, so the package list is there (the installer is not null)
                     return string.Format(OspreyResources.OspreyTorchRuntimes_DescribeGpuUnavailable_the_NVIDIA_CUDA_runtime_is_not_installed_in__0___run__1__to_download_it__about__2__GB_,
                         _runtimes.RuntimesDirectory, OspreyArgNames.Text(OspreyArgNames.INSTALL_CUDA_RUNTIME),
-                        FormatGigabytes(_runtimes.CudaInstaller.PackageSet.TotalSize, CultureInfo.CurrentCulture));
+                        FormatGigabytes(_runtimes.CudaInstaller.PackageSet.TotalSize));
             }
-        }
-
-        private static string FormatGigabytes(long bytes, CultureInfo culture)
-        {
-            return (bytes / 1e9).ToString(@"0.0", culture);
         }
 
         /// <summary>
