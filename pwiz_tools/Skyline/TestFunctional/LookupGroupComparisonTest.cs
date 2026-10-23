@@ -165,13 +165,16 @@ namespace pwiz.SkylineTestFunctional
 
         private List<string> GetAreaAxisLabels()
         {
-            return CallUI(() =>
+            // The graph pane and its axis labels are created asynchronously after the graph is shown
+            WaitForGraphs();
+            AreaReplicateGraphPane areaReplicateGraphPane = null;
+            WaitForConditionUI(() =>
             {
                 var graphSummary = FindGraphSummaryByGraphType<AreaReplicateGraphPane>();
-                Assert.IsNotNull(graphSummary);
-                Assert.IsTrue(graphSummary.TryGetGraphPane(out AreaReplicateGraphPane areaReplicateGraphPane));
-                return areaReplicateGraphPane.XAxis.Scale.TextLabels.ToList();
+                return graphSummary != null && graphSummary.TryGetGraphPane(out areaReplicateGraphPane) &&
+                       areaReplicateGraphPane.XAxis.Scale.TextLabels != null;
             });
+            return CallUI(() => areaReplicateGraphPane.XAxis.Scale.TextLabels.ToList());
         }
 
         private string GetRatName(ChromatogramSet chromatogramSet)
