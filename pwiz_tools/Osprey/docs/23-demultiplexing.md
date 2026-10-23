@@ -287,7 +287,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--scheme` | `scanning` | `scanning` (ZT Scan; needs `--kernel`), `staggered`, or `none` (no demultiplexing: the input as read, centroided with `--centroid centrix`) |
 | `--kernel` | - | the measured transmission profile (see [below](#the-transmission-zt-scan)) |
 | `--layout` | `centered:5` | ZT Scan output layout: `centered:k`, `tiled:k` or `framed:k:m` |
-| `--min-out` | 0.2 | ZT Scan: solved intensities below this many ions are not written |
+| `--min-out` | none | solved intensities (ZT Scan, staggered) and joint centroids below this many ions are not written; no floor until one is shown to help (the former default, 0.2, was never compared with none) |
 | `--position-mz` | off | ZT Scan: write each solved value at the m/z of the peaks it was solved from, in its own sweep (see [Output](#output-zt-scan-and-layouts)) |
 | `--source-positions` | off | ZT Scan: place each channel's sources once per block, then solve each sweep over them (see [Source positions](#source-positions)) |
 | `--source-l1 L` | 0 | ZT Scan, with `--source-positions`: a non-negative lasso weight on the fit that finds the sources |
@@ -315,7 +315,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--centrix-sigma S`, `--centrix-sigma-ms1 S` | measured | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, measured from the input |
 | `--centrix-param Name=Value` | - | any `CentrixParams` setting (`Solver=active_set` among them); also the joint solve's Centrix |
 | `--channel-th T` | ppm | staggered: fragment channels matched within T Th on a linear axis (unit resolution) |
-| `--ions` | off | intensities are ions per second (a Thermo ion trap's): solved and written as ions, intensity x fill time |
+| `--ions` | off | intensities are ions per second (a Thermo ion trap's): combined and written in ions per second; thresholds and Poisson weights in ions, intensity x fill time |
 | `--peak-sigma-th S` | measured | staggered `--joint` on a linear grid: the profile peak sigma, Th |
 | `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
 | `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
@@ -493,8 +493,8 @@ cannot reveal a biased solve.
 
 ### Output: ZT Scan, and layouts
 
-The solved intensity of each source position is written when it reaches `--min-out` ions. By default
-it is written at the channel's intensity-weighted mean m/z over the whole block. With `--position-mz`,
+Every positive solved intensity of a source position is written, or with `--min-out`, those reaching
+that many ions. By default it is written at the channel's intensity-weighted mean m/z over the whole block. With `--position-mz`,
 each value is written at the m/z of the observed peaks it was solved from, in its own sweep: each
 row's peaks count by the share of the row's modeled signal that position explains. That added about
 4% identifications on the slice (below). The *layout* decides which positions each output spectrum
@@ -731,10 +731,9 @@ The Thermo Stellar's staggered methods (the 2026-10-09 window-width HeLa set: `4
 2 Th bins; `4Th-SuperOverlap`, k=4, 1 Th bins) acquire each offset window set in its own pass over
 the range, about 1.2 s a pass mid-run. Their profile is on a uniform 0.2 Th grid (MS2 at 200 kTh/s),
 and their intensities are ions per second: ions = intensity x fill time, which `--ions` applies
-spectrum by spectrum. The solve works in ions, and with `--ions` the output is written in ions too,
-after any centroiding (Centrix expects the instrument's units): a measurement's precision is set by
-the ions it counted, which a rate hides. Each spectrum keeps its fill time, so the rate can be
-recovered. Every bin is observed in every pass, through a different window;
+spectrum by spectrum. Spectra are combined in ions per second, the only unit that compares across
+fill times, and written in it; a measurement's precision is set by the ions it counted, so the
+thresholds (`--min-out`) and Poisson weights are in ions. Every bin is observed in every pass, through a different window;
 only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
 one demultiplexed spectrum per bin per pass.
 

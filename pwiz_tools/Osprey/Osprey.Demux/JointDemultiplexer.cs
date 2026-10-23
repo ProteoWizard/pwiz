@@ -78,8 +78,11 @@ namespace pwiz.Osprey.Demux
         /// <summary>The expected count below which a sample's Poisson weight stops growing, in ions.</summary>
         public double WeightFloorIons { get; set; } = 0.5;
 
-        /// <summary>Centroids below this many ions are not written.</summary>
-        public double MinOutputIons { get; set; } = 0.2;
+        /// <summary>
+        /// Centroids below this many ions are not written; 0, the default, writes every positive one (no floor until
+        /// one is shown to help; see <see cref="ScanningDemuxParams.MinOutputIons"/>).
+        /// </summary>
+        public double MinOutputIons { get; set; }
 
         /// <summary>
         /// Grid samples whose coefficients one chunk owns; chunks overlap by a margin. At 16 threads the solve is
@@ -422,7 +425,7 @@ namespace pwiz.Osprey.Demux
                     previous = kept[k].Sample;
                     k++;
                 }
-                if (sum >= minOutputIons)
+                if (sum > 0 && sum >= minOutputIons)
                     output.Add(new ScanningPeak(unit.ColumnBins[column], unit.Cycles[c], grid.Mz(weighted / sum), sum));
             }
         }

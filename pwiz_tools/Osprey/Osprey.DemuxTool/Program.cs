@@ -220,8 +220,8 @@ namespace pwiz.Osprey.DemuxTool
                         options.Parameters.ChannelToleranceTh = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--ions":
-                        // Intensities are ions per second (a Thermo ion trap's): solved and written as ions, intensity x
-                        // fill time, since a measurement's precision is set by the ions it counted.
+                        // Intensities are ions per second (a Thermo ion trap's): spectra are combined, and written, in ions per
+                        // second; ions (intensity x each spectrum's fill time) set only the thresholds and Poisson weights.
                         options.IntensityIsIonsPerSecond = true;
                         break;
                     case @"--elution-fwhm":
@@ -441,8 +441,6 @@ namespace pwiz.Osprey.DemuxTool
                 msd.Run.SpectrumList = centrix
                     ? CentrixCentroided(spectra, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2)
                     : spectra;
-                if (options.IntensityIsIonsPerSecond)
-                    msd.Run.SpectrumList = IonCounts(msd.Run.SpectrumList);
                 WriteMzml(msd, output);
                 Console.WriteLine(@"Wrote {0} in {1:F0} s", output, stopwatch.Elapsed.TotalSeconds);
                 return 0;
@@ -464,9 +462,6 @@ namespace pwiz.Osprey.DemuxTool
             // The demultiplexed profile centroided as it is written.
             if (centrix)
                 msd.Run.SpectrumList = CentrixCentroided(msd.Run.SpectrumList, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2);
-            // Written as ions, after centroiding, which works in the instrument's units.
-            if (options.IntensityIsIonsPerSecond)
-                msd.Run.SpectrumList = IonCounts(msd.Run.SpectrumList);
 
             WriteMzml(msd, output);
 
@@ -515,16 +510,6 @@ namespace pwiz.Osprey.DemuxTool
                 used++;
             }
             return IonCalibration.CountsPerIon(intensities, out fit);
-        }
-
-        /// <summary>
-        /// The spectra written as ions (<see cref="IonCountSpectrumList"/>): each spectrum's intensities, ions per second,
-        /// times its fill time.
-        /// </summary>
-        private static ISpectrumList IonCounts(ISpectrumList spectra)
-        {
-            Console.WriteLine(@"Writing ions: intensity (ions/s) x each spectrum's fill time");
-            return new IonCountSpectrumList(spectra);
         }
 
         /// <summary>

@@ -41,8 +41,12 @@ namespace pwiz.Osprey.Demux
         /// <summary>A channel seen in fewer (encoded bin, sweep) cells passes through.</summary>
         public int MinChannelCells { get; set; } = 3;
 
-        /// <summary>Demultiplexed intensities below this many ions are not written.</summary>
-        public double MinOutputIons { get; set; } = 0.2;
+        /// <summary>
+        /// Demultiplexed intensities below this many ions are not written; 0, the default, writes every positive one.
+        /// No floor until one is shown to help: on ZT Scan a 1 ion floor gave 3-7% more identifications but a worse
+        /// replicate CV (0.099 to 0.119), and the former 0.2 was never compared with none.
+        /// </summary>
+        public double MinOutputIons { get; set; }
 
         /// <summary>
         /// Refit each solve with Poisson row weights 1 / max(mu, <see cref="WeightFloorIons"/>),
@@ -506,7 +510,7 @@ namespace pwiz.Osprey.Demux
                         for (int jj = 0; jj < nc; jj++)
                         {
                             int j = cols[jj];
-                            if (coreColumn[j] && x[jj] >= parameters.MinOutputIons)
+                            if (coreColumn[j] && x[jj] > 0 && x[jj] >= parameters.MinOutputIons)
                             {
                                 result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[j], unit.Cycles[c],
                                     positionMz != null ? positionMz[jj] : mz, x[jj]));
@@ -956,7 +960,7 @@ namespace pwiz.Osprey.Demux
                     SolveSweep(y, c, cycles, k);
                     for (int s = 0; s < k; s++)
                     {
-                        if (!coreColumn[_column[s]] || _amount[s] < _parameters.MinOutputIons)
+                        if (!coreColumn[_column[s]] || !(_amount[s] > 0) || _amount[s] < _parameters.MinOutputIons)
                             continue;
                         double mz = _parameters.PositionMz ? SourceMz(y, mzSum, c, cycles, k, s, blockMz) : blockMz;
                         output.Add(new ScanningPeak(_unit.ColumnBins[_column[s]], _unit.Cycles[c], mz, _amount[s]));

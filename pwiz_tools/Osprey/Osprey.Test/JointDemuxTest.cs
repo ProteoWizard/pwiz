@@ -42,6 +42,12 @@ namespace pwiz.Osprey.Test
         private const double ROOT_STEP = 9.786595e-05;
 
         /// <summary>
+        /// Above the solve's numerical residue: on these noise-free sources, centroids of 5e-6 to 3e-3 ions beside the
+        /// real ones, written since there is no output floor (<see cref="JointDemuxParams.MinOutputIons"/>).
+        /// </summary>
+        private const double RESIDUE_IONS = 0.01;
+
+        /// <summary>
         /// The grid of a profile spectrum: found from its points, with or without its zero samples; a
         /// sample's index and m/z round-trip; and points off one uniform grid give no grid.
         /// </summary>
@@ -200,7 +206,9 @@ namespace pwiz.Osprey.Test
                 Cycle = new int[mz.Count],
             };
             var result = JointDemultiplexer.DemuxUnit(unit, parameters, grid);
-            Assert.AreEqual(sources.Length, result.Demultiplexed.Count);
+            // With no output floor, the solve's numerical residue is written too: a few centroids of thousandths of an
+            // ion beside the sources, which are the only ones above it.
+            Assert.AreEqual(sources.Length, result.Demultiplexed.Count(p => p.Ions >= RESIDUE_IONS));
             foreach (var s in sources)
             {
                 var peak = result.Demultiplexed.Single(p => Math.Abs(grid.Position(p.Mz) - s.Sample) < 1);
@@ -271,7 +279,8 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Each source's intensity, over the core sweeps, in its own position within half a sample of its
-        /// m/z, within a relative tolerance; and each centroid there within 0.2 samples of the source.
+        /// m/z, within a relative tolerance; and each centroid there within 0.2 samples of the source, apart from the
+        /// solve's residue (<see cref="RESIDUE_IONS"/>).
         /// </summary>
         private static void AssertRecovered(ScanningUnitResult result, TofGrid grid,
             (int Bin, long Sample, double Amount)[] sources, double tolerance, string label)
@@ -281,8 +290,11 @@ namespace pwiz.Osprey.Test
                 double expected = s.Amount * ScanningDemuxTest.TotalElution();
                 Assert.AreEqual(expected, Sum(result.Demultiplexed, s.Bin, grid, s.Sample, 3), tolerance * expected,
                     string.Format(@"{0}, bin {1}, sample {2}", label, s.Bin, s.Sample));
-                foreach (var peak in result.Demultiplexed.Where(p => p.Bin == s.Bin && Math.Abs(grid.Position(p.Mz) - s.Sample) < 3))
+                foreach (var peak in result.Demultiplexed.Where(p => p.Bin == s.Bin && p.Ions >= RESIDUE_IONS &&
+                    Math.Abs(grid.Position(p.Mz) - s.Sample) < 3))
+                {
                     Assert.AreEqual(s.Sample, grid.Position(peak.Mz), 0.2, string.Format(@"{0}, bin {1} centroid", label, s.Bin));
+                }
             }
         }
 
