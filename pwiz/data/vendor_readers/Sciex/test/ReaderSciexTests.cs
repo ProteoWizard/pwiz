@@ -148,16 +148,18 @@ public class ReaderSciexTests
     public void Reader_Sciex_ACO_CE_wiff2()
     {
         // wiff2 from a compound optimization (ACO-CE) run, whose experiments report the
-        // triple-quad scan types "Q1MI" (ms level 1) and "ProductIon" (ms level 2) rather
-        // than the ZenoTOF "TOFMS" / "TOFMSMS" of the other wiff2 fixtures. The product ion
-        // scans must come out as MSn spectra with their collision energy, not MS1, and the
-        // single-point Q1MI scans must report the monitored m/z (331.677) and its window
-        // rather than m/z 0 in an unbounded scan window. Q1MI scans are centroids as they
-        // stand: vendor peak picking must keep their point rather than empty them.
+        // triple-quad scan types "Q1MI" and "ProductIon" rather than the ZenoTOF "TOFMS" /
+        // "TOFMSMS" of the other wiff2 fixtures. The product ion scans must come out as MSn
+        // spectra with their collision energy, not MS1. Q1MI is SIM: by default a SIM
+        // chromatogram at the monitored m/z (331.677), and with simAsSpectra single-point SIM
+        // spectra at that m/z and its window rather than m/z 0 in an unbounded scan window.
+        // Those points are centroids as they stand: vendor peak picking must keep them rather
+        // than empty them.
         var ctx = SetUp("ACO-CE-DKTGKN_2-332-Positive-2026-10-21-10-20-43.wiff2");
         if (ctx is null) return;
         ctx.Run(new ReaderTestConfig { IndexRange = (0, 20) });
-        ctx.Run(new ReaderTestConfig { PeakPicking = true, IndexRange = (0, 20) });
+        ctx.Run(new ReaderTestConfig { SimAsSpectra = true, IndexRange = (0, 20) });
+        ctx.Run(new ReaderTestConfig { SimAsSpectra = true, PeakPicking = true, IndexRange = (0, 20) });
         ctx.Check();
     }
 

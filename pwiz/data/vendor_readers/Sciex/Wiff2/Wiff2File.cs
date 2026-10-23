@@ -498,8 +498,9 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
 
     // "TOFMS" / "TOFMSMS" are what the ZenoTOF writes. Triple-quad style acquisitions (seen in
     // an ACO-CE compound optimization file) report "ProductIon" for their MS2 experiments and
-    // "Q1MI" for the single-point Q1 scan; Q1MI is mapped to MS rather than SIM because the
-    // wiff2 path drops SIM experiments from the spectrum list unless simAsSpectra is set.
+    // "Q1MI" (Q1 multiple ion) for single-point Q1 monitoring, which is SIM: the legacy .wiff
+    // SDK's SIM experiment type is the same Q1 MI scan. Like legacy SIM, it becomes one SIM
+    // chromatogram per monitored ion, and spectra only when simAsSpectra is set.
     public override WiffExperimentType ExperimentType => ExperimentTypeFor(_exp.ScanType);
 
     /// <summary>The experiment type for an SDK <c>IExperiment.ScanType</c> string.</summary>
@@ -508,7 +509,7 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
         "TOFMS" => WiffExperimentType.MS,
         "TOFMSMS" => WiffExperimentType.Product,
         "ProductIon" => WiffExperimentType.Product,
-        "Q1MI" => WiffExperimentType.MS,
+        "Q1MI" => WiffExperimentType.SIM,
         "MRM" => WiffExperimentType.MRM,
         "SIM" => WiffExperimentType.SIM,
         _ => WiffExperimentType.MS,
@@ -519,6 +520,24 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
     /// each ion being the centre of its mass range's isolation window.
     /// </summary>
     internal static bool IsQ1MultipleIon(string? scanType) => scanType == "Q1MI";
+
+    /// <summary>
+    /// The monitored m/z of each mass range of a "Q1MI" experiment, in mass range order: the
+    /// centre of its isolation window. Null for any other experiment, or if a range has none.
+    /// </summary>
+    internal static double[]? Q1MultipleIonMzs(IExperiment exp)
+    {
+        if (!IsQ1MultipleIon(exp.ScanType) || exp.MassRanges is not { Length: > 0 } ranges)
+            return null;
+        var mzs = new double[ranges.Length];
+        for (int i = 0; i < ranges.Length; i++)
+        {
+            if (ranges[i]?.IsolationWindow is not IScanWindow iw)
+                return null;
+            mzs[i] = (iw.Start + iw.End) / 2;
+        }
+        return mzs;
+    }
 
     public override WiffPolarity Polarity => _exp.IsPositivePolarityScan ? WiffPolarity.Positive : WiffPolarity.Negative;
 
@@ -615,11 +634,39 @@ internal sealed class Wiff2Experiment : AbstractWiffExperiment
         }
     }
 
-    // wiff2 has no MRM/SIM transitions (cpp WiffFile2 returns 0).
+    // wiff2 MRM experiments are not read as transitions yet.
     public override IReadOnlyList<WiffMrmTarget> SrmTransitions => Array.Empty<WiffMrmTarget>();
-    public override IReadOnlyList<WiffSimTarget> SimTransitions => Array.Empty<WiffSimTarget>();
+
+    private IReadOnlyList<WiffSimTarget>? _simTargets;
+
+    /// <summary>
+    /// One SIM target per monitored ion of a "Q1MI" experiment. The SDK's mass ranges carry no
+    /// dwell time, collision energy, schedule or compound name, so those are left at 0 / null.
+    /// </summary>
+    public override IReadOnlyList<WiffSimTarget> SimTransitions => _simTargets ??=
+        Q1MultipleIonMzs(_exp)?.Select(mz => new WiffSimTarget
+        {
+            Mass = mz,
+            DwellTimeMs = 0,
+            CollisionEnergy = 0,
+            StartTime = 0,
+            EndTime = 0,
+            CompoundName = null,
+        }).ToArray() ?? Array.Empty<WiffSimTarget>();
+
     public override (double[] Times, double[] Intensities) GetSic(int transitionIndex)
-        => (Array.Empty<double>(), Array.Empty<double>());
+    {
+        if (transitionIndex < 0 || transitionIndex >= SimTransitions.Count)
+            return (Array.Empty<double>(), Array.Empty<double>());
+        var req = _api.RequestFactory.CreateMrmXicReadRequest();
+        req.SampleId = _sample.Id;
+        req.ExperimentId = _exp.Id;
+        req.MassIndexes = new List<int> { transitionIndex };
+        var reader = _api.GetMrmXic(req);
+        if (!reader.MoveNext() || reader.GetCurrent() is not { } xic)
+            return (Array.Empty<double>(), Array.Empty<double>());
+        return (xic.XValues ?? Array.Empty<double>(), xic.YValues ?? Array.Empty<double>());
+    }
 
     // wiff2 SDK doesn't surface per-cycle base-peak metadata; cpp's WiffFile2 path
     // skips emitting MS_base_peak_* on wiff2 spectra. Returning null lets the
@@ -700,27 +747,19 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     }
 
     // wiff2 reports profile data unless the SDK is asked to centroid (ConvertToCentroid), which
-    // the spectrum list then marks itself. The exception is a "Q1MI" spectrum: one measured
-    // intensity per monitored ion is a centroid as it stands.
-    public override bool CentroidMode => Wiff2Experiment.IsQ1MultipleIon(_exp.ScanType);
+    // the spectrum list then marks itself; SIM ("Q1MI") spectra are marked centroid there too.
+    public override bool CentroidMode => false;
     public override double[] XValues
     {
         get
         {
             var x = _sdk.XValues ?? Array.Empty<double>();
             // A "Q1MI" (Q1 multiple ion) experiment monitors one ion per mass range, and the SDK
-            // reports each point's m/z as 0. The ion is the centre of that range's isolation
-            // window, so put it there; anything that does not fit that shape is left as is.
-            if (!Wiff2Experiment.IsQ1MultipleIon(_exp.ScanType) || _exp.MassRanges is not { } ranges || ranges.Length != x.Length)
+            // reports each point's m/z as 0, so put each at its ion's m/z; anything that does not
+            // fit that shape is left as is.
+            if (Wiff2Experiment.Q1MultipleIonMzs(_exp) is not { } mzs || mzs.Length != x.Length || x.Any(v => v != 0))
                 return x;
-            var mz = new double[x.Length];
-            for (int i = 0; i < x.Length; i++)
-            {
-                if (x[i] != 0 || ranges[i]?.IsolationWindow is not IScanWindow iw)
-                    return x;
-                mz[i] = (iw.Start + iw.End) / 2;
-            }
-            return mz;
+            return mzs;
         }
     }
     public override double[] YValues => _sdk.YValues ?? Array.Empty<double>();
@@ -801,9 +840,5 @@ internal sealed class Wiff2Spectrum : AbstractWiffSpectrum
     // per-cycle base-peak metadata; cpp emits these only for legacy WIFF.
     public override (double Mz, double Intensity)? BasePeak => null;
 
-    // wiff2 doesn't go through SrmAsSpectra/SimAsSpectra (the wiff2 reader rejects
-    // MRM/SIM experiments outright per cpp SpectrumList_ABI.cpp:288-292), so a
-    // wiff2 spectrum's experiment type is never MRM or SIM here. The MS / Product
-    // / Precursor distinction doesn't change XValues handling, so default to MS.
-    public override WiffExperimentType ExperimentType => WiffExperimentType.MS;
+    public override WiffExperimentType ExperimentType => Wiff2Experiment.ExperimentTypeFor(_exp.ScanType);
 }
