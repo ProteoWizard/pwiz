@@ -127,12 +127,6 @@ namespace pwiz.CarafeSharp.Proteome
             get { return ModelPath(RT_MODEL_FILE, ModelFiles.RT_SAFETENSORS); }
         }
 
-        /// <summary>True for a CarafeSharp safetensors model, false for a Carafe PyTorch checkpoint.</summary>
-        public static bool IsSafetensors(string modelPath)
-        {
-            return string.Equals(Path.GetExtension(modelPath), @".safetensors", StringComparison.OrdinalIgnoreCase);
-        }
-
         private string ModelPath(string checkpoint, string safetensors)
         {
             string first = Path.Combine(DirectoryPath, _preferSafetensors ? safetensors : checkpoint);

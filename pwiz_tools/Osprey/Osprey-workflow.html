@@ -1111,11 +1111,11 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
 <!-- ================================================================= -->
 <g transform="translate(0, 286)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 2 files/run<title>Per run: .scores.parquet, .calibration.json. Plus caches outside the output directory: 1 .spectra.bin per run and 1 .libcache. 164 files at 82 runs.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 2 files/run<title>Per run: .scores.parquet, .calibration.json. Plus caches outside the output directory: 1 .spectra.bin per run and, for a .tsv library, 1 derived .blib. 164 files at 82 runs.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; any batch size, 1..N nodes</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library (.blib / DIA-NN TSV), DIA mzML file(s)  &mdash; via  -i</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>, <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>   &#183;   validity stamped in each file</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.libcache</tspan>   &#183;   caches, written to --work-dir / --cache-dir; rebuildable</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.blib</tspan>   &#183;   caches, written to --work-dir / --cache-dir; rebuilt from their source, never upgraded</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: each node needs only its own runs</text>
 </g>
 
@@ -1133,8 +1133,8 @@ Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and i
   <text class="phase-title" x="60"  y="48">Library preparation</text>
 
   <rect class="st-done" x="80" y="70" width="460" height="42" rx="4"/>
-  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + binary cache</text>
-  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, .blib peaks typed b/y from m/z, .libcache for fast reload</text>
+  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + derived library</text>
+  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, .blib peaks typed b/y from m/z, a .tsv's finished form kept as a .blib</text>
 
   <rect class="st-done" x="80" y="130" width="460" height="42" rx="4"/>
   <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>

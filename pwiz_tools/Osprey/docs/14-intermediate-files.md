@@ -40,7 +40,6 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<blib-stem>.1st-pass.model.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
 | `<blib-stem>.1st-pass.stratum.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides, ascending. Absent under every mode but protein-compact. A SECOND file rather than a member of the model file because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadForAnalysis` merges the two on read when their stamps match. Until 2026-10 it was copied beside every run: 82 x 9.6 MB = 790 MB on the SEA-AD cohort |
 | `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
-| `<library-leaf>.libcache` | exp | Custom binary v6 | `Osprey.IO/LibraryCache.cs` | The reload cache the derived library replaced. Read, never written, for one release (section 7) |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
 | `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
@@ -597,7 +596,7 @@ column values added by `Osprey.IO/OspreyBlibWriter.cs`.
 
 ---
 
-## 7. The derived library (`<library-leaf>.blib`) and the reload cache it replaced
+## 7. The derived library (`<library-leaf>.blib`)
 
 **C# source**: `Osprey.IO/LibraryLoader.cs` (`Load`), `Osprey.IO/LibraryBlibWriter.cs`,
 `Osprey.IO/BlibLoader.cs`. A `.tsv` library is parsed once; its FINISHED form - normalized,
@@ -627,12 +626,14 @@ order; a decoy's base id is its target's through `DecoyPairs.TargetRefSpectraID`
 every other entry's spectrum RELEASED, the state a full load followed by
 `LibraryFragmentRelease` leaves. `LibraryLoadOptions.cs` states both contracts.
 
-**The `.libcache`** (`Osprey.IO/LibraryCache.cs`; magic `"OSPRLBR\0"`, `VERSION = 6`, the
-composition hash stamped after the version) is what the derived library replaced. It is still
-READ first, for one release, when a valid one is present, so an upgrade does not re-parse every
-library; none is written. `LoadCache` returns a tri-state `LibraryCacheStatus`: `Invalid` (bad
-magic / wrong version), `IdentityMismatch` (stored hash differs from the composition - the
-entries are *not* read), or `Loaded`.
+**The `.libcache`** it replaced (a binary reload cache, `Osprey.IO/LibraryCache.cs` until
+2026-10) is neither read nor written: a cache is rebuilt from its source, never upgraded or
+imported in place, and a renamed cache format removes its predecessor
+([00](00-pipeline-architecture.md), P18). Once the derived library is in place - written by
+this load, or read by it - `LibraryLoader` deletes `<library-leaf>.libcache` at exactly the
+path the old writer used (`LibraryLoader.RETIRED_CACHE_EXT`, in the cache directory), logs
+`Removed the library cache '<path>': the derived library replaces it.`, and touches nothing
+else.
 
 ---
 
@@ -851,7 +852,7 @@ written or reused. Defaults from `Osprey/OspreyCommandArgs.cs` + `Osprey.Core/Os
 |---|---|---|
 | `--work-dir <dir>` | unset (beside input) | Sets both `ArtifactPaths.OutputDir` and `CacheDir`; redirects every artifact |
 | `--output-dir <dir>` | unset | Sets `ArtifactPaths.OutputDir` (scores parquet, calibration JSON, FDR sidecars, reconciliation JSON) |
-| `--cache-dir <dir>` | unset | Sets `ArtifactPaths.CacheDir`, which holds `.spectra.bin` **and** the derived `<library-leaf>.blib` (`LibraryLoader` routes the derived library, and a `.libcache` an earlier release left, through it too); a shared cache dir lets analyses reuse one parse |
+| `--cache-dir <dir>` | unset | Sets `ArtifactPaths.CacheDir`, which holds `.spectra.bin` **and** the derived `<library-leaf>.blib` (`LibraryLoader` routes the derived library through it too); a shared cache dir lets analyses reuse one parse |
 | `--task <T>` | unset (in-process) | `FirstPassFDR`/`SecondPassFDR` trigger `ValidateScoresParquetGroup`; `SecondPassFDR` sets `ExpectReconciledInput` (requires `osprey.reconciled = "true"`). See 15-hpc-scoring-split.md |
 | `--resolution {hram\|unit}` | `hram` | Folded into `SearchParameterHash` ⇒ changing it invalidates `.scores.parquet` and (via the task key) recalibration |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; unit-res forces mz 0.5 | Folded into `SearchParameterHash` |

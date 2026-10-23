@@ -207,8 +207,8 @@ namespace pwiz.Osprey.IO
 
                     // MS2 records, grouped by window (contiguous per window).
                     //
-                    // Reported for the same reason LibraryCache reports its own write: this is
-                    // multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
+                    // Reported for the same reason the derived library's writer reports its own:
+                    // this is multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
                     // SEA-AD Astral cohort the cache is ~4.1 GB per file and took ~28 s, which
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked

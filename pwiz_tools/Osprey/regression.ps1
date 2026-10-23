@@ -1841,20 +1841,19 @@ function Assert-ExitAgreesWithLog {
     }
 }
 
-# Stage the library's DERIVED files into a phase dir: its <lib>.blib (and a .libcache an
-# earlier release left), when present. No task declares them - the derived blib is a cache of
-# the library, validated by its own osprey.library_hash row, and a node without it rebuilds
-# it - so the declared-input staging below does not ship them. This relay saves each phase the
-# rebuild, as an HPC orchestrator would. Returns the paths it staged.
+# Stage the library's DERIVED file into a phase dir: its <lib>.blib, when present. No task
+# declares it - the derived blib is a cache of the library, validated by its own
+# osprey.library_hash row, and a node without it rebuilds it - so the declared-input staging
+# below does not ship it. This relay saves each phase the rebuild, as an HPC orchestrator
+# would. Returns the paths it staged.
 function Copy-LibraryDerivedInto {
     param([string]$Library, [string]$Dir)
     $staged = @()
-    foreach ($derived in @(($Library + '.blib'), ($Library + '.libcache'))) {
-        if (Test-Path -LiteralPath $derived) {
-            $dest = Join-Path $Dir (Split-Path -Leaf $derived)
-            Copy-Item -LiteralPath $derived $dest
-            $staged += $dest
-        }
+    $derived = $Library + '.blib'
+    if (Test-Path -LiteralPath $derived) {
+        $dest = Join-Path $Dir (Split-Path -Leaf $derived)
+        Copy-Item -LiteralPath $derived $dest
+        $staged += $dest
     }
     return $staged
 }
