@@ -144,6 +144,23 @@ public class ReaderSciexTests
         ctx.Check();
     }
 
+    [TestMethod]
+    public void Reader_Sciex_ACO_CE_wiff2()
+    {
+        // wiff2 from a compound optimization (ACO-CE) run, whose experiments report the
+        // triple-quad scan types "Q1MI" (ms level 1) and "ProductIon" (ms level 2) rather
+        // than the ZenoTOF "TOFMS" / "TOFMSMS" of the other wiff2 fixtures. The product ion
+        // scans must come out as MSn spectra with their collision energy, not MS1, and the
+        // single-point Q1MI scans must report the monitored m/z (331.677) and its window
+        // rather than m/z 0 in an unbounded scan window. Q1MI scans are centroids as they
+        // stand: vendor peak picking must keep their point rather than empty them.
+        var ctx = SetUp("ACO-CE-DKTGKN_2-332-Positive-2026-10-21-10-20-43.wiff2");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig { IndexRange = (0, 20) });
+        ctx.Run(new ReaderTestConfig { PeakPicking = true, IndexRange = (0, 20) });
+        ctx.Check();
+    }
+
     /// <summary>
     /// cpp <c>SpectrumList_ABI.cpp:298</c> (index built off the TIC, keeping wiff1 cycles the
     /// BPC-plus-getDataSize probe would have dropped) and <c>:240</c> (base-peak cvParams
@@ -251,6 +268,7 @@ public class ReaderSciexTests
             Reader_Sciex_Enolase_repeats_AQv1_4_2_srmAsSpectra();
             Reader_Sciex_7600ZenoTOFMSMS_EAD_TestData();
             Reader_Sciex_swath_api();
+            Reader_Sciex_ACO_CE_wiff2();
         }
         finally
         {

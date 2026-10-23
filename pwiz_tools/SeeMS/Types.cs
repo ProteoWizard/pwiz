@@ -592,8 +592,11 @@ namespace Pwiz.SeeMS
         {
             get
             {
+                // A line needs two points: a profile spectrum of a single point would draw
+                // nothing at all, so draw it as a stick.
                 CVParam representation = Element.Params.CvParamChild(CVID.MS_spectrum_representation);
-                if( !representation.IsEmpty && representation.Cvid == CVID.MS_profile_spectrum )
+                if( !representation.IsEmpty && representation.Cvid == CVID.MS_profile_spectrum &&
+                    Element.DefaultArrayLength > 1 )
                     return pwiz.MSGraph.MSGraphItemDrawMethod.line;
                 else
                     return pwiz.MSGraph.MSGraphItemDrawMethod.stick;

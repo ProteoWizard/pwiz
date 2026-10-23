@@ -28,6 +28,9 @@
     <None Update="Reference\*.wiff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Reference\*.wiff2">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Reference\*.wiff.scan">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
