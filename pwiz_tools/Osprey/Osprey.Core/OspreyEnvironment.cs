@@ -265,6 +265,43 @@ namespace pwiz.Osprey.Core
         public static readonly string CrossImplReconciliationOut = GetVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
         /// <summary>
+        /// OSPREY_DEMUX_ENGINE: developer override of the <c>--demux</c> engine, weighted (the
+        /// default) | msconvert. msconvert runs the overlap demultiplexer, kept to compare against
+        /// msconvert until it is removed; the three variables below apply to it only.
+        /// </summary>
+        public static readonly string DemuxEngine = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_ENGINE");
+
+        /// <summary>
+        /// OSPREY_DEMUX_BLOCK / OSPREY_DEMUX_INTERPOLATION / OSPREY_DEMUX_OUTPUT: developer
+        /// overrides of the msconvert engine's block mode (covered_bins | truncated_slice),
+        /// RT interpolant (makima | pchip | natural_three_point | linear) and output mode
+        /// (apportioned | solution). Setting block and interpolation to truncated_slice and
+        /// natural_three_point reproduces msconvert's overlap demultiplexer, so a difference
+        /// from msconvert can be attributed setting by setting. Deliberately not flags: the
+        /// defaults are the supported configuration. Each value is part of the demux cache
+        /// descriptor, so a cache written under an override is rebuilt without it.
+        /// </summary>
+        public static readonly string DemuxBlockMode = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_BLOCK");
+
+        /// <summary>See <see cref="DemuxBlockMode"/>.</summary>
+        public static readonly string DemuxInterpolation = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_INTERPOLATION");
+
+        /// <summary>See <see cref="DemuxBlockMode"/>.</summary>
+        public static readonly string DemuxOutputMode = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_OUTPUT");
+
+        /// <summary>
+        /// OSPREY_DEMUX_MIN_CHANNEL_IONS / OSPREY_DEMUX_COUNTS_PER_ION: developer overrides of the
+        /// weighted engine's channel threshold (the ions a fragment channel needs over its block to
+        /// be demultiplexed rather than split evenly among its bins; 8 by default) and of how it
+        /// counts ions (a fixed intensity per ion instead of each spectrum's fill time and analyzer).
+        /// For measuring their effect on a search; each is part of the demux cache descriptor.
+        /// </summary>
+        public static readonly string DemuxMinChannelIons = GetVariable(@"OSPREY_DEMUX_MIN_CHANNEL_IONS");
+
+        /// <summary>See <see cref="DemuxMinChannelIons"/>.</summary>
+        public static readonly string DemuxCountsPerIon = GetVariable(@"OSPREY_DEMUX_COUNTS_PER_ION");
+
+        /// <summary>
         /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
         /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
         /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer

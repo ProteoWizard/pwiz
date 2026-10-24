@@ -1617,7 +1617,7 @@ namespace pwiz.Osprey.Tasks
             // fallback -- a rescore without the cache is a deployment error, not a reason
             // to re-read the 6 GB mzML (LoadSpectraForRescore throws).
             SpectraWindowIndex spectraIndex = ScoringTaskShared.LoadSpectraForRescore(inputFile, fileName,
-                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, true);
+                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, true, ctx);
             ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
                 spectraIndex.Ms2Count, spectraIndex.Ms1Spectra.Count, fileName));

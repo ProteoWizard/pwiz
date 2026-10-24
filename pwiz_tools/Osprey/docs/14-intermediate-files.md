@@ -26,6 +26,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
+| `<stem>.acquisition.bin` | run | Custom binary v1 | `Osprey.IO/AcquisitionSidecar.cs` | Each MS2 spectrum's fill time and analyzer, beside the `.spectra.bin`: what `--demux auto` counts ions from |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
@@ -227,6 +228,91 @@ nothing to re-parse, and the fingerprint check that would have caught a mismatch
 skipped precisely because there is nothing left to compare against. So validate the caches
 against their sources — magic, version, fingerprint, and that the index offset agrees with
 `n_ms2` — **before** deleting either, and treat the caches as data from then on.
+
+### Demultiplexed cache (`<stem>.demux.spectra.bin`)
+
+**C# source**: `Osprey.Tasks/DemuxCacheBuilder.cs` (build and open), `Osprey.IO/SpectraCache.cs`
+(format). Path: `SpectraCache.GetDemuxCachePath`, beside the `.spectra.bin` it is derived from.
+Written only with `--demux auto`, and only for a run whose isolation windows overlap.
+Osprey-only; Rust has no counterpart. How and when it is built, and what it contains, is in
+[23-demultiplexing.md](23-demultiplexing.md); this section is its bytes.
+
+The same VERSION 4 layout, with two differences:
+
+```
+[magic:        8 bytes  "OSPRDMX\0"]
+[version, source_size, source_mtime, n_ms2, n_ms1  as above]
+[descriptor_length: uint32]
+[descriptor:   UTF-8, e.g. "osprey-demux/3;block=covered_bins;interpolation=makima;..."]
+[MS2 body, MS1 section, index, footer  as above]
+```
+
+Everything after the header is addressed by absolute offsets from the index and footer, so the
+readers decode it unchanged. `TryReadHeader` refuses it with `DemuxSettingsChanged` in three cases:
+- it is read where a plain cache is expected;
+- a plain cache is read where a demultiplexed one is expected;
+- its descriptor differs from the current settings (`DemuxParams.Descriptor`: the algorithm
+  version plus every output-changing setting, but not the thread count).
+
+It records the *source* file's fingerprint, not the `.spectra.bin`'s, so a missing source is
+handled exactly as above.
+
+Each MS2 record is one narrow bin of one acquired spectrum. It keeps its parent's scan number
+and retention time, and its isolation window is the bin. Bins are disjoint, so no precursor
+falls in two windows.
+
+`SpectraWindowIndex` lists every distinct window of any cache, plain or demultiplexed. It
+used to take only the first cycle's windows, up to the first repeated key. That is the same
+set for ordinary DIA, but not for demultiplexed data: a bin covered only by the offset window
+set first appears after other bins have repeated. Searching msconvert-demultiplexed data that
+way silently left the top bin unscored.
+
+**Rebuildable from the `.spectra.bin`, cache to cache**, in seconds rather than the minutes a
+vendor parse takes. The `.spectra.bin` is never altered by demultiplexing, so it stays a pure
+function of the raw file.
+
+### Acquisition sidecar (`<stem>.acquisition.bin`)
+
+**C# source**: `Osprey.IO/AcquisitionSidecar.cs`. Path: `AcquisitionSidecar.PathFor`, the
+`.spectra.bin` path with `.acquisition.bin` in place of `.spectra.bin`. Written by
+`EnsureSpectraCache` beside every `.spectra.bin` it writes, from the parse. Osprey-only.
+
+What the spectra cache does not keep and the weighted demultiplexer needs to count each spectrum's
+ions ([23](23-demultiplexing.md#ions-from-the-fill-time)): each MS2 spectrum's ion injection (fill)
+time and its analyzer, the PSI-MS analyzer terms of its instrument configuration. A separate file,
+so the `.spectra.bin` format, and every cache already written, is unchanged.
+
+```
+[magic:        8 bytes  "OSPRACQ\0"]
+[version:      uint32 = 1]
+[source_size:  uint64]   as the .spectra.bin, including the unmeasurable sentinel
+[source_mtime: int64]
+[n_analyzers:  uint8]
+[analyzers:    n_analyzers x length-prefixed UTF-8 strings]
+[n_records:    uint32]
+[records:      n_records x { scan_number: uint32, fill_time_ms: float32 (NaN when not reported),
+                             analyzer: uint8 (index into analyzers) }]
+```
+
+It is refused, as the cache is, when it is missing, of another version, or written for a
+different version of the source. A `--demux auto` run that finds a `.spectra.bin` without a valid
+sidecar (one written before the sidecar existed) reads the fill times from the source's metadata
+alone, without its peaks, and writes the sidecar; with the source gone too, it counts ions at a
+constant 100 per ion and says so in the log. About 9 bytes per MS2 spectrum: 1-4 MB per run.
+
+### Centrix-centroided cache (`<stem>.centrix-<hash>.spectra.bin`)
+
+With `--centroid centrix` the spectra are Osprey's own centroids of the profile, not the vendor's
+([24-profile-centroiding.md](24-profile-centroiding.md)), so they are cached under their own name,
+in the plain VERSION 4 format: `<stem>.centrix-<hash>.spectra.bin`, and with `--demux auto`
+`<stem>.centrix-<hash>.demux.spectra.bin`. The hash is the first 8 hex digits of the SHA-256 of
+the centroiding descriptor (`ProfileCentroiding.Descriptor`: `CentrixCentroider.ALGORITHM_VERSION`
+and every setting), so different settings or a new algorithm version give a different file and
+never reuse an old one. `Program` sets the tag once on `ArtifactPaths.SpectraCacheTag`, and
+`SpectraCache.GetCachePath` / `GetDemuxCachePath` insert it, so every reader (Stage 6's rescore,
+the training export) finds the same file. Each cache stays a function of its source file and its
+settings; the vendor-centroided `<stem>.spectra.bin` beside it is untouched. The descriptor also
+enters every task's validity key (`;centroid=...`).
 
 ---
 
@@ -698,6 +784,8 @@ run:
 - `<stem>.{1st,2nd}-pass.fdr_scores.bin` — first-pass required by the Stage 6 worker; deleting
   forces a Stage 5 re-join.
 - `<stem>.reconciliation.json` — deleting forces a Stage 5 re-join.
+- `<stem>.acquisition.bin` — recreated from the source's metadata by a `--demux auto` run that
+  needs it. Keep it with the `.spectra.bin` on a cohort whose sources are deleted.
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
   C# recalibration is triggered by the task sidecar, not by this file's presence.
 - `<output>.<TaskName>.osprey.task` — deleting forces the task to re-run.

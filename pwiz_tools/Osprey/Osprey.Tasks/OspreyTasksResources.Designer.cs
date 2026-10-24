@@ -548,6 +548,153 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No fill times for {0}: {1} is missing and so is its source. Counting ions at {2} per ion..
+        /// </summary>
+        public static string DemuxCacheBuilder_AcquisitionsOf_No_fill_times_for__0____1__is_missing_and_so_is_its_source__Counting_ions_at__2__per_ion_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_AcquisitionsOf_No_fill_times_for__0____1__is_missing_and_so_is_" +
+                        "its_source__Counting_ions_at__2__per_ion_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading the fill times of {0}..
+        /// </summary>
+        public static string DemuxCacheBuilder_AcquisitionsOf_Reading_the_fill_times_of__0__ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_AcquisitionsOf_Reading_the_fill_times_of__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   {0:N0} MS2 spectra -&gt; {1:N0}; {2:N0} channel solves ({3:P1} zero, {4:P1} unconstrained, {5:P1} active set, {6:N0} at the iteration cap) over {7} block geometries.
+        /// </summary>
+        public static string DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__channel_solves___3_P1__zero___4_P1__unconstrained___5_P1__act {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__channel_solve" +
+                        "s___3_P1__zero___4_P1__unconstrained___5_P1__act", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   {0:N0} MS2 spectra -&gt; {1:N0}; {2:N0} fragment channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through unsolved.
+        /// </summary>
+        public static string DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__fragment_channels___3_N0__solved___4_P2__of__5_E3__ions_passe {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__fragment_chan" +
+                        "nels___3_N0__solved___4_P2__of__5_E3__ions_passe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   Demultiplexed in {0:F1}s with {1} threads; {2}; {3}.
+        /// </summary>
+        public static string DemuxCacheBuilder_LogSummary___Demultiplexed_in__0_F1_s_with__1__threads___2____3_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_LogSummary___Demultiplexed_in__0_F1_s_with__1__threads___2____3" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Demultiplexing {0}: {1}-fold overlap, {2} windows into {3} bins of {4:F3}-{5:F3} Th.
+        /// </summary>
+        public static string DemuxCacheBuilder_LogSummary_Demultiplexing__0____1__fold_overlap___2__windows_into__3__bins_of__4_F3___5_F3__Th {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_LogSummary_Demultiplexing__0____1__fold_overlap___2__windows_in" +
+                        "to__3__bins_of__4_F3___5_F3__Th", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not index the demultiplexed spectra cache &apos;{0}&apos; just written: {1}..
+        /// </summary>
+        public static string DemuxCacheBuilder_Resolve_Could_not_index_the_demultiplexed_spectra_cache___0___just_written___1__ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_Resolve_Could_not_index_the_demultiplexed_spectra_cache___0___j" +
+                        "ust_written___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read &apos;{0}&apos; to demultiplex it..
+        /// </summary>
+        public static string DemuxCacheBuilder_Resolve_Could_not_read___0___to_demultiplex_it_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_Resolve_Could_not_read___0___to_demultiplex_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Isolation windows of {0} do not overlap; searching as acquired..
+        /// </summary>
+        public static string DemuxCacheBuilder_Resolve_Isolation_windows_of__0__do_not_overlap__searching_as_acquired_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_Resolve_Isolation_windows_of__0__do_not_overlap__searching_as_a" +
+                        "cquired_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to save {0}: {1}.
+        /// </summary>
+        public static string DemuxCacheBuilder_SaveAcquisition_Failed_to_save__0____1_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_SaveAcquisition_Failed_to_save__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is demultiplexed, but its demultiplexed spectra cache &apos;{1}&apos; is missing or stale. Re-run {2} with {3} auto to rebuild it..
+        /// </summary>
+        public static string DemuxCacheBuilder_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demult" +
+                        "iplexed_spectra_cache___1___is_missing_or_stale_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; was acquired with overlapping isolation windows ({1}-fold, {2} windows over {3} bins). Searched as acquired, every precursor would be scored in {1} windows. Re-run with {4} auto to demultiplex it first..
+        /// </summary>
+        public static string DemuxCacheBuilder_ThrowIfOverlapping___0___was_acquired_with_overlapping_isolation_windows___1__fold___2__windows_over__3__bins___Searche {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_ThrowIfOverlapping___0___was_acquired_with_overlapping_isolatio" +
+                        "n_windows___1__fold___2__windows_over__3__bins___Searche", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Demultiplexed spectra cache {0} is not usable: {1}..
+        /// </summary>
+        public static string DemuxCacheBuilder_TryOpenDemuxCache_Demultiplexed_spectra_cache__0__is_not_usable___1__ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_TryOpenDemuxCache_Demultiplexed_spectra_cache__0__is_not_usable" +
+                        "___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to index demultiplexed spectra cache {0}: {1}.
+        /// </summary>
+        public static string DemuxCacheBuilder_TryOpenDemuxCache_Failed_to_index_demultiplexed_spectra_cache__0____1_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_TryOpenDemuxCache_Failed_to_index_demultiplexed_spectra_cache__" +
+                        "0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Streaming demultiplexed spectra from cache: {0}.
+        /// </summary>
+        public static string DemuxCacheBuilder_TryOpenDemuxCache_Streaming_demultiplexed_spectra_from_cache___0_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_TryOpenDemuxCache_Streaming_demultiplexed_spectra_from_cache___" +
+                        "0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Excluded {0:N0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics..
         /// </summary>
         public static string EntrapmentPairing_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_ {
@@ -3952,6 +4099,16 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_p" +
                         "recursor_candidates_of_every_run_in_memory_at_once_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Centroided the profile spectra with Centrix: peak sigma {0:F3} Th for MS1, {1:F3} Th for MS2.
+        /// </summary>
+        public static string ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2 {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix_" +
+                        "_peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2", resourceCulture);
             }
         }
         

@@ -302,6 +302,40 @@ namespace pwiz.Osprey.Core
         public bool PrefilterEnabled { get; set; } = true;
 
         /// <summary>
+        /// Demultiplex overlapping-window DIA into its narrow bins before searching
+        /// (<c>--demux</c>). Enters the search hash only when enabled, so existing
+        /// caches and goldens are unaffected while it is off.
+        /// </summary>
+        public DemuxMode DemuxMode { get; set; } = DemuxMode.off;
+
+        /// <summary>
+        /// Who centroids profile spectra (<c>--centroid</c>): the vendor library, as msconvert's
+        /// "peakPicking vendor" does, or Centrix, Osprey's lasso centroider for ion trap profile
+        /// data. Enters the search hash only when not vendor, so existing caches and goldens are
+        /// unaffected.
+        /// </summary>
+        public CentroidMode CentroidMode { get; set; } = CentroidMode.vendor;
+
+        /// <summary>
+        /// With Centrix, the MS1 profile peak sigma in Th (<c>--centrix-sigma-ms1</c>); 0, the default,
+        /// takes it from the run: 1.1 point spacings when the point spacing identifies a linear ion trap
+        /// scan rate, otherwise one species' peak width measured from the run.
+        /// </summary>
+        public double CentrixSigmaMs1 { get; set; }
+
+        /// <summary>
+        /// With Centrix, the MS2 profile peak sigma in Th (<c>--centrix-sigma-ms2</c>); 0, the default,
+        /// takes it from the run as for MS1.
+        /// </summary>
+        public double CentrixSigmaMs2 { get; set; }
+
+        /// <summary>
+        /// With Centrix, solve each region's lasso exactly by its active set rather than by
+        /// Centrix's own coordinate descent (<c>--centrix-solver</c>).
+        /// </summary>
+        public bool CentrixActiveSet { get; set; }
+
+        /// <summary>
         /// Protein-level FDR threshold. Optional on the command line
         /// (<c>--protein-fdr</c>); when unset, <see cref="EffectiveProteinFdr"/>
         /// falls back to <see cref="DefaultProteinFdr"/>. To match Rust osprey
@@ -625,5 +659,33 @@ namespace pwiz.Osprey.Core
         All,
         Razor,
         Unique
+    }
+
+    /// <summary>
+    /// Who centroids profile spectra. Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum CentroidMode
+    {
+        /// <summary>The vendor library's centroiding; the default.</summary>
+        vendor,
+
+        /// <summary>Centrix, the non-negative lasso centroider for unit-resolution (ion trap) profile data.</summary>
+        centrix,
+    }
+
+    /// <summary>
+    /// Whether overlapping-window (staggered) DIA is demultiplexed before searching.
+    /// Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum DemuxMode
+    {
+        /// <summary>Search spectra as acquired. The default while demux is validated.</summary>
+        off,
+
+        /// <summary>
+        /// Detect the isolation scheme and demultiplex it when it overlaps; a
+        /// non-overlapping run is searched as acquired.
+        /// </summary>
+        auto,
     }
 }

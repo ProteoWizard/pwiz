@@ -100,11 +100,26 @@
   <data name="_cache_dir" xml:space="preserve">
     <value>Directory for the {0} cache (overrides {1})</value>
   </data>
+  <data name="_centrix_sigma_ms1" xml:space="preserve">
+    <value>With {0} centrix: the MS1 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species' peak width measured from the run)</value>
+  </data>
+  <data name="_centrix_sigma_ms2" xml:space="preserve">
+    <value>With {0} centrix: the MS2 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species' peak width measured from the run)</value>
+  </data>
+  <data name="_centrix_solver" xml:space="preserve">
+    <value>With {0} centrix: how each region of a spectrum is fitted. descent: Centrix's own coordinate descent; active-set: the exact optimum of the same fit, several times faster (default: {1})</value>
+  </data>
+  <data name="_centroid" xml:space="preserve">
+    <value>Who centroids profile spectra: the vendor library, or Centrix, a lasso centroider for ion trap (unit resolution) profile data that separates peaks closer than 1 Th. Centrix reads the profile even from a vendor file, and its spectra are cached apart from the vendor-centroided ones (default: {0})</value>
+  </data>
   <data name="_decoy_pairing_manifest" xml:space="preserve">
     <value>FDRBench 5-column pairing manifest (TSV), used with {0}</value>
   </data>
   <data name="_decoys_in_library" xml:space="preserve">
     <value>Trust decoys already in the spectral library instead of generating reverse decoys. Stops with an error if none are recognized.</value>
+  </data>
+  <data name="_demux" xml:space="preserve">
+    <value>Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0})</value>
   </data>
   <data name="_diagnostics" xml:space="preserve">
     <value>Write developer diagnostic dump files, for comparison with the Rust implementation</value>

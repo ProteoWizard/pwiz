@@ -33,6 +33,7 @@
        facade. Nothing below Tasks references Tasks, so this stays acyclic. -->
   <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.Demux\Osprey.Demux.csproj" />
     <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
     <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
