@@ -61,10 +61,12 @@ namespace pwiz.Osprey.Centroid
         /// The version of this centroider's output, part of the name of the spectra caches Osprey writes with it
         /// (<c>ProfileCentroiding.CacheTag</c>) and of every task's validity key. Raise it with any change that moves a
         /// centroid, so the caches and scores computed from the previous version's centroids are rebuilt rather than
-        /// reused; a change to <see cref="CentrixParams"/> defaults counts. The Rust golden test must still pass, or the
-        /// change must be one Rust Centrix made too, with the golden regenerated from it.
+        /// reused; a change to <see cref="CentrixParams"/> defaults counts, and so does one to the sigma
+        /// <see cref="CentrixCalibration"/> gives a run when none is set (2: a linear ion trap's follows its point spacing).
+        /// The Rust golden test must still pass, or the change must be one Rust Centrix made too, with the golden
+        /// regenerated from it.
         /// </summary>
-        public const int ALGORITHM_VERSION = 1;
+        public const int ALGORITHM_VERSION = 2;
 
         /// <summary>Spectra whose detected spacing is within this fraction of the cached basis's reuse it.</summary>
         private const double SPACING_REUSE_TOLERANCE = 1e-6;

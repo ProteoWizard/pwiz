@@ -57,8 +57,9 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>
         /// Staggered profile data on a linear grid (an ion trap's), with <see cref="Joint"/>: the profile peak's sigma,
-        /// in Th, which the joint solve's Gaussian and Centrix take. 0, the default, measures it from the run's MS2
-        /// (<see cref="CentrixCalibration"/>: about 0.31 Th on a Thermo Stellar at 200 kTh/s, at every m/z).
+        /// in Th, which the joint solve's Gaussian and Centrix take. 0, the default, takes it from the run's MS2
+        /// (<see cref="CentrixCalibration"/>: 1.1 point spacings on a linear ion trap, 0.22 Th on a Thermo Stellar at
+        /// 200 kTh/s).
         /// </summary>
         public double LinearPeakSigmaTh { get; set; }
 

@@ -27,8 +27,8 @@ separately.
 | Option | Default | Meaning |
 |---|---|---|
 | `--centroid vendor\|centrix` | `vendor` | Who centroids profile spectra. `centrix` reads the profile even from a vendor file |
-| `--centrix-sigma-ms1 <Th>` | measured | The MS1 peak sigma; 0 or absent measures it from the run (see [The peak sigma](#the-peak-sigma)) |
-| `--centrix-sigma-ms2 <Th>` | measured | The MS2 peak sigma, likewise |
+| `--centrix-sigma-ms1 <Th>` | from the run | The MS1 peak sigma; 0 or absent takes it from the run: 1.1 point spacings on a linear ion trap (see [The peak sigma](#the-peak-sigma)) |
+| `--centrix-sigma-ms2 <Th>` | from the run | The MS2 peak sigma, likewise |
 | `--centrix-solver descent\|active-set` | `descent` | Centrix's coordinate descent, or the exact solve (see [Solvers](#solvers)) |
 
 ```
@@ -37,13 +37,14 @@ Osprey.exe -i run_profile.raw -l library.tsv -o out.blib --resolution unit --cen
 
 What happens in a run (`SpectrumFileReader.LoadAllSpectra`):
 1. The file is opened without vendor peak picking.
-2. Unless both sigmas are given, up to 3,000 spectra spread evenly over the file are read first
-   and each MS level's sigma is measured from their peaks.
+2. Unless both sigmas are given, spectra spread evenly over the file are read first until each
+   MS level's sigma is settled: its first profile spectrum on a linear ion trap, otherwise up to
+   3,000 spectra whose peaks it is measured from.
 3. The file is read in order and its profile spectra are centroided in parallel, 512 at a time
    (`--threads`). Each spectrum is centroided on its own, so the output does not depend on the
    thread count. Spectra the file holds centroided pass through.
-4. The log names the sigmas: "Centroided the profile spectra with Centrix: peak sigma 0.170 Th
-   for MS1, 0.309 Th for MS2".
+4. The log names the sigmas: "Centroided the profile spectra with Centrix: peak sigma 0.073 Th
+   for MS1, 0.220 Th for MS2" on the Stellar.
 5. The spectra are cached as `<stem>.centrix-<8 hex>.spectra.bin` (see
    [Caches and keys](#caches-and-keys)).
 
@@ -53,7 +54,7 @@ Stellar vendor centroid reports, so absolute intensities differ between the two 
 `Osprey.DemuxTool`: `--centroid centrix` with `--centrix-sigma S` (MS2), `--centrix-sigma-ms1 S`
 and `--centrix-param Name=Value` (any `CentrixParams` setting, `Solver=active_set` among them).
 `--scheme none` writes the input centroided and nothing else. With `--scheme staggered --joint`,
-MS2 is centroided inside the joint solve, whose sigma is `--peak-sigma-th` (measured when
+MS2 is centroided inside the joint solve, whose sigma is `--peak-sigma-th` (from the run when
 absent), and `--centroid centrix` then centroids the MS1.
 
 ## The algorithm
@@ -87,67 +88,94 @@ Per spectrum, in `CentrixCentroider` (`Osprey.Centroid`):
 | `CentrixBasis.cs` | Gaussian basis, Gram row, basis positions |
 | `NonNegativeLasso.cs` | coordinate descent, the active-set solve, sub-grid refinement |
 | `NoiseProfile.cs`, `SignalRegion.cs` | steps 1, 2 and 4 |
-| `CentrixCalibration.cs` | scan rates and the peak sigma measured from a run |
+| `CentrixCalibration.cs` | scan rates and a run's peak sigma |
 
 ## The peak sigma
 
-The sigma is the instrument's resolution, and a linear ion trap's resolution is set by its scan
-rate: the faster the scan, the wider the peaks and the coarser the profile points. The firmware
-fixes the point spacing per scan rate, so the spacing identifies the rate. Centrix's table gives
-each rate's broadest peak; the peaks a run actually shows are narrower.
+**On a linear ion trap the sigma is 1.1 point spacings** (`CentrixCalibration.SIGMA_PER_SPACING`).
+The firmware fixes the profile point spacing per scan rate, so the spacing identifies the rate
+(`LinearIonTrapScanRate.FromSpacing`), and the level's first profile spectrum settles its sigma.
 
-| Scan rate | Point spacing | Broadest peak (FWHM) | Measured on the Stellar (FWHM, sigma) |
+| Scan rate | Point spacing | Broadest peak (FWHM) | Measured on the Stellar (FWHM lower quartile) |
 |---|---|---|---|
 | 33 kTh/s | 1/30 Th | 0.5 Th | - |
-| 67 kTh/s | 1/15 Th | 0.6 Th | MS1: 0.40 Th, sigma 0.170 Th |
+| 67 kTh/s | 1/15 Th | 0.6 Th | MS1: 0.40 Th |
 | 125 kTh/s | 1/8 Th | 0.8 Th | - |
-| 200 kTh/s | 1/5 Th | 2.0 Th | MS2: 0.72 Th, sigma 0.309 Th |
+| 200 kTh/s | 1/5 Th | 2.0 Th | MS2: 0.63 to 0.72 Th |
 
-Centrix gives no spacing for 200 kTh/s; 0.2 Th is what the Stellar's MS2 at that rate has, five
-points per Th on the 1000 / rate pattern of the others.
+Centrix's table gives each rate's broadest peak and no spacing for 200 kTh/s; 0.2 Th is what the
+Stellar's MS2 at that rate has, five points per Th on the 1000 / rate pattern of the others.
 
-**How it is measured** (`CentrixCalibration`, `CentrixSigmaCalibrator`), for each MS level apart:
-1. The scan rate from the point spacing of the level's first profile spectrum
-   (`LinearIonTrapScanRate.FromSpacing`).
-2. In each of 3,000 spectra spread evenly over the run, the isolated intense peaks: local maxima
+**Why a little over one point spacing.** Centrix is there to split a peak wider than one species,
+and splitting a little too much costs little. The rule comes from one scan rate: the Stellar's 2 Th profile runs
+(three HeLa runs, MS2 at 200 kTh/s), centroided at fixed MS2 sigmas (MS1 0.2 Th in every arm) and
+searched by Osprey with a library fine-tuned on these runs and carrying natural entrapment:
+
+| MS2 sigma | Experiment precursors at q 1% | Entrapment FDP (combined) |
+|---|---|---|
+| 0.12 Th | 33,725 | 0.27% |
+| 0.15 Th | 34,604 | 0.34% |
+| 0.18 Th | 34,621 | 0.32% |
+| 0.20 Th (1 spacing) | 35,077 | 0.34% |
+| **0.21 Th** | **35,849** | 0.51% |
+| 0.24 Th | 35,680 | 0.52% |
+| 0.27 Th | 35,116 | 0.63% |
+| 0.30 Th | 34,330 | 0.51% |
+| 0.33 Th | 32,526 | 0.53% |
+| 0.36 Th | 32,297 | 0.47% |
+
+The same three runs acquired in centroid mode give 47,405 (0.49%). Identifications plateau from
+0.21 to 0.24 Th (1.05 to 1.2 spacings), where the entrapment FDP stays flat, and fall on both
+sides. At one spacing and below, Osprey's calibrated MS2 window narrows from 0.48 Th to 0.31-0.35
+Th and identifications drop, at a lower FDP; by 0.18 Th the centroids per MS2 spectrum have risen
+from about 260 to over 400. The default, 1.1 spacings, sits inside the plateau and clear of that
+drop. A wide sigma merges a fragment with its M+1 isotope into one centroid between them, which
+Osprey's mass calibration reads as a positive offset and a wider window (0.48 Th at sigma 0.21,
+1.04 at 0.33). Identifications alone cannot place the rule finely, since unit-resolution
+scoring barely penalizes splitting.
+
+**Not a measured width, on the Stellar.** A linear ion trap's peak width depends on the ions in the
+peak, so no single width is one species'. The MS2 widths' lower quartile is 0.71 to 0.74 Th at every
+m/z from 200 to 1200, as a linear ion trap's should be, but by ions in the peak it rises from 0.41 Th
+under 3 ions to 0.50 (3-10), 0.63 (10-30), 0.75 (30-100), 0.81 (100-300) and 0.9 Th over 300, with no
+plateau: few ions arrive as short pulses, many ions spread by space charge and merge with unresolved
+neighbors. A measured sigma is therefore set by which peaks are counted: over a whole 2 Th run, 0.27
+Th (threshold over all points, a quarter of them zeros), 0.31 Th (threshold over positive points, so
+stronger peaks), 0.33 Th (peaks of 30 or more ions). All are wider than the identifications' optimum.
+
+**Other scan rates are untested.** At 67 kTh/s the rule gives 0.073 Th, where the Stellar's MS1
+measures 0.17 Th (lower quartile); Osprey's Stellar scoring makes little use of MS1, so this is
+unexamined. Stellar data at other MS2 scan rates will decide whether the optimum follows the spacing,
+a fraction of the scan rate's broadest peak, or the few-ion peak width.
+
+**Elsewhere it is measured** (a spacing no scan rate has: a linear grid other than a linear ion
+trap's), for each MS level apart:
+1. In each of 3,000 spectra spread evenly over the run, the isolated intense peaks: local maxima
    above the spectrum's 99th percentile whose intensity falls without rising again, or reaching
    zero, to half the apex on both sides, over points with none missing between them. Each one's
    full width at half maximum, the apex taken from the log-parabola through its top three points.
-3. The sigma is the widths' lower quartile / 2.3548, no wider than the scan rate's broadest. With
-   under 20 peaks it is the scan rate's broadest; with no scan rate either, 0.34 Th, Centrix's
+2. The sigma is the widths' lower quartile / 2.3548; with under 20 peaks, 0.34 Th, Centrix's
    fallback.
 
-**Why this way.**
-- *A wider peak is most often two or more species the instrument did not resolve*, which is what
-  Centrix is there to separate, so the width is taken from the narrow side of the distribution,
-  not its middle. The scan rate's broadest bounds it from above.
+Why this way:
+- *A wider peak is most often two or more species the instrument did not resolve*, so the width is
+  taken from the narrow side of the distribution, not its middle.
 - *Full width at half maximum, not a fitted Gaussian.* These peaks have a narrow core and broad
   wings, and a Gaussian fit's sigma grows with the points it sees. On the Stellar's MS2 a
   log-parabola gives 0.31 Th from three points and 0.36 from five; linear fits over 5, 7, 9 and 11
   points give 0.36, 0.43, 0.51 and 0.61 Th. The last is what Centrix's own wavelet calibration
   reports.
-- *The lower quartile, not the mode.* The MS2 widths form a plateau from 0.70 to 0.85 Th, so their
-  mode (a half-sample mode was tried) moved by 6% between samples of 3,000 peaks; the lower
-  quartile moved by 0.6%.
+- *The lower quartile, not the mode.* The Stellar's MS2 widths form a plateau from 0.70 to 0.85 Th,
+  so their mode moved by 6% between samples of 3,000 peaks; the lower quartile moved by 0.6%.
 - *Spikes left out.* An ion trap ejects each ion at one instant, so a peak of a few ions lands on
-  one or two points with zeros beside it, narrower than the peak shape the scan rate gives. On the
-  Stellar's MS2, read through Thermo's library, a quarter of the profile points are zeros and such
-  spikes are a third of the intense local maxima. Counted, they pull the lower quartile from 0.72
-  to 0.63 Th (sigma 0.305 to 0.266 Th over a whole 2 Th run). A reader that drops the zeros leaves
-  a gap instead, which is rejected the same way, so the width does not depend on the reader.
-- *Sampled across the run, every sample used.* A first version stopped at 3,000 peaks, all from
-  the run's first minutes, and with the spikes counted read sigma 0.21 Th where the whole run reads
-  0.29. Over a whole run the sample gives 10,000 to 15,000 peaks.
-- *Not chosen by identifications.* At unit resolution those depend on mass accuracy, a separate
-  question from the peak width.
-
-**What moves it, left unmodeled.**
-- The width does not depend on m/z (lower quartile 0.71 to 0.74 Th from 200 to 1200 m/z), as a
-  linear ion trap's should not, but it rises with intensity: 0.63 Th in the weakest fifth of
-  peaks, 0.81 Th in the strongest. Space charge, or more merged species among larger peaks.
-- Spectra of wider windows merge more species. The 2 Th windows give sigma 0.309 Th; the same
-  spectra summed two and four at a time, as staggered windows are, give 0.331 and 0.340 Th. The
-  joint demultiplexer measures from the acquired, multiplexed spectra, so it reads the wider value.
+  one or two points with zeros beside it. Read through Thermo's library, a quarter of the Stellar's
+  profile points are zeros; peaks that fall to zero before half their apex are skipped, and a
+  reader that drops the zeros leaves a gap there, which is skipped the same way. Over a whole 2 Th
+  run this moves the sigma only from 0.266 to 0.269 Th.
+- *Sampled across the run, every sample used.* The run's first 3,000 peaks read 0.17 Th where the
+  whole run reads 0.27.
+- Spectra of wider windows merge more species: the Stellar's 2 Th windows summed two and four at a
+  time, as staggered windows are, read 0.331 and 0.340 Th where the 2 Th windows read 0.309.
 
 ## The Stellar's filter strings: "Z" and Adaptive RT
 
@@ -244,11 +272,10 @@ Raise `ALGORITHM_VERSION` with any change that moves a centroid; the tag and key
 - **Adaptive RT spectra** (isolation over 10 m/z on a Stellar) are not filtered from Osprey's
   input or from the mzML DemuxTool writes for Skyline.
 - **The intensity dependence of the width** is not modeled; one sigma serves each MS level.
-- **The joint demultiplexer's sigma** is measured from multiplexed spectra (above).
-- **Few MS1 peaks.** A Stellar run has one MS1 per cycle of some 250 spectra, and an MS1 holds
-  about four isolated intense peaks, so the 3,000 sampled spectra give about a dozen MS1 and some
-  50 peaks; enough for the quartile (20 needed), but a short run may fall back to the scan rate's
-  broadest.
+- **The joint demultiplexer's sigma** follows the same rule, 1.1 point spacings, for both its
+  Gaussian and Centrix. The staggered results in [23](23-demultiplexing.md) were measured at fixed
+  sigmas (0.33 Th); the joint solve at the rule's sigma is not yet searched.
+- **Other scan rates.** The rule rests on 200 kTh/s alone (see [The peak sigma](#the-peak-sigma)).
 - **Linear grids only.** Orbitrap and TOF profiles are not uniform in m/z; Centrix does not apply
   to them as it stands.
 - **Other linear ion traps** (a Fusion's) follow the same table but are untested.

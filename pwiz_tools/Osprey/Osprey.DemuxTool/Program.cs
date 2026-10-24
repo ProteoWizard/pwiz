@@ -288,11 +288,11 @@ namespace pwiz.Osprey.DemuxTool
                             profile = true;
                         break;
                     case @"--centrix-sigma":
-                        // Centrix: the MS2 profile peak's sigma, in Th (default: measured from the input).
+                        // Centrix: the MS2 profile peak's sigma, in Th (default: from the input, CentrixCalibration).
                         centrixSigmaMs2 = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--centrix-sigma-ms1": // Arg literal OK: DemuxTool's own option vocabulary
-                        // Centrix: the MS1 profile peak's sigma, in Th (default: measured from the input).
+                        // Centrix: the MS1 profile peak's sigma, in Th (default: from the input, CentrixCalibration).
                         centrixSigmaMs1 = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--centrix-param":
@@ -525,6 +525,8 @@ namespace pwiz.Osprey.DemuxTool
                 var calibrator = new CentrixSigmaCalibrator();
                 foreach (int i in CentrixSigmaCalibrator.SampleIndices(source.Count))
                 {
+                    if ((sigmaMs1 > 0 || calibrator.IsSettled(1)) && (sigmaMs2 > 0 || calibrator.IsSettled(2)))
+                        break;
                     var spectrum = source.GetSpectrum(i, true);
                     int level = spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
                     var mz = spectrum.GetMZArray()?.Data;
@@ -536,11 +538,10 @@ namespace pwiz.Osprey.DemuxTool
                 for (int level = 1; level <= 2; level++)
                 {
                     var rate = calibrator.ScanRate(level);
-                    Console.WriteLine(@"Centrix MS{0} peak width: {1} isolated peaks{2}", level, calibrator.PeakCount(level),
-                        rate != null
-                            ? string.Format(CultureInfo.InvariantCulture, @"; {0} kTh/s scan rate, broadest peak {1} Th FWHM",
-                                rate.KThPerSecond, rate.MaxFwhmTh)
-                            : string.Empty);
+                    if (rate != null)
+                        Console.WriteLine(@"Centrix MS{0} peak sigma: {1} kTh/s scan rate, from its point spacing", level, rate.KThPerSecond);
+                    else
+                        Console.WriteLine(@"Centrix MS{0} peak width: {1} isolated peaks", level, calibrator.PeakCount(level));
                 }
                 if (!(sigmaMs1 > 0))
                     sigmaMs1 = calibrator.Sigma(1);

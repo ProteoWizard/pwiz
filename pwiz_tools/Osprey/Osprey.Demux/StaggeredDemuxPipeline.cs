@@ -635,7 +635,7 @@ namespace pwiz.Osprey.Demux
         /// <summary>
         /// The joint solve's profile grid, taken once from the first spectrum with enough points, and the peak sigma
         /// that both the joint solve's Gaussian and Centrix use: <see cref="ScanningDemuxOptions.LinearPeakSigmaTh"/>
-        /// when given, else measured from the run (<see cref="MeasurePeakSigma"/>). Also makes the Centrix centroider of
+        /// when given, else from the run (<see cref="MeasurePeakSigma"/>). Also makes the Centrix centroider of
         /// each bin's share, on this grid's spacing.
         /// </summary>
         private LinearGrid GridOf(Dictionary<int, (double[] Mz, double[] Ions)> peaks)
@@ -665,17 +665,19 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// The MS2 profile peak sigma, Th, measured from MS2 spectra sampled across the run (<see cref="CentrixCalibration"/>):
-        /// one species' peak width, no wider than the broadest peak of the scan rate the point spacing identifies. The
-        /// spectra are the acquired, multiplexed ones, whose peaks merge more species than a narrow window's, so it reads
-        /// a little wider than the narrow-window run would (Stellar: 0.331 Th summing two 2 Th windows, 0.340 summing
-        /// four, against 0.309 for the 2 Th windows themselves).
+        /// The MS2 profile peak sigma, Th, from the run's MS2 spectra (<see cref="CentrixCalibration"/>): 1.1 point
+        /// spacings when the spacing identifies a linear ion trap scan rate (0.22 Th on the Stellar at 200 kTh/s), else
+        /// one species' peak width measured from spectra sampled across the run. Those are the acquired, multiplexed
+        /// spectra, whose peaks merge more species than a narrow window's, so a measured width reads a little wider than
+        /// the narrow-window run's would.
         /// </summary>
         private double MeasurePeakSigma()
         {
             var calibrator = new CentrixSigmaCalibrator();
             foreach (int n in CentrixSigmaCalibrator.SampleIndices(_ms2Spectra.Length))
             {
+                if (calibrator.IsSettled(2))
+                    break;
                 int k = _ms2Spectra[n];
                 _source.Read(k, out var mz, out var intensity);
                 if (mz != null && intensity != null)
@@ -683,10 +685,10 @@ namespace pwiz.Osprey.Demux
                 _source.Release(k);
             }
             var scanRate = calibrator.ScanRate(2);
-            _log.WriteLine(@"Peak width: {0} isolated MS2 peaks{1}", calibrator.PeakCount(2), scanRate != null
-                ? string.Format(CultureInfo.InvariantCulture, @"; {0} kTh/s scan rate, broadest peak {1} Th FWHM",
-                    scanRate.KThPerSecond, scanRate.MaxFwhmTh)
-                : string.Empty);
+            if (scanRate != null)
+                _log.WriteLine(@"Peak sigma: {0} kTh/s scan rate, from its point spacing", scanRate.KThPerSecond);
+            else
+                _log.WriteLine(@"Peak width: {0} isolated MS2 peaks", calibrator.PeakCount(2));
             return calibrator.Sigma(2);
         }
 

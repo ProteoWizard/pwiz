@@ -83,39 +83,44 @@ namespace pwiz.Osprey.Centroid
     }
 
     /// <summary>
-    /// The peak sigma Centrix fits a run's profile spectra with, measured from the run: the width of one species' peak,
-    /// which is the instrument's resolution at the scan rate it ran.
+    /// The peak sigma Centrix fits a run's profile spectra with.
+    /// <para>On a linear ion trap, whose point spacing identifies its scan rate
+    /// (<see cref="LinearIonTrapScanRate.FromSpacing"/>), it is a little over one point spacing
+    /// (<see cref="SIGMA_PER_SPACING"/>). Centrix is there to split a peak wider than one species, and splitting a
+    /// little too much costs little. On a Thermo Stellar's MS2 (200 kTh/s, 0.2 Th points) centroided at a range of
+    /// sigmas and searched with an entrapment library, identifications plateau from 1.05 to 1.2 spacings (0.21 to
+    /// 0.24 Th) and fall on either side, from one spacing down most steeply, as the centroids per spectrum jump
+    /// (docs/24-profile-centroiding.md). The rule is set from that one scan rate and stands until others are
+    /// measured.</para>
+    /// <para>Elsewhere, a spacing no scan rate has, it is measured from the run: the width of one species' peak.</para>
     /// <list type="bullet">
-    /// <item>The scan rate bounds it: no wider than <see cref="LinearIonTrapScanRate.MaxFwhmTh"/>, the broadest peak
-    /// that rate produces.</item>
-    /// <item>Within that, a wider peak is most often two or more species the instrument did not resolve, which is
-    /// what Centrix is there to separate. So the width is taken from the narrow side of the run's isolated peaks'
-    /// widths, their lower quartile (<see cref="WIDTH_QUANTILE"/>), not their median or mode.</item>
+    /// <item>A wider peak is most often two or more species the instrument did not resolve, which is what Centrix is
+    /// there to separate. So the width is taken from the narrow side of the run's isolated peaks' widths, their lower
+    /// quartile (<see cref="WIDTH_QUANTILE"/>), not their median or mode.</item>
     /// <item>Each peak's width is its full width at half maximum, the resolution's own measure, rather than the sigma
     /// of a Gaussian fitted to it: these peaks have a narrow core and broad wings, and a fit's sigma grows with the
     /// points it is given (on the Stellar MS2, 0.31 Th from three points, 0.36 from five, 0.61 from eleven, the last
     /// what Centrix's wavelet calibration reports).</item>
-    /// <item>The sigma is not chosen by identifications: at unit resolution those depend on mass accuracy, a separate
-    /// question from the peak width.</item>
     /// </list>
-    /// <para>Measured on a Thermo Stellar's MS2 (200 kTh/s, 35,000 isolated peaks of 6,000 spectra): the widths' lower
-    /// quartile is 0.71 to 0.74 Th at every m/z from 200 to 1200, as a linear ion trap's should be, and varies by 0.6%
-    /// between samples of 3,000 peaks, where their mode, the top of a plateau from 0.70 to 0.85 Th, varies by 6%. Two
-    /// effects move it, both left unmodeled: it rises with apex height, from 0.63 Th in the weakest fifth of peaks to
-    /// 0.81 Th in the strongest (space charge, or more merged species among the larger peaks); and spectra of summed
-    /// windows read wider (sigma 0.309 Th for the 2 Th windows, 0.331 and 0.340 for two and four of them summed), since
-    /// more of their peaks are merged species. MS1 (67 kTh/s): sigma 0.170 Th.</para>
-    /// <para>Whole runs read through Thermo's library, where a quarter of the profile points are zeros, agree once
-    /// spikes that reach zero are left out (<see cref="AddPeakWidths"/>): 3,000 spectra across a 2 Th run give 14,000
-    /// peaks and sigma 0.305 Th, and across a run of overlapping 4 Th windows 10,600 peaks and 0.310 Th. Counting
-    /// the spikes, the same runs give 0.266 and 0.285 Th, and the first 3,000 peaks, all from the run's first minutes,
-    /// only 0.174 and 0.213 Th. The early part of a run is not the whole, so every sampled spectrum is used
-    /// (<see cref="CentrixSigmaCalibrator.SampleIndices"/>).</para>
+    /// <para>The measurement is why the Stellar's rule is not a width. Its MS2 widths' lower quartile is 0.71 to
+    /// 0.74 Th at every m/z from 200 to 1200, as a linear ion trap's should be, but it rises with the ions in the peak,
+    /// from 0.41 Th FWHM under 3 ions to 0.9 Th over 300 (space charge, or more merged species among the larger
+    /// peaks), with no plateau, so which peaks are counted sets it. Whole runs read through Thermo's library, where a
+    /// quarter of the profile points are zeros, give sigma 0.27 Th over 3,000 spectra of a 2 Th run, 0.31 Th with the
+    /// intensity threshold taken over the positive points only, which keeps stronger peaks; spectra of summed windows
+    /// read wider still (0.331 and 0.340 Th for two and four 2 Th windows summed). The identifications' optimum,
+    /// 0.21 Th, is narrower than all of them.</para>
     /// </summary>
     public static class CentrixCalibration
     {
         /// <summary>A Gaussian's full width at half maximum over its sigma, 2 sqrt(2 ln 2).</summary>
         public const double FWHM_PER_SIGMA = 2.3548200450309493;
+
+        /// <summary>
+        /// A linear ion trap's sigma, in point spacings of the scan rate its spacing identifies: inside the Stellar's
+        /// plateau of 1.05 to 1.2, clear of the fall at one spacing.
+        /// </summary>
+        public const double SIGMA_PER_SPACING = 1.1;
 
         /// <summary>A width is measured from at least this many peaks; with fewer, the scan rate's broadest stands.</summary>
         public const int MIN_PEAKS = 20;
@@ -133,19 +138,20 @@ namespace pwiz.Osprey.Centroid
         private const double MAX_STEP_SPACINGS = 1.5;
 
         /// <summary>
-        /// The sigma, Th, for spectra of one MS level whose isolated peaks' FWHMs were collected: the widths'
-        /// <see cref="WIDTH_QUANTILE"/> quantile over <see cref="FWHM_PER_SIGMA"/>, no wider than the scan rate's
-        /// broadest. With fewer than <see cref="MIN_PEAKS"/> widths, the broadest itself, or
-        /// <see cref="FALLBACK_SIGMA_TH"/> without a scan rate.
+        /// The sigma, Th, for spectra of one MS level: with a linear ion trap scan rate, <see cref="SIGMA_PER_SPACING"/>
+        /// of its point spacing. Without one, from the isolated peaks' FWHMs collected: their
+        /// <see cref="WIDTH_QUANTILE"/> quantile over <see cref="FWHM_PER_SIGMA"/>, or <see cref="FALLBACK_SIGMA_TH"/>
+        /// with fewer than <see cref="MIN_PEAKS"/> widths.
         /// </summary>
         public static double EstimateSigma(List<double> fwhms, LinearIonTrapScanRate scanRate)
         {
-            double maxSigma = scanRate?.MaxSigmaTh ?? double.PositiveInfinity;
+            if (scanRate != null)
+                return SIGMA_PER_SPACING * scanRate.SpacingTh;
             if (fwhms.Count < MIN_PEAKS)
-                return scanRate?.MaxSigmaTh ?? FALLBACK_SIGMA_TH;
+                return FALLBACK_SIGMA_TH;
             var sorted = fwhms.ToArray();
             Array.Sort(sorted); // Array.Sort OK: equal doubles are indistinguishable
-            return Math.Min(sorted[(int)(WIDTH_QUANTILE * (sorted.Length - 1))] / FWHM_PER_SIGMA, maxSigma);
+            return sorted[(int)(WIDTH_QUANTILE * (sorted.Length - 1))] / FWHM_PER_SIGMA;
         }
 
         /// <summary>
@@ -233,9 +239,9 @@ namespace pwiz.Osprey.Centroid
     /// Collects the peak widths of a run's profile spectra, MS1 apart from MS2 and above, since a linear ion trap scans
     /// them at their own rates, and gives each level's sigma (<see cref="CentrixCalibration.EstimateSigma"/>) and scan
     /// rate, taken from the point spacing of the level's first spectrum. The caller offers the spectra of
-    /// <see cref="SampleIndices"/>, spread across the run, and every one is measured: the run's first minutes are not
-    /// the whole (on the Stellar, the first 3,000 peaks read sigma 0.21 Th where the whole run reads 0.29, spikes
-    /// counted).
+    /// <see cref="SampleIndices"/>, spread across the run, until the levels it needs are <see cref="IsSettled"/>: a
+    /// linear ion trap's from its first spectrum, any other's from every sample, since the run's first minutes are not
+    /// the whole (on the Stellar, the first 3,000 peaks read sigma 0.17 Th where the whole run reads 0.27).
     /// </summary>
     public sealed class CentrixSigmaCalibrator
     {
@@ -282,6 +288,12 @@ namespace pwiz.Osprey.Centroid
         public double Sigma(int msLevel)
         {
             return CentrixCalibration.EstimateSigma(_fwhms[Slot(msLevel)], ScanRate(msLevel));
+        }
+
+        /// <summary>Whether more spectra cannot change a level's sigma: its point spacing identifies a scan rate.</summary>
+        public bool IsSettled(int msLevel)
+        {
+            return ScanRate(msLevel) != null;
         }
 
         private static int Slot(int msLevel)

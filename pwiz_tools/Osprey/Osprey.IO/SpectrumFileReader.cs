@@ -333,6 +333,8 @@ namespace pwiz.Osprey.IO
                 var calibrator = new CentrixSigmaCalibrator();
                 foreach (int i in CentrixSigmaCalibrator.SampleIndices(msData.SpectrumCount))
                 {
+                    if ((ms1.SigmaTh > 0 || calibrator.IsSettled(1)) && (ms2.SigmaTh > 0 || calibrator.IsSettled(2)))
+                        break;
                     var spectrum = msData.GetSpectrum(i);
                     if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||
                         spectrum.Intensities == null)

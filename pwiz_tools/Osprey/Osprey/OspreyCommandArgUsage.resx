@@ -101,10 +101,10 @@
     <value>Directory for the {0} cache (overrides {1})</value>
   </data>
   <data name="_centrix_sigma_ms1" xml:space="preserve">
-    <value>With {0} centrix: the MS1 profile peak sigma in Th (default: measured from the run, one species' peak width, no wider than its scan rate's broadest peak)</value>
+    <value>With {0} centrix: the MS1 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species' peak width measured from the run)</value>
   </data>
   <data name="_centrix_sigma_ms2" xml:space="preserve">
-    <value>With {0} centrix: the MS2 profile peak sigma in Th (default: measured from the run, one species' peak width, no wider than its scan rate's broadest peak)</value>
+    <value>With {0} centrix: the MS2 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species' peak width measured from the run)</value>
   </data>
   <data name="_centrix_solver" xml:space="preserve">
     <value>With {0} centrix: how each region of a spectrum is fitted. descent: Centrix's own coordinate descent; active-set: the exact optimum of the same fit, several times faster (default: {1})</value>

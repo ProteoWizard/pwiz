@@ -321,25 +321,35 @@ namespace pwiz.Osprey.Test
             CentrixCalibration.AddPeakWidths(mz.Where((_, i) => spike[i] > 0).ToArray(), spike.Where(v => v > 0).ToArray(), spikeWidths);
             Assert.AreEqual(0, spikeWidths.Count);
 
-            // The width is the narrow side of the peaks' widths, no wider than the scan rate's broadest; with too few
-            // peaks, the broadest; without a scan rate either, Centrix's fallback.
+            // A linear ion trap's sigma follows its point spacing, whatever the peaks measure. Without a scan rate, the
+            // narrow side of the peaks' widths; with too few peaks, Centrix's fallback.
             var rate = LinearIonTrapScanRate.FromSpacing(0.2);
             var many = Enumerable.Range(0, 100).Select(i => 0.6 + 0.01 * i).ToList();
+            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(many, rate), 1e-12);
+            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(new List<double>(), rate), 1e-12);
             Assert.AreEqual(many[(int)(CentrixCalibration.WIDTH_QUANTILE * 99)] / CentrixCalibration.FWHM_PER_SIGMA,
-                CentrixCalibration.EstimateSigma(many, rate), 1e-12);
-            var wide = Enumerable.Range(0, 100).Select(_ => 5.0).ToList();
-            Assert.AreEqual(rate.MaxSigmaTh, CentrixCalibration.EstimateSigma(wide, rate));
-            Assert.AreEqual(rate.MaxSigmaTh, CentrixCalibration.EstimateSigma(new List<double> { 0.7 }, rate));
-            Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, CentrixCalibration.EstimateSigma(new List<double>(), null));
+                CentrixCalibration.EstimateSigma(many, null), 1e-12);
+            Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, CentrixCalibration.EstimateSigma(new List<double> { 0.7 }, null));
 
-            // On real Stellar profile spectra, read by Osprey with no sigma given: MS2 (200 kTh/s, 0.2 Th points) measures
-            // about 0.3 Th, narrower than the broadest 0.85; the two MS1 (67 kTh/s) hold too few isolated peaks, so take
-            // that scan rate's broadest.
+            // The calibrator settles a linear ion trap's level from its first spectrum; any other level takes every sample.
+            var calibrator = new CentrixSigmaCalibrator();
+            Assert.IsFalse(calibrator.IsSettled(2));
+            calibrator.Add(2, mz, GaussianProfile(mz, sigma, new[] { (410.0, 1000.0) }));
+            Assert.IsTrue(calibrator.IsSettled(2));
+            Assert.IsFalse(calibrator.IsSettled(1));
+            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, calibrator.Sigma(2), 1e-12);
+            var orbitrapLike = Enumerable.Range(0, 200).Select(i => 400 + i * 0.01).ToArray();
+            calibrator.Add(1, orbitrapLike, GaussianProfile(orbitrapLike, 0.02, new[] { (401.0, 1000.0) }));
+            Assert.IsFalse(calibrator.IsSettled(1));
+            Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, calibrator.Sigma(1));
+
+            // On real Stellar profile spectra, read by Osprey with no sigma given: MS2 (200 kTh/s) and MS1 (67 kTh/s)
+            // each at its own point spacing.
             string folder = Path.Combine(IOTest.FindPwizRoot(), GOLDEN_FOLDER);
             var read = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, GOLDEN_INPUTS[0]),
                 new CentroidingOptions(new CentrixParams { SigmaTh = 0 }, new CentrixParams { SigmaTh = 0 }, 4));
-            Assert.AreEqual(0.30, read.CentroidSigmaMs2, 0.04);
-            Assert.AreEqual(LinearIonTrapScanRate.FromSpacing(1.0 / 15).MaxSigmaTh, read.CentroidSigmaMs1, 1e-12);
+            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, read.CentroidSigmaMs2, 1e-12);
+            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING / 15, read.CentroidSigmaMs1, 1e-12);
         }
 
         [TestMethod]

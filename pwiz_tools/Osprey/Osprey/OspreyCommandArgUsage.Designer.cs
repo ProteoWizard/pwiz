@@ -70,7 +70,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0} centrix: the MS1 profile peak sigma in Th (default: measured from the run, one species&apos; peak width, no wider than its scan rate&apos;s broadest peak).
+        ///   Looks up a localized string similar to With {0} centrix: the MS1 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species&apos; peak width measured from the run).
         /// </summary>
         public static string _centrix_sigma_ms1 {
             get {
@@ -79,7 +79,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0} centrix: the MS2 profile peak sigma in Th (default: measured from the run, one species&apos; peak width, no wider than its scan rate&apos;s broadest peak).
+        ///   Looks up a localized string similar to With {0} centrix: the MS2 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species&apos; peak width measured from the run).
         /// </summary>
         public static string _centrix_sigma_ms2 {
             get {
