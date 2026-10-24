@@ -435,7 +435,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     if (UseExistingLibrary)
                     {
-                        if (!EditLibraryDlg.ValidateLibraryPath(this, ExistingLibraryPath))
+                        if (!ValidateExistingLibraryPath())
                         {
                             tbxLibraryPath.Focus();
                             return false;
@@ -463,14 +463,41 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     break;
                 case Pages.search_settings_page:
+                    // A threshold of 0 is a search that reports nothing, so the range excludes it.
                     var helper = new MessageBoxHelper(this);
-                    if (!helper.ValidateDecimalTextBox(txtRunFdr, 0, 1, out _) ||
-                        !helper.ValidateDecimalTextBox(txtExperimentFdr, 0, 1, out _) ||
-                        !helper.ValidateDecimalTextBox(txtProteinFdr, 0, 1, out _))
+                    if (!helper.ValidateDecimalTextBox(txtRunFdr, 0, 1, out _, false) ||
+                        !helper.ValidateDecimalTextBox(txtExperimentFdr, 0, 1, out _, false) ||
+                        !helper.ValidateDecimalTextBox(txtProteinFdr, 0, 1, out _, false))
                     {
                         return false;
                     }
                     break;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// An existing library must be a file in a format Osprey's <c>-l</c> reads (.blib or .tsv), and
+        /// not the document library, which is the search's output: Run would delete it before Osprey read it.
+        /// </summary>
+        private bool ValidateExistingLibraryPath()
+        {
+            string path = ExistingLibraryPath;
+            if (!EditLibraryDlg.ValidateLibraryPath(this, path))
+                return false;
+            if (!PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT) && !PathEx.HasExtension(path, BiblioSpecLiteBuilder.EXT_TSV))
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__,
+                    BiblioSpecLiteSpec.EXT, BiblioSpecLiteBuilder.EXT_TSV, path));
+                return false;
+            }
+            if (string.Equals(Path.GetFullPath(path), Path.GetFullPath(OutputLibraryPath), StringComparison.OrdinalIgnoreCase))
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_,
+                    path));
+                return false;
             }
             return true;
         }
@@ -490,13 +517,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Overwrite);
                 if (choice != DialogResult.OK)
                     return false;
-                ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.Document);
-                var docLibSpecs = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
-                    .Where(s => s != null && s.IsDocumentLibrary).ToArray();
-                if (docLibSpecs.Length > 0)
-                    _libraryManager.ReleaseLibraries(docLibSpecs);
-                FileEx.SafeDelete(docBlibPath, true);
-                FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+                ImportPeptideSearch.DeleteDocumentLibrary(SkylineWindow.Document, _libraryManager, docBlibPath);
             }
 
             btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
@@ -527,7 +548,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            AddSearchModificationsToDocument();
+            // The modifications shaped the predicted library; a given library carries its own.
+            if (!UseExistingLibrary)
+                AddSearchModificationsToDocument();
 
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
                 ImportPeptideSearchDlg.Workflow.dia, DataFileResults.FoundResultsFiles,
@@ -537,6 +560,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DialogResult = DialogResult.OK;
         }
 
+        /// <summary>
+        /// The Import Peptide Search wizard starts from the window's document, so the modifications
+        /// are added to it before the wizard opens, as one undoable, audit-logged change: a cancelled
+        /// import leaves them, and Undo takes them back.
+        /// </summary>
         private void AddSearchModificationsToDocument()
         {
             var modifications = SkylineWindow.Document.Settings.PeptideSettings.Modifications;

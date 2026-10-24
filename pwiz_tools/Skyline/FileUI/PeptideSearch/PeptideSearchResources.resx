@@ -479,4 +479,10 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_" xml:space="preserve">
     <value>Osprey cannot predict a library with these modifications:</value>
   </data>
+  <data name="OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__" xml:space="preserve">
+    <value>Osprey searches {0} and {1} libraries, not {2}.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_" xml:space="preserve">
+    <value>The existing library cannot be the document library {0}, which the search writes.</value>
+  </data>
 </root>

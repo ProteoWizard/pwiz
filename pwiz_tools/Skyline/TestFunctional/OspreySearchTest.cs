@@ -21,7 +21,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -117,13 +116,14 @@ namespace pwiz.SkylineTestFunctional
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths);
 
             // Page 4: run, and wait for Osprey; the progress bar must have moved, which is the
-            // "NN%" lines of Osprey's progress reporter parsing through ProcessRunner.
+            // "NN%" lines of Osprey's progress reporter parsing through ProcessRunner. Subscribe
+            // before Run, so an Osprey that fails at once cannot finish before the subscription.
+            bool? searchSucceeded = null;
+            searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
             RunUI(searchDlg.NextPage);
             int maxPercent = 0;
             try
             {
-                bool? searchSucceeded = null;
-                searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
                 WaitForConditionUI(15 * 60 * 1000, () =>
                 {
                     maxPercent = Math.Max(maxPercent, searchDlg.SearchControl.PercentComplete);

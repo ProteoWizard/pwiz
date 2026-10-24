@@ -56,8 +56,13 @@ namespace pwiz.Skyline.Model.Lib
         public const int OSPREY_DOWNLOAD_SIZE_MB = 105;
 
         public static string OspreyDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), OSPREY_FILENAME);
+
+        /// <summary>The pinned package's executable in the Tools folder, where a download puts it.</summary>
+        public static string OspreyDefaultBinary => Path.Combine(OspreyDirectory, OSPREY_EXE);
+
+        /// <summary>The Osprey Skyline runs: a registered search tool path when there is one, else the pinned package's.</summary>
         public static string OspreyBinary =>
-            Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Osprey, Path.Combine(OspreyDirectory, OSPREY_EXE));
+            Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Osprey, OspreyDefaultBinary);
         public static string OspreyArgs =>
             Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Osprey, string.Empty);
 
@@ -75,12 +80,15 @@ namespace pwiz.Skyline.Model.Lib
             // The zip holds a top-level Osprey-<version>-win-x64 folder, so it unpacks into the
             // Tools folder, OspreyDirectory's parent.
             InstallPath = ToolDescriptionHelpers.GetToolsDirectory(),
-            CheckInstalledPath = OspreyBinary,
+            // The pinned path, not the registered one: a stale registration (a developer build that
+            // moved) must not pass for an install, and a version bump must install the new version.
+            // The download registers the pinned path, replacing any stale entry.
+            CheckInstalledPath = OspreyDefaultBinary,
             DownloadUrl = OSPREY_DOWNLOAD_URL,
             OverwriteExisting = true,
             Unzip = true,
             ToolType = SearchToolType.Osprey,
-            ToolPath = OspreyBinary,
+            ToolPath = OspreyDefaultBinary,
             ToolExtraArgs = OspreyArgs
         };
 
@@ -213,8 +221,10 @@ namespace pwiz.Skyline.Model.Lib
             {
                 case CarafeModificationType.residue:
                     return mod.Terminus == null && onResidue && carafeMod.Target.HasValue && Contains(mod.AAs, carafeMod.Target.Value);
+                // A Skyline N-terminal modification applies to every peptide, which is Carafe's
+                // peptide N-term entry; a protein N-term entry would apply it to protein termini only,
+                // so a modification Carafe has only in that form is unsupported rather than mismapped.
                 case CarafeModificationType.peptide_n_term:
-                case CarafeModificationType.protein_n_term:
                     return mod.Terminus == ModTerminus.N && !onResidue;
                 case CarafeModificationType.peptide_n_term_residue:
                     return mod.Terminus == ModTerminus.N && onResidue && carafeMod.Target.HasValue && Contains(mod.AAs, carafeMod.Target.Value);
@@ -338,7 +348,7 @@ namespace pwiz.Skyline.Model.Lib
             using (var liveLog = TryOpenLiveLogWriter(config.WorkDirectory))
             {
                 pr.Run(psi, null, progressMonitor, ref status, liveLog,
-                    ProcessPriorityClass.BelowNormal, true, IsGoodOspreyOutput, true);
+                    ProcessPriorityClass.BelowNormal, true, IsGoodOspreyOutput);
             }
 
             return File.Exists(config.OutputPath) ? config.OutputPath : null;

@@ -604,19 +604,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return;
                 if (choice == DialogResult.Yes)
                 {
-                    // Close the doc's open read-streams and evict the cached Library
-                    // object from the LibraryManager so SafeDelete can actually unlink
-                    // the .blib. (LibraryManager.ReleaseLibraries now closes streams
-                    // as part of eviction.) Without both, BlibBuild silently falls
-                    // back to Append mode and the previous run's spectrum sources
-                    // stick around as "missing" on the chromatograms page.
-                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.Document);
-                    var docLibSpecs = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
-                        .Where(s => s != null && s.IsDocumentLibrary).ToArray();
-                    if (docLibSpecs.Length > 0)
-                        _libraryManager.ReleaseLibraries(docLibSpecs);
-                    FileEx.SafeDelete(docBlibPath, true);
-                    FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+                    // Close the doc's open read-streams and evict the cached Library object from
+                    // the LibraryManager so the .blib can actually be unlinked. Without both,
+                    // BlibBuild silently falls back to Append mode and the previous run's spectrum
+                    // sources stick around as "missing" on the chromatograms page.
+                    ImportPeptideSearch.DeleteDocumentLibrary(SkylineWindow.Document, _libraryManager, docBlibPath);
                 }
             }
 

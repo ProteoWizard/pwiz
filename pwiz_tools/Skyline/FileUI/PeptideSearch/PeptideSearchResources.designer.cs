@@ -1052,6 +1052,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Osprey searches {0} and {1} libraries, not {2}..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The existing library cannot be the document library {0}, which the search writes..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
         /// </summary>
         public static string SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_ {

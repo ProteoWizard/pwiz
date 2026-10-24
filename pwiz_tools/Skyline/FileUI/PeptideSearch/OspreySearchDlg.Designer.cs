@@ -270,6 +270,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.numFragmentTolerance, "numFragmentTolerance");
             this.numFragmentTolerance.DecimalPlaces = 2;
             this.numFragmentTolerance.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            this.numFragmentTolerance.Minimum = new decimal(new int[] { 1, 0, 0, 131072 });
             this.numFragmentTolerance.Name = "numFragmentTolerance";
             this.numFragmentTolerance.Value = new decimal(new int[] { 10, 0, 0, 0 });
             //
