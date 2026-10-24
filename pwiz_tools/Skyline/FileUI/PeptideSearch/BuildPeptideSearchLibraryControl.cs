@@ -460,7 +460,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 docLibSpec =
                     Settings.Default.SpectralLibraryList.FirstOrDefault(spec => spec.FilePath == libraryPath);
-                if (docLibSpec == null)
+                if (docLibSpec == null && IsDocumentLibraryPath(libraryPath))
+                {
+                    // A search engine that writes the .blib Skyline reads (Osprey) writes it as the
+                    // document library, so it joins the document the way a BlibBuild result does.
+                    docLibSpec = new BiblioSpecLiteSpec(Path.GetFileNameWithoutExtension(DocumentContainer.DocumentFilePath), libraryPath)
+                        .ChangeDocumentLibrary(true);
+                    Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
+                }
+                else if (docLibSpec == null)
                 {
                     var existingNames = new HashSet<string>();
                     existingNames.UnionWith(Settings.Default.SpectralLibraryList.Select(spec => spec.Name));
@@ -512,6 +520,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return true;
         }
 
+        /// <summary>
+        /// True when <paramref name="libraryPath"/> is the document library's path, the .blib named
+        /// after the document beside it.
+        /// </summary>
+        private bool IsDocumentLibraryPath(string libraryPath)
+        {
+            string documentPath = DocumentContainer.DocumentFilePath;
+            if (string.IsNullOrEmpty(documentPath) || string.IsNullOrEmpty(libraryPath))
+                return false;
+            return string.Equals(Path.GetFullPath(libraryPath),
+                Path.GetFullPath(BiblioSpecLiteSpec.GetLibraryFileName(documentPath)), StringComparison.OrdinalIgnoreCase);
+        }
 
         /// <summary>
         /// Shows a dialog prompting user to decide whether to use embedded spectra when external spectra are preferred but cannot be found.
