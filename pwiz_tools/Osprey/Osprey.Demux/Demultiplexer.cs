@@ -32,9 +32,12 @@ namespace pwiz.Osprey.Demux
     {
         /// <summary>
         /// Demultiplexes MS2 spectra given in acquisition order. A non-overlapping scheme is
-        /// returned unchanged, as the same spectrum objects.
+        /// returned unchanged, as the same spectrum objects. <paramref name="acquisitions"/>,
+        /// one per spectrum, give the weighted engine each spectrum's fill time and ion response
+        /// (<see cref="DemuxParams.IonsFromFillTime"/>); null when they are not known.
         /// </summary>
-        public static DemuxResult Demultiplex(IReadOnlyList<Spectrum> ms2Spectra, DemuxParams parameters)
+        public static DemuxResult Demultiplex(IReadOnlyList<Spectrum> ms2Spectra, DemuxParams parameters,
+            IReadOnlyList<SpectrumAcquisition> acquisitions = null)
         {
             if (ms2Spectra == null)
                 throw new ArgumentNullException(nameof(ms2Spectra));
@@ -53,7 +56,7 @@ namespace pwiz.Osprey.Demux
             }
             return parameters.Engine == DemuxEngine.msconvert
                 ? new OverlapDemultiplexer(scheme, ms2Spectra, parameters).Run()
-                : WeightedDemultiplexer.Run(ms2Spectra, parameters);
+                : WeightedDemultiplexer.Run(ms2Spectra, parameters, acquisitions);
         }
 
         /// <summary>

@@ -104,6 +104,7 @@ engine, with scalar code.
 |---|---|---|
 | `<stem>.spectra.bin` | always | The acquired spectra, **never altered by demultiplexing**. It stays a pure function of the raw file, so it is shareable across analyses, and demultiplexing can be redone from it without re-reading the source. |
 | `<stem>.demux.spectra.bin` | `--demux auto` on an overlapping run | The demultiplexed spectra: one record per narrow bin per acquired spectrum. Each keeps its parent's scan number and retention time; its isolation window is the bin. |
+| `<stem>.acquisition.bin` | with every `<stem>.spectra.bin` | Each MS2 spectrum's fill time and analyzer, which the weighted engine counts ions from ([Ions from the fill time](#ions-from-the-fill-time)); kept apart so the `.spectra.bin` format is unchanged ([14](14-intermediate-files.md#acquisition-sidecar-stemacquisitionbin)). |
 
 Both live in the cache directory (`--cache-dir`, else beside the source; see
 [00](00-pipeline-architecture.md)). The demultiplexed cache is about 1.7 times the size of the
@@ -115,7 +116,7 @@ cache's VERSION 4 layout with a different magic and a **descriptor** after the h
 example:
 
 ```
-osprey-demux/4;engine=weighted;channel_tolerance=10ppm;min_bin_width=0.2;counts_per_ion=100;block_cycles=12;cycle_pad=4;group_bins=16;min_channel_ions=8;min_channel_cells=3;poisson_weights=True;weight_floor_ions=0.5
+osprey-demux/4;engine=weighted;channel_tolerance=10ppm;min_bin_width=0.2;counts_per_ion=100;block_cycles=12;cycle_pad=4;group_bins=16;min_channel_ions=8;min_channel_cells=3;poisson_weights=True;weight_floor_ions=0.5;ions_from_fill_time=True
 osprey-demux/4;engine=msconvert;channel_tolerance=10ppm;min_bin_width=0.2;block=covered_bins;interpolation=makima;output=apportioned;block_bins=7
 ```
 
@@ -188,13 +189,18 @@ not been isolated.
 
 ## Developer overrides
 
-For attributing a difference from msconvert, and nothing else, environment variables override
-the defaults:
+For attributing a difference from msconvert, or measuring a setting's effect on a search, and
+nothing else, environment variables override the defaults:
 - `OSPREY_DEMUX_ENGINE` = `weighted` | `msconvert`: the engine. The three below apply to the
   msconvert engine only.
 - `OSPREY_DEMUX_BLOCK` = `covered_bins` | `truncated_slice`;
 - `OSPREY_DEMUX_INTERPOLATION` = `makima` | `pchip` | `natural_three_point` | `linear`;
 - `OSPREY_DEMUX_OUTPUT` = `apportioned` | `solution`.
+- `OSPREY_DEMUX_MIN_CHANNEL_IONS` = a positive number: the weighted engine's channel threshold,
+  the ions a fragment channel needs over its block to be solved rather than split evenly among
+  its bins (8 by default).
+- `OSPREY_DEMUX_COUNTS_PER_ION` = a positive number: the weighted engine counts every spectrum's
+  ions at this intensity per ion instead of from its fill time.
 
 `truncated_slice` with `natural_three_point` is msconvert's configuration. Each value is part of
 the descriptor, so a cache built under an override is rebuilt without it.
@@ -828,6 +834,14 @@ exposure e, its own fill time over that reference, so its counted ions are its v
 
 With exposures all 1 (a constant counts per ion) the solves run exactly as before. The elution
 fit (`--elution-fwhm`) still weighs values on the reference scale.
+
+**In Osprey's search** (`--demux auto`, the weighted engine) ions come from the fill time by
+default (`DemuxParams.IonsFromFillTime`, `ions_from_fill_time` in the descriptor). Each spectrum's
+fill time and analyzer are taken from the parse, or on a cache hit from `<stem>.acquisition.bin`
+beside the `.spectra.bin`. A cache written before the sidecar existed has its fill times read once
+from the source's metadata, without its peaks, and the sidecar written. A spectrum the file gives
+no fill time keeps the constant 100 per ion, as do all of a run's spectra when the sidecar and the
+source are both gone (with a warning). An analyzer the table does not know takes alpha 1.
 
 ### Determinism
 

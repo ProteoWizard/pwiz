@@ -463,10 +463,8 @@ namespace pwiz.Osprey
                     if (demuxRejection != SpectraCacheRejection.Absent)
                     {
                         LogError(string.Format(
-                            "Input file not found, and its demultiplexed spectra cache cannot stand in " +
-                            "for it: {0} ({1}). It can be rebuilt only from the source or its " +
-                            ".spectra.bin; restore one of them.",
-                            inputFile, SpectraCacheException.Describe(demuxRejection)));
+                            OspreyResources.Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_,
+                            inputFile, SpectraCacheException.Describe(demuxRejection), SpectraCache.EXT));
                         return 1;
                     }
                     LogError(string.Format(

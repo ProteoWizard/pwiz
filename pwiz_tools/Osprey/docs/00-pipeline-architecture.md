@@ -769,6 +769,7 @@ node running that task needs a copy, whatever batch it was handed.
 |---|---|---|---|---|
 | `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
+| `<stem>.acquisition.bin` | per-run cache, beside every `.spectra.bin` | `PerFileScoring` (Stage 2), or `--task SpectraCache`, from the parse | `PerFileScoring`, to count a demultiplexed run's ions (the weighted engine) | with its `.spectra.bin`; rebuilt from the source's metadata when missing |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on an overlapping-window run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, derived from `.spectra.bin` | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, so keep the `.spectra.bin` to rebuild it after a demux algorithm change |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |

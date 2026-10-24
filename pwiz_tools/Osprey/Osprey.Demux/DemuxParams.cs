@@ -144,6 +144,20 @@ namespace pwiz.Osprey.Demux
         public double CountsPerIon { get; set; } = DEFAULT_COUNTS_PER_ION;
 
         /// <summary>
+        /// Weighted engine: count each spectrum's ions from its fill time and its analyzer's ion
+        /// response (<see cref="IonResponse"/>), where the source reports them, rather than from
+        /// <see cref="CountsPerIon"/>. Only the weights and thresholds change: the spectra written
+        /// stay in the instrument's units.
+        /// </summary>
+        public bool IonsFromFillTime { get; set; } = true;
+
+        /// <summary>
+        /// Weighted engine: the ions a fragment channel needs over its block to be demultiplexed
+        /// rather than split evenly among its bins. NaN, the default, keeps the engine's own.
+        /// </summary>
+        public double MinChannelIons { get; set; } = double.NaN;
+
+        /// <summary>
         /// Degree of parallelism across spectra. The output does not depend on it.
         /// </summary>
         public int Threads { get; set; } = 1;

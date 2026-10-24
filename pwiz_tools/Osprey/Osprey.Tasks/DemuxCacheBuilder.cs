@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
@@ -61,6 +62,15 @@ namespace pwiz.Osprey.Tasks
                 @"OSPREY_DEMUX_INTERPOLATION", parameters.Interpolation);
             parameters.OutputMode = ParseOverride(OspreyEnvironment.DemuxOutputMode,
                 @"OSPREY_DEMUX_OUTPUT", parameters.OutputMode);
+            parameters.MinChannelIons = ParseOverride(OspreyEnvironment.DemuxMinChannelIons,
+                @"OSPREY_DEMUX_MIN_CHANNEL_IONS", parameters.MinChannelIons);
+            double countsPerIon = ParseOverride(OspreyEnvironment.DemuxCountsPerIon,
+                @"OSPREY_DEMUX_COUNTS_PER_ION", double.NaN);
+            if (!double.IsNaN(countsPerIon))
+            {
+                parameters.CountsPerIon = countsPerIon;
+                parameters.IonsFromFillTime = false;
+            }
             return parameters;
         }
 
@@ -105,17 +115,17 @@ namespace pwiz.Osprey.Tasks
                     CreateParams(ctx.Config).Descriptor);
                 if (hit != null)
                 {
-                    ctx.LogInfo(string.Format("Streaming demultiplexed spectra from cache: {0}", demuxPath));
+                    ctx.LogInfo(string.Format(OspreyTasksResources.DemuxCacheBuilder_TryOpenDemuxCache_Streaming_demultiplexed_spectra_from_cache___0_, demuxPath));
                     return hit;
                 }
                 // No promise of a rebuild here: Stage 6 cannot rebuild, and stops instead.
-                ctx.LogInfo(string.Format("Demultiplexed spectra cache {0} is not usable: {1}.",
+                ctx.LogInfo(string.Format(OspreyTasksResources.DemuxCacheBuilder_TryOpenDemuxCache_Demultiplexed_spectra_cache__0__is_not_usable___1__,
                     demuxPath, SpectraCacheException.Describe(reason)));
             }
             catch (Exception ex)
             {
                 ctx.LogWarning(string.Format(
-                    "Failed to index demultiplexed spectra cache {0}: {1}", demuxPath, ex.Message));
+                    OspreyTasksResources.DemuxCacheBuilder_TryOpenDemuxCache_Failed_to_index_demultiplexed_spectra_cache__0____1_, demuxPath, ex.Message));
             }
             return null;
         }
@@ -154,7 +164,7 @@ namespace pwiz.Osprey.Tasks
             if (scheme.Kind == DemuxSchemeKind.non_overlapping)
             {
                 ctx.LogInfo(string.Format(
-                    "Isolation windows of {0} do not overlap; searching as acquired.",
+                    OspreyTasksResources.DemuxCacheBuilder_Resolve_Isolation_windows_of__0__do_not_overlap__searching_as_acquired_,
                     Path.GetFileName(inputFile)));
                 return rawIndex;
             }
@@ -181,8 +191,12 @@ namespace pwiz.Osprey.Tasks
                 ms1 = loaded.Ms1Spectra;
             }
 
+            IReadOnlyList<SpectrumAcquisition> acquisitions = null;
+            if (parameters.Engine == DemuxEngine.weighted && parameters.IonsFromFillTime)
+                acquisitions = AcquisitionsOf(inputFile, rawIndex, parsed, ms2, ctx);
+
             var stopwatch = Stopwatch.StartNew();
-            var result = Demultiplexer.Demultiplex(ms2, parameters);
+            var result = Demultiplexer.Demultiplex(ms2, parameters, acquisitions);
             double demuxSeconds = stopwatch.Elapsed.TotalSeconds;
             LogSummary(inputFile, result, parameters, demuxSeconds, parseSeconds, ctx);
 
@@ -220,6 +234,71 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
+        /// <summary>
+        /// Each MS2 spectrum's fill time and ion response, for counting its ions: from the parse just done, else from
+        /// the acquisition sidecar beside the <c>.spectra.bin</c>, else read from the source's metadata (a cache
+        /// written before the sidecar existed) and saved beside it. Null when the source is gone too: the spectra are
+        /// then counted at <see cref="DemuxParams.CountsPerIon"/>.
+        /// </summary>
+        private static IReadOnlyList<SpectrumAcquisition> AcquisitionsOf(string inputFile,
+            SpectraWindowIndex rawIndex, SpectrumFileResult parsed, List<Spectrum> ms2, PipelineContext ctx)
+        {
+            var info = parsed?.Acquisition;
+            if (info == null)
+            {
+                string sidecarPath = AcquisitionSidecar.PathFor(rawIndex.CachePath);
+                info = AcquisitionSidecar.Load(sidecarPath, inputFile);
+                if (info == null)
+                {
+                    if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
+                    {
+                        ctx.LogWarning(string.Format(
+                            OspreyTasksResources.DemuxCacheBuilder_AcquisitionsOf_No_fill_times_for__0____1__is_missing_and_so_is_its_source__Counting_ions_at__2__per_ion_,
+                            Path.GetFileName(inputFile), sidecarPath, DemuxParams.DEFAULT_COUNTS_PER_ION));
+                        return null;
+                    }
+                    ctx.LogInfo(string.Format(OspreyTasksResources.DemuxCacheBuilder_AcquisitionsOf_Reading_the_fill_times_of__0__, Path.GetFileName(inputFile)));
+                    info = SpectrumFileReader.ReadAcquisition(inputFile);
+                    SaveAcquisition(sidecarPath, info, inputFile, ctx);
+                }
+            }
+
+            var responses = new Dictionary<string, double>();
+            var acquisitions = new SpectrumAcquisition[ms2.Count];
+            for (int i = 0; i < acquisitions.Length; i++)
+            {
+                if (!info.TryGet(ms2[i].ScanNumber, out double fillTimeMs, out string analyzer))
+                {
+                    acquisitions[i] = new SpectrumAcquisition(double.NaN, double.NaN);
+                    continue;
+                }
+                if (!responses.TryGetValue(analyzer, out double alpha))
+                {
+                    alpha = IonResponse.Of(IonResponse.KindOf(analyzer));
+                    responses.Add(analyzer, alpha);
+                }
+                acquisitions[i] = new SpectrumAcquisition(fillTimeMs, alpha);
+            }
+            return acquisitions;
+        }
+
+        /// <summary>
+        /// Writes the acquisition sidecar beside a <c>.spectra.bin</c>. A failure costs only a metadata re-read on a
+        /// later demultiplexing run, so it is a warning.
+        /// </summary>
+        internal static void SaveAcquisition(string sidecarPath, AcquisitionInfo info, string inputFile,
+            PipelineContext ctx)
+        {
+            try
+            {
+                AcquisitionSidecar.Save(sidecarPath, info, inputFile);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(OspreyTasksResources.DemuxCacheBuilder_SaveAcquisition_Failed_to_save__0____1_, sidecarPath, ex.Message));
+            }
+        }
+
         private static DemuxScheme DetectScheme(SpectraWindowIndex index)
         {
             // Every distinct window the run recorded, not just the first cycle: a staggered
@@ -232,9 +311,7 @@ namespace pwiz.Osprey.Tasks
             if (scheme.Kind != DemuxSchemeKind.overlapping)
                 return;
             throw new InvalidOperationException(string.Format(
-                "'{0}' was acquired with overlapping isolation windows ({1}-fold, {2} windows over " +
-                "{3} bins). Searched as acquired, every precursor would be scored in {1} windows. " +
-                "Re-run with {4} auto to demultiplex it first.",
+                OspreyTasksResources.DemuxCacheBuilder_ThrowIfOverlapping___0___was_acquired_with_overlapping_isolation_windows___1__fold___2__windows_over__3__bins___Searche,
                 Path.GetFileName(inputFile), scheme.OverlapFactor, scheme.Windows.Count, scheme.Bins.Count,
                 OspreyArgNames.Text(OspreyArgNames.DEMUX)));
         }
@@ -247,14 +324,13 @@ namespace pwiz.Osprey.Tasks
             double minWidth = scheme.Bins.Min(b => b.Width);
             double maxWidth = scheme.Bins.Max(b => b.Width);
             ctx.LogInfo(string.Format(
-                "Demultiplexing {0}: {1}-fold overlap, {2} windows into {3} bins of {4:F3}-{5:F3} Th",
+                OspreyTasksResources.DemuxCacheBuilder_LogSummary_Demultiplexing__0____1__fold_overlap___2__windows_into__3__bins_of__4_F3___5_F3__Th,
                 Path.GetFileName(inputFile), scheme.OverlapFactor, scheme.Windows.Count,
                 scheme.Bins.Count, minWidth, maxWidth));
             if (parameters.Engine == DemuxEngine.weighted)
             {
                 ctx.LogInfo(string.Format(
-                    "  {0:N0} MS2 spectra -> {1:N0}; {2:N0} fragment channels, {3:N0} solved; " +
-                    "{4:P2} of {5:E3} ions passed through unsolved",
+                    OspreyTasksResources.DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__fragment_channels___3_N0__solved___4_P2__of__5_E3__ions_passe,
                     stats.SpectraIn, stats.SpectraOut, stats.Channels, stats.ChannelsSolved,
                     stats.IonsPassedThrough / Math.Max(stats.IonsIn, 1e-30), stats.IonsIn));
             }
@@ -262,8 +338,7 @@ namespace pwiz.Osprey.Tasks
             {
                 double channels = Math.Max(1, stats.Channels);
                 ctx.LogInfo(string.Format(
-                    "  {0:N0} MS2 spectra -> {1:N0}; {2:N0} channel solves ({3:P1} zero, {4:P1} unconstrained, " +
-                    "{5:P1} active set, {6:N0} at the iteration cap) over {7} block geometries",
+                    OspreyTasksResources.DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__channel_solves___3_P1__zero___4_P1__unconstrained___5_P1__act,
                     stats.SpectraIn, stats.SpectraOut, stats.Channels, stats.ZeroSolves / channels,
                     stats.UnconstrainedSolves / channels, stats.ActiveSetSolves / channels,
                     stats.IterationCapSolves, stats.Geometries));
@@ -273,8 +348,18 @@ namespace pwiz.Osprey.Tasks
             string parse = double.IsNaN(parseSeconds)
                 ? @"no parse (cache hit)"
                 : string.Format(@"parse {0:F1}s, ratio {1:F2}", parseSeconds, demuxSeconds / Math.Max(parseSeconds, 1e-9));
-            ctx.LogInfo(string.Format("  Demultiplexed in {0:F1}s on {1} thread(s); {2}; {3}",
+            ctx.LogInfo(string.Format(OspreyTasksResources.DemuxCacheBuilder_LogSummary___Demultiplexed_in__0_F1_s_with__1__threads___2____3_,
                 demuxSeconds, parameters.Threads, parse, parameters.Descriptor));
+        }
+
+        private static double ParseOverride(string value, string variable, double defaultValue)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return defaultValue;
+            if (double.TryParse(value.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed) &&
+                parsed > 0 && !double.IsInfinity(parsed))
+                return parsed;
+            throw new InvalidOperationException(string.Format(@"{0}={1} is not a positive number", variable, value));
         }
 
         private static TEnum ParseOverride<TEnum>(string value, string variable, TEnum defaultValue)

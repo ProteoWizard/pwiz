@@ -110,7 +110,7 @@ namespace pwiz.Osprey.IO
         // needs no format version bump: a reader that does not know the sentinel
         // simply compares it against the real size, mismatches, and re-parses -
         // which is the intended outcome anyway.
-        private const ulong FINGERPRINT_UNMEASURABLE = ulong.MaxValue;
+        internal const ulong FINGERPRINT_UNMEASURABLE = ulong.MaxValue;
 
         // Fixed EOF footer: [ms1_section_offset: int64][index_offset: int64].
         private const int FOOTER_BYTES = 16;
@@ -347,7 +347,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string GetDemuxCachePath(string inputFile)
         {
-            string fileName = TaggedStem(inputFile) + ".demux.spectra.bin";
+            string fileName = TaggedStem(inputFile) + @".demux.spectra.bin";
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
@@ -597,7 +597,7 @@ namespace pwiz.Osprey.IO
         /// returns true with (0, 0): there is nothing to compare, which is the
         /// documented resume case.
         /// </summary>
-        private static bool TryComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
+        internal static bool TryComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
         {
             size = 0;
             mtimeMs = 0;

@@ -26,6 +26,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
+| `<stem>.acquisition.bin` | run | Custom binary v1 | `Osprey.IO/AcquisitionSidecar.cs` | Each MS2 spectrum's fill time and analyzer, beside the `.spectra.bin`: what `--demux auto` counts ions from |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
@@ -269,6 +270,35 @@ way silently left the top bin unscored.
 **Rebuildable from the `.spectra.bin`, cache to cache**, in seconds rather than the minutes a
 vendor parse takes. The `.spectra.bin` is never altered by demultiplexing, so it stays a pure
 function of the raw file.
+
+### Acquisition sidecar (`<stem>.acquisition.bin`)
+
+**C# source**: `Osprey.IO/AcquisitionSidecar.cs`. Path: `AcquisitionSidecar.PathFor`, the
+`.spectra.bin` path with `.acquisition.bin` in place of `.spectra.bin`. Written by
+`EnsureSpectraCache` beside every `.spectra.bin` it writes, from the parse. Osprey-only.
+
+What the spectra cache does not keep and the weighted demultiplexer needs to count each spectrum's
+ions ([23](23-demultiplexing.md#ions-from-the-fill-time)): each MS2 spectrum's ion injection (fill)
+time and its analyzer, the PSI-MS analyzer terms of its instrument configuration. A separate file,
+so the `.spectra.bin` format, and every cache already written, is unchanged.
+
+```
+[magic:        8 bytes  "OSPRACQ\0"]
+[version:      uint32 = 1]
+[source_size:  uint64]   as the .spectra.bin, including the unmeasurable sentinel
+[source_mtime: int64]
+[n_analyzers:  uint8]
+[analyzers:    n_analyzers x length-prefixed UTF-8 strings]
+[n_records:    uint32]
+[records:      n_records x { scan_number: uint32, fill_time_ms: float32 (NaN when not reported),
+                             analyzer: uint8 (index into analyzers) }]
+```
+
+It is refused, as the cache is, when it is missing, of another version, or written for a
+different version of the source. A `--demux auto` run that finds a `.spectra.bin` without a valid
+sidecar (one written before the sidecar existed) reads the fill times from the source's metadata
+alone, without its peaks, and writes the sidecar; with the source gone too, it counts ions at a
+constant 100 per ion and says so in the log. About 9 bytes per MS2 spectrum: 1-4 MB per run.
 
 ### Centrix-centroided cache (`<stem>.centrix-<hash>.spectra.bin`)
 
@@ -754,6 +784,8 @@ run:
 - `<stem>.{1st,2nd}-pass.fdr_scores.bin` — first-pass required by the Stage 6 worker; deleting
   forces a Stage 5 re-join.
 - `<stem>.reconciliation.json` — deleting forces a Stage 5 re-join.
+- `<stem>.acquisition.bin` — recreated from the source's metadata by a `--demux auto` run that
+  needs it. Keep it with the `.spectra.bin` on a cohort whose sources are deleted.
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
   C# recalibration is triggered by the task sidecar, not by this file's presence.
 - `<output>.<TaskName>.osprey.task` — deleting forces the task to re-run.

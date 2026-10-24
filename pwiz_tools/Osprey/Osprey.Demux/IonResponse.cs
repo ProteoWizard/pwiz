@@ -111,4 +111,23 @@ namespace pwiz.Osprey.Demux
             return alpha > 0 && fillMs > 0 ? alpha * MS_PER_SECOND / fillMs : double.NaN;
         }
     }
+
+    /// <summary>
+    /// What counting an MS2 spectrum's ions needs of its acquisition: its ion injection (fill) time and its analyzer's
+    /// ion response (<see cref="IonResponse"/>), each NaN when the source does not report it.
+    /// </summary>
+    public readonly struct SpectrumAcquisition
+    {
+        public SpectrumAcquisition(double fillTimeMs, double ionResponse)
+        {
+            FillTimeMs = fillTimeMs;
+            IonResponse = ionResponse;
+        }
+
+        /// <summary>Ion injection (fill) time, in milliseconds.</summary>
+        public double FillTimeMs { get; }
+
+        /// <summary>The analyzer's alpha.</summary>
+        public double IonResponse { get; }
+    }
 }

@@ -561,13 +561,16 @@ namespace pwiz.Osprey.Test
             try
             {
                 // Stand-in sources: a cache hit precedes the reader, so the bytes are never read,
-                // and saving with the source path makes the fingerprint check real.
+                // and saving with the source path makes the fingerprint check real. The fill times
+                // are saved beside the cache, as a parse saves them, so they are not read either.
                 string staggeredSource = Path.Combine(dir, @"staggered.raw");
                 File.WriteAllBytes(staggeredSource, new byte[] { 1, 2, 3, 4 });
                 var run = BuildStaggeredRun(6);
                 string rawCache = SpectraCache.GetCachePath(staggeredSource);
                 string demuxCache = SpectraCache.GetDemuxCachePath(staggeredSource);
                 SpectraCache.SaveSpectraCache(rawCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource);
+                AcquisitionSidecar.Save(AcquisitionSidecar.PathFor(rawCache), AstralAcquisition(run.Spectra),
+                    staggeredSource);
 
                 // Demux off: an overlapping run is refused rather than searched as acquired.
                 var off = WiringContext(DemuxMode.off);
@@ -643,6 +646,54 @@ namespace pwiz.Osprey.Test
         /// descriptor and what the reader expects, and window detection over every bin. Also
         /// the settings that select demux: the CLI switch and the search hash.
         /// </summary>
+        /// <summary>
+        /// The acquisition sidecar: each MS2 spectrum's fill time and analyzer round-trip beside the
+        /// spectra cache, a fill time the file did not report stays NaN, and a sidecar written for
+        /// another version of the source is refused, as the cache is.
+        /// </summary>
+        [TestMethod]
+        public void TestAcquisitionSidecar()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyAcquisition" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string source = Path.Combine(dir, @"run.raw");
+                File.WriteAllBytes(source, new byte[] { 1, 2, 3, 4 });
+                string path = AcquisitionSidecar.PathFor(SpectraCache.GetCachePath(source));
+                Assert.AreEqual(Path.Combine(dir, @"run" + AcquisitionSidecar.EXT), path);
+                Assert.IsNull(AcquisitionSidecar.Load(path, source));
+
+                var info = new AcquisitionInfo();
+                info.Add(3, 12.5, ASTRAL_ANALYZER);
+                info.Add(7, double.NaN, null);
+                info.Add(9, 4, @"orbitrap");
+                AcquisitionSidecar.Save(path, info, source);
+
+                var loaded = AcquisitionSidecar.Load(path, source);
+                Assert.IsNotNull(loaded);
+                Assert.AreEqual(3, loaded.Count);
+                Assert.IsTrue(loaded.TryGet(3, out double fillTimeMs, out string analyzer));
+                Assert.AreEqual(12.5, fillTimeMs);
+                Assert.AreEqual(MassAnalyzerKind.astral, IonResponse.KindOf(analyzer));
+                Assert.IsTrue(loaded.TryGet(7, out fillTimeMs, out analyzer));
+                Assert.IsTrue(double.IsNaN(fillTimeMs));
+                Assert.AreEqual(MassAnalyzerKind.unknown, IonResponse.KindOf(analyzer));
+                Assert.IsTrue(loaded.TryGet(9, out fillTimeMs, out analyzer));
+                Assert.AreEqual(4, fillTimeMs);
+                Assert.AreEqual(MassAnalyzerKind.orbitrap, IonResponse.KindOf(analyzer));
+                Assert.IsFalse(loaded.TryGet(4, out _, out _));
+
+                // A source rewritten since is another run: its sidecar is refused.
+                File.WriteAllBytes(source, new byte[] { 1, 2, 3, 4, 5 });
+                Assert.IsNull(AcquisitionSidecar.Load(path, source));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
         [TestMethod]
         public void TestDemuxCache()
         {
@@ -1000,6 +1051,17 @@ namespace pwiz.Osprey.Test
         /// The k=2, 8 Th staggered run the exactness tests use: constant elution, exact m/z, and
         /// the fragment shared by four consecutive bins.
         /// </summary>
+        private const string ASTRAL_ANALYZER = @"quadrupole asymmetric track lossless time-of-flight analyzer";
+
+        /// <summary>Spectra as an Astral fills them, each for 10 ms.</summary>
+        private static AcquisitionInfo AstralAcquisition(IEnumerable<Spectrum> spectra)
+        {
+            var info = new AcquisitionInfo();
+            foreach (var spectrum in spectra)
+                info.Add(spectrum.ScanNumber, 10, ASTRAL_ANALYZER);
+            return info;
+        }
+
         private static SyntheticRun BuildStaggeredRun(int cycles)
         {
             return BuildRun(new RunOptions

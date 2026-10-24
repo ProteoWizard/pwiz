@@ -34,12 +34,16 @@ namespace pwiz.Osprey.Demux
     {
         /// <summary>
         /// Demultiplexes MS2 spectra given in acquisition order, each into one spectrum per bin its window covers,
-        /// keeping its scan number and retention time.
+        /// keeping its scan number and retention time. <paramref name="acquisitions"/>, one per spectrum or null, give
+        /// each spectrum's fill time and ion response.
         /// </summary>
-        public static DemuxResult Run(IReadOnlyList<Spectrum> ms2Spectra, DemuxParams parameters)
+        public static DemuxResult Run(IReadOnlyList<Spectrum> ms2Spectra, DemuxParams parameters,
+            IReadOnlyList<SpectrumAcquisition> acquisitions = null)
         {
+            if (acquisitions != null && acquisitions.Count != ms2Spectra.Count)
+                throw new ArgumentException(@"One acquisition per spectrum is required.", nameof(acquisitions));
             var options = CreateOptions(parameters);
-            var pipeline = new StaggeredDemuxPipeline(new SpectraSource(ms2Spectra), options, TextWriter.Null,
+            var pipeline = new StaggeredDemuxPipeline(new SpectraSource(ms2Spectra, acquisitions), options, TextWriter.Null,
                 parameters.MinimumBinWidth);
             var spectra = new List<Spectrum>(pipeline.OutputCount);
             for (int index = 0; index < pipeline.OutputCount; index++)
@@ -80,7 +84,10 @@ namespace pwiz.Osprey.Demux
             {
                 Threads = Math.Max(1, parameters.Threads),
                 CountsPerIon = parameters.CountsPerIon,
+                IonsFromFillTime = parameters.IonsFromFillTime,
             };
+            if (!double.IsNaN(parameters.MinChannelIons))
+                options.Parameters.MinChannelIons = parameters.MinChannelIons;
             if (parameters.ChannelToleranceIsPpm)
                 options.Parameters.ChannelTolerancePpm = parameters.ChannelTolerance;
             else
@@ -100,19 +107,22 @@ namespace pwiz.Osprey.Demux
             string elution = options.Elution != null ? @";" + options.Elution.Descriptor : string.Empty;
             return string.Format(ic,
                 @"block_cycles={0};cycle_pad={1};group_bins={2};min_channel_ions={3};min_channel_cells={4};" +
-                @"poisson_weights={5};weight_floor_ions={6}",
+                @"poisson_weights={5};weight_floor_ions={6};ions_from_fill_time={7}",
                 options.BlockCycles, options.CyclePad, options.GroupBins, p.MinChannelIons.ToString(@"R", ic),
-                p.MinChannelCells, p.PoissonWeights, p.WeightFloorIons.ToString(@"R", ic)) + elution;
+                p.MinChannelCells, p.PoissonWeights, p.WeightFloorIons.ToString(@"R", ic), options.IonsFromFillTime) +
+                elution;
         }
 
         /// <summary>A run's MS2 spectra in memory as a demultiplexing source.</summary>
         private sealed class SpectraSource : IDemuxSource
         {
             private readonly IReadOnlyList<Spectrum> _spectra;
+            private readonly IReadOnlyList<SpectrumAcquisition> _acquisitions;
 
-            public SpectraSource(IReadOnlyList<Spectrum> spectra)
+            public SpectraSource(IReadOnlyList<Spectrum> spectra, IReadOnlyList<SpectrumAcquisition> acquisitions)
             {
                 _spectra = spectra;
+                _acquisitions = acquisitions;
             }
 
             public int Count
@@ -128,7 +138,11 @@ namespace pwiz.Osprey.Demux
             public DemuxSpectrumInfo Describe(int index)
             {
                 var spectrum = _spectra[index];
-                return new DemuxSpectrumInfo(2, true, spectrum.IsolationWindow, spectrum.RetentionTime);
+                if (_acquisitions == null)
+                    return new DemuxSpectrumInfo(2, true, spectrum.IsolationWindow, spectrum.RetentionTime);
+                var acquisition = _acquisitions[index];
+                return new DemuxSpectrumInfo(2, true, spectrum.IsolationWindow, spectrum.RetentionTime,
+                    acquisition.FillTimeMs, acquisition.IonResponse);
             }
 
             public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)

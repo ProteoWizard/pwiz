@@ -290,6 +290,18 @@ namespace pwiz.Osprey.Core
         public static readonly string DemuxOutputMode = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_OUTPUT");
 
         /// <summary>
+        /// OSPREY_DEMUX_MIN_CHANNEL_IONS / OSPREY_DEMUX_COUNTS_PER_ION: developer overrides of the
+        /// weighted engine's channel threshold (the ions a fragment channel needs over its block to
+        /// be demultiplexed rather than split evenly among its bins; 8 by default) and of how it
+        /// counts ions (a fixed intensity per ion instead of each spectrum's fill time and analyzer).
+        /// For measuring their effect on a search; each is part of the demux cache descriptor.
+        /// </summary>
+        public static readonly string DemuxMinChannelIons = GetVariable(@"OSPREY_DEMUX_MIN_CHANNEL_IONS");
+
+        /// <summary>See <see cref="DemuxMinChannelIons"/>.</summary>
+        public static readonly string DemuxCountsPerIon = GetVariable(@"OSPREY_DEMUX_COUNTS_PER_ION");
+
+        /// <summary>
         /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
         /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
         /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer

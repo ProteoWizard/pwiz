@@ -109,6 +109,7 @@ namespace pwiz.Osprey.IO
         {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
+            var acquisition = new AcquisitionInfo();
             int unsortedCount = 0;
             double sigmaMs1 = double.NaN, sigmaMs2 = double.NaN;
 
@@ -173,7 +174,7 @@ namespace pwiz.Osprey.IO
                         {
                             for (int i = 0; i < count; i++)
                             {
-                                AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
+                                AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra, acquisition,
                                     ref unsortedCount);
                                 progress.Report(i + 1);
                             }
@@ -193,7 +194,8 @@ namespace pwiz.Osprey.IO
                                 Parallel.For(0, size, parallel, k => CentroidProfile(batch[k], centroiders));
                                 for (int k = 0; k < size; k++)
                                 {
-                                    AddSpectrum(batch[k], start + k, ms2Spectra, ms1Spectra, ref unsortedCount);
+                                    AddSpectrum(batch[k], start + k, ms2Spectra, ms1Spectra, acquisition,
+                                        ref unsortedCount);
                                     batch[k] = null;
                                 }
                                 progress.Report(start + size);
@@ -238,6 +240,7 @@ namespace pwiz.Osprey.IO
             {
                 CentroidSigmaMs1 = sigmaMs1,
                 CentroidSigmaMs2 = sigmaMs2,
+                Acquisition = acquisition,
             };
         }
 
@@ -273,6 +276,28 @@ namespace pwiz.Osprey.IO
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Each MS2 spectrum's fill time and analyzer, read from the source's metadata without its peaks: for a
+        /// spectra cache written before they were saved beside it (<see cref="AcquisitionSidecar"/>). The spectrum
+        /// list is opened as <see cref="LoadAllSpectra(string, CentroidingOptions)"/> opens it (SIM scans as
+        /// spectra, ion mobility uncombined), so the scan numbers are the cache's.
+        /// </summary>
+        public static AcquisitionInfo ReadAcquisition(string path)
+        {
+            var acquisition = new AcquisitionInfo();
+            using (var msData = new MsDataFileImpl(path, simAsSpectra: true, combineIonMobilitySpectra: false))
+            {
+                int count = msData.SpectrumCount;
+                for (int i = 0; i < count; i++)
+                {
+                    var metadata = msData.GetSpectrumMetadata(i);
+                    if (metadata.MsLevel == 2)
+                        acquisition.Add((uint)i, metadata.InjectionTime ?? double.NaN, metadata.Analyzer);
+                }
+            }
+            return acquisition;
         }
 
         /// <summary>
@@ -377,7 +402,8 @@ namespace pwiz.Osprey.IO
         }
 
         private static void AddSpectrum(MsDataSpectrum spectrum, int spectrumIndex,
-            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, ref int unsortedCount)
+            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, AcquisitionInfo acquisition,
+            ref int unsortedCount)
         {
             if (spectrum == null)
                 return;
@@ -434,7 +460,10 @@ namespace pwiz.Osprey.IO
                 isolationTarget?.Value ?? 0.0, precursor.IsolationWindowLower ?? 0.0,
                 precursor.IsolationWindowUpper ?? 0.0, mzs, intensities);
             if (ms2 != null)
+            {
                 ms2Spectra.Add(ms2);
+                acquisition.Add(index, spectrum.Metadata?.InjectionTime ?? double.NaN, spectrum.Metadata?.Analyzer);
+            }
         }
 
         /// <summary>
@@ -470,6 +499,9 @@ namespace pwiz.Osprey.IO
 
         /// <summary>The peak sigma, Th, Centrix centroided MS2 with; NaN when it did not centroid.</summary>
         public double CentroidSigmaMs2 { get; set; } = double.NaN;
+
+        /// <summary>Each MS2 spectrum's fill time and analyzer, as the file reports them.</summary>
+        public AcquisitionInfo Acquisition { get; set; }
 
         public SpectrumFileResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
         {

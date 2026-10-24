@@ -224,6 +224,8 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
+                DemuxCacheBuilder.SaveAcquisition(AcquisitionSidecar.PathFor(cachePath), mzmlResult.Acquisition,
+                    inputFile, ctx);
                 // Name the file that was just written, the way the library cache does. Without
                 // this the only evidence a multi-GB cache was produced is a silent gap in the
                 // log, and nothing says WHERE it landed - which matters because --work-dir
