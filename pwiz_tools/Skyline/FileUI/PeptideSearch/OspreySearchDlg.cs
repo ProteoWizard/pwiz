@@ -659,7 +659,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnBack.Enabled = true;
             ControlBox = true;
             if (success)
+            {
+                // The file on disk is the new library from here on, whether or not the user goes on
+                // to Finish, so the document's object is refreshed now rather than at the hand-off.
+                ReloadDocumentLibrary();
                 btnNext.Enabled = true;
+            }
         }
 
         private void btnNext_Click(object sender, EventArgs e)
