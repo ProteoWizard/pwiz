@@ -38,9 +38,6 @@ namespace pwiz.Osprey.Demux
     /// </summary>
     internal sealed class StaggeredDemuxPlan : DemuxPlan
     {
-        /// <summary>Injection times are in milliseconds; an ion trap's intensities are ions per second.</summary>
-        private const double MS_PER_SECOND = 1000;
-
         private readonly IDemuxSource _source;
         private readonly ScanningDemuxOptions _options;
         private readonly int[] _ms2Spectra;           // input index of each MS2, in acquisition order
@@ -75,10 +72,11 @@ namespace pwiz.Osprey.Demux
             for (int k = 0; k < source.Count; k++)
             {
                 var info = infos[k];
-                // Ions per second over a fill time in ms: one ion is 1000 / fill time intensity units.
-                _intensityPerIon[k] = options.IntensityIsIonsPerSecond && info.InjectionTime > 0
-                    ? MS_PER_SECOND / info.InjectionTime
-                    : options.CountsPerIon;
+                // One ion is alpha x 1000 / fill time (ms) intensity units, alpha the analyzer's ion response
+                // (IonResponse: about 1 for an ion trap or an Astral, 10 for an Orbitrap); else a constant.
+                double alpha = info.IonResponse > 0 ? info.IonResponse : options.DefaultIonResponse;
+                double perIon = options.IonsFromFillTime ? IonResponse.IntensityPerIon(alpha, info.InjectionTime) : double.NaN;
+                _intensityPerIon[k] = perIon > 0 ? perIon : options.CountsPerIon;
                 if (info.MsLevel == 1)
                     continue;
                 windows.Add(info.Window);
@@ -117,12 +115,13 @@ namespace pwiz.Osprey.Demux
                 }
             }
             // The per-channel solve combines spectra, interpolating each window's channels between its acquisitions and
-            // solving them together, so with fill times that vary it must see them all on one scale: ions per second
-            // times the run's median fill time (as the joint solve uses its pass's). Each spectrum's peaks are put on it
-            // as read, and each output spectrum's are taken back to its own (LayOut). A constant counts per ion needs
-            // no conversion, and none is made.
+            // solving them together, so with fill times that vary it must see them all on one scale: rates times the
+            // run's median fill time (as the joint solve uses its pass's). Each spectrum's peaks are put on it as read,
+            // each acquisition's exposure (its own ions per unit on that scale) sets its weights (MakeUnit), and each
+            // output spectrum's peaks are taken back to its own scale (LayOut). A constant counts per ion needs no
+            // conversion, and none is made.
             _referencePerIon = double.NaN;
-            if (options.IntensityIsIonsPerSecond && !options.Joint && _ms2Spectra.Length > 0)
+            if (options.IonsFromFillTime && !options.Joint && _ms2Spectra.Length > 0)
             {
                 var scales = _ms2Spectra.Select(k => _intensityPerIon[k]).ToArray();
                 _referencePerIon = MedianMath.SelectInPlace(scales, scales.Length / 2);
@@ -409,6 +408,27 @@ namespace pwiz.Osprey.Demux
                 }
             }
 
+            // Each pass's rows' exposure: the ions an acquisition counted per unit of its values on the pass's scale,
+            // the row's own acquisition's in the pass, else interpolated in time between the row's acquisitions.
+            double[][] rowExposure = null;
+            if (_options.IonsFromFillTime)
+            {
+                rowExposure = new double[passes.Length][];
+                for (int c = 0; c < passes.Length; c++)
+                {
+                    double perIonRef = _passPerIon[passes[c]];
+                    rowExposure[c] = new double[rowWindows.Length];
+                    for (int r = 0; r < rowWindows.Length; r++)
+                    {
+                        var exposures = acquisitions[r].Select(i => perIonRef / _intensityPerIon[_ms2Spectra[i]]).ToArray();
+                        int own = acquisitions[r].FindIndex(i => _passOfMs2[i] == passes[c]);
+                        rowExposure[c][r] = own >= 0
+                            ? exposures[own]
+                            : ScanningDemultiplexer.InterpolateLinear(rowTimes[r], exposures, passTime[c]);
+                    }
+                }
+            }
+
             // Each row's samples in grid order, sorted once for every pass.
             var rowSamples = rowRates.Select(rates => rates.OrderBy(e => e.Key).ToArray()).ToArray();
             var mz = new List<double>();
@@ -449,6 +469,7 @@ namespace pwiz.Osprey.Demux
                 Ions = ions.ToArray(),
                 Row = row.ToArray(),
                 Cycle = cycle.ToArray(),
+                RowExposure = rowExposure,
             };
         }
 
@@ -653,6 +674,10 @@ namespace pwiz.Osprey.Demux
             }
             var rowTimes = acquisitions.Select(list => list.Select(i => _ms2Time[i]).ToArray()).ToArray();
             var rowSpectra = acquisitions.Select(list => list.Select(i => _ms2Spectra[i]).ToArray()).ToArray();
+            // Each acquisition's exposure: the ions it counted per unit of its values on the run's scale.
+            var rowExposure = double.IsNaN(_referencePerIon)
+                ? null
+                : rowSpectra.Select(list => list.Select(k => _referencePerIon / _intensityPerIon[k]).ToArray()).ToArray();
 
             var outputRow = new List<int>();
             var outputAcquisition = new List<int>();
@@ -695,6 +720,7 @@ namespace pwiz.Osprey.Demux
                 Ions = ions.ToArray(),
                 Row = row.ToArray(),
                 Acquisition = acquisition.ToArray(),
+                RowExposure = rowExposure,
             };
         }
 

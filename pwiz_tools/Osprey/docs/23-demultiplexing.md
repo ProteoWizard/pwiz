@@ -315,7 +315,8 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--centrix-sigma S`, `--centrix-sigma-ms1 S` | from the input | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, 1.1 point spacings on a linear ion trap, else measured from the input |
 | `--centrix-param Name=Value` | - | any `CentrixParams` setting (`Solver=active_set` among them); also the joint solve's Centrix |
 | `--channel-th T` | ppm | staggered: fragment channels matched within T Th on a linear axis (unit resolution) |
-| `--ions` | off | intensities are ions per second (a Thermo ion trap's): combined and written in ions per second; thresholds and Poisson weights in ions at a reference fill time (the run's median, or the joint solve's pass's), not yet each spectrum's own (see [Stellar profile data](#stellar-profile-data-linear-ion-trap)) |
+| `--ions` | off | ions from each spectrum's fill time and its analyzer's ion response (see [Ions from the fill time](#ions-from-the-fill-time)): spectra combined as rates and written in their own units; each observation's own ions set the Poisson weights and channel thresholds |
+| `--ion-response A` | 1 | with `--ions`: the ion response of spectra whose file names no analyzer the table knows |
 | `--peak-sigma-th S` | from the input | staggered `--joint` on a linear grid: the profile peak sigma, Th; absent, as `--centrix-sigma` |
 | `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
 | `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
@@ -733,12 +734,8 @@ the range, about 1.2 s a pass mid-run. Their profile is on a uniform 0.2 Th grid
 and their intensities are ions per second: ions = intensity x fill time, which `--ions` applies
 spectrum by spectrum. Spectra are combined in ions per second, the only unit that compares across
 fill times, and written in it. A measurement's precision is set by the ions it counted, so the
-channel thresholds and Poisson weights should be in each spectrum's own ions. They are not yet:
-the solves see every value on one scale, rates times a reference fill time (the run's median for
-the per-channel solve, the pass's for the joint solve), so a spectrum with a short fill is weighed
-as more ions than it counted and one with a long fill as fewer. Carrying each acquisition's own
-fill time into the weights is still to do. Every bin is observed in every pass, through a
-different window; only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
+channel thresholds and Poisson weights are in each spectrum's own ions ([Ions from the fill
+time](#ions-from-the-fill-time)). Every bin is observed in every pass, through a different window; only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
 one demultiplexed spectrum per bin per pass.
 
 Two ways through `Osprey.DemuxTool --scheme staggered`:
@@ -798,6 +795,39 @@ what sampling costs. Searches of the real methods are recorded in the pwiz-ai TO
 annotation cannot be used to drop anything. Adaptive RT spectra are 20 or 50 m/z wide, and Stellar
 DIA never exceeds 10 m/z; the isolation width is how to recognize them, and nothing filters them yet
 ([24](24-profile-centroiding.md#the-stellars-filter-strings-z-and-adaptive-rt)).
+
+### Ions from the fill time
+
+An Orbitrap's, an Astral's and an ion trap's intensities are rates: a spectrum's ions are its
+intensity x its fill (injection) time over its analyzer's ion response alpha, I = alpha x N / t
+(`IonResponse`). The values are Table 1 of Hsu C, Shulman N, ..., MacCoss MJ, "Evaluation of a
+Prototype Orbitrap Astral Zoom Mass Spectrometer for Quantitative Proteomics - Beyond
+Identification Lists", *J. Proteome Res.* 2025, 24, 5742-5754 (doi:10.1021/acs.jproteome.5c00593),
+from the variance of fragment-ion ratios over 5,000 spectra of infused Glu[1]-Fibrinopeptide B:
+
+| Analyzer | Instruments measured | alpha used |
+|---|---|---|
+| Astral | Orbitrap Astral 1.53, Astral Zoom prototype 1.31 | 1.53 |
+| Orbitrap | Astral 10.62, Astral Zoom prototype 10.30, Exploris 480 10.95, Ascend 9.40, Fusion Lumos 15.44 | 10.62 (the median) |
+| Ion trap | Stellar 0.97, Ascend 0.98, Fusion Lumos 1.09 | 0.98 (the median) |
+
+The analyzer is read from each spectrum's instrument configuration (its PSI-MS analyzer terms).
+An Astral spectrum filled for 10 ms carries one ion per 153 intensity units; one filled for 4 ms,
+one per 381. A constant counts per ion (`--counts-per-ion`, 100, the ZenoTOF's) misses both the
+scale and the spread. SCIEX ZT Scan keeps the constant.
+
+The ions set only the Poisson weights and thresholds; spectra are combined as rates and written
+in the instrument's units. The per-channel solve puts every observation on one scale, rates times
+the run's median fill time (the joint solve: its pass's), and each observation carries its
+exposure e, its own fill time over that reference, so its counted ions are its value times e:
+- the channel thresholds (`MinChannelIons`, `MinChannelCells`) and the channel finder use the
+  counted ions;
+- a row's Poisson weight, in its value's units, is e / max(mu, floor / e): its counted ions'
+  1 / max(mu x e, floor). An interpolated row's exposure is interpolated linearly in time
+  between its window's acquisitions.
+
+With exposures all 1 (a constant counts per ion) the solves run exactly as before. The elution
+fit (`--elution-fwhm`) still weighs values on the reference scale.
 
 ### Determinism
 

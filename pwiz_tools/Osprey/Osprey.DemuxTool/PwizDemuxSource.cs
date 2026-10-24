@@ -19,7 +19,9 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Spectra;
 using pwiz.Osprey.Demux;
 using IsolationWindow = pwiz.Osprey.Core.IsolationWindow;
@@ -36,6 +38,7 @@ namespace pwiz.Osprey.DemuxTool
     {
         private readonly ISpectrumList _spectra;
         private readonly object _readLock = new object();
+        private readonly Dictionary<string, double> _ionResponse = new Dictionary<string, double>();   // by configuration id
 
         public PwizDemuxSource(ISpectrumList spectra)
         {
@@ -64,9 +67,11 @@ namespace pwiz.Osprey.DemuxTool
         public DemuxSpectrumInfo Describe(int index)
         {
             Spectrum spectrum;
+            double ionResponse;
             lock (_readLock)
             {
                 spectrum = _spectra.GetSpectrum(index);
+                ionResponse = IonResponseOf(spectrum);
             }
             int level = spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
             double time = spectrum.ScanList.Scans.Count > 0
@@ -76,12 +81,12 @@ namespace pwiz.Osprey.DemuxTool
                 ? spectrum.ScanList.Scans[0].CvParamValueOrDefault(CVID.MS_ion_injection_time, double.NaN)
                 : double.NaN;
             if (spectrum.Precursors.Count == 0)
-                return new DemuxSpectrumInfo(level, false, default, time, injectionTime);
+                return new DemuxSpectrumInfo(level, false, default, time, injectionTime, ionResponse);
             var window = spectrum.Precursors[0].IsolationWindow;
             return new DemuxSpectrumInfo(level, true, new IsolationWindow(
                 window.CvParamValueOrDefault(CVID.MS_isolation_window_target_m_z, 0.0),
                 window.CvParamValueOrDefault(CVID.MS_isolation_window_lower_offset, 0.0),
-                window.CvParamValueOrDefault(CVID.MS_isolation_window_upper_offset, 0.0)), time, injectionTime);
+                window.CvParamValueOrDefault(CVID.MS_isolation_window_upper_offset, 0.0)), time, injectionTime, ionResponse);
         }
 
         public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
@@ -101,6 +106,26 @@ namespace pwiz.Osprey.DemuxTool
 
         public void Forget(int index)
         {
+        }
+
+        /// <summary>
+        /// The ion response (alpha) of the analyzer that acquired a spectrum, from its scan's instrument configuration's
+        /// analyzer terms (<see cref="IonResponse"/>); NaN when the configuration names none known. Kept by
+        /// configuration, under the read lock.
+        /// </summary>
+        private double IonResponseOf(Spectrum spectrum)
+        {
+            var configuration = spectrum.ScanList.Scans.Count > 0 ? spectrum.ScanList.Scans[0].InstrumentConfiguration : null;
+            if (configuration == null)
+                return double.NaN;
+            if (!_ionResponse.TryGetValue(configuration.Id, out double alpha))
+            {
+                var analyzers = configuration.ComponentList.Where(c => c.Type == ComponentType.Analyzer)
+                    .Select(c => c.CvParamChild(CVID.MS_mass_analyzer_type).Name);
+                alpha = IonResponse.Of(IonResponse.KindOf(string.Join(@" ", analyzers)));
+                _ionResponse[configuration.Id] = alpha;
+            }
+            return alpha;
         }
     }
 }

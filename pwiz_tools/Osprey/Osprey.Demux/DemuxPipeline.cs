@@ -33,13 +33,14 @@ namespace pwiz.Osprey.Demux
     public readonly struct DemuxSpectrumInfo
     {
         public DemuxSpectrumInfo(int msLevel, bool hasWindow, IsolationWindow window, double time,
-            double injectionTime = double.NaN)
+            double injectionTime = double.NaN, double ionResponse = double.NaN)
         {
             MsLevel = msLevel;
             HasWindow = hasWindow;
             Window = window;
             Time = time;
             InjectionTime = injectionTime;
+            IonResponse = ionResponse;
         }
 
         public int MsLevel { get; }
@@ -55,6 +56,12 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>Ion injection (fill) time, in milliseconds; NaN when the file does not report it.</summary>
         public double InjectionTime { get; }
+
+        /// <summary>
+        /// The ion response (alpha) of the analyzer that acquired the spectrum (<see cref="Demux.IonResponse"/>); NaN
+        /// when the source does not know the analyzer.
+        /// </summary>
+        public double IonResponse { get; }
 
         /// <summary>The isolation window's target m/z; 0 without a window.</summary>
         public double Target

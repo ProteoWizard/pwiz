@@ -79,6 +79,12 @@ namespace pwiz.Osprey.Demux
         public double WeightFloorIons { get; set; } = 0.5;
 
         /// <summary>
+        /// Weigh each sample by its Poisson variance (the default); false weighs every sample the same, for measuring
+        /// how values combine apart from how they are weighted.
+        /// </summary>
+        public bool PoissonWeights { get; set; } = true;
+
+        /// <summary>
         /// Centroids below this many ions are not written; 0, the default, writes every positive one (no floor until
         /// one is shown to help; see <see cref="ScanningDemuxParams.MinOutputIons"/>).
         /// </summary>
@@ -368,6 +374,7 @@ namespace pwiz.Osprey.Demux
                 // Grid order, then row: the order every later step visits them in.
                 points.Sort((a, b) => a.Sample != b.Sample ? a.Sample.CompareTo(b.Sample) : a.Row.CompareTo(b.Row)); // Array.Sort OK: (sample, row) is unique
                 kept.Clear();
+                solver.RowExposure = unit.RowExposure?[c];
                 long first = points[0].Sample, last = points[points.Count - 1].Sample;
                 int start = 0;
                 for (long core0 = first; core0 <= last; core0 += parameters.ChunkSamples)
@@ -638,6 +645,12 @@ namespace pwiz.Osprey.Demux
                 _workspace = new NnlsSolver.Workspace(most);
             }
 
+            /// <summary>
+            /// The exposure of each row of the sweep being solved: the ions its values counted per unit (null: each
+            /// value is its own ions). Sets the rows' Poisson weights.
+            /// </summary>
+            public double[] RowExposure { get; set; }
+
             /// <summary>Solves the coefficients of grid points [lo, hi] from points[start, end).</summary>
             public void Solve(List<(long Sample, int Row, double Ions)> points, int start, int end, long lo, long hi,
                 double[] kernel)
@@ -847,7 +860,8 @@ namespace pwiz.Osprey.Demux
             /// <summary>
             /// Poisson weights 1 / max(mu, floor), with mu the model's expected counts, y - residual, or before
             /// there is a model each row's counts smoothed by the peak; then each coefficient's curvature for
-            /// the weights.
+            /// the weights. With a row's exposure e (its counted ions per unit of its values), its weights are
+            /// e / max(mu, floor / e): its counted ions' 1 / max(mu e, floor), in its values' units.
             /// </summary>
             private void FillWeights(bool fromModel)
             {
@@ -858,10 +872,25 @@ namespace pwiz.Osprey.Demux
                     if (!_rowUsed[r])
                         continue;
                     int o = r * _samples;
-                    if (fromModel)
+                    double exposure = RowExposure?[r] ?? 1;
+                    if (!_parameters.PoissonWeights)
                     {
                         for (int s = 0; s < _samples; s++)
-                            _weight[o + s] = 1 / Math.Max(_y[o + s] - _residual[o + s], floor);
+                            _weight[o + s] = 1;
+                        continue;
+                    }
+                    if (fromModel)
+                    {
+                        if (RowExposure == null)
+                        {
+                            for (int s = 0; s < _samples; s++)
+                                _weight[o + s] = 1 / Math.Max(_y[o + s] - _residual[o + s], floor);
+                        }
+                        else
+                        {
+                            for (int s = 0; s < _samples; s++)
+                                _weight[o + s] = exposure / Math.Max(_y[o + s] - _residual[o + s], floor / exposure);
+                        }
                         continue;
                     }
                     // mu[s] = sum_d B[d] y[s + d], each sample's terms in ascending d: spread from each sample with
@@ -876,8 +905,16 @@ namespace pwiz.Osprey.Demux
                         for (int d = d1; d >= d0; d--)
                             _weight[o + t - d] += _b[d + _half] * yt;
                     }
-                    for (int s = 0; s < _samples; s++)
-                        _weight[o + s] = 1 / Math.Max(_weight[o + s], floor);
+                    if (RowExposure == null)
+                    {
+                        for (int s = 0; s < _samples; s++)
+                            _weight[o + s] = 1 / Math.Max(_weight[o + s], floor);
+                    }
+                    else
+                    {
+                        for (int s = 0; s < _samples; s++)
+                            _weight[o + s] = exposure / Math.Max(_weight[o + s], floor / exposure);
+                    }
                 }
                 // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r]: four neighbouring grid
                 // points at a time, as in the gradient check, each lane's sums in a single point's order.

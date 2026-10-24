@@ -48,7 +48,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--ions] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
+            @" [--channel-th T] [--ions] [--ion-response A] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
             @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]"; // Arg literal OK: DemuxTool's own option vocabulary
 
         private static int Main(string[] args)
@@ -221,10 +221,14 @@ namespace pwiz.Osprey.DemuxTool
                         options.Parameters.ChannelToleranceTh = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--ions":
-                        // Intensities are ions per second (a Thermo ion trap's): spectra are combined, and written, in ions per
-                        // second; ions set only the thresholds and Poisson weights (at a reference fill time, for now:
-                        // ScanningDemuxOptions.IntensityIsIonsPerSecond).
-                        options.IntensityIsIonsPerSecond = true;
+                        // Ions from each spectrum's fill time and its analyzer's ion response (IonResponse; Thermo ion trap,
+                        // Astral, Orbitrap): spectra are combined as rates and written in their own units; each
+                        // observation's ions set the Poisson weights and thresholds.
+                        options.IonsFromFillTime = true;
+                        break;
+                    case @"--ion-response":
+                        // With --ions: the ion response (alpha) of spectra whose analyzer the file does not name (default 1).
+                        options.DefaultIonResponse = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--elution-fwhm":
                         // Staggered: apportion by each channel's elution fitted with peaks of this FWHM (seconds).
@@ -361,8 +365,8 @@ namespace pwiz.Osprey.DemuxTool
                     options.Parameters.ChannelToleranceTh > 0
                         ? options.Parameters.ChannelToleranceTh.ToString(CultureInfo.InvariantCulture) + @" Th"
                         : options.Parameters.ChannelTolerancePpm.ToString(CultureInfo.InvariantCulture) + @" ppm",
-                    options.IntensityIsIonsPerSecond
-                        ? @"intensity (ions/s) x fill time"
+                    options.IonsFromFillTime
+                        ? @"intensity x fill time / the analyzer's ion response"
                         : @"intensity / " + options.CountsPerIon.ToString(CultureInfo.InvariantCulture));
             }
 

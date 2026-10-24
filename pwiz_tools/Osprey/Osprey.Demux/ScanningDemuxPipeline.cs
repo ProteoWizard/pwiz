@@ -47,14 +47,20 @@ namespace pwiz.Osprey.Demux
         public double CountsPerIon { get; set; } = 100;
 
         /// <summary>
-        /// Staggered data whose intensities are ions per second, as a Thermo ion trap reports them: each spectrum's
-        /// ions are its intensity x its injection (fill) time in seconds, so each follows its own fill time. Spectra
-        /// are combined in ions per second, the only unit that compares across fill times, and the solves see them in
-        /// ions at one reference fill time (the run's median, or for the joint solve its pass's), which set the
-        /// thresholds and Poisson weights; each spectrum's own ions do not yet. Output is in ions per second. Spectra
-        /// without an injection time keep <see cref="CountsPerIon"/>.
+        /// Staggered data whose ions follow each spectrum's fill time (Thermo: an ion trap, an Astral, an Orbitrap):
+        /// a spectrum's ions are its intensity x its injection (fill) time in seconds over its analyzer's ion response
+        /// (<see cref="Demux.IonResponse"/>, the spectrum's or <see cref="DefaultIonResponse"/>). Spectra are combined
+        /// as rates, the only unit that compares across fill times, while each observation's own ions set the Poisson
+        /// weights and the channel thresholds. Output stays in the instrument's units. Spectra without an injection
+        /// time keep <see cref="CountsPerIon"/>.
         /// </summary>
-        public bool IntensityIsIonsPerSecond { get; set; }
+        public bool IonsFromFillTime { get; set; }
+
+        /// <summary>
+        /// With <see cref="IonsFromFillTime"/>, the ion response of spectra whose analyzer the source does not name:
+        /// 1, intensities in ions per second (an ion trap's or an Astral's, near enough).
+        /// </summary>
+        public double DefaultIonResponse { get; set; } = 1;
 
         /// <summary>
         /// Staggered profile data on a linear grid (an ion trap's), with <see cref="Joint"/>: the profile peak's sigma,

@@ -201,6 +201,13 @@ namespace pwiz.Osprey.Demux
         /// <summary>Each peak's sweep (an index into <see cref="Cycles"/>).</summary>
         public int[] Cycle { get; set; }
 
+        /// <summary>
+        /// Each sweep's rows' exposure, by sweep (an index into <see cref="Cycles"/>) then row: the ions a row's values
+        /// counted per unit, when the values are rates on a reference fill time (the row's own acquisition's fill time,
+        /// or its acquisitions' either side, over the reference). Null when every value is its own spectrum's ions.
+        /// </summary>
+        public double[][] RowExposure { get; set; }
+
         /// <summary>Center m/z of each row's encoded bin; needed by <see cref="ScanningDemuxParams.SourcePositions"/>.</summary>
         public double[] RowCenters { get; set; }
 
@@ -269,6 +276,19 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>Each peak's acquisition (an index into its row's <see cref="RowTimes"/>).</summary>
         public int[] Acquisition { get; set; }
+
+        /// <summary>
+        /// Each row's acquisitions' exposure, parallel to <see cref="RowTimes"/>: the ions an observation counted per
+        /// unit of its value, when the values are rates on one reference fill time (its fill time over the reference,
+        /// <see cref="ScanningDemuxOptions.IonsFromFillTime"/>). Null when every value is its own spectrum's ions.
+        /// </summary>
+        public double[][] RowExposure { get; set; }
+
+        /// <summary>A peak's ions as its spectrum counted them: its value times its acquisition's exposure.</summary>
+        public double CountedIons(int peak)
+        {
+            return RowExposure == null ? Ions[peak] : Ions[peak] * RowExposure[Row[peak]][Acquisition[peak]];
+        }
     }
 
     /// <summary>One output peak: an encoded bin, a sweep, an m/z and an intensity in ions.</summary>
@@ -551,8 +571,16 @@ namespace pwiz.Osprey.Demux
             var a = unit.Transmission;
             OutputOwnership(unit, out var keep, out var ownOutput);
 
+            // Channels are found, and judged strong, by the ions their spectra counted; values combine as they are.
+            var counted = unit.Ions;
+            if (unit.RowExposure != null)
+            {
+                counted = new double[peaks];
+                for (int i = 0; i < peaks; i++)
+                    counted[i] = unit.CountedIons(i);
+            }
             var channel = new int[peaks];
-            result.Channels = FindChannels(unit.Mz, unit.Ions, parameters, channel);
+            result.Channels = FindChannels(unit.Mz, counted, parameters, channel);
             var order = new long[peaks];
             for (int i = 0; i < peaks; i++)
                 order[i] = (long)(channel[i] + 1) * peaks + i;
@@ -575,7 +603,7 @@ namespace pwiz.Osprey.Demux
             for (int s = 0; s < outputs; s++)
                 observed[s] = new List<int>();
             var solveObserved = new bool[outputs];
-            var solver = new ChannelSolver(a, parameters);
+            var solver = new ChannelSolver(a, parameters) { CellExposure = ExposureByCell(unit) };
             int k = 0;
             while (k < peaks)
             {
@@ -594,7 +622,7 @@ namespace pwiz.Osprey.Demux
                         cells++;
                     rowSeries[unit.Acquisition[i]] += unit.Ions[i];
                     rowHasSignal[unit.Row[i]] = true;
-                    ions += unit.Ions[i];
+                    ions += counted[i];
                     weightedMz += unit.Ions[i] * unit.Mz[i];
                     if (OwnsPassThrough(unit, ownOutput, i))
                         result.IonsIn += unit.Ions[i];
@@ -1162,6 +1190,46 @@ namespace pwiz.Osprey.Demux
         /// Solves one channel sweep by sweep, reusing its buffers from channel to channel within a
         /// block (one per block, so not shared across threads).
         /// </summary>
+        /// <summary>
+        /// The exposure of each (row, output) cell the per-channel solve sees, row-major as its counts: the row's own
+        /// acquisition's at that acquisition's time, else interpolated linearly in time between the row's acquisitions
+        /// either side (the nearer one's outside them; 1 for a row with none). Null when the unit has no exposures.
+        /// </summary>
+        private static double[] ExposureByCell(InterpolatedUnit unit)
+        {
+            if (unit.RowExposure == null)
+                return null;
+            int rows = unit.RowTimes.Length, outputs = unit.OutputTime.Length;
+            var exposure = new double[rows * outputs];
+            for (int r = 0; r < rows; r++)
+            {
+                for (int s = 0; s < outputs; s++)
+                    exposure[r * outputs + s] = InterpolateLinear(unit.RowTimes[r], unit.RowExposure[r], unit.OutputTime[s]);
+            }
+            return exposure;
+        }
+
+        /// <summary>
+        /// The linear interpolation of values at increasing times to a time: exact at a time given, the nearer end's
+        /// value outside them, 1 with none.
+        /// </summary>
+        internal static double InterpolateLinear(double[] times, double[] values, double time)
+        {
+            int n = times.Length;
+            if (n == 0)
+                return 1;
+            if (time <= times[0])
+                return values[0];
+            if (time >= times[n - 1])
+                return values[n - 1];
+            int hi = Array.BinarySearch(times, time);
+            if (hi >= 0)
+                return values[hi];
+            hi = ~hi;
+            double f = (time - times[hi - 1]) / (times[hi] - times[hi - 1]);
+            return values[hi - 1] + f * (values[hi] - values[hi - 1]);
+        }
+
         private sealed class ChannelSolver
         {
             private readonly double[,] _a;
@@ -1175,6 +1243,7 @@ namespace pwiz.Osprey.Demux
             private readonly double[] _atb;
             private readonly double[] _x;
             private readonly double[] _mu;
+            private readonly double[] _rowWeight;  // with exposures: each used row's Poisson weight in its value's units
             private readonly double[] _start;
             private readonly bool[] _rowSignal;
             private readonly int[] _rowStart;      // used row rr's entries are [_rowStart[rr], _rowStart[rr + 1])
@@ -1200,6 +1269,7 @@ namespace pwiz.Osprey.Demux
                 _atb = new double[_columns];
                 _x = new double[_columns];
                 _mu = new double[_rows];
+                _rowWeight = new double[_rows];
                 _start = new double[_columns];
                 _rowSignal = new bool[_rows];
                 _rowStart = new int[_rows + 1];
@@ -1284,22 +1354,39 @@ namespace pwiz.Osprey.Demux
             /// <summary>
             /// The Poisson-weighted refit. Rows whose expected count from the unweighted fit is at
             /// or below the floor all share the weight 1 / floor, so the weighted A^T W A is that
-            /// weight times A^T A, corrected only for the few rows above the floor.
+            /// weight times A^T A, corrected only for the few rows above the floor. With exposures,
+            /// each row's counts are its value times its exposure e, so its weight in its value's
+            /// units is e / max(mu, floor / e), every row its own.
             /// </summary>
             private void SolveWeighted(double[] y, int c, int cycles, int nr, int nc)
             {
                 double floor = _parameters.WeightFloorIons;
-                double baseWeight = 1 / floor;
-                for (int i = 0; i < nc * nc; i++)
-                    _weighted[i] = baseWeight * _gram[i];
+                if (CellExposure == null)
+                {
+                    double baseWeight = 1 / floor;
+                    for (int i = 0; i < nc * nc; i++)
+                        _weighted[i] = baseWeight * _gram[i];
+                }
+                else
+                {
+                    Array.Clear(_weighted, 0, nc * nc);
+                }
                 for (int rr = 0; rr < nr; rr++)
                 {
                     double mu = 0;
                     for (int e = _rowStart[rr]; e < _rowStart[rr + 1]; e++)
                         mu += _nzValue[e] * _x[_nzColumn[e]];
                     _mu[rr] = mu;
-                    if (mu > floor)
-                        AddOuterProduct(_weighted, nc, rr, 1 / mu - baseWeight);
+                    if (CellExposure != null)
+                    {
+                        double exposure = CellExposure[_rowIndex[rr] * cycles + c];
+                        _rowWeight[rr] = exposure / Math.Max(mu, floor / exposure);
+                        AddOuterProduct(_weighted, nc, rr, _rowWeight[rr]);
+                    }
+                    else if (mu > floor)
+                    {
+                        AddOuterProduct(_weighted, nc, rr, 1 / mu - 1 / floor);
+                    }
                 }
                 ComputeAtb(y, c, cycles, nr, nc, _mu);
                 Penalize(nc);
@@ -1329,6 +1416,12 @@ namespace pwiz.Osprey.Demux
 
             /// <summary>The columns the next solves may use (null: every column).</summary>
             public bool[] ColumnMask { get; set; }
+
+            /// <summary>
+            /// Each (row, time) count's exposure, row-major as the counts: the ions its spectrum counted per unit of it
+            /// (null: every count is its own ions). Sets each row's Poisson weight.
+            /// </summary>
+            public double[] CellExposure { get; set; }
 
             private void Penalize(int nc)
             {
@@ -1381,7 +1474,10 @@ namespace pwiz.Osprey.Demux
                     _x[_support[s]] = _supportX[s];
             }
 
-            /// <summary>A^T y for one sweep, or A^T W y with weights 1 / max(mu, floor) when mu is given.</summary>
+            /// <summary>
+            /// A^T y for one sweep, or A^T W y when mu is given: weights 1 / max(mu, floor), or with exposures the rows'
+            /// own (<see cref="SolveWeighted"/>).
+            /// </summary>
             private void ComputeAtb(double[] y, int c, int cycles, int nr, int nc, double[] mu)
             {
                 Array.Clear(_atb, 0, nc);
@@ -1390,7 +1486,9 @@ namespace pwiz.Osprey.Demux
                     double value = y[_rowIndex[rr] * cycles + c];
                     if (value == 0)
                         continue;
-                    if (mu != null)
+                    if (mu != null && CellExposure != null)
+                        value *= _rowWeight[rr];
+                    else if (mu != null)
                         value /= Math.Max(mu[rr], _parameters.WeightFloorIons);
                     for (int e = _rowStart[rr]; e < _rowStart[rr + 1]; e++)
                         _atb[_nzColumn[e]] += _nzValue[e] * value;

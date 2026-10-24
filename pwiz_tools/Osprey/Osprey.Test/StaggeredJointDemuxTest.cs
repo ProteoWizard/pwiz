@@ -105,7 +105,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Spectra are combined in ions per second: the same rates acquired at fill times varying 100-fold give the
         /// output a constant fill time gives. Without the lasso penalty and the Poisson weights, which rightly depend on
-        /// the ions counted (a weight floor far above any count makes every weight the same), and compared as the
+        /// the ions counted, so differ with the fill times, and compared as the
         /// apportioned profile, before Centrix, whose split-or-merge decisions can turn on a small difference. Interior
         /// bins only: a bin at either end of the range is seen through one window, so its split with its neighbor is
         /// not determined and the solve's choice follows its path, which the scale changes.
@@ -164,12 +164,55 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(pipeline.BaseIndex(output) >= pipeline.BaseIndex(output - 1), string.Format(@"output {0}", output));
         }
 
+        /// <summary>
+        /// The ion response: each analyzer's alpha from Table 1 of Hsu et al., J. Proteome Res. 2025, 24, 5742-5754
+        /// (doi:10.1021/acs.jproteome.5c00593), found from its PSI-MS term names; one ion's intensity units from alpha
+        /// and a fill time; each output spectrum's ion scale from its acquired spectrum's alpha and fill time, or the
+        /// default alpha when the source names no analyzer; and exposures interpolated linearly between acquisitions.
+        /// </summary>
+        [TestMethod]
+        public void TestIonResponse()
+        {
+            Assert.AreEqual(MassAnalyzerKind.astral, IonResponse.KindOf(@"quadrupole asymmetric track lossless time-of-flight analyzer"));
+            Assert.AreEqual(MassAnalyzerKind.orbitrap, IonResponse.KindOf(@"quadrupole orbitrap"));
+            Assert.AreEqual(MassAnalyzerKind.ion_trap, IonResponse.KindOf(@"quadrupole radial ejection linear ion trap"));
+            Assert.AreEqual(MassAnalyzerKind.unknown, IonResponse.KindOf(@"time-of-flight"));
+            Assert.AreEqual(MassAnalyzerKind.unknown, IonResponse.KindOf(null));
+            Assert.AreEqual(1.53, IonResponse.Of(MassAnalyzerKind.astral));
+            Assert.AreEqual(10.62, IonResponse.Of(MassAnalyzerKind.orbitrap));
+            Assert.AreEqual(0.98, IonResponse.Of(MassAnalyzerKind.ion_trap));
+            Assert.IsTrue(double.IsNaN(IonResponse.Of(MassAnalyzerKind.unknown)));
+            // An Astral spectrum filled for 10 ms: one ion is 153 intensity units.
+            Assert.AreEqual(153, IonResponse.IntensityPerIon(IonResponse.ASTRAL, 10), 1e-9);
+            Assert.IsTrue(double.IsNaN(IonResponse.IntensityPerIon(IonResponse.ASTRAL, double.NaN)));
+
+            foreach (double alpha in new[] { IonResponse.ASTRAL, double.NaN })
+            {
+                var source = new StaggeredProfileRun(true, -1, false, alpha);
+                var pipeline = new StaggeredDemuxPipeline(source, Channels(), TextWriter.Null);
+                double expectedAlpha = double.IsNaN(alpha) ? 1 : alpha;
+                for (int output = 0; output < pipeline.OutputCount; output++)
+                {
+                    double fill = source.FillTime(pipeline.BaseIndex(output));
+                    Assert.AreEqual(expectedAlpha * 1000 / fill, pipeline.IntensityPerIon(output), 1e-9 * expectedAlpha * 1000 / fill);
+                }
+            }
+
+            var times = new[] { 1.0, 2.0, 4.0 };
+            var exposures = new[] { 0.5, 1.5, 0.75 };
+            Assert.AreEqual(0.5, ScanningDemultiplexer.InterpolateLinear(times, exposures, 0.5));
+            Assert.AreEqual(1.5, ScanningDemultiplexer.InterpolateLinear(times, exposures, 2.0));
+            Assert.AreEqual(1.0, ScanningDemultiplexer.InterpolateLinear(times, exposures, 1.5), 1e-12);
+            Assert.AreEqual(0.75, ScanningDemultiplexer.InterpolateLinear(times, exposures, 9.0));
+            Assert.AreEqual(1.0, ScanningDemultiplexer.InterpolateLinear(new double[0], new double[0], 1.0));
+        }
+
         private static ScanningDemuxOptions Options(double l1Z = 2)
         {
             var options = new ScanningDemuxOptions
             {
                 Joint = true,
-                IntensityIsIonsPerSecond = true,
+                IonsFromFillTime = true,
                 LinearPeakSigmaTh = SIGMA,
                 Threads = 2,
             };
@@ -181,7 +224,7 @@ namespace pwiz.Osprey.Test
         {
             var options = new ScanningDemuxOptions
             {
-                IntensityIsIonsPerSecond = true,
+                IonsFromFillTime = true,
                 Threads = 2,
             };
             options.Parameters.ChannelToleranceTh = 0.09;
@@ -192,7 +235,7 @@ namespace pwiz.Osprey.Test
         {
             var options = Options(0);
             options.JointParameters.Reweight = false;
-            options.JointParameters.WeightFloorIons = 1e12;
+            options.JointParameters.PoissonWeights = false;
             options.JointCentroid = false;
             return options;
         }
@@ -321,11 +364,13 @@ namespace pwiz.Osprey.Test
 
             private readonly bool _variedFill;
             private readonly bool _baseline;
+            private readonly double _ionResponse;
 
-            public StaggeredProfileRun(bool variedFill, int emptyIndex, bool baseline = true)
+            public StaggeredProfileRun(bool variedFill, int emptyIndex, bool baseline = true, double ionResponse = double.NaN)
             {
                 _variedFill = variedFill;
                 _baseline = baseline;
+                _ionResponse = ionResponse;
                 EmptyIndex = emptyIndex;
             }
 
@@ -356,10 +401,16 @@ namespace pwiz.Osprey.Test
 
             public DemuxSpectrumInfo Describe(int index)
             {
-                double fill = _variedFill ? 0.2 * Math.Pow(100, Fraction(index * 0.6180339887)) : UNIFORM_FILL_MS;
+                double fill = FillTime(index);
                 if (!Window(index, out var window))
-                    return new DemuxSpectrumInfo(1, false, default, TimeOf(index), fill);
-                return new DemuxSpectrumInfo(2, true, window, TimeOf(index), fill);
+                    return new DemuxSpectrumInfo(1, false, default, TimeOf(index), fill, _ionResponse);
+                return new DemuxSpectrumInfo(2, true, window, TimeOf(index), fill, _ionResponse);
+            }
+
+            /// <summary>A spectrum's fill time, ms: constant, or from 0.2 to 20 ms.</summary>
+            public double FillTime(int index)
+            {
+                return _variedFill ? 0.2 * Math.Pow(100, Fraction(index * 0.6180339887)) : UNIFORM_FILL_MS;
             }
 
             public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
