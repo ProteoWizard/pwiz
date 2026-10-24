@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Database;
@@ -55,7 +56,18 @@ namespace pwiz.Skyline.Model.Lib
         public const string OSPREY_EXE = @"Osprey.exe";
 
         /// <summary>The compressed size of the Osprey package, stated before the download starts.</summary>
-        public const int OSPREY_DOWNLOAD_SIZE_MB = 105;
+        public const int OSPREY_DOWNLOAD_SIZE_MB = 150;
+
+        // Osprey's TeamCity build. Tests download from it as SkylineNightly downloads SkylineTester:
+        // the latest successful build on a designated branch, found through the REST API, which the
+        // Osprey project opens to guest access. Until Osprey has a release process, the pinned
+        // package is the TeamCity build that produced OSPREY_VERSION, addressed by build id, which
+        // stays valid only while that build is kept (pinned) on the server.
+        public const string TEAMCITY_SERVER = @"https://teamcity.labkey.org";
+        public const string TEAMCITY_BUILD_TYPE = @"ProteoWizard_OspreyWindowsNet";
+        public const string TEAMCITY_BRANCH = @"master";
+        public const string OSPREY_BUILD_ID = @"4234706";
+        private const string OSPREY_ZIP_SUFFIX = @"-win-x64.zip";
 
         public static string OspreyDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), OSPREY_FILENAME);
 
@@ -69,32 +81,76 @@ namespace pwiz.Skyline.Model.Lib
             Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Osprey, string.Empty);
 
         /// <summary>
-        /// Where the pinned package is downloaded from. Osprey has no release site yet, so the zip is
-        /// served from the Skyline tool testing mirror, which is also where
-        /// <see cref="SimpleFileDownloader.DownloadRequiredFiles"/> looks under tests.
+        /// Where the pinned package is downloaded from: the artifact of the TeamCity build that made
+        /// it, until Osprey has a release site.
         /// </summary>
-        public static readonly Uri OSPREY_DOWNLOAD_URL =
-            new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{OSPREY_FILENAME}.zip");
+        public static readonly Uri OSPREY_DOWNLOAD_URL = GetArtifactUrl(OSPREY_BUILD_ID, OSPREY_FILENAME + @".zip");
 
-        public static FileDownloadInfo OspreyDownloadInfo => new FileDownloadInfo
-        {
-            Filename = OSPREY_FILENAME,
-            // The zip holds a top-level Osprey-<version>-win-x64 folder, so it unpacks into the
-            // Tools folder, OspreyDirectory's parent.
-            InstallPath = ToolDescriptionHelpers.GetToolsDirectory(),
-            // The pinned path, not the registered one: a stale registration (a developer build that
-            // moved) must not pass for an install, and a version bump must install the new version.
-            // The download registers the pinned path, replacing any stale entry.
-            CheckInstalledPath = OspreyDefaultBinary,
-            DownloadUrl = OSPREY_DOWNLOAD_URL,
-            OverwriteExisting = true,
-            Unzip = true,
-            ToolType = SearchToolType.Osprey,
-            ToolPath = OspreyDefaultBinary,
-            ToolExtraArgs = OspreyArgs
-        };
+        public static FileDownloadInfo OspreyDownloadInfo => CreateDownloadInfo(OSPREY_FILENAME, OSPREY_DOWNLOAD_URL);
 
         public static FileDownloadInfo[] FilesToDownload => new[] { OspreyDownloadInfo };
+
+        /// <summary>
+        /// The download of the latest successful Osprey build on <see cref="TEAMCITY_BRANCH"/>, which
+        /// tests follow as SkylineNightly follows Skyline's head. The build is found through the REST
+        /// API, its zip named from the build's artifact list (the version is in the name), and the
+        /// download addressed by build id, so a build finishing between the two requests cannot
+        /// change what is downloaded. Throws with the reason when TeamCity cannot be reached or the
+        /// build has no package; these are developer messages, not user-facing text.
+        /// </summary>
+        public static FileDownloadInfo GetLatestBuildDownloadInfo()
+        {
+            using var client = new HttpClientWithProgress();
+            string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},branch:{TEAMCITY_BRANCH},status:SUCCESS,count:1";
+            // A locator in the path answers with the one build as the document root
+            var build = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/{buildLocator}")).Root;
+            string buildId = build?.Name.LocalName == @"build" ? build.Attribute(@"id")?.Value : null;
+            if (string.IsNullOrEmpty(buildId))
+            {
+                throw new IOException(string.Format(@"No successful {0} build on branch {1} at {2}",
+                    TEAMCITY_BUILD_TYPE, TEAMCITY_BRANCH, TEAMCITY_SERVER));
+            }
+            var artifacts = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/id:{buildId}/artifacts/children/"));
+            string zipName = artifacts.Root?.Elements(@"file").Select(f => f.Attribute(@"name")?.Value)
+                .FirstOrDefault(n => n != null && n.StartsWith(@"Osprey-") && n.EndsWith(OSPREY_ZIP_SUFFIX));
+            if (zipName == null)
+            {
+                throw new IOException(string.Format(@"Build {0} of {1} has no Osprey-<version>{2} artifact",
+                    build.Attribute(@"number")?.Value, TEAMCITY_BUILD_TYPE, OSPREY_ZIP_SUFFIX));
+            }
+            // The zip's top-level folder is its name without the extension
+            string folderName = zipName.Substring(0, zipName.Length - 4);
+            return CreateDownloadInfo(folderName, GetArtifactUrl(buildId, zipName));
+        }
+
+        private static Uri GetArtifactUrl(string buildId, string artifactName)
+        {
+            return new Uri($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/id:{buildId}/artifacts/content/{artifactName}");
+        }
+
+        /// <summary>
+        /// The download of one Osprey package: the zip holds a top-level <paramref name="folderName"/>
+        /// folder, so it unpacks into the Tools folder, and the executable in that folder is both the
+        /// check that it is installed and the path the download registers. The versioned path, not the
+        /// registered one: a stale registration (a developer build that moved) must not pass for an
+        /// install, and a version bump must install the new version.
+        /// </summary>
+        private static FileDownloadInfo CreateDownloadInfo(string folderName, Uri downloadUrl)
+        {
+            string toolPath = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), folderName, OSPREY_EXE);
+            return new FileDownloadInfo
+            {
+                Filename = folderName,
+                InstallPath = ToolDescriptionHelpers.GetToolsDirectory(),
+                CheckInstalledPath = toolPath,
+                DownloadUrl = downloadUrl,
+                OverwriteExisting = true,
+                Unzip = true,
+                ToolType = SearchToolType.Osprey,
+                ToolPath = toolPath,
+                ToolExtraArgs = OspreyArgs
+            };
+        }
 
         // Osprey's command-line vocabulary. The library-build options are CarafeSharp's, whose
         // declarations Skyline references directly (CarafeCommandLine.ARG_*); these are Osprey's own.

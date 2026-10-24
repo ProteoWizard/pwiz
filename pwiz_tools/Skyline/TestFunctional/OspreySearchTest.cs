@@ -29,6 +29,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -74,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             string ospreyExe = EnsureOsprey();
+            VerifyLatestBuildOnTeamCity();
             PrepareDocument("OspreySearchTest.sky");
 
             // The install gate: with Osprey registered at a path that does not exist, the menu item
@@ -387,16 +389,43 @@ namespace pwiz.SkylineTestFunctional
                 if (File.Exists(sibling))
                     return sibling;
             }
+            // Neither: the latest successful Osprey build on TeamCity, as SkylineNightly fetches
+            // SkylineTester. Its URL is used as given, since the tool mirror holds no Osprey package.
             RunUI(() =>
             {
                 if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
                     Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
             });
-            var downloadInfo = OspreyHelpers.OspreyDownloadInfo;
-            AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, new SilentProgressMonitor()),
-                @"failed to download Osprey " + OspreyHelpers.OSPREY_VERSION);
+            var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
+            bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
+            try
+            {
+                Skyline.Program.UseOriginalURLs = true;
+                AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, new SilentProgressMonitor()),
+                    @"failed to download Osprey from " + downloadInfo.DownloadUrl);
+            }
+            finally
+            {
+                Skyline.Program.UseOriginalURLs = savedUseOriginalUrls;
+            }
             AssertEx.FileExists(downloadInfo.ToolPath);
             return downloadInfo.ToolPath;
+        }
+
+        /// <summary>
+        /// The TeamCity resolution is checked on every run, whichever Osprey the test then uses: the
+        /// latest successful build names a versioned win-x64 zip and its artifact URL answers a HEAD
+        /// request, without downloading the package.
+        /// </summary>
+        private static void VerifyLatestBuildOnTeamCity()
+        {
+            var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
+            AssertEx.IsTrue(downloadInfo.Filename.StartsWith(@"Osprey-") && downloadInfo.Filename.EndsWith(@"-win-x64"),
+                @"unexpected Osprey package name " + downloadInfo.Filename);
+            AssertEx.AreEqual(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), downloadInfo.Filename, OspreyHelpers.OSPREY_EXE),
+                downloadInfo.ToolPath);
+            using var client = new HttpClientWithProgress();
+            AssertEx.IsTrue(client.Head(downloadInfo.DownloadUrl), @"no artifact at " + downloadInfo.DownloadUrl);
         }
     }
 }
