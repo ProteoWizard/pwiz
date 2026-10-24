@@ -6,6 +6,9 @@
     <AssemblyName>Osprey</AssemblyName>
     <!-- Declares longPathAware for native code in the process; see the file's comment. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The icon Osprey.exe carries, which the installer's shortcuts and Add/Remove Programs
+         entry show; the installer's own icon is the same file (Installer\Setup.iss). -->
+    <ApplicationIcon>Osprey.ico</ApplicationIcon>
     <!-- CarafeSharp's pretrained models, for the one-command library build (the fasta option),
          which predicts the library in-process through CarafeSharp.Tasks. The libtorch runtime is
          laid out by the import below: the CPU runtime in torch\cpu and the list of the CUDA
