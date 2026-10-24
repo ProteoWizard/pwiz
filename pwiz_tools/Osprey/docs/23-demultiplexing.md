@@ -115,7 +115,7 @@ cache's VERSION 4 layout with a different magic and a **descriptor** after the h
 example:
 
 ```
-osprey-demux/4;engine=weighted;channel_tolerance=10ppm;min_bin_width=0.2;counts_per_ion=100;block_cycles=12;cycle_pad=4;group_bins=16;min_channel_ions=8;min_channel_cells=3;poisson_weights=True;weight_floor_ions=0.5;min_output_ions=0.2
+osprey-demux/4;engine=weighted;channel_tolerance=10ppm;min_bin_width=0.2;counts_per_ion=100;block_cycles=12;cycle_pad=4;group_bins=16;min_channel_ions=8;min_channel_cells=3;poisson_weights=True;weight_floor_ions=0.5
 osprey-demux/4;engine=msconvert;channel_tolerance=10ppm;min_bin_width=0.2;block=covered_bins;interpolation=makima;output=apportioned;block_bins=7
 ```
 
@@ -287,7 +287,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--scheme` | `scanning` | `scanning` (ZT Scan; needs `--kernel`), `staggered`, or `none` (no demultiplexing: the input as read, centroided with `--centroid centrix`) |
 | `--kernel` | - | the measured transmission profile (see [below](#the-transmission-zt-scan)) |
 | `--layout` | `centered:5` | ZT Scan output layout: `centered:k`, `tiled:k` or `framed:k:m` |
-| `--min-out` | none | solved intensities (ZT Scan, staggered) and joint centroids below this many ions are not written; no floor until one is shown to help (the former default, 0.2, was never compared with none) |
+| `--min-out` | none | ZT Scan solved intensities and joint-solve centroids (staggered `--joint-fitted` included) below this many ions are not written; the staggered solves that split the measured spectra (per-channel, elution fit, the joint solve's default) write each measurement's shares and take no floor. No floor until one is shown to help (the former default, 0.2, was never compared with none) |
 | `--position-mz` | off | ZT Scan: write each solved value at the m/z of the peaks it was solved from, in its own sweep (see [Output](#output-zt-scan-and-layouts)) |
 | `--source-positions` | off | ZT Scan: place each channel's sources once per block, then solve each sweep over them (see [Source positions](#source-positions)) |
 | `--source-l1 L` | 0 | ZT Scan, with `--source-positions`: a non-negative lasso weight on the fit that finds the sources |
@@ -302,7 +302,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--counts-per-ion` | from the data | the detector counts of one ion, for the weights and the ion thresholds; estimated from each file's lowest intensity levels (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
 | `--joint` | off | ZT Scan: demultiplex and centroid the profile in one solve (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
 | `--merge-sigmas F` | 2 | with `--joint`: neighbouring positions' centroids closer than F TOF peak sigmas are summed |
-| `--ms1 vendor\|joint` | joint with `--joint`, else vendor | MS1 as the vendor's centroids, or centroided by the joint solve on its own grid |
+| `--ms1 vendor\|joint` | joint with `--joint` on ZT Scan, else vendor | MS1 as the vendor's centroids, or (ZT Scan only) centroided by the joint solve on its own grid; staggered MS1 is centroided by `--centroid centrix` |
 | `--peak-shape gaussian\|measured` | gaussian | with `--joint`: the TOF peak as the Gaussian of the sigma table, or as kernels measured from the file |
 | `--joint-param Name=Value` | - | with `--joint`: any scalar setting of `JointDemuxParams`, for tuning |
 | `--solve-profile` | off | with `--joint`: print where the solve's time went |
@@ -315,7 +315,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--centrix-sigma S`, `--centrix-sigma-ms1 S` | from the input | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, 1.1 point spacings on a linear ion trap, else measured from the input |
 | `--centrix-param Name=Value` | - | any `CentrixParams` setting (`Solver=active_set` among them); also the joint solve's Centrix |
 | `--channel-th T` | ppm | staggered: fragment channels matched within T Th on a linear axis (unit resolution) |
-| `--ions` | off | intensities are ions per second (a Thermo ion trap's): combined and written in ions per second; thresholds and Poisson weights in ions, intensity x fill time |
+| `--ions` | off | intensities are ions per second (a Thermo ion trap's): combined and written in ions per second; thresholds and Poisson weights in ions at a reference fill time (the run's median, or the joint solve's pass's), not yet each spectrum's own (see [Stellar profile data](#stellar-profile-data-linear-ion-trap)) |
 | `--peak-sigma-th S` | from the input | staggered `--joint` on a linear grid: the profile peak sigma, Th; absent, as `--centrix-sigma` |
 | `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
 | `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
@@ -732,9 +732,13 @@ The Thermo Stellar's staggered methods (the 2026-10-09 window-width HeLa set: `4
 the range, about 1.2 s a pass mid-run. Their profile is on a uniform 0.2 Th grid (MS2 at 200 kTh/s),
 and their intensities are ions per second: ions = intensity x fill time, which `--ions` applies
 spectrum by spectrum. Spectra are combined in ions per second, the only unit that compares across
-fill times, and written in it; a measurement's precision is set by the ions it counted, so the
-thresholds (`--min-out`) and Poisson weights are in ions. Every bin is observed in every pass, through a different window;
-only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
+fill times, and written in it. A measurement's precision is set by the ions it counted, so the
+channel thresholds and Poisson weights should be in each spectrum's own ions. They are not yet:
+the solves see every value on one scale, rates times a reference fill time (the run's median for
+the per-channel solve, the pass's for the joint solve), so a spectrum with a short fill is weighed
+as more ions than it counted and one with a long fill as fewer. Carrying each acquisition's own
+fill time into the weights is still to do. Every bin is observed in every pass, through a
+different window; only each window repeats every k passes. The goal at k=4 is each 1 Th bin at the full sampling rate,
 one demultiplexed spectrum per bin per pass.
 
 Two ways through `Osprey.DemuxTool --scheme staggered`:
@@ -857,7 +861,8 @@ counted together in one pass, below 1000.70 m/z):
 
 **ZT Scan, a slice** (A1, D1 and G1 at 4.1-5.9 min, 500-700 m/z; searched with DIA-NN 2.3.2
 against a Carafe library with entrapment; CV of `Precursor.Quantity` over the 1,386 precursors
-every arm found in all three runs):
+every arm found in all three runs; arms without `--min-out` ran at the former default floor,
+0.2 ions, not at today's none):
 
 | Arm | Target precursors (A1 / D1 / G1) | CV | A1 file |
 |---|---|---|---|
@@ -887,7 +892,7 @@ acquired mzML (2,768 / 2,807 / 2,958; 0.097) all found in all three runs. center
   1.0000).
 
 **ZT Scan, the whole A1 run** (DIA-NN as above; the numbers are DIA-NN's precursors at 1% FDR,
-targets only):
+targets only; arms without `--min-out` at the former 0.2-ion floor):
 
 | Arm | Target precursors | Entrapment FDP | Peptides |
 |---|---|---|---|

@@ -195,8 +195,9 @@ namespace pwiz.Osprey.DemuxTool
                         options.MeasuredPeakShape = value == @"measured";
                         break;
                     case @"--ms1":
-                        // joint (the default with --joint): MS1 read as profile and centroided by the joint solve;
-                        // vendor (the default otherwise): the vendor's centroids from a vendor file, else as read.
+                        // joint (the default with --joint on a scanning acquisition): MS1 read as profile and centroided
+                        // by the joint solve; vendor (the default otherwise, staggered --joint included): the vendor's
+                        // centroids from a vendor file, else as read.
                         options.JointMs1 = value == @"joint";
                         ms1Set = true;
                         break;
@@ -221,7 +222,8 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--ions":
                         // Intensities are ions per second (a Thermo ion trap's): spectra are combined, and written, in ions per
-                        // second; ions (intensity x each spectrum's fill time) set only the thresholds and Poisson weights.
+                        // second; ions set only the thresholds and Poisson weights (at a reference fill time, for now:
+                        // ScanningDemuxOptions.IntensityIsIonsPerSecond).
                         options.IntensityIsIonsPerSecond = true;
                         break;
                     case @"--elution-fwhm":
@@ -296,7 +298,14 @@ namespace pwiz.Osprey.DemuxTool
                         centrixSigmaMs1 = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--centrix-param":
-                        // Any scalar setting of Centrix by its property name, for tuning.
+                        // Any scalar setting of Centrix by its property name, for tuning, but the sigma and the grid
+                        // spacing, which are set per MS level from their options or the data.
+                        if (value.StartsWith(@"SigmaTh=", StringComparison.Ordinal) ||
+                            value.StartsWith(@"GridSpacingTh=", StringComparison.Ordinal))
+                        {
+                            Console.Error.WriteLine(@"Set the Centrix sigma with --centrix-sigma, --centrix-sigma-ms1 or --peak-sigma-th; the grid spacing comes from the data: {0}", value); // Arg literal OK: DemuxTool's own option vocabulary
+                            return 1;
+                        }
                         if (!SetParameter(centrixMs2, value))
                         {
                             Console.Error.WriteLine(@"Unknown Centrix setting: {0}", value);
@@ -317,6 +326,12 @@ namespace pwiz.Osprey.DemuxTool
             // centroids (DIA-NN's tolerance pinned), at a CV 0.002-0.003 worse.
             if (options.Joint && !ms1Set)
                 options.JointMs1 = !staggered;
+            if (staggered && options.JointMs1)
+            {
+                // The staggered plan passes MS1 through; --centroid centrix centroids it.
+                Console.Error.WriteLine(@"--ms1 joint applies to a scanning acquisition; for staggered MS1 use --centroid centrix."); // Arg literal OK: DemuxTool's own option vocabulary
+                return 1;
+            }
             // A vendor reader serves concurrent requests, and decoding and centroiding its spectra is the slowest
             // step of a run read serially (about 2.6 s a sweep for a ZT Scan .wiff2).
             if (!readThreadsSet && input != null && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
@@ -388,6 +403,12 @@ namespace pwiz.Osprey.DemuxTool
             else if (options.Joint && options.JointMs1)
             {
                 Console.WriteLine(@"MS1 and MS2 as profile, both centroided by the joint solve: {0}", input);
+            }
+            else if (options.Joint && centrix)
+            {
+                // The joint solve centroids MS2 itself, from the profile; MS1 passes through as profile for Centrix to
+                // centroid as the output is written.
+                Console.WriteLine(@"MS1 as profile, centroided by Centrix; MS2 profile for the joint solve: {0}", input);
             }
             else if (options.Joint && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
@@ -523,26 +544,17 @@ namespace pwiz.Osprey.DemuxTool
             if (!(sigmaMs1 > 0) || !(sigmaMs2 > 0))
             {
                 var calibrator = new CentrixSigmaCalibrator();
-                foreach (int i in CentrixSigmaCalibrator.SampleIndices(source.Count))
+                calibrator.Sample(source.Count, !(sigmaMs1 > 0), !(sigmaMs2 > 0), i =>
                 {
-                    if ((sigmaMs1 > 0 || calibrator.IsSettled(1)) && (sigmaMs2 > 0 || calibrator.IsSettled(2)))
-                        break;
                     var spectrum = source.GetSpectrum(i, true);
                     int level = spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
                     var mz = spectrum.GetMZArray()?.Data;
                     var intensity = spectrum.GetIntensityArray()?.Data;
-                    if (level < 1 || spectrum.Params.HasCVParam(CVID.MS_centroid_spectrum) || mz == null || intensity == null)
-                        continue;
-                    calibrator.Add(level, mz, intensity);
-                }
+                    if (level >= 1 && !spectrum.Params.HasCVParam(CVID.MS_centroid_spectrum) && mz != null && intensity != null)
+                        calibrator.Add(level, mz, intensity);
+                });
                 for (int level = 1; level <= 2; level++)
-                {
-                    var rate = calibrator.ScanRate(level);
-                    if (rate != null)
-                        Console.WriteLine(@"Centrix MS{0} peak sigma: {1} kTh/s scan rate, from its point spacing", level, rate.KThPerSecond);
-                    else
-                        Console.WriteLine(@"Centrix MS{0} peak width: {1} isolated peaks", level, calibrator.PeakCount(level));
-                }
+                    Console.WriteLine(@"Centrix MS{0} peak sigma: {1}", level, calibrator.Describe(level));
                 if (!(sigmaMs1 > 0))
                     sigmaMs1 = calibrator.Sigma(1);
                 if (!(sigmaMs2 > 0))

@@ -44,8 +44,9 @@ namespace pwiz.Osprey.Centroid
     /// stops at its tolerance a sweep apart; and the grid spacing is detected per spectrum (a basis kept per spacing)
     /// where Rust takes the first spectrum's of each MS level. Not ported: Centrix's sigma calibration (filter-string
     /// scan rate, wavelet fit), which misreads the Stellar; <see cref="CentrixCalibration"/> replaces it.</para>
-    /// <para><b>Settings that matter.</b> The peak sigma (<see cref="CentrixParams.SigmaTh"/>) is the instrument's
-    /// resolution, set by the scan rate; measure it with <see cref="CentrixCalibration"/>. The solver
+    /// <para><b>Settings that matter.</b> The peak sigma (<see cref="CentrixParams.SigmaTh"/>), which
+    /// <see cref="CentrixCalibration"/> gives a run: on a linear ion trap 1.1 point spacings, else one species' width
+    /// measured from the run. The solver
     /// (<see cref="CentrixParams.Solver"/>): Centrix's coordinate descent, or the exact active-set solve, several times
     /// faster (6,000 Stellar spectra: 18-31 s against 64-169 s, file I/O included) and equal on the truth benchmark. Intensities must be in the instrument's units (the noise
     /// estimate floors its sigma at 1, which suits an ion trap's rates and not a count of ions).</para>
@@ -68,16 +69,13 @@ namespace pwiz.Osprey.Centroid
         /// </summary>
         public const int ALGORITHM_VERSION = 2;
 
-        /// <summary>Spectra whose detected spacing is within this fraction of the cached basis's reuse it.</summary>
-        private const double SPACING_REUSE_TOLERANCE = 1e-6;
-
         private readonly CentrixParams _parameters;
         private CentrixBasis _basis;
 
         public CentrixCentroider(CentrixParams parameters)
         {
-            if (!(parameters.SigmaTh > 0))
-                throw new ArgumentException(@"The peak sigma must be positive.");
+            if (!(parameters.SigmaTh > 0) || double.IsInfinity(parameters.SigmaTh))
+                throw new ArgumentException(@"The peak sigma must be positive and finite.");
             _parameters = parameters.Copy();
             if (_parameters.GridSpacingTh > 0)
                 _basis = new CentrixBasis(_parameters.SigmaTh, _parameters.GridSpacingTh, _parameters.GridOffsetTh);
@@ -180,10 +178,10 @@ namespace pwiz.Osprey.Centroid
         }
 
         /// <summary>
-        /// The basis for a spectrum: the fixed one when the spacing is set, else the cached one when its spacing
-        /// matches the spectrum's, else a new one for the spectrum's spacing, which replaces it in the cache. A
-        /// spectrum with no spacing of its own (half its gaps zero) takes the cached one, as Centrix would give it
-        /// its first spectrum's; null when there is none yet.
+        /// The basis for a spectrum: the fixed one when the spacing is set, else the one for the spectrum's own
+        /// spacing, cached while the spacing stays the same. A spectrum's basis therefore depends on that spectrum
+        /// alone, whichever thread or spectrum filled the cache. A spectrum with no spacing of its own (half its gaps
+        /// zero) has none, and gives no centroids.
         /// </summary>
         private CentrixBasis BasisFor(double[] mz)
         {
@@ -192,8 +190,8 @@ namespace pwiz.Osprey.Centroid
                 return basis;
             double spacing = DetectGridSpacing(mz);
             if (!(spacing > 0))
-                return basis;
-            if (basis != null && Math.Abs(spacing - basis.GridSpacing) <= SPACING_REUSE_TOLERANCE * basis.GridSpacing)
+                return null;
+            if (basis != null && basis.GridSpacing == spacing)
                 return basis;
             basis = new CentrixBasis(_parameters.SigmaTh, spacing, _parameters.GridOffsetTh);
             _basis = basis;
@@ -250,7 +248,7 @@ namespace pwiz.Osprey.Centroid
         {
             if (_parameters.Solver == CentrixSolver.active_set)
             {
-                var beta = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, warmStart, out _);
+                var beta = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, warmStart);
                 if (beta != null)
                     return beta;
             }

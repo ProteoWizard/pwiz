@@ -89,7 +89,10 @@ namespace pwiz.Osprey.Demux
             return options;
         }
 
-        /// <summary>The settings of the staggered solve that change its output, for the demux cache's descriptor.</summary>
+        /// <summary>
+        /// The settings of the staggered solve that change its output, for the demux cache's descriptor. Not the output
+        /// floor: the staggered solve writes each measured peak's shares, which no floor applies to.
+        /// </summary>
         public static string Descriptor(ScanningDemuxOptions options)
         {
             var ic = CultureInfo.InvariantCulture;
@@ -97,10 +100,9 @@ namespace pwiz.Osprey.Demux
             string elution = options.Elution != null ? @";" + options.Elution.Descriptor : string.Empty;
             return string.Format(ic,
                 @"block_cycles={0};cycle_pad={1};group_bins={2};min_channel_ions={3};min_channel_cells={4};" +
-                @"poisson_weights={5};weight_floor_ions={6};min_output_ions={7}",
+                @"poisson_weights={5};weight_floor_ions={6}",
                 options.BlockCycles, options.CyclePad, options.GroupBins, p.MinChannelIons.ToString(@"R", ic),
-                p.MinChannelCells, p.PoissonWeights, p.WeightFloorIons.ToString(@"R", ic),
-                p.MinOutputIons.ToString(@"R", ic)) + elution;
+                p.MinChannelCells, p.PoissonWeights, p.WeightFloorIons.ToString(@"R", ic)) + elution;
         }
 
         /// <summary>A run's MS2 spectra in memory as a demultiplexing source.</summary>

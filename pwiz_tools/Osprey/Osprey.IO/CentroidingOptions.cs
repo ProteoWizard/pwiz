@@ -41,11 +41,5 @@ namespace pwiz.Osprey.IO
         public CentrixParams Ms1 { get; }
         public CentrixParams Ms2 { get; }
         public int Threads { get; }
-
-        /// <summary>The settings for an MS level: MS1's for 1, MS2's for every other.</summary>
-        public CentrixParams ForLevel(int msLevel)
-        {
-            return msLevel == 1 ? Ms1 : Ms2;
-        }
     }
 }

@@ -21,14 +21,13 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Osprey.Centroid;
 
 namespace pwiz.Osprey.Demux
 {
     /// <summary>Settings of <see cref="ElutionDemultiplexer"/>.</summary>
     public sealed class ElutionDemuxParams
     {
-        private const double FWHM_PER_SIGMA = 2.3548200450309493;
-
         /// <summary>Full width at half maximum of a chromatographic peak, in seconds.</summary>
         public double FwhmSeconds { get; set; } = 5;
 
@@ -59,7 +58,7 @@ namespace pwiz.Osprey.Demux
         /// <summary>Peak sigma, in minutes (the unit of spectrum times).</summary>
         public double SigmaMinutes
         {
-            get { return FwhmSeconds / 60.0 / FWHM_PER_SIGMA; }
+            get { return FwhmSeconds / 60.0 / CentrixCalibration.FWHM_PER_SIGMA; }
         }
 
         /// <summary>The settings that change the output, for a log or a cache descriptor.</summary>
@@ -476,10 +475,12 @@ namespace pwiz.Osprey.Demux
                     }
                 }
 
+                // Zero observations count, so the floor keeps their weights finite even when set to zero.
                 var w = new double[observations];
                 var mu = new double[observations];
+                double initialFloor = Math.Max(_params.InitialFloorIons, _floor);
                 for (int o = 0; o < observations; o++)
-                    w[o] = 1 / Math.Max(y[o], _params.InitialFloorIons);
+                    w[o] = 1 / Math.Max(y[o], initialFloor);
                 var score = new double[atoms];
                 for (int atom = 0; atom < atoms; atom++)
                     score[atom] = Score(atom, atomStart, footObs, footValue, y, w, mu);

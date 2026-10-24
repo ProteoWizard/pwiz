@@ -20,17 +20,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace pwiz.Osprey.Centroid
 {
     /// <summary>
-    /// A linear ion trap scan rate (Thermo Stellar, Fusion and other LITs): the broadest peak it produces and the
-    /// profile point spacing its firmware fixes, which identifies it. The faster the scan, the coarser the points and
-    /// the wider the peaks. From Centrix's table (Centrix's README, <c>cwt.rs</c> <c>LIT_SCAN_RATES</c>), whose widths
-    /// are the broadest peak for each rate: the peaks a run actually shows are narrower (on the Stellar, MS2 at
-    /// 200 kTh/s measures about 0.72 Th FWHM against 2.0, MS1 at 67 kTh/s about 0.40 against 0.6). Centrix gives no
-    /// spacing for 200 kTh/s; the 0.2 Th here (five points per Th, on the 1000 / rate pattern of the others) is what
-    /// the Stellar's MS2 at that rate has.
+    /// A linear ion trap scan rate (Thermo Stellar, Fusion and other LITs) and the profile point spacing its firmware
+    /// fixes, which identifies it: the faster the scan, the coarser the points (and the wider the peaks). From
+    /// Centrix's table (Centrix's README, <c>cwt.rs</c> <c>LIT_SCAN_RATES</c>, which also lists each rate's broadest
+    /// peak; docs/24-profile-centroiding.md). Centrix gives no spacing for 200 kTh/s; the 0.2 Th here (five points
+    /// per Th, on the 1000 / rate pattern of the others) is what the Stellar's MS2 at that rate has.
     /// <para>The rate is identified from the spacing rather than from the filter string's scan rate code (Centrix's
     /// first choice: n, r, t, u after "NSI"). The Stellar's MS1 carry "r" (67 kTh/s), but its MS2 carry "Z", a Zoom
     /// annotation the Stellar, which performs no zoom scans, uses to mark Adaptive RT spectra, and which Lauren's
@@ -42,33 +41,26 @@ namespace pwiz.Osprey.Centroid
         /// <summary>The scan rates: 33, 67, 125 and 200 kTh/s.</summary>
         public static readonly LinearIonTrapScanRate[] ALL =
         {
-            new LinearIonTrapScanRate(33, 0.5, 1.0 / 30),
-            new LinearIonTrapScanRate(67, 0.6, 1.0 / 15),
-            new LinearIonTrapScanRate(125, 0.8, 1.0 / 8),
-            new LinearIonTrapScanRate(200, 2.0, 1.0 / 5),
+            new LinearIonTrapScanRate(33, 1.0 / 30),
+            new LinearIonTrapScanRate(67, 1.0 / 15),
+            new LinearIonTrapScanRate(125, 1.0 / 8),
+            new LinearIonTrapScanRate(200, 1.0 / 5),
         };
 
         /// <summary>Spacings within this fraction of a scan rate's are that scan rate's.</summary>
         private const double SPACING_TOLERANCE = 0.02;
 
-        private LinearIonTrapScanRate(double kThPerSecond, double maxFwhmTh, double spacingTh)
+        private LinearIonTrapScanRate(double kThPerSecond, double spacingTh)
         {
             KThPerSecond = kThPerSecond;
-            MaxFwhmTh = maxFwhmTh;
             SpacingTh = spacingTh;
         }
 
         /// <summary>The scan rate, thousands of Th per second.</summary>
         public double KThPerSecond { get; }
 
-        /// <summary>The broadest peak, Th: a single species' peak is this wide or narrower.</summary>
-        public double MaxFwhmTh { get; }
-
         /// <summary>The profile point spacing, Th.</summary>
         public double SpacingTh { get; }
-
-        /// <summary>The Gaussian sigma of the broadest peak, Th.</summary>
-        public double MaxSigmaTh => MaxFwhmTh / CentrixCalibration.FWHM_PER_SIGMA;
 
         /// <summary>The scan rate whose point spacing this is, or null when it is none of them.</summary>
         public static LinearIonTrapScanRate FromSpacing(double spacingTh)
@@ -122,7 +114,7 @@ namespace pwiz.Osprey.Centroid
         /// </summary>
         public const double SIGMA_PER_SPACING = 1.1;
 
-        /// <summary>A width is measured from at least this many peaks; with fewer, the scan rate's broadest stands.</summary>
+        /// <summary>A width is measured from at least this many peaks; with fewer, <see cref="FALLBACK_SIGMA_TH"/> stands.</summary>
         public const int MIN_PEAKS = 20;
 
         /// <summary>Peaks are local maxima among a spectrum's most intense points: those above this quantile.</summary>
@@ -175,7 +167,7 @@ namespace pwiz.Osprey.Centroid
 
             for (int i = 1; i < n - 1; i++)
             {
-                // An intense local maximum with positive neighbors (a plateau's first point counts once).
+                // An intense local maximum with positive neighbors (of a flat top, the first point; skipped below).
                 double y = intensity[i];
                 if (!(y > threshold) || !(y > intensity[i - 1]) || !(y >= intensity[i + 1]) ||
                     !(intensity[i - 1] > 0) || !(intensity[i + 1] > 0))
@@ -192,8 +184,13 @@ namespace pwiz.Osprey.Centroid
                 int right = i;
                 while (right < n - 1 && intensity[right + 1] < intensity[right] && intensity[right] > half)
                     right++;
-                if (intensity[left] > half || intensity[right] > half || !Contiguous(mz, left, right, maxStep))
+                // A walk that cannot leave the apex (the log-parabola's apex at least twice the sampled maximum, or a
+                // flat top) has no crossing to interpolate.
+                if (left == i || right == i || intensity[left] > half || intensity[right] > half ||
+                    !Contiguous(mz, left, right, maxStep))
+                {
                     continue;
+                }
                 // A peak that falls to zero before half its apex is a few ions' spike, not the peak shape the scan
                 // rate gives: an ion trap ejects each ion at one instant, so a handful of them land on one or two
                 // points with nothing beside them. On the Stellar's MS2 they are a third of the intense local maxima,
@@ -238,9 +235,10 @@ namespace pwiz.Osprey.Centroid
     /// <summary>
     /// Collects the peak widths of a run's profile spectra, MS1 apart from MS2 and above, since a linear ion trap scans
     /// them at their own rates, and gives each level's sigma (<see cref="CentrixCalibration.EstimateSigma"/>) and scan
-    /// rate, taken from the point spacing of the level's first spectrum. The caller offers the spectra of
-    /// <see cref="SampleIndices"/>, spread across the run, until the levels it needs are <see cref="IsSettled"/>: a
-    /// linear ion trap's from its first spectrum, any other's from every sample, since the run's first minutes are not
+    /// rate, taken from the point spacing of the level's densest spectrum so far (a sparse one, its zero points
+    /// dropped, shows a multiple of the spacing). The caller offers the spectra of <see cref="SampleIndices"/>, spread
+    /// across the run, until the levels it needs are <see cref="IsSettled"/>: a linear ion trap's from its first
+    /// spectrum of <see cref="MIN_SPACING_POINTS"/> points, any other's from every sample, since the run's first minutes are not
     /// the whole (on the Stellar, the first 3,000 peaks read sigma 0.17 Th where the whole run reads 0.27).
     /// </summary>
     public sealed class CentrixSigmaCalibrator
@@ -252,7 +250,11 @@ namespace pwiz.Osprey.Centroid
         public const int SAMPLE_SPECTRA = 3000;
 
         private readonly List<double>[] _fwhms = { new List<double>(), new List<double>() };
+        /// <summary>A level's spacing settles its sigma once taken from a spectrum of at least this many points.</summary>
+        public const int MIN_SPACING_POINTS = 100;
+
         private readonly double[] _spacing = { double.NaN, double.NaN };
+        private readonly int[] _spacingPoints = new int[2];   // the points of the spectrum each spacing was taken from
 
         /// <summary>Up to <see cref="SAMPLE_SPECTRA"/> spectrum indices spread evenly over a run, ascending.</summary>
         public static IEnumerable<int> SampleIndices(int spectrumCount)
@@ -262,12 +264,29 @@ namespace pwiz.Osprey.Centroid
                 yield return (int)((long)s * spectrumCount / samples);
         }
 
+        /// <summary>
+        /// Offers the spectra of <see cref="SampleIndices"/> in turn, each through <paramref name="offer"/> (which
+        /// <see cref="Add"/>s it if it is a profile spectrum), until every level needed is <see cref="IsSettled"/>.
+        /// </summary>
+        public void Sample(int spectrumCount, bool needMs1, bool needMs2, Action<int> offer)
+        {
+            foreach (int i in SampleIndices(spectrumCount))
+            {
+                if ((!needMs1 || IsSettled(1)) && (!needMs2 || IsSettled(2)))
+                    break;
+                offer(i);
+            }
+        }
+
         /// <summary>Adds a profile spectrum's isolated peak widths to its level's.</summary>
         public void Add(int msLevel, IReadOnlyList<double> mz, IReadOnlyList<double> intensity)
         {
             int level = Slot(msLevel);
-            if (double.IsNaN(_spacing[level]) && mz.Count >= 2)
+            if (mz.Count >= 2 && mz.Count > _spacingPoints[level])
+            {
                 _spacing[level] = CentrixCentroider.DetectGridSpacing(mz);
+                _spacingPoints[level] = mz.Count;
+            }
             CentrixCalibration.AddPeakWidths(mz, intensity, _fwhms[level]);
         }
 
@@ -284,16 +303,28 @@ namespace pwiz.Osprey.Centroid
             return double.IsNaN(spacing) ? null : LinearIonTrapScanRate.FromSpacing(spacing);
         }
 
+        /// <summary>Where a level's sigma comes from, for a log: its scan rate, or the peaks measured.</summary>
+        public string Describe(int msLevel)
+        {
+            var rate = ScanRate(msLevel);
+            return rate != null
+                ? string.Format(CultureInfo.InvariantCulture, @"{0} kTh/s scan rate, from its point spacing", rate.KThPerSecond)
+                : string.Format(CultureInfo.InvariantCulture, @"{0} isolated peaks measured", PeakCount(msLevel));
+        }
+
         /// <summary>A level's sigma, Th.</summary>
         public double Sigma(int msLevel)
         {
             return CentrixCalibration.EstimateSigma(_fwhms[Slot(msLevel)], ScanRate(msLevel));
         }
 
-        /// <summary>Whether more spectra cannot change a level's sigma: its point spacing identifies a scan rate.</summary>
+        /// <summary>
+        /// Whether more spectra cannot change a level's sigma: its point spacing, from a spectrum of at least
+        /// <see cref="MIN_SPACING_POINTS"/> points, identifies a scan rate.
+        /// </summary>
         public bool IsSettled(int msLevel)
         {
-            return ScanRate(msLevel) != null;
+            return _spacingPoints[Slot(msLevel)] >= MIN_SPACING_POINTS && ScanRate(msLevel) != null;
         }
 
         private static int Slot(int msLevel)

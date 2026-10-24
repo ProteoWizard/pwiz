@@ -62,6 +62,8 @@ namespace pwiz.Osprey.DemuxTool
                     _group.Add(-1);
                     continue;
                 }
+                if (spectrum.Precursors.Count == 0)
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, @"Remultiplexing needs every MS2 spectrum's isolation window; {0} has none.", spectrum.Id));
                 double center = spectrum.Precursors[0].IsolationWindow.CvParamValueOrDefault(CVID.MS_isolation_window_target_m_z, 0.0);
                 if (cycle.Any(c => Math.Abs(c.Center - center) < 1e-3))
                     cycles += Flush(cycle, cycles, k);
@@ -107,7 +109,10 @@ namespace pwiz.Osprey.DemuxTool
                 upper = Math.Max(upper, target + window.CvParamValueOrDefault(CVID.MS_isolation_window_upper_offset, 0.0));
                 var scan = spectrum.ScanList.Scans[0];
                 timeSum += scan.CvParamValueOrDefault(CVID.MS_scan_start_time, 0.0);
-                fillSum += scan.CvParamValueOrDefault(CVID.MS_ion_injection_time, 0.0);
+                double fill = scan.CvParamValueOrDefault(CVID.MS_ion_injection_time, double.NaN);
+                if (!(fill > 0))
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, @"Remultiplexing sums spectra through their fill times; {0} has none.", spectrum.Id));
+                fillSum += fill;
             }
             var isolation = first.Precursors[0].IsolationWindow;
             isolation.Set(CVID.MS_isolation_window_target_m_z, (lower + upper) / 2, CVID.MS_m_z);
@@ -116,6 +121,16 @@ namespace pwiz.Osprey.DemuxTool
             var firstScan = first.ScanList.Scans[0];
             firstScan.Set(CVID.MS_scan_start_time, timeSum / spectra.Length, CVID.UO_minute);
             firstScan.Set(CVID.MS_ion_injection_time, fillSum, CVID.UO_millisecond);
+            // The summed window's precursor is its center, as msconvert's demultiplexer writes a bin's; the first member's
+            // selected-ion intensity and its peaks' summary terms describe that member alone.
+            foreach (var selected in first.Precursors[0].SelectedIons)
+            {
+                selected.Set(CVID.MS_selected_ion_m_z, (lower + upper) / 2, CVID.MS_m_z);
+                selected.CVParams.RemoveAll(p => p.Cvid == CVID.MS_peak_intensity);
+            }
+            first.Params.CVParams.RemoveAll(p => p.Cvid == CVID.MS_total_ion_current || p.Cvid == CVID.MS_base_peak_m_z ||
+                p.Cvid == CVID.MS_base_peak_intensity || p.Cvid == CVID.MS_lowest_observed_m_z ||
+                p.Cvid == CVID.MS_highest_observed_m_z);
             if (!getBinaryData)
                 return first;
 
@@ -146,7 +161,7 @@ namespace pwiz.Osprey.DemuxTool
                 outIntensity.Add(point.Ions);
             }
             for (int i = 0; i < outIntensity.Count; i++)
-                outIntensity[i] /= fillSum > 0 ? fillSum : 1;
+                outIntensity[i] /= fillSum;
             first.SetMZIntensityArrays(outMz.ToArray(), outIntensity.ToArray(), CVID.MS_number_of_detector_counts);
             return first;
         }

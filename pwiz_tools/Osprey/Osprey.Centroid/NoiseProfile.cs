@@ -52,8 +52,6 @@ namespace pwiz.Osprey.Centroid
         /// </summary>
         public double NoiseSigma { get; }
 
-        public bool IsRefined => _refinedMz != null;
-
         /// <summary>The rough estimate from a spectrum's intensities.</summary>
         public static NoiseProfile Rough(double[] intensity)
         {

@@ -137,11 +137,10 @@ namespace pwiz.Osprey.Centroid
         /// above zero start the passive set. Null when a passive system is not numerically positive definite or the
         /// set cycles, for the caller to fall back to <see cref="Solve"/>.
         /// </summary>
-        public static double[] SolveActiveSet(double[] aty, double[] gramRow, double lambda, double[] warmStart,
-            out int iterations)
+        public static double[] SolveActiveSet(double[] aty, double[] gramRow, double lambda, double[] warmStart)
         {
             int n = aty.Length;
-            iterations = 0;
+            int iterations = 0;
             var beta = new double[n];
             if (n == 0)
                 return beta;

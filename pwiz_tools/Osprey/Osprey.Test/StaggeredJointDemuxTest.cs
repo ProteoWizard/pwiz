@@ -117,27 +117,8 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestStaggeredJointFillTimeInvariance()
         {
-            var uniform = Demultiplex(new StaggeredProfileRun(false, -1), Unweighted());
-            var varied = Demultiplex(new StaggeredProfileRun(true, -1), Unweighted());
-            Assert.AreEqual(uniform.Count, varied.Count);
-            double scale = uniform.Where(o => o.Rates.Length > 0).Max(o => o.Rates.Max());
-            double worst = 0;
-            for (int output = 0; output < uniform.Count; output++)
-            {
-                if (uniform[output].Bin < 2 || uniform[output].Bin >= BINS - 2)
-                    continue;
-                // Sample by sample on the grid, a sample missing from one side counting as zero.
-                var a = BySample(uniform[output]);
-                var b = BySample(varied[output]);
-                foreach (long sample in a.Keys.Union(b.Keys))
-                {
-                    a.TryGetValue(sample, out double rateA);
-                    b.TryGetValue(sample, out double rateB);
-                    worst = Math.Max(worst, Math.Abs(rateA - rateB) / scale);
-                }
-            }
-            Console.WriteLine(@"worst rate difference {0:E2} of the largest", worst);
-            Assert.IsTrue(worst < 2e-3, worst.ToString(@"E2"));
+            AssertSameInteriorRates(Demultiplex(new StaggeredProfileRun(false, -1), Unweighted()),
+                Demultiplex(new StaggeredProfileRun(true, -1), Unweighted()));
         }
 
         /// <summary>
@@ -150,31 +131,15 @@ namespace pwiz.Osprey.Test
         {
             // Without the baseline, which only the joint solve needs (its grid is found from a spectrum's points), and
             // which the per-channel solve would take as thousands of channels.
-            var uniform = Demultiplex(new StaggeredProfileRun(false, -1, false), Channels());
-            var varied = Demultiplex(new StaggeredProfileRun(true, -1, false), Channels());
-            Assert.AreEqual(uniform.Count, varied.Count);
-            double scale = uniform.Where(o => o.Rates.Length > 0).Max(o => o.Rates.Max());
-            double worst = 0;
-            for (int output = 0; output < uniform.Count; output++)
-            {
-                if (uniform[output].Bin < 2 || uniform[output].Bin >= BINS - 2)
-                    continue;
-                var a = BySample(uniform[output]);
-                var b = BySample(varied[output]);
-                foreach (long sample in a.Keys.Union(b.Keys))
-                {
-                    a.TryGetValue(sample, out double rateA);
-                    b.TryGetValue(sample, out double rateB);
-                    worst = Math.Max(worst, Math.Abs(rateA - rateB) / scale);
-                }
-            }
-            Console.WriteLine(@"worst rate difference {0:E2} of the largest", worst);
-            Assert.IsTrue(worst < 2e-3, worst.ToString(@"E2"));
+            AssertSameInteriorRates(Demultiplex(new StaggeredProfileRun(false, -1, false), Channels()),
+                Demultiplex(new StaggeredProfileRun(true, -1, false), Channels()));
         }
 
         /// <summary>
         /// One output spectrum per bin of every acquired spectrum, in order, whatever it holds: an acquired spectrum of
-        /// zeros gives empty spectra in place, not missing ones. And the output does not depend on the thread count.
+        /// zeros gives empty spectra in place, not missing ones. And the output does not depend on the thread count,
+        /// also for a run that starts mid-pass, whose passes the window-repeat rule alone would split between cycles
+        /// and so between two blocks of one batch (at 4 threads, not at 1).
         /// </summary>
         [TestMethod]
         public void TestStaggeredJointThreadsAndEmptySpectra()
@@ -185,14 +150,10 @@ namespace pwiz.Osprey.Test
             var many = Options();
             many.Threads = 4;
             var one = Demultiplex(source, single);
-            var four = Demultiplex(source, many);
             Assert.AreEqual(CYCLES + CYCLES * StaggeredProfileRun.MS2_PER_CYCLE * 2, one.Count);
-            Assert.AreEqual(one.Count, four.Count);
-            for (int output = 0; output < one.Count; output++)
-            {
-                CollectionAssert.AreEqual(one[output].Mz, four[output].Mz, string.Format(@"output {0}", output));
-                CollectionAssert.AreEqual(one[output].Rates, four[output].Rates, string.Format(@"output {0}", output));
-            }
+            AssertSameOutput(one, Demultiplex(source, many));
+            var midPass = new SkipFirst(source, StaggeredProfileRun.SpectrumIndex(0, 0, 5));
+            AssertSameOutput(Demultiplex(midPass, single), Demultiplex(midPass, many));
 
             var pipeline = new StaggeredDemuxPipeline(source, single, TextWriter.Null);
             var ofEmpty = Enumerable.Range(0, pipeline.OutputCount).Where(o => pipeline.BaseIndex(o) == source.EmptyIndex).ToArray();
@@ -244,8 +205,47 @@ namespace pwiz.Osprey.Test
             return bySample;
         }
 
+        /// <summary>
+        /// Two runs of the same rates give the same interior bins' rates, sample by sample on the grid (a sample missing
+        /// from one side counting as zero), within 2e-3 of the largest rate.
+        /// </summary>
+        private static void AssertSameInteriorRates(List<(double[] Mz, double[] Rates, int Bin)> uniform,
+            List<(double[] Mz, double[] Rates, int Bin)> varied)
+        {
+            Assert.AreEqual(uniform.Count, varied.Count);
+            double scale = uniform.Where(o => o.Rates.Length > 0).Max(o => o.Rates.Max());
+            double worst = 0;
+            for (int output = 0; output < uniform.Count; output++)
+            {
+                if (uniform[output].Bin < 2 || uniform[output].Bin >= BINS - 2)
+                    continue;
+                var a = BySample(uniform[output]);
+                var b = BySample(varied[output]);
+                foreach (long sample in a.Keys.Union(b.Keys))
+                {
+                    a.TryGetValue(sample, out double rateA);
+                    b.TryGetValue(sample, out double rateB);
+                    worst = Math.Max(worst, Math.Abs(rateA - rateB) / scale);
+                }
+            }
+            Console.WriteLine(@"worst rate difference {0:E2} of the largest", worst);
+            Assert.IsTrue(worst < 2e-3, worst.ToString(@"E2"));
+        }
+
+        /// <summary>Two demultiplexings give the same output spectra, peak for peak.</summary>
+        private static void AssertSameOutput(List<(double[] Mz, double[] Rates, int Bin)> expected,
+            List<(double[] Mz, double[] Rates, int Bin)> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int output = 0; output < expected.Count; output++)
+            {
+                CollectionAssert.AreEqual(expected[output].Mz, actual[output].Mz, string.Format(@"output {0}", output));
+                CollectionAssert.AreEqual(expected[output].Rates, actual[output].Rates, string.Format(@"output {0}", output));
+            }
+        }
+
         /// <summary>Each output spectrum's peaks in ions per second and its bin, -1 for a survey scan.</summary>
-        private static List<(double[] Mz, double[] Rates, int Bin)> Demultiplex(StaggeredProfileRun source,
+        private static List<(double[] Mz, double[] Rates, int Bin)> Demultiplex(IDemuxSource source,
             ScanningDemuxOptions options)
         {
             var pipeline = new StaggeredDemuxPipeline(source, options, TextWriter.Null);
@@ -453,6 +453,46 @@ namespace pwiz.Osprey.Test
             private static double Fraction(double value)
             {
                 return value - Math.Floor(value);
+            }
+        }
+
+        /// <summary>A run without its first spectra, as an mzML sliced from the middle of a cycle would hold it.</summary>
+        private sealed class SkipFirst : IDemuxSource
+        {
+            private readonly IDemuxSource _source;
+            private readonly int _skip;
+
+            public SkipFirst(IDemuxSource source, int skip)
+            {
+                _source = source;
+                _skip = skip;
+            }
+
+            public int Count => _source.Count - _skip;
+
+            public string NativeId(int index)
+            {
+                return _source.NativeId(index + _skip);
+            }
+
+            public DemuxSpectrumInfo Describe(int index)
+            {
+                return _source.Describe(index + _skip);
+            }
+
+            public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
+            {
+                _source.Read(index + _skip, out mz, out intensity);
+            }
+
+            public void Release(int index)
+            {
+                _source.Release(index + _skip);
+            }
+
+            public void Forget(int index)
+            {
+                _source.Forget(index + _skip);
             }
         }
     }

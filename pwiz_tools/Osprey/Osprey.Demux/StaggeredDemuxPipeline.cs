@@ -68,7 +68,7 @@ namespace pwiz.Osprey.Demux
             var times = new List<double>();
             var windows = new List<IsolationWindow>();
             _intensityPerIon = new double[source.Count];
-            // Described on the read threads (a vendor reader serves concurrent requests), then used in order.
+            // Described on the read threads (a source serializes what its reader cannot serve at once), then used in order.
             var infos = new DemuxSpectrumInfo[source.Count];
             Parallel.For(0, source.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, options.ReadThreads) },
                 k => infos[k] = source.Describe(k));
@@ -93,23 +93,6 @@ namespace pwiz.Osprey.Demux
                 _ms2OfSpectrum[_ms2Spectra[i]] = i;
             Scheme = DemuxSchemeDetector.Detect(windows, minimumBinWidth);
 
-            // A cycle ends when a window repeats, so a staggered pair of window sets is one cycle
-            // and a file without survey scans still has cycles.
-            _cycleOfMs2 = new int[_ms2Spectra.Length];
-            var seen = new HashSet<int>();
-            int cycle = 0;
-            for (int i = 0; i < _ms2Spectra.Length; i++)
-            {
-                if (!seen.Add(Scheme.WindowOfSpectrum[i]))
-                {
-                    cycle++;
-                    seen.Clear();
-                    seen.Add(Scheme.WindowOfSpectrum[i]);
-                }
-                _cycleOfMs2[i] = cycle;
-            }
-            _cycles = _ms2Spectra.Length > 0 ? cycle + 1 : 0;
-
             // A pass is one set of windows tiling the range, acquired in ascending order: a window below the one
             // before it starts the next pass. The joint solve demultiplexes pass by pass, each in ions at the
             // median fill time of its spectra (the ion trap's intensities are rates).
@@ -121,12 +104,16 @@ namespace pwiz.Osprey.Demux
                     pass++;
                 _passOfMs2[i] = pass;
             }
+            // The joint solve takes whole passes into a block, so its cycles end only where a pass starts: a pass
+            // that a window's repeat would split (an input that starts mid-pass) would otherwise be solved, and
+            // written, by two blocks.
+            _cycleOfMs2 = CycleNumbers(Scheme.WindowOfSpectrum, options.Joint ? _passOfMs2 : null, out _cycles);
             if (options.Joint)
             {
                 foreach (var group in Enumerable.Range(0, _ms2Spectra.Length).GroupBy(i => _passOfMs2[i]))
                 {
-                    var scales = group.Select(i => _intensityPerIon[_ms2Spectra[i]]).OrderBy(v => v).ToArray();
-                    _passPerIon[group.Key] = scales[scales.Length / 2];
+                    var scales = group.Select(i => _intensityPerIon[_ms2Spectra[i]]).ToArray();
+                    _passPerIon[group.Key] = MedianMath.SelectInPlace(scales, scales.Length / 2);
                 }
             }
             // The per-channel solve combines spectra, interpolating each window's channels between its acquisitions and
@@ -137,8 +124,8 @@ namespace pwiz.Osprey.Demux
             _referencePerIon = double.NaN;
             if (options.IntensityIsIonsPerSecond && !options.Joint && _ms2Spectra.Length > 0)
             {
-                var scales = _ms2Spectra.Select(k => _intensityPerIon[k]).OrderBy(v => v).ToArray();
-                _referencePerIon = scales[scales.Length / 2];
+                var scales = _ms2Spectra.Select(k => _intensityPerIon[k]).ToArray();
+                _referencePerIon = MedianMath.SelectInPlace(scales, scales.Length / 2);
             }
             log.WriteLine(@"Scheme: {0}, {1} windows into {2} bins, {3}-fold", Scheme.Kind, Scheme.Windows.Count,
                 Scheme.Bins.Count, Scheme.OverlapFactor);
@@ -225,44 +212,6 @@ namespace pwiz.Osprey.Demux
         {
         }
 
-        /// <summary>
-        /// Keeps the MS2 spectra of every <paramref name="every"/>-th cycle only (cycles as the plan counts them: a
-        /// window's repeat ends one), and records the rest as dropped.
-        /// </summary>
-        private void Thin(List<int> ms2, List<double> times, List<IsolationWindow> windows, int every,
-            double minimumBinWidth)
-        {
-            var scheme = DemuxSchemeDetector.Detect(windows, minimumBinWidth);
-            var seen = new HashSet<int>();
-            int cycle = 0;
-            var keep = new bool[ms2.Count];
-            for (int i = 0; i < ms2.Count; i++)
-            {
-                if (!seen.Add(scheme.WindowOfSpectrum[i]))
-                {
-                    cycle++;
-                    seen.Clear();
-                    seen.Add(scheme.WindowOfSpectrum[i]);
-                }
-                keep[i] = cycle % every == 0;
-                if (!keep[i])
-                    _thinnedOut.Add(ms2[i]);
-            }
-            int n = 0;
-            for (int i = 0; i < keep.Length; i++)
-            {
-                if (!keep[i])
-                    continue;
-                ms2[n] = ms2[i];
-                times[n] = times[i];
-                windows[n] = windows[i];
-                n++;
-            }
-            ms2.RemoveRange(n, ms2.Count - n);
-            times.RemoveRange(n, times.Count - n);
-            windows.RemoveRange(n, windows.Count - n);
-        }
-
         /// <summary>Reads every MS2 spectrum of a batch's padded cycles and makes one solve per block and group of bins.</summary>
         public override IReadOnlyList<DemuxWork> MakeWork(int firstCycle, int lastCycle, out double readSeconds)
         {
@@ -271,7 +220,7 @@ namespace pwiz.Osprey.Demux
             // Every MS2 spectrum of the padded cycles, its nonzero peaks in ions.
             var inBlock = Enumerable.Range(0, _ms2Spectra.Length)
                 .Where(i => _cycleOfMs2[i] >= padLo && _cycleOfMs2[i] <= padHi).ToArray();
-            // Read on the read threads (a vendor reader serves concurrent requests), each into its own slot.
+            // Read on the read threads (a source serializes what its reader cannot serve at once), each into its own slot.
             var read = new (double[] Mz, double[] Ions)[inBlock.Length];
             Parallel.For(0, inBlock.Length, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _options.ReadThreads) },
                 n => read[n] = ReadPeaks(_ms2Spectra[inBlock[n]]));
@@ -313,10 +262,13 @@ namespace pwiz.Osprey.Demux
                 {
                     int g1 = Math.Min(binCount - 1, g0 + _options.GroupBins - 1);
                     var unit = MakeUnit(inBlock, peaks, lo, hi, k0, k1, g0, g1, contextBins);
+                    // The solves capture only these locals: one referring to the plan would keep the batch's whole
+                    // read (captured above, with the plan) alive until the batch's last solve.
                     var elution = _options.Elution;
+                    var parameters = _options.Parameters;
                     work.Add(new DemuxWork(elution != null
-                        ? (Func<ScanningUnitResult>)(() => ElutionDemultiplexer.DemuxUnit(unit, _options.Parameters, elution))
-                        : () => ScanningDemultiplexer.DemuxInterpolatedUnit(unit, _options.Parameters),
+                        ? (Func<ScanningUnitResult>)(() => ElutionDemultiplexer.DemuxUnit(unit, parameters, elution))
+                        : () => ScanningDemultiplexer.DemuxInterpolatedUnit(unit, parameters),
                         unit.Mz.Length));
                 }
             }
@@ -408,19 +360,7 @@ namespace pwiz.Osprey.Demux
             int lo, int hi, int k0, int k1, int g0, int g1, int contextBins, out bool[] observed)
         {
             observed = null;
-            int col0 = Math.Max(0, g0 - contextBins), col1 = Math.Min(Scheme.Bins.Count - 1, g1 + contextBins);
-            var columnBins = Enumerable.Range(col0, col1 - col0 + 1).ToArray();
-            var rowWindows = Enumerable.Range(0, Scheme.Windows.Count)
-                .Where(w => Scheme.Windows[w].LastBin >= col0 && Scheme.Windows[w].FirstBin <= col1).ToArray();
-            var rowOfWindow = new Dictionary<int, int>();
-            for (int r = 0; r < rowWindows.Length; r++)
-                rowOfWindow[rowWindows[r]] = r;
-            var a = new double[rowWindows.Length, columnBins.Length];
-            for (int r = 0; r < rowWindows.Length; r++)
-            {
-                for (int j = 0; j < columnBins.Length; j++)
-                    a[r, j] = Scheme.Windows[rowWindows[r]].Covers(columnBins[j]) ? 1 : 0;
-            }
+            var a = BlockLayout(g0, g1, contextBins, out var columnBins, out var rowWindows, out var rowOfWindow);
 
             // Each row's acquisitions in the padded block, in time order; the core passes and their times.
             var acquisitions = rowWindows.Select(w => new List<int>()).ToArray();
@@ -442,7 +382,7 @@ namespace pwiz.Osprey.Demux
             if (passTimes.Count == 0)
                 return null;
             var passes = passTimes.Keys.ToArray();
-            var passTime = passes.Select(p => passTimes[p].OrderBy(t => t).ElementAt(passTimes[p].Count / 2)).ToArray();
+            var passTime = passes.Select(p => MedianMath.SelectInPlace(passTimes[p].ToArray(), passTimes[p].Count / 2)).ToArray();
 
             // Each row's rates by grid sample, over its acquisitions.
             var rowTimes = new double[rowWindows.Length][];
@@ -469,6 +409,8 @@ namespace pwiz.Osprey.Demux
                 }
             }
 
+            // Each row's samples in grid order, sorted once for every pass.
+            var rowSamples = rowRates.Select(rates => rates.OrderBy(e => e.Key).ToArray()).ToArray();
             var mz = new List<double>();
             var ions = new List<double>();
             var row = new List<int>();
@@ -483,12 +425,13 @@ namespace pwiz.Osprey.Demux
                     if (times.Length == 0)
                         continue;
                     int acquired = acquisitions[r].FindIndex(i => _passOfMs2[i] == passes[c]);
-                    foreach (var entry in rowRates[r].OrderBy(e => e.Key))
+                    foreach (var entry in rowSamples[r])
                     {
                         double rate = acquired >= 0
                             ? entry.Value[acquired]
-                            : Math.Max(0, RtInterpolator.Interpolate(RtInterpolation.makima, times, entry.Value, times.Length, passTime[c]));
-                        if (rate <= 0)
+                            : RtInterpolator.Interpolate(RtInterpolation.makima, times, entry.Value, times.Length, passTime[c]);
+                        // Not negative, and not a value made non-finite by a malformed series (equal times).
+                        if (!(rate > 0) || double.IsInfinity(rate))
                             continue;
                         mz.Add(grid.Mz(entry.Key));
                         ions.Add(rate / perIonRef);
@@ -597,7 +540,14 @@ namespace pwiz.Osprey.Demux
                     cycle.Add(c);
                 }
             }
-            var result = new ScanningUnitResult { IonsIn = fit.IonsIn };
+            // The ions in are the measured ions split among the unit's own bins: the fit's would count each pass's
+            // interpolated windows too.
+            var result = new ScanningUnitResult
+            {
+                Channels = fit.Channels,
+                ChannelsSolved = fit.ChannelsSolved,
+                IonsIn = ions.Sum(),
+            };
             if (centrix == null)
             {
                 for (int n = 0; n < mz.Count; n++)
@@ -633,7 +583,7 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// The joint solve's profile grid, taken once from the first spectrum with enough points, and the peak sigma
+        /// The joint solve's profile grid, taken once, from the first batch's densest spectrum, and the peak sigma
         /// that both the joint solve's Gaussian and Centrix use: <see cref="ScanningDemuxOptions.LinearPeakSigmaTh"/>
         /// when given, else from the run (<see cref="MeasurePeakSigma"/>). Also makes the Centrix centroider of
         /// each bin's share, on this grid's spacing.
@@ -642,26 +592,28 @@ namespace pwiz.Osprey.Demux
         {
             if (_grid != null)
                 return _grid;
+            // The grid of the batch's densest spectrum (the first of the densest), whose most common gap is the grid
+            // step itself: a sparse spectrum, its zero points dropped, can show a multiple of it.
+            double[] densest = null;
             foreach (var (mz, _) in peaks.OrderBy(e => e.Key).Select(e => e.Value))
             {
-                if (mz.Length < 1000)
-                    continue;
-                _grid = LinearGrid.Detect(mz);
-                if (_grid == null)
-                    throw new InvalidOperationException(@"The joint solve needs profile spectra on one linear grid.");
-                double sigmaTh = _options.LinearPeakSigmaTh > 0 ? _options.LinearPeakSigmaTh : MeasurePeakSigma();
-                double sigma = sigmaTh / _grid.Step;
-                _options.JointParameters.PeakSigmaSamples = new[] { sigma };
-                _options.JointParameters.PeakSigmaMz = new[] { 500.0 };
-                var centrix = _options.Centrix.Copy();
-                centrix.SigmaTh = sigmaTh;
-                centrix.GridSpacingTh = _grid.Step;
-                _centrix = new CentrixCentroider(centrix);
-                _log.WriteLine(@"Profile grid: step {0:F4} Th; peak sigma {1:F3} Th = {2:F2} samples", _grid.Step,
-                    sigmaTh, sigma);
-                return _grid;
+                if (densest == null || mz.Length > densest.Length)
+                    densest = mz;
             }
-            throw new InvalidOperationException(@"The joint solve found no profile spectrum to take the grid from.");
+            _grid = densest != null ? LinearGrid.Detect(densest) : null;
+            if (_grid == null)
+                throw new InvalidOperationException(@"The joint solve needs profile spectra on one linear grid.");
+            double sigmaTh = _options.LinearPeakSigmaTh > 0 ? _options.LinearPeakSigmaTh : MeasurePeakSigma();
+            double sigma = sigmaTh / _grid.Step;
+            _options.JointParameters.PeakSigmaSamples = new[] { sigma };
+            _options.JointParameters.PeakSigmaMz = new[] { 500.0 };
+            var centrix = _options.Centrix.Copy();
+            centrix.SigmaTh = sigmaTh;
+            centrix.GridSpacingTh = _grid.Step;
+            _centrix = new CentrixCentroider(centrix);
+            _log.WriteLine(@"Profile grid: step {0:F4} Th; peak sigma {1:F3} Th = {2:F2} samples", _grid.Step,
+                sigmaTh, sigma);
+            return _grid;
         }
 
         /// <summary>
@@ -674,41 +626,22 @@ namespace pwiz.Osprey.Demux
         private double MeasurePeakSigma()
         {
             var calibrator = new CentrixSigmaCalibrator();
-            foreach (int n in CentrixSigmaCalibrator.SampleIndices(_ms2Spectra.Length))
+            calibrator.Sample(_ms2Spectra.Length, false, true, n =>
             {
-                if (calibrator.IsSettled(2))
-                    break;
                 int k = _ms2Spectra[n];
                 _source.Read(k, out var mz, out var intensity);
                 if (mz != null && intensity != null)
                     calibrator.Add(2, mz, intensity);
                 _source.Release(k);
-            }
-            var scanRate = calibrator.ScanRate(2);
-            if (scanRate != null)
-                _log.WriteLine(@"Peak sigma: {0} kTh/s scan rate, from its point spacing", scanRate.KThPerSecond);
-            else
-                _log.WriteLine(@"Peak width: {0} isolated MS2 peaks", calibrator.PeakCount(2));
+            });
+            _log.WriteLine(@"Peak sigma: {0}", calibrator.Describe(2));
             return calibrator.Sigma(2);
         }
 
         private InterpolatedUnit MakeUnit(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, int lo, int hi,
             int k0, int k1, int g0, int g1, int contextBins)
         {
-            int col0 = Math.Max(0, g0 - contextBins), col1 = Math.Min(Scheme.Bins.Count - 1, g1 + contextBins);
-            var columnBins = Enumerable.Range(col0, col1 - col0 + 1).ToArray();
-            // Rows: the windows that cover any of the columns.
-            var rowWindows = Enumerable.Range(0, Scheme.Windows.Count)
-                .Where(w => Scheme.Windows[w].LastBin >= col0 && Scheme.Windows[w].FirstBin <= col1).ToArray();
-            var rowOfWindow = new Dictionary<int, int>();
-            for (int r = 0; r < rowWindows.Length; r++)
-                rowOfWindow[rowWindows[r]] = r;
-            var a = new double[rowWindows.Length, columnBins.Length];
-            for (int r = 0; r < rowWindows.Length; r++)
-            {
-                for (int j = 0; j < columnBins.Length; j++)
-                    a[r, j] = Scheme.Windows[rowWindows[r]].Covers(columnBins[j]) ? 1 : 0;
-            }
+            var a = BlockLayout(g0, g1, contextBins, out var columnBins, out var rowWindows, out var rowOfWindow);
 
             var acquisitions = rowWindows.Select(w => new List<int>()).ToArray();
             foreach (int i in inBlock)
@@ -749,7 +682,7 @@ namespace pwiz.Osprey.Demux
                     for (int p = 0; p < m.Length; p++)
                     {
                         mz.Add(m[p]);
-                        ions.Add(double.IsNaN(_referencePerIon) ? v[p] : v[p] * toReference);
+                        ions.Add(v[p] * toReference);
                         row.Add(r);
                         acquisition.Add(q);
                     }
@@ -776,7 +709,7 @@ namespace pwiz.Osprey.Demux
                 int count = Math.Min(mzData.Count, intensityData.Count);
                 for (int i = 0; i < count; i++)
                 {
-                    if (intensityData[i] <= 0)
+                    if (!(intensityData[i] > 0))
                         continue;
                     mzs.Add(mzData[i]);
                     values.Add(intensityData[i] / perIon);
@@ -784,6 +717,90 @@ namespace pwiz.Osprey.Demux
             }
             _source.Release(k);
             return (mzs.ToArray(), values.ToArray());
+        }
+
+        /// <summary>
+        /// A unit's bins and windows: its columns, bins g0 to g1 and the context bins either side; its rows, the windows
+        /// that cover any of the columns (with each row's index by window); and the 0/1 matrix of which row covers
+        /// which column.
+        /// </summary>
+        private double[,] BlockLayout(int g0, int g1, int contextBins, out int[] columnBins, out int[] rowWindows,
+            out Dictionary<int, int> rowOfWindow)
+        {
+            int col0 = Math.Max(0, g0 - contextBins), col1 = Math.Min(Scheme.Bins.Count - 1, g1 + contextBins);
+            columnBins = Enumerable.Range(col0, col1 - col0 + 1).ToArray();
+            rowWindows = Enumerable.Range(0, Scheme.Windows.Count)
+                .Where(w => Scheme.Windows[w].LastBin >= col0 && Scheme.Windows[w].FirstBin <= col1).ToArray();
+            rowOfWindow = new Dictionary<int, int>();
+            for (int r = 0; r < rowWindows.Length; r++)
+                rowOfWindow[rowWindows[r]] = r;
+            var a = new double[rowWindows.Length, columnBins.Length];
+            for (int r = 0; r < rowWindows.Length; r++)
+            {
+                for (int j = 0; j < columnBins.Length; j++)
+                    a[r, j] = Scheme.Windows[rowWindows[r]].Covers(columnBins[j]) ? 1 : 0;
+            }
+            return a;
+        }
+
+        /// <summary>
+        /// Keeps the MS2 spectra of every <paramref name="every"/>-th cycle only (cycles as the plan counts them: a
+        /// window's repeat ends one), and records the rest as dropped.
+        /// </summary>
+        private void Thin(List<int> ms2, List<double> times, List<IsolationWindow> windows, int every,
+            double minimumBinWidth)
+        {
+            var cycleOf = CycleNumbers(DemuxSchemeDetector.Detect(windows, minimumBinWidth).WindowOfSpectrum, null, out _);
+            int n = 0;
+            for (int i = 0; i < ms2.Count; i++)
+            {
+                if (cycleOf[i] % every != 0)
+                {
+                    _thinnedOut.Add(ms2[i]);
+                    continue;
+                }
+                ms2[n] = ms2[i];
+                times[n] = times[i];
+                windows[n] = windows[i];
+                n++;
+            }
+            ms2.RemoveRange(n, ms2.Count - n);
+            times.RemoveRange(n, times.Count - n);
+            windows.RemoveRange(n, windows.Count - n);
+        }
+
+        /// <summary>
+        /// The cycle of each MS2 spectrum: a cycle ends when a window repeats, so a staggered pair of window sets is
+        /// one cycle and a file without survey scans still has cycles. With each spectrum's pass given, a cycle ends
+        /// only where a pass starts, so every pass lies whole in one cycle.
+        /// </summary>
+        private static int[] CycleNumbers(int[] windowOfSpectrum, int[] passOfSpectrum, out int cycles)
+        {
+            var cycleOf = new int[windowOfSpectrum.Length];
+            var seen = new HashSet<int>();
+            int cycle = 0;
+            for (int start = 0, end; start < cycleOf.Length; start = end)
+            {
+                // Spectra start to end - 1 are taken together: one spectrum, or one pass.
+                end = start + 1;
+                while (passOfSpectrum != null && end < cycleOf.Length && passOfSpectrum[end] == passOfSpectrum[start])
+                    end++;
+                bool repeats = false;
+                for (int i = start; i < end && !repeats; i++)
+                    repeats = seen.Contains(windowOfSpectrum[i]);
+                if (repeats)
+                {
+                    cycle++;
+                    seen.Clear();
+                }
+                for (int i = start; i < end; i++)
+                {
+                    seen.Add(windowOfSpectrum[i]);
+                    cycleOf[i] = cycle;
+                }
+            }
+            cycles = cycleOf.Length > 0 ? cycle + 1 : 0;
+            return cycleOf;
         }
 
         private static void Add<TKey>(Dictionary<TKey, List<ScanningPeak>> byKey, TKey key, ScanningPeak peak)

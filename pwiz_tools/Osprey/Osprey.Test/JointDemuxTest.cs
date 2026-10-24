@@ -42,14 +42,16 @@ namespace pwiz.Osprey.Test
         private const double ROOT_STEP = 9.786595e-05;
 
         /// <summary>
-        /// Above the solve's numerical residue: on these noise-free sources, centroids of 5e-6 to 3e-3 ions beside the
-        /// real ones, written since there is no output floor (<see cref="JointDemuxParams.MinOutputIons"/>).
+        /// Above the solve's numerical residue: coefficients under its tolerance are dropped, but on these noise-free
+        /// sources a few centroids of 1e-3 to 3e-3 ions remain beside the real ones, written since there is no output
+        /// floor (<see cref="JointDemuxParams.MinOutputIons"/>).
         /// </summary>
         private const double RESIDUE_IONS = 0.01;
 
         /// <summary>
-        /// The grid of a profile spectrum: found from its points, with or without its zero samples; a
-        /// sample's index and m/z round-trip; and points off one uniform grid give no grid.
+        /// The grid of a profile spectrum, a TOF's and a linear ion trap's: found from its points, with or without its
+        /// zero samples, and from m/z stored in 32 bits; a sample's index and m/z round-trip; and points off one
+        /// uniform grid give no grid.
         /// </summary>
         [TestMethod]
         public void TestTofGrid()
@@ -71,6 +73,20 @@ namespace pwiz.Osprey.Test
             }
             var shifted = sparse.Select((mz, i) => i == 100 ? truth.Mz(100.3) : mz).ToList();
             Assert.IsNull(TofGrid.Detect(shifted));
+
+            // A linear ion trap's grid (the Stellar's 0.2 Th), also with m/z stored in 32 bits, which rounds every gap
+            // the same way: the median gap is then 0.20001220703125, 0.3 samples off by 1200 m/z.
+            var linear = Enumerable.Range(0, 5000).Select(k => 200.2 + 0.2 * k).ToList();
+            var linearGrid = LinearGrid.Detect(linear);
+            Assert.IsNotNull(linearGrid);
+            Assert.AreEqual(0.2, linearGrid.Step, 1e-12);
+            var single = linear.Select(mz => (double)(float)mz).ToList();
+            var singleGrid = LinearGrid.Detect(single);
+            Assert.IsNotNull(singleGrid);
+            Assert.AreEqual(0.2, singleGrid.Step, 1e-6);
+            for (int k = 0; k < 5000; k += 499)
+                Assert.AreEqual(k, singleGrid.Index(single[k]));
+            Assert.IsNull(LinearGrid.Detect(linear.Select((mz, i) => i == 100 ? mz + 0.06 : mz).ToList()));
         }
 
         /// <summary>
@@ -206,8 +222,8 @@ namespace pwiz.Osprey.Test
                 Cycle = new int[mz.Count],
             };
             var result = JointDemultiplexer.DemuxUnit(unit, parameters, grid);
-            // With no output floor, the solve's numerical residue is written too: a few centroids of thousandths of an
-            // ion beside the sources, which are the only ones above it.
+            // With no output floor, the solve's numerical residue above its tolerance is written too: a few centroids of
+            // thousandths of an ion beside the sources, which are the only ones above it.
             Assert.AreEqual(sources.Length, result.Demultiplexed.Count(p => p.Ions >= RESIDUE_IONS));
             foreach (var s in sources)
             {

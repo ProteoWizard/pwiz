@@ -331,18 +331,15 @@ namespace pwiz.Osprey.IO
             if (!(ms1.SigmaTh > 0) || !(ms2.SigmaTh > 0))
             {
                 var calibrator = new CentrixSigmaCalibrator();
-                foreach (int i in CentrixSigmaCalibrator.SampleIndices(msData.SpectrumCount))
+                calibrator.Sample(msData.SpectrumCount, !(ms1.SigmaTh > 0), !(ms2.SigmaTh > 0), i =>
                 {
-                    if ((ms1.SigmaTh > 0 || calibrator.IsSettled(1)) && (ms2.SigmaTh > 0 || calibrator.IsSettled(2)))
-                        break;
                     var spectrum = msData.GetSpectrum(i);
-                    if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||
-                        spectrum.Intensities == null)
+                    if (spectrum != null && !spectrum.Centroided && spectrum.Level >= 1 && spectrum.Mzs != null &&
+                        spectrum.Intensities != null)
                     {
-                        continue;
+                        calibrator.Add(spectrum.Level, spectrum.Mzs, spectrum.Intensities);
                     }
-                    calibrator.Add(spectrum.Level, spectrum.Mzs, spectrum.Intensities);
-                }
+                });
                 if (!(ms1.SigmaTh > 0))
                     ms1.SigmaTh = calibrator.Sigma(1);
                 if (!(ms2.SigmaTh > 0))
@@ -360,8 +357,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void CentroidProfile(MsDataSpectrum spectrum, CentrixCentroider[] centroiders)
         {
+            // A spectrum with a non-finite m/z is left as read, for AddSpectrum to refuse (EnsureSorted).
             if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||
-                spectrum.Intensities == null || spectrum.Intensities.Length != spectrum.Mzs.Length)
+                spectrum.Intensities == null || spectrum.Intensities.Length != spectrum.Mzs.Length ||
+                !Array.TrueForAll(spectrum.Mzs, double.IsFinite))
             {
                 return;
             }

@@ -36,11 +36,16 @@ namespace pwiz.Osprey.DemuxTool
     internal sealed class StaggeredDemuxSpectrumList : SpectrumListWrapper
     {
         private readonly StaggeredDemuxPipeline _pipeline;
+        private readonly bool _centroided; // the demultiplexed spectra are centroids, whatever the input was
 
         public StaggeredDemuxSpectrumList(ISpectrumList inner, ScanningDemuxOptions options, TextWriter log)
             : base(inner)
         {
             _pipeline = new StaggeredDemuxPipeline(new PwizDemuxSource(inner), options, log);
+            // The joint solve writes centroids from the profile: its fitted peaks, or Centrix's of each bin's share.
+            // Its shares written as profile (--joint-profile) stay profile, and the other solves' output follows
+            // their input.
+            _centroided = options.Joint && (!options.JointApportion || options.JointCentroid);
         }
 
         public long Channels
@@ -99,6 +104,8 @@ namespace pwiz.Osprey.DemuxTool
             window.Set(CVID.MS_isolation_window_target_m_z, demuxBin.Center, CVID.MS_m_z);
             window.Set(CVID.MS_isolation_window_lower_offset, demuxBin.Width / 2, CVID.MS_m_z);
             window.Set(CVID.MS_isolation_window_upper_offset, demuxBin.Width / 2, CVID.MS_m_z);
+            if (_centroided)
+                ScanningDemuxSpectrumList.MarkCentroid(spectrum);
             if (!getBinaryData)
                 return spectrum;
             var (mz, ions) = _pipeline.Peaks(index);

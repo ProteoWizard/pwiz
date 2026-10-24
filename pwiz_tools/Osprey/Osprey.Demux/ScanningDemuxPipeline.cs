@@ -49,9 +49,10 @@ namespace pwiz.Osprey.Demux
         /// <summary>
         /// Staggered data whose intensities are ions per second, as a Thermo ion trap reports them: each spectrum's
         /// ions are its intensity x its injection (fill) time in seconds, so each follows its own fill time. Spectra
-        /// are combined in ions per second, the only unit that compares across fill times; the ions set the thresholds
-        /// and Poisson weights. Output is in ions per second. Spectra without an injection time keep
-        /// <see cref="CountsPerIon"/>.
+        /// are combined in ions per second, the only unit that compares across fill times, and the solves see them in
+        /// ions at one reference fill time (the run's median, or for the joint solve its pass's), which set the
+        /// thresholds and Poisson weights; each spectrum's own ions do not yet. Output is in ions per second. Spectra
+        /// without an injection time keep <see cref="CountsPerIon"/>.
         /// </summary>
         public bool IntensityIsIonsPerSecond { get; set; }
 

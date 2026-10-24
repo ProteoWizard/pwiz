@@ -142,8 +142,9 @@ namespace pwiz.Osprey.Demux
             }
             SortByValueThenIndex(rank, rankedBins);
 
-            // Greedy maxima, each claiming the bins within the tolerance of it.
-            int radius = (int)Math.Ceiling(tolerance);
+            // Greedy maxima, each claiming the bins within the tolerance of it: whole bins, the same radius the peaks are
+            // assigned within below (a tolerance in Th over 0.01 Th bins is not exact: 0.28 / 0.01 = 28.000000000000004).
+            int radius = (int)Math.Floor(tolerance + 1e-9);
             var taken = new bool[bins];
             var centers = new long[candidates];
             int channels = 0;
@@ -179,7 +180,7 @@ namespace pwiz.Osprey.Demux
                     best = hi;
                     bestDistance = centers[hi] - key[i];
                 }
-                if (best >= 0 && bestDistance <= tolerance)
+                if (best >= 0 && bestDistance <= radius)
                     channel[i] = best;
             }
             return channels;

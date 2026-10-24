@@ -49,7 +49,9 @@ namespace pwiz.Osprey.Centroid
         /// <summary>
         /// The runs of points above <c>baseline + thresholdSigma * noiseSigma</c>, runs separated by no more than
         /// mergeGap points joined, each extended by extension points on both sides (within the spectrum) and kept
-        /// when at least minWidth points wide. Ascending and disjoint.
+        /// when at least minWidth points wide. Ascending, but not always disjoint: runs more than mergeGap and fewer
+        /// than 2 * extension points apart give regions that share points, as Rust Centrix's do (pass 2 replaces a
+        /// refit region's centroids by its m/z range, as Rust does).
         /// </summary>
         public static List<SignalRegion> Detect(double[] mz, double[] intensity, double baseline, double noiseSigma,
             double thresholdSigma, int mergeGap, int extension, int minWidth)

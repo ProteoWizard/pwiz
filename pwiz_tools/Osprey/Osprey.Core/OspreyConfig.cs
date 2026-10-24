@@ -318,14 +318,14 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// With Centrix, the MS1 profile peak sigma in Th (<c>--centrix-sigma-ms1</c>); 0, the default,
-        /// measures it from the run: one species' peak width, no wider than the broadest peak of the
-        /// scan rate the point spacing identifies.
+        /// takes it from the run: 1.1 point spacings when the point spacing identifies a linear ion trap
+        /// scan rate, otherwise one species' peak width measured from the run.
         /// </summary>
         public double CentrixSigmaMs1 { get; set; }
 
         /// <summary>
         /// With Centrix, the MS2 profile peak sigma in Th (<c>--centrix-sigma-ms2</c>); 0, the default,
-        /// measures it from the run as for MS1.
+        /// takes it from the run as for MS1.
         /// </summary>
         public double CentrixSigmaMs2 { get; set; }
 

@@ -49,14 +49,14 @@ namespace pwiz.Osprey.Centroid
     public sealed class CentrixParams
     {
         /// <summary>
-        /// The sigma of one species' profile peak, in Th: the instrument's resolution, which a linear ion trap's scan
-        /// rate sets (<see cref="LinearIonTrapScanRate"/>). Must be positive for <see cref="CentrixCentroider"/>.
-        /// Osprey's callers pass 0 to mean "measure it" and replace it with <see cref="CentrixCalibration"/>'s estimate
-        /// before constructing the centroider. The default is that estimate for a Thermo Stellar's MS2 at 200 kTh/s
-        /// (0.31 Th from the narrow-window runs, 0.33 from summed staggered windows), for callers that build these
-        /// settings directly. Centrix's own calibration is not ported: the Stellar's MS2 filter strings carry no scan
-        /// rate code it knows (they read "Z", which the Stellar uses to mark Adaptive RT spectra), and its wavelet fit
-        /// reads the broad wings of these peaks as width (0.61 Th).
+        /// The sigma of the Gaussian peaks the profile is fitted with, in Th. Must be positive and finite for
+        /// <see cref="CentrixCentroider"/>. Osprey's callers pass 0 to mean "from the run" and replace it with
+        /// <see cref="CentrixCalibration"/>'s sigma before constructing the centroider (on a linear ion trap, 1.1 point
+        /// spacings: 0.22 Th for a Thermo Stellar's MS2 at 200 kTh/s). The default, 0.33 Th, is the width once measured
+        /// on the Stellar's summed staggered MS2 windows, for callers that build these settings directly. Centrix's own
+        /// calibration is not ported: the Stellar's MS2 filter strings carry no scan rate code it knows (they read "Z",
+        /// which the Stellar uses to mark Adaptive RT spectra), and its wavelet fit reads the broad wings of these peaks
+        /// as width (0.61 Th).
         /// </summary>
         public double SigmaTh { get; set; } = 0.33;
 

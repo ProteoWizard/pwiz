@@ -251,7 +251,7 @@ namespace pwiz.Osprey.Test
                 }
                 double lambda = 3 * noise;
 
-                var exact = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, null, out _);
+                var exact = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, null);
                 Assert.IsNotNull(exact, "trial " + trial);
                 double scale = aty.Max(v => Math.Abs(v));
                 for (int j = 0; j < n; j++)
@@ -272,7 +272,7 @@ namespace pwiz.Osprey.Test
 
                 // From a warm start (here the coordinate descent solution at a larger penalty) it reaches the same optimum.
                 var warm = NonNegativeLasso.Solve(aty, gramRow, 1.3 * lambda, null, 2000, 1e-6, out _, out _);
-                var fromWarm = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, warm, out _);
+                var fromWarm = NonNegativeLasso.SolveActiveSet(aty, gramRow, lambda, warm);
                 Assert.IsNotNull(fromWarm);
                 for (int j = 0; j < n; j++)
                     Assert.AreEqual(exact[j], fromWarm[j], 1e-7 * scale, "trial " + trial + " warm " + j);
@@ -284,13 +284,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestCentrixCalibration()
         {
-            // The point spacing identifies a linear ion trap's scan rate, and with it the broadest peak.
+            // The point spacing identifies a linear ion trap's scan rate.
             Assert.AreEqual(200, LinearIonTrapScanRate.FromSpacing(0.2).KThPerSecond);
             Assert.AreEqual(67, LinearIonTrapScanRate.FromSpacing(1.0 / 15).KThPerSecond);
             Assert.AreEqual(125, LinearIonTrapScanRate.FromSpacing(0.125).KThPerSecond);
             Assert.AreEqual(33, LinearIonTrapScanRate.FromSpacing(1.0 / 30).KThPerSecond);
             Assert.IsNull(LinearIonTrapScanRate.FromSpacing(0.1));
-            Assert.AreEqual(0.6 / CentrixCalibration.FWHM_PER_SIGMA, LinearIonTrapScanRate.FromSpacing(1.0 / 15).MaxSigmaTh, 1e-12);
 
             // An isolated Gaussian's width is recovered wherever it falls between grid points; two species 0.4 Th apart
             // read as one wider peak; a peak with a point missing is not measured.
@@ -320,6 +319,18 @@ namespace pwiz.Osprey.Test
             CentrixCalibration.AddPeakWidths(mz, spike, spikeWidths);
             CentrixCalibration.AddPeakWidths(mz.Where((_, i) => spike[i] > 0).ToArray(), spike.Where(v => v > 0).ToArray(), spikeWidths);
             Assert.AreEqual(0, spikeWidths.Count);
+            // A flat top whose log-parabola apex is twice the sampled maximum has no half-maximum crossing to
+            // interpolate; it is not measured, rather than giving an infinite width.
+            var flatTop = new double[mz.Length];
+            flatTop[119] = 1;
+            flatTop[120] = 300;
+            flatTop[121] = 300;
+            flatTop[122] = 150;
+            flatTop[123] = 40;
+            flatTop[124] = 5;
+            var flatWidths = new List<double>();
+            CentrixCalibration.AddPeakWidths(mz, flatTop, flatWidths);
+            Assert.AreEqual(0, flatWidths.Count);
 
             // A linear ion trap's sigma follows its point spacing, whatever the peaks measure. Without a scan rate, the
             // narrow side of the peaks' widths; with too few peaks, Centrix's fallback.

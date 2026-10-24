@@ -28,11 +28,14 @@ namespace pwiz.Osprey.DemuxTool
 {
     /// <summary>
     /// A pwiz spectrum list as a demultiplexing source that keeps nothing it reads: for detecting the scheme, and
-    /// for the descriptions a spectrum list built on the pipeline passes through.
+    /// for the descriptions a spectrum list built on the pipeline passes through. Requests are served one at a time,
+    /// whatever the pipeline's read threads: a Thermo .raw shares one raw-file accessor and an unsynchronized precursor
+    /// cache among its readers, and an mzML is read from one stream.
     /// </summary>
     internal sealed class PwizDemuxSource : IDemuxSource
     {
         private readonly ISpectrumList _spectra;
+        private readonly object _readLock = new object();
 
         public PwizDemuxSource(ISpectrumList spectra)
         {
@@ -41,17 +44,30 @@ namespace pwiz.Osprey.DemuxTool
 
         public int Count
         {
-            get { return _spectra.Count; }
+            get
+            {
+                lock (_readLock)
+                {
+                    return _spectra.Count;
+                }
+            }
         }
 
         public string NativeId(int index)
         {
-            return _spectra.SpectrumIdentity(index).Id;
+            lock (_readLock)
+            {
+                return _spectra.SpectrumIdentity(index).Id;
+            }
         }
 
         public DemuxSpectrumInfo Describe(int index)
         {
-            var spectrum = _spectra.GetSpectrum(index);
+            Spectrum spectrum;
+            lock (_readLock)
+            {
+                spectrum = _spectra.GetSpectrum(index);
+            }
             int level = spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
             double time = spectrum.ScanList.Scans.Count > 0
                 ? spectrum.ScanList.Scans[0].CvParamValueOrDefault(CVID.MS_scan_start_time, 0.0)
@@ -70,7 +86,11 @@ namespace pwiz.Osprey.DemuxTool
 
         public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
         {
-            var spectrum = _spectra.GetSpectrum(index, true);
+            Spectrum spectrum;
+            lock (_readLock)
+            {
+                spectrum = _spectra.GetSpectrum(index, true);
+            }
             mz = spectrum.GetMZArray()?.Data;
             intensity = spectrum.GetIntensityArray()?.Data;
         }

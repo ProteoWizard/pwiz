@@ -117,7 +117,8 @@ searched by Osprey with a library fine-tuned on these runs and carrying natural 
 | 0.15 Th | 34,604 | 0.34% |
 | 0.18 Th | 34,621 | 0.32% |
 | 0.20 Th (1 spacing) | 35,077 | 0.34% |
-| **0.21 Th** | **35,849** | 0.51% |
+| 0.21 Th | 35,849 | 0.51% |
+| **0.22 Th (1.1 spacings, the default)** | **36,001** | 0.53% |
 | 0.24 Th | 35,680 | 0.52% |
 | 0.27 Th | 35,116 | 0.63% |
 | 0.30 Th | 34,330 | 0.51% |
@@ -144,9 +145,10 @@ Th (threshold over all points, a quarter of them zeros), 0.31 Th (threshold over
 stronger peaks), 0.33 Th (peaks of 30 or more ions). All are wider than the identifications' optimum.
 
 **Other scan rates are untested.** At 67 kTh/s the rule gives 0.073 Th, where the Stellar's MS1
-measures 0.17 Th (lower quartile); Osprey's Stellar scoring makes little use of MS1, so this is
-unexamined. Stellar data at other MS2 scan rates will decide whether the optimum follows the spacing,
-a fraction of the scan rate's broadest peak, or the few-ion peak width.
+measures 0.17 Th (lower quartile). For Osprey's search of these runs it does not matter: the
+default (MS1 0.073 Th, MS2 0.22 Th) gives exactly the 36,001 precursors of MS1 at 0.2 Th. Stellar
+data at other MS2 scan rates will decide whether the optimum follows the spacing, a fraction of
+the scan rate's broadest peak, or the few-ion peak width.
 
 **Elsewhere it is measured** (a spacing no scan rate has: a linear grid other than a linear ion
 trap's), for each MS level apart:
@@ -273,8 +275,10 @@ Raise `ALGORITHM_VERSION` with any change that moves a centroid; the tag and key
   input or from the mzML DemuxTool writes for Skyline.
 - **The intensity dependence of the width** is not modeled; one sigma serves each MS level.
 - **The joint demultiplexer's sigma** follows the same rule, 1.1 point spacings, for both its
-  Gaussian and Centrix. The staggered results in [23](23-demultiplexing.md) were measured at fixed
-  sigmas (0.33 Th); the joint solve at the rule's sigma is not yet searched.
+  Gaussian and Centrix. On the truth benchmark (below) it scores at least as well as the 0.33 Th
+  the staggered searches in [23](23-demultiplexing.md) ran at: median cosine 0.985 against 0.982 at
+  k=2, 0.939 against 0.930 at k=4, each scored against truth centroided at the same sigma. The
+  joint solve at this sigma is not yet searched.
 - **Other scan rates.** The rule rests on 200 kTh/s alone (see [The peak sigma](#the-peak-sigma)).
 - **Linear grids only.** Orbitrap and TOF profiles are not uniform in m/z; Centrix does not apply
   to them as it stands.

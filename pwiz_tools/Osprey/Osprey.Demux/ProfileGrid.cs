@@ -65,8 +65,10 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>
         /// The grid of one profile spectrum (m/z ascending, zero points present or not): the step is the median of
-        /// the gaps within 20% of the smallest common gap, and sample 0 is the spectrum's first point. Null when too
-        /// few points, or when they do not lie on one uniform grid.
+        /// the gaps within 20% of the smallest common gap, and sample 0 is the spectrum's first point. When the points
+        /// drift off that grid, the step is taken instead from the whole span over its number of steps: m/z stored in
+        /// 32 bits rounds every gap the same way (0.20001220703125 for 0.2 Th), an error that adds up to 0.3 samples
+        /// over a Stellar spectrum. Null when too few points, or when they do not lie on one uniform grid.
         /// </summary>
         public static LinearGrid Detect(IReadOnlyList<double> mz)
         {
@@ -90,12 +92,14 @@ namespace pwiz.Osprey.Demux
                     steps.Add(gap);
             }
             var grid = new LinearGrid(mz[0], steps[steps.Count / 2]);
-            for (int i = 0; i < mz.Count; i++)
-            {
-                if (Math.Abs(grid.Position(mz[i]) - grid.Index(mz[i])) > MAX_OFF_GRID)
-                    return null;
-            }
-            return grid;
+            if (IsOnGrid(grid, mz))
+                return grid;
+            double span = mz[mz.Count - 1] - mz[0];
+            double count = Math.Round(span / grid.Step);
+            if (!(count > 0))
+                return null;
+            grid = new LinearGrid(mz[0], span / count);
+            return IsOnGrid(grid, mz) ? grid : null;
         }
 
         public long Index(double mz)
@@ -111,6 +115,17 @@ namespace pwiz.Osprey.Demux
         public double Mz(double position)
         {
             return Origin + position * Step;
+        }
+
+        /// <summary>Whether every point lies within <see cref="MAX_OFF_GRID"/> samples of a grid sample.</summary>
+        private static bool IsOnGrid(LinearGrid grid, IReadOnlyList<double> mz)
+        {
+            for (int i = 0; i < mz.Count; i++)
+            {
+                if (Math.Abs(grid.Position(mz[i]) - grid.Index(mz[i])) > MAX_OFF_GRID)
+                    return false;
+            }
+            return true;
         }
     }
 }

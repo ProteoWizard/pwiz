@@ -43,8 +43,8 @@ namespace pwiz.Osprey.Centroid
 
         public CentrixBasis(double sigma, double gridSpacing, double gridOffset)
         {
-            if (!(sigma > 0) || !(gridSpacing > 0))
-                throw new ArgumentException(@"The peak sigma and grid spacing must be positive.");
+            if (!(sigma > 0) || !(gridSpacing > 0) || double.IsInfinity(sigma) || double.IsInfinity(gridSpacing))
+                throw new ArgumentException(@"The peak sigma and grid spacing must be positive and finite.");
             Sigma = sigma;
             GridSpacing = gridSpacing;
             GridOffset = gridOffset;

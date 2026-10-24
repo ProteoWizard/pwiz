@@ -398,7 +398,7 @@ namespace pwiz.Osprey.Demux
                 }
                 else
                 {
-                    Centroid(kept, unit, c, grid, parameters.MinOutputIons, result.Demultiplexed);
+                    Centroid(kept, unit, c, grid, parameters.ToleranceIons, parameters.MinOutputIons, result.Demultiplexed);
                 }
             }
             return result;
@@ -406,11 +406,15 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>
         /// Each position's coefficients in one sweep as centroids: every run of adjacent grid points with a
-        /// positive coefficient is one peak, at its coefficient-weighted m/z, carrying their sum.
+        /// coefficient of at least the solve's tolerance is one peak, at its coefficient-weighted m/z, carrying their
+        /// sum. A smaller coefficient is not resolved from zero (the solve stops once none moves by more than the
+        /// tolerance), so it is a numerical residue, not a measurement, and no peak; unlike an output floor
+        /// (<paramref name="minOutputIons"/>), which applies to the peaks.
         /// </summary>
         private static void Centroid(List<(int Column, long Sample, double Beta)> kept, ScanningUnit unit, int c,
-            IProfileGrid grid, double minOutputIons, List<ScanningPeak> output)
+            IProfileGrid grid, double toleranceIons, double minOutputIons, List<ScanningPeak> output)
         {
+            kept.RemoveAll(entry => !(entry.Beta >= toleranceIons));
             kept.Sort((a, b) => a.Column != b.Column ? a.Column.CompareTo(b.Column) : a.Sample.CompareTo(b.Sample)); // Array.Sort OK: (column, sample) is unique
             int k = 0;
             while (k < kept.Count)

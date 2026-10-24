@@ -207,7 +207,7 @@ namespace pwiz.Osprey.DemuxTool
         /// Labels a layout spectrum centroid: its peaks are the demultiplexed centroids, whether the source
         /// was centroided or, for the joint solve, profile.
         /// </summary>
-        private static void MarkCentroid(Spectrum spectrum)
+        internal static void MarkCentroid(Spectrum spectrum)
         {
             var terms = spectrum.Params;
             for (int i = terms.CVParams.Count - 1; i >= 0; i--)
