@@ -379,18 +379,32 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void HandleResizeEvent()
         {
+            var fontSpec = XAxis.Scale.FontSpec;
+            float size = fontSpec.Size, angle = fontSpec.Angle;
+            var labels = XAxis.Scale.TextLabels?.ToArray();   // Copy, since scaling can change the labels in place
             ScaleAxisLabels();
+            // ZedGraph chooses which text labels to skip in AxisChange, from the label font at that time.
+            // Without this, the labels drawn depend on whether something else updates the graph after
+            // its labels are first scaled during a draw.
+            if (XAxis.Scale.FontSpec.Size != size || XAxis.Scale.FontSpec.Angle != angle ||
+                !ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, labels))
+            {
+                AxisChange();
+                _axisLabelsRescaled = true;
+            }
         }
 
         protected virtual bool IsRedrawRequired(Graphics g)
         {
             // Have to call HandleResizeEvent twice, since the X-scale may not be up
             // to date before calling Draw.  If nothing changes, this will be a no-op
+            _axisLabelsRescaled = false;
             HandleResizeEvent();
-            return (Chart.Rect.Bottom != _chartBottom);
+            return _axisLabelsRescaled || (Chart.Rect.Bottom != _chartBottom);
         }
 
         private float _chartBottom;
+        private bool _axisLabelsRescaled;
         protected AxisLabelScaler _axisLabelScaler;
 
         protected string[] OriginalXAxisLabels
