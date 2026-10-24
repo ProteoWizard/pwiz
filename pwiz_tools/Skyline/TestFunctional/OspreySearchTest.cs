@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -202,6 +203,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.Contains(commandLine, @"--var-mod 0 ");  // Carafe's spelling of none
                 AssertEx.Contains(commandLine, @"--enzyme 1 ");   // Carafe's Trypsin, matched on behavior
                 AssertEx.Contains(commandLine, @"--min-pep-charge 2 ", @"--max-pep-charge 3 "); // The DIA defaults for a default document
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_CULTURE + @" " + CultureInfo.CurrentUICulture.Name); // Osprey writes in Skyline's language
                 AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_LIBRARY + @" "));
             }
             else

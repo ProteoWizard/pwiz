@@ -688,9 +688,6 @@ They start as the document's, and the ones the search uses are added to the docu
   <data name="txtRunFdr.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="txtRunFdr.Text" xml:space="preserve">
-    <value>0.01</value>
-  </data>
   <data name="&gt;&gt;txtRunFdr.Name" xml:space="preserve">
     <value>txtRunFdr</value>
   </data>
@@ -730,9 +727,6 @@ They start as the document's, and the ones the search uses are added to the docu
   <data name="txtExperimentFdr.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="txtExperimentFdr.Text" xml:space="preserve">
-    <value>0.01</value>
-  </data>
   <data name="&gt;&gt;txtExperimentFdr.Name" xml:space="preserve">
     <value>txtExperimentFdr</value>
   </data>
@@ -771,9 +765,6 @@ They start as the document's, and the ones the search uses are added to the docu
   </data>
   <data name="txtProteinFdr.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
-  </data>
-  <data name="txtProteinFdr.Text" xml:space="preserve">
-    <value>0.01</value>
   </data>
   <data name="&gt;&gt;txtProteinFdr.Name" xml:space="preserve">
     <value>txtProteinFdr</value>

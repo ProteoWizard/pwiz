@@ -169,6 +169,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_EXPERIMENT_FDR = @"--experiment-fdr";
         public const string ARG_PROTEIN_FDR = @"--protein-fdr";
         public const string ARG_THREADS = @"--threads";
+        public const string ARG_CULTURE = @"--culture";
 
         public const string DEVICE_AUTO = @"auto";
         public const string RESOLUTION_HRAM = @"hram";
@@ -356,6 +357,10 @@ namespace pwiz.Skyline.Model.Lib
             AppendNumber(sb, ARG_EXPERIMENT_FDR, config.ExperimentFdr);
             AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
             AppendNumber(sb, ARG_THREADS, config.Threads);
+            // A child process starts in the OS culture, not Skyline's UI language, so Osprey is told
+            // which to write its messages in; the numbers above are invariant either way.
+            if (!string.IsNullOrEmpty(config.CultureName))
+                sb.Append(ARG_CULTURE).Append(' ').Append(config.CultureName).Append(' ');
 
             return sb.ToString().TrimEnd();
         }
@@ -506,5 +511,8 @@ namespace pwiz.Skyline.Model.Lib
         public int MaxVariableMods { get; set; } = 1;
         public IList<int> FixedModificationIds { get; set; } = new List<int>();
         public IList<int> VariableModificationIds { get; set; } = new List<int>();
+
+        /// <summary>The culture Osprey writes its messages in: Skyline's UI language, which the child would not inherit.</summary>
+        public string CultureName { get; set; }
     }
 }

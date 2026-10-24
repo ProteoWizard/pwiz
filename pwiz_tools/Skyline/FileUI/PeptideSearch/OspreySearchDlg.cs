@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -112,6 +113,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             IsHighResolution = true; // Sets the tolerance and its unit to the high-resolution defaults
             numThreads.Maximum = MAX_THREAD_COUNT;
             numThreads.Value = Math.Min(Environment.ProcessorCount, MAX_THREAD_COUNT);
+            // Set from a number, not resx text, so the decimal separator is the current culture's
+            RunFdr = ExperimentFdr = ProteinFdr = DEFAULT_FDR;
 
             InitializeModifications();
             UpdateExistingLibraryControls();
@@ -240,22 +243,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set => comboFragmentUnit.SelectedIndex = value ? 0 : 1;
         }
 
+        public const double DEFAULT_FDR = 0.01;
+
         public double RunFdr
         {
-            get => double.TryParse(txtRunFdr.Text, out var v) ? v : 0.01;
-            set => txtRunFdr.Text = value.ToString(@"G");
+            get => double.TryParse(txtRunFdr.Text, out var v) ? v : DEFAULT_FDR;
+            set => txtRunFdr.Text = value.ToString(CultureInfo.CurrentCulture);
         }
 
         public double ExperimentFdr
         {
-            get => double.TryParse(txtExperimentFdr.Text, out var v) ? v : 0.01;
-            set => txtExperimentFdr.Text = value.ToString(@"G");
+            get => double.TryParse(txtExperimentFdr.Text, out var v) ? v : DEFAULT_FDR;
+            set => txtExperimentFdr.Text = value.ToString(CultureInfo.CurrentCulture);
         }
 
         public double ProteinFdr
         {
-            get => double.TryParse(txtProteinFdr.Text, out var v) ? v : 0.01;
-            set => txtProteinFdr.Text = value.ToString(@"G");
+            get => double.TryParse(txtProteinFdr.Text, out var v) ? v : DEFAULT_FDR;
+            set => txtProteinFdr.Text = value.ToString(CultureInfo.CurrentCulture);
         }
 
         public const int MAX_THREAD_COUNT = 128;
@@ -303,7 +308,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MaxCharge = charges.Count > 0 ? charges.Max() : 3,
                 MaxVariableMods = peptideSettings.Modifications.MaxVariableMods,
                 FixedModificationIds = OspreyHelpers.GetCarafeModificationIds(FixedMods, out _),
-                VariableModificationIds = OspreyHelpers.GetCarafeModificationIds(VariableMods, out _)
+                VariableModificationIds = OspreyHelpers.GetCarafeModificationIds(VariableMods, out _),
+                CultureName = CultureInfo.CurrentUICulture.Name
             };
         }
 
