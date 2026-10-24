@@ -3683,6 +3683,11 @@ namespace pwiz.Skyline
             ShowDiannSearchDlg();
         }
 
+        private void ospreySearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowOspreySearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3844,6 +3849,65 @@ namespace pwiz.Skyline
                 return false; // user canceled
             }
             return true;
+        }
+
+        public void ShowOspreySearchDlg()
+        {
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            if (!EnsureOspreyInstalled())
+                return;
+
+            using (var dlg = new OspreySearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true once Osprey is installed: already present (the pinned package in the Tools
+        /// folder, or a registered search tool path), or downloaded now with the user's consent.
+        /// Osprey is Skyline's own tool - one zip, one pinned version, no licence - so the gate is a
+        /// confirmation naming the download size and a progress dialog, not a dialog of its own.
+        /// </summary>
+        private bool EnsureOspreyInstalled()
+        {
+            if (File.Exists(OspreyHelpers.OspreyBinary))
+                return true;
+
+            var choice = MultiButtonMsgDlg.Show(this,
+                string.Format(SkylineResources.SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_,
+                    OspreyHelpers.OSPREY_VERSION, OspreyHelpers.OSPREY_DOWNLOAD_SIZE_MB),
+                SkylineResources.SkylineWindow_EnsureOspreyInstalled_Download);
+            if (choice != DialogResult.OK)
+                return false;
+
+            try
+            {
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    longWaitDlg.Text = SkylineResources.SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey;
+                    longWaitDlg.PerformWork(this, 500, broker =>
+                        SimpleFileDownloader.DownloadRequiredFiles(OspreyHelpers.FilesToDownload, broker));
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, SkylineResources.SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_, x);
+                return false;
+            }
+            return File.Exists(OspreyHelpers.OspreyBinary);
         }
 
         public void ShowFeatureDetectionDlg()
