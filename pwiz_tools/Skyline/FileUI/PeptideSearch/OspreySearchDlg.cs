@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -283,6 +284,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DataFiles = DataFileResults.FoundResultsFiles.Select(f => f.Path).ToList(),
                 FastaPath = ImportFastaControl.FastaFile,
                 LibraryPath = UseExistingLibrary ? ExistingLibraryPath : null,
+                DecoysInLibrary = UseExistingLibrary && OspreyHelpers.LibraryHasDecoyPairs(ExistingLibraryPath),
                 OutputPath = OutputLibraryPath,
                 WorkDirectory = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath),
                 TorchRuntimesDirectory = ToolDescriptionHelpers.GetToolsDirectory(),
@@ -552,12 +554,58 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!UseExistingLibrary)
                 AddSearchModificationsToDocument();
 
+            if (!ReloadDocumentLibrary())
+                return;
+
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
                 ImportPeptideSearchDlg.Workflow.dia, DataFileResults.FoundResultsFiles,
                 ImportFastaControl.ImportSettings, new[] { blibPath });
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;
+        }
+
+        /// <summary>
+        /// A document that already had the document library (a re-run) still holds the Library
+        /// object loaded from the file Run deleted, which nothing reloads on its own: the library
+        /// manager's cache was released at Run, but the document's object stays loaded. So the
+        /// rewritten file is loaded here and put in the document in the old object's place, as the
+        /// library manager does when it reloads a library: no settings change, nothing to log or
+        /// undo. The Import Peptide Search wizard then finds the library in the document and
+        /// leaves it. Returns false when the library could not be loaded, after reporting it.
+        /// </summary>
+        private bool ReloadDocumentLibrary()
+        {
+            var docLibSpec = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .FirstOrDefault(s => s != null && s.IsDocumentLibrary);
+            if (docLibSpec == null)
+                return true;
+
+            Library libraryNew = null;
+            using (var longWait = new LongWaitDlg())
+            {
+                longWait.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
+                var status = longWait.PerformWork(this, 800, monitor =>
+                    libraryNew = _libraryManager.LoadLibrary(docLibSpec, () => new DefaultFileLoadMonitor(monitor)));
+                if (status.IsError)
+                {
+                    MessageDlg.ShowException(this, status.ErrorException);
+                    return false;
+                }
+            }
+            if (libraryNew == null)
+                return false;
+
+            SkylineWindow.ModifyDocumentNoUndo(doc => doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib =>
+            {
+                int i = lib.LibrarySpecs.IndexOf(docLibSpec);
+                if (i == -1 || ReferenceEquals(lib.Libraries[i], libraryNew))
+                    return lib;
+                var libraries = new List<Library>(lib.Libraries);
+                libraries[i] = libraryNew;
+                return lib.ChangeLibraries(libraries);
+            })));
+            return true;
         }
 
         /// <summary>

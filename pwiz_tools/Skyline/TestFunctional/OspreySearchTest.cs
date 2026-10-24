@@ -41,7 +41,9 @@ namespace pwiz.SkylineTestFunctional
     /// synthetic protein FASTA whose records are the subset library's tryptic peptides, so Osprey
     /// predicts a small library from the FASTA with Carafe and searches it in a minute or two.
     /// Finish hands the .blib Osprey wrote to the Import Peptide Search wizard as the document
-    /// library, and the DIA pages import the runs.
+    /// library, and the DIA pages import the runs. A second run on the same document then
+    /// searches the library the first run predicted, in place of predicting one, overwriting the
+    /// document library with the user's consent.
     /// </summary>
     [TestClass]
     public class OspreySearchTest : AbstractFunctionalTestEx
@@ -51,6 +53,15 @@ namespace pwiz.SkylineTestFunctional
         /// looks for an Osprey build beside the Skyline source and then downloads the pinned package.
         /// </summary>
         public const string ENV_OSPREY_EXE = @"SKYLINE_TEST_OSPREY_EXE";
+
+        /// <summary>
+        /// Osprey names the library it predicts from the FASTA after the output, in the working
+        /// folder: &lt;output stem&gt;.predicted.blib.
+        /// </summary>
+        private const string PREDICTED_LIBRARY_SUFFIX = @".predicted";
+
+        private const string WIZARD_LOG_FIRST_RUN = @"OspreySearchControlLog.txt";
+        private const string WIZARD_LOG_SECOND_RUN = @"OspreySearchControlLog-rerun.txt";
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -75,52 +86,162 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
 
             RegisterOsprey(ospreyExe);
-            var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
 
             string fastaFilepath = TestFilesDir.GetTestPath("stellar-subset-proteins.fasta");
             string[] diaFilePaths = Directory.GetFiles(TestFilesDir.FullPath, "*.mzML").OrderBy(p => p).ToArray();
             AssertEx.AreEqual(3, diaFilePaths.Length);
+            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
+            string workDir = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath);
 
-            // Page 0: data files
-            RunUI(() => AssertEx.AreEqual(OspreySearchDlg.Pages.data_files_page, searchDlg.CurrentPage));
-            RunUI(() => searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
-                .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileNameWithoutExtension(p), p)).ToArray());
-
-            // Page 1: FASTA - the library is predicted from it; the existing-library alternative is off
-            RunUI(searchDlg.NextPage);
+            // The first run: the library is predicted from the FASTA; the existing-library
+            // alternative is off.
+            var searchDlg = OpenWizardOnFastaPage(diaFilePaths);
             RunUI(() =>
             {
-                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
                 AssertEx.IsFalse(searchDlg.UseExistingLibrary);
                 searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
             });
+            AdvanceToSearchSettings(searchDlg);
+            VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, null);
+            RunSearch(searchDlg, docBlibPath, workDir, WIZARD_LOG_FIRST_RUN);
+            FinishImport(searchDlg, diaFilePaths, docBlibPath);
 
-            // Page 2: modifications - the document's (Carbamidomethyl C fixed)
-            RunUI(searchDlg.NextPage);
+            // The second run, on the document the first one made: Osprey searches the library
+            // it predicted in the first run, and overwrites the document library.
+            string predictedLibraryPath = Path.Combine(workDir,
+                Path.GetFileNameWithoutExtension(SkylineWindow.DocumentFilePath) + PREDICTED_LIBRARY_SUFFIX + BiblioSpecLiteSpec.EXT);
+            AssertEx.FileExists(predictedLibraryPath, @"the first run did not leave its predicted library in the working folder");
+            var libraryBefore = GetDocumentLibrary();
+
+            searchDlg = OpenWizardOnFastaPage(diaFilePaths);
             RunUI(() =>
             {
+                searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
+                searchDlg.UseExistingLibrary = true;
+                // The document library is the search's output, so it is refused as the input.
+                searchDlg.ExistingLibraryPath = docBlibPath;
+            });
+            var refusal = ShowDialog<MessageDlg>(searchDlg.NextPage);
+            AssertEx.AreEqual(string.Format(
+                PeptideSearchResources.OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_,
+                docBlibPath), refusal.Message);
+            OkDialog(refusal, refusal.OkDialog);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
+                searchDlg.ExistingLibraryPath = predictedLibraryPath;
+            });
+            AdvanceToSearchSettings(searchDlg);
+            VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, predictedLibraryPath);
+            RunSearch(searchDlg, docBlibPath, workDir, WIZARD_LOG_SECOND_RUN);
+            FinishImport(searchDlg, diaFilePaths, docBlibPath);
+
+            // The document reads the library Osprey rewrote, not the one it loaded before the
+            // overwrite: the second run replaces the document's Library object.
+            AssertEx.IsFalse(ReferenceEquals(libraryBefore, GetDocumentLibrary()),
+                @"the document still holds the library object loaded before the overwrite");
+        }
+
+        /// <summary>
+        /// Opens the wizard, fills the data files page with <paramref name="diaFilePaths"/> and
+        /// moves to the FASTA page.
+        /// </summary>
+        private OspreySearchDlg OpenWizardOnFastaPage(string[] diaFilePaths)
+        {
+            var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(OspreySearchDlg.Pages.data_files_page, searchDlg.CurrentPage);
+                searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
+                    .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileNameWithoutExtension(p), p)).ToArray();
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
+            });
+            return searchDlg;
+        }
+
+        /// <summary>
+        /// From the FASTA page through the modifications page (the document's: Carbamidomethyl C
+        /// fixed) to the search settings page, set for the Stellar subset's unit resolution.
+        /// </summary>
+        private static void AdvanceToSearchSettings(OspreySearchDlg searchDlg)
+        {
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
                 AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage);
                 AssertEx.AreEqual(1, searchDlg.FixedMods.Count());
                 AssertEx.AreEqual(0, searchDlg.VariableMods.Count());
-            });
 
-            // Page 3: search settings - the Stellar subset is unit resolution
-            RunUI(searchDlg.NextPage);
-            RunUI(() =>
-            {
+                searchDlg.NextPage();
                 AssertEx.AreEqual(OspreySearchDlg.Pages.search_settings_page, searchDlg.CurrentPage);
                 searchDlg.IsHighResolution = false;
                 AssertEx.IsFalse(searchDlg.IsFragmentTolerancePpm);
                 searchDlg.Threads = Environment.ProcessorCount;
             });
-            VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths);
+        }
 
-            // Page 4: run, and wait for Osprey; the progress bar must have moved, which is the
-            // "NN%" lines of Osprey's progress reporter parsing through ProcessRunner. Subscribe
-            // before Run, so an Osprey that fails at once cannot finish before the subscription.
+        /// <summary>
+        /// The command line the wizard builds, checked before the search runs: the one command
+        /// from the FASTA with the document's digest settings, or from
+        /// <paramref name="existingLibraryPath"/> with no library-build options at all, and the
+        /// document library as the output either way.
+        /// </summary>
+        private void VerifyCommandLine(OspreySearchDlg searchDlg, string fastaFilepath, string[] diaFilePaths, string existingLibraryPath)
+        {
+            OspreyConfig config = null;
+            RunUI(() => config = searchDlg.GetSearchConfig());
+            string commandLine = OspreyHelpers.BuildCommandLine(config);
+            if (existingLibraryPath == null)
+            {
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_FASTA + @" " + fastaFilepath.Quote());
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_AUTO);
+                AssertEx.Contains(commandLine, @"--fix-mod 1 ");  // Carafe's Carbamidomethyl of C
+                AssertEx.Contains(commandLine, @"--var-mod 0 ");  // Carafe's spelling of none
+                AssertEx.Contains(commandLine, @"--enzyme 1 ");   // Carafe's Trypsin, matched on behavior
+                AssertEx.Contains(commandLine, @"--min-pep-charge 2 ", @"--max-pep-charge 3 "); // The DIA defaults for a default document
+                AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_LIBRARY + @" "));
+            }
+            else
+            {
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_LIBRARY + @" " + existingLibraryPath.Quote());
+                // The predicted library pairs its decoys with their targets, so Osprey searches with them.
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_DECOYS_IN_LIBRARY);
+                AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_FASTA + @" "));
+                AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_DEVICE + @" "));
+                AssertEx.IsFalse(commandLine.Contains(@"--enzyme "));
+            }
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_OUTPUT + @" " +
+                BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath).Quote());
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_RESOLUTION + @" " + OspreyHelpers.RESOLUTION_UNIT);
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_FRAGMENT_UNIT + @" " + OspreyHelpers.FRAGMENT_UNIT_MZ);
+            foreach (var path in diaFilePaths)
+                AssertEx.Contains(commandLine, path.Quote());
+        }
+
+        /// <summary>
+        /// Run from the search settings page and wait for Osprey. When the document library exists
+        /// already (a re-run), Run asks before overwriting it. The progress bar must have moved,
+        /// which is the "NN%" lines of Osprey's progress reporter parsing through ProcessRunner.
+        /// The wizard's log is saved as <paramref name="logName"/> whether the search succeeds or not.
+        /// </summary>
+        private void RunSearch(OspreySearchDlg searchDlg, string docBlibPath, string workDir, string logName)
+        {
+            // Subscribe before Run, so an Osprey that fails at once cannot finish before the subscription.
             bool? searchSucceeded = null;
             searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
-            RunUI(searchDlg.NextPage);
+            if (File.Exists(docBlibPath))
+            {
+                var overwritePrompt = ShowDialog<MultiButtonMsgDlg>(searchDlg.NextPage);
+                AssertEx.AreEqual(string.Format(
+                    PeptideSearchResources.OspreySearchDlg_StartSearch_The_document_library__0__already_exists__Overwrite_it_with_the_results_of_this_search_,
+                    docBlibPath), overwritePrompt.Message);
+                OkDialog(overwritePrompt, overwritePrompt.ClickOk); // The Overwrite button
+            }
+            else
+            {
+                RunUI(searchDlg.NextPage);
+            }
             int maxPercent = 0;
             try
             {
@@ -133,18 +254,23 @@ namespace pwiz.SkylineTestFunctional
             }
             finally
             {
-                File.WriteAllText(TestFilesDir.GetTestPath("OspreySearchControlLog.txt"), searchDlg.SearchControl.LogText);
+                File.WriteAllText(TestFilesDir.GetTestPath(logName), searchDlg.SearchControl.LogText);
             }
             AssertEx.IsTrue(maxPercent > 0, @"Osprey's progress lines did not advance the progress bar");
 
-            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
             AssertEx.AreEqual(docBlibPath, searchDlg.SearchControl.OutputLibraryPath);
             AssertEx.FileExists(docBlibPath);
-            string workDir = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath);
             AssertEx.FileExists(Path.Combine(workDir, OspreyHelpers.STDOUT_LOG_NAME));
+        }
 
-            // Finish: the Import Peptide Search wizard opens on its existing-library route, past the
-            // library page, with the searched runs on the chromatograms page.
+        /// <summary>
+        /// Finish: the Import Peptide Search wizard opens on its existing-library route, past the
+        /// library page, with the searched runs on the chromatograms page, and its DIA pages add
+        /// the library's peptides and import the runs. Ends with the document saved and the
+        /// wizard closed, so another run can start from it.
+        /// </summary>
+        private void FinishImport(OspreySearchDlg searchDlg, string[] diaFilePaths, string docBlibPath)
+        {
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
             RunUI(() =>
@@ -158,9 +284,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // The library is the document library, as a BlibBuild result would be.
-            var docLibSpec = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.FirstOrDefault(s => s.IsDocumentLibrary);
-            Assert.IsNotNull(docLibSpec, @"Osprey's library was not added as the document library");
-            AssertEx.AreEqual(docBlibPath, docLibSpec.FilePath);
+            VerifyDocumentLibrary(docBlibPath);
 
             // Three files share a common prefix and suffix, so the wizard offers to shorten the names.
             var removePrefix = ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
@@ -186,37 +310,38 @@ namespace pwiz.SkylineTestFunctional
             {
                 OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
             }
+            WaitForClosedForm(importPeptideSearchDlg);
+            WaitForClosedForm(searchDlg);
             WaitForDocumentLoaded();
 
             var doc = SkylineWindow.Document;
             AssertEx.IsTrue(doc.PeptideCount > 0, @"no peptides matched the Osprey library");
             AssertEx.IsTrue(doc.Settings.HasResults);
             AssertEx.AreEqual(diaFilePaths.Length, doc.Settings.MeasuredResults.Chromatograms.Count);
+            VerifyDocumentLibrary(docBlibPath);
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
         /// <summary>
-        /// The command line the wizard builds, checked before the search runs: the one command
-        /// from the FASTA, the document library as the output, and the document's digest settings.
+        /// The document has exactly one document library, at <paramref name="docBlibPath"/>, and
+        /// the Library object it holds is the one the library manager loaded from that file.
         /// </summary>
-        private void VerifyCommandLine(OspreySearchDlg searchDlg, string fastaFilepath, string[] diaFilePaths)
+        private void VerifyDocumentLibrary(string docBlibPath)
         {
-            OspreyConfig config = null;
-            RunUI(() => config = searchDlg.GetSearchConfig());
-            string commandLine = OspreyHelpers.BuildCommandLine(config);
-            AssertEx.Contains(commandLine, OspreyHelpers.ARG_FASTA + @" " + fastaFilepath.Quote());
-            AssertEx.Contains(commandLine, OspreyHelpers.ARG_OUTPUT + @" " +
-                BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath).Quote());
-            AssertEx.Contains(commandLine, OspreyHelpers.ARG_RESOLUTION + @" " + OspreyHelpers.RESOLUTION_UNIT);
-            AssertEx.Contains(commandLine, OspreyHelpers.ARG_FRAGMENT_UNIT + @" " + OspreyHelpers.FRAGMENT_UNIT_MZ);
-            AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_AUTO);
-            AssertEx.Contains(commandLine, @"--fix-mod 1 ");  // Carafe's Carbamidomethyl of C
-            AssertEx.Contains(commandLine, @"--var-mod 0 ");  // Carafe's spelling of none
-            AssertEx.Contains(commandLine, @"--enzyme 1 ");   // Carafe's Trypsin, matched on behavior
-            AssertEx.Contains(commandLine, @"--min-pep-charge 2 ", @"--max-pep-charge 3 "); // The DIA defaults for a default document
-            AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_LIBRARY + @" "));
-            foreach (var path in diaFilePaths)
-                AssertEx.Contains(commandLine, path.Quote());
+            var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            var docLibSpecs = libraries.LibrarySpecs.Where(s => s.IsDocumentLibrary).ToArray();
+            AssertEx.AreEqual(1, docLibSpecs.Length, @"expected exactly one document library");
+            AssertEx.AreEqual(docBlibPath, docLibSpecs[0].FilePath);
+            var docLib = GetDocumentLibrary();
+            Assert.IsNotNull(docLib, @"the document library is not loaded");
+            AssertEx.IsTrue(ReferenceEquals(docLib, SkylineWindow.LibraryManager.TryGetLibrary(docLibSpecs[0])),
+                @"the document's library object is not the one the library manager holds for its file");
+        }
+
+        private Library GetDocumentLibrary()
+        {
+            var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            return libraries.TryGetDocumentLibrary(out var docLib) ? docLib : null;
         }
 
         private void PrepareDocument(string documentFile)

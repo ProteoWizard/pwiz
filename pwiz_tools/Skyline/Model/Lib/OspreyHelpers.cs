@@ -25,7 +25,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
@@ -99,6 +101,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_INPUT = @"-i";
         public const string ARG_FASTA = @"--fasta";
         public const string ARG_LIBRARY = @"-l";
+        public const string ARG_DECOYS_IN_LIBRARY = @"--decoys-in-library";
         public const string ARG_OUTPUT = @"-o";
         public const string ARG_WORK_DIR = @"--work-dir";
         public const string ARG_TORCH_RUNTIMES = @"--torch-runtimes";
@@ -141,6 +144,30 @@ namespace pwiz.Skyline.Model.Lib
         {
             string dir = Path.GetDirectoryName(documentPath) ?? string.Empty;
             return Path.Combine(dir, Path.GetFileNameWithoutExtension(documentPath) + WORK_DIR_SUFFIX);
+        }
+
+        /// <summary>
+        /// True when the .blib at <paramref name="libraryPath"/> carries the DecoyPairs table Osprey
+        /// and CarafeSharp write, which pairs each decoy with its target: the one case Osprey can
+        /// search a library's own decoys (<c>--decoys-in-library</c>), as it does the library it
+        /// predicts itself. Without the table Osprey generates decoys, and the flag would be refused.
+        /// False for a library that cannot be opened, so the question is Osprey's to answer.
+        /// </summary>
+        public static bool LibraryHasDecoyPairs(string libraryPath)
+        {
+            if (string.IsNullOrEmpty(libraryPath) || !PathEx.HasExtension(libraryPath, BiblioSpecLiteSpec.EXT) || !File.Exists(libraryPath))
+                return false;
+            try
+            {
+                using (var connection = SqliteOperations.OpenConnection(libraryPath))
+                {
+                    return SqliteOperations.TableExists(connection, BlibSchema.TABLE_DECOY_PAIRS);
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -254,6 +281,8 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(config.LibraryPath))
             {
                 sb.Append(ARG_LIBRARY).Append(' ').Append(config.LibraryPath.Quote()).Append(' ');
+                if (config.DecoysInLibrary)
+                    sb.Append(ARG_DECOYS_IN_LIBRARY).Append(' ');
             }
             else
             {
@@ -387,6 +416,12 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>An existing library to search in place of predicting one; null predicts from <see cref="FastaPath"/>.</summary>
         public string LibraryPath { get; set; }
+
+        /// <summary>
+        /// Whether <see cref="LibraryPath"/> supplies its own paired decoys (its DecoyPairs table), so
+        /// Osprey uses them in place of generating decoys, as it does for the library it predicts.
+        /// </summary>
+        public bool DecoysInLibrary { get; set; }
 
         public string OutputPath { get; set; }
         public string WorkDirectory { get; set; }
