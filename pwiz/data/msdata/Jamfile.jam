@@ -54,6 +54,7 @@ lib pwiz_data_msdata_core
         Serializer_mzML.cpp
         SpectrumInfo.cpp
         SpectrumIterator.cpp
+        SpectrumList_IgnoreCalibrationScans.cpp
         SpectrumList_mzML.cpp
         SpectrumListBase.cpp
         SpectrumListCache.cpp
@@ -134,6 +135,7 @@ unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_msdata_examples ; # Diff.c
 unit-test-if-exists MSDataMergerTest : MSDataMergerTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_msdata ; # References.cpp MSData.cpp cv.cpp ;
 unit-test-if-exists IOTest : IOTest.cpp pwiz_data_msdata ; # IO.cpp MSData.cpp Diff.cpp cv.cpp References.cpp BinaryDataEncoder.cpp ../minimxml ../util ;
+unit-test-if-exists SpectrumList_IgnoreCalibrationScansTest : SpectrumList_IgnoreCalibrationScansTest.cpp pwiz_data_msdata ;
 unit-test-if-exists SpectrumList_mzML_Test : SpectrumList_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzML.cpp examples.cpp Serializer_mzML.cpp  References.cpp IO.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../minimxml ../util ;
 unit-test-if-exists ChromatogramList_mzML_Test : ChromatogramList_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # ChromatogramList_mzML.cpp examples.cpp Serializer_mzML.cpp  References.cpp IO.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../minimxml ../util ;
 unit-test-if-exists Serializer_mzML_Test : Serializer_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzML.cpp examples.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../util ../minimxml ;
