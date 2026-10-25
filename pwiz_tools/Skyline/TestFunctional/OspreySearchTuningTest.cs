@@ -24,9 +24,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
+using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
@@ -105,12 +107,15 @@ namespace pwiz.SkylineTestFunctional
             var searchDlg = OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
             RunUI(() =>
             {
-                // The defaults: the pretrained models, used as they are, and no tuning runs
+                // The defaults: the pretrained models, used as they are, no tuning runs, and the CPU
+                // (a test's Tools folder has no CUDA runtime)
                 AssertEx.IsTrue(searchDlg.UseExistingModel);
                 AssertEx.IsTrue(searchDlg.Model.IsDefault);
                 AssertEx.AreEqual(0, searchDlg.TuningFileItems.Count);
-                searchDlg.UseExistingModel = false;
+                AssertEx.IsFalse(searchDlg.UseGpu);
             });
+            VerifyUseGpu(searchDlg);
+            RunUI(() => searchDlg.UseExistingModel = false);
             ShowAndDismissMessage(searchDlg, PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_);
 
             RunUI(() =>
@@ -266,6 +271,37 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
             });
             return searchDlg;
+        }
+
+        /// <summary>
+        /// Use GPU applies to both choices on the page: without an NVIDIA GPU, checking it says so and
+        /// it stays unchecked; with one but no CUDA runtime in the runtimes folder, it offers the
+        /// download first and stays unchecked when that is declined. Ends with the wizard's own
+        /// runtimes back in place.
+        /// </summary>
+        private void VerifyUseGpu(OspreySearchDlg searchDlg)
+        {
+            RunUI(() => searchDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null });
+            var noGpuDlg = ShowDialog<MessageDlg>(() => searchDlg.UseGpu = true);
+            AssertEx.AreEqual(ModelResources.TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver_,
+                noGpuDlg.Message);
+            OkDialog(noGpuDlg, noGpuDlg.OkDialog);
+            RunUI(() =>
+            {
+                AssertEx.IsFalse(searchDlg.UseGpu);
+                searchDlg.TorchRuntimes = new TorchRuntimes
+                {
+                    CudaDriver = new CudaDriver(12080, 89, @"Test GPU"),
+                    RuntimesDirectory = TestFilesDir.GetTestPath(@"libtorch")
+                };
+            });
+            var downloadDlg = ShowDialog<MultiButtonMsgDlg>(() => searchDlg.UseGpu = true);
+            OkDialog(downloadDlg, downloadDlg.BtnCancelClick);
+            RunUI(() =>
+            {
+                AssertEx.IsFalse(searchDlg.UseGpu);
+                searchDlg.TorchRuntimes = new TorchRuntimes();
+            });
         }
 
         /// <summary>Next refuses with <paramref name="message"/> and stays on the Library Model page.</summary>

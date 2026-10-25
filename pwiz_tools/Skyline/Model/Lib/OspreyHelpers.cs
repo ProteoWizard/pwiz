@@ -173,7 +173,11 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_THREADS = @"--threads";
         public const string ARG_CULTURE = @"--culture";
 
+        // Osprey's --device: gpu and cpu are requirements (a run that cannot predict on the GPU
+        // fails); auto takes the GPU when the CUDA runtime is installed, else the CPU.
         public const string DEVICE_AUTO = @"auto";
+        public const string DEVICE_GPU = @"gpu";
+        public const string DEVICE_CPU = @"cpu";
         public const string RESOLUTION_HRAM = @"hram";
         public const string RESOLUTION_UNIT = @"unit";
         public const string FRAGMENT_UNIT_PPM = @"ppm";
@@ -538,10 +542,13 @@ namespace pwiz.Skyline.Model.Lib
         public string OutputPath { get; set; }
         public string WorkDirectory { get; set; }
 
-        /// <summary>Skyline's Tools folder, where its own CUDA runtime install lives, if any.</summary>
+        /// <summary>The folder Osprey finds the CUDA runtime in: Skyline's Tools folder, where its own install lives, if any.</summary>
         public string TorchRuntimesDirectory { get; set; }
 
-        /// <summary>auto lets Osprey use the GPU when a CUDA runtime is installed in <see cref="TorchRuntimesDirectory"/>.</summary>
+        /// <summary>
+        /// gpu predicts on the GPU with the CUDA runtime in <see cref="TorchRuntimesDirectory"/> and
+        /// fails without it; cpu predicts on the CPU; auto takes the GPU when the runtime is installed.
+        /// </summary>
         public string Device { get; set; } = OspreyHelpers.DEVICE_AUTO;
 
         public string Resolution { get; set; } = OspreyHelpers.RESOLUTION_HRAM;

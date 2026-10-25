@@ -26,23 +26,30 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestFunctional;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
 {
     /// <summary>
-    /// The Osprey Search wizard's Library Model page at real-data scale: the three Stellar HeLa sDIA
-    /// runs (1.5 GB of mzML each) searched against the filtered HeLa FASTA, with a model fine-tuned
-    /// on the middle run chosen from the searched files; then the outer runs searched with the middle
-    /// run browsed in and held out of the search, which must train the same model tensor for tensor;
-    /// then the three runs searched with the saved model. OspreySearchTuningTest covers the page's
-    /// behavior on Osprey's subset in a minute or two; this is the run as a user makes it, where a
-    /// run searched alone keeps enough precursors to tune on.
+    /// The Osprey Search wizard's Library Model page at real-data scale: the two outer Stellar HeLa
+    /// sDIA runs (1.5 GB of mzML each) searched against the filtered HeLa FASTA with a model fine-tuned
+    /// on the middle run, browsed in and held out of the search; then the three runs searched with the
+    /// saved model. OspreySearchTuningTest covers the page's behavior on Osprey's subset in a minute,
+    /// where a run searched alone keeps nothing to tune on; this is the run as a user makes it, with
+    /// one fine-tune, on the GPU when <see cref="ENV_TORCH_RUNTIMES"/> names a CUDA runtime.
     /// </summary>
     [TestClass]
     public class OspreySearchPerfTest : AbstractFunctionalTestEx
     {
+        /// <summary>
+        /// Names a folder holding a <c>torch\</c> CUDA runtime (Osprey's own <c>%LOCALAPPDATA%\Osprey</c>,
+        /// say), so the test predicts on the GPU; unset, the test's Tools folder has none and Osprey
+        /// predicts on the CPU, where the fine-tune takes about ten minutes.
+        /// </summary>
+        public const string ENV_TORCH_RUNTIMES = @"SKYLINE_TEST_OSPREY_TORCH_RUNTIMES";
+
         private const string ZIP_NAME = @"osprey-testfiles-mzML-v2";
         private const string STELLAR_DIR = @"stellar";
         private const string FASTA_NAME = @"hela-filtered.fasta";
@@ -98,55 +105,23 @@ namespace TestPerf
             string middleRun = diaFilePaths[1];
             string[] outerRuns = { diaFilePaths[0], diaFilePaths[2] };
 
-            // Scenario 1: the three runs searched, and the model tuned on the middle run, chosen
-            // from the searched files.
-            OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest.sky"));
-            var modelFromSearched = TuneOnSearchedRun(diaFilePaths, middleRun, fastaFilepath);
-
-            // Scenario 2: the outer runs searched, and the model tuned on the middle run, browsed
-            // in, so it is held out of the search. The same run trains the same tensors.
+            // The outer runs searched, and the model tuned on the middle run, browsed in, so it is
+            // held out of the search. (Tuning on it as one of three searched files is the same tuning
+            // through the other list; OspreySearchTuningTest covers that list, and a second fine-tune
+            // here would double the run.)
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest-heldout.sky"));
-            var modelFromBrowsed = TuneOnHeldOutRun(outerRuns, middleRun, fastaFilepath);
-            OspreySearchTuningTest.AssertSameModelTensors(modelFromSearched.FilePath, modelFromBrowsed.FilePath);
+            var tunedModel = TuneOnHeldOutRun(outerRuns, middleRun, fastaFilepath);
 
-            // Scenario 3: the three runs searched with the saved model from scenario 1.
+            // The three runs searched with the saved model: a model tuned on one run serving a search
+            // of all three, with no training.
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest-saved.sky"));
-            SearchWithSavedModel(diaFilePaths, fastaFilepath, modelFromSearched);
+            SearchWithSavedModel(diaFilePaths, fastaFilepath, tunedModel);
         }
 
         /// <summary>A file of the persistent data folder, extracted in place beside the zip.</summary>
         private string GetDataPath(string fileName)
         {
             return TestFilesDir.GetTestPath(Path.Combine(ZIP_NAME, STELLAR_DIR, fileName));
-        }
-
-        /// <summary>
-        /// "Choose from the searched files" lists the searched runs unchecked; the one checked run
-        /// is tuned on, and names the model by default.
-        /// </summary>
-        private CarafeModelSpec TuneOnSearchedRun(string[] diaFilePaths, string tuningRun, string fastaFilepath)
-        {
-            string docPath = SkylineWindow.DocumentFilePath;
-            string modelName = OspreySearchTuningTest.GetDefaultModelName(docPath, tuningRun);
-            var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
-            RunUI(() =>
-            {
-                AssertEx.IsTrue(searchDlg.UseExistingModel);
-                AssertEx.IsTrue(searchDlg.Model.IsDefault);
-                searchDlg.UseExistingModel = false;
-                searchDlg.ChooseFromSearchedFiles = true;
-                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFileItems);
-                AssertEx.AreEqual(0, searchDlg.TuningFiles.Count);
-                searchDlg.SetTuningFileChecked(tuningRun, true);
-                AssertEx.AreEqualDeep(new[] { tuningRun }, searchDlg.TuningFiles);
-                AssertEx.AreEqual(modelName, searchDlg.ModelName);
-            });
-            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg,diaFilePaths, new[] { tuningRun }, null);
-            var spec = OspreySearchTuningTest.RunTuningSearch(searchDlg, modelName,
-                TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), SEARCH_TIMEOUT_MILLIS);
-            FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
-            return spec;
         }
 
         /// <summary>
@@ -160,14 +135,18 @@ namespace TestPerf
             var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(searchedRuns, fastaFilepath);
             RunUI(() =>
             {
+                AssertEx.IsTrue(searchDlg.UseExistingModel);
+                AssertEx.IsTrue(searchDlg.Model.IsDefault);
                 searchDlg.UseExistingModel = false;
                 searchDlg.AddTuningFiles(new[] { tuningRun });
                 AssertEx.AreEqualDeep(new[] { tuningRun }, searchDlg.TuningFileItems);
                 AssertEx.AreEqualDeep(new[] { tuningRun }, searchDlg.TuningFiles);
                 AssertEx.AreEqual(modelName, searchDlg.ModelName);
             });
+            ChooseDevice(searchDlg);
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg,searchedRuns, new[] { tuningRun }, null);
+            OspreySearchTuningTest.VerifyCommandLine(searchDlg, searchedRuns, new[] { tuningRun }, null);
+            VerifyDevice(searchDlg);
             var spec = OspreySearchTuningTest.RunTuningSearch(searchDlg, modelName,
                 TestFilesDir.GetTestPath("OspreySearchControlLog-heldout.txt"), SEARCH_TIMEOUT_MILLIS);
             FinishImport(searchDlg, searchedRuns, docPath, MIN_SPECTRA_TWO_RUNS);
@@ -181,20 +160,65 @@ namespace TestPerf
             var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
             RunUI(() =>
             {
-                // The pretrained default and the two models the tuning searches saved
-                AssertEx.AreEqual(3, Settings.Default.CarafeModelList.Count);
+                // The pretrained default and the model the tuning search saved
+                AssertEx.AreEqual(2, Settings.Default.CarafeModelList.Count);
                 searchDlg.Model = savedModel;
                 AssertEx.AreEqual(savedModel.FilePath, searchDlg.Model.FilePath);
                 AssertEx.IsTrue(searchDlg.UseExistingModel);
             });
+            ChooseDevice(searchDlg);
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg,diaFilePaths, null, savedModel.FilePath);
+            OspreySearchTuningTest.VerifyCommandLine(searchDlg, diaFilePaths, null, savedModel.FilePath);
+            VerifyDevice(searchDlg);
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
             string workDir = OspreyHelpers.GetWorkDirectory(docPath);
             OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir,
                 TestFilesDir.GetTestPath("OspreySearchControlLog-saved.txt"), SEARCH_TIMEOUT_MILLIS);
             AssertEx.IsFalse(File.Exists(OspreyHelpers.GetTunedModelPath(docBlibPath, workDir)), @"a search with a saved model wrote a model");
             FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
+        }
+
+        /// <summary>The folder <see cref="ENV_TORCH_RUNTIMES"/> names, or null for the test's own Tools folder and the CPU.</summary>
+        private static string TorchRuntimesDirectory
+        {
+            get
+            {
+                string directory = Environment.GetEnvironmentVariable(ENV_TORCH_RUNTIMES);
+                return string.IsNullOrEmpty(directory) ? null : directory;
+            }
+        }
+
+        /// <summary>
+        /// On the Library Model page: with <see cref="ENV_TORCH_RUNTIMES"/> set, points the wizard at
+        /// that runtimes folder and checks Use GPU, which must then stay checked (the folder holds the
+        /// runtime and this computer's GPU can use it); otherwise leaves the CPU default alone.
+        /// </summary>
+        private static void ChooseDevice(OspreySearchDlg searchDlg)
+        {
+            string directory = TorchRuntimesDirectory;
+            if (directory == null)
+                return;
+            RunUI(() =>
+            {
+                var runtimes = new TorchRuntimes { RuntimesDirectory = directory };
+                AssertEx.IsTrue(runtimes.CanUseCuda, ENV_TORCH_RUNTIMES + @" is set but this computer's GPU cannot predict: " + runtimes.GetCudaUnavailableReason());
+                AssertEx.IsTrue(runtimes.IsCudaInstalled, ENV_TORCH_RUNTIMES + @" names a folder without the CUDA runtime: " + directory);
+                searchDlg.TorchRuntimes = runtimes;
+                searchDlg.UseGpu = true;
+                AssertEx.IsTrue(searchDlg.UseGpu);
+            });
+        }
+
+        /// <summary>The command names the device chosen and, on the GPU, the runtimes folder the variable named.</summary>
+        private static void VerifyDevice(OspreySearchDlg searchDlg)
+        {
+            OspreyConfig config = null;
+            RunUI(() => config = searchDlg.GetSearchConfig());
+            string commandLine = OspreyHelpers.BuildCommandLine(config);
+            string directory = TorchRuntimesDirectory;
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + (directory != null ? OspreyHelpers.DEVICE_GPU : OspreyHelpers.DEVICE_CPU) + @" ");
+            if (directory != null)
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_TORCH_RUNTIMES + @" " + directory.Quote() + @" ");
         }
 
         /// <summary>

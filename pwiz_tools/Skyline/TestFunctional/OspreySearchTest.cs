@@ -214,7 +214,8 @@ namespace pwiz.SkylineTestFunctional
             if (existingLibraryPath == null)
             {
                 AssertEx.Contains(commandLine, OspreyHelpers.ARG_FASTA + @" " + fastaFilepath.Quote());
-                AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_AUTO);
+                // A test's Tools folder has no CUDA runtime, so Use GPU starts unchecked
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_CPU);
                 AssertEx.Contains(commandLine, @"--fix-mod 1 ");  // Carafe's Carbamidomethyl of C
                 AssertEx.Contains(commandLine, @"--var-mod 0 ");  // Carafe's spelling of none
                 AssertEx.Contains(commandLine, @"--enzyme 1 ");   // Carafe's Trypsin, matched on behavior

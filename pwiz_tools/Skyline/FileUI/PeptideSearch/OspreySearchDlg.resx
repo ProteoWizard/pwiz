@@ -397,6 +397,30 @@ A model fine-tuned on runs like these predicts them better; a model this search 
   <data name="&gt;&gt;comboModel.Parent" xml:space="preserve">
     <value>libraryModelPage</value>
   </data>
+  <data name="cbUseGpu.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseGpu.Location" type="System.Drawing.Point, System.Drawing">
+    <value>520, 80</value>
+  </data>
+  <data name="cbUseGpu.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 17</value>
+  </data>
+  <data name="cbUseGpu.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="cbUseGpu.Text" xml:space="preserve">
+    <value>Use &amp;GPU</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Name" xml:space="preserve">
+    <value>cbUseGpu</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
   <data name="radioUseExistingModel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>

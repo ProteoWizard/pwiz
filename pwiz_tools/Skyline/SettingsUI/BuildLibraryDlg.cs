@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
-using pwiz.CarafeSharp.Models;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -104,13 +103,15 @@ namespace pwiz.Skyline.SettingsUI
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
 
-        private TorchRuntimes _torchRuntimes;
-        private bool _updatingUseGpu;
+        private readonly UseGpuDriver _useGpuDriver;
         private SettingsListComboDriver<CarafeModelSpec> _driverCarafeModel;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+
+            // Prediction runs in this process, so the choice closes once a runtime is loaded
+            _useGpuDriver = new UseGpuDriver(this, cbUseGpu, true);
 
             Icon = Resources.Skyline;
 
@@ -311,8 +312,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             Builder = builder;
             // Not when this session already loaded a runtime, which decides the box
-            if (TorchRuntimes.CanChooseRuntime)
-                Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
+            _useGpuDriver.SaveSetting();
 
             return true;
         }
@@ -322,12 +322,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public TorchRuntimes TorchRuntimes
         {
-            get { return _torchRuntimes ??= new TorchRuntimes(); }
-            set
-            {
-                _torchRuntimes = value;
-                UpdateUseGpu();
-            }
+            get { return _useGpuDriver.TorchRuntimes; }
+            set { _useGpuDriver.TorchRuntimes = value; }
         }
 
         /// <summary>
@@ -336,107 +332,13 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool UseGpu
         {
-            get { return cbUseGpu.Checked; }
-            set { cbUseGpu.Checked = value; }
-        }
-
-        /// <summary>
-        /// Shows the runtime this session already predicted with, which it cannot change, or else checks
-        /// Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is installed.
-        /// Finding the GPU loads the NVIDIA driver and initializes CUDA, which can take a moment, so
-        /// the first time that runs behind an indeterminate wait, shown if it takes long.
-        /// </summary>
-        private void UpdateUseGpu()
-        {
-            var runtimes = TorchRuntimes;
-            if (!runtimes.CanChooseRuntime)
-            {
-                SetUseGpu(LibTorchRuntime.Loaded.IsCuda);
-                return;
-            }
-            if (!runtimes.IsCudaDriverFound)
-            {
-                using var longWaitDlg = new LongWaitDlg(allowCancel: false);
-                longWaitDlg.Message = SettingsUIResources.BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU;
-                longWaitDlg.PerformWork(this, 500, () =>
-                {
-                    var unused = runtimes.CudaDriver;
-                });
-            }
-            SetUseGpu(runtimes.CanUseCuda && runtimes.IsCudaInstalled && Settings.Default.AlphaPeptDeepUseGpu);
+            get { return _useGpuDriver.UseGpu; }
+            set { _useGpuDriver.UseGpu = value; }
         }
 
         private void cbUseGpu_CheckedChanged(object sender, EventArgs e)
         {
-            if (_updatingUseGpu)
-                return;
-
-            string reason = null;
-            if (!TorchRuntimes.CanChooseRuntime)
-                reason = SettingsUIResources.BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_;
-            else if (cbUseGpu.Checked)
-                reason = TorchRuntimes.GetCudaUnavailableReason();
-
-            if (reason != null)
-            {
-                MessageDlg.Show(this, reason);
-                SetUseGpu(!cbUseGpu.Checked);
-            }
-            else if (cbUseGpu.Checked && !TorchRuntimes.IsCudaInstalled && !InstallCudaRuntime())
-            {
-                SetUseGpu(false);
-            }
-        }
-
-        /// <summary>
-        /// Checks or unchecks Use GPU without asking anything of the user.
-        /// </summary>
-        private void SetUseGpu(bool useGpu)
-        {
-            _updatingUseGpu = true;
-            try
-            {
-                cbUseGpu.Checked = useGpu;
-            }
-            finally
-            {
-                _updatingUseGpu = false;
-            }
-        }
-
-        /// <summary>
-        /// Downloads and installs the CUDA runtime, once the user agrees to its size. Returns false if the
-        /// user declines, or the download fails or is canceled.
-        /// </summary>
-        private bool InstallCudaRuntime()
-        {
-            long downloadSize = TorchRuntimes.CudaInstaller.PackageSet.TotalSize;
-            string message = string.Format(SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime,
-                (downloadSize / 1e9).ToString(@"0.0", LocalizationHelper.CurrentCulture));
-            using (var confirmDlg = new MultiButtonMsgDlg(message, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Download))
-            {
-                if (confirmDlg.ShowDialog(this) != DialogResult.OK)
-                    return false;
-            }
-
-            try
-            {
-                using var longWaitDlg = new LongWaitDlg();
-                var status = longWaitDlg.PerformWork(this, 0, progressMonitor =>
-                {
-                    IProgressStatus progressStatus = new ProgressStatus();
-                    TorchRuntimes.InstallCuda(progressMonitor, ref progressStatus);
-                });
-                return !status.IsCanceled;
-            }
-            catch (Exception x)
-            {
-                if (ExceptionUtil.IsProgrammingDefect(x))
-                    throw;
-                MessageDlg.ShowWithException(this,
-                    SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_, x);
-                return false;
-            }
+            _useGpuDriver.CheckedChanged();
         }
 
         /// <summary>
@@ -1099,7 +1001,7 @@ namespace pwiz.Skyline.SettingsUI
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     // Only now, so the NVIDIA driver is not loaded and the model files are not read
                     // for the other library sources
-                    UpdateUseGpu();
+                    _useGpuDriver.Update();
                     var unused = CarafeModelDriver;
                     UpdateModificationWarning();
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;

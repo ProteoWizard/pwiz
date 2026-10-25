@@ -35,7 +35,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -82,6 +81,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly LibraryManager _libraryManager;
         private readonly Stack<SrmDocument> _documents;
         private readonly SettingsListComboDriver<CarafeModelSpec> _driverModel;
+        private readonly UseGpuDriver _useGpuDriver;
+        private bool _useGpuUpdated;
 
         public OspreySearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
         {
@@ -126,6 +127,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Edit current and Edit list
             _driverModel = new SettingsListComboDriver<CarafeModelSpec>(comboModel, Settings.Default.CarafeModelList);
             _driverModel.LoadList(null);
+            // Osprey predicts in its own process, so the CPU or the GPU is open to choose every time
+            _useGpuDriver = new UseGpuDriver(this, cbUseGpu, false);
 
             InitializeModifications();
             UpdateExistingLibraryControls();
@@ -244,6 +247,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void AddModel()
         {
             _driverModel.AddItem();
+        }
+
+        /// <summary>
+        /// The libtorch runtimes Osprey predicts with, which decide whether Use GPU can be checked and
+        /// name the folder Osprey is pointed at (<c>--torch-runtimes</c>); a test gives its own.
+        /// </summary>
+        public TorchRuntimes TorchRuntimes
+        {
+            get => _useGpuDriver.TorchRuntimes;
+            set => _useGpuDriver.TorchRuntimes = value;
+        }
+
+        /// <summary>
+        /// Whether Osprey predicts on the GPU, for the saved model and the tuning alike
+        /// (<c>--device gpu</c>, else <c>cpu</c>). Checking it says why when the GPU cannot be used,
+        /// and otherwise downloads the NVIDIA CUDA runtime first, if it is not installed.
+        /// </summary>
+        public bool UseGpu
+        {
+            get => _useGpuDriver.UseGpu;
+            set => _useGpuDriver.UseGpu = value;
+        }
+
+        private void cbUseGpu_CheckedChanged(object sender, EventArgs e)
+        {
+            _useGpuDriver.CheckedChanged();
         }
 
         /// <summary>
@@ -676,7 +705,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 TrainingInputs = IsTuningSearch ? TuningFiles : new List<string>(),
                 OutputPath = OutputLibraryPath,
                 WorkDirectory = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath),
-                TorchRuntimesDirectory = ToolDescriptionHelpers.GetToolsDirectory(),
+                TorchRuntimesDirectory = TorchRuntimes.RuntimesDirectory,
+                Device = UseGpu ? OspreyHelpers.DEVICE_GPU : OspreyHelpers.DEVICE_CPU,
                 Resolution = IsHighResolution ? OspreyHelpers.RESOLUTION_HRAM : OspreyHelpers.RESOLUTION_UNIT,
                 FragmentTolerance = FragmentTolerance,
                 FragmentUnit = IsFragmentTolerancePpm ? OspreyHelpers.FRAGMENT_UNIT_PPM : OspreyHelpers.FRAGMENT_UNIT_MZ,
@@ -792,6 +822,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // The data files page may have changed since the list was last filled
                     SyncSearchedTuningFiles();
                     UpdateDefaultModelName();
+                    // Only now, so the NVIDIA driver is not loaded for a search of an existing library,
+                    // and only once, so Back and Next keep the user's choice
+                    if (!_useGpuUpdated)
+                    {
+                        _useGpuDriver.Update();
+                        _useGpuUpdated = true;
+                    }
                     break;
 
                 case Pages.search_settings_page:
@@ -947,6 +984,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnCancel.Enabled = false;
             btnBack.Enabled = false;
             ControlBox = false;
+            _useGpuDriver.SaveSetting();
             SearchControl.SearchConfig = GetSearchConfig();
             SearchControl.RunSearch();
             return true;

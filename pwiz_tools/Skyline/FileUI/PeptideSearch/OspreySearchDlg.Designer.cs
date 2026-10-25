@@ -53,6 +53,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbChooseFromSearchedFiles = new System.Windows.Forms.CheckBox();
             this.lblModelName = new System.Windows.Forms.Label();
             this.tbxModelName = new System.Windows.Forms.TextBox();
+            this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.modificationsPage = new System.Windows.Forms.TabPage();
             this.lblModifications = new System.Windows.Forms.Label();
             this.lblFixedMods = new System.Windows.Forms.Label();
@@ -169,6 +170,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             //
             // libraryModelPage
             //
+            this.libraryModelPage.Controls.Add(this.cbUseGpu);
             this.libraryModelPage.Controls.Add(this.tbxModelName);
             this.libraryModelPage.Controls.Add(this.lblModelName);
             this.libraryModelPage.Controls.Add(this.cbChooseFromSearchedFiles);
@@ -248,6 +250,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             //
             resources.ApplyResources(this.tbxModelName, "tbxModelName");
             this.tbxModelName.Name = "tbxModelName";
+            //
+            // cbUseGpu
+            //
+            resources.ApplyResources(this.cbUseGpu, "cbUseGpu");
+            this.cbUseGpu.Name = "cbUseGpu";
+            this.cbUseGpu.UseVisualStyleBackColor = true;
+            this.cbUseGpu.CheckedChanged += new System.EventHandler(this.cbUseGpu_CheckedChanged);
             //
             // modificationsPage
             //
@@ -476,6 +485,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.CheckBox cbChooseFromSearchedFiles;
         private System.Windows.Forms.Label lblModelName;
         private System.Windows.Forms.TextBox tbxModelName;
+        private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.TabPage modificationsPage;
         private System.Windows.Forms.Label lblModifications;
         private System.Windows.Forms.Label lblFixedMods;
