@@ -26,14 +26,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// The user-facing end-of-run reports, modeled on DIA-NN's output so the two tools
-    /// are directly comparable:
+    /// The end-of-run reports modeled on DIA-NN's output, so the two tools are directly
+    /// comparable, written only under OSPREY_DIANN_REPORTS
+    /// (<see cref="OspreyEnvironment.DiannReports"/>): they hold nothing the output .blib does
+    /// not, and nothing in Osprey reads them.
     /// <list type="bullet">
     /// <item><c>&lt;output&gt;.protein_groups.tsv</c> -- DIA-NN's <c>pg_matrix</c> shape
     /// (Protein.Group / Protein.Names / N.Peptides / N.Proteotypic / PG.Q.Value), plus the
@@ -44,9 +47,8 @@ namespace pwiz.Osprey.Tasks
     /// experiment-level row.</item>
     /// </list>
     /// These are distinct from the <c>cs_stage7_protein_fdr.tsv</c> cross-impl DIAGNOSTIC
-    /// dump (counts only, env-gated); these are default, user-facing, and additive (new
-    /// files), so the byte-parity gate -- which compares the blib + the Stage-7 dump -- is
-    /// unaffected.
+    /// dump (counts only, env-gated); these are additive (new files), so the byte-parity
+    /// gate -- which compares the blib + the Stage-7 dump -- is unaffected.
     /// </summary>
     public static class OspreyReportWriter
     {
@@ -98,8 +100,8 @@ namespace pwiz.Osprey.Tasks
         // The reports are additive: nothing downstream reads them, and the blib has not been
         // written yet when they run. So a write failure is a warning naming the path, not a
         // pipeline abort. The common case is the previous run's report still open in Excel,
-        // which makes FileSaver.Commit throw IOException on the replace; Commit deliberately
-        // lets that propagate so the caller can log it. FileSaver's disposal drops the temp.
+        // which makes SimpleFileSaver.Commit throw IOException on the replace; Commit deliberately
+        // lets that propagate so the caller can log it. SimpleFileSaver's disposal drops the temp.
         // label is the machine token on the [COUNT] line; displayName is the localized name
         // the warning uses.
         private static void TryWriteReport(string label, string displayName, string path,
@@ -117,15 +119,11 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        // Report file stem = the output blib without its extension, else the report path,
-        // else null (caller skips). Path.ChangeExtension(x, null) drops the extension.
+        // Report file stem = the output blib without its extension, else null (caller skips).
+        // Path.ChangeExtension(x, null) drops the extension.
         private static string ReportStem(OspreyConfig config)
         {
-            if (!string.IsNullOrEmpty(config.OutputBlib))
-                return Path.ChangeExtension(config.OutputBlib, null);
-            if (!string.IsNullOrEmpty(config.OutputReport))
-                return Path.ChangeExtension(config.OutputReport, null);
-            return null;
+            return string.IsNullOrEmpty(config.OutputBlib) ? null : Path.ChangeExtension(config.OutputBlib, null);
         }
 
         // ------------------------------------------------------------------ protein groups
@@ -373,12 +371,12 @@ namespace pwiz.Osprey.Tasks
 
         // Both reports are the same file shape: a tab-joined header, tab-joined rows, "\n"
         // newlines and UTF-8 without BOM (the StreamWriter default). The file is staged and
-        // committed through FileSaver so a kill mid-write leaves the previous report or none,
+        // committed through SimpleFileSaver so a kill mid-write leaves the previous report or none,
         // never a truncated one (P8). Rows stream through; the report is never built as one
         // string.
         private static void WriteTsv(string path, string[] header, IEnumerable<string[]> rows)
         {
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var w = new StreamWriter(saver.SafeName, false))
                 {

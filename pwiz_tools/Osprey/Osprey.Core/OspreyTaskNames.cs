@@ -21,8 +21,8 @@
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// The <c>--task</c> values, and the name pattern of the file each task writes to record
-    /// that it completed. The tasks themselves live in Osprey.Tasks, which Osprey.IO cannot
+    /// The <c>--task</c> values, which are also the task names each artifact's validity stamp
+    /// records. The tasks themselves live in Osprey.Tasks, which Osprey.IO cannot
     /// reference, so each task takes its name from these constants and a message in any
     /// assembly that tells the user which task to run, or which files to delete, names it
     /// exactly as the parser accepts it. Messages pass these as format arguments: a user
@@ -36,20 +36,5 @@ namespace pwiz.Osprey.Core
         public const string PER_FILE_RESCORING = @"PerFileRescoring";
         public const string SECOND_PASS_FDR = @"SecondPassFDR";
         public const string MODEL_DIAGNOSTICS = @"ModelDiagnostics";
-
-        /// <summary>
-        /// Extension of the file a task writes beside each output to record that it completed:
-        /// <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>.
-        /// </summary>
-        public const string EXT_TASK_FILE = @".osprey.task";
-
-        /// <summary>
-        /// The file pattern a user deletes to make a task run again, e.g.
-        /// <c>*.FirstPassFDR.osprey.task</c>.
-        /// </summary>
-        public static string TaskFilePattern(string taskName)
-        {
-            return @"*." + taskName + EXT_TASK_FILE;
-        }
     }
 }

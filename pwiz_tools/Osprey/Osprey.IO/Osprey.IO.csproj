@@ -22,6 +22,14 @@
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <!-- Centrix, for profile spectra Osprey centroids itself (CentroidingOptions). -->
     <ProjectReference Include="..\Osprey.Centroid\Osprey.Centroid.csproj" />
+    <!-- The Osprey-CarafeSharp contracts: the training export's record, schema, writer and
+         reader, and the parquet blob codec both files share. Osprey links CarafeSharp's
+         assemblies and not the reverse, so the contract lives in the CarafeSharp tree. Out of
+         Osprey.sln, like CommonUtil, and given this build's Configuration the same way. -->
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <!-- The one .blib writer every tool of ours writes the format through; Osprey adds its own
+         tables beside the standard ones. Out of Osprey.sln, like CommonUtil. -->
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
   </ItemGroup>
 
   <!-- ProteoWizard, as the ONLY spectrum reader (issue #4497), reached through the

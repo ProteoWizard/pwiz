@@ -1009,6 +1009,21 @@
   <data name="ViewLibraryDlg_AddAllPeptides__0__unmatched" xml:space="preserve">
     <value>{0} unmatched</value>
   </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added" xml:space="preserve">
+    <value>{0} library entries fail the global cutoff and will not be added.</value>
+  </data>
+  <data name="GlobalQValueFilterControls_LevelItem_Peptide_q_value" xml:space="preserve">
+    <value>Peptide q-value</value>
+  </data>
+  <data name="GlobalQValueFilterControls_LevelItem_Precursor_q_value" xml:space="preserve">
+    <value>Precursor q-value</value>
+  </data>
+  <data name="GlobalQValueFilterControls_LevelItem_Protein_q_value" xml:space="preserve">
+    <value>Protein q-value</value>
+  </data>
+  <data name="GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry" xml:space="preserve">
+    <value>The q-value cutoff must be a number between 0 and 1, or empty to add every entry.</value>
+  </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Add_All" xml:space="preserve">
     <value>Add All</value>
   </data>
@@ -1219,6 +1234,45 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   </data>
   <data name="BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_" xml:space="preserve">
     <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
+  </data>
+  <data name="EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>The file {0} does not exist.</value>
+  </data>
+  <data name="EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_" xml:space="preserve">
+    <value>The file {0} is not a valid fine-tuned Carafe model.</value>
+  </data>
+  <data name="EditCarafeModelDlg_OkDialog_The_model__0__already_exists_" xml:space="preserve">
+    <value>The model {0} already exists.</value>
+  </data>
+  <data name="EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models" xml:space="preserve">
+    <value>Fine-tuned Carafe models</value>
+  </data>
+  <data name="CarafeModelChoice_GetDetails__0__min_gradient" xml:space="preserve">
+    <value>{0} min gradient</value>
+  </data>
+  <data name="CarafeModelChoice_PrecursorMzRange__0___1_" xml:space="preserve">
+    <value>{0}-{1}</value>
+  </data>
+  <data name="CarafeModelChoice_GetDetails_NCE__0_" xml:space="preserve">
+    <value>NCE {0}</value>
+  </data>
+  <data name="BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime" xml:space="preserve">
+    <value>Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk.</value>
+  </data>
+  <data name="BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_" xml:space="preserve">
+    <value>Skyline chooses between the CPU and the GPU when it first predicts a library. Restart Skyline to change it.</value>
+  </data>
+  <data name="BuildLibraryDlg_InstallCudaRuntime_Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU" xml:space="preserve">
+    <value>Looking for an NVIDIA GPU</value>
+  </data>
+  <data name="BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_" xml:space="preserve">
+    <value>Limited or no support for: {0}</value>
+  </data>
+  <data name="BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_" xml:space="preserve">
+    <value>Failed to download the NVIDIA CUDA runtime.</value>
   </data>
   <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
     <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,

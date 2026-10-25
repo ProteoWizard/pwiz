@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -63,6 +64,7 @@ namespace pwiz.Skyline.Properties
     //  The PropertyChanged event is raised after a setting's value is changed.
     //  The SettingsLoaded event is raised after the setting values are loaded.
     //  The SettingsSaving event is raised before the setting values are saved.
+    [SettingsProvider(typeof(PortableSettingsProvider))]
     public sealed partial class Settings
     {
         /// <devdoc>
@@ -127,6 +129,26 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
+        /// The provider that reads and writes the user scoped settings. Point its
+        /// <see cref="PortableSettingsProvider.ConfigFilePath"/> at another file to read or
+        /// write the settings of another installation.
+        /// </summary>
+        public PortableSettingsProvider PortableProvider
+        {
+            get { return Providers.OfType<PortableSettingsProvider>().First(); }
+        }
+
+        /// <summary>
+        /// Path of the file that user scoped settings are read from and written to, which is
+        /// what Tools > Options > Miscellaneous shows the user. Asks the provider rather than
+        /// recomputing the path, so this cannot drift away from where the settings really are.
+        /// </summary>
+        public string SettingsFilePath
+        {
+            get { return PortableProvider.ConfigFilePath; }
+        }
+
+        /// <summary>
         /// Clears internal cache of original serialized settings values and resets all settings to their default value.
         /// </summary>
         public new void Reset()
@@ -135,6 +157,20 @@ namespace pwiz.Skyline.Properties
             {
                 _originalSerializedValues.Clear();
                 base.Reset();
+            }
+        }
+
+        /// <summary>
+        /// Drops every cached value so that the next read comes from the settings file, including
+        /// the values this instance changed. <see cref="ReloadAndMerge"/> is the alternative
+        /// that keeps those.
+        /// </summary>
+        public new void Reload()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reload();
             }
         }
 
@@ -155,11 +191,63 @@ namespace pwiz.Skyline.Properties
                         modifiedValues.Add(new KeyValuePair<string, object>(propertyName, currentValue));
                     }
                 }
-                _originalSerializedValues.Clear();
                 Reload();
                 foreach (var pair in modifiedValues)
                 {
                     this[pair.Key] = pair.Value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Settings belonging to this installation, which no other settings file has a say in.
+        /// </summary>
+        private static readonly ISet<string> UNMERGED_SETTINGS = new HashSet<string>
+        {
+            nameof(InstallationId),
+            nameof(CheckedForSettingsToImport)
+        };
+
+        /// <summary>
+        /// Brings across what changed in <paramref name="sourceSettings"/> since it was the same
+        /// as <paramref name="baseSettings"/>. A setting changed only in the source takes the
+        /// source's value. One changed here as well keeps its value here, unless its value can be
+        /// merged part by part; see <see cref="IMergeable"/>.
+        /// </summary>
+        public void MergeChanges(Settings baseSettings, Settings sourceSettings)
+        {
+            lock (this)
+            {
+                foreach (SettingsProperty property in Properties)
+                {
+                    if (property.Attributes[typeof(UserScopedSettingAttribute)] == null ||
+                        UNMERGED_SETTINGS.Contains(property.Name))
+                    {
+                        continue;
+                    }
+                    // The property rather than the indexer, since some properties supply their
+                    // defaults themselves when nothing was saved.
+                    var propertyInfo = typeof(Settings).GetProperty(property.Name);
+                    if (propertyInfo == null)
+                        continue;
+                    object baseValue, sourceValue;
+                    try
+                    {
+                        baseValue = propertyInfo.GetValue(baseSettings);
+                        sourceValue = propertyInfo.GetValue(sourceSettings);
+                    }
+                    catch (Exception)
+                    {
+                        continue;   // Unreadable in one of the files, so nothing to go by
+                    }
+                    var baseSerialized = GetSerializedValue(property.Name, baseValue);
+                    if (Equals(baseSerialized, GetSerializedValue(property.Name, sourceValue)))
+                        continue;
+                    var localValue = propertyInfo.GetValue(this);
+                    if (localValue is IMergeable mergeable)
+                        this[property.Name] = mergeable.ThreeWayMerge(baseValue, sourceValue);
+                    else if (Equals(baseSerialized, GetSerializedValue(property.Name, localValue)))
+                        this[property.Name] = sourceValue;
                 }
             }
         }
@@ -422,6 +510,27 @@ namespace pwiz.Skyline.Properties
                 return (List<string>)(this[@"StackTraceList"]);
             }
             set { this[@"StackTraceList"] = value; }
+        }
+
+        /// <summary>
+        /// The Carafe models Build Library offers: the pretrained AlphaPeptDeep models first, then the
+        /// fine-tuned model files the user added under names of their own.
+        /// </summary>
+        [UserScopedSettingAttribute]
+        public CarafeModelList CarafeModelList
+        {
+            get
+            {
+                var list = this[typeof(CarafeModelList).Name] as CarafeModelList;
+                if (list == null)
+                {
+                    list = new CarafeModelList();
+                    list.AddDefaults();
+                    CarafeModelList = list;
+                }
+                return list;
+            }
+            set { this[typeof(CarafeModelList).Name] = value; }
         }
 
         [UserScopedSettingAttribute]
@@ -1918,6 +2027,61 @@ namespace pwiz.Skyline.Properties
 
         public SrmSettings SetSelectedItems(SrmSettings settings, string[] keys) =>
             settings.ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(ResolveKeys(keys)));
+    }
+
+    /// <summary>
+    /// The Carafe models Build Library predicts with: the pretrained AlphaPeptDeep models, the
+    /// default that is always first and cannot be edited, and the fine-tuned model files the user
+    /// added. Its list editor is a grid of what each model was trained on rather than the generic
+    /// name list, so the models can be compared.
+    /// </summary>
+    public sealed class CarafeModelList : SettingsList<CarafeModelSpec>
+    {
+        public override IEnumerable<CarafeModelSpec> GetDefaults(int revisionIndex)
+        {
+            return new[] { CarafeModelSpec.DEFAULT };
+        }
+
+        public override int ExcludeDefaults { get { return 1; } }
+
+        public override string GetDisplayName(CarafeModelSpec item)
+        {
+            if (item.IsDefault)
+                return PropertiesResources.CarafeModelList_GetDisplayName_Default__AlphaPeptDeep_;
+            return CarafeModelChoice.GetDisplayName(item);
+        }
+
+        public override CarafeModelSpec EditItem(Control owner, CarafeModelSpec item,
+            IEnumerable<CarafeModelSpec> existing, object tag)
+        {
+            using (var editModel = new EditCarafeModelDlg(existing ?? this))
+            {
+                editModel.ModelSpec = item;
+                if (editModel.ShowDialog(owner) == DialogResult.OK)
+                    return editModel.ModelSpec;
+
+                return null;
+            }
+        }
+
+        public override CarafeModelSpec CopyItem(CarafeModelSpec item)
+        {
+            return (CarafeModelSpec)item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<CarafeModelSpec> EditList(Control owner, object tag)
+        {
+            using (var dlg = new CarafeModelListDlg(this))
+            {
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                    return dlg.GetAllEdited().ToArray();
+                return null;
+            }
+        }
+
+        public override string Title { get { return PropertiesResources.CarafeModelList_Title_Edit_Carafe_Models; } }
+
+        public override string Label { get { return PropertiesResources.CarafeModelList_Label_Models; } }
     }
 
     [LlmName("Background Proteomes")]
@@ -4229,7 +4393,7 @@ namespace pwiz.Skyline.Properties
 
         #region IListEditor<T> Members
 
-        public IEnumerable<TItem> EditList(Control owner, object tag)
+        public virtual IEnumerable<TItem> EditList(Control owner, object tag)
         {
             using (var dlg = new EditListDlg<SettingsListBase<TItem>, TItem>(this, tag))
             {

@@ -23,10 +23,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Pwiz.Analysis;
+using Pwiz.Data.Common.Cv;
+using PwizSpectra = Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Centroid;
 using pwiz.Osprey.Core;
 using pwiz.ProteowizardWrapper;
@@ -105,13 +110,20 @@ namespace pwiz.Osprey.IO
         /// spectra under a name tagged with the settings (<see cref="ArtifactPaths.SpectraCacheTag"/>), never in place of
         /// the vendor-centroided cache.
         /// </summary>
-        public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding)
+        /// <param name="path">The mzML or vendor instrument file.</param>
+        /// <param name="centroiding">Centrix settings, or null for the vendor's centroids.</param>
+        /// <param name="demultiplex">ProteoWizard demultiplexing settings (<c>OSPREY_DEMUX_ENGINE=pwiz</c>): a run
+        /// whose isolation windows overlap (or that is MSX) is then read demultiplexed, by ProteoWizard, as
+        /// msconvert's demultiplex filter writes it. Null reads every run as acquired.</param>
+        public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding,
+            SpectrumListDemux.Params demultiplex = null)
         {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
             var acquisition = new AcquisitionInfo();
             int unsortedCount = 0;
             double sigmaMs1 = double.NaN, sigmaMs2 = double.NaN;
+            SpectrumListDemux.Scheme demultiplexed = null;
 
             ReportVendorRegistrationFailures();
 
@@ -152,13 +164,21 @@ namespace pwiz.Osprey.IO
                 // one-permit gate - so it is the caller the option was written for. Only the
                 // mzML reader honours it, and only on a forward index walk, which is what the
                 // loop below does. See OspreyEnvironment.MzmlDecodeThreads for the measurements.
+                //
+                // demultiplex: ProteoWizard's own demultiplexer, applied after centroiding, so
+                // the spectra are those of msconvert --filter "demultiplex optimization=
+                // overlap_only" without the mzML in between.
                 using (var msData = new MsDataFileImpl(path,
                            simAsSpectra: true,
                            requireVendorCentroidedMS1: vendorFormat,
                            requireVendorCentroidedMS2: vendorFormat,
                            combineIonMobilitySpectra: false,
-                           mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads))
+                           mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads,
+                           demultiplex: demultiplex))
                 {
+                    if (demultiplex != null)
+                        demultiplexed = msData.DemultiplexScheme;
+
                     // A chromatogram-only file has no spectrum list, so SpectrumCount is 0
                     // and this reads nothing. Osprey has no use for such a file, but an
                     // empty result says so far more clearly than a throw would.
@@ -241,7 +261,22 @@ namespace pwiz.Osprey.IO
                 CentroidSigmaMs1 = sigmaMs1,
                 CentroidSigmaMs2 = sigmaMs2,
                 Acquisition = acquisition,
+                DemultiplexScheme = demultiplexed,
             };
+        }
+
+        /// <summary>
+        /// The multiplexing scheme of a run from the isolation window of every MS2 spectrum in
+        /// acquisition order, as a spectra cache records them, or null when it is not multiplexed.
+        /// The same ProteoWizard detection a demultiplexed read uses, over the same spectra (the head,
+        /// middle and end of the run), for a run whose source file is not at hand. A cache records one
+        /// window per spectrum, so an MSX run, whose spectra each isolate several, cannot be told from
+        /// ordinary DIA this way.
+        /// </summary>
+        public static SpectrumListDemux.Scheme DetectDemultiplexScheme(double[] centers, double[] lowerOffsets,
+            double[] upperOffsets)
+        {
+            return SpectrumListDemux.DetectScheme(new RecordedWindowSpectrumList(centers, lowerOffsets, upperOffsets));
         }
 
         /// <summary>
@@ -281,7 +316,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Each MS2 spectrum's fill time and analyzer, read from the source's metadata without its peaks: for a
         /// spectra cache written before they were saved beside it (<see cref="AcquisitionSidecar"/>). The spectrum
-        /// list is opened as <see cref="LoadAllSpectra(string, CentroidingOptions)"/> opens it (SIM scans as
+        /// list is opened as <see cref="LoadAllSpectra(string, CentroidingOptions, SpectrumListDemux.Params)"/> opens it (SIM scans as
         /// spectra, ion mobility uncombined), so the scan numbers are the cache's.
         /// </summary>
         public static AcquisitionInfo ReadAcquisition(string path)
@@ -481,7 +516,49 @@ namespace pwiz.Osprey.IO
             if (Interlocked.Exchange(ref _vendorFailuresReported, 1) != 0)
                 return;
             foreach (string failure in VendorReaderRegistration.Failures)
-                OspreyOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
+                CommandOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
+        }
+
+        /// <summary>
+        /// MS2 spectra with only an isolation window, built when asked for: detection reads a few
+        /// thousand of a run's spectra, not all of them.
+        /// </summary>
+        private sealed class RecordedWindowSpectrumList : PwizSpectra.SpectrumListBase
+        {
+            private readonly double[] _centers;
+            private readonly double[] _lowerOffsets;
+            private readonly double[] _upperOffsets;
+
+            public RecordedWindowSpectrumList(double[] centers, double[] lowerOffsets, double[] upperOffsets)
+            {
+                _centers = centers;
+                _lowerOffsets = lowerOffsets;
+                _upperOffsets = upperOffsets;
+            }
+
+            public override int Count => _centers.Length;
+
+            public override PwizSpectra.SpectrumIdentity SpectrumIdentity(int index)
+            {
+                return new PwizSpectra.SpectrumIdentity { Index = index, Id = GetId(index) };
+            }
+
+            public override PwizSpectra.Spectrum GetSpectrum(int index, bool getBinaryData = false)
+            {
+                var spectrum = new PwizSpectra.Spectrum { Index = index, Id = GetId(index) };
+                spectrum.Params.Set(CVID.MS_ms_level, 2);
+                var precursor = new PwizSpectra.Precursor();
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, _centers[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, _lowerOffsets[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, _upperOffsets[index], CVID.MS_m_z);
+                spectrum.Precursors.Add(precursor);
+                return spectrum;
+            }
+
+            private static string GetId(int index)
+            {
+                return string.Format(CultureInfo.InvariantCulture, @"scan={0}", index + 1);
+            }
         }
     }
 
@@ -502,6 +579,10 @@ namespace pwiz.Osprey.IO
 
         /// <summary>Each MS2 spectrum's fill time and analyzer, as the file reports them.</summary>
         public AcquisitionInfo Acquisition { get; set; }
+
+        /// <summary>The multiplexing scheme ProteoWizard demultiplexed the MS2 spectra from, or null
+        /// when they were read as acquired.</summary>
+        public SpectrumListDemux.Scheme DemultiplexScheme { get; set; }
 
         public SpectrumFileResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
         {

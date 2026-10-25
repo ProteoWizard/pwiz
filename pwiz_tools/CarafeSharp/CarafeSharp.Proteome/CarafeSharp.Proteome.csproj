@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Proteome</RootNamespace>
+    <AssemblyName>CarafeSharp.Proteome</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <!-- PairingManifestReconciler reads a predicted .blib's RefSpectra.peptideSeq, as Carafe
+         does through sqlite-jdbc, through the shared BlibReader (which brings System.Data.SQLite
+         at the version CarafeSharp.IO and Osprey use). -->
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
+  </ItemGroup>
+
+</Project>

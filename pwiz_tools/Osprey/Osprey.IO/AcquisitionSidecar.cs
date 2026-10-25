@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using pwiz.Osprey.Core;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.IO
 {
@@ -130,7 +130,7 @@ namespace pwiz.Osprey.IO
                 sourceSize = unchecked((long)SpectraCache.FINGERPRINT_UNMEASURABLE);
                 sourceMtimeMs = 0;
             }
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var w = new BinaryWriter(fs, Encoding.UTF8))

@@ -331,7 +331,7 @@ After discovery, `PerFileScoringTask.RunCalibrationForFile`
 (`PerFileScoringTask.cs:1700-1738`) serializes a `CalibrationParams` (metadata +
 MS1/MS2 `MzCalibrationJson` + `RTCalibrationJson` with the full LOESS `model_params`)
 to `{inputStem}.calibration.json` next to the input (or in the resolved output dir).
-`CalibrationIO.SaveCalibration` writes atomically via `FileSaver`
+`CalibrationIO.SaveCalibration` writes atomically via `SimpleFileSaver`
 (`CalibrationIO.cs:42`). On resume, `PerFileScoringTask` reloads the JSON and
 reconstructs the model with `RTCalibration.FromModelParams`
 (`PerFileScoringTask.cs:1055, 1303`, `RTCalibration.cs:359`), skipping discovery. The
@@ -357,7 +357,7 @@ console report the same window number (issue #4364).
 | `RtCalibration.MaxRtTolerance` | `3.0` min | Upper clamp (hard cap) on the search RT window. |
 | `RtCalibration.CalibrationSampleSize` | `100000` | Target sampled entries; `0` = use all (`Calibrator.cs:197, 759`). |
 | `RtCalibration.CalibrationRetryFactor` | `2.0` | Present on the config but **unused** by the C# `Calibrator` (see Divergences). |
-| `--resolution {unit\|hram\|auto}` | `auto` | Selects the main-search scorer and the mass-error unit context; the calibration XCorr is always unit-resolution regardless (`Calibrator.cs:72`). |
+| `--resolution {hram\|unit}` | `hram` | Selects the main-search scorer and the mass-error unit context; the calibration XCorr is always unit-resolution regardless (`Calibrator.cs:72`). |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; forced `mz 0.5` at unit resolution | Base fragment tolerance used before calibration and as the fallback when uncalibrated (`ScoringPipeline.cs:192`). Also sets the mass-error unit ("ppm"/"Th"). |
 | `PrecursorTolerance` (config, ppm) | `10.0` | Window for MS1 M+0 isotope extraction (`Calibrator.cs:1305-1308`). |
 | `OSPREY_LOESS_CLASSICAL_ROBUST` (env) | on (unset ⇒ classical) | `0` reverts LOESS to legacy single-refresh residuals (`OspreyEnvironment.cs:72`, `LoessRegression.cs:291-298`). |
@@ -373,8 +373,7 @@ console report the same window number (issue #4364).
 `OSPREY_DUMP_LOESS_INPUT` (the `(libRt, measuredRt)` pairs actually fed to the
 accepted fit, `Calibrator.cs:274, 343`), `OSPREY_DUMP_MS2_CAL_ERRORS`
 (`Calibrator.cs:731`), and the per-entry XIC trace via
-`OSPREY_DIAG_XIC_ENTRY_ID` / `OSPREY_DIAG_XIC_PASS` (`Calibrator.cs:1060`). `--write-pin`
-also forces the cal-sample dump (`Calibrator.cs:203`).
+`OSPREY_DIAG_XIC_ENTRY_ID` / `OSPREY_DIAG_XIC_PASS` (`Calibrator.cs:1060`).
 
 ---
 

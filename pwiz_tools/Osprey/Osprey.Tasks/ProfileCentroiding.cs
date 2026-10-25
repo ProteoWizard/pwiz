@@ -32,14 +32,14 @@ namespace pwiz.Osprey.Tasks
     /// the rest of the pipeline sees it. All three of its parts are empty for vendor centroiding, the default, so
     /// nothing about a default run, its caches, hashes or goldens, changes.
     /// <list type="bullet">
-    /// <item><see cref="CreateOptions"/>: the reader's settings (<see cref="SpectrumFileReader.LoadAllSpectra(string, CentroidingOptions)"/>).</item>
+    /// <item><see cref="CreateOptions"/>: the reader's settings (<see cref="SpectrumFileReader.LoadAllSpectra(string, CentroidingOptions, Pwiz.Analysis.SpectrumListDemux.Params)"/>).</item>
     /// <item><see cref="CacheTag"/>: inserted into the spectra cache's name by <c>Program</c> through
     /// <see cref="ArtifactPaths.SpectraCacheTag"/>, so the Centrix spectra live in
     /// <c>{stem}.centrix-{hash}.spectra.bin</c> (and <c>{stem}.centrix-{hash}.demux.spectra.bin</c>) beside, never in
     /// place of, the vendor-centroided <c>{stem}.spectra.bin</c>. Every reader of the cache, Stage 6's rescore and the
     /// training export included, goes through <see cref="SpectraCache.GetCachePath"/> and so finds the same file. The cache
     /// stays a function of its source file: different settings, a different name.</item>
-    /// <item><see cref="ValidityKeySuffix"/>: added to every task's validity key (<see cref="OspreyTask.ValidityKey"/>), so
+    /// <item><see cref="ValidityKeySuffix"/>: added to every task's validity key (<see cref="OspreyTask.ValidityKey(PipelineContext)"/>), so
     /// scores computed from one centroiding are never reused for another. The search hash (<see cref="SearchIdentity"/>)
     /// records the settings too, but cannot see the algorithm version.</item>
     /// </list>

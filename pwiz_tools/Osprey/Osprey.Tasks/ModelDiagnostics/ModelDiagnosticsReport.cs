@@ -23,9 +23,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 
@@ -46,7 +49,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// <summary>
         /// The pass-1 <see cref="ModelDiagnosticsData"/>, written by FirstPassFdrTask when its
         /// score pass ends. An experiment-wide PRODUCT in the doc-00 sense: committed through
-        /// <see cref="FileSaver"/> so presence proves completeness (P8), written once and never
+        /// <see cref="SimpleFileSaver"/> so presence proves completeness (P8), written once and never
         /// revisited (P11), and stamped with FirstPassFDR's own validity key (P9).
         ///
         /// <para>It used to be a hand-off that SecondPassFdrTask DELETED once consumed, which is
@@ -70,12 +73,14 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
 
-        /// <summary>Logged when no first-pass model was trained on this run, so the Model tab
-        /// has nothing to show: a resumed or rehydrated run takes its q-values from sidecars.</summary>
+        /// <summary>Logged when no first-pass model views are available, so the Model tab has
+        /// nothing to show: the analysis's first-pass model, or a run's share of the feature
+        /// report in its first-pass FDR file, is missing or belongs to another analysis.</summary>
         internal const string MODEL_NOT_RETRAINED_NOTE =
-            "The first-pass model was not retrained on this run (it resumed from saved first-pass " +
-            "results), so the Model tab has no feature table or per-feature distributions. Delete " +
-            "the .1st-pass.* intermediate files to retrain it.";
+            "The first-pass model's feature report is not available: the first-pass model or a " +
+            "run's first-pass FDR file is missing or from another analysis, so the Model tab has no " +
+            "feature table or per-feature distributions. Delete the .1st-pass.* intermediate files " +
+            "to rebuild them.";
 
         /// <summary>Logged for a gradient-boosted-tree first pass: the model was trained, but a tree
         /// ensemble has no coefficients for the contribution table to decompose.</summary>
@@ -97,72 +102,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         };
 
         /// <summary>
-        /// Build and write the report. Called from the Stage 5 boundary where the
-        /// per-file <see cref="FdrEntry"/> lists are scored and q-valued (pre
-        /// compaction, so decoys and entrapment are still present).
-        /// </summary>
-        public static void Write(
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureContributions contributions,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            ModelDiagnosticsData.CalibrationData cal,
-            OspreyConfig config,
-            IOspreyLog log,
-            string validityKey = null)
-        {
-            try
-            {
-                Dictionary<uint, EntrapmentClass> classByBaseId;
-                Dictionary<uint, uint> pairByBaseId;
-                double entrapmentRatio;
-                BuildClassificationFromLibrary(config, libraryById, log, 1,
-                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
-
-                var data = ModelDiagnosticsData.Build(
-                    perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById));
-                // The CAL view: per-file calibration diagnostics captured at Stage 3
-                // (null when none were captured -- a resumed run, or no files calibrated).
-                // Serialized into the pass-1 data sidecar below, so it round-trips into
-                // WritePass2AndFinalize's reloaded object graph and survives to the final page.
-                data.Cal = cal;
-                LogModelTabNote(contributions, log);
-                data.GeneratedUtc = DateTime.UtcNow.ToString(
-                    @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                data.OspreyVersion = OspreyVersion.DisplayVersion;
-                data.OutputName = OutputStem(config);
-
-                // Unmatched entrapment excluded from the FDP is reported by
-                // EntrapmentPairing.LogSummary during classification; no separate
-                // NUnclassified warning needed (it counts the same intended drops).
-
-                // The pass-1 product first, then the page: the page is a view of it, so an
-                // interruption between the two leaves the artifact that can rebuild the view
-                // rather than a view with nothing behind it.
-                WritePass1Sidecar(data, config, validityKey, log.LogInfo);
-                string outPath = RenderAndWrite(data, config);
-
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_, outPath));
-            }
-            catch (Exception ex)
-            {
-                // Never let a diagnostics-only artifact take down a real run.
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_, ex.Message));
-            }
-        }
-
-        /// <summary>
-        /// Projection-path counterpart of <see cref="Write"/>: build and write the pass-1 report
-        /// from the streamed <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the
-        /// first-pass score sink) instead of the resident pre-compaction pool that OOM'd an
-        /// 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
+        /// Build and write the pass-1 report from the streamed
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the first-pass score
+        /// sink or the streaming rehydrate) instead of the resident pre-compaction pool that
+        /// OOM'd an 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
         /// (built by <see cref="BuildClassificationFromLibrary"/> when it was constructed, and
         /// logged once there), so this only assembles the data model, attaches the CAL view + run
         /// metadata, renders the HTML, and stashes the pass-1 data sidecar for SecondPassFdrTask's
-        /// pass-2 enrichment. Byte-identical to <see cref="Write"/> on the same input: the
-        /// accumulator's streamed reductions reproduce the resident reductions (they are
-        /// order-independent). Any failure is logged and swallowed; a diagnostics artifact never
+        /// pass-2 enrichment. Byte-identical to the batch <c>ModelDiagnosticsData.Build</c>
+        /// test oracle on the same input: the accumulator's streamed reductions reproduce the
+        /// resident reductions (they are order-independent). Any failure is logged and swallowed; a diagnostics artifact never
         /// aborts a real run.
         ///
         /// <c>coAssignment</c> is the pass-1 peak co-assignment panel (issue #4522), built by
@@ -171,7 +120,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public static void WriteFromAccumulator(
             ModelDiagnosticsData.Accumulator accumulator,
-            FeatureContributions contributions,
+            ModelDiagnosticsData.ModelView modelView,
             ModelDiagnosticsData.CalibrationData cal,
             OspreyConfig config,
             IOspreyLog log,
@@ -180,14 +129,14 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             try
             {
-                var data = accumulator.Build(contributions);
+                var data = accumulator.BuildFromModelView(modelView);
                 data.CoAssignment = coAssignment;
                 // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
                 // none were captured -- a resumed run, or no files calibrated). Serialized into the
-                // pass-1 data sidecar below so it round-trips into WritePass2AndFinalize's reloaded
-                // object graph and survives to the final page (same as Write).
+                // pass-1 data sidecar below so it round-trips into the object graph
+                // WritePass2AndFinalizeFromAccumulator reloads and survives to the final page.
                 data.Cal = cal;
-                LogModelTabNote(contributions, log);
+                LogModelTabNote(modelView, log);
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
@@ -197,7 +146,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // interruption between the two leaves the artifact that can rebuild the view
                 // rather than a view with nothing behind it.
                 WritePass1Sidecar(data, config, validityKey, log.LogInfo);
-                string outPath = RenderAndWrite(data, config);
+                string outPath = RenderAndWrite(data, config, ProductStamp(FirstPassTaskName, validityKey));
 
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WriteFromAccumulator_Wrote_the_model_diagnostics_report___0_, outPath));
             }
@@ -210,108 +159,45 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// What the report says about its Model tab, or null when the tab is complete (a linear
-        /// model). A null <paramref name="contributions"/> means no model was trained on this run;
-        /// a tree ensemble's was trained and has no contribution table. Kept apart because the
-        /// first note tells the operator to clear sidecars and force a retrain, which for a fresh
-        /// gbdt run would be both false and a wasted re-run.
+        /// model). A null <paramref name="modelView"/> means no model views are available; a tree
+        /// ensemble's were and it has no contribution table. Kept apart because the first note
+        /// tells the operator to clear sidecars and force a retrain, which for a fresh gbdt run
+        /// would be both false and a wasted re-run.
         /// </summary>
-        internal static string ModelTabNote(FeatureContributions contributions)
+        internal static string ModelTabNote(ModelDiagnosticsData.ModelView modelView)
         {
-            if (contributions == null)
+            if (modelView == null)
                 return MODEL_NOT_RETRAINED_NOTE;
-            return contributions.IsTreeEnsemble ? TREE_MODEL_NOTE : null;
+            return modelView.ModelIsTreeEnsemble ? TREE_MODEL_NOTE : null;
         }
 
         /// <summary>Log <see cref="ModelTabNote"/> when there is one, rather than silently emitting a
         /// Model tab that is blank or half-empty.</summary>
-        private static void LogModelTabNote(FeatureContributions contributions, IOspreyLog log)
+        private static void LogModelTabNote(ModelDiagnosticsData.ModelView modelView, IOspreyLog log)
         {
-            string note = ModelTabNote(contributions);
+            string note = ModelTabNote(modelView);
             if (note != null)
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, note);
         }
 
         /// <summary>
-        /// End-of-run enrichment: reload the pass-1 data sidecar, compute the
-        /// pass-2 (final reported pool) FDP calibration views from the
-        /// post-compaction, second-pass-q-valued <paramref name="perFileEntries"/>
-        /// (SecondPassFdrTask's <c>RescoredEntries</c>), append them, and re-render the
-        /// page so its FDR-calibration view selector offers both passes. Uses the
-        /// same library-derived classification / pairing as pass 1, so the HTML
-        /// pass-2 curve matches stock FDRBench (<c>--fdrbench-pass 2</c>) by
-        /// construction. A no-op (with a log line) if the sidecar is absent -- the
-        /// pass-1 page FirstPassFDR already wrote then stands unchanged. Any failure is
-        /// logged and swallowed; a diagnostics artifact never aborts a real run.
-        /// </summary>
-        public static void WritePass2AndFinalize(
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config,
-            IOspreyLog log,
-            HashSet<uint> stratumBaseIds = null,
-            string validityKey = null)
-        {
-            try
-            {
-                var data = ReadPass1ForEnrichment(config, log);
-                if (data == null)
-                    return;
-
-                Dictionary<uint, EntrapmentClass> classByBaseId;
-                Dictionary<uint, uint> pairByBaseId;
-                double entrapmentRatio;
-                BuildClassificationFromLibrary(config, libraryById, log, 2,
-                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
-
-                // Build the complete pass-2 (final reported pool) bundle -- every
-                // pass-dependent card recomputed on this post-compaction, second-pass
-                // q-valued pool -- so the page's top-level Pass 1 / Pass 2 switch can
-                // re-source the whole page. The structural half is null in every surviving
-                // mode: with the retrain removed (#4484) there is no retrained pass-2 model
-                // to describe, which is why null is passed as the contributions rather than
-                // sourced. The q-driven half is always built (FdpViews empty without an
-                // entrapment pool).
-                // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
-                // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
-                // BuildPass2 owns essentially all of it and carries its own per-card
-                // ProgressReporter; no heading is added here, because a reporter already prints
-                // one and then only as many percent lines as the elapsed time needs, while a
-                // heading at this call site would print unconditionally on every run forever.
-                // Measured 2026-08-15: the render that follows completes inside the same second
-                // it starts, so it gets no line at all.
-                data.Pass2 = ModelDiagnosticsData.BuildPass2(
-                    perFileEntries, null, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById), stratumBaseIds);
-
-                FinalizePass2(data, config, validityKey, log);
-            }
-            catch (Exception ex)
-            {
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_, ex.Message));
-            }
-        }
-
-        /// <summary>
-        /// End-of-run enrichment from the STREAMED pass-2 fold, the accumulator sibling of
-        /// <see cref="WritePass2AndFinalize"/>. Same product, same page, same log line - the only
-        /// difference is that the pass-2 cards come from reductions folded run by run through
-        /// <see cref="ModelDiagnosticsData.Accumulator"/> instead of from the resident survivor
-        /// pool, which is what lets <c>CanStreamStage7Join</c> stop declining the streamed join
-        /// whenever <c>--model-diagnostics</c> is asked for.
+        /// End-of-run enrichment from the STREAMED pass-2 fold: reload the pass-1 data, append
+        /// the pass-2 (final reported pool) cards, and re-render the page so its view selector
+        /// offers both passes. The pass-2 cards come from reductions folded run by run through
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> rather than from a resident survivor
+        /// pool - the batch builder this replaced held every run's survivors at once.
         ///
-        /// <para>Byte-identical to <see cref="WritePass2AndFinalize"/> on the same input for the
-        /// reason the pass-1 pair already is: every reduction the accumulator performs is
-        /// order-independent, and both paths enumerate the reduced best-per-precursor set in the
-        /// same nested (file, row) order. The classification / pairing / ratio are not rebuilt
-        /// here - the accumulator was constructed with them, and rebuilding runs for minutes at
-        /// 6.3M library entries.</para>
+        /// <para>Every reduction the accumulator performs is order-independent and enumerates
+        /// the reduced best-per-precursor set in nested (file, row) order, which is what keeps it
+        /// byte-identical to the batch <c>ModelDiagnosticsData.BuildPass2</c> its tests
+        /// compare against. The classification / pairing / ratio are not rebuilt here - the
+        /// accumulator was constructed with them, and rebuilding runs for minutes at 6.3M
+        /// library entries.</para>
         ///
         /// <para><paramref name="coAssignment"/> is built by the caller from its own second
         /// stream pass, because that panel's acceptance boundary is a reduction over every row
         /// that its per-row verdicts are then compared against - it cannot be folded in the pass
-        /// that computes it. Null leaves the panel out, exactly as a null library lookup does on
-        /// the resident path.</para>
+        /// that computes it. Null leaves the panel out.</para>
         ///
         /// <para><c>data</c> is the pass-1 object the caller already read in order to decide
         /// whether folding was worth doing at all. It is handed in rather than re-read here:
@@ -372,9 +258,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string validityKey, IOspreyLog log)
         {
             string pass2Path = ResolvePass2SidecarPath(config);
-            WriteJson(pass2Path, data.Pass2);
-            StampProduct(pass2Path, SecondPassTaskName, validityKey, log.LogInfo);
-            string outPath = RenderAndWrite(data, config);
+            var pass2Stamp = ProductStamp(SecondPassTaskName, validityKey);
+            WriteJson(pass2Path, data.Pass2, pass2Stamp);
+            string outPath = RenderAndWrite(data, config, pass2Stamp);
             int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_MDIAG_PASS2, @"fdr-views={0} model={1}",
                 pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"none"));
@@ -417,8 +303,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             var data = ReadJson<ModelDiagnosticsData>(pass1Path);
             if (data == null)
                 return false;
-            data.Pass2 = ReadJson<ModelDiagnosticsData.Pass2Data>(ResolvePass2SidecarPath(config));
-            string outPath = RenderAndWrite(data, config);
+            string pass2Path = ResolvePass2SidecarPath(config);
+            data.Pass2 = ReadJson<ModelDiagnosticsData.Pass2Data>(pass2Path);
+            // The page re-rendered from the products carries the stamp of the newest product it
+            // shows, exactly as the page the producing task rendered did.
+            string outPath = RenderAndWrite(data, config,
+                ArtifactValidity.ReadStamp(data.Pass2 != null ? pass2Path : pass1Path));
             if (data.Pass2 == null)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, OspreyTasksResources.ModelDiagnosticsReport_TryRenderFromProducts_Second_pass_results_are_not_on_disk__so_this_report_covers_the_first_pass_only__Run_this_);
@@ -444,6 +334,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             string path = FirstPassExperimentSidecarPath(config);
             return !string.IsNullOrEmpty(path) && File.Exists(path);
+        }
+
+        /// <summary>
+        /// The Osprey version that wrote this analysis's first pass, from its experiment sidecar's
+        /// stamp, or null when the sidecar is missing or unstamped.
+        /// </summary>
+        public static string FirstPassVersion(OspreyConfig config)
+        {
+            return ArtifactValidity.ReadStamp(FirstPassExperimentSidecarPath(config))?.Version;
         }
 
         /// <summary>
@@ -511,20 +410,28 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// Whether the pass-1 diagnostics product describes the first pass that is on disk NOW.
-        /// Both were stamped by FirstPassFDR with the same key, so equal keys is the whole test -
+        /// Both were stamped by the same FirstPassFDR run, so identical stamps is the whole test -
         /// and it is answerable without a pipeline context, which the render path does not have.
         ///
-        /// <para>Refusing when the stamp is absent is deliberate. A product written before this
-        /// stamping existed cannot be shown to belong to this analysis, and "cannot tell" has to
-        /// resolve to "rebuild it" - the same conservative direction
-        /// <see cref="TaskValiditySidecar.IsValid"/> takes for a missing sidecar.</para>
+        /// <para>The stamps are compared to EACH OTHER, not to this build. Re-rendering writes
+        /// only the page, from products a completed analysis already holds, so the build that
+        /// wrote them does not matter; demanding this build's version sent a re-render of a
+        /// cohort finished by yesterday's build into the full pipeline, which re-ran every stage
+        /// for hours under a command documented to write nothing but the report.</para>
+        ///
+        /// <para>Refusing when a stamp is absent is deliberate. A product without one cannot be
+        /// shown to belong to this analysis, and "cannot tell" has to resolve to "rebuild it" -
+        /// the same conservative direction every resume check takes.</para>
         /// </summary>
         private static bool DescribesTheFirstPassOnDisk(OspreyConfig config, string pass1Path)
         {
-            string experimentPath = FirstPassExperimentSidecarPath(config);
-            if (!TaskValiditySidecar.TryReadValidityKey(experimentPath, FirstPassTaskName, out string key))
-                return false;
-            return TaskValiditySidecar.IsValid(pass1Path, FirstPassTaskName, key);
+            var experimentStamp = ArtifactValidity.ReadStamp(FirstPassExperimentSidecarPath(config));
+            var productStamp = ArtifactValidity.ReadStamp(pass1Path);
+            return experimentStamp != null && productStamp != null &&
+                   string.Equals(experimentStamp.Task, FirstPassTaskName, StringComparison.Ordinal) &&
+                   string.Equals(productStamp.Task, FirstPassTaskName, StringComparison.Ordinal) &&
+                   string.Equals(experimentStamp.Version, productStamp.Version, StringComparison.Ordinal) &&
+                   string.Equals(experimentStamp.Key, productStamp.Key, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -542,17 +449,21 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// for. Negative leaves it at <c>FileCount</c>.</para>
         /// </summary>
         private static string RenderAndWrite(ModelDiagnosticsData data, OspreyConfig config,
-            int runsContributed = -1)
+            ArtifactStamp stamp, int runsContributed = -1)
         {
             data.Completeness = BuildCompleteness(data, runsContributed,
                 HasCompletedSecondPass(config));
             string html = ModelDiagnosticsHtml.Render(data);
+            // The stamp of the product this page shows, as a comment ahead of the DOCTYPE, so the
+            // page is a declared output whose validity is read from the page itself.
+            if (stamp != null)
+                html = stamp.ToHtmlComment() + Environment.NewLine + html;
             string outPath = ResolveReportPath(config);
             string dir = Path.GetDirectoryName(outPath);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
             // Atomic write (temp + rename) so an interrupted run can't leave a truncated report.
-            using (var saver = new FileSaver(outPath))
+            using (var saver = new SimpleFileSaver(outPath))
             {
                 File.WriteAllText(saver.SafeName, html);
                 saver.Commit();
@@ -637,42 +548,48 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string path = ResolvePass1SidecarPath(config);
             try
             {
-                WriteJson(path, data);
+                WriteJson(path, data, ProductStamp(FirstPassTaskName, validityKey));
             }
             finally
             {
                 data.Pass2 = pass2;
             }
-            StampProduct(path, FirstPassTaskName, validityKey, logWarning);
         }
 
         /// <summary>
-        /// Stamp a diagnostics product with its producing task's validity key, so a later render
-        /// can tell "this describes the analysis on disk" from "this is left over from another
-        /// one". No key means no stamp, and an unstamped product is refused by the render rather
-        /// than trusted.
+        /// The stamp a diagnostics product is written with, so a later render can tell "this
+        /// describes the analysis on disk" from "this is left over from another one". No key
+        /// means no stamp, and an unstamped product is refused by the render rather than trusted.
         /// </summary>
-        private static void StampProduct(string path, string taskName, string validityKey,
-            Action<string> logWarning)
+        private static ArtifactStamp ProductStamp(string taskName, string validityKey)
         {
-            if (string.IsNullOrEmpty(validityKey))
-                return;
-            PerFileResumeDriver.Stamp(path, taskName, OspreyVersion.Current, validityKey,
-                Array.Empty<string>(), logWarning);
+            return string.IsNullOrEmpty(validityKey) ? null : OspreyVersion.Stamp(taskName, validityKey);
         }
 
         /// <summary>
-        /// Atomic write of one diagnostics product. Every consumer relies on presence proving
+        /// Atomic write of one diagnostics product, with <paramref name="stamp"/> (when there is
+        /// one) as the document's first property. Every consumer relies on presence proving
         /// completeness (P8), so a partial write must never surface as a corrupt data model.
         /// </summary>
-        private static void WriteJson(string path, object value)
+        private static void WriteJson(string path, object value, ArtifactStamp stamp)
         {
             string dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
-            using (var saver = new FileSaver(path))
+            string json = JsonConvert.SerializeObject(value, SidecarSettings);
+            if (stamp != null)
             {
-                File.WriteAllText(saver.SafeName, JsonConvert.SerializeObject(value, SidecarSettings));
+                // SidecarSettings writes compact JSON, so the object opens with '{' and the stamp
+                // goes straight after it - first, where ArtifactStamp.TryReadJsonHead looks.
+                string property = JsonConvert.ToString(ArtifactStamp.JSON_PROPERTY) + @":" +
+                                  JsonConvert.ToString(stamp.ToString());
+                json = json == @"{}"
+                    ? @"{" + property + @"}"
+                    : @"{" + property + @"," + json.Substring(1);
+            }
+            using (var saver = new SimpleFileSaver(path))
+            {
+                File.WriteAllText(saver.SafeName, json);
                 saver.Commit();
             }
         }
@@ -724,7 +641,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     ? OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_first_pass_model_diagnostics___
                     : OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_second_pass_model_diagnostics___,
                 libraryById.Count));
-            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+            var pairing = EntrapmentPairing.Build(libraryById);
 
             int nTarget = 0, nPTarget = 0;
             classByBaseId = new Dictionary<uint, EntrapmentClass>();
@@ -735,8 +652,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 if (lib == null || lib.Sequence == null)
                     continue;
                 // Skip decoy-side entries: their base-id equals their target's, which
-                // the target-side entry below classifies (accession is authoritative).
-                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                // the target-side entry below classifies.
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib))
                     continue;
                 // Exclude unmatched entrapment so the HTML FDP counts the same peptides
                 // the emitted manifest gives FDRBench.
@@ -758,7 +675,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (nTarget > 0)
                 entrapmentRatio = (double)nPTarget / nTarget;
 
-            pairing.LogSummary(log);
         }
 
         /// <summary>
@@ -836,6 +752,53 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public static string Pass2SidecarPath(OspreyConfig config)
         {
             return ResolvePass2SidecarPath(config);
+        }
+
+        /// <summary>
+        /// One run's calibration-view row and its mass-error unit (the row does not carry it), as
+        /// the <see cref="CalibrationParams.ModelDiagnostics"/> member of the run's
+        /// <c>.calibration.json</c>. PerFileScoring sets it on every run, because only Stage 3
+        /// holds the calibration matches the row is binned from; FirstPassFDR reads it back when
+        /// the in-memory byproduct is absent - a resume past Stage 3, an HPC join, or
+        /// <c>--model-diagnostics</c> added after the analysis ran without it (P16). Null for a null
+        /// row.
+        /// </summary>
+        public static JObject CalibrationDiagnosticsToJson(ModelDiagnosticsData.CalFileRow row, string massUnit)
+        {
+            if (row == null)
+                return null;
+            return JObject.FromObject(new CalibrationDiagnosticsMember { MassUnit = massUnit, Row = row },
+                JsonSerializer.Create(SidecarSettings));
+        }
+
+        /// <summary>
+        /// The run's calibration-view row from its loaded <c>.calibration.json</c>, or null when
+        /// the file carries none or it is unreadable.
+        /// </summary>
+        public static ModelDiagnosticsData.CalFileRow CalibrationDiagnosticsFromJson(CalibrationParams calibration,
+            out string massUnit)
+        {
+            massUnit = null;
+            if (calibration?.ModelDiagnostics == null)
+                return null;
+            try
+            {
+                var member = calibration.ModelDiagnostics.ToObject<CalibrationDiagnosticsMember>(
+                    JsonSerializer.Create(SidecarSettings));
+                massUnit = member?.MassUnit;
+                return member?.Row;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>The form of <see cref="CalibrationParams.ModelDiagnostics"/>.</summary>
+        private sealed class CalibrationDiagnosticsMember
+        {
+            public string MassUnit { get; set; }
+            public ModelDiagnosticsData.CalFileRow Row { get; set; }
         }
 
         private static string ResolvePass1SidecarPath(OspreyConfig config)

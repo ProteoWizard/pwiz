@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommandLine;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -435,36 +436,28 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestValidateFirstPassFdrRejectsSingleFile()
+        public void TestValidateFirstPassFdrAcceptsSingleFile()
         {
-            // FirstPassFDR writes the Stage 5 -> Stage 6 boundary pair, only
-            // meaningful with siblings; a single-file run errors fast.
+            // One run is a chain like any other (the one command's single tuning run): the
+            // consensus is empty and PerFileRescoring has no plan for the run, but no task refuses.
             var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "only.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, string.Format(
-                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, 1, PerFileRescoreTask.TASK_NAME,
-                OspreyCommandArgs.ARG_INPUT.ArgumentText));
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateFirstPassFdrRequiresReconciliationEnabled()
+        public void TestValidateFirstPassFdrAcceptsReconciliationOff()
         {
+            // Stage 5 trains the first-pass model and computes its q-values whether or not a
+            // consensus is planned from them.
             var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             config.Reconciliation.Enabled = false;
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, string.Format(
-                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME));
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         // - SecondPassFDR (every run in, reading their reconciled parquets) --
@@ -561,7 +554,7 @@ namespace pwiz.Osprey.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, Program.USAGE_INPUT),
+            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, OspreyCommandArgs.UsageInput),
                 Program.ValidateArgs(config));
         }
 
@@ -578,7 +571,13 @@ namespace pwiz.Osprey.Test
         public void TestResolveTask()
         {
             var tasks = OspreyTasks.Create();
-            Assert.AreEqual(tasks.All.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            // The task set and the one command's library phases, which are tasks of its workflow.
+            Assert.AreEqual(tasks.All.Count + LibraryBuildConfig.PHASES.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            foreach (string phase in LibraryBuildConfig.PHASES)
+            {
+                Assert.AreEqual(phase, LibraryBuildConfig.FindPhase(phase.ToLowerInvariant()));
+                Assert.IsNull(tasks.FindByName(phase), phase + @" is not a stage");
+            }
             foreach (var expected in tasks.All)
             {
                 Assert.IsNull(Program.ResolveTask(expected.Name, tasks, out OspreyTask task));
@@ -586,12 +585,13 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
                     string.Format(@"{0} must appear in the {1} values exactly once", expected.Name, OspreyCommandArgs.ARG_TASK.ArgumentText));
             }
-            // The four canonical stages and the two selector-only tasks, by the constants the
-            // classes declare, so a task dropped from the list fails here by name.
-            CollectionAssert.AreEquivalent(
+            // The four canonical stages, the two selector-only tasks and the library phases, by the
+            // constants the classes declare, so a task dropped from the list fails here by name.
+            CollectionAssert.AreEqual(
                 new[]
                 {
-                    SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                    SpectraCacheTask.TASK_NAME, LibraryBuildConfig.PREDICT_TRAINING_LIBRARY, LibraryBuildConfig.TRAIN_MODEL,
+                    LibraryBuildConfig.PREDICT_LIBRARY, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
                     PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
                     ModelDiagnosticsTask.TASK_NAME
                 },
@@ -604,7 +604,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ResolveTask(@"Bogus", tasks, out OspreyTask none);
             Assert.IsNull(none);
             Assert.AreEqual(string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
-                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", string.Join(@", ", tasks.All.Select(t => t.Name))), err);
+                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", string.Join(@", ", OspreyCommandArgs.ARG_TASK.Values)), err);
         }
 
         [TestMethod]
@@ -726,7 +726,7 @@ namespace pwiz.Osprey.Test
             // The retired HPC mode flags are now unknown options. ParseArgs
             // must throw rather than silently dropping them (which would run
             // the full pipeline in the wrong mode). Replaced by --task <Name>.
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Parse("--no-join", OspreyCommandArgs.ARG_INPUT + @"a.mzML"));
             StringAssert.Contains(ex.Message, "--no-join");
         }
@@ -734,7 +734,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParseArgsRejectsRetiredJoinOnly()
         {
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--join-only" }));
             StringAssert.Contains(ex.Message, "--join-only");
         }
@@ -742,12 +742,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParseArgsRejectsRetiredJoinAtPass()
         {
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--join-at-pass=2" }));
             StringAssert.Contains(ex.Message, "--join-at-pass=2");
 
             // Space-separated form too.
-            Assert.ThrowsException<ArgumentException>(
+            Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--join-at-pass", "1" }));
         }
 
@@ -756,7 +756,7 @@ namespace pwiz.Osprey.Test
         {
             // Any unrecognized option fails fast (e.g. a typo), not just the
             // retired flags.
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--bogus-flag" }));
             StringAssert.Contains(ex.Message, "--bogus-flag");
         }
@@ -776,10 +776,10 @@ namespace pwiz.Osprey.Test
             // A bare --task (or --task followed by another flag) must throw,
             // like the other required-value flags, so it can't be silently
             // ignored when ParseArgs runs outside Main's pre-scan.
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<ValueMissingException>(
                 () => Parse(OspreyCommandArgs.ARG_TASK));
             StringAssert.Contains(ex.Message, OspreyCommandArgs.ARG_TASK.ArgumentText);
-            Assert.ThrowsException<ArgumentException>(
+            Assert.ThrowsException<ValueMissingException>(
                 () => Parse(OspreyCommandArgs.ARG_TASK, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib"));
         }
 
@@ -806,7 +806,7 @@ namespace pwiz.Osprey.Test
             };
             foreach (var args in missingOrFlagFollowed)
             {
-                Assert.ThrowsException<ArgumentException>(
+                Assert.ThrowsException<ValueMissingException>(
                     () => Program.ParseArgs(args));
             }
         }

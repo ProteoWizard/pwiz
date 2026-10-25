@@ -136,10 +136,6 @@
     <value>パイプラインが失敗しました：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>タスク{0}による{1}の完了を記録できませんでした：{2}。再開時にはこのステップがやり直されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
     <value>適用先</value>
     <comment>Needs Review:New resource</comment>
@@ -304,6 +300,10 @@
     <value>HPC分割（1ノード = 1つの{0}）：上記の{0}を参照してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__" xml:space="preserve">
+    <value>受け付けるその他の形式：値はオプションに「=」でつなげて指定することもでき（{0}）、存在するファイルは{1}なしで指定できます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_" xml:space="preserve">
     <value>Osprey - ペプチド中心のDIA解析</value>
     <comment>Needs Review:New resource</comment>
@@ -462,5 +462,17 @@
   <data name="Program_ValidateArgs_No_spectral_library_specified__Use__0_" xml:space="preserve">
     <value>スペクトルライブラリが指定されていません。{0}を使用してください</value>
     <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
+    <value>path/to/file（ファイル）</value>
+  </data>
+  <data name="OspreyCommandArgs_PATH_TO_FOLDER" xml:space="preserve">
+    <value>path/to/folder（フォルダ）</value>
+  </data>
+  <data name="OspreyCommandArgs_INT_VALUE" xml:space="preserve">
+    <value>&lt;整数&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_NUM_VALUE" xml:space="preserve">
+    <value>&lt;数字&gt;</value>
   </data>
 </root>

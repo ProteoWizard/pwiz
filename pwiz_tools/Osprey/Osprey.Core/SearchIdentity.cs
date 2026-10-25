@@ -273,8 +273,7 @@ namespace pwiz.Osprey.Core
         /// <see cref="OspreyConfig.InputFiles"/> only carries this worker's single
         /// parquet — the hash that the downstream <c>--task SecondPassFDR</c>
         /// SecondPassFDR node expects is computed over ALL files in the join, so
-        /// the worker must read the full set from the planner's
-        /// <c>reconciliation.json</c> envelope and pass it in here. The
+        /// the worker must pass the join's full set in here. The
         /// stems are sorted + deduped internally so the hash is invariant
         /// to caller ordering. Mirrors Rust
         /// <c>OspreyConfig::reconciliation_parameter_hash_for_stems</c>.

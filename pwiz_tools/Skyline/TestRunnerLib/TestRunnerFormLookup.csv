@@ -28,11 +28,11 @@ LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg.PropertiesPage,TestFullScanId
 BuildLibraryDlg.FilesPage,TestFullScanId
-BuildLibraryDlg.LearningPage,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 CalibrationForm,TestCalibration
 CalibrationCurveOptionsDlg,TestCalibration
+CarafeModelListDlg,TestCarafeModelBuildLibrary
 CandidatePeakForm,TestCandidatePeaks
 ChangeIrtPeptidesDlg,IrtFunctionalTest
 ChooseFormatDlg,TestGroupComparisonPivotEditor
@@ -68,6 +68,7 @@ EditIrtCalcDlg,TestRetentionTimeFilter
 EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
+EditCarafeModelDlg,TestCarafeModelBuildLibrary
 EditLibraryDlg,TestRetentionTimeAlignment
 EditLinkedPeptidesDlg,TestCrosslinking
 EditListDlg`2,TestEditStaticMod
@@ -220,6 +221,7 @@ ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
 ShareResultsFilesDlg,TestDocumentSharing
 SkylineWindow,*
+SlowLoadingForm,*
 SpectrumGridForm,TestSpectrumGrid
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns
@@ -237,6 +239,7 @@ ToolOptionsUI.LanguageTab,TestAccessServer
 ToolOptionsUI.MiscellaneousTab,TestAccessServer
 ToolOptionsUI.DisplayTab,TestAccessServer
 ToolOptionsUI.KoinaTab,TestAccessServer
+ImportSettingsDlg,TestImportSettings
 ToolStoreDlg,TestToolStore
 ToolUpdatesDlg,TestToolUpdates
 TransitionSettingsUI.FilterTab,TestMethodEditTutorial

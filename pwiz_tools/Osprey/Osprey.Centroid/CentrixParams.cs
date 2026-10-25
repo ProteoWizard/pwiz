@@ -36,7 +36,7 @@ namespace pwiz.Osprey.Centroid
         /// The exact optimum of the same problem, by an active-set (Lawson-Hanson) solve of its few nonzero coefficients:
         /// the same centroids where coordinate descent converges, the converged ones where it stops at its cap. Several
         /// times faster; on the Stellar 8.5% of centroids move by more than 1e-4 against coordinate descent, and scores
-        /// against truth are unchanged (<c>docs/24-profile-centroiding.md</c>).
+        /// against truth are unchanged (<c>docs/25-profile-centroiding.md</c>).
         /// </summary>
         active_set,
     }

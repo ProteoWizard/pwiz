@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -59,7 +60,7 @@ namespace pwiz.Osprey.IO
     /// [footer: [ms1_section_offset: int64] [index_offset: int64]]  (16 bytes at EOF)
     ///
     /// The acquisition-order index lets a reader rebuild the window map, AllMs2Rts,
-    /// and the first-cycle isolation windows from one compact contiguous read (no
+    /// and the run's isolation windows from one compact contiguous read (no
     /// record walk), and restores acquisition order for the full LoadSpectraCache
     /// read even though the body is physically window-grouped.
     ///
@@ -75,6 +76,9 @@ namespace pwiz.Osprey.IO
     public static class SpectraCache
     {
         public const string EXT = @".spectra.bin";
+
+        /// <summary>Extension of the demultiplexed spectra cache (<see cref="GetDemuxCachePath"/>).</summary>
+        public const string EXT_DEMUX = @".demux.spectra.bin";
 
         private static readonly byte[] MAGIC = new byte[] {
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
@@ -151,6 +155,11 @@ namespace pwiz.Osprey.IO
                 sourceMtimeMs = 0;
             }
 
+            // A descriptor the reader would refuse would make a cache nothing can reopen.
+            byte[] descriptorBytes = demuxDescriptor == null ? null : Encoding.UTF8.GetBytes(demuxDescriptor);
+            if (descriptorBytes != null && descriptorBytes.Length > MAX_DESCRIPTOR_BYTES)
+                throw new ArgumentOutOfRangeException(nameof(demuxDescriptor));
+
             int nMs2 = ms2Spectra.Count;
 
             // Group MS2 record indices by isolation-window key, preserving acquisition
@@ -158,7 +167,7 @@ namespace pwiz.Osprey.IO
             // Writing each window's records contiguously lets SpectraWindowIndex
             // .LoadWindow read a whole window in one sequential run (the cold-HDD fix);
             // the acquisition-order index written after the body restores file order
-            // for AllMs2Rts / first-cycle windows and for the full LoadSpectraCache read.
+            // for AllMs2Rts / the isolation windows and for the full LoadSpectraCache read.
             var windowKeyOrder = new List<int>();
             var windowKeyToIndices = new Dictionary<int, List<int>>();
             for (int i = 0; i < nMs2; i++)
@@ -178,7 +187,7 @@ namespace pwiz.Osprey.IO
             // in acquisition order into the index block.
             var recordOffsets = new long[nMs2];
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var w = new BinaryWriter(fs))
@@ -190,17 +199,16 @@ namespace pwiz.Osprey.IO
                     w.Write(sourceMtimeMs);
                     w.Write((uint)nMs2);
                     w.Write((uint)ms1Spectra.Count);
-                    if (demuxDescriptor != null)
+                    if (descriptorBytes != null)
                     {
-                        byte[] descriptorBytes = Encoding.UTF8.GetBytes(demuxDescriptor);
                         w.Write((uint)descriptorBytes.Length);
                         w.Write(descriptorBytes);
                     }
 
                     // MS2 records, grouped by window (contiguous per window).
                     //
-                    // Reported for the same reason LibraryCache reports its own write: this is
-                    // multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
+                    // Reported for the same reason the derived library's writer reports its own:
+                    // this is multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
                     // SEA-AD Astral cohort the cache is ~4.1 GB per file and took ~28 s, which
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
@@ -347,7 +355,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string GetDemuxCachePath(string inputFile)
         {
-            string fileName = TaggedStem(inputFile) + @".demux.spectra.bin";
+            string fileName = TaggedStem(inputFile) + EXT_DEMUX;
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
@@ -704,7 +712,7 @@ namespace pwiz.Osprey.IO
         /// The per-record index read back from a v4 cache's EOF index block, in
         /// acquisition order. <see cref="RecordOffsets"/>[i] locates MS2 record i's
         /// peak blob within the window-grouped body; the iso/rt fields let a reader
-        /// rebuild the window map, AllMs2Rts, and first-cycle windows without
+        /// rebuild the window map, AllMs2Rts, and the isolation windows without
         /// touching the body.
         /// </summary>
         internal sealed class SpectraCacheIndex

@@ -19,7 +19,10 @@
         straight-through, at full size).
       * A check that reads output a leg here already produces (a log line, a
         cache hit) is fine. A new leg that exists to exercise pipeline behavior
-        is not: write it as a subset test.
+        is not: write it as a subset test. The one exception is opt-in and off in
+        every gate: mode 13 (-StepwiseOneCommand), the demonstration at real scale
+        that a run stopped after any task resumes after it. Its subset twin,
+        SubsetPipelineTest.TestSubsetLibraryBuildTunedStepwise, is the gate.
 
     Acquires real DIA test data the way Skyline perf tests do (download a
     panorama zip into the shared <Downloads>\Perftests folder, extract,
@@ -97,6 +100,24 @@
               2026-09-12 (SHA-256 identical on StellarLibDecoy and Stellar, per-precursor
               and per-run) and would cost a full resident run per dataset to repeat.
 
+      mode 13 (opt-in, -StepwiseOneCommand, Stellar only) the one command with tuning
+              (--fasta hela-filtered.fasta --training-input <_21>) straight through, then
+              the same command with OSPREY_STOP_AFTER_TASKS=1 run again and again until it
+              completes: each run must skip every task finished before it and run exactly
+              the next, in the straight-through order (PredictTrainingLibrary, the tuning
+              search's four stages, TrainModel, PredictLibrary, the search's four), and the
+              stepwise result must equal the straight-through one at -Tolerance. CPU
+              prediction and a full fine-tune, twice: about 35 minutes.
+
+      mode 14 (opt-in, -HpcOneCommand, Stellar only) the tuned one command as a cluster
+              runs it: one process per --task node (PredictTrainingLibrary; the tuning
+              search's stages with --training-search, the per-file ones one node per run;
+              TrainModel; PredictLibrary; the search's stages, one node per run for the
+              per-file ones), every node the same command line. Before each node its
+              declared inputs (--task-files) must exist; after it, exactly its task ran and
+              its declared outputs exist; the result must equal the straight-through one
+              (mode 13's, run here if mode 13 is not) at -Tolerance. About 25 minutes.
+
     Which mode emits which summary line on which dataset, with what gates it and the
     seconds each leg cost on the last full run, is rendered as regression.html beside
     this script by Regression\Write-RegressionMatrix.ps1 (read it before adding a leg
@@ -172,10 +193,29 @@
     (the chain is part of the standing cadence); this switch is for fast local
     iteration when only the straight-through correctness matters.
 
+.PARAMETER StepwiseOneCommand
+    Run mode 13 on Stellar: the tuned one command straight through and stepwise
+    (OSPREY_STOP_AFTER_TASKS=1), proving at real scale that a run stopped after any task
+    resumes after it, re-running nothing. Opt-in; TeamCity does not pass it.
+
+.PARAMETER HpcOneCommand
+    Run mode 14 on Stellar: the tuned one command node by node (--task, --training-search),
+    each node checked against its declared files, against a straight-through run. Opt-in;
+    TeamCity does not pass it.
+
 .PARAMETER DownloadsPath
     Override the downloads folder (default: Windows Downloads, honoring
     SKYLINE_DOWNLOAD_PATH and a relocated Downloads).
 
+.PARAMETER LibraryAsBlib
+    Search every dataset through a .blib instead of its .tsv: before the legs, the built Osprey
+    exports the staged library (decoys stripped, or marked and paired from the manifest, as the
+    dataset says) with --export-library, and every leg then takes the .blib (the manifest stays:
+    the .blib pairs its decoys from its own DecoyPairs table, but the diagnostics' entrapment
+    pairing still comes from the manifest). The goldens stay the .tsv search's,
+    so mode 1 asks whether a search through the shared BiblioSpec.IO reader is byte-identical to
+    one through the TSV parser; the only gate on the .blib read path, since every dataset's
+    library is a .tsv. Opt-in; TeamCity does not pass it. Refused with -CreateGolden.
 .PARAMETER Threads
     --threads for each run (default 16).
 
@@ -204,7 +244,7 @@
 
 .PARAMETER KeepOutput
     Retain EVERYTHING this run writes, including the staged input copies the HPC chain
-    makes (per-worker spectra.bin / library / .libcache / parquet copies, the consumed
+    makes (per-worker spectra.bin / library / derived .blib / parquet copies, the consumed
     phase dirs). A local run already retains its PRODUCTS - <dataset>\straight, the
     chain's phase 3/4 outputs and logs, every comparison input a red leg needs - and
     drops the copies as they are consumed, because they are byte-identical to what
@@ -272,6 +312,8 @@ param(
     [switch]$SkipResume,
     [switch]$SkipWarmRerun,
     [switch]$SkipHpcChain,
+    [switch]$StepwiseOneCommand,
+    [switch]$HpcOneCommand,
     [string]$DownloadsPath,
     [int]$Threads = 16,
     [switch]$TeamCity,
@@ -292,10 +334,16 @@ param(
     # is written in the invariant culture, so the SAME golden must match: a fr-FR run that
     # passes proves no number in a file or a tagged line follows the UI culture. The log's
     # prose is in fr-FR form (1 234 567, 12,5 %) and is never compared.
-    [string]$Culture
+    [string]$Culture,
+    # Every leg searches an exported .blib of the dataset's library instead of the .tsv; see
+    # the parameter help.
+    [switch]$LibraryAsBlib
 )
 
 $ErrorActionPreference = 'Stop'
+if ($LibraryAsBlib -and $CreateGolden) {
+    throw "-LibraryAsBlib and -CreateGolden do not mix: the goldens are the .tsv search's, and a .blib run is compared against them."
+}
 
 # Clean BEFORE a run, not after. Stated ONCE here; every other comment on cleanup points
 # back to this block rather than restating it (copies drift - this PR replaced eight).
@@ -307,7 +355,7 @@ $ErrorActionPreference = 'Stop'
 #                    only to regenerate files a passing run had produced and then deleted.
 #                    False under -TeamCity or -CleanOutput; -KeepOutput forces it.
 #   $retainStaging - the staged input COPIES survive too: per-worker spectra.bin / library /
-#                    .libcache / parquet copies and the consumed phase dirs (Remove-Staging
+#                    derived .blib / parquet copies and the consumed phase dirs (Remove-Staging
 #                    honors it). Only -KeepOutput: the copies are byte-identical to what the
 #                    straight leg already holds and were 69% of a retained Stellar run dir,
 #                    ~67 GB of an Astral one.
@@ -327,11 +375,11 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
 # (YEAR.ORDINAL.BRANCH.DOY) that changes every day, but the committed blib golden
-# compares the osprey_version metadata cell exactly. Pin OspreyVersion.Current to
+# compares the osprey.version metadata cell exactly. Pin OspreyVersion.Current to
 # a canonical constant for every Osprey invocation in this run (the env var
 # is inherited by the child processes), so the stamp is deterministic and the
 # golden stays green without the comparator skipping the field. Must match the
-# osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
+# osprey.version value committed in osprey-regression.data/*/tables/LibMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
 # Turn ON the per-file second-pass verifier for this gate (issue #4486). Stage 7 recomputes each
@@ -347,122 +395,10 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # chain's output against the straight leg's.
 $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 
-# No leg of this gate may run under a resident-pool allowance, so clear any INHERITED
-# one rather than merely declining to set it. A TeamCity agent, or a developer shell
-# that just ran a Stage 6 A/B, can have OSPREY_ALLOW_UNFIXED_RESIDENT exported; every
-# leg of every dataset would then run under that blanket and a regression back onto an
-# O(files) resident pool would pass fully green. That is the ten-day
-# OSPREY_PASS2_QVALUE=transfer failure the named-token ratchet was built to stop, so
-# "the gate sets it nowhere" has to mean the variable is UNSET when Osprey reads it,
-# not just that this script never assigns it. Announced rather than silent: an operator
-# who deliberately exported it should see why their run behaves differently here.
-# --- Known O(files) resident gaps, stated where the gate can be read -----------
-# "No leg sets OSPREY_ALLOW_UNFIXED_RESIDENT" is necessary but NOT sufficient as a
-# statement of health, and reading it as sufficient is the trap: a token is only
-# required where a guard demands one, so a resident path that no guard covers is
-# invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
-# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. #4486 was the standing example while it was open: the survivor
-# buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
-# path, and no guard covered it because it was not a resume or a mode - it was what Stage
-# 7 took as input. That is now closed (#4486): every default leg folds run by run, and the
-# one route that still takes the pool is the transfer pass-2 mode, tracked as #4665 in the
-# row below. Zero tokens therefore does NOT mean zero gaps, and this table keeps that
-# legible.
-#
-# Printed in the run summary (not just parked in a comment) so every CI log states the
-# outstanding gaps, and so a fixed entry left here shows up as a stale line in output
-# rather than as a comment nobody re-reads.
-#
-# Rules, from ai/docs/osprey-development-guide.md:
-#   * token + warning = an operator asked for residency and was told what they got
-#   * warning alone on a default path = INSUFFICIENT, allowed only as an interim
-#     tripwire with an open issue against it
-#   * any token this gate REQUIRES must have an open issue to remove it, and the token
-#     comes OUT of the gate when the issue lands. NONE is required today: #4536 gave the
-#     rehydrate its own per-file survivor loader, so the rehydrate streams the Stage 6
-#     handoff like every other leg and resume-survivor-handoff - the last entry here - came out
-#     with it. Zero is the invariant, not a milestone: a new entry below is a regression
-#     to justify in review, not a line to add and move on.
-$knownResidentGaps = @(
-    # Untokened by nature, which is exactly why it belongs here: no guard demands a token
-    # for it, so a token audit cannot see it and a green gate printed "none" while every
-    # leg walked it. Measured 2026-08-09 on 82 files rather than estimated - the preamble
-    # above names it, and a table that omits the one gap the preamble names is worse than
-    # no table. Token NONE, so it does not inflate the required-token count below.
-    @{
-        Issue = '#4665'
-        Token = 'NONE'
-        Path  = 'Transfer pass-2 (OSPREY_PASS2_QVALUE=transfer) computes its per-file half in Stage 7 over the whole pool (TransferOneFile runs from TransferPerRunQ, not from Pass2PerFileWorker); resident for the whole of Stage 7. #4486, the original tracker, is closed.'
-        # One model, stated explicitly: a fixed library term plus a per-file slope, both from
-        # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
-        # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
-        # not 0.197), which is unreadable in a summary that prints on every CI run.
-        # NOT every leg any more, and saying so mattered: this gate's own mode-3 SecondPassFDR
-        # phase takes the streamed join, which is the fix for this gap being exercised rather
-        # than merely described. The note below about hpc-merge already said that; this line
-        # still said "every leg", so the summary printed the stale half on every CI run.
-        #
-        # The model is now CONFIRMED rather than projected: 4.4 + 0.197*446 = 92.3 GB predicts
-        # the 91.1 GB private measured on the 446-run CHS cohort (2026-09-08), which is the
-        # first endpoint past 82 files. Quoted as a check on the model, not as a second model -
-        # see the note above about three numbers no single model reproduced.
-        # The set has SHRUNK from "every leg except mode 3's join phase" to one pass-2 mode.
-        # CanStreamStage7Join's first term was config.ExpectReconciledInput, which only
-        # --task SecondPassFDR sets, so the ordinary run could not stream BY CONSTRUCTION;
-        # derived from the reconciled parquets on disk it is route-independent, and the cold
-        # run and both resume arms now fold run by run (asserted per leg, not projected).
-        # What is left is the pass-2 mode with no per-file worker: transfer still computes
-        # its per-file half in Stage 7, over the whole pool. Moving TransferOneFile into
-        # Pass2PerFileWorker is what empties this row - and then the guard's
-        # streamingAvailable exemption has no subject either, so the two go together.
-        Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, exercised per commit by SubsetPipelineTest''s transfer arm since #4728; no leg of this gate runs it). Every default leg - cold straight-through, the resume, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
-    }
-)
-# Reachable only outside this gate, tokened, each with an open issue: NONE. The last one,
-# fdrbench-pass1 (#4507), is GONE: the pass-1 emitter streams off the per-file sidecars and
-# mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
-# --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
-# mode 3's join node needs no token).
-# By design rather than unfinished, so no issue: projection-off and
-# compacted-entries-buffer (the A/B byte-identity oracles). non-percolator-fdr went with
-# #4543, which deleted the simple FDR method it named - the ratchet shrinking a sixth time.
-
-# Preserved and RESTORED at the end of the run (see the finally block): this mutates the
-# process environment, so a developer running the gate in their interactive shell would
-# otherwise silently lose an exported token for the rest of the session.
-$script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0
-# and OSPREY_FDR_PROJECTION=0 force resident paths ON PURPOSE, and clearing the token that
-# admits them would abort the gate on its first leg with a guard error - making the very
-# comparison this harness exists to support impossible to run. Ambient tokens are stripped
-# ONLY when no such switch is set, which is the case the clearing is aimed at.
-#
-# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10): the switch itself was
-# retired once its A/B was banked, so there is no Stage-7 arm left for an operator to
-# force and no token to keep. ResidentPaths.KNOWN_UNFIXED shrank from 5 to 4 with it.
-#
-$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-               ($env:OSPREY_FDR_PROJECTION -eq '0')
-if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
-    if ($abSwitchSet) {
-        # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
-        # formatted and '{0}' survives verbatim into the output.
-        Write-Host (("Keeping inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - an A/B switch " +
-            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION=0) is set and needs it.") `
-            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-    } else {
-        Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
-            "gate may run under an ambient resident-pool allowance.") `
-            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-    }
-}
-
 # The goldens are captured under the shipped first-pass SVM C selection, so an inherited
 # OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
 # under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
-# golden. Cleared, announced, and restored in the finally block like the allowance above.
+# golden. Cleared, announced, and restored in the finally block.
 $script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
 if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
     Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
@@ -603,6 +539,11 @@ $datasets = [ordered]@{
         NestedZip        = 'libdecoy-entrapment.zip'
         LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
+        # The manifest pairs each entrapment peptide with its original target for the paired
+        # FDP and the FDRBench output; an entrapment library without it is refused at load.
+        # Until 2026-10-17 this dataset ran without one and its paired FDP was the no-pairing
+        # value.
+        Manifest         = 'osprey_library_db_pairing.tsv'
         StripDecoys      = $true
         Resolution       = 'unit'
         ModelDiagnostics = $true
@@ -956,6 +897,47 @@ function Invoke-OspreyRun {
     return @{ Wall = $sw.Elapsed; Log = $logPath; ExitCode = $exit }
 }
 
+# --- mode 13: the one command (--fasta --training-input), optionally stopped per task ---
+function Get-OneCommandArgs {
+    param([string[]]$Mzmls, [string]$Fasta, [string[]]$TuningRuns, [string]$Resolution, [string]$WorkDir)
+    $cliArgs = @()
+    foreach ($m in $Mzmls) { $cliArgs += @('-i', $m) }
+    $cliArgs += @('--fasta', $Fasta, '--training-input') + $TuningRuns
+    $cliArgs += @('-o', (Join-Path $WorkDir 'output.blib'),
+                  '--device', 'cpu', '--resolution', $Resolution, '--protein-fdr', '0.01',
+                  '--threads', $Threads.ToString(), '--work-dir', $WorkDir,
+                  # The lab's digest and prediction (Run-CarafeSharpWorkflow.ps1 stages 1a and 2).
+                  '--enzyme', '2', '--miss-c', '1', '--min-length', '7', '--max-length', '35',
+                  '--fix-mod', '1', '--var-mod', '0', '--max-var', '1',
+                  '--min-pep-charge', '2', '--max-pep-charge', '3', '--min-pep-mz', '400', '--max-pep-mz', '900',
+                  '--lf-frag-mz-min', '200', '--lf-frag-mz-max', '1960', '--lf-top-n-frag', '20',
+                  '--lf-min-n-frag', '2', '--lf-frag-n-min', '2')
+    $cliArgs += $memStampArgs
+    return $cliArgs
+}
+
+function Invoke-OneCommandRun {
+    param([string[]]$Mzmls, [string]$Fasta, [string]$TuningRun, [string]$Resolution, [string]$WorkDir,
+          [string]$LogName, [int]$StopAfterTasks = 0)
+    New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    $logPath = Join-Path $WorkDir $LogName
+    $cliArgs = Get-OneCommandArgs -Mzmls $Mzmls -Fasta $Fasta -TuningRuns @($TuningRun) -Resolution $Resolution -WorkDir $WorkDir
+    if ($StopAfterTasks -gt 0) { $env:OSPREY_STOP_AFTER_TASKS = $StopAfterTasks.ToString() }
+    Push-Location $WorkDir
+    try {
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        & $ospreyExe @cliArgs 2>&1 | Tee-Object -FilePath $logPath | Out-Null
+        $exit = $LASTEXITCODE
+        $sw.Stop()
+    } finally {
+        Pop-Location
+        if ($StopAfterTasks -gt 0) { Remove-Item Env:OSPREY_STOP_AFTER_TASKS -ErrorAction SilentlyContinue }
+    }
+    Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
+    if ($exit -ne 0) { throw "Osprey exited $exit (see $logPath)" }
+    return @{ Wall = $sw.Elapsed; Log = $logPath }
+}
+
 # Resolve a dataset's inputs from the extracted read-only data folder.
 # The mzML folder and the library folder can differ, so a second dataset can
 # reuse one copy of the mzML rather than duplicating gigabytes of it in the zip.
@@ -1175,6 +1157,40 @@ function Resolve-DatasetInputs {
         $manifest = Join-Path $libDir $Spec.Manifest
         if (-not (Test-Path $manifest)) { throw "Pairing manifest not found: $manifest" }
     }
+
+    # -LibraryAsBlib: the legs search an exported .blib of the library staged above. Derived
+    # EVERY run, never cached: the export is the loader's own reading of the .tsv (its typing,
+    # its decoy marking and pairing from the manifest), so a .blib from an earlier build would
+    # mask exactly the change a run is meant to catch. Into the same scratch as StripDecoys,
+    # through a temp name moved into place, for the same reason as there.
+    if ($LibraryAsBlib) {
+        $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
+        New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
+        $blib = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.blib')
+        $blibTmp = $blib + '.tmp'
+        $exportDir = Join-Path $derivedDir 'export'
+        $exportLog = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.export.log')
+        Remove-Item $blib, $blibTmp -Force -ErrorAction SilentlyContinue
+        $exportArgs = @('-l', $library, '--export-library', $blibTmp, '--resolution', $Spec.Resolution,
+                        '--threads', $Threads.ToString(), '--work-dir', $exportDir)
+        if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
+        if ($manifest) { $exportArgs += @('--decoy-pairing-manifest', $manifest) }
+        Write-Host "  exporting the library as a .blib for the legs to search..."
+        & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $blibTmp)) {
+            throw "Exporting $library as a .blib failed (exit $LASTEXITCODE); see $exportLog"
+        }
+        Move-Item $blibTmp $blib -Force
+        $saved = Select-String -Path $exportLog -Pattern 'Saved [\d,]+ library precursors? to' | Select-Object -Last 1
+        Write-Host ("  {0}" -f ($(if ($saved) { $saved.Line -replace '^\[[^\]]*\]\s*', '' } else { "exported " + (Split-Path -Leaf $blib) })))
+        $library = $blib
+        # The legs search the .blib ALONE: its DecoyPairs table carries the whole pairing design
+        # (each decoy's target, and the manifest's pairing id that pairs an entrapment peptide
+        # with its original target), so the manifest is not on their command line. The .blib
+        # must reproduce every golden the .tsv plus manifest produced, the model diagnostics'
+        # paired entrapment FDP (mode 1b) included.
+        $manifest = $null
+    }
     return @{ Dir = $dir; LibDir = $libDir; Mzmls = $mzmls; Library = $library; Manifest = $manifest }
 }
 
@@ -1225,8 +1241,8 @@ function Compare-DirFingerprint {
 # The canonical four-task pipeline, in execution order. These are the
 # OspreyTask.Name values (OspreyTasks.Create().Pipeline, the explicit ordered list the
 # task set declares): the same tokens
-# Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
-# [TASK] log lines and the .<Name>.osprey.task validity sidecars.
+# the driver writes into its [TASK] log lines and every artifact embeds in its
+# validity stamp.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
 
 # The driver's own per-task markers: the cache-hit skip at the top of the task
@@ -1778,7 +1794,7 @@ function Invoke-OspreyTaskRun {
         throw ("Osprey --task modified {0} file(s) it was given, which no task may do: [{1}]. " +
                "A phase produces new artifacts; rewriting one it received means a later stage " +
                "is reaching back into an earlier stage's output, so that file no longer matches " +
-               "the validity sidecar attesting it. See issue #4486. Log: {2}") -f
+               "the producer that stamped it. See issue #4486. Log: {2}") -f
               $touched.Count, ($touched -join ', '), $logPath
     }
 }
@@ -1825,15 +1841,134 @@ function Assert-ExitAgreesWithLog {
     }
 }
 
-# Stage the library (+ its .libcache when present) into a phase dir.
-function Copy-LibraryInto {
-    param([string]$Library, [string]$Dir, [string]$Manifest)
-    Copy-Item $Library (Join-Path $Dir (Split-Path -Leaf $Library))
-    $libCache = $Library + '.libcache'
-    if (Test-Path $libCache) { Copy-Item $libCache (Join-Path $Dir (Split-Path -Leaf $libCache)) }
-    # The pairing manifest is an input like the library: each phase runs with its
-    # own dir as CWD and references it by leaf name, so it must be staged too.
-    if ($Manifest) { Copy-Item $Manifest (Join-Path $Dir (Split-Path -Leaf $Manifest)) }
+# Stage the library's DERIVED file into a phase dir: its <lib>.blib, when present. No task
+# declares it - the derived blib is a cache of the library, validated by its own
+# osprey.library_hash row, and a node without it rebuilds it - so the declared-input staging
+# below does not ship it. This relay saves each phase the rebuild, as an HPC orchestrator
+# would. Returns the paths it staged.
+function Copy-LibraryDerivedInto {
+    param([string]$Library, [string]$Dir)
+    $staged = @()
+    $derived = $Library + '.blib'
+    if (Test-Path -LiteralPath $derived) {
+        $dest = Join-Path $Dir (Split-Path -Leaf $derived)
+        Copy-Item -LiteralPath $derived $dest
+        $staged += $dest
+    }
+    return $staged
+}
+
+# The files a --task node declares, as Osprey prints them: the node's own command line plus
+# --task-files (Program.PrintTaskFiles), run with CWD = the node dir, as Invoke-OspreyTaskRun
+# runs it, so every path resolves where the node will look. Nothing runs: the declarations
+# read the configuration only. One object per line, Kind 'input' or 'output'.
+function Get-DeclaredTaskFiles {
+    param([string]$WorkDir, [string[]]$CliArgs)
+    New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    Push-Location $WorkDir
+    try {
+        $lines = @(& $ospreyExe @CliArgs '--task-files' 2>&1 | ForEach-Object { "$_" })
+        $exit = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    if ($exit -ne 0) {
+        throw ("Osprey --task-files exited {0} in {1}: {2}" -f $exit, $WorkDir, ($lines -join ' | '))
+    }
+    # The last three tab-separated fields: --timestamp / --memstamp prepend columns of their own.
+    return @(foreach ($line in $lines) {
+        $f = $line.Split("`t")
+        if ($f.Count -ge 3 -and ($f[-3] -eq 'input' -or $f[-3] -eq 'output')) {
+            [pscustomobject]@{ Kind = $f[-3]; Task = $f[-2]; Path = $f[-1].Trim() }
+        }
+    })
+}
+
+# Stage a --task node with EXACTLY the inputs its task declares (OspreyTask.Inputs), each copied
+# from the first of $SourceDirs - the earlier phases' dirs - that holds it, else from $External
+# (leaf -> path, for the inputs from outside the chain), mtime preserved: the library's identity
+# and the training export's key are name + size + mtime. A declared input found nowhere FAILS
+# staging and names the file.
+#
+# This is what makes the declarations a contract rather than documentation. The chain used to
+# stage from hand-maintained lists, generous enough that a task could read a file its
+# declaration never promised and the gate stayed green - the #4486 relocation was believed done
+# for days while Stage 7 still read every 1st-pass sidecar. Now an undeclared dependency fails
+# the node that reads it, and a declared input nothing produced fails here
+# (TODO-task_file_contract_from_declarations.md).
+#
+# One substitution, the data-file rule of doc 00's relay checklist: a declared data file (an -i
+# of this node) is satisfied by its <stem>.spectra.bin, and the data file is never staged.
+# Returns the staged paths and the declared outputs.
+function Copy-DeclaredInputs {
+    param([string]$WorkDir, [string[]]$CliArgs, [string[]]$SourceDirs, [hashtable]$External,
+          [string]$Library)
+    $declared = Get-DeclaredTaskFiles -WorkDir $WorkDir -CliArgs $CliArgs
+    $dataLeaves = @{}
+    for ($i = 0; $i -lt $CliArgs.Count - 1; $i++) {
+        if ($CliArgs[$i] -eq '-i') { $dataLeaves[(Split-Path -Leaf $CliArgs[$i + 1])] = $true }
+    }
+    $workFull = [IO.Path]::GetFullPath($WorkDir).TrimEnd('\')
+    $staged = [System.Collections.Generic.List[string]]::new()
+    foreach ($in in @($declared | Where-Object { $_.Kind -eq 'input' })) {
+        if ([IO.Path]::GetDirectoryName($in.Path).TrimEnd('\') -ne $workFull) {
+            throw "staging: $($in.Task) declares input '$($in.Path)' outside its node directory $WorkDir"
+        }
+        $leaf = Split-Path -Leaf $in.Path
+        if ($dataLeaves.ContainsKey($leaf)) { $leaf = [IO.Path]::GetFileNameWithoutExtension($leaf) + '.spectra.bin' }
+        $dest = Join-Path $WorkDir $leaf
+        if (Test-Path -LiteralPath $dest) { continue }
+        $src = $null
+        foreach ($d in $SourceDirs) {
+            $candidate = Join-Path $d $leaf
+            if (Test-Path -LiteralPath $candidate) { $src = $candidate; break }
+        }
+        if (-not $src -and $External.ContainsKey($leaf) -and (Test-Path -LiteralPath $External[$leaf])) {
+            $src = $External[$leaf]
+        }
+        if (-not $src) {
+            throw ("staging: {0} declares input '{1}', and no earlier phase produced it (searched {2}, " +
+                   "then the library, manifest and straight-through spectra caches). Either its producer " +
+                   "did not write it or the declaration names a file nothing writes.") -f
+                  $in.Task, $leaf, ($SourceDirs -join ', ')
+        }
+        Copy-Item -LiteralPath $src $dest
+        (Get-Item -LiteralPath $dest).LastWriteTimeUtc = (Get-Item -LiteralPath $src).LastWriteTimeUtc
+        $staged.Add($dest)
+    }
+    $libLeaf = Split-Path -Leaf $Library
+    if (@($staged | Where-Object { (Split-Path -Leaf $_) -eq $libLeaf }).Count -gt 0) {
+        foreach ($p in @(Copy-LibraryDerivedInto -Library $Library -Dir $WorkDir)) { $staged.Add($p) }
+    }
+    return @{
+        Staged  = $staged.ToArray()
+        Outputs = @($declared | Where-Object { $_.Kind -eq 'output' } | ForEach-Object { $_.Path })
+    }
+}
+
+# One HPC node: stage its declared inputs, run it, keep its log, check it wrote every output it
+# declares, and free the staged copies (unless -KeepStaged: phase 4's are compared afterwards).
+# The free is per file: a phase dir is left holding only what its task wrote, which is what the
+# later phases search.
+function Invoke-HpcNode {
+    param([string]$WorkDir, [string[]]$CliArgs, [string]$LogName, [string]$KeptLog,
+          [string[]]$SourceDirs, [hashtable]$External, [string]$Library, [switch]$KeepStaged,
+          # Dirs that are fully consumed once this node is staged, freed before it runs.
+          [string[]]$FreeBeforeRun)
+    $stage = Copy-DeclaredInputs -WorkDir $WorkDir -CliArgs $CliArgs -SourceDirs $SourceDirs `
+        -External $External -Library $Library
+    foreach ($d in @($FreeBeforeRun)) { Remove-Staging $d }
+    Invoke-OspreyTaskRun -WorkDir $WorkDir -CliArgs $CliArgs -LogName $LogName
+    $logPath = Join-Path $WorkDir $LogName
+    Copy-Item $logPath $KeptLog -Force
+    $missing = @($stage.Outputs | Where-Object { -not (Test-Path -LiteralPath $_) })
+    if ($missing.Count -gt 0) {
+        throw ("Osprey --task exited 0 without writing {0} of its declared outputs: [{1}]. Log: {2}" -f
+               $missing.Count, ($missing -join ', '), $logPath)
+    }
+    if (-not $KeepStaged) {
+        foreach ($p in $stage.Staged) { Remove-Staging $p }
+    }
 }
 
 # Run the distributed --task pipeline end to end against copied inputs under
@@ -1871,280 +2006,111 @@ function Invoke-HpcChain {
     # Stable, file-order stem list (NOT hashtable key order) so the -i
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
-    $mzmlByStem = @{}
-    foreach ($m in $Mzmls) { $mzmlByStem[[IO.Path]::GetFileNameWithoutExtension($m)] = $m }
+    $commonArgs = @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+                    '--protein-fdr', '0.01', '--threads', $Threads.ToString()) + $extraArgs + $memStampArgs
+
+    # EVERY PHASE IS STAGED FROM ITS TASK'S DECLARATIONS (Invoke-HpcNode): what the node is given
+    # is what `--task-files` says it reads, found in the earlier phases' dirs. Nothing here lists
+    # a file by hand, so what follows is only which phases may supply which.
+    #
+    # The inputs from outside the chain, by leaf: the library and pairing manifest, and each
+    # run's spectra cache from the straight-through leg. Consulted only AFTER the phase dirs and
+    # only for these leaves, so a phase that failed to write an artifact can never be covered by
+    # the straight-through leg's copy of it.
+    #
+    # The caches are what phase 1 is seeded from, not the mzML. Phase 1 is the only HPC phase
+    # that reads spectra from scratch, so this costs nothing, stops copying multi-GB inputs, and
+    # makes the phase the gate on PerFileScoring reading a .spectra.bin with no source. Mode 2
+    # cannot cover that - it requires PerFileScoring to be SKIPPED, and a skipped task opens no
+    # cache. Also the only leg covering the UNREDIRECTED lookup: no phase passes --work-dir, so
+    # ResolveCacheDir returns the input directory, which is what an operator gets by default.
+    $external = @{ $libName = $Library }
+    if ($Manifest) { $external[$manifestName] = $Manifest }
+    foreach ($stem in $stemList) {
+        $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
+        if (-not (Test-Path -LiteralPath $srcCache)) {
+            throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
+        }
+        $external["$stem.spectra.bin"] = $srcCache
+    }
 
     # Phase logs are copied here as each phase finishes, because the phase DIRS are
-    # freed mid-chain to bound peak disk (phases 1, 2 and every phase-3 worker go
-    # before the SecondPassFDR node even starts). A leg-level assertion therefore cannot read
+    # freed mid-chain to bound peak disk. A leg-level assertion therefore cannot read
     # them where they were written -- mode 6 found exactly that, seeing only phase 4.
     # A few KB of text survives; the multi-GB inputs still do not.
     $chainLogDir = Join-Path $ChainRoot 'logs'
     New-Item -ItemType Directory -Path $chainLogDir -Force | Out-Null
 
-    # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
-    # <stem>.calibration.json per file.
-    # ONE PROCESS PER FILE, in its own directory, because that is what PerFileScoring is.
-    # Running all three mzMLs through a single process proved the task works on a node that can
-    # see every file - the one condition an HPC worker never has. A worker that reached for a
-    # sibling's data would have passed here and failed in production.
+    # Phase 1: per-file raw workers (Stage 1-4), writing <stem>.scores.parquet +
+    # <stem>.calibration.json. ONE PROCESS PER FILE, in its own directory, because that is what
+    # PerFileScoring is: running all three through one process proved the task works on a node
+    # that can see every file - the one condition an HPC worker never has. Each node is given
+    # its own spectra cache for the data file it declares, and NO mzML: Osprey tolerates a
+    # missing data file once the .spectra.bin exists, and a 0-byte stub would make a rejected
+    # cache silently parse an empty file.
     $ph1Root = Join-Path $ChainRoot 'phase1_scoring'
-    New-Item -ItemType Directory -Path $ph1Root -Force | Out-Null
     $ph1Dirs = @{}
     foreach ($stem in $stemList) {
         $ph1Dirs[$stem] = Join-Path $ph1Root $stem
-        New-Item -ItemType Directory -Path $ph1Dirs[$stem] -Force | Out-Null
-    }
-    # Seeded with the straight-through leg's CACHES, not the mzML. Phase 1 is the only HPC
-    # phase that reads spectra and it deletes the copied mzML right after running anyway, so
-    # this costs nothing, stops copying multi-GB inputs, and makes the phase the gate on
-    # PerFileScoring reading a .spectra.bin with no source. Mode 2 cannot cover that - it
-    # requires PerFileScoring to be SKIPPED, and a skipped task opens no cache. Mode 3's
-    # chain==straight comparison is what proves the results identical.
-    #
-    # Also the only leg covering the UNREDIRECTED lookup: phase 1 passes no --work-dir, so
-    # ResolveCacheDir returns the input directory, which is what an operator gets by default.
-    foreach ($stem in $stemList) {
-        $d1 = $ph1Dirs[$stem]
-        $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
-        if (-not (Test-Path -LiteralPath $srcCache)) {
-            throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
-        }
-        # THIS worker's data and nothing else: its own spectra cache and the library. No
-        # sibling's cache or parquet is present, and NO mzML - Osprey tolerates a missing
-        # data file once the .spectra.bin exists, so the chain stages what an orchestrator
-        # would and no longer fakes an input file to satisfy path derivation.
-        Copy-Item -LiteralPath $srcCache (Join-Path $d1 "$stem.spectra.bin")
-        Copy-LibraryInto -Library $Library -Dir $d1 -Manifest $Manifest
-        $a1 = @('-i', "$stem.mzML",
-                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-                '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
-        $a1 += $extraArgs
-        $a1 += $memStampArgs
-        Invoke-OspreyTaskRun -WorkDir $d1 -CliArgs $a1 -LogName 'phase1.log'
-        Copy-Item (Join-Path $d1 'phase1.log') (Join-Path $chainLogDir "phase1_$stem.log") -Force
+        $a1 = @('-i', "$stem.mzML") + $commonArgs + @('--task', 'PerFileScoring')
+        Invoke-HpcNode -WorkDir $ph1Dirs[$stem] -CliArgs $a1 -LogName 'phase1.log' `
+            -KeptLog (Join-Path $chainLogDir "phase1_$stem.log") -SourceDirs @() -External $external `
+            -Library $Library
     }
 
-    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
-    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. No
-    # input file is staged; the task derives sidecar paths from the -i names alone.
+    # Phase 2: FirstPassFDR (Stage 5), from every run's phase-1 output. Writes each run's
+    # <stem>.1st-pass.fdr_scores.bin and the analysis-wide output.1st-pass.* files. -i names the
+    # DATA files, exactly as phase 1 was given them, though this node holds none: Osprey accepts
+    # an absent input whose scores parquet is on disk, which is the state a staged join is in.
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
-    New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
-    foreach ($s in $stemList) {
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
-    }
-    Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
-    # -i names the DATA files, exactly as phase 1 was given them, even though this
-    # directory holds no data file at all: Osprey accepts an absent input whose scores
-    # parquet is on disk, which is precisely the state a staged join node is in. That
-    # tolerance is what --input-scores used to express by naming a different input KIND.
     $a2 = @('--task', 'FirstPassFDR')
     foreach ($s in $stemList) { $a2 += @('-i', "$s.mzML") }
-    $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
-    $a2 += $extraArgs
-    $a2 += $memStampArgs
-    Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
-    Copy-Item (Join-Path $ph2 'phase2.log') (Join-Path $chainLogDir 'phase2.log') -Force
+    $a2 += $commonArgs
+    Invoke-HpcNode -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log' `
+        -KeptLog (Join-Path $chainLogDir 'phase2.log') `
+        -SourceDirs @($stemList | ForEach-Object { $ph1Dirs[$_] }) -External $external -Library $Library
 
-    # Phase 3: per-file rescore workers (Stage 6), one independent worker per
-    # file. Stage 6 STREAMS its MS2 from the .spectra.bin cache phase 1 wrote (there is
-    # no mzML fallback), so each worker gets phase 1's <stem>.spectra.bin and no input
-    # file at all (Osprey tolerates a missing data file once the cache exists -- the real
-    # 6 GB mzML is never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
-    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
-    # --task PerFileRescoring runs alone (the membership rule includes only the selected stage), so
-    # phase 4 is the only node that writes one.
+    # Phase 3: per-file rescore workers (Stage 6), one independent worker per file, from its own
+    # phase-1 output and phase 2's. Stage 6 STREAMS its MS2 from the spectra cache (there is no
+    # mzML fallback), which PerFileRescoring declares, so each worker gets its run's cache and no
+    # data file. It writes the reconciled parquet, the run's plan and the per-run 2nd-pass
+    # sidecars. NOT given the pass-1 diagnostics product: PerFileRescoring does not read it, so
+    # phase 4 takes it from phase 2 directly instead of through a relay hop here.
+    #
+    # Freeing each worker's staged copies as it finishes keeps at most one worker's 6 GB
+    # spectra.bin + library copy on disk at a time (the out-of-disk failure was several of them
+    # coexisting with the straight-through leg's spectra caches).
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
-        $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
-        $ph3Dirs[$s] = $ph3
-        New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.spectra.bin")     (Join-Path $ph3 "$s.spectra.bin")
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")  (Join-Path $ph3 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph3 "$s.calibration.json")
-        Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
-        Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
-        # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
-        # phase2 -> phase3 -> phase4 relay as the other Stage-5 sidecars: $ph2 is
-        # deleted below (before SecondPassFDR), so SecondPassFDR can only reach it
-        # via a phase-3 hop. Present only for the SVM/percolator framework; absent for
-        # the GBDT golden, so guard with Test-Path.
-        $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
-        if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
-        # The protein-compact stratum is a SECOND artifact, not a field of the model sidecar:
-        # first-pass protein FDR computes it and training does not, so it is written when that
-        # later phase ends. It therefore needs its own hop on the same relay. Present only
-        # under OSPREY_PASS2_QVALUE=protein-compact, so guard with Test-Path.
-        $ph2stratum = Join-Path $ph2 "$s.1st-pass.stratum.json"
-        if (Test-Path $ph2stratum) { Copy-Item $ph2stratum (Join-Path $ph3 "$s.1st-pass.stratum.json") }
-        # The analysis-wide EXPERIMENT-scope sidecar (format v5, issue #4486) rides the same
-        # relay. It is a RUN-level file, not per-stem - one record per distinct entry_id for the
-        # whole analysis - but it is copied inside this per-stem loop because each stem gets its
-        # own phase-3 directory and a PerFileRescoring worker reads it from its own working
-        # directory. Stage 6's compaction reads the protein-rescue q out of this file, so a
-        # worker that cannot see it computes a different survivor set than straight-through.
-        $ph2exp = Join-Path $ph2 'output.1st-pass.fdr_experiment.bin'
-        if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
-        # The analysis-wide RETAINED BASE_ID summary rides the same relay, for the same reason
-        # and one step further: it is what lets this worker compact its single run without
-        # reading every other run's reconciliation.json. FirstPassFDR writes it when planning
-        # ends. Unlike the files above this one is NOT guarded with Test-Path - a worker that
-        # cannot see it fails rather than silently compacting to a per-run subset, so a missing
-        # copy here must surface as that failure and not as a skipped hop.
-        $ph2ret = Join-Path $ph2 'output.1st-pass.retained_base_ids.bin'
-        Copy-Item $ph2ret (Join-Path $ph3 'output.1st-pass.retained_base_ids.bin')
-        # The pass-1 diagnostics product rides the same relay. FirstPassFDR is the only task
-        # that can produce it - the pass-1 pool and trained model are gone by SecondPassFDR - so
-        # a node that cannot see it renders a page with no first-pass half at all.
-        #
-        # This hop did not exist for its predecessor either, which doc 00 names as a standing
-        # gap: "a relay obligation mode 3 does not stage is an obligation nothing is checking".
-        # It stayed invisible because mode 3 compares the blib and the FDR sidecars and never
-        # opens the report, so the chain's SecondPassFDR silently logged "pass-1 data sidecar
-        # not found; pass-2 enrichment skipped" and the leg passed anyway. Guarded with
-        # Test-Path: present only under --model-diagnostics.
-        $ph2diag = Join-Path $ph2 'output.1st-pass.model-diagnostics.json'
-        if (Test-Path $ph2diag) { Copy-Item $ph2diag (Join-Path $ph3 'output.1st-pass.model-diagnostics.json') }
-        Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
-        $a3 = @('--task', 'PerFileRescoring', '-i', "$s.mzML",
-                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-                '--protein-fdr', '0.01', '--threads', $Threads.ToString())
-        $a3 += $extraArgs
-        $a3 += $memStampArgs
-        Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
-        Copy-Item (Join-Path $ph3 'phase3.log') (Join-Path $chainLogDir "phase3_$s.log") -Force
-        # This worker has written its reconciled parquet; phase 4
-        # consumes it plus the calibration / reconciliation / 1st-pass
-        # sidecars copied above -- never this worker's spectra cache, input
-        # scores.parquet, or library. Drop those big inputs now so at most one
-        # worker's 6 GB spectra.bin + library copy is on disk at a time (the
-        # out-of-disk failure was several of them coexisting with the
-        # straight-through leg's spectra caches).
-        Remove-Staging (Join-Path $ph3 "$s.spectra.bin")
-        Remove-Staging (Join-Path $ph3 "$s.scores.parquet")
-        Remove-Staging (Join-Path $ph3 $libName)
-        Remove-Staging (Join-Path $ph3 ($libName + '.libcache'))
+        $ph3Dirs[$s] = Join-Path $ChainRoot "phase3_rescore_$s"
+        $a3 = @('--task', 'PerFileRescoring', '-i', "$s.mzML") + $commonArgs
+        Invoke-HpcNode -WorkDir $ph3Dirs[$s] -CliArgs $a3 -LogName 'phase3.log' `
+            -KeptLog (Join-Path $chainLogDir "phase3_$s.log") -SourceDirs @($ph1Dirs[$s], $ph2) `
+            -External $external -Library $Library
     }
-
-    # Phases 1 and 2 are fully consumed once every rescore worker has copied its
-    # inputs (phase 4 reads only phase-3 outputs, and their logs are already in
-    # chain\logs). Free them before SecondPassFDR.
+    # Phase 1 is fully consumed: phase 4 reads nothing Stage 1-4 wrote.
     Remove-Staging $ph1Root
-    Remove-Staging $ph2
 
-    # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
-    # reconciled parquet + sidecars (never the original Stage 4 parquet, and no
-    # input file at all) and writes the blib.
+    # Phase 4: SecondPassFDR (Stage 7 + blib), from the phase-3 workers' outputs and phase 2's
+    # analysis-wide files.
+    #
+    # THE PER-FILE 1st-PASS SIDECARS ARE WITHHELD, because SecondPassFDR declares them only
+    # under OSPREY_PASS2_VERIFY_WORKER, which this chain turns off. That is the gate for issue
+    # #4486's goal, and an ENFORCEMENT rather than an assertion: if Stage 7 reaches for one, it
+    # fails on a missing file rather than passing quietly. The straight leg has them sitting in
+    # its own directory, so only this leg can show the default path is independent of them. The
+    # same holds for the per-run .calibration.json, which SecondPassFDR no longer declares, and
+    # for the model and stratum outside protein-compact.
+    #
+    # The 1st-pass sidecars are still preserved for mode 3's pass-1 comparison: they are chain
+    # outputs (phase 2 wrote them), simply not phase 4's input, and phase 2's dir is freed once
+    # phase 4 is staged, with every phase-3 worker's.
     $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
-    New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
-    # Where the phase-3 workers' own outputs are kept for comparison after their dirs are cleaned.
     $ph3Out = Join-Path $ChainRoot 'phase3_outputs'
     New-Item -ItemType Directory -Path $ph3Out -Force | Out-Null
     foreach ($s in $stemList) {
-        $ph3 = $ph3Dirs[$s]
-        Copy-Item (Join-Path $ph3 "$s.scores-reconciled.parquet") (Join-Path $ph4 "$s.scores-reconciled.parquet")
-        # THE PER-FILE 1st-PASS SIDECARS ARE DELIBERATELY WITHHELD when the verifier is off.
-        #
-        # This is the gate for issue #4486's actual goal, and it is an ENFORCEMENT rather than an
-        # assertion: phase 4 is given exactly what an HPC orchestrator would give a SecondPassFDR
-        # node - the reconciled parquets, the per-run 2nd-pass artifacts, and the analysis-wide
-        # experiment sidecar - and nothing per-file from the first pass. If Stage 7 reaches for
-        # one, it fails on a missing file rather than passing quietly, and no log line or count
-        # has to be trusted to notice.
-        #
-        # A green mode 3 therefore MEANS the default path is independent of these files. That is
-        # not something a passing run could otherwise demonstrate: the straight leg has them
-        # sitting in its own directory, so it would read them without anyone knowing.
-        #
-        # Under OSPREY_PASS2_VERIFY_WORKER they ARE relayed, because the recomputation legitimately
-        # needs them - the flag changes what this node is being asked to do.
-        # Preserved for the mode-3 comparison regardless: these ARE chain outputs (phase 3 wrote
-        # them), they are simply not phase 4's input. The worker dirs are scrubbed a few lines
-        # below, so without this the files the comparison needs would be gone.
-        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
-
-        # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
-        # (protein-compact) leaves a 2nd-pass sidecar here, and phase 4 folds it
-        # without opening anything from the first pass - that is the contract issue #4486
-        # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
-        # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
-        # needs these files; withholding them there would fail a mode for a contract it never
-        # claimed. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
-        # future mode gets the right answer without editing this line.
-        if (-not (Test-Path (Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"))) {
-            Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
-        }
-        Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
-        Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
-        # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
-        # modes (transfer / protein-compact) without re-training. Written
-        # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
-        # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
-        # protein-compact's stratum is its own artifact (protein FDR computes it, training does
-        # not), so it takes the same second hop rather than riding inside the model sidecar.
-        $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
-        if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
-        $stratumSide = Join-Path $ph3 "$s.1st-pass.stratum.json"
-        if (Test-Path $stratumSide) { Copy-Item $stratumSide (Join-Path $ph4 "$s.1st-pass.stratum.json") }
-        # The per-run 2nd-pass sidecar is now an INPUT to phase 4, not its output (#4486): the
-        # per-file half of the second pass runs in PerFileRescoring, so phase 3 produces this
-        # file and phase 4 folds it. Its VALIDITY STAMP travels with it, because that stamp is
-        # how SecondPassFDR knows the worker owns the file - the filename records the producer,
-        # so presence answers "who wrote this" without opening it.
-        #
-        # Copying the binary but not the stamp would be worse than copying neither: phase 4
-        # would fold a file it believed it had produced itself. Guarded with Test-Path because
-        # the retrain modes have no per-file half and phase 3 writes nothing here.
-        #
-        # The DECOY SIDE of the same competition travels with it, and is not optional once the
-        # sidecar is here: the pool image cannot carry the winning decoy of a base_id (a
-        # non-survivor holds no pool row), so phase 4 THROWS rather than folding an experiment
-        # q against a decoy-depleted null. Relaying one without the other is the exact defect
-        # this relay produced once before - a per-file artifact that silently did not arrive,
-        # leaving phase 4 to recompute and answer differently from the straight route.
-        $pass2Side = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
-        if (Test-Path $pass2Side) {
-            $pass2Decoys = Join-Path $ph3 "$s.2nd-pass.fdr_decoys.bin"
-            if (-not (Test-Path $pass2Decoys)) {
-                throw "PerFileRescoring wrote $s.2nd-pass.fdr_scores.bin but no matching .2nd-pass.fdr_decoys.bin in $ph3"
-            }
-            Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
-            Copy-Item $pass2Decoys (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin")
-            $decoysStamp = "$pass2Decoys.PerFileRescoring.osprey.task"
-            if (Test-Path $decoysStamp) {
-                Copy-Item $decoysStamp (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task")
-            }
-            $pass2Stamp = "$pass2Side.PerFileRescoring.osprey.task"
-            if (Test-Path $pass2Stamp) {
-                Copy-Item $pass2Stamp (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task")
-            }
-        }
-        # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
-        # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
-        $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'
-        if (Test-Path $ph3exp) { Copy-Item $ph3exp (Join-Path $ph4 'output.1st-pass.fdr_experiment.bin') -Force }
-        # And the retained base_id summary, for the same reason: SecondPassFDR's reconciled-input
-        # load streams each run against it, so $ph2 being gone makes phase 3 its only route here.
-        $ph3ret = Join-Path $ph3 'output.1st-pass.retained_base_ids.bin'
-        Copy-Item $ph3ret (Join-Path $ph4 'output.1st-pass.retained_base_ids.bin') -Force
-        # The pass-1 diagnostics product takes its second hop for the same reason as the model
-        # sidecar: SecondPassFDR renders the page and $ph2 is gone by now, so phase 3 is its
-        # only route here. Without it the chain's report has no first-pass half.
-        $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
-        if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
-        # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
-        # it could never fire: --task PerFileRescoring runs alone (the membership rule includes only
-        # the selected stage), so SecondPassFdrTask never runs on a phase-3 worker and no such file exists to copy. Worse than dead - had
-        # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
-        # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
-        # Phase 4 is the only node that writes these.
+        Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
     }
-    # SecondPassFDR now has every worker's reconciled output copied in (and kept under
-    # phase3_outputs for comparison); the phase-3 worker dirs are done.
-    foreach ($d in $ph3Dirs.Values) { Remove-Staging $d }
-    Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
     # -i again, and the RECONCILED parquet is what each run resolves to - because the TASK
     # says so (ScoringTaskShared.ReadsReconciledScores), not because it is the only file
     # here. That this directory also holds only the reconciled sibling is the enforcement
@@ -2152,12 +2118,12 @@ function Invoke-HpcChain {
     # a disk probe, the staging would hide it.
     $a4 = @('--task', 'SecondPassFDR')
     foreach ($s in $stemList) { $a4 += @('-i', "$s.mzML") }
-    $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
-    $a4 += $extraArgs
-    $a4 += $memStampArgs
-    Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
-    Copy-Item (Join-Path $ph4 'phase4.log') (Join-Path $chainLogDir 'phase4.log') -Force
+    $a4 += $commonArgs
+    # Staged copies kept: mode 3 compares the per-run 2nd-pass sidecars in this directory.
+    Invoke-HpcNode -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log' `
+        -KeptLog (Join-Path $chainLogDir 'phase4.log') `
+        -SourceDirs (@($stemList | ForEach-Object { $ph3Dirs[$_] }) + $ph2) -External $external `
+        -Library $Library -KeepStaged -FreeBeforeRun (@($ph3Dirs.Values) + $ph2)
 
     return (Join-Path $ph4 'output.blib')
     } finally {
@@ -2211,37 +2177,11 @@ foreach ($name in $selected) {
     $dataFp = Get-DirFingerprint -Dir $inputs.Dir
 
     $straightDir = Join-Path $runRoot "$name\straight"
-    # Whether this run was ASKED for a configuration that cannot stream the Stage-7 join, so
-    # the legs below can tell "took the resident join" from "was told to". These are
-    # CanStreamStage7Join's OWN terms, not a mode list: the switch that forces the resident
-    # join, the one that makes NeedsResidentPool true, and any pass-2 mode other than
-    # protein-compact (transfer still computes its per-file half in Stage 7). Enumerated
-    # rather than inferred from the log, because a resident run says nothing about WHY it was
-    # resident - and a silent SKIP for the wrong reason is what these legs exist to prevent.
-    #
-    # ExpectReconciledInput is not among them, and used to be the whole answer: it was
-    # CanStreamStage7Join's first term, and only --task SecondPassFDR sets it, so the ordinary
-    # run could not stream by construction. Deriving the admission from the reconciled parquets
-    # on disk is what puts every leg under one question.
-    #
-    # OSPREY_STAGE6_STREAM_SURVIVORS=0 belongs here too, and its absence made this list
-    # wrong rather than merely incomplete. Under that switch BuildRunPerRunSource returns
-    # null (no loader, and the per-run lists are never cleared), so no marker reaches
-    # straight.log and the mode1 leg FAILS a run behaving exactly as instructed - while
-    # mode2 PASS, because BuildResumePerRunSource reads the loader through
-    # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
-    # red that reads like a genuine regression is the worst shape a gate can have.
-    #
-    # Reading env vars only is now COMPLETE for the resident-pool half: NeedsResidentPool's
-    # one remaining trigger is OSPREY_FDR_PROJECTION=0, tested below. Its CLI/config triggers are
-    # gone - --fdrbench-pass 1 streamed with #4507, and the non-Percolator --fdr-method went
-    # with #4543, which removed the argument and the simple FDR method. OSPREY_FDR_MODEL=gbdt
-    # does not belong here: trees run the same Percolator framework and stream.
-    $cannotStreamJoin =
-        ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-        ($env:OSPREY_FDR_PROJECTION -eq '0') -or
-        (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
-         $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
+    # No configuration this gate can be asked for declines the streamed Stage-7 join any more,
+    # so every leg's streamed-join assertion is unconditional. The terms that once excused one
+    # were the switches that forced a resident join or a resident first-pass pool
+    # (OSPREY_STAGE7_STREAM, OSPREY_STAGE6_STREAM_SURVIVORS, OSPREY_FDR_PROJECTION=0), each
+    # retired with its arm, and the pass-2 mode, which stopped being a term with #4665.
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
     # so keying the golden on Folder alone would collide with Stellar's.
@@ -2317,7 +2257,7 @@ foreach ($name in $selected) {
 
     # ---- mode 1: straight-through vs committed golden ----
     Write-Progress-Tc "${name}: comparing vs golden (mode 1)"
-    $m1 = Compare-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump -Tolerance $Tolerance
+    $m1 = Compare-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump -Tolerance $Tolerance -LibraryAsBlib:$LibraryAsBlib
     if ($m1.Pass) {
         $summaryLines.Add("$name mode1 (vs golden): PASS")
     } else {
@@ -2467,7 +2407,9 @@ foreach ($name in $selected) {
             # Compare-Object boxes every byte into a PSObject and hashes it. On Astral (85.8 MB,
             # 2,498,773 records) that took the harness process to a 53 GB working set and stalled
             # this leg for many minutes; the span compare is under a second.
-            $expDiff = [OspreyFdrSidecarComparer]::CompareBytes(
+            # CompareExperimentBytes: header and records only. The trailing validity stamp is
+            # provenance whose key names the route, so it legitimately differs between legs.
+            $expDiff = [OspreyFdrSidecarComparer]::CompareExperimentBytes(
                 $expStraight[0].FullName, $expChain[0].FullName, 1000)
             if (-not $expDiff.Readable) {
                 $m3sIssues.Add("$expName : $($expDiff.Problem)")
@@ -2485,9 +2427,9 @@ foreach ($name in $selected) {
                     $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
                     $expDiff.FirstDiffOffset, $expDiff.DiffCount))
             } else {
-                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length -
+                $m3sCompared += [int](($expDiff.LengthExpected -
                     [OspreyFdrSidecarComparer]::ExperimentHeaderLen) /
-                    [OspreyFdrSidecarComparer]::ExperimentRecordLen
+                    [OspreyFdrSidecarComparer]::ExperimentRecordLen)
             }
         }
 
@@ -2533,27 +2475,27 @@ foreach ($name in $selected) {
             -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
         $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
-        # And the chain must have folded a worker answer for EVERY file. "Verification off" is
-        # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
-        # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
-        # what a SEA-AD measurement did for hours while reporting the shipped path (2026-08-31).
-        # Only the modes with a per-file half make this claim. OSPREY_PASS2_QVALUE=transfer and
-        # the retrain modes compute the second pass in Stage 7 by definition, so there is no
-        # worker answer to fold and demanding one would fail them for a contract they never
-        # made. Detected from the worker's own validity stamp reaching phase 4, not from the
-        # mode flag.
-        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir `
-            -Filter '*.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task' `
-            -ErrorAction SilentlyContinue).Count -gt 0
-        $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
-            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ answered=(\d+)/\1\b') -Quiet
-        if (-not $chainHasWorkerOutput) {
-            $summaryLines.Add("$name mode3 (shipped fold): SKIP (mode has no per-file half)")
-        } elseif (-not $chainAllAnswered) {
+        # And the chain must have folded the worker answers. "Verification off" is not the same
+        # as "the shipped path ran": a node given no 2nd-pass artifacts also has the verifier off.
+        # It used to silently recompute every file from 1st-pass sidecars - exactly what a SEA-AD
+        # measurement did for hours while reporting the shipped path (2026-08-31). Since #4665 it
+        # refuses instead, because SecondPassFDR computes no per-run answer in any mode, so this
+        # asserts the two things that make the fold real: every 2nd-pass sidecar phase 4 read
+        # names PerFileRescoring as its producer, and phase 4 reported the fold.
+        $chainSidecars = @(Get-ChildItem -File -Path $chainDir -Filter '*.2nd-pass.fdr_scores.bin' -ErrorAction SilentlyContinue)
+        $chainWorkerSidecars = @($chainSidecars | Where-Object { Test-ProducedBy $_.FullName 'PerFileRescoring' })
+        # The fold line is the competition's (it carries the verifier state); the transfer fold
+        # emits none, so it is demanded only where the straight leg emitted one too.
+        $chainFolded = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ runs=\d+\b') -Quiet
+        $foldLineExpected = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
+        if ($chainSidecars.Count -eq 0 -or $chainWorkerSidecars.Count -ne $chainSidecars.Count -or
+            ($foldLineExpected -and -not $chainFolded)) {
             $overallFail = $true
-            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - phase 4 did not report a worker " +
-                "answer for ALL files, so it recomputed some from 1st-pass sidecars rather than " +
-                "folding what the workers wrote.")
+            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - $($chainWorkerSidecars.Count) of " +
+                "$($chainSidecars.Count) 2nd-pass sidecars were written by PerFileRescoring, and phase 4 " +
+                "reported the fold: $([bool]$chainFolded).")
             $summaryLines.Add("$name mode3 (shipped fold): FAIL")
         } else {
             $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
@@ -2573,20 +2515,13 @@ foreach ($name in $selected) {
         # the suite green. That term is gone from the predicate (the pass-2 report is folded run
         # by run through ModelDiagnosticsData.Accumulator), so the scoping goes with it.
         #
-        # Nothing else in the predicate varies across these datasets: --fdrbench is never passed
-        # here, so NeedsResidentPool is false, and protein-compact is the default pass-2 mode, so
-        # every mode-3 chain meets the remaining conditions structurally. A dataset that ever
-        # needs a narrower rule should name the condition rather than restore a blanket skip.
-        # ...unless the run was asked for a configuration that cannot stream, in which case it
-        # is doing exactly what it was told and demanding the marker would fail it for
-        # complying. $cannotStreamJoin, computed once per dataset above, is that question; it
-        # governs every leg's copy of this assertion rather than each one enumerating the
-        # terms again.
+        # Nothing else in the predicate varies across these datasets: protein-compact is the
+        # default pass-2 mode, so every mode-3 chain meets the remaining conditions
+        # structurally. A dataset that ever needs a narrower rule should name the condition
+        # rather than restore a blanket skip.
         $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern $stage7StreamMarker -SimpleMatch -Quiet
-        if ($cannotStreamJoin) {
-            $summaryLines.Add("$name mode3 (streamed join): SKIP (this configuration cannot stream the join)")
-        } elseif (-not $chainStreamed) {
+        if (-not $chainStreamed) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (streamed join): FAIL - phase 4 did not report the " +
                 "per-run fold, so SecondPassFDR built the whole-run survivor pool. Output is " +
@@ -2596,10 +2531,10 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (streamed join): PASS (per-run fold, no all-runs pool)")
         }
 
-        # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
-        # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
-        # NEITHER fold line and there is no split to assert. Detected from the straight leg having
-        # emitted a fold line at all, rather than from the mode flag.
+        # Scoped to the competition: the verifier only exists on the protein-compact fold, so
+        # OSPREY_PASS2_QVALUE=transfer emits NEITHER fold line and there is no split to assert.
+        # Detected from the straight leg having emitted a fold line at all, rather than from the
+        # mode flag.
         $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
             -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
         if (-not $straightUsedFrozenPath) {
@@ -2667,9 +2602,10 @@ foreach ($name in $selected) {
         # obligation mode 3 does not stage is an obligation nothing is checking."
         #
         # Nothing else here can see this. Every other mode-3 assertion compares the blib and
-        # the FDR sidecars, and none opens the report, so removing the phase2 -> phase3 -> phase4
-        # hop would silently turn the chain's page back into a pass-1-only one with every leg
-        # still green. That was the state before the hop existed.
+        # the FDR sidecars, and none opens the report, so dropping the pass-1 product from
+        # SecondPassFDR's declared inputs - which is all that stages it on phase 4 now - would
+        # silently turn the chain's page back into a pass-1-only one with every leg still
+        # green. That was the state before the relay existed.
         #
         # completeness.pass2Present is the right signal precisely because it is not a copy
         # check: it is true only when pass-2 content was ATTACHED at render time, which on the
@@ -2712,9 +2648,6 @@ foreach ($name in $selected) {
     if (-not $SkipWarmRerun) {
         Write-Progress-Tc "${name}: warm re-run cache hits (mode 4)"
         $warmBefore = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
-        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, for mode 3's reason: a healthy warm
-        # re-run runs NO task, so it can reach no resident path, and pre-setting the
-        # opt-in could only mask the regression this leg exists to catch.
         $rWarm = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
             -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench)
         $warmAfter = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
@@ -2789,18 +2722,6 @@ foreach ($name in $selected) {
     if (-not $SkipResume -and -not (Test-ModeCut $cfg 2)) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, and this leg is the reason the variable is
-        # now unset on EVERY leg of the gate. It used to name mdiag-full-resume: the
-        # invalidation leaves every <stem>.1st-pass.fdr_scores.bin on disk, so under
-        # --model-diagnostics Stage 5 held the RESIDENT per-file entries for the batch
-        # ModelDiagnosticsReport.Write to read, which is O(files) and genuinely needed
-        # suppressing at 3 files. #4505 streamed that report off FirstPassFDR's own per-file load,
-        # so the trigger is gone and so is the token.
-        #
-        # Nothing here replaces it. An opt-in on this leg would mask exactly the regression the
-        # leg exists to catch, which is why mode 3 and mode 4 never had one either: the former
-        # blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 wrapped a whole leg and let a transfer
-        # regression ride along unnoticed for ten days.
         # The inputs this leg names DO NOT EXIST: same file names, but under the work dir,
         # where an mzML is never placed - only the .spectra.bin is. The sources stay in the
         # read-only Perftests tree, untouched.
@@ -2907,33 +2828,16 @@ foreach ($name in $selected) {
         @{ Log = 'resume.log';    Mode = 'mode2'; What = 'the resume'; ModeNumber = 2 })) {
         if (Test-ModeCut $cfg $streamLeg.ModeNumber) { continue }
         $legPath = Join-Path $straightDir $streamLeg.Log
-        if ($cannotStreamJoin) {
-            $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): SKIP " +
-                '(this configuration cannot stream the join)'))
-        } elseif (-not (Test-Path -LiteralPath $legPath)) {
+        if (-not (Test-Path -LiteralPath $legPath)) {
             $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): SKIP (leg not run)")
         } else {
             $legStream = Test-LogMarker -LogPath $legPath -Marker $stage7StreamMarker `
                 -Description ("$($streamLeg.What) folding Stage 7 one run at a time instead " +
                     'of rebuilding every run''s survivors at once')
-            # PRESENCE OF THE MARKER IS NOT ENOUGH, and this is the hole it left. The marker is
-            # logged when the per-run source is BUILT, not when anything folds through it. A
-            # consumer that reads RescoredEntries.Value instead of streaming routes to
-            # MaterializeAllFromSource, which builds every run at once - the exact O(runs x
-            # entries) peak, 91.1 GB at 446 - while Streams stays true, so the marker is present,
-            # WarnResidentStage7Join stays silent, and this leg reported PASS on a resident run.
-            # MaterializeAllFromSource has always logged its own warning; nothing asserted its
-            # absence. Assert it here: the marker says a source was offered, this says nothing
-            # took the whole pool anyway.
-            $legPooled = Select-String -LiteralPath $legPath -SimpleMatch -Quiet `
-                -Pattern '[PATH] survivor-pool: materialized'
-            if ($legPooled) {
-                $overallFail = $true
-                Write-Problem-Tc ("$name $($streamLeg.Mode) (streamed join): FAIL - a per-run " +
-                    'source was published AND a consumer then pulled the whole pool through it, ' +
-                    'so the fold did not bound anything. The marker alone cannot see this.')
-                $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): FAIL")
-            } elseif ($legStream.Pass) {
+            # The marker is logged when the per-run source is BUILT, not when anything folds
+            # through it. That is enough now: RescoredEntries.Value refuses, so a consumer cannot
+            # pull the whole pool through the source instead of streaming it.
+            if ($legStream.Pass) {
                 $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): PASS " +
                     '(per-run fold, no all-runs pool)'))
             } else {
@@ -3077,6 +2981,137 @@ foreach ($name in $selected) {
         $summaryLines.Add("$name mode6 (library-fragment release engaged): FAIL ($($m6Issues.Count) issues)")
     }
 
+    # ---- mode 13 (opt-in): the tuned one command, stopped after every task ----
+    if ($StepwiseOneCommand -and $name -eq 'Stellar') {
+        Write-Progress-Tc "${name}: mode13 tuned one command, straight through"
+        $m13Fasta = Join-Path $inputs.Dir 'hela-filtered.fasta'
+        $m13Tuning = @($inputs.Mzmls | Where-Object { [IO.Path]::GetFileNameWithoutExtension($_) -like '*_21' })[0]
+        if (-not (Test-Path $m13Fasta) -or -not $m13Tuning) { throw "mode 13 needs $m13Fasta and the _21 run in $($inputs.Dir)" }
+        $m13StraightDir = Join-Path $runRoot "$name\onecommand-straight"
+        $m13StepDir = Join-Path $runRoot "$name\onecommand-stepwise"
+        $r13 = Invoke-OneCommandRun -Mzmls $inputs.Mzmls -Fasta $m13Fasta -TuningRun $m13Tuning -Resolution $cfg.Resolution `
+            -WorkDir $m13StraightDir -LogName 'straight.log'
+        Write-Host ("  one command straight through: wall {0:hh\:mm\:ss}" -f $r13.Wall)
+
+        $m13Issues = [System.Collections.Generic.List[string]]::new()
+        $m13Expected = @('PredictTrainingLibrary', 'PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR',
+                         'TrainModel', 'PredictLibrary', 'PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
+        $m13Ran = [System.Collections.Generic.List[string]]::new()
+        $m13Wall = [TimeSpan]::Zero
+        for ($step = 0; $step -le $m13Expected.Count; $step++) {
+            Write-Progress-Tc "${name}: mode13 stepwise run $($step + 1)"
+            $rs = Invoke-OneCommandRun -Mzmls $inputs.Mzmls -Fasta $m13Fasta -TuningRun $m13Tuning -Resolution $cfg.Resolution `
+                -WorkDir $m13StepDir -LogName ('step{0:D2}.log' -f $step) -StopAfterTasks 1
+            $m13Wall += $rs.Wall
+            $text = Get-Content -Raw -LiteralPath $rs.Log
+            $started = @([regex]::Matches($text, '\[TASK\] (\w+):starting') | ForEach-Object { $_.Groups[1].Value })
+            $skipped = ([regex]::Matches($text, '\[TASK\] \w+:skipping')).Count
+            $stopped = $text.Contains('[TASK] stop:')
+            if ($skipped -ne $step) { $m13Issues.Add("run $($step + 1): $skipped task(s) skipped, expected $step ($($rs.Log))") }
+            if (-not $stopped) {
+                if ($started.Count -ne 0) { $m13Issues.Add("run $($step + 1): completed but ran $($started -join ', ') ($($rs.Log))") }
+                break
+            }
+            if ($started.Count -ne 1) { $m13Issues.Add("run $($step + 1): ran $($started.Count) task(s) ($($started -join ', ')), expected 1 ($($rs.Log))") }
+            $m13Ran.AddRange([string[]]$started)
+        }
+        if (($m13Ran -join ',') -ne ($m13Expected -join ',')) {
+            $m13Issues.Add("tasks ran in the order $($m13Ran -join ', '); expected $($m13Expected -join ', ')")
+        }
+        $m13 = Compare-BlibFull -BlibExpected (Join-Path $m13StraightDir 'output.blib') -BlibActual (Join-Path $m13StepDir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m13.Issues) { $m13Issues.Add($issue) }
+        Write-Host ("  one command stepwise: {0} runs, wall {1:hh\:mm\:ss}" -f ($m13Ran.Count + 1), $m13Wall)
+        if ($m13Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode13 (stepwise one command==straight): PASS ($($m13Ran.Count) tasks, one per run)")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode13 (stepwise one command==straight): FAIL - $($m13Issues.Count) issue(s)"
+            $m13Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode13 (stepwise one command==straight): FAIL ($($m13Issues.Count) issues)")
+        }
+    }
+
+    # ---- mode 14 (opt-in): the tuned one command node by node, as a cluster runs it ----
+    if ($HpcOneCommand -and $name -eq 'Stellar') {
+        $m14Fasta = Join-Path $inputs.Dir 'hela-filtered.fasta'
+        $m14Tuning = @($inputs.Mzmls | Where-Object { [IO.Path]::GetFileNameWithoutExtension($_) -like '*_21' })[0]
+        if (-not (Test-Path $m14Fasta) -or -not $m14Tuning) { throw "mode 14 needs $m14Fasta and the _21 run in $($inputs.Dir)" }
+        $m14StraightDir = Join-Path $runRoot "$name\onecommand-straight"
+        if (-not (Test-Path (Join-Path $m14StraightDir 'output.blib'))) {
+            Write-Progress-Tc "${name}: mode14 tuned one command, straight through"
+            $r14 = Invoke-OneCommandRun -Mzmls $inputs.Mzmls -Fasta $m14Fasta -TuningRun $m14Tuning -Resolution $cfg.Resolution `
+                -WorkDir $m14StraightDir -LogName 'straight.log'
+            Write-Host ("  one command straight through: wall {0:hh\:mm\:ss}" -f $r14.Wall)
+        }
+        $m14Dir = Join-Path $runRoot "$name\onecommand-hpc"
+        New-Item -ItemType Directory -Path $m14Dir -Force | Out-Null
+        $m14Issues = [System.Collections.Generic.List[string]]::new()
+        # The nodes, in order: the task, its -i runs, its tuning runs, and whether it is a stage of
+        # the tuning runs' search. A per-file stage is one node per run.
+        $m14Nodes = [System.Collections.Generic.List[object]]::new()
+        $m14Nodes.Add(@('PredictTrainingLibrary', $inputs.Mzmls, @($m14Tuning), $false))
+        foreach ($training in @($true, $false)) {
+            if (-not $training) {
+                $m14Nodes.Add(@('TrainModel', $inputs.Mzmls, @($m14Tuning), $false))
+                $m14Nodes.Add(@('PredictLibrary', $inputs.Mzmls, @($m14Tuning), $false))
+            }
+            $runs = if ($training) { @($m14Tuning) } else { $inputs.Mzmls }
+            # The same four stages for any number of runs: Stellar tunes on one, whose FirstPassFDR
+            # has no other run to reconcile against.
+            foreach ($stage in @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')) {
+                $perFile = $stage -eq 'PerFileScoring' -or $stage -eq 'PerFileRescoring'
+                # A list, not a pipeline: PowerShell unrolls a one-element array of arrays.
+                $groups = [System.Collections.Generic.List[object]]::new()
+                if ($perFile) { foreach ($run in $runs) { $groups.Add([string[]]@($run)) } }
+                else { $groups.Add([string[]]$runs) }
+                foreach ($group in $groups) {
+                    if ($training) { $m14Nodes.Add(@($stage, $inputs.Mzmls, $group, $true)) }
+                    else { $m14Nodes.Add(@($stage, $group, @($m14Tuning), $false)) }
+                }
+            }
+        }
+        $m14Wall = [TimeSpan]::Zero
+        $nodeIndex = 0
+        foreach ($node in $m14Nodes) {
+            $nodeIndex++
+            $task = $node[0]
+            Write-Progress-Tc "${name}: mode14 node $nodeIndex/$($m14Nodes.Count) $task$(if ($node[3]) { ' (training search)' })"
+            $nodeArgs = @('--task', $task) + (Get-OneCommandArgs -Mzmls $node[1] -Fasta $m14Fasta -TuningRuns $node[2] `
+                -Resolution $cfg.Resolution -WorkDir $m14Dir)
+            if ($node[3]) { $nodeArgs += '--training-search' }
+            $declared = Get-DeclaredTaskFiles -WorkDir $m14Dir -CliArgs $nodeArgs
+            # A declared data file is satisfied by its spectra cache, as on a staged node.
+            foreach ($f in @($declared | Where-Object { $_.Kind -eq 'input' })) {
+                $cache = Join-Path $m14Dir ([IO.Path]::GetFileNameWithoutExtension($f.Path) + '.spectra.bin')
+                if (-not (Test-Path -LiteralPath $f.Path) -and -not (Test-Path -LiteralPath $cache)) {
+                    $m14Issues.Add("node $nodeIndex ${task}: declared input missing before it ran: $($f.Path)")
+                }
+            }
+            $logName = 'node{0:D2}_{1}.log' -f $nodeIndex, $task
+            $sw = [Diagnostics.Stopwatch]::StartNew()
+            Invoke-OspreyTaskRun -WorkDir $m14Dir -CliArgs $nodeArgs -LogName $logName
+            $sw.Stop()
+            $m14Wall += $sw.Elapsed
+            $text = Get-Content -Raw -LiteralPath (Join-Path $m14Dir $logName)
+            $started = @([regex]::Matches($text, '\[TASK\] (\w+):starting') | ForEach-Object { $_.Groups[1].Value })
+            if (($started -join ',') -ne $task) { $m14Issues.Add("node $nodeIndex ${task}: ran [$($started -join ', ')] ($logName)") }
+            foreach ($f in @($declared | Where-Object { $_.Kind -eq 'output' })) {
+                if (-not (Test-Path -LiteralPath $f.Path)) { $m14Issues.Add("node $nodeIndex ${task}: declared output not written: $($f.Path)") }
+            }
+        }
+        $m14 = Compare-BlibFull -BlibExpected (Join-Path $m14StraightDir 'output.blib') -BlibActual (Join-Path $m14Dir 'output.blib') -Tolerance $Tolerance
+        foreach ($issue in $m14.Issues) { $m14Issues.Add($issue) }
+        Write-Host ("  one command node by node: {0} nodes, wall {1:hh\:mm\:ss}" -f $m14Nodes.Count, $m14Wall)
+        if ($m14Issues.Count -eq 0) {
+            $summaryLines.Add("$name mode14 (one command node by node==straight): PASS ($($m14Nodes.Count) nodes)")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode14 (one command node by node==straight): FAIL - $($m14Issues.Count) issue(s)"
+            $m14Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode14 (one command node by node==straight): FAIL ($($m14Issues.Count) issues)")
+        }
+    }
+
     # All legs for this dataset are done. When not retaining output, free its scratch
     # now so peak disk stays at ~one dataset (the next dataset / the perf-gate step gets
     # the space back); a retaining run keeps it (see $retainOutput).
@@ -3101,11 +3136,6 @@ catch {
 }
 finally {
     # Restore the operator's environment, whatever happened above.
-    if ([string]::IsNullOrWhiteSpace($script:priorAllowResident)) {
-        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-    } else {
-        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $script:priorAllowResident
-    }
     if (-not [string]::IsNullOrEmpty($script:priorSvmCTolerance)) {
         $env:OSPREY_SVM_C_TOLERANCE = $script:priorSvmCTolerance
     }
@@ -3174,26 +3204,6 @@ if ($phaseMarks.Count -eq 0) {
                  "staging that precede the first phase") -f $phaseTotal, $phaseCosts.Count)
 }
 
-# The gaps this gate KNOWS it still traverses. Printed green-or-red runs alike: these
-# are not failures (the legs above passed), they are the O(files) paths a passing gate
-# is nonetheless walking, and a passing gate is exactly when nobody goes looking.
-Write-Host ""
-Write-Host "=== Known O(files) resident paths this gate still traverses ===" -ForegroundColor Cyan
-if ($knownResidentGaps.Count -eq 0) {
-    Write-Host "  none" -ForegroundColor Green
-} else {
-    foreach ($g in $knownResidentGaps) {
-        Write-Host ("  {0}  token: {1}" -f $g.Issue, $g.Token) -ForegroundColor Yellow
-        Write-Host ("      {0}" -f $g.Path)
-        Write-Host ("      {0}" -f $g.Legs)
-    }
-    # DERIVED, not typed. A literal count reads identically before and after a gap is
-    # closed, so it can never report the invariant it claims to state - and a hardcoded 0
-    # sitting three lines under a table naming a required token is worse than no line.
-    $requiredTokens = @($knownResidentGaps | Where-Object { $_.Token -and $_.Token -ne 'NONE' })
-    Write-Host (("  Tokens REQUIRED by this gate: {0} (target: 0). Each must have an open " +
-        "issue to remove it.") -f $requiredTokens.Count)
-}
 # No artifacts are published (the downloaded raw input data is kept; what happens to
 # the run's scratch is $retainOutput's call). A red gate's diagnosis lives in the build
 # log (every per-file log is Tee'd to the console TeamCity captures) and the

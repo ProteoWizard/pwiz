@@ -661,7 +661,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                                 e.EntryId, mz, e.ApexRt, e.Score, cls),
                             runQ, expQ, runFdr);
                     }
-                    builder.FlushFile();
+                    builder.FlushFile(f);
                     f++;
                 }
                 VerifyRunCount(runNames, f);
@@ -845,7 +845,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // What survives a seal, per file: the boundary itself, and the DECOY entry ids that
             // clear it. The second is O(decoys admitted), not O(entries) - the admitted decoy
             // population is what the ~1% FDR rule lets through, thousands per file rather than
-            // millions, so this does not reintroduce the scaling it replaces.
+            // millions - and each file's set is dropped at that file's phase-2 flush, the last
+            // point anything asks about it, so the map never holds every run's sets at once
+            // (issue #4664).
             private readonly Dictionary<int, HashSet<uint>> _admittedRunDecoys =
                 new Dictionary<int, HashSet<uint>>();
 
@@ -1451,11 +1453,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 return cls == EntrapmentClass.Decoy || cls == EntrapmentClass.PDecoy;
             }
 
-            /// <summary>Close the current run in both scopes.</summary>
-            public void FlushFile()
+            /// <summary>
+            /// Close run <paramref name="fileIdx"/> in both scopes, and drop its admitted-decoy
+            /// set: phase 2 visits each run once, so nothing asks about it again.
+            /// </summary>
+            public void FlushFile(int fileIdx)
             {
                 _run.FlushFile();
                 _experiment.FlushFile();
+                _admittedRunDecoys.Remove(fileIdx);
             }
 
             /// <summary>Assemble the panel, or null when no row was ever detected at either scope.</summary>

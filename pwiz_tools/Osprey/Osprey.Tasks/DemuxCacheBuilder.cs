@@ -41,9 +41,36 @@ namespace pwiz.Osprey.Tasks
     /// cache, with no second vendor read, and carries the demux descriptor, so changing a
     /// demux setting rebuilds seconds of demultiplexing instead of minutes of parsing. With
     /// <c>--demux off</c>, an overlapping scheme is refused rather than searched as acquired.
+    ///
+    /// With <c>OSPREY_DEMUX_ENGINE=pwiz</c>, for comparison, ProteoWizard demultiplexes the run as it
+    /// is read instead (<see cref="PwizDemuxCache"/>). Its cache has the same name and its own
+    /// descriptor (<see cref="ExpectedDescriptor"/>), so opening, checking and keying it go through here.
     /// </remarks>
     internal static class DemuxCacheBuilder
     {
+        /// <summary>The <c>OSPREY_DEMUX_ENGINE</c> value that selects ProteoWizard's demultiplexer.</summary>
+        internal const string PWIZ_ENGINE = @"pwiz";
+
+        /// <summary>
+        /// Whether <c>--demux</c> is on with ProteoWizard's demultiplexer selected
+        /// (<c>OSPREY_DEMUX_ENGINE=pwiz</c>) in place of Osprey's.
+        /// </summary>
+        internal static bool UsesPwizEngine(OspreyConfig config)
+        {
+            return config.DemuxMode != DemuxMode.off && IsPwizEngine(OspreyEnvironment.DemuxEngine);
+        }
+
+        /// <summary>
+        /// The descriptor a demultiplexed cache must carry to be searched under the current settings:
+        /// Osprey's engine's, or ProteoWizard's with <c>OSPREY_DEMUX_ENGINE=pwiz</c>.
+        /// </summary>
+        internal static string ExpectedDescriptor(OspreyConfig config)
+        {
+            return UsesPwizEngine(config)
+                ? PwizDemuxCache.Descriptor(PwizDemuxCache.CreateParams(config))
+                : CreateParams(config).Descriptor;
+        }
+
         /// <summary>
         /// The demux settings a run uses. Library defaults throughout; <c>--demux</c> is the
         /// only switch, so the demultiplexed cache stays independent of search settings. The
@@ -54,8 +81,9 @@ namespace pwiz.Osprey.Tasks
         internal static DemuxParams CreateParams(OspreyConfig config)
         {
             var parameters = new DemuxParams { Threads = Math.Max(1, config.NThreads) };
-            parameters.Engine = ParseOverride(OspreyEnvironment.DemuxEngine,
-                @"OSPREY_DEMUX_ENGINE", parameters.Engine);
+            string engine = OspreyEnvironment.DemuxEngine;
+            if (!IsPwizEngine(engine))
+                parameters.Engine = ParseOverride(engine, @"OSPREY_DEMUX_ENGINE", parameters.Engine);
             parameters.BlockMode = ParseOverride(OspreyEnvironment.DemuxBlockMode,
                 @"OSPREY_DEMUX_BLOCK", parameters.BlockMode);
             parameters.Interpolation = ParseOverride(OspreyEnvironment.DemuxInterpolation,
@@ -86,7 +114,7 @@ namespace pwiz.Osprey.Tasks
         {
             return config.DemuxMode == DemuxMode.off
                 ? ValidityKeySuffix(config.DemuxMode, null)
-                : ValidityKeySuffix(config.DemuxMode, CreateParams(config).Descriptor);
+                : ValidityKeySuffix(config.DemuxMode, ExpectedDescriptor(config));
         }
 
         /// <summary>
@@ -100,9 +128,10 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// A valid demultiplexed cache for the input, or null when there is none to use. Tried
         /// before the <c>.spectra.bin</c>, so a run staged with demux can be searched from its
-        /// demultiplexed cache alone.
+        /// demultiplexed cache alone. <paramref name="loadMs1"/> as for
+        /// <see cref="SpectraWindowIndex.BuildFromCache(string,string,bool,out SpectraCacheRejection,string)"/>.
         /// </summary>
-        internal static SpectraWindowIndex TryOpenDemuxCache(string inputFile, PipelineContext ctx)
+        internal static SpectraWindowIndex TryOpenDemuxCache(string inputFile, PipelineContext ctx, bool loadMs1 = true)
         {
             if (ctx.Config.DemuxMode == DemuxMode.off)
                 return null;
@@ -111,8 +140,8 @@ namespace pwiz.Osprey.Tasks
                 return null;
             try
             {
-                var hit = SpectraWindowIndex.BuildFromCache(demuxPath, inputFile, out var reason,
-                    CreateParams(ctx.Config).Descriptor);
+                var hit = SpectraWindowIndex.BuildFromCache(demuxPath, inputFile, loadMs1, out var reason,
+                    ExpectedDescriptor(ctx.Config));
                 if (hit != null)
                 {
                     ctx.LogInfo(string.Format(OspreyTasksResources.DemuxCacheBuilder_TryOpenDemuxCache_Streaming_demultiplexed_spectra_from_cache___0_, demuxPath));
@@ -138,7 +167,7 @@ namespace pwiz.Osprey.Tasks
         internal static SpectraCacheRejection CheckDemuxCache(string inputFile, OspreyConfig config)
         {
             return SpectraCache.CheckHeader(SpectraCache.GetDemuxCachePath(inputFile), inputFile,
-                CreateParams(config).Descriptor);
+                ExpectedDescriptor(config));
         }
 
         /// <summary>
@@ -152,8 +181,10 @@ namespace pwiz.Osprey.Tasks
         /// </param>
         /// <param name="parseSeconds">Wall time of that parse, or NaN on a cache hit.</param>
         /// <param name="ctx">Pipeline context for the settings and the log.</param>
+        /// <param name="concurrentReads">Files being read at once on other lanes (<c>--task SpectraCache</c>),
+        /// which share the search's threads; the output does not depend on it.</param>
         internal static SpectraWindowIndex Resolve(string inputFile, SpectraWindowIndex rawIndex,
-            SpectrumFileResult parsed, double parseSeconds, PipelineContext ctx)
+            SpectrumFileResult parsed, double parseSeconds, PipelineContext ctx, int concurrentReads = 1)
         {
             var scheme = DetectScheme(rawIndex);
             if (ctx.Config.DemuxMode == DemuxMode.off)
@@ -170,6 +201,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             var parameters = CreateParams(ctx.Config);
+            parameters.Threads = Math.Max(1, parameters.Threads / Math.Max(1, concurrentReads));
             string descriptor = parameters.Descriptor;
             string demuxPath = SpectraCache.GetDemuxCachePath(inputFile);
             List<Spectrum> ms2;
@@ -212,6 +244,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The larger of the run's <c>.spectra.bin</c> and demultiplexed cache, either of which it
+        /// can be searched from, for sizing a run without its source; the <c>.spectra.bin</c>
+        /// path when neither exists.
+        /// </summary>
+        internal static string GetLargestCachePath(string inputFile)
+        {
+            string plainPath = SpectraCache.GetCachePath(inputFile);
+            string demuxPath = SpectraCache.GetDemuxCachePath(inputFile);
+            return FileLengthOrZero(demuxPath) > FileLengthOrZero(plainPath) ? demuxPath : plainPath;
+        }
+
+        /// <summary>
         /// For a reader that found only the <c>.spectra.bin</c> while <c>--demux</c> is on:
         /// fine when the run does not overlap, an error when it does, because the demultiplexed
         /// cache the earlier stages searched is missing.
@@ -224,7 +268,10 @@ namespace pwiz.Osprey.Tasks
                 ThrowIfOverlapping(inputFile, DetectScheme(rawIndex));
                 return;
             }
-            if (DetectScheme(rawIndex).Kind == DemuxSchemeKind.overlapping)
+            bool demultiplexed = UsesPwizEngine(ctx.Config)
+                ? PwizDemuxCache.IsDemultiplexedRun(rawIndex, ctx.Config)
+                : DetectScheme(rawIndex).Kind == DemuxSchemeKind.overlapping;
+            if (demultiplexed)
             {
                 throw new SpectraCacheException(string.Format(
                     OspreyTasksResources.DemuxCacheBuilder_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_,
@@ -352,6 +399,11 @@ namespace pwiz.Osprey.Tasks
                 demuxSeconds, parameters.Threads, parse, parameters.Descriptor));
         }
 
+        private static bool IsPwizEngine(string engine)
+        {
+            return string.Equals(engine?.Trim(), PWIZ_ENGINE, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static double ParseOverride(string value, string variable, double defaultValue)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -371,6 +423,18 @@ namespace pwiz.Osprey.Tasks
                 return parsed;
             throw new InvalidOperationException(string.Format(@"{0}={1} is not one of: {2}",
                 variable, value, string.Join(@", ", Enum.GetNames(typeof(TEnum)))));
+        }
+
+        private static long FileLengthOrZero(string path)
+        {
+            try
+            {
+                return File.Exists(path) ? new FileInfo(path).Length : 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
         }
     }
 }

@@ -96,8 +96,9 @@
           Outputs="$(SciexAssembliesDir)/Clearcore2.Data.AnalystDataProvider.dll;$(SciexAssembliesDir)/SQLite.Interop.dll">
     <MakeDir Directories="$(SciexAssembliesDir)" />
     <!-- 7za uses case-insensitive globbing on Windows; *.dll picks up Sciex.Data.Processing.DLL too.
-         x64\SQLite.Interop.dll is extracted alongside so MsConvert.csproj's StageWiff2NativeAssemblies
-         target can stage it into the wiff2/ subfolder for Wiff2LoadContext. We deliberately skip the
+         x64\SQLite.Interop.dll is extracted alongside so the StageWiff2NativeAssemblies target
+         (pwiz_tools\Shared\Lib\SciexWiff2Staging.targets) can stage it into the wiff2/ subfolder
+         for Wiff2LoadContext. We deliberately skip the
          x86 copy and the rest of x64\* — only SQLite.Interop is needed at runtime. -->
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(SciexAssembliesDir)&quot; &quot;$(SciexArchive)&quot; &quot;vendor_api/ABI/*.dll&quot; &quot;vendor_api/ABI/*.DLL&quot; &quot;vendor_api/ABI/x64/SQLite.Interop.dll&quot;" StandardOutputImportance="low" />
     <ItemGroup>
@@ -162,7 +163,7 @@
          include it; we ship the .NET-Standard-compatible build from the SCIEX server SDK.
          Loaded by Wiff2LoadContext (the patched Unity.Abstractions, wiff2-specific SQLite,
          and SQLite.Interop go to wiff2/ via the StageWiff2NativeAssemblies build target in
-         MsConvert.csproj). -->
+         pwiz_tools\Shared\Lib\SciexWiff2Staging.targets). -->
     <_SciexRuntime Include="$(SciexWiff2DepsDir)/System.ServiceModel.dll" />
     <Content Include="@(_SciexRuntime)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

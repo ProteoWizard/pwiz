@@ -20,8 +20,8 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -102,16 +102,15 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Test of long path functions in <see cref="Directory"/>. Because the test cannot
         /// turn on long path support in the registry, this does not actually test long paths
-        /// if the feature is not enabled in the registry. Since the feature is required for
-        /// installing Python and testing AlphaPeptDeep and Carafe, we expect the majority
-        /// of systems on the Skyline dev team to eventually have this enabled.
+        /// if the feature is not enabled in the registry. Since SkylineNightly turns it on,
+        /// we expect the majority of systems on the Skyline dev team to have it enabled.
         /// </summary>
         [TestMethod]
         public void DirectoryWithLongPathTest()
         {
             string inputPath = TestContext.GetTestResultsPath();    // Start in the normal test directory that gets tested for file locking
 
-            if (PythonInstaller.ValidateEnableLongpaths())
+            if (IsLongPathsEnabled())
             {
                 // Make the directory path longer than 256 characters, but only when the registry has LongPathsEnabled set
                 for (int i = 0; i < 12; i++)
@@ -156,16 +155,15 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Test of long path functions in <see cref="DirectoryEx"/>. Because the test cannot
         /// turn on long path support in the registry, this does not actually test long paths
-        /// if the feature is not enabled in the registry. Since the feature is required for
-        /// installing Python and testing AlphaPeptDeep and Carafe, we expect the majority
-        /// of systems on the Skyline dev team to eventually have this enabled.
+        /// if the feature is not enabled in the registry. Since SkylineNightly turns it on,
+        /// we expect the majority of systems on the Skyline dev team to have it enabled.
         /// </summary>
         [TestMethod]
         public void DirectoryExWithLongPathTest()
         {
             string inputPath = TestContext.GetTestResultsPath();    // Start in the normal test directory that gets tested for file locking
 
-            if (PythonInstaller.ValidateEnableLongpaths())
+            if (IsLongPathsEnabled())
             {
                 // Make the directory path longer than 256 characters, but only when the registry has LongPathsEnabled set
                 for (int i = 0; i < 12; i++)
@@ -205,6 +203,12 @@ namespace pwiz.SkylineTest
                     Assert.AreEqual(testPath, longPath);
                 testPath = longPath;
             }
+        }
+
+        private static bool IsLongPathsEnabled()
+        {
+            return Registry.GetValue(@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem",
+                @"LongPathsEnabled", 0) is int enabled && enabled == 1;
         }
     }
 }

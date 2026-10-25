@@ -32,7 +32,7 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for Centrix in <c>Osprey.Centroid</c> and its use by Osprey (<c>docs/24-profile-centroiding.md</c>):
+    /// Tests for Centrix in <c>Osprey.Centroid</c> and its use by Osprey (<c>docs/25-profile-centroiding.md</c>):
     /// <list type="bullet">
     /// <item><see cref="TestCentrixBasis"/>, <see cref="TestCentrixLasso"/>, <see cref="TestCentrixNoiseAndRegions"/>,
     /// <see cref="TestCentrixCentroider"/>: Rust Centrix's own unit tests, ported (the sigma and spacing of a

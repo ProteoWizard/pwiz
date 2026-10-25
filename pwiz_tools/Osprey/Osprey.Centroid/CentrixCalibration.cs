@@ -28,7 +28,7 @@ namespace pwiz.Osprey.Centroid
     /// A linear ion trap scan rate (Thermo Stellar, Fusion and other LITs) and the profile point spacing its firmware
     /// fixes, which identifies it: the faster the scan, the coarser the points (and the wider the peaks). From
     /// Centrix's table (Centrix's README, <c>cwt.rs</c> <c>LIT_SCAN_RATES</c>, which also lists each rate's broadest
-    /// peak; docs/24-profile-centroiding.md). Centrix gives no spacing for 200 kTh/s; the 0.2 Th here (five points
+    /// peak; docs/25-profile-centroiding.md). Centrix gives no spacing for 200 kTh/s; the 0.2 Th here (five points
     /// per Th, on the 1000 / rate pattern of the others) is what the Stellar's MS2 at that rate has.
     /// <para>The rate is identified from the spacing rather than from the filter string's scan rate code (Centrix's
     /// first choice: n, r, t, u after "NSI"). The Stellar's MS1 carry "r" (67 kTh/s), but its MS2 carry "Z", a Zoom
@@ -82,7 +82,7 @@ namespace pwiz.Osprey.Centroid
     /// little too much costs little. On a Thermo Stellar's MS2 (200 kTh/s, 0.2 Th points) centroided at a range of
     /// sigmas and searched with an entrapment library, identifications plateau from 1.05 to 1.2 spacings (0.21 to
     /// 0.24 Th) and fall on either side, from one spacing down most steeply, as the centroids per spectrum jump
-    /// (docs/24-profile-centroiding.md). The rule is set from that one scan rate and stands until others are
+    /// (docs/25-profile-centroiding.md). The rule is set from that one scan rate and stands until others are
     /// measured.</para>
     /// <para>Elsewhere, a spacing no scan rate has, it is measured from the run: the width of one species' peak.</para>
     /// <list type="bullet">

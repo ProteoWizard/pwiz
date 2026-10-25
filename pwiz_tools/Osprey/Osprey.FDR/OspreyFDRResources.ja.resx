@@ -133,24 +133,12 @@
     <value>1個のファイルで各プリカーサーの最良ピークを検索中</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
-    <value>{1:N0}個のプリカーサー候補ピークに対して{0}Percolatorを実行中...</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PercolatorEngine_PassDisplayName_First_pass" xml:space="preserve">
     <value>第1パス</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
     <value>{1:N0}個のプリカーサー候補ピークに対して{0}Percolatorを実行中...</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR" xml:space="preserve">
-    <value>{0}Percolatorの結果：ターゲット{1:N0}個、デコイ{2:N0}個が{3:P1} FDRを通過</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_" xml:space="preserve">
-    <value>{0}：保存された第1パスモデルですべての{1:N0}個のプリカーサー候補ピークをスコアリングし（再トレーニングなし）、その後Q値とPEPのためにターゲット-デコイ競合を行います。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">

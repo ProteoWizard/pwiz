@@ -249,6 +249,68 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// <see cref="OspreyEnvironment.KnownVariables"/> names exactly the OSPREY_* variables the
+        /// production code reads. Startup refuses any other OSPREY_* name, so a reader added
+        /// without a line there would be refused the moment someone set its variable, and a line
+        /// left behind for a deleted reader would quietly admit a variable that no longer does
+        /// anything. A read is a whole string literal naming the variable (<c>@"OSPREY_X"</c>);
+        /// a name inside a message or a comment is not one. The registry's own initializer is
+        /// left out of the scan, or every name in it would count as its own reader.
+        /// </summary>
+        [TestMethod]
+        public void TestOspreyVariablesAreRegistered()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var pattern = new Regex("@?\"(OSPREY_[A-Z0-9_]+)\"");
+            var read = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var unregistered = new List<string>();
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string[] lines;
+                try { lines = File.ReadAllLines(file); }
+                catch (IOException) { continue; }
+
+                bool inRegistry = false;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    if (line.Contains(nameof(OspreyEnvironment.KnownVariables) + " = new"))
+                    {
+                        inRegistry = true;
+                        continue;
+                    }
+                    if (inRegistry)
+                    {
+                        inRegistry = line.Trim() != "};";
+                        continue;
+                    }
+                    int commentIdx = IndexOfLineComment(line);
+                    string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
+                    foreach (Match match in pattern.Matches(codePart))
+                    {
+                        string name = match.Groups[1].Value;
+                        read.Add(name);
+                        if (!OspreyEnvironment.KnownVariables.Contains(name))
+                        {
+                            string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                            unregistered.Add(string.Format("{0}:{1}: {2}", rel, i + 1, name));
+                        }
+                    }
+                }
+            }
+            var unread = OspreyEnvironment.KnownVariables.Where(name => !read.Contains(name))
+                .OrderBy(name => name, StringComparer.Ordinal).ToList();
+
+            Assert.AreEqual(0, unregistered.Count,
+                "OSPREY_* variable read but not in OspreyEnvironment.KnownVariables, so startup " +
+                "would refuse it. Add it there.\n" + string.Join("\n", unregistered));
+            Assert.AreEqual(0, unread.Count,
+                "OspreyEnvironment.KnownVariables names a variable nothing reads any more. Remove " +
+                "it, so startup refuses it like any other name this build does not know.\n" +
+                string.Join("\n", unread));
+        }
+
+        /// <summary>
         /// Developer words that must not reach a user through a resource: the first table of
         /// docs/21-user-facing-text.md. The English .resx VALUES are scanned (translations follow
         /// the English), so a banned word cannot come back through a reworded message. Keys may
@@ -429,7 +491,7 @@ namespace pwiz.Osprey.Test
             // Flags (long or short) and file extensions, the tokens a user types or matches. A
             // hyphen after a format hole is a compound word ("{0}-fold"), not a flag.
             var resxToken = new Regex(@"(?<![\w}-])--?[a-z][a-z0-9-]*|(?<![\w{}])\.(?:[\w-]+\.)*" +
-                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|libcache|html|sln)\b");
+                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|html|sln)\b");
             foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
             {
                 var resxRoot = XDocument.Load(file).Root;
