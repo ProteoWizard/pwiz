@@ -94,6 +94,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
 
             Icon = SkylineWindow.Icon;
+            UpdateTitle();
 
             DataFileResults = new ImportResultsDIAControl(this);
             AddPageControl(DataFileResults, dataFilesPage, 2, 60, 0);
@@ -224,8 +225,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         /// <summary>
         /// The model to predict the library with: the default, the pretrained AlphaPeptDeep models,
-        /// or a saved fine-tuned model from the list. With tuning runs it is the model the tuning
-        /// starts from. Setting it selects that model in the combo.
+        /// or a saved fine-tuned model from the list; the default while a new model is fine-tuned,
+        /// since the tuning starts from the pretrained models. Setting it selects that model in the combo.
         /// </summary>
         public CarafeModelSpec Model
         {
@@ -243,7 +244,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _driverModel.SelectedIndexChangedEvent(sender, e);
         }
 
-        /// <summary>The combo's Add..., for tests: opens the model editor and adds its model to the list.</summary>
+        /// <summary>
+        /// The combo's Add..., for tests: opens the model editor, which names a model file (the
+        /// document's fine-tuned model, say) and adds it to the list, selected.
+        /// </summary>
         public void AddModel()
         {
             _driverModel.AddItem();
@@ -277,7 +281,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         /// <summary>
         /// True predicts with the chosen model as it is; false fine-tunes a new model on the tuning
-        /// runs, starting from the chosen model, and saves it under <see cref="ModelName"/>.
+        /// runs and saves it beside the document (<see cref="DocumentModelPath"/>).
         /// </summary>
         public bool UseExistingModel
         {
@@ -299,17 +303,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateTuningControls();
         }
 
+        private CarafeModelSpec _modelBeforeTuning;
+
+        /// <summary>
+        /// Fine-tuning starts from the pretrained models: the combo is set to them and disabled, so
+        /// the page says what the tuning starts from, and the model chosen before comes back when
+        /// "Use this model" is chosen again. (Osprey can tune a saved model further, but chaining
+        /// fine-tunes compounds their drift, so it is not offered here.)
+        /// </summary>
         private void UpdateTuningControls()
         {
             bool tune = !UseExistingModel;
+            if (tune && comboModel.Enabled)
+            {
+                _modelBeforeTuning = Model;
+                Model = CarafeModelSpec.DEFAULT;
+                comboModel.Enabled = false;
+            }
+            else if (!tune && !comboModel.Enabled)
+            {
+                comboModel.Enabled = true;
+                if (_modelBeforeTuning != null && Settings.Default.CarafeModelList.Contains(_modelBeforeTuning))
+                    Model = _modelBeforeTuning;
+            }
             listTuningFiles.Enabled = btnBrowseTuningFiles.Enabled = cbChooseFromSearchedFiles.Enabled = tune;
-            lblModelName.Enabled = tbxModelName.Enabled = tune;
-            UpdateDefaultModelName();
         }
 
         /// <summary>
         /// One run in the tuning list: browsed in by the user, or put there by the searched-files
-        /// checkbox, which is what the checkbox takes out again. Shown by its file name.
+        /// checkbox, which is what the checkbox takes out again. Shown by its name without the
+        /// extension, as the data files page lists the searched runs.
         /// </summary>
         private class TuningRun
         {
@@ -324,7 +347,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public override string ToString()
             {
-                return Path.GetFileName(FilePath);
+                return Path.GetFileNameWithoutExtension(FilePath);
             }
         }
 
@@ -411,7 +434,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 listTuningFiles.SetItemChecked(insertAt, true);
                 insertAt++;
             }
-            UpdateDefaultModelName();
         }
 
         /// <summary>
@@ -428,7 +450,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void cbChooseFromSearchedFiles_CheckedChanged(object sender, EventArgs e)
         {
             SyncSearchedTuningFiles();
-            UpdateDefaultModelName();
         }
 
         /// <summary>
@@ -452,57 +473,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private void listTuningFiles_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            // The check changes after this event, so the item's new state is taken from the event
-            UpdateDefaultModelName(e.Index, e.NewValue == CheckState.Checked);
-        }
-
-        /// <summary>The name the fine-tuned model is saved under in the model list.</summary>
-        public string ModelName
-        {
-            get => tbxModelName.Text.Trim();
-            set => tbxModelName.Text = value;
-        }
-
-        private string _defaultModelName = string.Empty;
-
-        /// <summary>
-        /// The default name, "&lt;document&gt; tuned on &lt;first checked run&gt;", follows the
-        /// checks until the user types a name of their own.
-        /// </summary>
-        private void UpdateDefaultModelName(int changingIndex = -1, bool changingChecked = false)
-        {
-            string firstRun = null;
-            for (int i = 0; i < listTuningFiles.Items.Count && firstRun == null; i++)
-            {
-                bool isChecked = i == changingIndex ? changingChecked : listTuningFiles.GetItemChecked(i);
-                if (isChecked)
-                    firstRun = TuningRunAt(i).FilePath;
-            }
-            string newDefault = firstRun == null
-                ? string.Empty
-                : string.Format(PeptideSearchResources.OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_,
-                    Path.GetFileNameWithoutExtension(DocumentFilePath), Path.GetFileNameWithoutExtension(firstRun));
-            if (Equals(tbxModelName.Text, _defaultModelName))
-                tbxModelName.Text = newDefault;
-            _defaultModelName = newDefault;
-        }
-
         /// <summary>The model a tuning search writes: in the working folder, named after the output.</summary>
         public string TunedModelPath => OspreyHelpers.GetTunedModelPath(OutputLibraryPath, OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath));
 
-        /// <summary>The copy of that model the model list points to, named after <see cref="ModelName"/>.</summary>
-        public string RegisteredModelPath => OspreyHelpers.GetRegisteredModelPath(OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath), ModelName);
-
-        private string _confirmedReplaceModelName;
+        /// <summary>The document's fine-tuned model, the copy of that model beside the document.</summary>
+        public string DocumentModelPath => OspreyHelpers.GetDocumentModelPath(SkylineWindow.DocumentFilePath);
 
         /// <summary>
         /// Next from the Library Model page: a saved model must open; a tuning search needs at
-        /// least one run, which must exist unless it is searched too, no two runs of the search or
-        /// the tuning with the same file name (Osprey keys its spectra cache by stem and refuses
-        /// the clash), a start model other than the one this search writes, and a name, which
-        /// replaces a listed model of the same name after the user agrees.
+        /// least one run, which must exist unless it is searched too, and no two runs of the search
+        /// or the tuning with the same file name (Osprey keys its spectra cache by stem and refuses
+        /// the clash); and when the document already has a fine-tuned model, the user agrees to its
+        /// being overwritten, or stays on the page.
         /// </summary>
         private bool ValidateLibraryModelPage()
         {
@@ -532,27 +514,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             if (!ValidateNoStemClash(searched.Concat(tuningFiles)))
                 return false;
-            if (!model.IsDefault && PathsEqual(model.FilePath, TunedModelPath))
-            {
-                MessageDlg.Show(this, string.Format(
-                    PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_model__0__is_the_one_this_search_writes__Choose_another_model_to_fine_tune_from__or_use_it_as_it_is_,
-                    model.FilePath));
-                return false;
-            }
-            var helper = new MessageBoxHelper(this);
-            if (!helper.ValidateNameTextBox(tbxModelName, out string name))
-                return false;
-            if (Settings.Default.CarafeModelList.ContainsKey(name) && !Equals(name, _confirmedReplaceModelName))
+            // The document's model is overwritten like its library, but asked about here, before the
+            // run, since a model in the list may point at the file
+            string documentModelPath = DocumentModelPath;
+            if (File.Exists(documentModelPath))
             {
                 var choice = MultiButtonMsgDlg.Show(this, string.Format(
-                    PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_A_model_named__0__is_already_in_the_list__Replace_it_with_the_model_this_search_fine_tunes_, name),
-                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
-                if (choice != DialogResult.Yes)
-                {
-                    tbxModelName.Focus();
+                    PeptideSearchResources.OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_,
+                    documentModelPath), MessageBoxButtons.OKCancel);
+                if (choice != DialogResult.OK)
                     return false;
-                }
-                _confirmedReplaceModelName = name;
             }
             return true;
         }
@@ -581,37 +552,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
-        /// After a tuning search succeeds, the model Osprey saved is copied to a file named after
-        /// the model (the next tuning of the document rewrites Osprey's) and the copy joins the model
-        /// list under the name given, in place of a model of that name, so the next search (here or
-        /// in Build Library) can predict with it or tune it further.
+        /// After a tuning search succeeds, the model Osprey saved in the working folder is copied
+        /// beside the document as the document's fine-tuned model (<see cref="DocumentModelPath"/>),
+        /// where the user finds it and can add it to the model list by name for other documents.
         /// </summary>
-        private void RegisterTunedModel()
+        private void CopyTunedModel()
         {
             string modelPath = TunedModelPath;
             if (!File.Exists(modelPath))
             {
-                MessageDlg.Show(this, string.Format(PeptideSearchResources.OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__, modelPath));
+                MessageDlg.Show(this, string.Format(PeptideSearchResources.OspreySearchDlg_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__, modelPath));
                 return;
             }
-            string registeredPath = RegisteredModelPath;
+            string documentModelPath = DocumentModelPath;
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(registeredPath) ?? string.Empty);
-                File.Copy(modelPath, registeredPath, true);
+                File.Copy(modelPath, documentModelPath, true);
             }
             catch (Exception x)
             {
                 if (ExceptionUtil.IsProgrammingDefect(x))
                     throw;
-                MessageDlg.ShowWithException(this, string.Format(PeptideSearchResources.OspreySearchDlg_RegisterTunedModel_Failed_saving_the_fine_tuned_model_as__0__, registeredPath), x);
-                return;
+                MessageDlg.ShowWithException(this, string.Format(PeptideSearchResources.OspreySearchDlg_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__, documentModelPath), x);
             }
-            var models = Settings.Default.CarafeModelList;
-            var spec = new CarafeModelSpec(ModelName, registeredPath);
-            if (models.TryGetValue(spec.Name, out var existing))
-                models.Remove(existing);
-            models.Add(spec);
         }
 
         #endregion
@@ -701,7 +664,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FastaPath = ImportFastaControl.FastaFile,
                 LibraryPath = UseExistingLibrary ? ExistingLibraryPath : null,
                 DecoysInLibrary = UseExistingLibrary && OspreyHelpers.LibraryHasDecoyPairs(ExistingLibraryPath),
-                ModelPath = !UseExistingLibrary && !Model.IsDefault ? Model.FilePath : null,
+                ModelPath = !UseExistingLibrary && UseExistingModel && !Model.IsDefault ? Model.FilePath : null,
                 TrainingInputs = IsTuningSearch ? TuningFiles : new List<string>(),
                 OutputPath = OutputLibraryPath,
                 WorkDirectory = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath),
@@ -821,7 +784,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.library_model_page:
                     // The data files page may have changed since the list was last filled
                     SyncSearchedTuningFiles();
-                    UpdateDefaultModelName();
                     // Only now, so the NVIDIA driver is not loaded for a search of an existing library,
                     // and only once, so Back and Next keep the user's choice
                     if (!_useGpuUpdated)
@@ -1119,10 +1081,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (success)
             {
                 // The model is saved and the file on disk is the new library from here on, whether
-                // or not the user goes on to Finish, so the model is listed and the document's
-                // library object refreshed now rather than at the hand-off.
+                // or not the user goes on to Finish, so the model is copied beside the document and
+                // the document's library object refreshed now rather than at the hand-off.
                 if (IsTuningSearch)
-                    RegisterTunedModel();
+                    CopyTunedModel();
                 ReloadDocumentLibrary();
                 btnNext.Enabled = true;
             }
@@ -1136,6 +1098,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void btnBack_Click(object sender, EventArgs e)
         {
             PreviousPage();
+        }
+
+        private void wizardPages_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateTitle();
+        }
+
+        /// <summary>
+        /// The title above the pages is the current page's name, as the Import Peptide Search wizard
+        /// names its pages, since the pages' own tabs are hidden.
+        /// </summary>
+        private void UpdateTitle()
+        {
+            lblTitle.Text = wizardPages.SelectedTab?.Text;
         }
 
         private static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header, int footer)

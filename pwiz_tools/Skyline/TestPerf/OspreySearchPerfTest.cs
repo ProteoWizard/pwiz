@@ -23,9 +23,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestFunctional;
 using pwiz.SkylineTestUtil;
@@ -33,12 +35,14 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf
 {
     /// <summary>
-    /// The Osprey Search wizard's Library Model page at real-data scale: the two outer Stellar HeLa
-    /// sDIA runs (1.5 GB of mzML each) searched against the filtered HeLa FASTA with a model fine-tuned
-    /// on the middle run, browsed in and held out of the search; then the three runs searched with the
-    /// saved model. OspreySearchTuningTest covers the page's behavior on Osprey's subset in a minute,
-    /// where a run searched alone keeps nothing to tune on; this is the run as a user makes it, with
-    /// one fine-tune, on the GPU when <see cref="ENV_TORCH_RUNTIMES"/> names a CUDA runtime.
+    /// The Osprey Search wizard's Library Model page at real-data scale, as the lab runs it: the three
+    /// Stellar HeLa sDIA runs (1.5 GB of mzML each) searched against the filtered HeLa FASTA with a
+    /// model fine-tuned on the middle run, chosen from the searched files; then the three runs
+    /// searched again with that model, added to the model list by name. OspreySearchTuningTest covers
+    /// the page's behavior on Osprey's subset in a minute, where a run searched alone keeps nothing
+    /// to tune on; this is the run as a user makes it, with one fine-tune, on the GPU when
+    /// <see cref="ENV_TORCH_RUNTIMES"/> names a CUDA runtime. Run on-screen (-ShowUI), it pauses on
+    /// each page of the first search for a look at the pages; the pauses are no-ops offscreen.
     /// </summary>
     [TestClass]
     public class OspreySearchPerfTest : AbstractFunctionalTestEx
@@ -69,11 +73,13 @@ namespace TestPerf
 
         /// <summary>
         /// The untuned search of the three runs wrote 29,884 library spectra, and the search tuned on
-        /// the middle run 35,473, so 20,000 is a clear lower bound for three runs. Two runs cannot
-        /// yield fewer spectra than either one alone, and half the three-run bound keeps the margin.
+        /// the middle run 35,473 (regression.ps1's digest) or 32,519 (the wizard's default digest), so
+        /// 20,000 is a clear lower bound for three runs.
         /// </summary>
         private const int MIN_SPECTRA_THREE_RUNS = 20000;
-        private const int MIN_SPECTRA_TWO_RUNS = 10000;
+
+        /// <summary>The name the test gives the document's fine-tuned model when it adds it to the model list.</summary>
+        private const string SAVED_MODEL_NAME = @"Stellar, tuned on the middle run";
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -104,19 +110,17 @@ namespace TestPerf
             foreach (var path in diaFilePaths.Append(fastaFilepath))
                 AssertEx.FileExists(path);
             string middleRun = diaFilePaths[1];
-            string[] outerRuns = { diaFilePaths[0], diaFilePaths[2] };
 
-            // The outer runs searched, and the model tuned on the middle run, browsed in, so it is
-            // held out of the search. (Tuning on it as one of three searched files is the same tuning
-            // through the other list; OspreySearchTuningTest covers that list, and a second fine-tune
-            // here would double the run.)
-            OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest-heldout.sky"));
-            var tunedModel = TuneOnHeldOutRun(outerRuns, middleRun, fastaFilepath);
+            // The three runs searched, and the model tuned on the middle run, chosen from the searched
+            // files: the lab's way. (The subset test covers the other list, browsed runs held out of
+            // the search; a second fine-tune here would double the run.)
+            OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest.sky"));
+            string tunedModelPath = TuneOnSearchedRun(diaFilePaths, middleRun, fastaFilepath);
 
-            // The three runs searched with the saved model: a model tuned on one run serving a search
-            // of all three, with no training.
+            // The three runs searched with that model, added to the model list by name: a model tuned
+            // on one run serving a search of all three, with no training.
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest-saved.sky"));
-            SearchWithSavedModel(diaFilePaths, fastaFilepath, tunedModel);
+            SearchWithSavedModel(diaFilePaths, fastaFilepath, tunedModelPath);
         }
 
         /// <summary>A file of the persistent data folder, extracted in place beside the zip.</summary>
@@ -126,50 +130,86 @@ namespace TestPerf
         }
 
         /// <summary>
-        /// A browsed run arrives at the top of the tuning list, checked, and names the model; it is
-        /// tuned on without being searched.
+        /// Page by page, pausing on each on-screen: the three runs on the data files page, the FASTA,
+        /// and on the Library Model page "Choose from the searched files" listing the runs unchecked,
+        /// then the middle run checked as the one tuning run. Returns the document's fine-tuned model.
         /// </summary>
-        private CarafeModelSpec TuneOnHeldOutRun(string[] searchedRuns, string tuningRun, string fastaFilepath)
+        private string TuneOnSearchedRun(string[] diaFilePaths, string tuningRun, string fastaFilepath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
-            string modelName = OspreySearchTuningTest.GetDefaultModelName(docPath, tuningRun);
-            var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(searchedRuns, fastaFilepath);
+            var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
             RunUI(() =>
             {
+                AssertEx.AreEqual(OspreySearchDlg.Pages.data_files_page, searchDlg.CurrentPage);
+                searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
+                    .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileNameWithoutExtension(p), p)).ToArray();
+            });
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
+                searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
+            });
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
                 AssertEx.IsTrue(searchDlg.UseExistingModel);
                 AssertEx.IsTrue(searchDlg.Model.IsDefault);
+            });
+            RunUI(() =>
+            {
                 searchDlg.UseExistingModel = false;
-                searchDlg.AddTuningFiles(new[] { tuningRun });
-                AssertEx.AreEqualDeep(new[] { tuningRun }, searchDlg.TuningFileItems);
+                searchDlg.ChooseFromSearchedFiles = true;
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFileItems);
+                AssertEx.AreEqual(0, searchDlg.TuningFiles.Count);
+            });
+            RunUI(() =>
+            {
+                searchDlg.SetTuningFileChecked(tuningRun, true);
                 AssertEx.AreEqualDeep(new[] { tuningRun }, searchDlg.TuningFiles);
-                AssertEx.AreEqual(modelName, searchDlg.ModelName);
             });
             ChooseDevice(searchDlg);
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage);
+            });
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg, searchedRuns, new[] { tuningRun }, null);
+            OspreySearchTuningTest.VerifyCommandLine(searchDlg, diaFilePaths, new[] { tuningRun }, null);
             VerifyDevice(searchDlg);
-            var spec = OspreySearchTuningTest.RunTuningSearch(searchDlg, modelName,
-                TestFilesDir.GetTestPath("OspreySearchControlLog-heldout.txt"), SEARCH_TIMEOUT_MILLIS);
-            FinishImport(searchDlg, searchedRuns, docPath, MIN_SPECTRA_TWO_RUNS);
-            return spec;
+            string modelPath = OspreySearchTuningTest.RunTuningSearch(searchDlg,
+                TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), SEARCH_TIMEOUT_MILLIS);
+            FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
+            return modelPath;
         }
 
-        /// <summary>The saved model is predicted with as it is: the command names it and no tuning runs, and no model is written.</summary>
-        private void SearchWithSavedModel(string[] diaFilePaths, string fastaFilepath, CarafeModelSpec savedModel)
+        /// <summary>
+        /// The document's model from the tuning search is added to the model list by name through
+        /// the combo's Add..., and predicted with as it is: the command names it and no tuning runs,
+        /// and no model is written.
+        /// </summary>
+        private void SearchWithSavedModel(string[] diaFilePaths, string fastaFilepath, string savedModelPath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
             var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
+            RunDlg<EditCarafeModelDlg>(searchDlg.AddModel, dlg =>
+            {
+                dlg.ModelName = SAVED_MODEL_NAME;
+                dlg.ModelPath = savedModelPath;
+                dlg.OkDialog();
+            });
             RunUI(() =>
             {
-                // The pretrained default and the model the tuning search saved
+                // The pretrained default and the model just added, selected
                 AssertEx.AreEqual(2, Settings.Default.CarafeModelList.Count);
-                searchDlg.Model = savedModel;
-                AssertEx.AreEqual(savedModel.FilePath, searchDlg.Model.FilePath);
+                AssertEx.AreEqual(SAVED_MODEL_NAME, searchDlg.Model.Name);
+                AssertEx.AreEqual(savedModelPath, searchDlg.Model.FilePath);
                 AssertEx.IsTrue(searchDlg.UseExistingModel);
             });
             ChooseDevice(searchDlg);
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg, diaFilePaths, null, savedModel.FilePath);
+            OspreySearchTuningTest.VerifyCommandLine(searchDlg, diaFilePaths, null, savedModelPath);
             VerifyDevice(searchDlg);
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
             string workDir = OspreyHelpers.GetWorkDirectory(docPath);

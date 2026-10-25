@@ -136,14 +136,59 @@
   <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
+  <data name="lblTitle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblTitle.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 12pt</value>
+  </data>
+  <data name="lblTitle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 9</value>
+  </data>
+  <data name="lblTitle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 20</value>
+  </data>
+  <data name="lblTitle.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lblTitle.Name" xml:space="preserve">
+    <value>lblTitle</value>
+  </data>
+  <data name="&gt;&gt;lblTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblTitle.Parent" xml:space="preserve">
+    <value>titlePanel</value>
+  </data>
+  <data name="titlePanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="titlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="titlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>784, 43</value>
+  </data>
+  <data name="titlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;titlePanel.Name" xml:space="preserve">
+    <value>titlePanel</value>
+  </data>
+  <data name="&gt;&gt;titlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;titlePanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
   <data name="wizardPages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="wizardPages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>0, 46</value>
   </data>
   <data name="wizardPages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>784, 521</value>
+    <value>784, 475</value>
   </data>
   <data name="wizardPages.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -476,7 +521,7 @@ A model fine-tuned on runs like these predicts them better; a model this search 
     <value>28, 161</value>
   </data>
   <data name="listTuningFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>650, 229</value>
+    <value>650, 299</value>
   </data>
   <data name="listTuningFiles.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -521,7 +566,7 @@ A model fine-tuned on runs like these predicts them better; a model this search 
     <value>True</value>
   </data>
   <data name="cbChooseFromSearchedFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 400</value>
+    <value>28, 470</value>
   </data>
   <data name="cbChooseFromSearchedFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>176, 17</value>
@@ -539,51 +584,6 @@ A model fine-tuned on runs like these predicts them better; a model this search 
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbChooseFromSearchedFiles.Parent" xml:space="preserve">
-    <value>libraryModelPage</value>
-  </data>
-  <data name="lblModelName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="lblModelName.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblModelName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 439</value>
-  </data>
-  <data name="lblModelName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 13</value>
-  </data>
-  <data name="lblModelName.Text" xml:space="preserve">
-    <value>&amp;Save as:</value>
-  </data>
-  <data name="&gt;&gt;lblModelName.Name" xml:space="preserve">
-    <value>lblModelName</value>
-  </data>
-  <data name="&gt;&gt;lblModelName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblModelName.Parent" xml:space="preserve">
-    <value>libraryModelPage</value>
-  </data>
-  <data name="tbxModelName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="tbxModelName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>88, 436</value>
-  </data>
-  <data name="tbxModelName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>590, 20</value>
-  </data>
-  <data name="tbxModelName.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;tbxModelName.Name" xml:space="preserve">
-    <value>tbxModelName</value>
-  </data>
-  <data name="&gt;&gt;tbxModelName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxModelName.Parent" xml:space="preserve">
     <value>libraryModelPage</value>
   </data>
   <data name="modificationsPage.Location" type="System.Drawing.Point, System.Drawing">

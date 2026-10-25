@@ -488,23 +488,17 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On" xml:space="preserve">
     <value>Browse for Runs to Fine-Tune On</value>
   </data>
-  <data name="OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_" xml:space="preserve">
-    <value>{0} tuned on {1}</value>
+  <data name="OspreySearchDlg_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__" xml:space="preserve">
+    <value>Failed copying the fine-tuned model to {0}.</value>
   </data>
-  <data name="OspreySearchDlg_RegisterTunedModel_Failed_saving_the_fine_tuned_model_as__0__" xml:space="preserve">
-    <value>Failed saving the fine-tuned model as {0}.</value>
-  </data>
-  <data name="OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__" xml:space="preserve">
+  <data name="OspreySearchDlg_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__" xml:space="preserve">
     <value>Osprey did not write the fine-tuned model {0}.</value>
   </data>
-  <data name="OspreySearchDlg_ValidateCurrentPage_A_model_named__0__is_already_in_the_list__Replace_it_with_the_model_this_search_fine_tunes_" xml:space="preserve">
-    <value>A model named {0} is already in the list. Replace it with the model this search fine-tunes?</value>
+  <data name="OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_" xml:space="preserve">
+    <value>The document's fine-tuned model {0} already exists. Continuing will overwrite it with the model this search fine-tunes.</value>
   </data>
   <data name="OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_" xml:space="preserve">
     <value>Choose at least one run to fine-tune the model on.</value>
-  </data>
-  <data name="OspreySearchDlg_ValidateCurrentPage_The_model__0__is_the_one_this_search_writes__Choose_another_model_to_fine_tune_from__or_use_it_as_it_is_" xml:space="preserve">
-    <value>The model {0} is the one this search writes. Choose another model to fine-tune from, or use it as it is.</value>
   </data>
   <data name="OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_" xml:space="preserve">
     <value>The runs {0} and {1} have the same file name. Osprey keeps one spectra cache per name, so rename one of them.</value>

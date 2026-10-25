@@ -35,6 +35,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBack = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.wizardPages = new WizardPages();
+            this.titlePanel = new System.Windows.Forms.Panel();
+            this.lblTitle = new System.Windows.Forms.Label();
             this.dataFilesPage = new System.Windows.Forms.TabPage();
             this.lblDataFiles = new System.Windows.Forms.Label();
             this.fastaPage = new System.Windows.Forms.TabPage();
@@ -51,8 +53,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.listTuningFiles = new System.Windows.Forms.CheckedListBox();
             this.btnBrowseTuningFiles = new System.Windows.Forms.Button();
             this.cbChooseFromSearchedFiles = new System.Windows.Forms.CheckBox();
-            this.lblModelName = new System.Windows.Forms.Label();
-            this.tbxModelName = new System.Windows.Forms.TextBox();
             this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.modificationsPage = new System.Windows.Forms.TabPage();
             this.lblModifications = new System.Windows.Forms.Label();
@@ -81,6 +81,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.numThreads = new System.Windows.Forms.NumericUpDown();
             this.runSearchPage = new System.Windows.Forms.TabPage();
             this.wizardPages.SuspendLayout();
+            this.titlePanel.SuspendLayout();
             this.fastaPage.SuspendLayout();
             this.libraryModelPage.SuspendLayout();
             this.modificationsPage.SuspendLayout();
@@ -121,6 +122,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPages.Controls.Add(this.runSearchPage);
             this.wizardPages.Name = "wizardPages";
             this.wizardPages.SelectedIndex = 0;
+            this.wizardPages.SelectedIndexChanged += new System.EventHandler(this.wizardPages_SelectedIndexChanged);
+            //
+            // titlePanel
+            //
+            this.titlePanel.BackColor = System.Drawing.Color.GhostWhite;
+            this.titlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.titlePanel.Controls.Add(this.lblTitle);
+            resources.ApplyResources(this.titlePanel, "titlePanel");
+            this.titlePanel.Name = "titlePanel";
+            //
+            // lblTitle
+            //
+            resources.ApplyResources(this.lblTitle, "lblTitle");
+            this.lblTitle.Name = "lblTitle";
             //
             // dataFilesPage
             //
@@ -171,8 +186,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // libraryModelPage
             //
             this.libraryModelPage.Controls.Add(this.cbUseGpu);
-            this.libraryModelPage.Controls.Add(this.tbxModelName);
-            this.libraryModelPage.Controls.Add(this.lblModelName);
             this.libraryModelPage.Controls.Add(this.cbChooseFromSearchedFiles);
             this.libraryModelPage.Controls.Add(this.btnBrowseTuningFiles);
             this.libraryModelPage.Controls.Add(this.listTuningFiles);
@@ -225,7 +238,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.listTuningFiles.CheckOnClick = true;
             this.listTuningFiles.FormattingEnabled = true;
             this.listTuningFiles.Name = "listTuningFiles";
-            this.listTuningFiles.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listTuningFiles_ItemCheck);
             //
             // btnBrowseTuningFiles
             //
@@ -240,16 +252,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbChooseFromSearchedFiles.Name = "cbChooseFromSearchedFiles";
             this.cbChooseFromSearchedFiles.UseVisualStyleBackColor = true;
             this.cbChooseFromSearchedFiles.CheckedChanged += new System.EventHandler(this.cbChooseFromSearchedFiles_CheckedChanged);
-            //
-            // lblModelName
-            //
-            resources.ApplyResources(this.lblModelName, "lblModelName");
-            this.lblModelName.Name = "lblModelName";
-            //
-            // tbxModelName
-            //
-            resources.ApplyResources(this.tbxModelName, "tbxModelName");
-            this.tbxModelName.Name = "tbxModelName";
             //
             // cbUseGpu
             //
@@ -440,6 +442,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.titlePanel);
             this.Controls.Add(this.wizardPages);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnBack);
@@ -449,6 +452,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Name = "OspreySearchDlg";
             this.ShowInTaskbar = false;
             this.wizardPages.ResumeLayout(false);
+            this.titlePanel.ResumeLayout(false);
+            this.titlePanel.PerformLayout();
             this.fastaPage.ResumeLayout(false);
             this.fastaPage.PerformLayout();
             this.libraryModelPage.ResumeLayout(false);
@@ -467,6 +472,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button btnBack;
         private System.Windows.Forms.Button btnNext;
         private WizardPages wizardPages;
+        private System.Windows.Forms.Panel titlePanel;
+        private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.TabPage dataFilesPage;
         private System.Windows.Forms.Label lblDataFiles;
         private System.Windows.Forms.TabPage fastaPage;
@@ -483,8 +490,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.CheckedListBox listTuningFiles;
         private System.Windows.Forms.Button btnBrowseTuningFiles;
         private System.Windows.Forms.CheckBox cbChooseFromSearchedFiles;
-        private System.Windows.Forms.Label lblModelName;
-        private System.Windows.Forms.TextBox tbxModelName;
         private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.TabPage modificationsPage;
         private System.Windows.Forms.Label lblModifications;

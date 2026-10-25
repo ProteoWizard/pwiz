@@ -218,20 +218,17 @@ namespace pwiz.Skyline.Model.Lib
             return Path.Combine(workDirectory, Path.GetFileNameWithoutExtension(outputLibraryPath) + CarafeModelFile.EXTENSION);
         }
 
-        /// <summary>The subfolder of the working folder that keeps the models the wizard saved to the model list.</summary>
-        public const string MODELS_FOLDER = @"models";
-
         /// <summary>
-        /// Where the wizard keeps the model a tuning search saved under <paramref name="modelName"/>:
-        /// a copy in the working folder's models subfolder, named after the model. Osprey writes every
-        /// tuning of a document to <see cref="GetTunedModelPath"/>, so the next tuning would overwrite
-        /// the file a listed model points to; and Osprey refuses to tune further from that file, which
-        /// the copy is not.
+        /// The document's fine-tuned model: a copy of the model a tuning search wrote, beside the
+        /// document and named after it (&lt;doc&gt;.model.zip), as the document library is. A support
+        /// file of the document, like the library, rather than an entry in the model list; a user
+        /// who wants it elsewhere adds it to the list by name through the list's Add... The copy
+        /// lives outside the working folder, whose spectra caches a user may delete to reclaim space.
         /// </summary>
-        public static string GetRegisteredModelPath(string workDirectory, string modelName)
+        public static string GetDocumentModelPath(string documentPath)
         {
-            string fileName = string.Join(@"_", modelName.Split(Path.GetInvalidFileNameChars())).Trim();
-            return Path.Combine(workDirectory, MODELS_FOLDER, fileName + CarafeModelFile.EXTENSION);
+            string dir = Path.GetDirectoryName(documentPath) ?? string.Empty;
+            return Path.Combine(dir, Path.GetFileNameWithoutExtension(documentPath) + CarafeModelFile.EXTENSION);
         }
 
         /// <summary>
