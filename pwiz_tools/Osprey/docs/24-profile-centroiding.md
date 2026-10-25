@@ -280,6 +280,12 @@ Raise `ALGORITHM_VERSION` with any change that moves a centroid; the tag and key
   k=2, 0.939 against 0.930 at k=4, each scored against truth centroided at the same sigma. The
   joint solve at this sigma is not yet searched.
 - **Other scan rates.** The rule rests on 200 kTh/s alone (see [The peak sigma](#the-peak-sigma)).
-- **Linear grids only.** Orbitrap and TOF profiles are not uniform in m/z; Centrix does not apply
-  to them as it stands.
+- **Other grids.** Orbitrap and TOF profiles are not uniform in m/z. `GridCentroider` (Osprey.Demux)
+  runs Centrix on any profile grid's sample index, where a grid uniform in some coordinate of m/z is
+  uniform (a TOF's, in sqrt(m/z)), with the peak sigma in samples given by m/z
+  (`CentrixCentroider`'s varying sigma: each region fitted with the basis of the sigma at its center,
+  rounded to 0.01) and the Th settings converted at a reference m/z. Tried on ZT Scan in place of the
+  joint solve's own centroids, it did not help ([23](23-demultiplexing.md#the-joint-solve-zt-scan---joint)).
+  Counting data also needs a noise floor of its own (`MinNoiseSigma`, 1 by default as in Centrix):
+  a profile of counts with its zeros dropped reads a noise of zero.
 - **Other linear ion traps** (a Fusion's) follow the same table but are untested.

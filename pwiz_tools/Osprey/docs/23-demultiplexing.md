@@ -326,6 +326,8 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--peak-sigma-th S` | from the input | staggered `--joint` on a linear grid: the profile peak sigma, Th; absent, as `--centrix-sigma` |
 | `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
 | `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
+| `--joint-centrix-fit` | off | ZT Scan `--joint`: centroid each source position's fitted profile with Centrix on the TOF grid, in place of the fit's own centroids |
+| `--joint-centrix` | off | ZT Scan `--joint`: split the measured profile among the source positions by the fit, as the staggered joint solve does, and centroid each position's share with Centrix on the TOF grid instead of writing the fit's own centroids (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
 | `--elution-fwhm S`, `--elution-param Name=Value` | off | staggered: split by each channel's elution fitted with peaks of FWHM S seconds, and its tuning |
 | `--thin N` | 1 | staggered: keep only every N-th cycle's MS2, to measure what sampling costs |
 | `--remultiplex K` | - | sum a narrow-window run into K-fold staggered windows and write them undemultiplexed: the truth benchmark's input |
@@ -726,6 +728,35 @@ tolerance of 1e-3 raised the CV by 0.013-0.017, because the unconverged split of
 neighbouring positions differs from run to run. `--joint-param BlockPoints=K` solves up to K = 5
 neighbouring grid points per block step: 3 points land twice as close to convergence in 42% of the block
 solves, but each block costs more and the solve takes longer.
+
+**Centrix in place of the fit's centroids (2026-10-24).** The staggered joint solve splits the measured
+profile among its bins by the fit and centroids each share with Centrix, which beat writing the fit on the
+Stellar ([Stellar profile data](#stellar-profile-data-linear-ion-trap)). The same was tried here, with
+Centrix run on the TOF grid's sample index (`GridCentroider`: the grid is uniform there, and the peak
+sigma follows the sigma table by m/z, each signal region taking its own) and the split shared with the
+staggered solve (`JointApportioner`, the share of position j in proportion to A[r, j] (B * beta_j)[k]).
+Each position's share in a sweep is summed over the encoded bins that saw it and divided by its
+transmission summed over them, the fit's scale. On the slice (same settings and DIA-NN pins as above,
+one machine, `ids_summary.py`; the CV change is `paired_cv.py --rt 4.1 5.9`, the median change over the
+precursors every compared arm finds in every run, 1,901-2,503 of them; the joint arm's own median, 0.089-0.095,
+moves with that set):
+
+| Arm | Precursors A1 / D1 / G1 | Peptides in all runs / any | Median CV change vs joint |
+|---|---|---|---|
+| joint, its own centroids (the default) | 3,582 / 3,759 / 3,755 | 2,722 / 4,764 | (0.089-0.095) |
+| split + Centrix, noise floor 1 count (`--joint-centrix`) | 3,459 / 3,234 / 3,480 | 2,513 / 4,350 | +0.007 |
+| split + Centrix, floor 33 counts (`MinNoiseSigma=33`) | 3,466 / 3,467 / 3,539 | 2,604 / 4,490 | +0.015 |
+| split + Centrix, floor 100 counts, one ion | 2,934 / 2,832 / 2,903 | 2,208 / 3,645 | +0.010 |
+| fitted profile + Centrix (`--joint-centrix-fit`) | 3,587 / 3,792 / 3,670 | 2,738 / 4,728 | +0.010 |
+| the same, centroids merged within 2 sigma | 3,701 / 3,674 / 3,618 | 2,736 / 4,713 | +0.011 |
+
+Neither form helps ZT Scan, and the joint solve's own centroids stay the default. Splitting puts each
+position's counting noise back, and Centrix's lasso, one penalty per region from a Gaussian noise
+estimate, suits counting data poorly: the share profiles are mostly zeros, so its noise reads at its
+floor, and raising the floor toward an ion loses identifications. Unlike the Stellar's, this fit
+interpolates nothing, so the split has no error of the fit to remove. Centrix on the fitted profile
+identifies as many as the fit's own centroids but quantifies worse (33% of precursors improved), and
+merging its centroids within 2 sigma does not close the gap, so it is not peaks split in two.
 
 **Speed.** One whole A1 run from the `.wiff2`, 16 threads on a laptop with 6 performance and 8 efficiency
 cores: 6,438 s, a 16.8 GB mzML, against 14.4 min of acquisition. The solve took 96 thread-seconds a sweep:

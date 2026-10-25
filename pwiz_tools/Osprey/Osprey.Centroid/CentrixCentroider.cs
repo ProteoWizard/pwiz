@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace pwiz.Osprey.Centroid
@@ -53,8 +54,12 @@ namespace pwiz.Osprey.Centroid
     /// <para><b>Users.</b> Osprey's reader with <c>--centroid centrix</c> (<c>SpectrumFileReader</c>), the staggered
     /// joint demultiplexer, on each bin's share of the measured profile (<c>StaggeredDemuxPlan</c>), and
     /// <c>Osprey.DemuxTool --centroid centrix</c>.</para>
-    /// <para>Thread-safe: an instance holds only its settings and the basis of the last grid spacing it saw, replaced
-    /// by reference. Raise <see cref="ALGORITHM_VERSION"/> with any change that moves a centroid.</para>
+    /// <para><b>A sigma that varies along the axis</b> (the constructor's <c>sigmaAt</c>): each region is fitted with the
+    /// basis of the sigma at its center, and centroids merge within the sigma where they lie. For a grid uniform in some
+    /// other coordinate than m/z, centroided in that coordinate (a TOF's sample index, where its peak is 1.2 to 1.5
+    /// samples wide across the m/z range). Without it, one sigma, as Rust Centrix.</para>
+    /// <para>Thread-safe: an instance holds only its settings and the bases it has built, replaced by reference or
+    /// kept in a concurrent map. Raise <see cref="ALGORITHM_VERSION"/> with any change that moves a centroid.</para>
     /// </summary>
     public sealed class CentrixCentroider
     {
@@ -69,14 +74,31 @@ namespace pwiz.Osprey.Centroid
         /// </summary>
         public const int ALGORITHM_VERSION = 2;
 
+        /// <summary>A varying sigma is rounded to this step, so a few bases serve every region.</summary>
+        public const double SIGMA_STEP = 0.01;
+
         private readonly CentrixParams _parameters;
+        private readonly Func<double, double> _sigmaAt;
+        private readonly ConcurrentDictionary<long, CentrixBasis> _sigmaBases = new ConcurrentDictionary<long, CentrixBasis>();
         private CentrixBasis _basis;
 
-        public CentrixCentroider(CentrixParams parameters)
+        public CentrixCentroider(CentrixParams parameters) : this(parameters, null)
+        {
+        }
+
+        /// <summary>
+        /// A centroider whose peak sigma varies along the axis: <paramref name="sigmaAt"/> gives it at a coordinate, in
+        /// the axis's units, and <see cref="CentrixParams.SigmaTh"/> is then only the sigma of the fixed basis. Needs a
+        /// fixed <see cref="CentrixParams.GridSpacingTh"/>. Null: <see cref="CentrixParams.SigmaTh"/> everywhere.
+        /// </summary>
+        public CentrixCentroider(CentrixParams parameters, Func<double, double> sigmaAt)
         {
             if (!(parameters.SigmaTh > 0) || double.IsInfinity(parameters.SigmaTh))
                 throw new ArgumentException(@"The peak sigma must be positive and finite.");
+            if (sigmaAt != null && !(parameters.GridSpacingTh > 0))
+                throw new ArgumentException(@"A varying peak sigma needs a fixed grid spacing.");
             _parameters = parameters.Copy();
+            _sigmaAt = sigmaAt;
             if (_parameters.GridSpacingTh > 0)
                 _basis = new CentrixBasis(_parameters.SigmaTh, _parameters.GridSpacingTh, _parameters.GridOffsetTh);
         }
@@ -140,7 +162,7 @@ namespace pwiz.Osprey.Centroid
             if (n < 3)
                 return centroids;
 
-            var noise = NoiseProfile.Rough(intensity);
+            var noise = NoiseProfile.Rough(intensity, p.MinNoiseSigma);
             double roughLambda = p.LambdaFactor * noise.NoiseSigma;
             var regions = SignalRegion.Detect(mz, intensity, noise.Baseline, noise.NoiseSigma, p.SignalThresholdSigma,
                 p.MergeGapPoints, p.ExtensionPoints, p.MinRegionWidth);
@@ -152,12 +174,12 @@ namespace pwiz.Osprey.Centroid
             var residuals = new List<(double CenterMz, double[] Residuals)>();
             for (int r = 0; r < regions.Count; r++)
             {
-                var fit = FitRegion(r, regions[r], mz, intensity, basis, roughLambda);
+                var fit = FitRegion(r, regions[r], mz, intensity, RegionBasis(regions[r], basis), roughLambda);
                 if (fit == null)
                     continue;
                 fits.Add(fit);
                 residuals.Add((fit.CenterMz, fit.Residuals));
-                AddCentroids(fit.Beta, fit.Grid, basis, centroids);
+                AddCentroids(fit.Beta, fit.Grid, fit.Basis, centroids);
             }
 
             // Pass 2: each region the refined noise changes enough solved again from its pass-1 solution, and its
@@ -169,12 +191,27 @@ namespace pwiz.Osprey.Centroid
                 double lambda = p.LambdaFactor * refined.NoiseAt(region.CenterMz);
                 if (!NeedsRefit(fit.Lambda, lambda, p.LambdaChangeThreshold))
                     continue;
-                var beta = Solve(fit.Aty, basis.GramRow, lambda, fit.Beta);
+                var beta = Solve(fit.Aty, fit.Basis.GramRow, lambda, fit.Beta);
                 centroids.RemoveAll(c => c.Mz >= region.MzStart && c.Mz <= region.MzEnd);
-                AddCentroids(beta, fit.Grid, basis, centroids);
+                AddCentroids(beta, fit.Grid, fit.Basis, centroids);
             }
 
-            return Merge(SortByMz(centroids), p.MinCentroidSeparationTh > 0 ? p.MinCentroidSeparationTh : basis.Sigma);
+            if (p.MinCentroidSeparationTh > 0 || _sigmaAt == null)
+                return Merge(SortByMz(centroids), p.MinCentroidSeparationTh > 0 ? p.MinCentroidSeparationTh : basis.Sigma);
+            return Merge(SortByMz(centroids), _sigmaAt);
+        }
+
+        /// <summary>The basis a region is fitted with: the spectrum's, or with a varying sigma, the sigma at its center's.</summary>
+        private CentrixBasis RegionBasis(SignalRegion region, CentrixBasis basis)
+        {
+            if (_sigmaAt == null)
+                return basis;
+            double sigma = _sigmaAt(region.CenterMz);
+            if (!(sigma > 0) || double.IsInfinity(sigma))
+                return basis;
+            long key = (long)Math.Round(sigma / SIGMA_STEP);
+            return _sigmaBases.GetOrAdd(key, k =>
+                new CentrixBasis(k * SIGMA_STEP, _parameters.GridSpacingTh, _parameters.GridOffsetTh));
         }
 
         /// <summary>
@@ -237,7 +274,7 @@ namespace pwiz.Osprey.Centroid
                     fitted += a[row + j] * beta[j];
                 residuals[i] = intensity[region.Start + i] - fitted;
             }
-            return new RegionFit(index, grid, aty, beta, lambda, (mz[region.Start] + mz[region.End]) / 2, residuals);
+            return new RegionFit(index, basis, grid, aty, beta, lambda, (mz[region.Start] + mz[region.End]) / 2, residuals);
         }
 
         /// <summary>
@@ -324,13 +361,44 @@ namespace pwiz.Osprey.Centroid
             return merged;
         }
 
+        /// <summary>
+        /// As above, with the separation the sigma where each pair lies, at the centroid merged so far: a varying
+        /// sigma's.
+        /// </summary>
+        private static List<(double Mz, double Intensity)> Merge(List<(double Mz, double Intensity)> sorted,
+            Func<double, double> separationAt)
+        {
+            var merged = new List<(double Mz, double Intensity)>(sorted.Count);
+            if (sorted.Count == 0)
+                return merged;
+            var current = sorted[0];
+            for (int i = 1; i < sorted.Count; i++)
+            {
+                var next = sorted[i];
+                if (next.Mz - current.Mz < separationAt(current.Mz))
+                {
+                    double total = current.Intensity + next.Intensity;
+                    if (total > 0)
+                        current = ((current.Mz * current.Intensity + next.Mz * next.Intensity) / total, total);
+                }
+                else
+                {
+                    merged.Add(current);
+                    current = next;
+                }
+            }
+            merged.Add(current);
+            return merged;
+        }
+
         /// <summary>A region's pass-1 solve, what pass 2 needs to solve it again.</summary>
         private sealed class RegionFit
         {
-            public RegionFit(int region, double[] grid, double[] aty, double[] beta, double lambda, double centerMz,
-                double[] residuals)
+            public RegionFit(int region, CentrixBasis basis, double[] grid, double[] aty, double[] beta, double lambda,
+                double centerMz, double[] residuals)
             {
                 Region = region;
+                Basis = basis;
                 Grid = grid;
                 Aty = aty;
                 Beta = beta;
@@ -340,6 +408,7 @@ namespace pwiz.Osprey.Centroid
             }
 
             public int Region { get; }
+            public CentrixBasis Basis { get; }
             public double[] Grid { get; }
             public double[] Aty { get; }
             public double[] Beta { get; }

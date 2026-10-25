@@ -492,24 +492,6 @@ namespace pwiz.Osprey.Demux
             coefficients.KeepCoefficients = true;
             var fit = JointDemultiplexer.DemuxUnit(unit, coefficients, grid);
 
-            // Each (pass, column)'s coefficients by grid sample.
-            var columnOf = new Dictionary<int, int>();
-            for (int j = 0; j < unit.ColumnBins.Length; j++)
-                columnOf[unit.ColumnBins[j]] = j;
-            var beta = new Dictionary<(int, int), Dictionary<long, double>>();
-            foreach (var p in fit.Demultiplexed)
-            {
-                var key = (p.Cycle, columnOf[p.Bin]);
-                if (!beta.TryGetValue(key, out var map))
-                {
-                    map = new Dictionary<long, double>();
-                    beta[key] = map;
-                }
-                map[grid.Index(p.Mz)] = p.Ions;
-            }
-            var kernel = parameters.PeakAt(500);
-            int half = kernel.Length / 2;
-
             // The core bins, one row and one position each, and the acquired points apportioned among them.
             var coreBins = unit.ColumnBins.Where(b => b >= unit.FirstCoreBin && b <= unit.LastCoreBin).ToArray();
             var coreIndex = new Dictionary<int, int>();
@@ -519,48 +501,15 @@ namespace pwiz.Osprey.Demux
             var ions = new List<double>();
             var row = new List<int>();
             var cycle = new List<int>();
-            var covered = new List<int>();
-            var fitted = new List<double>();
-            for (int p = 0; p < unit.Mz.Length; p++)
+            JointApportioner.Split(unit, fit, grid, parameters, p => observed[p], (p, j, fraction) =>
             {
-                if (!observed[p])
-                    continue;
-                int r = unit.Row[p], c = unit.Cycle[p];
-                long sample = grid.Index(unit.Mz[p]);
-                covered.Clear();
-                fitted.Clear();
-                double total = 0;
-                for (int j = 0; j < unit.ColumnBins.Length; j++)
-                {
-                    if (unit.Transmission[r, j] <= 0)
-                        continue;
-                    double f = 0;
-                    if (beta.TryGetValue((unit.Cycles[c], j), out var map))
-                    {
-                        for (int d = -half; d <= half; d++)
-                        {
-                            if (map.TryGetValue(sample - d, out double b))
-                                f += kernel[d + half] * b;
-                        }
-                    }
-                    covered.Add(j);
-                    fitted.Add(f);
-                    total += f;
-                }
-                for (int n = 0; n < covered.Count; n++)
-                {
-                    int bin = unit.ColumnBins[covered[n]];
-                    if (!coreIndex.TryGetValue(bin, out int core))
-                        continue;
-                    double share = total > 0 ? fitted[n] / total : 1.0 / covered.Count;
-                    if (share <= 0)
-                        continue;
-                    mz.Add(unit.Mz[p]);
-                    ions.Add(unit.Ions[p] * share);
-                    row.Add(core);
-                    cycle.Add(c);
-                }
-            }
+                if (!coreIndex.TryGetValue(unit.ColumnBins[j], out int core))
+                    return;
+                mz.Add(unit.Mz[p]);
+                ions.Add(unit.Ions[p] * fraction);
+                row.Add(core);
+                cycle.Add(unit.Cycle[p]);
+            });
             // The ions in are the measured ions split among the unit's own bins: the fit's would count each pass's
             // interpolated windows too.
             var result = new ScanningUnitResult

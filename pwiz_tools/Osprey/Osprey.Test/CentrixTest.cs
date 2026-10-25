@@ -219,6 +219,10 @@ namespace pwiz.Osprey.Test
             var detecting = new CentrixCentroider(new CentrixParams { SigmaTh = SIGMA });
             var detected = Centroids(detecting, 494.0, 160, (500.0, 10000.0), (500.625, 10000.0));
             Assert.AreEqual(Describe(pair), Describe(detected));
+
+            // A varying sigma that stays the same gives the same centroids.
+            var constant = new CentrixCentroider(new CentrixParams { SigmaTh = SIGMA, GridSpacingTh = SPACING }, m => SIGMA);
+            Assert.AreEqual(Describe(pair), Describe(Centroids(constant, 494.0, 160, (500.0, 10000.0), (500.625, 10000.0))));
         }
 
         [TestMethod]

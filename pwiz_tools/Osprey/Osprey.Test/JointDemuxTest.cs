@@ -20,8 +20,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Centroid;
 using pwiz.Osprey.Demux;
 
 namespace pwiz.Osprey.Test
@@ -47,6 +49,9 @@ namespace pwiz.Osprey.Test
         /// floor (<see cref="JointDemuxParams.MinOutputIons"/>).
         /// </summary>
         private const double RESIDUE_IONS = 0.01;
+
+        /// <summary>ZT Scan's detector counts of one ion, near enough (99.665 measured).</summary>
+        private const double COUNTS_PER_ION = 100;
 
         /// <summary>
         /// The grid of a profile spectrum, a TOF's and a linear ion trap's: found from its points, with or without its
@@ -294,6 +299,72 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Centrix on the TOF grid's sample index (<see cref="GridCentroider"/>), unpenalized: peaks of the grid's own
+        /// width, their zero samples dropped and 130,000 samples apart, come back one centroid each at their own position
+        /// and summed counts, and two peaks three samples (about 2.4 sigma) apart are both found.
+        /// </summary>
+        [TestMethod]
+        public void TestGridCentroider()
+        {
+            var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
+            var parameters = new JointDemuxParams();
+            var peaks = new[] { (Sample: 30000L, Counts: 50000.0), (Sample: 30003L, Counts: 20000.0), (Sample: 160000L, Counts: 8000.0) };
+            var profile = new SortedDictionary<long, double>();
+            foreach (var peak in peaks)
+            {
+                double sigma = parameters.SigmaAt(grid.Mz(peak.Sample));
+                for (int d = -6; d <= 6; d++)
+                {
+                    profile.TryGetValue(peak.Sample + d, out double sum);
+                    profile[peak.Sample + d] = sum + peak.Counts * Math.Exp(-0.5 * d * d / (sigma * sigma)) / (sigma * Math.Sqrt(2 * Math.PI));
+                }
+            }
+            var centroider = new GridCentroider(grid, Unpenalized(), parameters.SigmaAt, 600);
+            var centroids = centroider.Centroid(profile.Keys.ToArray(), profile.Values.ToArray());
+            string found = Describe(grid, centroids);
+            Assert.AreEqual(peaks.Length, centroids.Count(c => c.Intensity >= 80), found);
+            foreach (var peak in peaks)
+            {
+                var centroid = centroids.Where(c => Math.Abs(grid.Position(c.Mz) - peak.Sample) < 1.5)
+                    .OrderByDescending(c => c.Intensity).First();
+                Assert.AreEqual(peak.Sample, grid.Position(centroid.Mz), 0.1, found);
+                Assert.AreEqual(peak.Counts, centroid.Intensity, 0.02 * peak.Counts, found);
+            }
+        }
+
+        /// <summary>
+        /// The ZT Scan joint solve with the measurements kept (<c>--joint-centrix</c>): the profile split among the
+        /// source positions by the fit, each position's share summed over its encoded bins, scaled back by their
+        /// transmission and centroided by Centrix. Noiseless, every fragment returns to its precursor's position at its
+        /// own m/z and intensity, the two fragments of different precursors two samples apart included.
+        /// </summary>
+        [TestMethod]
+        public void TestJointCentrixRecovers()
+        {
+            var centers = Enumerable.Range(0, BINS).Select(b => FIRST_CENTER + b * STEP).ToArray();
+            var a = ScanningDemultiplexer.TransmissionMatrix(ScanningDemuxTest.TrapezoidKernel(), centers, centers, STEP);
+            var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
+            long Sample(double mz) => grid.Index(mz);
+            var sources = new[]
+            {
+                (Bin: 20, Sample: Sample(412.2345), Amount: 1000.0),
+                (Bin: 20, Sample: Sample(655.4321), Amount: 400.0),
+                (Bin: 34, Sample: Sample(520.3456), Amount: 800.0),
+                (Bin: 28, Sample: Sample(733.1111), Amount: 500.0),
+            };
+            long shared = Sample(610.5);
+            var close = new[] { (Bin: 20, Sample: shared, Amount: 1000.0), (Bin: 34, Sample: shared + 2, Amount: 600.0) };
+            var parameters = new JointDemuxParams { L1Z = 0, ChunkSamples = 256 };
+            var centrix = new GridCentroider(grid, Unpenalized(), parameters.SigmaAt, 600);
+            foreach (var (set, label) in new[] { (sources, @"split + Centrix"), (close, @"split + Centrix, near-isobaric") })
+            {
+                var unit = SimulateProfile(a, grid, set, null, parameters);
+                var result = ScanningDemuxPlan.SolveJointApportioned(unit, parameters, grid, centrix, COUNTS_PER_ION);
+                AssertRecovered(result, grid, set, 0.02, label);
+            }
+        }
+
+        /// <summary>
         /// Each source's intensity, over the core sweeps, in its own position within half a sample of its
         /// m/z, within a relative tolerance; and each centroid there within 0.2 samples of the source, apart from the
         /// solve's residue (<see cref="RESIDUE_IONS"/>).
@@ -377,6 +448,22 @@ namespace pwiz.Osprey.Test
             for (int e = -half; e <= half; e++)
                 sum += Math.Exp(-0.5 * e * e / (sigma * sigma));
             return Math.Exp(-0.5 * d * d / (sigma * sigma)) / sum;
+        }
+
+        /// <summary>
+        /// Centrix without its lasso penalty, solved exactly: these profiles hold only peaks, so its noise estimate, the
+        /// interquartile range of every point given, reads hundreds of counts and the penalty would shrink each peak by
+        /// about 1.4 times it. What penalty suits counting data is measured on real data, not here.
+        /// </summary>
+        private static CentrixParams Unpenalized()
+        {
+            return new CentrixParams { LambdaFactor = 0, Solver = CentrixSolver.active_set };
+        }
+
+        private static string Describe(TofGrid grid, IEnumerable<(double Mz, double Intensity)> centroids)
+        {
+            return string.Join(@", ", centroids.Select(c => string.Format(CultureInfo.InvariantCulture, @"{0:F2}:{1:F0}",
+                grid.Position(c.Mz), c.Intensity)));
         }
 
         /// <summary>The ions of a bin's peaks within a number of grid samples of a sample.</summary>

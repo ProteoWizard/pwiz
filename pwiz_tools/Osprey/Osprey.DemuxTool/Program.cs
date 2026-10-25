@@ -48,7 +48,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--ions] [--ion-response A] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile]" +
+            @" [--channel-th T] [--ions] [--ion-response A] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile] [--joint-centrix] [--joint-centrix-fit]" +
             @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]"; // Arg literal OK: DemuxTool's own option vocabulary
 
         private static int Main(string[] args)
@@ -57,6 +57,7 @@ namespace pwiz.Osprey.DemuxTool
             int remultiplex = 0;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false, noDemux = false, centrix = false;
+            bool jointCentrix = false;
             var options = new ScanningDemuxOptions();
             // The staggered joint solve's Centrix settings serve --centroid centrix too; the joint solve takes its sigma
             // from --peak-sigma-th.
@@ -70,7 +71,7 @@ namespace pwiz.Osprey.DemuxTool
                     option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile" ||
                     option == @"--joint" || option == @"--joint-relaxed" || option == @"--solve-profile" ||
                     option == @"--joint-keep-active" || option == @"--joint-fitted" || option == @"--joint-profile" ||
-                    option == @"--ions";
+                    option == @"--joint-centrix" || option == @"--joint-centrix-fit" || option == @"--ions";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -246,6 +247,17 @@ namespace pwiz.Osprey.DemuxTool
                         // Staggered joint solve: write each bin's apportioned profile, for another centroider.
                         options.JointCentroid = false;
                         break;
+                    case @"--joint-centrix":
+                        // ZT Scan joint solve: split the measured profile among the source positions by the fit and
+                        // centroid each position's share with Centrix on the TOF grid, instead of the fit's own centroids.
+                        jointCentrix = true;
+                        break;
+                    case @"--joint-centrix-fit":
+                        // ZT Scan joint solve: centroid each source position's fitted profile with Centrix on the TOF
+                        // grid, in place of the fit's own centroids.
+                        jointCentrix = true;
+                        options.JointCentrixFitted = true;
+                        break;
                     case @"--joint-fitted":
                         // Staggered joint solve: write the fitted peaks themselves instead of apportioning the measured profile.
                         options.JointApportion = false;
@@ -330,6 +342,10 @@ namespace pwiz.Osprey.DemuxTool
             // centroids (DIA-NN's tolerance pinned), at a CV 0.002-0.003 worse.
             if (options.Joint && !ms1Set)
                 options.JointMs1 = !staggered;
+            // A scanning acquisition keeps the fit's own centroids unless asked to split and centroid with Centrix,
+            // until that is shown to do better on the slice.
+            if (!staggered)
+                options.JointApportion = jointCentrix;
             if (staggered && options.JointMs1)
             {
                 // The staggered plan passes MS1 through; --centroid centrix centroids it.

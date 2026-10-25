@@ -47,23 +47,23 @@ namespace pwiz.Osprey.Centroid
         public double Baseline { get; }
 
         /// <summary>
-        /// The rough noise sigma: the interquartile range / 1.349, at least a tenth of the baseline and at least 1, so
-        /// it assumes intensities on the scale of a vendor's (an ion trap's rates), not of ions.
+        /// The rough noise sigma: the interquartile range / 1.349, at least a tenth of the baseline and at least the
+        /// floor given (Centrix's is 1, which assumes intensities on the scale of a vendor's, an ion trap's rates).
         /// </summary>
         public double NoiseSigma { get; }
 
-        /// <summary>The rough estimate from a spectrum's intensities.</summary>
-        public static NoiseProfile Rough(double[] intensity)
+        /// <summary>The rough estimate from a spectrum's intensities, its sigma at least <paramref name="minSigma"/>.</summary>
+        public static NoiseProfile Rough(double[] intensity, double minSigma = 1.0)
         {
             int n = intensity.Length;
             if (n == 0)
-                return new NoiseProfile(0, 1, null, null);
+                return new NoiseProfile(0, minSigma, null, null);
             var sorted = (double[])intensity.Clone();
             Array.Sort(sorted); // Array.Sort OK: equal doubles are indistinguishable
             double p10 = Math.Max(sorted[n / 10], 0);
             double p25 = sorted[n / 4];
             double p75 = sorted[n * 3 / 4];
-            double sigma = Math.Max(Math.Max((p75 - p25) / 1.349, p10 * 0.1), 1.0);
+            double sigma = Math.Max(Math.Max((p75 - p25) / 1.349, p10 * 0.1), minSigma);
             return new NoiseProfile(p10, sigma, null, null);
         }
 

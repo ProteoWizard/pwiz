@@ -111,6 +111,14 @@ namespace pwiz.Osprey.Centroid
         /// <summary>Centroids closer than this, in Th, merge into one. Zero: the peak sigma.</summary>
         public double MinCentroidSeparationTh { get; set; }
 
+        /// <summary>
+        /// The least noise sigma the penalty is set from, in the input's intensity units. Centrix's is 1, which suits an
+        /// ion trap's rates. Counting data is noisier than that by its own statistics: a TOF's counts of one ion (about
+        /// 100 on a ZenoTOF) are the natural unit there, and a floor of a fraction of them keeps the penalty from
+        /// vanishing on a profile whose noise reads as zeros.
+        /// </summary>
+        public double MinNoiseSigma { get; set; } = 1;
+
         public CentrixParams Copy()
         {
             return (CentrixParams)MemberwiseClone();

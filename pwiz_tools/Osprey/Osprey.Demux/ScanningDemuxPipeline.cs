@@ -71,11 +71,19 @@ namespace pwiz.Osprey.Demux
         public double LinearPeakSigmaTh { get; set; }
 
         /// <summary>
-        /// Staggered joint solve: split each acquired spectrum's observed profile among its bins by the fitted peaks of
-        /// each bin, then centroid each bin's share, rather than writing the fitted peaks themselves, which carry the
-        /// errors of the interpolated windows.
+        /// The joint solve: split the measured profile among the bins (staggered) or source positions (ZT Scan) by the
+        /// fitted peaks of each, then centroid each share (<see cref="JointApportioner"/>), rather than writing the fitted
+        /// peaks themselves. Staggered, the fit carries the errors of the interpolated windows. ZT Scan, each position's
+        /// share in a sweep is summed over the encoded bins that saw it and centroided by Centrix on the TOF grid
+        /// (<see cref="GridCentroider"/>) in place of the fit's own runs of coefficients.
         /// </summary>
         public bool JointApportion { get; set; } = true;
+
+        /// <summary>
+        /// ZT Scan, with <see cref="JointApportion"/>: Centrix centroids each position's fitted profile (its peaks,
+        /// B * beta) rather than its split measurement, which isolates the centroider from the measurement's noise.
+        /// </summary>
+        public bool JointCentrixFitted { get; set; }
 
         /// <summary>
         /// With <see cref="JointApportion"/>: centroid each bin's share with Centrix (<see cref="Centrix"/>); false
@@ -175,6 +183,9 @@ namespace pwiz.Osprey.Demux
     /// </remarks>
     internal sealed class ScanningDemuxPlan : DemuxPlan
     {
+        /// <summary>Where Centrix's Th settings (its noise windows) become TOF samples: mid-range for fragments.</summary>
+        private const double CENTRIX_REFERENCE_MZ = 600;
+
         private readonly IDemuxSource _source;
         private readonly ScanningKernel _kernel;
         private readonly ScanningDemuxOptions _options;
@@ -195,6 +206,7 @@ namespace pwiz.Osprey.Demux
         private JointDemuxParams _surveyParameters;           // the joint settings with MS1's peak width
         private double _surveyCountsPerIon = double.NaN;      // of the last MS1 spectrum whose low levels fitted
         private TofGrid _grid;
+        private GridCentroider _centrix;                      // with JointApportion: centroids each position's share
 
         public ScanningDemuxPlan(IDemuxSource source, ScanningKernel kernel, ScanningDemuxOptions options,
             TextWriter log)
@@ -463,6 +475,16 @@ namespace pwiz.Osprey.Demux
                     unit.KernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
                     // The units hold copies of their peaks, so they solve on the solve threads while the pipeline
                     // goes on reading, laying out and writing.
+                    if (_options.Joint && _options.JointApportion)
+                    {
+                        var parameters = _options.JointParameters;
+                        var centrix = _options.JointCentroid ? _centrix : null;
+                        double countsPerIon = _options.CountsPerIon;
+                        bool fitted = _options.JointCentrixFitted;
+                        work.Add(new DemuxWork(() => SolveJointApportioned(unit, parameters, grid, centrix, countsPerIon, fitted),
+                            unit.Mz.Length));
+                        continue;
+                    }
                     work.Add(new DemuxWork(() => _options.Joint
                         ? JointDemultiplexer.DemuxUnit(unit, _options.JointParameters, grid)
                         : ScanningDemultiplexer.DemuxUnit(unit, _options.Parameters), unit.Mz.Length));
@@ -584,10 +606,121 @@ namespace pwiz.Osprey.Demux
                     _log.WriteLine(@"TOF grid: step {0:E6} in sqrt(m/z)", _grid.Step);
                     if (_options.MeasuredPeakShape)
                         MeasurePeakShape(sweeps);
+                    if (_options.JointApportion && _options.JointCentroid)
+                    {
+                        var joint = _options.JointParameters;
+                        _centrix = new GridCentroider(_grid, _options.Centrix, joint.SigmaAt, CENTRIX_REFERENCE_MZ);
+                        _log.WriteLine(@"Centrix on the TOF grid: peak sigma {0:F2} samples at 300 m/z, {1:F2} at 1200",
+                            joint.SigmaAt(300), joint.SigmaAt(1200));
+                    }
                     return _grid;
                 }
             }
             throw new InvalidOperationException(@"The joint solve found no profile spectrum to take the TOF grid from.");
+        }
+
+        /// <summary>
+        /// A unit's joint solve with the measured profile kept: the fit splits each point among the source positions its
+        /// encoded bin transmits (<see cref="JointApportioner"/>); each core position's shares in each core sweep are
+        /// summed by grid sample over the bins that saw it and divided by its transmission summed over them, the fit's
+        /// scale, so the position's coefficients would be its share if the fit were exact; and the sum is centroided by
+        /// Centrix in counts (<paramref name="countsPerIon"/>), its noise model's units, or kept as profile when there
+        /// is no centroider. Peaks are keyed by source position and sweep, as the fit's centroids are. With
+        /// <paramref name="fitted"/>, each core position's fitted profile is centroided instead of its share.
+        /// </summary>
+        internal static ScanningUnitResult SolveJointApportioned(ScanningUnit unit, JointDemuxParams parameters,
+            TofGrid grid, GridCentroider centrix, double countsPerIon, bool fitted = false)
+        {
+            var coefficients = parameters.Copy();
+            coefficients.KeepCoefficients = true;
+            var fit = JointDemultiplexer.DemuxUnit(unit, coefficients, grid);
+            if (fitted)
+                return CentroidFitted(unit, fit, parameters, grid, centrix, countsPerIon);
+
+            int rows = unit.RowBins.Length, columns = unit.ColumnBins.Length;
+            var transmitted = new double[columns];
+            for (int j = 0; j < columns; j++)
+            {
+                for (int r = 0; r < rows; r++)
+                    transmitted[j] += unit.Transmission[r, j];
+            }
+            var shares = new Dictionary<(int Cycle, int Column), SortedDictionary<long, double>>();
+            JointApportioner.Split(unit, fit, grid, parameters, p =>
+            {
+                int cycle = unit.Cycles[unit.Cycle[p]];
+                return cycle >= unit.FirstCoreCycle && cycle <= unit.LastCoreCycle;
+            }, (p, j, fraction) =>
+            {
+                int bin = unit.ColumnBins[j];
+                if (bin < unit.FirstCoreBin || bin > unit.LastCoreBin || !(transmitted[j] > 0))
+                    return;
+                var key = (unit.Cycles[unit.Cycle[p]], j);
+                if (!shares.TryGetValue(key, out var profile))
+                {
+                    profile = new SortedDictionary<long, double>();
+                    shares[key] = profile;
+                }
+                long sample = grid.Index(unit.Mz[p]);
+                profile.TryGetValue(sample, out double sum);
+                profile[sample] = sum + unit.Ions[p] * fraction / transmitted[j];
+            });
+
+            var result = new ScanningUnitResult
+            {
+                Channels = fit.Channels,
+                ChannelsSolved = fit.ChannelsSolved,
+                IonsIn = fit.IonsIn,
+            };
+            foreach (var ((cycle, j), profile) in shares.OrderBy(e => e.Key.Cycle).ThenBy(e => e.Key.Column))
+            {
+                int bin = unit.ColumnBins[j];
+                if (centrix == null)
+                {
+                    foreach (var (sample, ions) in profile)
+                        result.Demultiplexed.Add(new ScanningPeak(bin, cycle, grid.Mz(sample), ions));
+                    continue;
+                }
+                var samples = profile.Keys.ToArray();
+                var counts = profile.Values.Select(ions => ions * countsPerIon).ToArray();
+                foreach (var (mz, value) in centrix.Centroid(samples, counts))
+                    result.Demultiplexed.Add(new ScanningPeak(bin, cycle, mz, value / countsPerIon));
+            }
+            return result;
+        }
+
+        /// <summary>Each core position's fitted profile in each core sweep, centroided by Centrix in counts.</summary>
+        private static ScanningUnitResult CentroidFitted(ScanningUnit unit, ScanningUnitResult fit, JointDemuxParams parameters,
+            TofGrid grid, GridCentroider centrix, double countsPerIon)
+        {
+            var profiles = new Dictionary<(int Cycle, int Column), SortedDictionary<long, double>>();
+            foreach (var ((cycle, sample), peaks) in JointApportioner.FittedPeaks(unit, fit, grid, parameters))
+            {
+                foreach (var (j, value) in peaks)
+                {
+                    int bin = unit.ColumnBins[j];
+                    if (bin < unit.FirstCoreBin || bin > unit.LastCoreBin)
+                        continue;
+                    if (!profiles.TryGetValue((cycle, j), out var profile))
+                    {
+                        profile = new SortedDictionary<long, double>();
+                        profiles[(cycle, j)] = profile;
+                    }
+                    profile[sample] = value;
+                }
+            }
+            var result = new ScanningUnitResult
+            {
+                Channels = fit.Channels,
+                ChannelsSolved = fit.ChannelsSolved,
+                IonsIn = fit.IonsIn,
+            };
+            foreach (var ((cycle, j), profile) in profiles.OrderBy(e => e.Key.Cycle).ThenBy(e => e.Key.Column))
+            {
+                var counts = profile.Values.Select(ions => ions * countsPerIon).ToArray();
+                foreach (var (mz, value) in centrix.Centroid(profile.Keys.ToArray(), counts))
+                    result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[j], cycle, mz, value / countsPerIon));
+            }
+            return result;
         }
 
         /// <summary>
