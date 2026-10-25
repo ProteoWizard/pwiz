@@ -463,6 +463,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>The model a tuning search writes: in the working folder, named after the output.</summary>
         public string TunedModelPath => OspreyHelpers.GetTunedModelPath(OutputLibraryPath, OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath));
 
+        /// <summary>The copy of that model the model list points to, named after <see cref="ModelName"/>.</summary>
+        public string RegisteredModelPath => OspreyHelpers.GetRegisteredModelPath(OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath), ModelName);
+
         private string _confirmedReplaceModelName;
 
         /// <summary>
@@ -498,20 +501,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
             }
-            var runsByStem = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var run in searched.Concat(tuningFiles))
-            {
-                string stem = Path.GetFileNameWithoutExtension(run);
-                if (!runsByStem.TryGetValue(stem, out var other))
-                    runsByStem.Add(stem, run);
-                else if (!PathsEqual(other, run))
-                {
-                    MessageDlg.Show(this, string.Format(
-                        PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_,
-                        other, run));
-                    return false;
-                }
-            }
+            if (!ValidateNoStemClash(searched.Concat(tuningFiles)))
+                return false;
             if (!model.IsDefault && PathsEqual(model.FilePath, TunedModelPath))
             {
                 MessageDlg.Show(this, string.Format(
@@ -538,9 +529,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
-        /// After a tuning search succeeds, the model Osprey saved joins the model list under the
-        /// name given, in place of a model of that name, so the next search (here or in Build
-        /// Library) can predict with it.
+        /// Osprey keeps one spectra cache per file stem and refuses two runs that share one, so the
+        /// clash is refused here, before the run, naming the two paths.
+        /// </summary>
+        private bool ValidateNoStemClash(IEnumerable<string> runs)
+        {
+            var runsByStem = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var run in runs)
+            {
+                string stem = Path.GetFileNameWithoutExtension(run);
+                if (!runsByStem.TryGetValue(stem, out var other))
+                    runsByStem.Add(stem, run);
+                else if (!PathsEqual(other, run))
+                {
+                    MessageDlg.Show(this, string.Format(
+                        PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_,
+                        other, run));
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// After a tuning search succeeds, the model Osprey saved is copied to a file named after
+        /// the model (the next tuning of the document rewrites Osprey's) and the copy joins the model
+        /// list under the name given, in place of a model of that name, so the next search (here or
+        /// in Build Library) can predict with it or tune it further.
         /// </summary>
         private void RegisterTunedModel()
         {
@@ -550,8 +565,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MessageDlg.Show(this, string.Format(PeptideSearchResources.OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__, modelPath));
                 return;
             }
+            string registeredPath = RegisteredModelPath;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(registeredPath) ?? string.Empty);
+                File.Copy(modelPath, registeredPath, true);
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                MessageDlg.ShowWithException(this, string.Format(PeptideSearchResources.OspreySearchDlg_RegisterTunedModel_Failed_saving_the_fine_tuned_model_as__0__, registeredPath), x);
+                return;
+            }
             var models = Settings.Default.CarafeModelList;
-            var spec = new CarafeModelSpec(ModelName, modelPath);
+            var spec = new CarafeModelSpec(ModelName, registeredPath);
             if (models.TryGetValue(spec.Name, out var existing))
                 models.Remove(existing);
             models.Add(spec);
@@ -816,6 +844,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         MessageDlg.Show(this, PeptideSearchResources.DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_);
                         return false;
                     }
+                    if (!ValidateNoStemClash(SearchedFilePaths))
+                        return false;
                     break;
                 case Pages.fasta_page:
                     // The FASTA is needed either way: Osprey predicts the library from it, and the

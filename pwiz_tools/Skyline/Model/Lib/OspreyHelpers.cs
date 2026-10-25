@@ -214,6 +214,22 @@ namespace pwiz.Skyline.Model.Lib
             return Path.Combine(workDirectory, Path.GetFileNameWithoutExtension(outputLibraryPath) + CarafeModelFile.EXTENSION);
         }
 
+        /// <summary>The subfolder of the working folder that keeps the models the wizard saved to the model list.</summary>
+        public const string MODELS_FOLDER = @"models";
+
+        /// <summary>
+        /// Where the wizard keeps the model a tuning search saved under <paramref name="modelName"/>:
+        /// a copy in the working folder's models subfolder, named after the model. Osprey writes every
+        /// tuning of a document to <see cref="GetTunedModelPath"/>, so the next tuning would overwrite
+        /// the file a listed model points to; and Osprey refuses to tune further from that file, which
+        /// the copy is not.
+        /// </summary>
+        public static string GetRegisteredModelPath(string workDirectory, string modelName)
+        {
+            string fileName = string.Join(@"_", modelName.Split(Path.GetInvalidFileNameChars())).Trim();
+            return Path.Combine(workDirectory, MODELS_FOLDER, fileName + CarafeModelFile.EXTENSION);
+        }
+
         /// <summary>
         /// True when the .blib at <paramref name="libraryPath"/> carries the DecoyPairs table Osprey
         /// and CarafeSharp write, which pairs each decoy with its target: the one case Osprey can

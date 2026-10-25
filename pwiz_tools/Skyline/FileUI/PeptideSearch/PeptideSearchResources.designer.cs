@@ -1016,6 +1016,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Failed saving the fine-tuned model as {0}..
+        /// </summary>
+        public static string OspreySearchDlg_RegisterTunedModel_Failed_saving_the_fine_tuned_model_as__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_RegisterTunedModel_Failed_saving_the_fine_tuned_model_as__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey did not write the fine-tuned model {0}..
         /// </summary>
         public static string OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__ {

@@ -491,6 +491,9 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_" xml:space="preserve">
     <value>{0} tuned on {1}</value>
   </data>
+  <data name="OspreySearchDlg_RegisterTunedModel_Failed_saving_the_fine_tuned_model_as__0__" xml:space="preserve">
+    <value>Failed saving the fine-tuned model as {0}.</value>
+  </data>
   <data name="OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__" xml:space="preserve">
     <value>Osprey did not write the fine-tuned model {0}.</value>
   </data>

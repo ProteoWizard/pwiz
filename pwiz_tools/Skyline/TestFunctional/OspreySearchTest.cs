@@ -65,6 +65,9 @@ namespace pwiz.SkylineTestFunctional
         private const string WIZARD_LOG_FIRST_RUN = @"OspreySearchControlLog.txt";
         private const string WIZARD_LOG_SECOND_RUN = @"OspreySearchControlLog-rerun.txt";
 
+        /// <summary>How long <see cref="RunSearch"/> waits for Osprey on the subset; a perf test on full runs passes its own.</summary>
+        public const int SEARCH_TIMEOUT_MILLIS = 15 * 60 * 1000;
+
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOspreySearch()
@@ -242,7 +245,8 @@ namespace pwiz.SkylineTestFunctional
         /// which is the "NN%" lines of Osprey's progress reporter parsing through ProcessRunner.
         /// The wizard's log is saved to <paramref name="logPath"/> whether the search succeeds or not.
         /// </summary>
-        public static void RunSearch(OspreySearchDlg searchDlg, string docBlibPath, string workDir, string logPath)
+        public static void RunSearch(OspreySearchDlg searchDlg, string docBlibPath, string workDir, string logPath,
+            int searchTimeoutMillis = SEARCH_TIMEOUT_MILLIS)
         {
             // Subscribe before Run, so an Osprey that fails at once cannot finish before the subscription.
             bool? searchSucceeded = null;
@@ -262,7 +266,7 @@ namespace pwiz.SkylineTestFunctional
             int maxPercent = 0;
             try
             {
-                WaitForConditionUI(15 * 60 * 1000, () =>
+                WaitForConditionUI(searchTimeoutMillis, () =>
                 {
                     maxPercent = Math.Max(maxPercent, searchDlg.SearchControl.PercentComplete);
                     return searchSucceeded.HasValue;
@@ -284,9 +288,11 @@ namespace pwiz.SkylineTestFunctional
         /// Finish: the Import Peptide Search wizard opens on its existing-library route, past the
         /// library page, with the searched runs on the chromatograms page, and its DIA pages add
         /// the library's peptides and import the runs. Ends with the document saved and the
-        /// wizard closed, so another run can start from it.
+        /// wizard closed, so another run can start from it. The chromatogram import gets
+        /// <paramref name="importTimeoutMillis"/>, which a perf test on full-size runs raises.
         /// </summary>
-        public static void FinishImport(OspreySearchDlg searchDlg, string[] diaFilePaths, string docBlibPath)
+        public static void FinishImport(OspreySearchDlg searchDlg, string[] diaFilePaths, string docBlibPath,
+            int importTimeoutMillis = WAIT_TIME)
         {
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
@@ -323,13 +329,13 @@ namespace pwiz.SkylineTestFunctional
 
             var associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             WaitForConditionUI(() => associateProteinsDlg.DocumentFinalCalculated);
-            using (new WaitDocumentChange(null, true))
+            using (new WaitDocumentChange(null, true, importTimeoutMillis))
             {
                 OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
             }
             WaitForClosedForm(importPeptideSearchDlg);
             WaitForClosedForm(searchDlg);
-            WaitForDocumentLoaded();
+            WaitForDocumentLoaded(importTimeoutMillis);
 
             var doc = SkylineWindow.Document;
             AssertEx.IsTrue(doc.PeptideCount > 0, @"no peptides matched the Osprey library");

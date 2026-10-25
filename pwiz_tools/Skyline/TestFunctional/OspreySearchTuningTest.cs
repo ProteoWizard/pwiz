@@ -102,7 +102,6 @@ namespace pwiz.SkylineTestFunctional
         private CarafeModelSpec TuneOnSearchedRuns(string[] diaFilePaths, string fastaFilepath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
-            string docName = Path.GetFileNameWithoutExtension(docPath);
             var searchDlg = OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
             RunUI(() =>
             {
@@ -123,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var path in diaFilePaths)
                     searchDlg.SetTuningFileChecked(path, true);
                 AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
-                AssertEx.AreEqual(GetDefaultModelName(docName, diaFilePaths[0]), searchDlg.ModelName);
+                AssertEx.AreEqual(GetDefaultModelName(docPath,diaFilePaths[0]), searchDlg.ModelName);
             });
 
             // A browsed run that does not exist
@@ -134,9 +133,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 AssertEx.AreEqual(missingRun, searchDlg.TuningFileItems[0]);
-                AssertEx.AreEqual(GetDefaultModelName(docName, missingRun), searchDlg.ModelName);
+                AssertEx.AreEqual(GetDefaultModelName(docPath,missingRun), searchDlg.ModelName);
                 searchDlg.SetTuningFileChecked(missingRun, false);
-                AssertEx.AreEqual(GetDefaultModelName(docName, diaFilePaths[0]), searchDlg.ModelName);
+                AssertEx.AreEqual(GetDefaultModelName(docPath,diaFilePaths[0]), searchDlg.ModelName);
             });
 
             // A copy of a searched run in another folder: Osprey keeps one spectra cache per file name
@@ -154,7 +153,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => searchDlg.ModelName = string.Empty);
             var emptyName = ShowDialog<MessageDlg>(searchDlg.NextPage);
             OkDialog(emptyName, emptyName.OkDialog);
-            string modelName = GetDefaultModelName(docName, diaFilePaths[0]);
+            string modelName = GetDefaultModelName(docPath,diaFilePaths[0]);
             RunUI(() =>
             {
                 AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
@@ -165,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
 
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
             VerifyCommandLine(searchDlg, diaFilePaths, diaFilePaths, null);
-            var spec = RunTuningSearch(searchDlg, modelName, "OspreySearchControlLog-searched.txt");
+            var spec = RunTuningSearch(searchDlg, modelName, TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"));
             RunUI(() =>
             {
                 // The combo offers the saved model
@@ -213,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
 
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
             VerifyCommandLine(searchDlg, searchedRuns, tuningRuns, null);
-            var spec = RunTuningSearch(searchDlg, MODEL_NAME_HELD_OUT, "OspreySearchControlLog-heldout.txt");
+            var spec = RunTuningSearch(searchDlg, MODEL_NAME_HELD_OUT, TestFilesDir.GetTestPath("OspreySearchControlLog-heldout.txt"));
             OspreySearchTest.FinishImport(searchDlg, searchedRuns, BiblioSpecLiteSpec.GetLibraryFileName(docPath));
             AssertEx.AreEqual(searchedRuns.Length, OspreySearchTest.GetDocumentLibrary().LibraryFiles.Count);
             return spec;
@@ -257,7 +256,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Opens the wizard on the data files, sets the FASTA and moves to the Library Model page.
         /// </summary>
-        private static OspreySearchDlg OpenWizardOnLibraryModelPage(string[] diaFilePaths, string fastaFilepath)
+        public static OspreySearchDlg OpenWizardOnLibraryModelPage(string[] diaFilePaths, string fastaFilepath)
         {
             var searchDlg = OspreySearchTest.OpenWizardOnFastaPage(diaFilePaths);
             RunUI(() =>
@@ -278,10 +277,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage));
         }
 
-        private static string GetDefaultModelName(string docName, string firstRun)
+        /// <summary>The wizard's default name for the tuned model: "&lt;document&gt; tuned on &lt;first checked run&gt;".</summary>
+        public static string GetDefaultModelName(string docPath, string firstRun)
         {
             return string.Format(PeptideSearchResources.OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_,
-                docName, Path.GetFileNameWithoutExtension(firstRun));
+                Path.GetFileNameWithoutExtension(docPath), Path.GetFileNameWithoutExtension(firstRun));
         }
 
         /// <summary>
@@ -289,7 +289,7 @@ namespace pwiz.SkylineTestFunctional
         /// (or no --training-input), the saved model after --model (or no --model), and never an
         /// existing library.
         /// </summary>
-        private static void VerifyCommandLine(OspreySearchDlg searchDlg, string[] searchedRuns, string[] tuningRuns, string modelPath)
+        public static void VerifyCommandLine(OspreySearchDlg searchDlg, string[] searchedRuns, string[] tuningRuns, string modelPath)
         {
             OspreyConfig config = null;
             RunUI(() => config = searchDlg.GetSearchConfig());
@@ -313,31 +313,38 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Runs a tuning search from the search settings page: Osprey writes the model in the
-        /// working folder and the wizard lists it under <paramref name="modelName"/>, recording the
-        /// runs it was tuned on.
+        /// working folder and the wizard lists a copy of it under <paramref name="modelName"/>,
+        /// recording the runs it was tuned on. The wizard's log is saved to <paramref name="logPath"/>.
         /// </summary>
-        private CarafeModelSpec RunTuningSearch(OspreySearchDlg searchDlg, string modelName, string logName)
+        public static CarafeModelSpec RunTuningSearch(OspreySearchDlg searchDlg, string modelName, string logPath,
+            int searchTimeoutMillis = OspreySearchTest.SEARCH_TIMEOUT_MILLIS)
         {
             string docPath = SkylineWindow.DocumentFilePath;
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
             string workDir = OspreyHelpers.GetWorkDirectory(docPath);
             int tuningRunCount = 0;
             string modelPath = null;
+            string registeredPath = null;
             RunUI(() =>
             {
                 tuningRunCount = searchDlg.TuningFiles.Count;
                 modelPath = searchDlg.TunedModelPath;
+                registeredPath = searchDlg.RegisteredModelPath;
             });
             AssertEx.AreEqual(OspreyHelpers.GetTunedModelPath(docBlibPath, workDir), modelPath);
+            AssertEx.AreEqual(OspreyHelpers.GetRegisteredModelPath(workDir, modelName), registeredPath);
 
-            OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(logName));
+            OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir, logPath, searchTimeoutMillis);
 
+            // Osprey's model, and the copy named after the model that the list points to, so the
+            // document's next tuning cannot overwrite it
             AssertEx.FileExists(modelPath, @"Osprey did not write the fine-tuned model");
+            AssertEx.FileExists(registeredPath, @"the fine-tuned model was not saved under its name");
             CarafeModelSpec spec = null;
             RunUI(() => spec = Settings.Default.CarafeModelList.FirstOrDefault(m => Equals(m.Name, modelName)));
             Assert.IsNotNull(spec, @"the fine-tuned model is not in the model list");
-            AssertEx.AreEqual(modelPath, spec.FilePath);
-            var choice = CarafeModelChoice.Read(modelPath);
+            AssertEx.AreEqual(registeredPath, spec.FilePath);
+            var choice = CarafeModelChoice.Read(registeredPath);
             Assert.IsNotNull(choice, @"the fine-tuned model cannot be read");
             AssertEx.AreEqual(tuningRunCount, choice.TrainingRunCount);
             return spec;
@@ -348,7 +355,7 @@ namespace pwiz.SkylineTestFunctional
         /// safetensors entry matches. The files themselves differ, since the manifest carries the
         /// save time.
         /// </summary>
-        private static void AssertSameModelTensors(string modelPath1, string modelPath2)
+        public static void AssertSameModelTensors(string modelPath1, string modelPath2)
         {
             var entries1 = CarafeModelFile.ReadDescription(modelPath1).Entries;
             var entries2 = CarafeModelFile.ReadDescription(modelPath2).Entries;
@@ -357,7 +364,11 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(tensors1.Count > 0, @"the model holds no tensors");
             AssertEx.AreEqualDeep(tensors1, tensors2);
             foreach (var entry in tensors1)
+            {
+                // The hashes go to the test output as the record of the two trainings
+                Console.WriteLine(@"{0}: {1} / {2}", entry, entries1[entry], entries2[entry]);
                 AssertEx.AreEqual(entries1[entry], entries2[entry], @"the tensors of " + entry + @" differ between the two trainings");
+            }
         }
 
         private static bool IsTensorEntry(string entryName)
