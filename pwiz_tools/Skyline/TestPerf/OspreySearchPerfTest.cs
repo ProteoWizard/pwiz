@@ -44,9 +44,10 @@ namespace TestPerf
     public class OspreySearchPerfTest : AbstractFunctionalTestEx
     {
         /// <summary>
-        /// Names a folder holding a <c>torch\</c> CUDA runtime (Osprey's own <c>%LOCALAPPDATA%\Osprey</c>,
-        /// say), so the test predicts on the GPU; unset, the test's Tools folder has none and Osprey
-        /// predicts on the CPU, where the fine-tune takes about ten minutes.
+        /// Names a runtimes folder holding the installed CUDA runtime, the folder with the
+        /// <c>libtorch-cuda-12.8-win-x64.2.10.0</c> subfolder in it (Osprey's own is
+        /// <c>%LOCALAPPDATA%\Osprey\torch</c>), so the test predicts on the GPU; unset, the test's Tools
+        /// folder has none and Osprey predicts on the CPU, where the fine-tune takes about ten minutes.
         /// </summary>
         public const string ENV_TORCH_RUNTIMES = @"SKYLINE_TEST_OSPREY_TORCH_RUNTIMES";
 
