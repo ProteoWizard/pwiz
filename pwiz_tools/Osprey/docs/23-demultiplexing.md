@@ -228,6 +228,11 @@ tests):
   msconvert engine's output against a committed per-bin golden and its agreement with msconvert
   against measured floors. How the slice was made, and how to rebless the golden, is in the
   folder's README.
+- **Real-data fixtures for every path** (`DemuxFixtureTest`, same folder): an Orbitrap Astral staggered
+  slice through Osprey's `--demux auto` (the fill-time sidecar and the Astral's ion response included), a
+  Stellar SuperOverlap profile slice through the staggered joint solve, split and Centrix, and a ZT Scan
+  profile slice through the scanning joint solve. Each pins every output spectrum (scan, window, peak count,
+  summed intensity, mean m/z) to a golden, so a refactor must reproduce them and a changed output shows.
 - **The weighted engine**: exact recovery of the constant-elution truth, output independent of
   the thread count, and on the fixture a median cosine with msconvert of 0.995 (0.855 of spectra
   at 0.95 or more), with the measured intensity kept.
@@ -330,6 +335,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--joint-centrix` | off | ZT Scan `--joint`: split the measured profile among the source positions by the fit, as the staggered joint solve does, and centroid each position's share with Centrix on the TOF grid instead of writing the fit's own centroids (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
 | `--elution-fwhm S`, `--elution-param Name=Value` | off | staggered: split by each channel's elution fitted with peaks of FWHM S seconds, and its tuning |
 | `--thin N` | 1 | staggered: keep only every N-th cycle's MS2, to measure what sampling costs |
+| `--filter F` | - | an msconvert filter in msconvert's syntax (`"scanTime [900,1020]"`, `"mzPrecursors [...] target=isolated"`), applied in order after the reader's centroiding; with `--scheme none`, how the test fixtures' slices are cut |
 | `--remultiplex K` | - | sum a narrow-window run into K-fold staggered windows and write them undemultiplexed: the truth benchmark's input |
 
 For staggered data the tool and `--demux auto` run the same pipeline (`StaggeredDemuxPipeline`),

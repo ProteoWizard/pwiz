@@ -43,7 +43,7 @@ namespace pwiz.Osprey.Demux
             if (acquisitions != null && acquisitions.Count != ms2Spectra.Count)
                 throw new ArgumentException(@"One acquisition per spectrum is required.", nameof(acquisitions));
             var options = CreateOptions(parameters);
-            var pipeline = new StaggeredDemuxPipeline(new SpectraSource(ms2Spectra, acquisitions), options, TextWriter.Null,
+            var pipeline = new StaggeredDemuxPipeline(new SpectraDemuxSource(ms2Spectra, acquisitions), options, TextWriter.Null,
                 parameters.MinimumBinWidth);
             var spectra = new List<Spectrum>(pipeline.OutputCount);
             for (int index = 0; index < pipeline.OutputCount; index++)
@@ -111,57 +111,6 @@ namespace pwiz.Osprey.Demux
                 options.BlockCycles, options.CyclePad, options.GroupBins, p.MinChannelIons.ToString(@"R", ic),
                 p.MinChannelCells, p.PoissonWeights, p.WeightFloorIons.ToString(@"R", ic), options.IonsFromFillTime) +
                 elution;
-        }
-
-        /// <summary>A run's MS2 spectra in memory as a demultiplexing source.</summary>
-        private sealed class SpectraSource : IDemuxSource
-        {
-            private readonly IReadOnlyList<Spectrum> _spectra;
-            private readonly IReadOnlyList<SpectrumAcquisition> _acquisitions;
-
-            public SpectraSource(IReadOnlyList<Spectrum> spectra, IReadOnlyList<SpectrumAcquisition> acquisitions)
-            {
-                _spectra = spectra;
-                _acquisitions = acquisitions;
-            }
-
-            public int Count
-            {
-                get { return _spectra.Count; }
-            }
-
-            public string NativeId(int index)
-            {
-                return _spectra[index].ScanNumber.ToString(CultureInfo.InvariantCulture);
-            }
-
-            public DemuxSpectrumInfo Describe(int index)
-            {
-                var spectrum = _spectra[index];
-                if (_acquisitions == null)
-                    return new DemuxSpectrumInfo(2, true, spectrum.IsolationWindow, spectrum.RetentionTime);
-                var acquisition = _acquisitions[index];
-                return new DemuxSpectrumInfo(2, true, spectrum.IsolationWindow, spectrum.RetentionTime,
-                    acquisition.FillTimeMs, acquisition.IonResponse);
-            }
-
-            public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
-            {
-                var spectrum = _spectra[index];
-                var values = new double[spectrum.Intensities.Length];
-                for (int i = 0; i < values.Length; i++)
-                    values[i] = spectrum.Intensities[i];
-                mz = spectrum.Mzs;
-                intensity = values;
-            }
-
-            public void Release(int index)
-            {
-            }
-
-            public void Forget(int index)
-            {
-            }
         }
     }
 }

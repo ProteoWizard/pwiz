@@ -48,7 +48,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events|centrix]" + // Arg literal OK: DemuxTool's own option vocabulary
             @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]" +
-            @" [--channel-th T] [--ions] [--ion-response A] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile] [--joint-centrix] [--joint-centrix-fit]" +
+            @" [--channel-th T] [--ions] [--ion-response A] [--elution-fwhm S] [--elution-param Name=Value] [--thin N] [--peak-sigma-th S] [--joint-fitted] [--joint-profile] [--joint-centrix] [--joint-centrix-fit] [--filter F]" +
             @" [--remultiplex K] [--centrix-sigma S] [--centrix-sigma-ms1 S] [--centrix-param Name=Value]"; // Arg literal OK: DemuxTool's own option vocabulary
 
         private static int Main(string[] args)
@@ -58,6 +58,7 @@ namespace pwiz.Osprey.DemuxTool
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false, noDemux = false, centrix = false;
             bool jointCentrix = false;
+            var filters = new List<string>();
             var options = new ScanningDemuxOptions();
             // The staggered joint solve's Centrix settings serve --centroid centrix too; the joint solve takes its sigma
             // from --peak-sigma-th.
@@ -235,6 +236,11 @@ namespace pwiz.Osprey.DemuxTool
                         // Staggered: apportion by each channel's elution fitted with peaks of this FWHM (seconds).
                         options.Elution ??= new ElutionDemuxParams();
                         options.Elution.FwhmSeconds = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--filter":
+                        // An msconvert filter, in msconvert's syntax, applied in order after the reader's centroiding and
+                        // before demultiplexing; with --scheme none, for cutting a slice of a run (the test fixtures).
+                        filters.Add(value);
                         break;
                     case @"--remultiplex":
                         // A narrow-window run summed into K-fold staggered windows, written without demultiplexing: the
@@ -455,6 +461,11 @@ namespace pwiz.Osprey.DemuxTool
                 spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1-");
                 Console.WriteLine(@"Vendor centroiding: {0}", input);
             }
+            if (filters.Count > 0)
+            {
+                spectra = SpectrumListFactory.Wrap(spectra, filters, msd);
+                Console.WriteLine(@"Filters: {0}", string.Join(@"; ", filters));
+            }
             if (!schemeSet)
             {
                 var detection = DemuxSchemeDetector.DetectScanning(new PwizDemuxSource(spectra));
@@ -479,6 +490,9 @@ namespace pwiz.Osprey.DemuxTool
             }
             if (noDemux)
             {
+                // A slice keeps no chromatograms: the whole run's TIC and base peak traces outweigh it.
+                if (filters.Count > 0)
+                    msd.Run.ChromatogramList = null;
                 msd.Run.SpectrumList = centrix
                     ? CentrixCentroided(spectra, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2)
                     : spectra;
