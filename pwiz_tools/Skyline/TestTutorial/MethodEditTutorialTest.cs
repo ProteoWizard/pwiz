@@ -537,14 +537,8 @@ namespace pwiz.SkylineTestTutorial
             if (pause)
             {
                 PauseForScreenShot<ScreenForm>("Tip for " + nodeText, null,
-                    bmp =>
-                    {
-                        var cropRect = SkylineWindow.SequenceTree.TipRect;
-                        // Remove lower-right shadow
-                        cropRect.Width -= 4;
-                        cropRect.Height -= 4;
-                        return ClipBitmap(bmp, cropRect);
-                    });
+                    // The tip's drop shadow is drawn by the OS outside TipRect, so no cropping is needed
+                    bmp => ClipBitmap(bmp, SkylineWindow.SequenceTree.TipRect));
             }
 
             SkylineWindow.SequenceTree.IgnoreFocus = false;

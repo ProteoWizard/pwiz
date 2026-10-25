@@ -2831,6 +2831,7 @@ namespace pwiz.SkylineTestUtil
             using var restoreTracking = new ScopedAction(
                 FileStreamManager.Default.StartTrackingHistory,
                 FileStreamManager.Default.EndTrackingHistory);
+            using var restoreAnimations = IsRecordingScreenShots ? ScreenshotManager.DisableControlAnimations() : null;
 
             try
             {
