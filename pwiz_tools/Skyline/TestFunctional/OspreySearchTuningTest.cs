@@ -104,9 +104,27 @@ namespace pwiz.SkylineTestFunctional
         private CarafeModelSpec TuneOnSearchedRuns(string[] diaFilePaths, string fastaFilepath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
-            var searchDlg = OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
+            // Page by page, with a pause on each when the test is run on-screen (-ShowUI) for a review
+            // of the layout; the pauses are no-ops offscreen
+            var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
             RunUI(() =>
             {
+                AssertEx.AreEqual(OspreySearchDlg.Pages.data_files_page, searchDlg.CurrentPage);
+                searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
+                    .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileNameWithoutExtension(p), p)).ToArray();
+            });
+            PauseTest("Data files page");
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
+                searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
+            });
+            PauseTest("FASTA page");
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
                 // The defaults: the pretrained models, used as they are, no tuning runs, and the CPU
                 // (a test's Tools folder has no CUDA runtime)
                 AssertEx.IsTrue(searchDlg.UseExistingModel);
@@ -114,6 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(0, searchDlg.TuningFileItems.Count);
                 AssertEx.IsFalse(searchDlg.UseGpu);
             });
+            PauseTest("Library Model page: the defaults");
             VerifyUseGpu(searchDlg);
             RunUI(() => searchDlg.UseExistingModel = false);
             ShowAndDismissMessage(searchDlg, PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_);
@@ -127,8 +146,9 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var path in diaFilePaths)
                     searchDlg.SetTuningFileChecked(path, true);
                 AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
-                AssertEx.AreEqual(GetDefaultModelName(docPath,diaFilePaths[0]), searchDlg.ModelName);
+                AssertEx.AreEqual(GetDefaultModelName(docPath, diaFilePaths[0]), searchDlg.ModelName);
             });
+            PauseTest("Library Model page: fine-tune on the three searched files");
 
             // A browsed run that does not exist
             string missingRun = TestFilesDir.GetTestPath("missing.mzML");
@@ -138,9 +158,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 AssertEx.AreEqual(missingRun, searchDlg.TuningFileItems[0]);
-                AssertEx.AreEqual(GetDefaultModelName(docPath,missingRun), searchDlg.ModelName);
+                AssertEx.AreEqual(GetDefaultModelName(docPath, missingRun), searchDlg.ModelName);
                 searchDlg.SetTuningFileChecked(missingRun, false);
-                AssertEx.AreEqual(GetDefaultModelName(docPath,diaFilePaths[0]), searchDlg.ModelName);
+                AssertEx.AreEqual(GetDefaultModelName(docPath, diaFilePaths[0]), searchDlg.ModelName);
             });
 
             // A copy of a searched run in another folder: Osprey keeps one spectra cache per file name
@@ -158,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => searchDlg.ModelName = string.Empty);
             var emptyName = ShowDialog<MessageDlg>(searchDlg.NextPage);
             OkDialog(emptyName, emptyName.OkDialog);
-            string modelName = GetDefaultModelName(docPath,diaFilePaths[0]);
+            string modelName = GetDefaultModelName(docPath, diaFilePaths[0]);
             RunUI(() =>
             {
                 AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
@@ -166,10 +186,25 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(diaFilePaths.Length + 2, searchDlg.TuningFileItems.Count);
                 AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
             });
+            PauseTest("Library Model page: two browsed runs on top, unchecked");
 
-            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage);
+            });
+            PauseTest("Modifications page");
+            RunUI(() =>
+            {
+                searchDlg.NextPage();
+                AssertEx.AreEqual(OspreySearchDlg.Pages.search_settings_page, searchDlg.CurrentPage);
+                searchDlg.IsHighResolution = false;
+                searchDlg.Threads = Environment.ProcessorCount;
+            });
+            PauseTest("Search settings page");
             VerifyCommandLine(searchDlg, diaFilePaths, diaFilePaths, null);
             var spec = RunTuningSearch(searchDlg, modelName, TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"));
+            PauseTest("Run page: the search finished");
             RunUI(() =>
             {
                 // The combo offers the saved model
