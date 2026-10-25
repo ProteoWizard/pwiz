@@ -156,6 +156,8 @@ namespace pwiz.Skyline.Model.Lib
         // declarations Skyline references directly (CarafeCommandLine.ARG_*); these are Osprey's own.
         public const string ARG_INPUT = @"-i";
         public const string ARG_FASTA = @"--fasta";
+        public const string ARG_MODEL = @"--model";
+        public const string ARG_TRAINING_INPUT = @"--training-input";
         public const string ARG_LIBRARY = @"-l";
         public const string ARG_DECOYS_IN_LIBRARY = @"--decoys-in-library";
         public const string ARG_OUTPUT = @"-o";
@@ -201,6 +203,15 @@ namespace pwiz.Skyline.Model.Lib
         {
             string dir = Path.GetDirectoryName(documentPath) ?? string.Empty;
             return Path.Combine(dir, Path.GetFileNameWithoutExtension(documentPath) + WORK_DIR_SUFFIX);
+        }
+
+        /// <summary>
+        /// The model a tuning search writes: Osprey saves it beside the library it predicts, in the
+        /// working folder, as the output's stem with CarafeSharp's model extension (&lt;doc&gt;.model.zip).
+        /// </summary>
+        public static string GetTunedModelPath(string outputLibraryPath, string workDirectory)
+        {
+            return Path.Combine(workDirectory, Path.GetFileNameWithoutExtension(outputLibraryPath) + CarafeModelFile.EXTENSION);
         }
 
         /// <summary>
@@ -319,10 +330,10 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// The command line for one search: the runs, the FASTA to predict the library from (or an
-        /// existing library in its place), the output, the working folder, the libtorch runtimes
-        /// folder shared with Skyline's own prediction, and the digest, modification, scoring and FDR
-        /// settings. Paths are quoted; numbers are written in the invariant culture, which Osprey
-        /// reads them in.
+        /// existing library in its place) with the saved model to predict with and the runs to tune
+        /// on, the output, the working folder, the libtorch runtimes folder shared with Skyline's own
+        /// prediction, and the digest, modification, scoring and FDR settings. Paths are quoted;
+        /// numbers are written in the invariant culture, which Osprey reads them in.
         /// </summary>
         public static string BuildCommandLine(OspreyConfig config)
         {
@@ -344,6 +355,17 @@ namespace pwiz.Skyline.Model.Lib
             else
             {
                 sb.Append(ARG_FASTA).Append(' ').Append(config.FastaPath.Quote()).Append(' ');
+                // A saved model is predicted with as it is, or, with tuning runs, is the model the
+                // tuning starts from; with neither Osprey predicts with the pretrained models.
+                if (!string.IsNullOrEmpty(config.ModelPath))
+                    sb.Append(ARG_MODEL).Append(' ').Append(config.ModelPath.Quote()).Append(' ');
+                if (config.TrainingInputs.Count > 0)
+                {
+                    sb.Append(ARG_TRAINING_INPUT);
+                    foreach (var run in config.TrainingInputs)
+                        sb.Append(' ').Append(run.Quote());
+                    sb.Append(' ');
+                }
                 AppendLibraryBuildArgs(sb, config);
             }
 
@@ -477,6 +499,19 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>An existing library to search in place of predicting one; null predicts from <see cref="FastaPath"/>.</summary>
         public string LibraryPath { get; set; }
+
+        /// <summary>
+        /// A saved fine-tuned model (.model.zip) to predict the library with, or to tune further when
+        /// there are <see cref="TrainingInputs"/>; null for the pretrained models.
+        /// </summary>
+        public string ModelPath { get; set; }
+
+        /// <summary>
+        /// The runs the models are fine-tuned on before the library is predicted: a subset of
+        /// <see cref="DataFiles"/>, other runs, or both. A run not among the data files is searched
+        /// for the tuning only and is absent from the output. Empty predicts without tuning.
+        /// </summary>
+        public IList<string> TrainingInputs { get; set; } = new List<string>();
 
         /// <summary>
         /// Whether <see cref="LibraryPath"/> supplies its own paired decoys (its DecoyPairs table), so

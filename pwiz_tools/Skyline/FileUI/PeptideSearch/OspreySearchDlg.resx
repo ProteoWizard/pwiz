@@ -315,6 +315,253 @@ Osprey predicts a spectral library for its peptides with Carafe, then searches t
   <data name="&gt;&gt;btnBrowseLibrary.Parent" xml:space="preserve">
     <value>fastaPage</value>
   </data>
+  <data name="libraryModelPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="libraryModelPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="libraryModelPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="libraryModelPage.Text" xml:space="preserve">
+    <value>Library Model</value>
+  </data>
+  <data name="&gt;&gt;libraryModelPage.Name" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="&gt;&gt;libraryModelPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;libraryModelPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblLibraryModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblLibraryModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblLibraryModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>540, 26</value>
+  </data>
+  <data name="lblLibraryModel.Text" xml:space="preserve">
+    <value>Choose the model Osprey predicts the spectral library with.
+A model fine-tuned on runs like these predicts them better; a model this search fine-tunes is saved for later searches.</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryModel.Name" xml:space="preserve">
+    <value>lblLibraryModel</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryModel.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="lblModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 60</value>
+  </data>
+  <data name="lblModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 13</value>
+  </data>
+  <data name="lblModel.Text" xml:space="preserve">
+    <value>&amp;Model:</value>
+  </data>
+  <data name="&gt;&gt;lblModel.Name" xml:space="preserve">
+    <value>lblModel</value>
+  </data>
+  <data name="&gt;&gt;lblModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblModel.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="comboModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 78</value>
+  </data>
+  <data name="comboModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>500, 21</value>
+  </data>
+  <data name="comboModel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Name" xml:space="preserve">
+    <value>comboModel</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="radioUseExistingModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioUseExistingModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 112</value>
+  </data>
+  <data name="radioUseExistingModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>142, 17</value>
+  </data>
+  <data name="radioUseExistingModel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="radioUseExistingModel.Text" xml:space="preserve">
+    <value>&amp;Use this model as it is</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.Name" xml:space="preserve">
+    <value>radioUseExistingModel</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="radioTuneModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioTuneModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 138</value>
+  </data>
+  <data name="radioTuneModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 17</value>
+  </data>
+  <data name="radioTuneModel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="radioTuneModel.Text" xml:space="preserve">
+    <value>&amp;Fine-tune a new model on these runs:</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.Name" xml:space="preserve">
+    <value>radioTuneModel</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="listTuningFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listTuningFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 161</value>
+  </data>
+  <data name="listTuningFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>650, 229</value>
+  </data>
+  <data name="listTuningFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.Name" xml:space="preserve">
+    <value>listTuningFiles</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>688, 161</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseTuningFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Text" xml:space="preserve">
+    <value>B&amp;rowse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.Name" xml:space="preserve">
+    <value>btnBrowseTuningFiles</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 400</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 17</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Text" xml:space="preserve">
+    <value>&amp;Choose from the searched files</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.Name" xml:space="preserve">
+    <value>cbChooseFromSearchedFiles</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="lblModelName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="lblModelName.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblModelName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 439</value>
+  </data>
+  <data name="lblModelName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="lblModelName.Text" xml:space="preserve">
+    <value>&amp;Save as:</value>
+  </data>
+  <data name="&gt;&gt;lblModelName.Name" xml:space="preserve">
+    <value>lblModelName</value>
+  </data>
+  <data name="&gt;&gt;lblModelName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblModelName.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="tbxModelName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="tbxModelName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>88, 436</value>
+  </data>
+  <data name="tbxModelName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>590, 20</value>
+  </data>
+  <data name="tbxModelName.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;tbxModelName.Name" xml:space="preserve">
+    <value>tbxModelName</value>
+  </data>
+  <data name="&gt;&gt;tbxModelName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxModelName.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
   <data name="modificationsPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>

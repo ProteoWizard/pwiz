@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -44,10 +45,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     /// <summary>
     /// The Osprey Search wizard: the DIA runs, the protein FASTA Osprey predicts its library from
-    /// (or an existing library in its place), the modifications, the search settings, and the run.
-    /// Osprey writes the document library directly, so Finish hands that .blib, the FASTA settings
-    /// and the runs to the Import Peptide Search wizard's existing-library route, which adds the
-    /// library to the document and imports the runs.
+    /// (or an existing library in its place), the model the library is predicted with (a saved
+    /// fine-tuned model, or one this search fine-tunes on chosen runs and saves for later searches),
+    /// the modifications, the search settings, and the run. Osprey writes the document library
+    /// directly, so Finish hands that .blib, the FASTA settings and the runs to the Import Peptide
+    /// Search wizard's existing-library route, which adds the library to the document and imports
+    /// the runs.
     /// </summary>
     public partial class OspreySearchDlg : FormEx, IModifyDocumentContainer, IMultipleViewProvider
     {
@@ -58,6 +61,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             data_files_page,
             fasta_page,
+            library_model_page,
             modifications_page,
             search_settings_page,
             run_page
@@ -65,17 +69,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public class DataFilesPage : IFormView { }
         public class FastaPage : IFormView { }
+        public class LibraryModelPage : IFormView { }
         public class ModificationsPage : IFormView { }
         public class SearchSettingsPage : IFormView { }
         public class RunPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new DataFilesPage(), new FastaPage(), new ModificationsPage(), new SearchSettingsPage(), new RunPage()
+            new DataFilesPage(), new FastaPage(), new LibraryModelPage(), new ModificationsPage(), new SearchSettingsPage(), new RunPage()
         };
 
         private readonly LibraryManager _libraryManager;
         private readonly Stack<SrmDocument> _documents;
+        private readonly SettingsListComboDriver<CarafeModelSpec> _driverModel;
 
         public OspreySearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
         {
@@ -116,8 +122,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Set from a number, not resx text, so the decimal separator is the current culture's
             RunFdr = ExperimentFdr = ProteinFdr = DEFAULT_FDR;
 
+            // The model list as Build Library offers it: the pretrained models, the saved ones, Add,
+            // Edit current and Edit list
+            _driverModel = new SettingsListComboDriver<CarafeModelSpec>(comboModel, Settings.Default.CarafeModelList);
+            _driverModel.LoadList(null);
+
             InitializeModifications();
             UpdateExistingLibraryControls();
+            UpdateTuningControls();
         }
 
         public ImportResultsDIAControl DataFileResults { get; }
@@ -205,6 +217,348 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 tbxLibraryPath.Text = newPath;
         }
 
+        #region Library Model page
+
+        /// <summary>
+        /// The model to predict the library with: the default, the pretrained AlphaPeptDeep models,
+        /// or a saved fine-tuned model from the list. With tuning runs it is the model the tuning
+        /// starts from. Setting it selects that model in the combo.
+        /// </summary>
+        public CarafeModelSpec Model
+        {
+            get => _driverModel?.SelectedItem ?? CarafeModelSpec.DEFAULT;
+            // The driver selects by the combo's text, which is the display name, not the key
+            set => _driverModel.LoadList(Settings.Default.CarafeModelList.GetDisplayName(value));
+        }
+
+        private void comboModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Add, Edit current and Edit list reload the list, which fires this event again from
+            // within the driver's handling
+            if (_driverModel == null || _driverModel.IsInSelectedIndexChangedEvent)
+                return;
+            _driverModel.SelectedIndexChangedEvent(sender, e);
+        }
+
+        /// <summary>The combo's Add..., for tests: opens the model editor and adds its model to the list.</summary>
+        public void AddModel()
+        {
+            _driverModel.AddItem();
+        }
+
+        /// <summary>
+        /// True predicts with the chosen model as it is; false fine-tunes a new model on the tuning
+        /// runs, starting from the chosen model, and saves it under <see cref="ModelName"/>.
+        /// </summary>
+        public bool UseExistingModel
+        {
+            get => radioUseExistingModel.Checked;
+            set
+            {
+                if (value)
+                    radioUseExistingModel.Checked = true;
+                else
+                    radioTuneModel.Checked = true;
+            }
+        }
+
+        /// <summary>A tuning search: the library is predicted from the FASTA with a model this search fine-tunes.</summary>
+        public bool IsTuningSearch => !UseExistingLibrary && !UseExistingModel;
+
+        private void radioModel_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateTuningControls();
+        }
+
+        private void UpdateTuningControls()
+        {
+            bool tune = !UseExistingModel;
+            listTuningFiles.Enabled = btnBrowseTuningFiles.Enabled = cbChooseFromSearchedFiles.Enabled = tune;
+            lblModelName.Enabled = tbxModelName.Enabled = tune;
+            UpdateDefaultModelName();
+        }
+
+        /// <summary>
+        /// One run in the tuning list: browsed in by the user, or put there by the searched-files
+        /// checkbox, which is what the checkbox takes out again. Shown by its file name.
+        /// </summary>
+        private class TuningRun
+        {
+            public TuningRun(string filePath, bool fromSearch)
+            {
+                FilePath = filePath;
+                FromSearch = fromSearch;
+            }
+
+            public string FilePath { get; }
+            public bool FromSearch { get; }
+
+            public override string ToString()
+            {
+                return Path.GetFileName(FilePath);
+            }
+        }
+
+        /// <summary>Every run in the tuning list, checked or not, in list order.</summary>
+        public IList<string> TuningFileItems => listTuningFiles.Items.Cast<TuningRun>().Select(r => r.FilePath).ToList();
+
+        /// <summary>The runs the model is fine-tuned on: the checked items, in list order.</summary>
+        public IList<string> TuningFiles => listTuningFiles.CheckedItems.Cast<TuningRun>().Select(r => r.FilePath).ToList();
+
+        public void SetTuningFileChecked(string path, bool isChecked)
+        {
+            int i = IndexOfTuningRun(path);
+            if (i >= 0)
+                listTuningFiles.SetItemChecked(i, isChecked);
+        }
+
+        private IList<string> SearchedFilePaths => DataFileResults.FoundResultsFiles.Select(f => f.Path).ToList();
+
+        private TuningRun TuningRunAt(int index)
+        {
+            return (TuningRun)listTuningFiles.Items[index];
+        }
+
+        private int IndexOfTuningRun(string path)
+        {
+            for (int i = 0; i < listTuningFiles.Items.Count; i++)
+            {
+                if (PathsEqual(TuningRunAt(i).FilePath, path))
+                    return i;
+            }
+            return -1;
+        }
+
+        private static bool PathsEqual(string path1, string path2)
+        {
+            return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void btnBrowseTuningFiles_Click(object sender, EventArgs e)
+        {
+            BrowseTuningFiles();
+        }
+
+        /// <summary>
+        /// Browse... adds runs collected for the tuning, through the data source dialog the data
+        /// files page uses, remembering its folder as that page does.
+        /// </summary>
+        public void BrowseTuningFiles()
+        {
+            using var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList);
+            dlgOpen.Text = PeptideSearchResources.OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On;
+            dlgOpen.RestoreState(DocumentFilePath, Settings.Default.OpenDataSourceState);
+            if (dlgOpen.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            Settings.Default.OpenDataSourceState = dlgOpen.GetState(DocumentFilePath);
+            var dataSources = dlgOpen.DataSources;
+            if (dataSources == null || !dataSources.Any())
+            {
+                MessageDlg.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen);
+                return;
+            }
+            AddTuningFiles(dataSources.Select(d => d.ToString()));
+        }
+
+        /// <summary>
+        /// What Browse... does with the chosen runs: they go to the top of the list, checked, in
+        /// the order chosen. One already listed as a searched file is listed once, at the top,
+        /// checked, as a browsed one; one already browsed stays where it is.
+        /// </summary>
+        public void AddTuningFiles(IEnumerable<string> paths)
+        {
+            int insertAt = 0;
+            foreach (var path in paths)
+            {
+                int existing = IndexOfTuningRun(path);
+                if (existing >= 0)
+                {
+                    if (!TuningRunAt(existing).FromSearch)
+                        continue;
+                    listTuningFiles.Items.RemoveAt(existing);
+                }
+                listTuningFiles.Items.Insert(insertAt, new TuningRun(path, false));
+                listTuningFiles.SetItemChecked(insertAt, true);
+                insertAt++;
+            }
+            UpdateDefaultModelName();
+        }
+
+        /// <summary>
+        /// Checked, the searched files are offered below any browsed runs, unchecked, in search
+        /// order; unchecked, they and their checks are taken out again. Browsed runs are untouched
+        /// either way, so a 446-file search with four tuning runs never scrolls the search list.
+        /// </summary>
+        public bool ChooseFromSearchedFiles
+        {
+            get => cbChooseFromSearchedFiles.Checked;
+            set => cbChooseFromSearchedFiles.Checked = value;
+        }
+
+        private void cbChooseFromSearchedFiles_CheckedChanged(object sender, EventArgs e)
+        {
+            SyncSearchedTuningFiles();
+            UpdateDefaultModelName();
+        }
+
+        /// <summary>
+        /// Brings the searched entries of the tuning list up to date with the data files page: the
+        /// searched files not yet listed are added, unchecked, after the runs already there, and
+        /// searched entries no longer searched (or no longer wanted) are removed.
+        /// </summary>
+        private void SyncSearchedTuningFiles()
+        {
+            var searched = ChooseFromSearchedFiles ? SearchedFilePaths : new List<string>();
+            for (int i = listTuningFiles.Items.Count - 1; i >= 0; i--)
+            {
+                var run = TuningRunAt(i);
+                if (run.FromSearch && !searched.Any(p => PathsEqual(p, run.FilePath)))
+                    listTuningFiles.Items.RemoveAt(i);
+            }
+            foreach (var path in searched)
+            {
+                if (IndexOfTuningRun(path) < 0)
+                    listTuningFiles.Items.Add(new TuningRun(path, true));
+            }
+        }
+
+        private void listTuningFiles_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            // The check changes after this event, so the item's new state is taken from the event
+            UpdateDefaultModelName(e.Index, e.NewValue == CheckState.Checked);
+        }
+
+        /// <summary>The name the fine-tuned model is saved under in the model list.</summary>
+        public string ModelName
+        {
+            get => tbxModelName.Text.Trim();
+            set => tbxModelName.Text = value;
+        }
+
+        private string _defaultModelName = string.Empty;
+
+        /// <summary>
+        /// The default name, "&lt;document&gt; tuned on &lt;first checked run&gt;", follows the
+        /// checks until the user types a name of their own.
+        /// </summary>
+        private void UpdateDefaultModelName(int changingIndex = -1, bool changingChecked = false)
+        {
+            string firstRun = null;
+            for (int i = 0; i < listTuningFiles.Items.Count && firstRun == null; i++)
+            {
+                bool isChecked = i == changingIndex ? changingChecked : listTuningFiles.GetItemChecked(i);
+                if (isChecked)
+                    firstRun = TuningRunAt(i).FilePath;
+            }
+            string newDefault = firstRun == null
+                ? string.Empty
+                : string.Format(PeptideSearchResources.OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_,
+                    Path.GetFileNameWithoutExtension(DocumentFilePath), Path.GetFileNameWithoutExtension(firstRun));
+            if (Equals(tbxModelName.Text, _defaultModelName))
+                tbxModelName.Text = newDefault;
+            _defaultModelName = newDefault;
+        }
+
+        /// <summary>The model a tuning search writes: in the working folder, named after the output.</summary>
+        public string TunedModelPath => OspreyHelpers.GetTunedModelPath(OutputLibraryPath, OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath));
+
+        private string _confirmedReplaceModelName;
+
+        /// <summary>
+        /// Next from the Library Model page: a saved model must open; a tuning search needs at
+        /// least one run, which must exist unless it is searched too, no two runs of the search or
+        /// the tuning with the same file name (Osprey keys its spectra cache by stem and refuses
+        /// the clash), a start model other than the one this search writes, and a name, which
+        /// replaces a listed model of the same name after the user agrees.
+        /// </summary>
+        private bool ValidateLibraryModelPage()
+        {
+            var model = Model;
+            if (!model.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, model.FilePath))
+            {
+                comboModel.Focus();
+                return false;
+            }
+            if (UseExistingModel)
+                return true;
+
+            var tuningFiles = TuningFiles;
+            if (tuningFiles.Count == 0)
+            {
+                MessageDlg.Show(this, PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_);
+                return false;
+            }
+            var searched = SearchedFilePaths;
+            foreach (var run in tuningFiles.Where(r => !searched.Any(s => PathsEqual(s, r))))
+            {
+                if (!File.Exists(run) && !Directory.Exists(run))
+                {
+                    MessageDlg.Show(this, string.Format(PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_, run));
+                    return false;
+                }
+            }
+            var runsByStem = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var run in searched.Concat(tuningFiles))
+            {
+                string stem = Path.GetFileNameWithoutExtension(run);
+                if (!runsByStem.TryGetValue(stem, out var other))
+                    runsByStem.Add(stem, run);
+                else if (!PathsEqual(other, run))
+                {
+                    MessageDlg.Show(this, string.Format(
+                        PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_,
+                        other, run));
+                    return false;
+                }
+            }
+            if (!model.IsDefault && PathsEqual(model.FilePath, TunedModelPath))
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_model__0__is_the_one_this_search_writes__Choose_another_model_to_fine_tune_from__or_use_it_as_it_is_,
+                    model.FilePath));
+                return false;
+            }
+            var helper = new MessageBoxHelper(this);
+            if (!helper.ValidateNameTextBox(tbxModelName, out string name))
+                return false;
+            if (Settings.Default.CarafeModelList.ContainsKey(name) && !Equals(name, _confirmedReplaceModelName))
+            {
+                var choice = MultiButtonMsgDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_A_model_named__0__is_already_in_the_list__Replace_it_with_the_model_this_search_fine_tunes_, name),
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
+                if (choice != DialogResult.Yes)
+                {
+                    tbxModelName.Focus();
+                    return false;
+                }
+                _confirmedReplaceModelName = name;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// After a tuning search succeeds, the model Osprey saved joins the model list under the
+        /// name given, in place of a model of that name, so the next search (here or in Build
+        /// Library) can predict with it.
+        /// </summary>
+        private void RegisterTunedModel()
+        {
+            string modelPath = TunedModelPath;
+            if (!File.Exists(modelPath))
+            {
+                MessageDlg.Show(this, string.Format(PeptideSearchResources.OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__, modelPath));
+                return;
+            }
+            var models = Settings.Default.CarafeModelList;
+            var spec = new CarafeModelSpec(ModelName, modelPath);
+            if (models.TryGetValue(spec.Name, out var existing))
+                models.Remove(existing);
+            models.Add(spec);
+        }
+
+        #endregion
+
         public bool IsHighResolution
         {
             get => comboResolution.SelectedIndex == 0;
@@ -290,6 +644,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FastaPath = ImportFastaControl.FastaFile,
                 LibraryPath = UseExistingLibrary ? ExistingLibraryPath : null,
                 DecoysInLibrary = UseExistingLibrary && OspreyHelpers.LibraryHasDecoyPairs(ExistingLibraryPath),
+                ModelPath = !UseExistingLibrary && !Model.IsDefault ? Model.FilePath : null,
+                TrainingInputs = IsTuningSearch ? TuningFiles : new List<string>(),
                 OutputPath = OutputLibraryPath,
                 WorkDirectory = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath),
                 TorchRuntimesDirectory = ToolDescriptionHelpers.GetToolsDirectory(),
@@ -400,10 +756,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
 
             if (wizardPages.SelectedIndex < wizardPages.TabPages.Count - 1)
-                wizardPages.SelectTab(wizardPages.SelectedIndex + 1);
+                wizardPages.SelectTab(GetNextPageIndex(wizardPages.SelectedIndex));
 
             switch (CurrentPage)
             {
+                case Pages.library_model_page:
+                    // The data files page may have changed since the list was last filled
+                    SyncSearchedTuningFiles();
+                    UpdateDefaultModelName();
+                    break;
+
                 case Pages.search_settings_page:
                     btnNext.Text = PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_Run;
                     break;
@@ -422,10 +784,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Enabled = wizardPages.SelectedIndex < wizardPages.TabPages.Count - 1;
         }
 
+        /// <summary>
+        /// The Library Model page belongs to a predicted library: an existing library is searched
+        /// as it is, so the page is skipped in both directions.
+        /// </summary>
+        private int GetNextPageIndex(int index)
+        {
+            int next = index + 1;
+            if ((Pages)next == Pages.library_model_page && UseExistingLibrary)
+                next++;
+            return next;
+        }
+
+        private int GetPreviousPageIndex(int index)
+        {
+            int previous = index - 1;
+            if ((Pages)previous == Pages.library_model_page && UseExistingLibrary)
+                previous--;
+            return previous;
+        }
+
         private bool ValidateCurrentPage()
         {
             switch (CurrentPage)
             {
+                case Pages.library_model_page:
+                    return ValidateLibraryModelPage();
                 case Pages.data_files_page:
                     if (!DataFileResults.FoundResultsFiles.Any())
                     {
@@ -653,7 +1037,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (CurrentPage == Pages.run_page)
                 btnNext.Text = PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_Run;
 
-            wizardPages.SelectTab(wizardPages.SelectedIndex - 1);
+            wizardPages.SelectTab(GetPreviousPageIndex(wizardPages.SelectedIndex));
 
             btnBack.Enabled = wizardPages.SelectedIndex > 0;
             btnNext.Enabled = wizardPages.SelectedIndex < wizardPages.TabPages.Count - 1;
@@ -666,8 +1050,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ControlBox = true;
             if (success)
             {
-                // The file on disk is the new library from here on, whether or not the user goes on
-                // to Finish, so the document's object is refreshed now rather than at the hand-off.
+                // The model is saved and the file on disk is the new library from here on, whether
+                // or not the user goes on to Finish, so the model is listed and the document's
+                // library object refreshed now rather than at the hand-off.
+                if (IsTuningSearch)
+                    RegisterTunedModel();
                 ReloadDocumentLibrary();
                 btnNext.Enabled = true;
             }

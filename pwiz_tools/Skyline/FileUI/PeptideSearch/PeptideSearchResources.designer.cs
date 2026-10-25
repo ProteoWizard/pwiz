@@ -971,6 +971,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Browse for Runs to Fine-Tune On.
+        /// </summary>
+        public static string OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string OspreySearchDlg_FragmentUnit_m_z {
@@ -989,11 +998,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} tuned on {1}.
+        /// </summary>
+        public static string OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_GetDefaultModelName__0__tuned_on__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey did not write the spectral library {0}..
         /// </summary>
         public static string OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__ {
             get {
                 return ResourceManager.GetString("OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey did not write the fine-tuned model {0}..
+        /// </summary>
+        public static string OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_RegisterTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__", resourceCulture);
             }
         }
 
@@ -1034,6 +1061,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to A model named {0} is already in the list. Replace it with the model this search fine-tunes?.
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_A_model_named__0__is_already_in_the_list__Replace_it_with_the_model_this_search_fine_tunes_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_A_model_named__0__is_already_in_the_list__Replace_it_with_the_model_this_search_fine_tunes_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose at least one run to fine-tune the model on..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey cannot predict a library for the enzyme &apos;{0}&apos;. Choose an enzyme with a standard cleavage rule..
         /// </summary>
         public static string OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_ {
@@ -1048,6 +1093,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_ {
             get {
                 return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The model {0} is the one this search writes. Choose another model to fine-tune from, or use it as it is..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_The_model__0__is_the_one_this_search_writes__Choose_another_model_to_fine_tune_from__or_use_it_as_it_is_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_The_model__0__is_the_one_this_search_writes__Choose_another_model_to_fine_tune_from__or_use_it_as_it_is_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The runs {0} and {1} have the same file name. Osprey keeps one spectra cache per name, so rename one of them..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The tuning run {0} does not exist..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_", resourceCulture);
             }
         }
 
