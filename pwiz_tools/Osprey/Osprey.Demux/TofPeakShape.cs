@@ -88,7 +88,7 @@ namespace pwiz.Osprey.Demux
                     isolated = full[k - d] <= EDGE_FRACTION * top && full[k + d] <= EDGE_FRACTION * top;
                 if (!isolated)
                     continue;
-                double l0 = Math.Log(full[k - 1]), l1 = Math.Log(top), l2 = Math.Log(full[k + 1]);
+                double l0 = PortableMath.Log(full[k - 1]), l1 = PortableMath.Log(top), l2 = PortableMath.Log(full[k + 1]);
                 double a = (l0 - 2 * l1 + l2) / 2, b = (l2 - l0) / 2;
                 if (a >= 0)
                     continue;
@@ -97,7 +97,7 @@ namespace pwiz.Osprey.Demux
                 double center = -b / (2 * a);
                 if (Math.Abs(center) > WINDOW)
                     continue;
-                double height = Math.Exp(l1 - b * b / (4 * a));
+                double height = PortableMath.Exp(l1 - b * b / (4 * a));
                 int bin = Bin(grid.Mz(k - ISOLATION + first + center));
                 if (bin < 0)
                     continue;

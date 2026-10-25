@@ -116,6 +116,56 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// PortableMath: the same bits on every operating system, pinned here so the Linux and Windows builds both check
+        /// them (two of the arguments are ones where the C libraries' exp and log disagree), and within a few units in the
+        /// last place of Math.Exp and Math.Log.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxPortableMath()
+        {
+            var expected = new (string Function, double X, ulong Bits)[]
+            {
+                (@"exp", -0.5, 0x3FE368B2FC6F960AUL),
+                (@"exp", -4.710385710268998, 0x3F826F46B55AC868UL),
+                (@"exp", 1.0, 0x4005BF0A8B14576AUL),
+                (@"exp", -41.40463204448576, 0x3C333C6F85FDB7A6UL),
+                (@"exp", -700.0, 0x00D14F2B0FB9307FUL),
+                (@"exp", -745.0, 0x0000000000000001UL),
+                (@"exp", 709.0, 0x7FDD422D2BE5DC9BUL),
+                (@"log", 2.0, 0x3FE62E42FEFA39EFUL),
+                (@"log", 1.8675521641060904, 0x3FE3FCF50E27F9EAUL),
+                (@"log", 600.5234, 0x401997594E079217UL),
+                (@"log", 0.75, 0xBFD269621134DB92UL),
+                (@"log", 1e-310, 0xC0864E69394D9508UL),
+                (@"log", 1e300, 0x4085963447F87FB5UL),
+            };
+            foreach (var (function, x, bits) in expected)
+            {
+                double value = function == @"exp" ? PortableMath.Exp(x) : PortableMath.Log(x);
+                Assert.AreEqual(bits, (ulong)BitConverter.DoubleToInt64Bits(value), string.Format(@"{0}({1:R})", function, x));
+            }
+
+            Assert.AreEqual(1.0, PortableMath.Exp(0));
+            Assert.AreEqual(0.0, PortableMath.Exp(-800));
+            Assert.AreEqual(double.PositiveInfinity, PortableMath.Exp(710));
+            Assert.IsTrue(double.IsNaN(PortableMath.Exp(double.NaN)));
+            Assert.AreEqual(0.0, PortableMath.Log(1));
+            Assert.AreEqual(double.NegativeInfinity, PortableMath.Log(0));
+            Assert.AreEqual(double.PositiveInfinity, PortableMath.Log(double.PositiveInfinity));
+            Assert.IsTrue(double.IsNaN(PortableMath.Log(-1)));
+
+            var random = new Random(4711);
+            for (int i = 0; i < 100000; i++)
+            {
+                double x = 1400 * random.NextDouble() - 700;
+                Assert.IsTrue(UlpDistance(PortableMath.Exp(x), Math.Exp(x)) <= 2, string.Format(@"exp({0:R})", x));
+                double y = Math.ScaleB(1 + random.NextDouble(), random.Next(-1070, 1020));
+                double log = Math.Log(y);
+                Assert.IsTrue(Math.Abs(PortableMath.Log(y) - log) <= 4e-16 * Math.Max(1, Math.Abs(log)), string.Format(@"log({0:R})", y));
+            }
+        }
+
+        /// <summary>
         /// The RT interpolants: exactness where they must be exact, holding at the ends, and the
         /// apex-bias ordering behind the choice of makima as the default.
         /// </summary>
@@ -1431,6 +1481,11 @@ namespace pwiz.Osprey.Test
                     return j;
             }
             throw new AssertFailedException(string.Format(@"No bin contains {0}", mz));
+        }
+
+        private static long UlpDistance(double a, double b)
+        {
+            return Math.Abs(BitConverter.DoubleToInt64Bits(a) - BitConverter.DoubleToInt64Bits(b));
         }
 
         private static void AssertArrayNear(double[] expected, double[] actual, double tolerance)

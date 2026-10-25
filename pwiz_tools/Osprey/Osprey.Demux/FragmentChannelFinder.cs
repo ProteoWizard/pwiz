@@ -62,7 +62,7 @@ namespace pwiz.Osprey.Demux
             // 1 ppm bins on a log m/z axis.
             var key = new long[mz.Length];
             for (int i = 0; i < mz.Length; i++)
-                key[i] = (long)Math.Floor(Math.Log(mz[i]) * 1e6);
+                key[i] = (long)Math.Floor(PortableMath.Log(mz[i]) * 1e6);
             return FindByKey(key, ions, tolerancePpm, SMOOTHING_HALF_WIDTH, minIons, channel);
         }
 

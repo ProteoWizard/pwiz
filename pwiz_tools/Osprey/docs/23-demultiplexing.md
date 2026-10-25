@@ -899,6 +899,13 @@ source are both gone (with a warning). An analyzer the table does not know takes
 - The joint solve's peak loops run as fixed-width four-lane vectors where the hardware has them, and
   otherwise as four scalar partial sums in the same lane order, reduced in one fixed order, so every
   machine gets the same bits.
+- Every exp and log in `Osprey.Demux` comes from `PortableMath`, built from IEEE arithmetic alone,
+  not from `Math.Exp` and `Math.Log`, which call the operating system's C library. Windows (UCRT) and
+  Linux (glibc) disagree in the last bit or two for about 0.5% of arguments; the joint solve, which
+  iterates to a tolerance, turned that into differences of up to 1e-5 in its output and a peak or two
+  in a survey scan, so the ZT Scan golden written on Windows failed on Linux. The solve is that
+  sensitive throughout: moving from the C library to `PortableMath` moved that golden by a median
+  of 4e-4 in summed intensity, and by 1 to 3 peaks in 11 of its 60 spectra.
 
 ### Speed
 

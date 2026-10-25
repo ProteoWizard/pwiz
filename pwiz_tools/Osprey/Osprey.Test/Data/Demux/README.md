@@ -44,8 +44,9 @@ fails, so a rebless is never silent), review the diff, and say why in the commit
 Used by `DemuxFixtureTest`. One slice per acquisition type, each through the path Osprey or the tool runs it on,
 with its output pinned to a golden: one line per output spectrum, its source scan, window, peak count, summed
 intensity and intensity-weighted mean m/z. The scan, window and peak count must match exactly; the two sums to a
-relative 1e-9. The solvers give the same bits on every machine (the joint solve's vector sums are reduced in a fixed
-lane order), and the output does not depend on the thread count, so a refactor reproduces every line. A changed
+relative 1e-9. The solvers give the same bits on every machine and operating system (the joint solve's vector sums
+are reduced in a fixed lane order, and exp and log come from `PortableMath`, not the C library), and the output does
+not depend on the thread count, so a refactor reproduces every line. A changed
 setting does not: run with `OSPREY_DEMUX_MIN_CHANNEL_IONS=1`, the Astral test fails on its first spectrum.
 
 | File | What it is |

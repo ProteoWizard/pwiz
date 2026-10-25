@@ -178,7 +178,7 @@ namespace pwiz.Osprey.Demux
                 double sigma = GaussianSigmaAt(mz), sum = 0;
                 for (int d = -half; d <= half; d++)
                 {
-                    double v = Math.Exp(-0.5 * d * d / (sigma * sigma));
+                    double v = PortableMath.Exp(-0.5 * d * d / (sigma * sigma));
                     kernel[d + half] = v;
                     sum += v;
                 }

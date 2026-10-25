@@ -380,7 +380,7 @@ namespace pwiz.Osprey.Demux
                     if (a[row, j] <= 0)
                         continue;
                     double d = (time - _atomTau[atom]) / _sigma;
-                    double value = _beta[c] * Math.Exp(-0.5 * d * d);
+                    double value = _beta[c] * PortableMath.Exp(-0.5 * d * d);
                     int slot = 0;
                     while (slot < nc && cols[slot] != j)
                         slot++;
@@ -424,7 +424,7 @@ namespace pwiz.Osprey.Demux
                     {
                         double d = (times[q] - tau) / _sigma;
                         _footObs.Add(_obsOf[r][q]);
-                        _footValue.Add(share * Math.Exp(-0.5 * d * d));
+                        _footValue.Add(share * PortableMath.Exp(-0.5 * d * d));
                     }
                 }
                 if (_footObs.Count == start)
