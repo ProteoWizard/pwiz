@@ -75,6 +75,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            // Osprey predicts the library: a local build, or the latest TeamCity build downloaded
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             RunUI(() => SkylineWindow.Paste(TextUtil.LineSeparate(PEPTIDES.Select(p => p.Sequence))));
 
             const string libraryName = "CarafeModelLibrary";

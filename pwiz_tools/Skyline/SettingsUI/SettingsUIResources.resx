@@ -1259,9 +1259,6 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime" xml:space="preserve">
     <value>Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk.</value>
   </data>
-  <data name="BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_" xml:space="preserve">
-    <value>Skyline chooses between the CPU and the GPU when it first predicts a library. Restart Skyline to change it.</value>
-  </data>
   <data name="BuildLibraryDlg_InstallCudaRuntime_Download" xml:space="preserve">
     <value>Download</value>
   </data>

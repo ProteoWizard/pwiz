@@ -658,6 +658,34 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
+        /// The library a host predicts for a precursor table (Osprey's <c>--precursors</c>, which
+        /// Skyline's Build Library runs): no FASTA and no digest, the saved model and device when the
+        /// host gives them, and the prediction options it recorded read as a CarafeSharp command
+        /// line's are, with the same refusals.
+        /// </summary>
+        public LibrarySettings InterpretHostedPrecursorTable(string modelFile, string device, string commandLine)
+        {
+            if (modelFile != null)
+                Set(ARG_MODEL, modelFile);
+            if (device != null)
+                Set(ARG_DEVICE, device);
+            var digest = InterpretDigest(out var modifications, out double minMz, out double maxMz);
+            Mode = CarafeCommandMode.predict_library;
+            LibrarySettings = InterpretLibrarySettings(null, digest, modifications, minMz, maxMz);
+            LibrarySettings.CommandLine = commandLine;
+            return LibrarySettings;
+        }
+
+        /// <summary>
+        /// The <see cref="HostedDigestArguments"/> the host recorded, as typed: a host predicting a
+        /// precursor table, which digests nothing, refuses them by name rather than ignoring them.
+        /// </summary>
+        public IEnumerable<string> HostedDigestOptionsGiven()
+        {
+            return HostedDigestArguments.Where(Has).Select(arg => arg.ArgumentText);
+        }
+
+        /// <summary>
         /// The fine-tuning a host runs on Osprey's training exports, with the options it recorded
         /// from <see cref="HostedTrainingArguments"/> and the library sections. The rest is derived as
         /// <see cref="InterpretHostedLibrary"/> derives it: <paramref name="database"/>, the saved model
@@ -848,6 +876,15 @@ namespace pwiz.CarafeSharp.Proteome
             string extension = Path.GetExtension(database).ToLowerInvariant();
             if (extension != @".fa" && extension != @".fasta")
                 throw new NotSupportedException(@"CarafeSharp predicts libraries from a FASTA (.fa or .fasta) only: " + database);
+            return InterpretLibrarySettings(database, digest, modifications, minMz, maxMz);
+        }
+
+        /// <summary>
+        /// The library settings over <paramref name="database"/> (null for a host's precursor table,
+        /// which digests nothing) and the prediction options as given.
+        /// </summary>
+        private LibrarySettings InterpretLibrarySettings(string database, DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)
+        {
             if (Has(ARG_USER_VAR_MODS) || Has(ARG_MOD2MASS))
                 throw new NotSupportedException(ARG_USER_VAR_MODS.ArgumentText + @" and " + ARG_MOD2MASS.ArgumentText + @" are not supported by CarafeSharp");
             if (TryGet(ARG_MODE, out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))

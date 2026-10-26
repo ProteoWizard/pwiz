@@ -265,6 +265,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed at {0}..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to AlphaPeptDeep finished in {0} minutes {1} seconds..
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_ {
@@ -303,15 +312,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Predicting with the fine-tuned model {0}: {1}.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_ {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Failed to predict the library with AlphaPeptDeep..
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_ {
@@ -319,25 +319,7 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Predicting with AlphaPeptDeep on the CPU..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Predicting with AlphaPeptDeep on the GPU..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Running AlphaPeptDeep.
         /// </summary>
@@ -2387,12 +2369,12 @@ namespace pwiz.Skyline.Model {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to This build of Skyline does not list the NVIDIA CUDA runtime packages..
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed, so its NVIDIA CUDA runtime packages are not known..
         /// </summary>
-        public static string TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NVIDIA_CUDA_runtime_packages_ {
+        public static string TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_ {
             get {
-                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NV" +
-                        "IDIA_CUDA_runtime_packages_", resourceCulture);
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_" +
+                        "installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_", resourceCulture);
             }
         }
 

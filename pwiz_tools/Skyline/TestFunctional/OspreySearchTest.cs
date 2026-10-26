@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
         /// Names a local Osprey.exe to test against, for a developer's loop; without it the test
         /// looks for an Osprey build beside the Skyline source and then downloads the pinned package.
         /// </summary>
-        public const string ENV_OSPREY_EXE = @"SKYLINE_TEST_OSPREY_EXE";
+        public const string ENV_OSPREY_EXE = OspreyTestUtil.ENV_OSPREY_EXE;
 
         /// <summary>
         /// Osprey names the library it predicts from the FASTA after the output, in the working
@@ -78,20 +78,38 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            string ospreyExe = EnsureOsprey(TestContext);
+            string ospreyExe = OspreyTestUtil.EnsureOsprey(TestContext);
             VerifyLatestBuildOnTeamCity();
             PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTest.sky"));
 
             // The install gate: with Osprey registered at a path that does not exist, the menu item
-            // offers the download and canceling it opens no wizard.
+            // offers the download and canceling it opens no wizard. A developer build, as the tests
+            // run, offers the latest successful master build; a release the pinned one. On TeamCity
+            // that package is the one EnsureOsprey just installed in the Tools folder, which the gate
+            // would register again instead of offering, so it is moved aside for the check.
             const string bogusPath = @"C:\__osprey_not_installed__\Osprey.exe";
-            RegisterOsprey(bogusPath);
-            var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
-            AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.OSPREY_VERSION);
-            OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
-            AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
+            OspreyTestUtil.RegisterOsprey(bogusPath);
+            AssertEx.IsFalse(OspreyHelpers.UsesPinnedPackage);
+            var package = OspreyHelpers.GetPackageDownloadInfo();
+            string packageDir = Path.GetDirectoryName(package.ToolPath);
+            string asideDir = packageDir + @"-aside";
+            bool packageInstalled = Directory.Exists(packageDir);
+            if (packageInstalled)
+                Directory.Move(packageDir, asideDir);
+            try
+            {
+                var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
+                AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.GetPackageVersion(package));
+                OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
+                AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
+            }
+            finally
+            {
+                if (packageInstalled)
+                    Directory.Move(asideDir, packageDir);
+            }
 
-            RegisterOsprey(ospreyExe);
+            OspreyTestUtil.RegisterOsprey(ospreyExe);
 
             string fastaFilepath = TestFilesDir.GetTestPath("stellar-subset-proteins.fasta");
             string[] diaFilePaths = Directory.GetFiles(TestFilesDir.FullPath, "*.mzML").OrderBy(p => p).ToArray();
@@ -393,60 +411,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument(documentPath));
         }
 
-        public static void RegisterOsprey(string ospreyExe)
-        {
-            RunUI(() =>
-            {
-                if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
-                    Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
-                Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.Osprey,
-                    ospreyExe, string.Empty, Path.GetDirectoryName(ospreyExe), false));
-            });
-        }
-
-        /// <summary>
-        /// The Osprey.exe to test: the one SKYLINE_TEST_OSPREY_EXE names, else a build in the Osprey
-        /// project beside the Skyline source (the developer's loop), else the pinned package from
-        /// the tool mirror (TeamCity).
-        /// </summary>
-        public static string EnsureOsprey(TestContext testContext)
-        {
-            string fromEnvironment = Environment.GetEnvironmentVariable(ENV_OSPREY_EXE);
-            if (!string.IsNullOrEmpty(fromEnvironment))
-            {
-                AssertEx.FileExists(fromEnvironment, ENV_OSPREY_EXE + @" names a file that does not exist");
-                return fromEnvironment;
-            }
-            foreach (var configuration in new[] { @"Debug", @"Release" })
-            {
-                string sibling = Path.GetFullPath(testContext.GetProjectDirectory(
-                    Path.Combine(@"..", @"Osprey", @"Osprey", @"bin", @"x64", configuration, @"net10.0", OspreyHelpers.OSPREY_EXE)));
-                if (File.Exists(sibling))
-                    return sibling;
-            }
-            // Neither: the latest successful Osprey build on TeamCity, as SkylineNightly fetches
-            // SkylineTester. Its URL is used as given, since the tool mirror holds no Osprey package.
-            RunUI(() =>
-            {
-                if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
-                    Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
-            });
-            var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
-            bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
-            try
-            {
-                Skyline.Program.UseOriginalURLs = true;
-                AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, new SilentProgressMonitor()),
-                    @"failed to download Osprey from " + downloadInfo.DownloadUrl);
-            }
-            finally
-            {
-                Skyline.Program.UseOriginalURLs = savedUseOriginalUrls;
-            }
-            AssertEx.FileExists(downloadInfo.ToolPath);
-            return downloadInfo.ToolPath;
-        }
-
         /// <summary>
         /// The TeamCity resolution is checked on every run, whichever Osprey the test then uses: the
         /// latest successful build names a versioned win-x64 zip and its artifact URL answers a HEAD
@@ -457,6 +421,9 @@ namespace pwiz.SkylineTestFunctional
             var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
             AssertEx.IsTrue(downloadInfo.Filename.StartsWith(@"Osprey-") && downloadInfo.Filename.EndsWith(@"-win-x64"),
                 @"unexpected Osprey package name " + downloadInfo.Filename);
+            // The version the prompt names is the folder name's middle: the pinned package's is the pinned version
+            AssertEx.AreEqual(OspreyHelpers.OSPREY_VERSION, OspreyHelpers.GetPackageVersion(OspreyHelpers.OspreyDownloadInfo));
+            AssertEx.AreEqual(@"Osprey-" + OspreyHelpers.GetPackageVersion(downloadInfo) + @"-win-x64", downloadInfo.Filename);
             AssertEx.AreEqual(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), downloadInfo.Filename, OspreyHelpers.OSPREY_EXE),
                 downloadInfo.ToolPath);
             using var client = new HttpClientWithProgress();

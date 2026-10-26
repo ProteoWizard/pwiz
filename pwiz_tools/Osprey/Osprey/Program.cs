@@ -538,12 +538,17 @@ namespace pwiz.Osprey
                 {
                     // The one command: the library is predicted before the search, so the banner
                     // names what it is predicted from and where it will be.
-                    LogInfo(string.Format(OspreyResources.Program_Run_Library__predicted_from__0__with__1_, config.LibraryBuild.FastaPath,
+                    LogInfo(string.Format(OspreyResources.Program_Run_Library__predicted_from__0__with__1_,
+                        config.LibraryBuild.FastaPath ?? config.LibraryBuild.PrecursorTablePath,
                         config.LibraryBuild.ModelPath != null
                             ? string.Format(OspreyResources.Program_Run_the_saved_model__0_, config.LibraryBuild.ModelPath)
                             : OspreyResources.Program_Run_the_pretrained_models));
-                    LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
-                        LibraryBuildWorkflow.LibraryPath(config), LibraryBuildWorkflow.WorkDirectory(config)));
+                    // A precursor table's prediction has no working folder: the Output line names its TSV
+                    if (config.LibraryBuild.PrecursorTablePath == null)
+                    {
+                        LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
+                            LibraryBuildWorkflow.LibraryPath(config), LibraryBuildWorkflow.WorkDirectory(config)));
+                    }
                     if (config.LibraryBuild.Tuning)
                     {
                         LogInfo(string.Format(OspreyResources.Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_,
@@ -1110,6 +1115,38 @@ namespace pwiz.Osprey
                 return null;
             }
             string fastaArg = OspreyCommandArgs.ARG_FASTA.ArgumentText;
+            if (build.PrecursorTablePath != null)
+            {
+                // A precursor table is the PredictLibrary phase alone: no digest of a FASTA, no
+                // search, so nothing of the one command's tuning or entrapment applies to it.
+                string precursorsArg = OspreyCommandArgs.ARG_PRECURSORS.ArgumentText;
+                if (build.FastaPath != null)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_,
+                        fastaArg, precursorsArg);
+                }
+                if (build.Phase != LibraryBuildConfig.PREDICT_LIBRARY)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
+                        precursorsArg, OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY));
+                }
+                var fastaOnly = new List<string>();
+                if (build.Tuning)
+                    fastaOnly.Add(OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
+                if (build.Entrapment)
+                    fastaOnly.Add(OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
+                if (build.EntrapmentFastaPath != null)
+                    fastaOnly.Add(OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText);
+                if (build.TrainingSearch)
+                    fastaOnly.Add(OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText);
+                fastaOnly.AddRange(build.DigestOptionsWithPrecursors);
+                if (fastaOnly.Count > 0)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                        string.Join(@", ", fastaOnly), fastaArg);
+                }
+                fastaArg = precursorsArg;
+            }
             if (config.LibrarySource != null)
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_,
@@ -1148,8 +1185,10 @@ namespace pwiz.Osprey
                                                        build.Phase == LibraryBuildConfig.PREDICT_LIBRARY);
             bool tunes = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.TRAIN_MODEL);
             bool predictsOutputLibrary = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.PREDICT_LIBRARY);
-            if (predicts && !File.Exists(build.FastaPath))
+            if (predicts && build.FastaPath != null && !File.Exists(build.FastaPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.FastaPath);
+            if (predicts && build.PrecursorTablePath != null && !File.Exists(build.PrecursorTablePath))
+                return string.Format(OspreyResources.Program_LibraryBuildError_Precursor_table_not_found___0_, build.PrecursorTablePath);
             if ((predicts || tunes) && build.ModelPath != null && !File.Exists(build.ModelPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_Model_file_not_found___0_, build.ModelPath);
             if (build.EntrapmentFastaPath != null)

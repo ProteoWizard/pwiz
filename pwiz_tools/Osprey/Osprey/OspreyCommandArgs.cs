@@ -29,6 +29,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Chromatography;
@@ -202,6 +203,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
+        // Skyline's Build Library: the document's precursors as they are, no digest, the TSV
+        // peptdeep wrote. A phase of its own and nothing else, so the search options never apply.
+        public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
+            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
+            { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
+                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
             { Variadic = true, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, ARG_INPUT.ShortArgumentText, ModelExample, ARG_MODEL.ArgumentText } };
@@ -240,7 +247,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_BUILD =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Build, true,
-                ARG_FASTA, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
+                ARG_FASTA, ARG_PRECURSORS, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
                 ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
 
         // CarafeSharp's declarations, declared again for Osprey's parser: the name, the value and
@@ -709,8 +716,18 @@ namespace pwiz.Osprey
             // (LibraryBuildWorkflow): auto is Osprey's word, not CarafeSharp's, and gpu or cpu is
             // set there from the runtime loaded, so CarafeSharp gets its default here.
             string device = string.Equals(build.Device, OspreyTorchRuntimes.DEVICE_AUTO, StringComparison.OrdinalIgnoreCase) ? null : build.Device;
-            var library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, device, config.CommandLine);
-            if (!build.Tuning)
+            LibrarySettings library;
+            if (build.PrecursorTablePath != null)
+            {
+                build.DigestOptionsWithPrecursors.AddRange(_carafe.HostedDigestOptionsGiven());
+                library = _carafe.InterpretHostedPrecursorTable(build.ModelPath, device, config.CommandLine);
+            }
+            else
+            {
+                library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, device, config.CommandLine);
+            }
+            // A precursor table tunes nothing: Program refuses --training-input with it, after the parse
+            if (!build.Tuning || build.PrecursorTablePath != null)
             {
                 build.OptionsWithoutTrainingInput.AddRange(_tuningOptionsSeen.Distinct());
                 return new LibraryBuildSettings(library, null);

@@ -59,11 +59,12 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>The compressed size of the Osprey package, stated before the download starts.</summary>
         public const int OSPREY_DOWNLOAD_SIZE_MB = 150;
 
-        // Osprey's TeamCity build. Tests download from it as SkylineNightly downloads SkylineTester:
-        // the latest successful build on a designated branch, found through the REST API, which the
-        // Osprey project opens to guest access. Until Osprey has a release process, the pinned
-        // package is the TeamCity build that produced OSPREY_VERSION, addressed by build id, which
-        // stays valid only while that build is kept (pinned) on the server.
+        // Osprey's TeamCity build. Tests, developer builds and master dailies download from it as
+        // SkylineNightly downloads SkylineTester: the latest successful build on a designated branch,
+        // found through the REST API, which the Osprey project opens to guest access. A release and
+        // its FEATURE COMPLETE dailies install the pinned package, the TeamCity build that produced
+        // OSPREY_VERSION, addressed by build id; the release process sets the pin and keeps (pins)
+        // that build on the server, since an unpinned build is cleaned up (release-guide.md).
         public const string TEAMCITY_SERVER = @"https://teamcity.labkey.org";
         public const string TEAMCITY_BUILD_TYPE = @"ProteoWizard_OspreyWindowsNet";
         public const string TEAMCITY_BRANCH = @"master";
@@ -90,6 +91,48 @@ namespace pwiz.Skyline.Model.Lib
         public static FileDownloadInfo OspreyDownloadInfo => CreateDownloadInfo(OSPREY_FILENAME, OSPREY_DOWNLOAD_URL);
 
         public static FileDownloadInfo[] FilesToDownload => new[] { OspreyDownloadInfo };
+
+        /// <summary>
+        /// Whether this build installs the pinned package: a release (build 0) and the FEATURE COMPLETE
+        /// dailies of a release branch (build 9), whose pin is set when the branch is cut
+        /// (release-guide.md). A master daily and a developer build take the last successful master
+        /// build instead, found when Osprey is first needed, so the development line never updates
+        /// the pin by hand and a daily built after an Osprey change gets the Osprey it was built with.
+        /// </summary>
+        public static bool UsesPinnedPackage => !Install.IsDeveloperInstall && (Install.Build == 0 || Install.Build == 9);
+
+        /// <summary>
+        /// The package this build installs: the pinned one, or the latest successful master build,
+        /// which asks TeamCity (<see cref="GetLatestBuildDownloadInfo"/>) and throws when it cannot.
+        /// </summary>
+        public static FileDownloadInfo GetPackageDownloadInfo()
+        {
+            return UsesPinnedPackage ? OspreyDownloadInfo : GetLatestBuildDownloadInfo();
+        }
+
+        /// <summary>The version in a package's folder name, Osprey-&lt;version&gt;-win-x64, for the user.</summary>
+        public static string GetPackageVersion(FileDownloadInfo package)
+        {
+            const string prefix = @"Osprey-";
+            string suffix = OSPREY_ZIP_SUFFIX.Substring(0, OSPREY_ZIP_SUFFIX.Length - 4);
+            string name = package.Filename;
+            if (name.StartsWith(prefix) && name.EndsWith(suffix) && name.Length > prefix.Length + suffix.Length)
+                return name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length);
+            return name;
+        }
+
+        /// <summary>
+        /// Registers an installed package as the Osprey Skyline runs, as its download would have, in
+        /// place of any earlier registration: for a package found in the Tools folder after its
+        /// registration was lost.
+        /// </summary>
+        public static void RegisterPackage(FileDownloadInfo package)
+        {
+            var tools = Settings.Default.SearchToolList;
+            if (tools.ContainsKey(SearchToolType.Osprey))
+                tools.Remove(tools[SearchToolType.Osprey]);
+            tools.Add(new SearchTool(package.ToolType, package.ToolPath, package.ToolExtraArgs, package.InstallPath, true));
+        }
 
         /// <summary>
         /// The download of the latest successful Osprey build on <see cref="TEAMCITY_BRANCH"/>, which
@@ -174,6 +217,12 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_THREADS = @"--threads";
         public const string ARG_CULTURE = @"--culture";
         public const string ARG_TIMESTAMP = @"--timestamp";
+        // The precursor-table prediction Build Library runs: the PredictLibrary phase alone
+        public const string ARG_PRECURSORS = @"--precursors";
+        public const string ARG_TASK = @"--task";
+
+        /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>
+        public const string PREDICTED_TABLE_SUFFIX = @".predicted.speclib.tsv";
 
         // Osprey's --device: gpu and cpu are requirements (a run that cannot predict on the GPU
         // fails); auto takes the GPU when the CUDA runtime is installed, else the CPU.
@@ -458,8 +507,60 @@ namespace pwiz.Skyline.Model.Lib
         public static string RunSearch(OspreyConfig config, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             Directory.CreateDirectory(config.WorkDirectory);
-            string args = BuildCommandLine(config);
+            // The progress bar is driven by Osprey's [TASK] lines through OspreyProgressMonitor, so
+            // ProcessRunner's own percent parsing is off: its bar restarted at every phase that
+            // printed 100% and froze through the phases that print no percentage (the fine-tune).
+            var taskMonitor = new OspreyProgressMonitor(progressMonitor, config);
+            RunOsprey(BuildCommandLine(config), config.WorkDirectory, taskMonitor, ref status, false);
+            return File.Exists(config.OutputPath) ? config.OutputPath : null;
+        }
 
+        /// <summary>
+        /// The command line of the precursor-table prediction Build Library runs: Osprey's
+        /// PredictLibrary phase alone over <paramref name="tablePath"/>, with the pretrained models or
+        /// the saved <paramref name="modelPath"/>, on the GPU (a requirement, with the CUDA runtime in
+        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
+        /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
+        /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
+        /// </summary>
+        public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
+            bool useGpu, string torchRuntimesDirectory, string cultureName)
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(OspreyArgs))
+                sb.Append(OspreyArgs).Append(' ');
+            sb.Append(ARG_PRECURSORS).Append(' ').Append(tablePath.Quote()).Append(' ');
+            sb.Append(ARG_TASK).Append(' ').Append(OspreyProgressMonitor.TASK_PREDICT_LIBRARY).Append(' ');
+            sb.Append(ARG_OUTPUT).Append(' ').Append(outputBlib.Quote()).Append(' ');
+            if (!string.IsNullOrEmpty(modelPath))
+                sb.Append(ARG_MODEL).Append(' ').Append(modelPath.Quote()).Append(' ');
+            sb.Append(ARG_DEVICE).Append(' ').Append(useGpu ? DEVICE_GPU : DEVICE_CPU);
+            if (!string.IsNullOrEmpty(torchRuntimesDirectory))
+                sb.Append(' ').Append(ARG_TORCH_RUNTIMES).Append(' ').Append(torchRuntimesDirectory.Quote());
+            if (!string.IsNullOrEmpty(cultureName))
+                sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
+            return sb.ToString();
+        }
+
+        /// <summary>The TSV a precursor-table prediction with the output <paramref name="outputBlib"/> writes.</summary>
+        public static string GetPredictedTablePath(string outputBlib)
+        {
+            return Path.Combine(Path.GetDirectoryName(outputBlib) ?? string.Empty,
+                Path.GetFileNameWithoutExtension(outputBlib) + PREDICTED_TABLE_SUFFIX);
+        }
+
+        /// <summary>
+        /// Runs Osprey with <paramref name="args"/>, every line of its output reported to
+        /// <paramref name="progressMonitor"/> as the status message and teed to
+        /// <see cref="STDOUT_LOG_NAME"/> in <paramref name="logDirectory"/>, an earlier log rolled aside.
+        /// With <paramref name="updateProgressPercentage"/> the runner reads Osprey's NN% lines into the
+        /// status, for a run of one task; the wizard passes false and an <see cref="OspreyProgressMonitor"/>
+        /// instead. The verdict is the exit code, which Osprey reconciles with its own Error: lines;
+        /// a failure throws with Osprey's last lines.
+        /// </summary>
+        public static void RunOsprey(string args, string logDirectory, IProgressMonitor progressMonitor, ref IProgressStatus status,
+            bool updateProgressPercentage)
+        {
             var pr = new ProcessRunner();
             // The 8.3 short form of the install path and a non-Unicode TMP, the precautions the
             // DIA-NN path takes under TestRunner's Unicode tool folder; harmless everywhere else.
@@ -477,19 +578,13 @@ namespace pwiz.Skyline.Model.Lib
             progressMonitor.UpdateProgress(status);
 
             // Tee Osprey's output to a flushed file in the working folder so a user (or a developer)
-            // can follow a long search from outside Skyline. Osprey's own --log-file is not used:
-            // it redirects every line away from the console, which would leave the wizard blind.
-            // The progress bar is driven by Osprey's [TASK] lines through OspreyProgressMonitor, so
-            // ProcessRunner's own percent parsing is off: its bar restarted at every phase that
-            // printed 100% and froze through the phases that print no percentage (the fine-tune).
-            using (var liveLog = TryOpenLiveLogWriter(config.WorkDirectory))
+            // can follow a long run from outside Skyline. Osprey's own --log-file is not used:
+            // it redirects every line away from the console, which would leave the caller blind.
+            using (var liveLog = TryOpenLiveLogWriter(logDirectory))
             {
-                var taskMonitor = new OspreyProgressMonitor(progressMonitor, config);
-                pr.Run(psi, null, taskMonitor, ref status, liveLog,
-                    ProcessPriorityClass.BelowNormal, true, IsGoodOspreyOutput, false);
+                pr.Run(psi, null, progressMonitor, ref status, liveLog,
+                    ProcessPriorityClass.BelowNormal, true, IsGoodOspreyOutput, updateProgressPercentage);
             }
-
-            return File.Exists(config.OutputPath) ? config.OutputPath : null;
         }
 
         private static bool IsGoodOspreyOutput(string stdErr, int exitCode)

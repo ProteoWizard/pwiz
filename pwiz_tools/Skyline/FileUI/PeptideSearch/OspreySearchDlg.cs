@@ -129,8 +129,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Edit current and Edit list
             _driverModel = new SettingsListComboDriver<CarafeModelSpec>(comboModel, Settings.Default.CarafeModelList);
             _driverModel.LoadList(null);
-            // Osprey predicts in its own process, so the CPU or the GPU is open to choose every time
-            _useGpuDriver = new UseGpuDriver(this, cbUseGpu, false);
+            _useGpuDriver = new UseGpuDriver(this, cbUseGpu);
 
             InitializeModifications();
             UpdateExistingLibraryControls();

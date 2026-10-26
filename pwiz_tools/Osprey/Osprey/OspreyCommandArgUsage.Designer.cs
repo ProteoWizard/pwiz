@@ -365,7 +365,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_perf_stats", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} and {1}: predict a spectral library for exactly the precursors of this tab-separated table (columns {2}, in alphabase&apos;s notation, as Skyline writes it for its Build Library) and write it beside the output as {3}, the TSV peptdeep writes. The pretrained models or {4} predict; the Library Prediction options apply, the Library Digest options, the entrapment and the tuning do not..
+        /// </summary>
+        public static string _precursors {
+            get {
+                return ResourceManager.GetString("_precursors", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Protein-level FDR threshold (optional).
         /// </summary>

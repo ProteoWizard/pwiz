@@ -463,6 +463,12 @@
   <data name="Program_LibraryBuildError_FASTA_file_not_found___0_" xml:space="preserve">
     <value>FASTA file not found: {0}</value>
   </data>
+  <data name="Program_LibraryBuildError_Precursor_table_not_found___0_" xml:space="preserve">
+    <value>Precursor table not found: {0}</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_" xml:space="preserve">
+    <value>{0} and {1} both name what to predict; give one or the other.</value>
+  </data>
   <data name="Program_LibraryBuildError_Model_file_not_found___0_" xml:space="preserve">
     <value>Model file not found: {0}</value>
   </data>
