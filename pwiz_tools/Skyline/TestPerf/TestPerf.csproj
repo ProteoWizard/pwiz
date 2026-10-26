@@ -54,6 +54,8 @@
     <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
     <ProjectReference Include="..\Skyline.csproj" />
     <ProjectReference Include="..\SkylineTool\SkylineTool.csproj" />
+    <!-- The Osprey Search perf test drives the wizard with OspreySearchTest's public helpers. -->
+    <ProjectReference Include="..\TestFunctional\TestFunctional.csproj" />
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj" />
     <ProjectReference Include="..\TestUtil\TestUtil.csproj" />
   </ItemGroup>

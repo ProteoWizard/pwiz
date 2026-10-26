@@ -35,6 +35,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBack = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.wizardPages = new WizardPages();
+            this.titlePanel = new System.Windows.Forms.Panel();
+            this.lblTitle = new System.Windows.Forms.Label();
             this.dataFilesPage = new System.Windows.Forms.TabPage();
             this.lblDataFiles = new System.Windows.Forms.Label();
             this.fastaPage = new System.Windows.Forms.TabPage();
@@ -42,6 +44,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbUseExistingLibrary = new System.Windows.Forms.CheckBox();
             this.tbxLibraryPath = new System.Windows.Forms.TextBox();
             this.btnBrowseLibrary = new System.Windows.Forms.Button();
+            this.libraryModelPage = new System.Windows.Forms.TabPage();
+            this.lblLibraryModel = new System.Windows.Forms.Label();
+            this.lblModel = new System.Windows.Forms.Label();
+            this.comboModel = new System.Windows.Forms.ComboBox();
+            this.radioUseExistingModel = new System.Windows.Forms.RadioButton();
+            this.radioTuneModel = new System.Windows.Forms.RadioButton();
+            this.listTuningFiles = new System.Windows.Forms.CheckedListBox();
+            this.btnBrowseTuningFiles = new System.Windows.Forms.Button();
+            this.cbChooseFromSearchedFiles = new System.Windows.Forms.CheckBox();
+            this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.modificationsPage = new System.Windows.Forms.TabPage();
             this.lblModifications = new System.Windows.Forms.Label();
             this.lblFixedMods = new System.Windows.Forms.Label();
@@ -69,7 +81,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.numThreads = new System.Windows.Forms.NumericUpDown();
             this.runSearchPage = new System.Windows.Forms.TabPage();
             this.wizardPages.SuspendLayout();
+            this.titlePanel.SuspendLayout();
             this.fastaPage.SuspendLayout();
+            this.libraryModelPage.SuspendLayout();
             this.modificationsPage.SuspendLayout();
             this.searchSettingsPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numFragmentTolerance)).BeginInit();
@@ -102,11 +116,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.wizardPages, "wizardPages");
             this.wizardPages.Controls.Add(this.dataFilesPage);
             this.wizardPages.Controls.Add(this.fastaPage);
+            this.wizardPages.Controls.Add(this.libraryModelPage);
             this.wizardPages.Controls.Add(this.modificationsPage);
             this.wizardPages.Controls.Add(this.searchSettingsPage);
             this.wizardPages.Controls.Add(this.runSearchPage);
             this.wizardPages.Name = "wizardPages";
             this.wizardPages.SelectedIndex = 0;
+            this.wizardPages.SelectedIndexChanged += new System.EventHandler(this.wizardPages_SelectedIndexChanged);
+            //
+            // titlePanel
+            //
+            this.titlePanel.BackColor = System.Drawing.Color.GhostWhite;
+            this.titlePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.titlePanel.Controls.Add(this.lblTitle);
+            resources.ApplyResources(this.titlePanel, "titlePanel");
+            this.titlePanel.Name = "titlePanel";
+            //
+            // lblTitle
+            //
+            resources.ApplyResources(this.lblTitle, "lblTitle");
+            this.lblTitle.Name = "lblTitle";
             //
             // dataFilesPage
             //
@@ -153,6 +182,83 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBrowseLibrary.Name = "btnBrowseLibrary";
             this.btnBrowseLibrary.UseVisualStyleBackColor = true;
             this.btnBrowseLibrary.Click += new System.EventHandler(this.btnBrowseLibrary_Click);
+            //
+            // libraryModelPage
+            //
+            this.libraryModelPage.Controls.Add(this.cbUseGpu);
+            this.libraryModelPage.Controls.Add(this.cbChooseFromSearchedFiles);
+            this.libraryModelPage.Controls.Add(this.btnBrowseTuningFiles);
+            this.libraryModelPage.Controls.Add(this.listTuningFiles);
+            this.libraryModelPage.Controls.Add(this.radioTuneModel);
+            this.libraryModelPage.Controls.Add(this.radioUseExistingModel);
+            this.libraryModelPage.Controls.Add(this.comboModel);
+            this.libraryModelPage.Controls.Add(this.lblModel);
+            this.libraryModelPage.Controls.Add(this.lblLibraryModel);
+            resources.ApplyResources(this.libraryModelPage, "libraryModelPage");
+            this.libraryModelPage.Name = "libraryModelPage";
+            this.libraryModelPage.UseVisualStyleBackColor = true;
+            //
+            // lblLibraryModel
+            //
+            resources.ApplyResources(this.lblLibraryModel, "lblLibraryModel");
+            this.lblLibraryModel.Name = "lblLibraryModel";
+            //
+            // lblModel
+            //
+            resources.ApplyResources(this.lblModel, "lblModel");
+            this.lblModel.Name = "lblModel";
+            //
+            // comboModel
+            //
+            resources.ApplyResources(this.comboModel, "comboModel");
+            this.comboModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboModel.FormattingEnabled = true;
+            this.comboModel.Name = "comboModel";
+            this.comboModel.SelectedIndexChanged += new System.EventHandler(this.comboModel_SelectedIndexChanged);
+            //
+            // radioUseExistingModel
+            //
+            resources.ApplyResources(this.radioUseExistingModel, "radioUseExistingModel");
+            this.radioUseExistingModel.Checked = true;
+            this.radioUseExistingModel.Name = "radioUseExistingModel";
+            this.radioUseExistingModel.TabStop = true;
+            this.radioUseExistingModel.UseVisualStyleBackColor = true;
+            this.radioUseExistingModel.CheckedChanged += new System.EventHandler(this.radioModel_CheckedChanged);
+            //
+            // radioTuneModel
+            //
+            resources.ApplyResources(this.radioTuneModel, "radioTuneModel");
+            this.radioTuneModel.Name = "radioTuneModel";
+            this.radioTuneModel.UseVisualStyleBackColor = true;
+            this.radioTuneModel.CheckedChanged += new System.EventHandler(this.radioModel_CheckedChanged);
+            //
+            // listTuningFiles
+            //
+            resources.ApplyResources(this.listTuningFiles, "listTuningFiles");
+            this.listTuningFiles.CheckOnClick = true;
+            this.listTuningFiles.FormattingEnabled = true;
+            this.listTuningFiles.Name = "listTuningFiles";
+            //
+            // btnBrowseTuningFiles
+            //
+            resources.ApplyResources(this.btnBrowseTuningFiles, "btnBrowseTuningFiles");
+            this.btnBrowseTuningFiles.Name = "btnBrowseTuningFiles";
+            this.btnBrowseTuningFiles.UseVisualStyleBackColor = true;
+            this.btnBrowseTuningFiles.Click += new System.EventHandler(this.btnBrowseTuningFiles_Click);
+            //
+            // cbChooseFromSearchedFiles
+            //
+            resources.ApplyResources(this.cbChooseFromSearchedFiles, "cbChooseFromSearchedFiles");
+            this.cbChooseFromSearchedFiles.Name = "cbChooseFromSearchedFiles";
+            this.cbChooseFromSearchedFiles.UseVisualStyleBackColor = true;
+            this.cbChooseFromSearchedFiles.CheckedChanged += new System.EventHandler(this.cbChooseFromSearchedFiles_CheckedChanged);
+            //
+            // cbUseGpu
+            //
+            resources.ApplyResources(this.cbUseGpu, "cbUseGpu");
+            this.cbUseGpu.Name = "cbUseGpu";
+            this.cbUseGpu.UseVisualStyleBackColor = true;
+            this.cbUseGpu.CheckedChanged += new System.EventHandler(this.cbUseGpu_CheckedChanged);
             //
             // modificationsPage
             //
@@ -336,6 +442,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.titlePanel);
             this.Controls.Add(this.wizardPages);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnBack);
@@ -345,8 +452,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Name = "OspreySearchDlg";
             this.ShowInTaskbar = false;
             this.wizardPages.ResumeLayout(false);
+            this.titlePanel.ResumeLayout(false);
+            this.titlePanel.PerformLayout();
             this.fastaPage.ResumeLayout(false);
             this.fastaPage.PerformLayout();
+            this.libraryModelPage.ResumeLayout(false);
+            this.libraryModelPage.PerformLayout();
             this.modificationsPage.ResumeLayout(false);
             this.searchSettingsPage.ResumeLayout(false);
             this.searchSettingsPage.PerformLayout();
@@ -361,6 +472,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button btnBack;
         private System.Windows.Forms.Button btnNext;
         private WizardPages wizardPages;
+        private System.Windows.Forms.Panel titlePanel;
+        private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.TabPage dataFilesPage;
         private System.Windows.Forms.Label lblDataFiles;
         private System.Windows.Forms.TabPage fastaPage;
@@ -368,6 +481,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.CheckBox cbUseExistingLibrary;
         private System.Windows.Forms.TextBox tbxLibraryPath;
         private System.Windows.Forms.Button btnBrowseLibrary;
+        private System.Windows.Forms.TabPage libraryModelPage;
+        private System.Windows.Forms.Label lblLibraryModel;
+        private System.Windows.Forms.Label lblModel;
+        private System.Windows.Forms.ComboBox comboModel;
+        private System.Windows.Forms.RadioButton radioUseExistingModel;
+        private System.Windows.Forms.RadioButton radioTuneModel;
+        private System.Windows.Forms.CheckedListBox listTuningFiles;
+        private System.Windows.Forms.Button btnBrowseTuningFiles;
+        private System.Windows.Forms.CheckBox cbChooseFromSearchedFiles;
+        private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.TabPage modificationsPage;
         private System.Windows.Forms.Label lblModifications;
         private System.Windows.Forms.Label lblFixedMods;

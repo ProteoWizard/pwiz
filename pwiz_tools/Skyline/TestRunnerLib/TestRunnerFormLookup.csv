@@ -93,6 +93,7 @@ DiannSearchDlg.SearchSettingsPage,TestDiannSearch
 DiannSearchDlg.RunPage,TestDiannSearch
 OspreySearchDlg.DataFilesPage,TestOspreySearch
 OspreySearchDlg.FastaPage,TestOspreySearch
+OspreySearchDlg.LibraryModelPage,TestOspreySearchTuning
 OspreySearchDlg.ModificationsPage,TestOspreySearch
 OspreySearchDlg.SearchSettingsPage,TestOspreySearch
 OspreySearchDlg.RunPage,TestOspreySearch
