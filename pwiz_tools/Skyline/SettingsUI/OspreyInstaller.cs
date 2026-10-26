@@ -48,9 +48,32 @@ namespace pwiz.Skyline.SettingsUI
             if (File.Exists(OspreyHelpers.OspreyBinary))
                 return true;
 
+            // The package this build installs: the pinned one, or for a daily or developer build the
+            // last successful master build, which is a request to TeamCity (OspreyHelpers.UsesPinnedPackage)
+            var package = default(FileDownloadInfo);
+            try
+            {
+                using (var longWaitDlg = new LongWaitDlg(allowCancel: false))
+                {
+                    longWaitDlg.Message = SkylineResources.OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build;
+                    longWaitDlg.PerformWork(parent, 500, () => package = OspreyHelpers.GetPackageDownloadInfo());
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(parent, SkylineResources.SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_, x);
+                return false;
+            }
+            // Installed already with its registration lost: registered again rather than downloaded again
+            if (File.Exists(package.ToolPath))
+            {
+                OspreyHelpers.RegisterPackage(package);
+                return true;
+            }
+
             var choice = MultiButtonMsgDlg.Show(parent,
                 string.Format(SkylineResources.SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_,
-                    OspreyHelpers.OSPREY_VERSION, OspreyHelpers.OSPREY_DOWNLOAD_SIZE_MB),
+                    OspreyHelpers.GetPackageVersion(package), OspreyHelpers.OSPREY_DOWNLOAD_SIZE_MB),
                 SkylineResources.SkylineWindow_EnsureOspreyInstalled_Download);
             if (choice != DialogResult.OK)
                 return false;
@@ -61,7 +84,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     longWaitDlg.Text = SkylineResources.SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey;
                     longWaitDlg.PerformWork(parent, 500, broker =>
-                        SimpleFileDownloader.DownloadRequiredFiles(OspreyHelpers.FilesToDownload, broker));
+                        SimpleFileDownloader.DownloadRequiredFiles(new[] { package }, broker));
                 }
             }
             catch (Exception x)

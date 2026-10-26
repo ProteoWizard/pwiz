@@ -87,7 +87,9 @@ namespace pwiz.SkylineTestFunctional
             const string bogusPath = @"C:\__osprey_not_installed__\Osprey.exe";
             OspreyTestUtil.RegisterOsprey(bogusPath);
             var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
-            AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.OSPREY_VERSION);
+            // A developer build, as the tests run, offers the latest successful master build; a release the pinned one
+            AssertEx.IsFalse(OspreyHelpers.UsesPinnedPackage);
+            AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.GetPackageVersion(OspreyHelpers.GetPackageDownloadInfo()));
             OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
             AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
 
@@ -403,6 +405,9 @@ namespace pwiz.SkylineTestFunctional
             var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
             AssertEx.IsTrue(downloadInfo.Filename.StartsWith(@"Osprey-") && downloadInfo.Filename.EndsWith(@"-win-x64"),
                 @"unexpected Osprey package name " + downloadInfo.Filename);
+            // The version the prompt names is the folder name's middle: the pinned package's is the pinned version
+            AssertEx.AreEqual(OspreyHelpers.OSPREY_VERSION, OspreyHelpers.GetPackageVersion(OspreyHelpers.OspreyDownloadInfo));
+            AssertEx.AreEqual(@"Osprey-" + OspreyHelpers.GetPackageVersion(downloadInfo) + @"-win-x64", downloadInfo.Filename);
             AssertEx.AreEqual(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), downloadInfo.Filename, OspreyHelpers.OSPREY_EXE),
                 downloadInfo.ToolPath);
             using var client = new HttpClientWithProgress();

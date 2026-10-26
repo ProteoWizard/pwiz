@@ -59,11 +59,12 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>The compressed size of the Osprey package, stated before the download starts.</summary>
         public const int OSPREY_DOWNLOAD_SIZE_MB = 150;
 
-        // Osprey's TeamCity build. Tests download from it as SkylineNightly downloads SkylineTester:
-        // the latest successful build on a designated branch, found through the REST API, which the
-        // Osprey project opens to guest access. Until Osprey has a release process, the pinned
-        // package is the TeamCity build that produced OSPREY_VERSION, addressed by build id, which
-        // stays valid only while that build is kept (pinned) on the server.
+        // Osprey's TeamCity build. Tests, developer builds and master dailies download from it as
+        // SkylineNightly downloads SkylineTester: the latest successful build on a designated branch,
+        // found through the REST API, which the Osprey project opens to guest access. A release and
+        // its FEATURE COMPLETE dailies install the pinned package, the TeamCity build that produced
+        // OSPREY_VERSION, addressed by build id; the release process sets the pin and keeps (pins)
+        // that build on the server, since an unpinned build is cleaned up (release-guide.md).
         public const string TEAMCITY_SERVER = @"https://teamcity.labkey.org";
         public const string TEAMCITY_BUILD_TYPE = @"ProteoWizard_OspreyWindowsNet";
         public const string TEAMCITY_BRANCH = @"master";
@@ -90,6 +91,48 @@ namespace pwiz.Skyline.Model.Lib
         public static FileDownloadInfo OspreyDownloadInfo => CreateDownloadInfo(OSPREY_FILENAME, OSPREY_DOWNLOAD_URL);
 
         public static FileDownloadInfo[] FilesToDownload => new[] { OspreyDownloadInfo };
+
+        /// <summary>
+        /// Whether this build installs the pinned package: a release (build 0) and the FEATURE COMPLETE
+        /// dailies of a release branch (build 9), whose pin is set when the branch is cut
+        /// (release-guide.md). A master daily and a developer build take the last successful master
+        /// build instead, found when Osprey is first needed, so the development line never updates
+        /// the pin by hand and a daily built after an Osprey change gets the Osprey it was built with.
+        /// </summary>
+        public static bool UsesPinnedPackage => !Install.IsDeveloperInstall && (Install.Build == 0 || Install.Build == 9);
+
+        /// <summary>
+        /// The package this build installs: the pinned one, or the latest successful master build,
+        /// which asks TeamCity (<see cref="GetLatestBuildDownloadInfo"/>) and throws when it cannot.
+        /// </summary>
+        public static FileDownloadInfo GetPackageDownloadInfo()
+        {
+            return UsesPinnedPackage ? OspreyDownloadInfo : GetLatestBuildDownloadInfo();
+        }
+
+        /// <summary>The version in a package's folder name, Osprey-&lt;version&gt;-win-x64, for the user.</summary>
+        public static string GetPackageVersion(FileDownloadInfo package)
+        {
+            const string prefix = @"Osprey-";
+            string suffix = OSPREY_ZIP_SUFFIX.Substring(0, OSPREY_ZIP_SUFFIX.Length - 4);
+            string name = package.Filename;
+            if (name.StartsWith(prefix) && name.EndsWith(suffix) && name.Length > prefix.Length + suffix.Length)
+                return name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length);
+            return name;
+        }
+
+        /// <summary>
+        /// Registers an installed package as the Osprey Skyline runs, as its download would have, in
+        /// place of any earlier registration: for a package found in the Tools folder after its
+        /// registration was lost.
+        /// </summary>
+        public static void RegisterPackage(FileDownloadInfo package)
+        {
+            var tools = Settings.Default.SearchToolList;
+            if (tools.ContainsKey(SearchToolType.Osprey))
+                tools.Remove(tools[SearchToolType.Osprey]);
+            tools.Add(new SearchTool(package.ToolType, package.ToolPath, package.ToolExtraArgs, package.InstallPath, true));
+        }
 
         /// <summary>
         /// The download of the latest successful Osprey build on <see cref="TEAMCITY_BRANCH"/>, which
