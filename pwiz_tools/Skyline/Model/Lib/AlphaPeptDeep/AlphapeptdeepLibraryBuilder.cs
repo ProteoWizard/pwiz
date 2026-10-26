@@ -24,53 +24,38 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using pwiz.BiblioSpec;
-using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using TorchSharp;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
     /// <summary>
     /// Builds a library of AlphaPeptDeep MS2 and RT predictions for the document's precursors. The
-    /// models run in process through CarafeSharp's TorchSharp port of peptdeep, on an NVIDIA GPU when
-    /// the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on the CPU. The predictions are written as the predict.speclib.tsv
-    /// that peptdeep 1.5.0's "cmd-flow --task_workflow library" wrote when Skyline ran it in Python,
-    /// using that workflow's defaults, and are then imported through BlibBuild as before. The library
-    /// keeps the predicted CCS, which Skyline converts to ion mobility with each data file's calibration.
+    /// precursors go to Osprey as the table Skyline once wrote for peptdeep, and Osprey's PredictLibrary
+    /// phase (CarafeSharp's TorchSharp port of peptdeep, in Osprey's own process) predicts them, on an
+    /// NVIDIA GPU when the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on
+    /// the CPU. The predictions come back as the predict.speclib.tsv that peptdeep 1.5.0's
+    /// "cmd-flow --task_workflow library" wrote when Skyline ran it in Python, using that workflow's
+    /// defaults, and are then imported through BlibBuild as before. The library keeps the predicted
+    /// CCS, which Skyline converts to ion mobility with each data file's calibration.
     /// </summary>
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
 
-        // peptdeep 1.5.0 library defaults (model_mgr and library--output_tsv in its default settings.yaml).
-        // With them CarafeSharp reproduces the libraries peptdeep built for TestAlphaPeptDeepBuildLibrary:
-        // the same fragments, intensities within 1e-5 and iRT within 0.02.
-        private const double NCE = 30;
-        private const string INSTRUMENT = @"Lumos";
-        private const double MIN_FRAGMENT_MZ = 200;
-        private const double MAX_FRAGMENT_MZ = 2000;
-        private const float MIN_RELATIVE_INTENSITY = 0.001f;
-        private const int MAX_FRAGMENTS = 12;
-
-        // Precursors predicted between progress updates and cancellation checks
-        private const int PRECURSORS_PER_CHUNK = 1000;
-
         // Processing folders
         private const string PREFIX_WORKDIR = "APD";
         private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
-        private const string CARAFE_MODEL_DIR = @"carafe_model";
 
-        // Processing intermediate file names
+        // Processing intermediate file names. Osprey takes an output .blib path and writes the TSV
+        // beside it as <stem>.predicted.speclib.tsv (OspreyHelpers.GetPredictedTablePath).
         private const string INPUT_FILE_NAME = @"input.tsv";
-        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
+        private const string OSPREY_OUTPUT_FILE_NAME = @"predict.blib";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_sky.speclib.tsv";
 
         // Column names for AlphaPeptDeep
@@ -86,18 +71,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string NORMALIZED_RT = "RT";
         private const string CCS = "CCS";
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
-
-        // Columns of the predict.speclib.tsv peptdeep wrote, without its IonMobility, the timsTOF 1/K0 of the
-        // CCS, which the library did not keep
-        private static readonly string[] SpectralLibraryColumnNames =
-        {
-            MODIFIED_PEPTIDE, @"PrecursorCharge", NORMALIZED_RT, CCS, @"StrippedPeptide", @"PrecursorMz", @"Decoy",
-            @"FragmentType", @"FragmentMz", @"RelativeIntensity", @"FragmentCharge", @"FragmentNumber",
-            @"FragmentLossType"
-        };
-
-        private static readonly string[] FRAGMENT_TYPES = { @"b", @"b", @"y", @"y" };
-        private static readonly int[] FRAGMENT_CHARGES = { 1, 2, 1, 2 };
 
         protected override string ToolName => ALPHAPEPTDEEP;
 
@@ -153,15 +126,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public static readonly LibraryBuilderModificationSupport MODEL_MODIFICATION_SUPPORT =
             new LibraryBuilderModificationSupport(MODEL_SUPPORTED_UNIMODS);
 
-        /// <summary>
-        /// The pinned AlphaPeptDeep pretrained models, which the build places beside the Skyline assembly.
-        /// </summary>
-        public static string PretrainedModelsPath =>
-            Path.Combine(BundledFilesDirectory, PretrainedModels.BUNDLED_RELATIVE_PATH);
-
-        private static string BundledFilesDirectory =>
-            Path.GetDirectoryName(typeof(AlphapeptdeepLibraryBuilder).Assembly.Location) ?? string.Empty;
-
         public LibrarySpec LibrarySpec { get; private set; }
 
         /// <summary>
@@ -181,13 +145,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         /// <summary>
-        /// The libtorch runtimes to predict with.
+        /// The libtorch runtimes Osprey predicts with: where the CUDA runtime is installed, passed to Osprey.
         /// </summary>
         public TorchRuntimes TorchRuntimes { get; set; } = new TorchRuntimes();
 
         /// <summary>
-        /// Whether to predict on the GPU, which needs the CUDA runtime installed. Otherwise, and when this
-        /// process already predicted on the CPU, prediction runs on the CPU.
+        /// Whether to predict on the GPU, which needs the CUDA runtime installed and is then a requirement
+        /// of the run; otherwise prediction runs on the CPU.
         /// </summary>
         public bool UseGpu { get; set; }
 
@@ -208,7 +172,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
 
-        public string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
+        /// <summary>The output Osprey is given, whose stem names the TSV it writes.</summary>
+        private string OspreyOutputPath => Path.Combine(OutputSpectralLibsDir, OSPREY_OUTPUT_FILE_NAME);
+
+        public string OutputSpectraLibFilepath => OspreyHelpers.GetPredictedTablePath(OspreyOutputPath);
         public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
@@ -248,6 +215,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             try
             {
                 RunAlphapeptdeep(progress, ref progressStatus);
+                if (progressStatus.IsCanceled)
+                    return false;
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
                 return true;
             }
@@ -266,8 +235,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-            PredictSpectralLibrary(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
+            ExecuteOsprey(progress, ref progressStatus);
+            // ProcessRunner advanced the segment itself on Osprey's final 100% line (or at its exit),
+            // and reported the cancel, if any, as the status
+            if (progressStatus.IsCanceled)
+                return;
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
@@ -275,206 +247,40 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         /// <summary>
         /// Predicts fragment intensities and retention times (iRT, or minutes with a fine-tuned RT model)
-        /// for every precursor in the input file and writes them
-        /// to <see cref="OutputSpectraLibFilepath"/>.
+        /// for every precursor in the input file by running Osprey's PredictLibrary phase over it
+        /// (<see cref="OspreyHelpers.BuildPredictLibraryCommandLine"/>), which writes them to
+        /// <see cref="OutputSpectraLibFilepath"/>. Osprey chooses the libtorch runtime in its own process,
+        /// so a build on the GPU needs no restart of Skyline; its console lines are the status messages,
+        /// its NN% lines the bar, and its output is teed to a log in the working folder.
         /// </summary>
-        private void PredictSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private void ExecuteOsprey(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep));
+            if (!File.Exists(OspreyHelpers.OspreyBinary))
+            {
+                throw new IOException(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_,
+                    OspreyHelpers.OspreyBinary));
+            }
             var timer = Stopwatch.StartNew();
-            var precursors = ReadPrecursorInputFile();
+            Directory.CreateDirectory(OutputSpectralLibsDir);
+            string args = OspreyHelpers.BuildPredictLibraryCommandLine(InputFilePath, OspreyOutputPath, CarafeModelPath,
+                UseGpu, TorchRuntimes.RuntimesDirectory, LocalizationHelper.CurrentUICulture.Name);
             try
             {
-                // Before anything touches TorchSharp, which would otherwise look for libtorch beside the executable
-                var runtime = TorchRuntimes.Load(UseGpu);
-                var device = TorchDevice.Resolve(UseGpu && runtime.IsCuda ? TorchDevice.GPU : TorchDevice.CPU, out _);
-                Messages.WriteAsyncUserMessage(device.type == DeviceType.CUDA
-                    ? ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU
-                    : ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU);
-                var pretrained = PretrainedModels.Open(PretrainedModelsPath);
-                Directory.CreateDirectory(OutputSpectralLibsDir);
-                var settings = new LibrarySettings { Nce = NCE, Instrument = INSTRUMENT };
-                var modelDirectory = OpenCarafeModel(settings);
-                if (modelDirectory == null)
-                    settings.RtModelType = RtModelType.alphapeptdeep;
-                string ms2Path = modelDirectory?.GetMs2ModelPath(settings.TrainingType);
-                using var ms2 = ms2Path != null ? Ms2Model.FromFile(ms2Path, device) : Ms2Model.FromPretrained(pretrained, device);
-                using var rt = new RtPredictorLoader(() => pretrained, device)
-                {
-                    FineTunedPath = modelDirectory?.GetRtModelPath(settings.TrainingType),
-                    RtModelType = settings.RtModelType,
-                    DefaultRtModelType = LibrarySettings.DEFAULT_RT_MODEL,
-                    ModelDirectory = modelDirectory?.DirectoryPath,
-                    RtMax = settings.RtMax,
-                    ChronologerDirectory = Path.Combine(BundledFilesDirectory, ChronologerFiles.BUNDLED_RELATIVE_DIRECTORY),
-                }.Load();
-                // A fine-tuned model file holds no CCS model, as CarafeSharp does not fine-tune it
-                using var ccs = CcsModel.FromPretrained(pretrained, device);
-                // A model of a fraction of the gradient gives minutes on the training runs' gradient, as CarafeSharp
-                // writes them; the pretrained models' predictions, and a Chronologer's hydrophobic index, give iRT
-                double libraryRtMax = rt.PredictsNormalizedRt ? settings.RtMax : 0;
-                var irt = libraryRtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
-                using var writer = new StreamWriter(OutputSpectraLibFilepath, false, new UTF8Encoding(false));
-                writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR, SpectralLibraryColumnNames));
-                for (int start = 0; start < precursors.Count; start += PRECURSORS_PER_CHUNK)
-                {
-                    if (progress.IsCanceled)
-                        throw new OperationCanceledException();
-
-                    var chunk = precursors.Skip(start).Take(PRECURSORS_PER_CHUNK).ToList();
-                    var spectra = ms2.Predict(chunk.Select(p =>
-                        new Ms2Request(p, settings.Nce, settings.Instrument, settings.Activation, settings.Analyzer)).ToList());
-                    var rtPredictions = rt.Predict(chunk.Select(p => p.Peptide).ToList());
-                    var ccsPredictions = ccs.Predict(chunk);
-                    for (int i = 0; i < chunk.Count; i++)
-                    {
-                        WriteSpectrum(writer, spectra[i],
-                            LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[i], libraryRtMax, irt.Slope, irt.Intercept),
-                            ccsPredictions[i]);
-                    }
-
-                    progress.UpdateProgress(progressStatus = progressStatus
-                        .ChangePercentComplete((start + chunk.Count) * 100 / precursors.Count));
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
+                OspreyHelpers.RunOsprey(args, WorkDir, progress, ref progressStatus, true);
             }
             catch (Exception ex)
             {
                 throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_, ex);
             }
+            if (progressStatus.IsCanceled)
+                return;
+            if (!File.Exists(OutputSpectraLibFilepath))
+                throw new FileNotFoundException(ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_, OutputSpectraLibFilepath);
             timer.Stop();
             Messages.WriteAsyncUserMessage(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_,
                 timer.Elapsed.Minutes, timer.Elapsed.Seconds));
-        }
-
-        /// <summary>
-        /// Opens <see cref="CarafeModelPath"/>, checking every entry, unpacks its models into the work
-        /// folder, and takes into <paramref name="settings"/> what CarafeSharp takes from the file when it
-        /// predicts a library with it: the training run's NCE, instrument, activation, analyzer and rt_max,
-        /// and the kind of RT model. Null when no model file is given.
-        /// </summary>
-        private CarafeModelDirectory OpenCarafeModel(LibrarySettings settings)
-        {
-            if (string.IsNullOrEmpty(CarafeModelPath))
-                return null;
-            var modelFile = CarafeModelFile.Open(CarafeModelPath);
-            var modelDirectory = modelFile.Extract(Path.Combine(WorkDir, CARAFE_MODEL_DIR));
-            modelFile.ApplyPredictionDefaults(settings);
-            Messages.WriteAsyncUserMessage(string.Format(
-                ModelResources.AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_,
-                CarafeModelPath, modelFile.Describe()));
-            return modelDirectory;
-        }
-
-        private List<PrecursorForm> ReadPrecursorInputFile()
-        {
-            var precursors = new List<PrecursorForm>();
-            using var reader = new DsvFileReader(InputFilePath, TextUtil.SEPARATOR_TSV);
-            while (null != reader.ReadLine())
-            {
-                var peptide = PeptideForm.FromAlphabase(reader.GetFieldByName(SEQUENCE),
-                    reader.GetFieldByName(MODS), reader.GetFieldByName(MOD_SITES));
-                precursors.Add(new PrecursorForm(peptide,
-                    int.Parse(reader.GetFieldByName(CHARGE), CultureInfo.InvariantCulture)));
-            }
-            return precursors;
-        }
-
-        /// <summary>
-        /// Writes one precursor's rows the way peptdeep translated its predictions to TSV: b and y ions of
-        /// charge 1 and 2 (not above the precursor charge) within the fragment m/z range, renormalized to the
-        /// most intense of them, at least <see cref="MIN_RELATIVE_INTENSITY"/>, the
-        /// <see cref="MAX_FRAGMENTS"/> most intense, in decreasing intensity.
-        /// </summary>
-        private static void WriteSpectrum(TextWriter writer, Ms2Prediction spectrum, double irt, double ccs)
-        {
-            var precursor = spectrum.Precursor;
-            var peptide = precursor.Peptide;
-            var fragmentMzs = AlphabaseFragmentMz.Calculate(precursor);
-            var fragments = new List<(int Row, int Column, float Mz, float Intensity)>();
-            for (int row = 0; row < spectrum.RowCount; row++)
-            {
-                for (int column = 0; column < AlphabaseFragmentMz.COLUMN_COUNT; column++)
-                {
-                    float intensity = spectrum.Get(row, column);
-                    double mz = fragmentMzs[row * AlphabaseFragmentMz.COLUMN_COUNT + column];
-                    if (FRAGMENT_CHARGES[column] > precursor.Charge || intensity <= 0 ||
-                        mz < MIN_FRAGMENT_MZ || mz > MAX_FRAGMENT_MZ)
-                    {
-                        continue;
-                    }
-                    fragments.Add((row, column, (float)mz, intensity));
-                }
-            }
-            if (fragments.Count == 0)
-                return;
-
-            float maxIntensity = fragments.Max(f => f.Intensity);
-            string precursorColumns = string.Join(TextUtil.SEPARATOR_TSV_STR,
-                GetModifiedPeptide(peptide),
-                precursor.Charge.ToString(CultureInfo.InvariantCulture),
-                irt.ToString(CultureInfo.InvariantCulture),
-                ccs.ToString(CultureInfo.InvariantCulture),
-                peptide.Sequence,
-                GetPrecursorMz(precursor).ToString(CultureInfo.InvariantCulture),
-                @"0");
-            foreach (var fragment in fragments
-                         .Select(f => (f.Row, f.Column, f.Mz, Intensity: f.Intensity / maxIntensity))
-                         .Where(f => f.Intensity >= MIN_RELATIVE_INTENSITY)
-                         .OrderByDescending(f => f.Intensity)
-                         .Take(MAX_FRAGMENTS))
-            {
-                string type = FRAGMENT_TYPES[fragment.Column];
-                int number = type == @"b" ? fragment.Row + 1 : peptide.Length - 1 - fragment.Row;
-                writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR,
-                    precursorColumns,
-                    type,
-                    fragment.Mz.ToString(CultureInfo.InvariantCulture),
-                    fragment.Intensity.ToString(CultureInfo.InvariantCulture),
-                    FRAGMENT_CHARGES[fragment.Column].ToString(CultureInfo.InvariantCulture),
-                    number.ToString(CultureInfo.InvariantCulture),
-                    @"noloss"));
-            }
-        }
-
-        /// <summary>
-        /// The peptide in peptdeep's DIA-NN notation with UniMod ids, e.g. _S[UniMod:21]KYLINE_. A terminal
-        /// modification follows the terminal residue, as peptdeep writes it.
-        /// </summary>
-        private static string GetModifiedPeptide(PeptideForm peptide)
-        {
-            var modsAfterResidue = new List<string>[peptide.Length];
-            for (int i = 0; i < peptide.ModNames.Count; i++)
-            {
-                int site = peptide.ModSites[i];
-                int index = site == 0 ? 0 : site == -1 ? peptide.Length - 1 : site - 1;
-                modsAfterResidue[index] ??= new List<string>();
-                modsAfterResidue[index].Add(string.Format(CultureInfo.InvariantCulture, @"[UniMod:{0}]",
-                    ModificationTable.Get(peptide.ModNames[i]).UnimodId));
-            }
-            var result = new StringBuilder(@"_");
-            for (int i = 0; i < peptide.Length; i++)
-            {
-                result.Append(peptide.Sequence[i]);
-                if (modsAfterResidue[i] != null)
-                    result.Append(string.Concat(modsAfterResidue[i]));
-            }
-            return result.Append(@"_").ToString();
-        }
-
-        /// <summary>
-        /// Monoisotopic precursor m/z from alphabase's masses, which peptdeep reported.
-        /// </summary>
-        private static double GetPrecursorMz(PrecursorForm precursor)
-        {
-            var peptide = precursor.Peptide;
-            double mass = peptide.Sequence.Sum(AlphabaseMasses.GetResidueMass) + AlphabaseMasses.H2O +
-                          peptide.ModNames.Sum(name => ModificationTable.Get(name).Mass);
-            return mass / precursor.Charge + AlphabaseMasses.PROTON;
         }
 
         public void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)

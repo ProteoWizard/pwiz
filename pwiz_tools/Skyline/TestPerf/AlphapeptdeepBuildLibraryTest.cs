@@ -62,6 +62,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            // Osprey predicts the library: a local build, or the latest TeamCity build downloaded
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             TestEmptyDocumentMessage();
 
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));

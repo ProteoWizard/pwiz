@@ -323,16 +323,6 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline chooses between the CPU and the GPU when it first predicts a library. Restart Skyline to change it..
-        /// </summary>
-        public static string BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_ {
-            get {
-                return ResourceManager.GetString("BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_G" +
-                        "PU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
         /// </summary>
         public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {

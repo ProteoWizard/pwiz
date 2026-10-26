@@ -110,8 +110,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
-            // Prediction runs in this process, so the choice closes once a runtime is loaded
-            _useGpuDriver = new UseGpuDriver(this, cbUseGpu, true);
+            _useGpuDriver = new UseGpuDriver(this, cbUseGpu);
 
             Icon = Resources.Skyline;
 
@@ -295,6 +294,10 @@ namespace pwiz.Skyline.SettingsUI
             var carafeModel = CarafeModel;
             if (!carafeModel.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, carafeModel.FilePath))
                 return false;
+            // Osprey predicts the library; offered for download when the source was chosen, and
+            // again here in case that was declined
+            if (!OspreyInstaller.EnsureInstalled(this))
+                return false;
 
             var builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
@@ -311,7 +314,6 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
             Builder = builder;
-            // Not when this session already loaded a runtime, which decides the box
             _useGpuDriver.SaveSetting();
 
             return true;
@@ -999,8 +1001,10 @@ namespace pwiz.Skyline.SettingsUI
                 if (radioAlphaSource.Checked)
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
-                    // Only now, so the NVIDIA driver is not loaded and the model files are not read
-                    // for the other library sources
+                    // Only now, so Osprey is not downloaded, the NVIDIA driver is not loaded and the
+                    // model files are not read for the other library sources. Osprey first: its
+                    // package lists the CUDA runtime the Use GPU box checks for.
+                    OspreyInstaller.EnsureInstalled(this);
                     _useGpuDriver.Update();
                     var unused = CarafeModelDriver;
                     UpdateModificationWarning();

@@ -97,7 +97,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            OspreySearchTest.RegisterOsprey(OspreySearchTest.EnsureOsprey(TestContext));
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             RunUI(() =>
             {
                 // The model list starts with the pretrained models alone

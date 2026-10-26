@@ -19,7 +19,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Core;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
@@ -45,6 +45,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Choosing the AlphaPeptDeep source installs Osprey, whose package lists the CUDA runtime
+            // the box checks for; nothing here predicts
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() => buildLibraryDlg.AlphaPeptDeep = true);
@@ -60,32 +63,27 @@ namespace pwiz.SkylineTestFunctional
                     @"Test GPU", @"6.1", @"7.0"));
 
             // A GPU that can predict, with no CUDA runtime installed, asks before downloading it
-            if (LibTorchRuntime.Loaded == null)
+            RunUI(() => buildLibraryDlg.TorchRuntimes = new TorchRuntimes
             {
-                RunUI(() => buildLibraryDlg.TorchRuntimes = new TorchRuntimes
-                {
-                    CudaDriver = new CudaDriver(12080, 89, @"Test GPU"),
-                    RuntimesDirectory = TestFilesDir.GetTestPath(@"libtorch")
-                });
-                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.UseGpu = true);
-                AssertEx.Contains(confirmDlg.Message, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime
-                    .Substring(0, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime.IndexOf('{')));
-                OkDialog(confirmDlg, confirmDlg.BtnCancelClick);
-                RunUI(() => Assert.IsFalse(buildLibraryDlg.UseGpu));
-            }
+                CudaDriver = new CudaDriver(12080, 89, @"Test GPU"),
+                RuntimesDirectory = TestFilesDir.GetTestPath(@"libtorch")
+            });
+            var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.UseGpu = true);
+            AssertEx.Contains(confirmDlg.Message, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime
+                .Substring(0, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime.IndexOf('{')));
+            OkDialog(confirmDlg, confirmDlg.BtnCancelClick);
+            RunUI(() => Assert.IsFalse(buildLibraryDlg.UseGpu));
 
             OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
             OkDialog(peptideSettings, peptideSettings.CancelDialog);
         }
 
         /// <summary>
-        /// Checks Use GPU with the given driver, before any runtime is loaded, and expects the message
+        /// Checks Use GPU with the given driver and expects the message
         /// saying why the GPU cannot predict, after which the box is unchecked again.
         /// </summary>
         private static void CheckUseGpuRefused(BuildLibraryDlg buildLibraryDlg, CudaDriver driver, string expectedMessage)
         {
-            if (LibTorchRuntime.Loaded != null)
-                expectedMessage = SettingsUIResources.BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_;
             RunUI(() =>
             {
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = driver };
