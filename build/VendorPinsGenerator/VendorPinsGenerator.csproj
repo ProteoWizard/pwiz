@@ -24,10 +24,54 @@
 
        The root is passed as $(PwizRepoDir) rather than $(PwizRepoRoot), which ends in a
        backslash: for a checkout at a drive root "P:\" would reach the generator as P:" because
-       a backslash before a closing quote escapes it. -->
-  <Target Name="RunVendorPinsGenerator">
+       a backslash before a closing quote escapes it.
+
+       Skipped while nothing the pins come from has changed: the archives (their SHA-256), the
+       pins JSON, this generator, and the last commit to touch each archive. That commit can
+       change without any file changing (a commit or checkout), so the HEAD commit stands in for
+       it, written to VendorPinsHeadFile only when it differs; every commit or checkout runs the
+       generator once. The generated file cannot be the Outputs: the generator rewrites it only
+       when its content changes, so after a no-op run it would stay older than the inputs and the
+       target would never skip again. The stamp records the last run instead. The generated file
+       is still an input, so deleting it (clean.bat does) brings it back.
+
+       The archive glob is wider than the JSON's list. A change to an unpinned archive costs one
+       generator run. -->
+  <PropertyGroup>
+    <VendorPinsHeadFile>$(BaseIntermediateOutputPath)VendorPins.head</VendorPinsHeadFile>
+    <VendorPinsStampFile>$(BaseIntermediateOutputPath)VendorPins.stamp</VendorPinsStampFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <VendorPinsInput Include="$(PwizRepoRoot)vendor-archives\vendor_api_*.7z" />
+    <VendorPinsInput Include="$(PwizRepoRoot)build\vendor-sdk-pins.json" />
+    <VendorPinsInput Include="@(Compile);$(MSBuildProjectFullPath)" />
+    <VendorPinsInput Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Common\VendorSdkPins.generated.cs" />
+  </ItemGroup>
+
+  <!-- With no usable git (a source tarball, or a worktree whose gitdir this OS cannot see) the
+       file holds git's error text instead, which is just as stable, and the generator keeps the
+       existing pins as it always has. -->
+  <Target Name="RecordVendorPinsHead">
+    <Exec Command="git rev-parse HEAD"
+          WorkingDirectory="$(PwizRepoRoot)"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          StandardOutputImportance="low"
+          StandardErrorImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_VendorPinsHead" />
+    </Exec>
+    <MakeDir Directories="$(BaseIntermediateOutputPath)" />
+    <WriteLinesToFile File="$(VendorPinsHeadFile)" Lines="$(_VendorPinsHead)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="RunVendorPinsGenerator"
+          DependsOnTargets="RecordVendorPinsHead"
+          Inputs="@(VendorPinsInput);$(VendorPinsHeadFile)"
+          Outputs="$(VendorPinsStampFile)">
     <Exec Command="dotnet run --project &quot;$(MSBuildProjectFullPath)&quot; -c Release -- &quot;$(PwizRepoDir)&quot;"
           WorkingDirectory="$(PwizRepoRoot)"
           StandardOutputImportance="low" />
+    <Touch Files="$(VendorPinsStampFile)" AlwaysCreate="true" />
   </Target>
 </Project>
