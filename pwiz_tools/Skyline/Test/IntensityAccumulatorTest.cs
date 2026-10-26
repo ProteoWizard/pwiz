@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -44,6 +45,54 @@ namespace pwiz.SkylineTest
             TestNullIonMobilityIgnored();
             TestObservedIonMobilityAggregate();
             TestObservedIonMobilityHighEnergyOffset();
+            TestObservedIonMobilityNeutralLoss();
+        }
+
+        // A precursor transition with a neutral loss is a fragment ion with its own mobility, extracted
+        // from MS2 spectra rather than MS1, and has no isotope distribution. It is left out of the
+        // observed IM when the precursor has MS1 isotope transitions (where its area weight would
+        // otherwise swamp their abundance weights), and counts only when it is all there is.
+        private static void TestObservedIonMobilityNeutralLoss()
+        {
+            const double precursorIm = 3.477, window = 0.2;
+            var peptide = new Peptide(@"PEPTIDEK");
+            var transitionGroup = new TransitionGroup(peptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
+            var nodeM = MakeIsotopeTransition(transitionGroup, 0, 0.6f);
+            var nodeM1 = MakeIsotopeTransition(transitionGroup, 1, 0.3f);
+            var waterLoss = new TransitionLosses(new List<TransitionLoss>
+                { new TransitionLoss(null, new FragmentLoss(@"H2O"), MassType.Monoisotopic) }, MassType.Monoisotopic);
+            var nodeLoss = new TransitionDocNode(new Transition(transitionGroup, IonType.precursor, 7, 0, Adduct.DOUBLY_PROTONATED),
+                waterLoss, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
+            Assert.IsFalse(nodeLoss.HasDistInfo);
+            Assert.IsFalse(nodeLoss.IsMs1);
+            var fileId = new ChromFileInfoId();
+
+            // The large loss area would otherwise make the mean nearly the loss ion's IM (3.10)
+            var withIsotopes = new[]
+            {
+                (nodeLoss, MakeChromInfo(fileId, precursorIm, window, 3.10f, 100000)),
+                (nodeM, MakeChromInfo(fileId, precursorIm, window, 3.40f, 1000)),
+                (nodeM1, MakeChromInfo(fileId, precursorIm, window, 3.43f, 500))
+            };
+            var result = ObservedIonMobilityCalculator.Calculate(withIsotopes, true, () => 0);
+            Assert.AreEqual((0.6 * 3.40 + 0.3 * 3.43) / 0.9, result.IonMobility.Value, 1e-5);
+            Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
+
+            // With no MS1 transitions, the loss transition is the observed IM, like a fragment (no offset here)
+            var lossOnly = new[]
+            {
+                (nodeLoss, MakeChromInfo(fileId, precursorIm, window, 3.10f, 100000))
+            };
+            result = ObservedIonMobilityCalculator.Calculate(lossOnly, true, () => 0);
+            Assert.AreEqual(3.10, result.IonMobility.Value, 1e-5);
+        }
+
+        private static TransitionDocNode MakeIsotopeTransition(TransitionGroup transitionGroup, int massIndex, float proportion)
+        {
+            return new TransitionDocNode(new Transition(transitionGroup, IonType.precursor, 7, massIndex, Adduct.DOUBLY_PROTONATED),
+                null, TypedMass.ZERO_MONO_MASSH,
+                new TransitionDocNode.TransitionQuantInfo(new TransitionIsotopeDistInfo(massIndex + 1, proportion), null, true),
+                ExplicitTransitionValues.EMPTY);
         }
 
         // Fragments are extracted in the high-energy frame: their stored IM filter is centered on

@@ -99,10 +99,17 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (target == null && HasFilter(chromInfo))
                         target = chromInfo.IonMobility;
-                    // MS1 isotope channels weight by predicted abundance; an MS1 precursor with
-                    // no isotope distribution (m/z-only small molecule, low-res precursor
-                    // filtering, or a neutral-loss transition) weights by observed area instead
-                    // so its observed IM/CCS is still surfaced.
+                    // MS1 isotope channels weight by predicted abundance; a precursor with no isotope
+                    // distribution (an m/z-only small molecule, or low resolution precursor filtering)
+                    // weights by observed area instead, so its observed IM/CCS is still surfaced. The
+                    // two never mix within a precursor: every MS1 transition gets its isotope
+                    // distribution from the precursor, so either all have one or none do.
+                    // A precursor transition with a neutral loss (e.g. [M-H2O]) is not MS1 (see
+                    // NeutralFragmentIon.IsMs1). It is extracted from MS2 spectra like a fragment, so it
+                    // is a high-energy channel below, used only when the precursor has no MS1 channels.
+                    // That keeps it out of the precursor's observed IM when isotopes were measured,
+                    // which is right physically too: a neutral loss is a fragment ion with its own
+                    // mobility, not a measurement of the precursor ion's.
                     double weight = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : chromInfo.Area;
                     channels.Add(new Channel(true, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, weight, 0));
                 }
