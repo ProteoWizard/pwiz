@@ -1699,6 +1699,7 @@ namespace pwiz.Skyline.Model.Results
     public class DataFileInstrumentInfo : IFilterInstrumentInfo
     {
         private readonly MsDataFileImpl _dataFile;
+        private bool _reportedCcsConversionFailure;
 
         public DataFileInstrumentInfo(MsDataFileImpl dataFile)
         {
@@ -1733,8 +1734,10 @@ namespace pwiz.Skyline.Model.Results
         public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
         {
             var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
-            if (double.IsNaN(ccs))
+            // Observed CCS converts every extracted point, so report only the first failure in a file
+            if (double.IsNaN(ccs) && !_reportedCcsConversionFailure)
             {
+                _reportedCcsConversionFailure = true;
                 Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
             }
             return ccs;
