@@ -233,23 +233,16 @@ namespace pwiz.Osprey.Demux
             if (_options.Joint)
             {
                 var grid = GridOf(peaks);
-                for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
+                foreach (var (unit, observed) in MakeJointUnits(inBlock, peaks, grid, firstCycle, lastCycle, padLo, padHi, contextBins))
                 {
-                    int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
-                    int lo = Math.Max(padLo, k0 - _options.CyclePad), hi = Math.Min(padHi, k1 + _options.CyclePad);
-                    for (int g0 = 0; g0 < binCount; g0 += _options.GroupBins)
-                    {
-                        int g1 = Math.Min(binCount - 1, g0 + _options.GroupBins - 1);
-                        var unit = MakeJointUnit(inBlock, peaks, grid, lo, hi, k0, k1, g0, g1, contextBins, out var observed);
-                        if (unit == null)
-                            continue;
-                        var parameters = _options.JointParameters;
-                        var centrix = _options.JointCentroid ? _centrix : null;
-                        var passPerIon = _passPerIon;
-                        work.Add(new DemuxWork(_options.JointApportion
-                            ? (Func<ScanningUnitResult>)(() => SolveJointApportioned(unit, observed, parameters, grid, centrix, passPerIon))
-                            : () => JointDemultiplexer.DemuxUnit(unit, parameters, grid), unit.Mz.Length));
-                    }
+                    if (unit == null)
+                        continue;
+                    var parameters = _options.JointParameters;
+                    var centrix = _options.JointCentroid ? _centrix : null;
+                    var passPerIon = _passPerIon;
+                    work.Add(new DemuxWork(_options.JointApportion
+                        ? (Func<ScanningUnitResult>)(() => SolveJointApportioned(unit, observed, parameters, grid, centrix, passPerIon))
+                        : () => JointDemultiplexer.DemuxUnit(unit, parameters, grid), unit.Mz.Length));
                 }
                 return work;
             }
@@ -347,6 +340,34 @@ namespace pwiz.Osprey.Demux
                     peaks[output] = (ordered.Select(p => p.Mz).ToArray(), ordered.Select(p => p.Ions * scale).ToArray());
                 }
             }
+        }
+
+        /// <summary>
+        /// The batch's joint units, block of cycles by group of bins, null where a block has no core pass in the
+        /// group's bins. Made on up to <see cref="ScanningDemuxOptions.Threads"/> threads, each into its own slot, so
+        /// they come back in the order one thread would make them: each reads only the batch's read and the plan.
+        /// </summary>
+        private (ScanningUnit Unit, bool[] Observed)[] MakeJointUnits(int[] inBlock,
+            Dictionary<int, (double[] Mz, double[] Ions)> peaks, LinearGrid grid, int firstCycle, int lastCycle,
+            int padLo, int padHi, int contextBins)
+        {
+            int binCount = Scheme.Bins.Count;
+            var blocks = new List<(int K0, int K1, int G0, int G1)>();
+            for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
+            {
+                int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
+                for (int g0 = 0; g0 < binCount; g0 += _options.GroupBins)
+                    blocks.Add((k0, k1, g0, Math.Min(binCount - 1, g0 + _options.GroupBins - 1)));
+            }
+            var units = new (ScanningUnit Unit, bool[] Observed)[blocks.Count];
+            Parallel.For(0, blocks.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _options.Threads) }, b =>
+            {
+                var (k0, k1, g0, g1) = blocks[b];
+                int lo = Math.Max(padLo, k0 - _options.CyclePad), hi = Math.Min(padHi, k1 + _options.CyclePad);
+                var unit = MakeJointUnit(inBlock, peaks, grid, lo, hi, k0, k1, g0, g1, contextBins, out var observed);
+                units[b] = (unit, observed);
+            });
+            return units;
         }
 
         /// <summary>
