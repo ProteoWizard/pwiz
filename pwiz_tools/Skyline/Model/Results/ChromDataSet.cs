@@ -337,21 +337,7 @@ namespace pwiz.Skyline.Model.Results
                     if (!(observedIonMobility > 0))
                         continue;
                     var ionMobility = IonMobilityValue.GetIonMobilityValue(observedIonMobility, imUnits);
-                    double? ccs;
-                    try
-                    {
-                        ccs = GetObservedCcs(converter, ionMobility, mz, charge, NodeGroup);
-                    }
-                    catch (Exception)
-                    {
-                        // Observed CCS is supplementary, and the conversion is a vendor black box whose
-                        // failures (e.g. a MassLynx status error surfaces as an InvalidOperationException)
-                        // say nothing about the extracted chromatograms, so a failure leaves this group
-                        // without CCS rather than failing the import of the whole file.
-                        Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion,
-                            NodeGroup, ionMobility, mz, charge);
-                        return;
-                    }
+                    var ccs = GetObservedCcs(converter, ionMobility, mz, charge, NodeGroup);
                     if (ccs.HasValue)
                         observedCcs[i] = (float) ccs.Value;
                 }

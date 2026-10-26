@@ -348,14 +348,12 @@ namespace pwiz.SkylineTest
             Assert.IsNull(peak.ObservedCcs);
 
             // The vendor IM->CCS conversion of each point at import: a value passes through, while
-            // no value (0 or NaN) leaves the point without CCS. A failure is left to the caller,
-            // which stops converting that chromatogram group rather than fail the whole import.
+            // no value (0 or NaN, which is also what a failed conversion gives) leaves the point
+            // without CCS.
             var im = IonMobilityValue.GetIonMobilityValue(1.05, eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
             Assert.AreEqual(345.67, ChromDataSet.GetObservedCcs(new FakeCcsConverter(() => 345.67), im, 500, 2, null));
             Assert.IsNull(ChromDataSet.GetObservedCcs(new FakeCcsConverter(() => 0), im, 500, 2, null));
             Assert.IsNull(ChromDataSet.GetObservedCcs(new FakeCcsConverter(() => double.NaN), im, 500, 2, null));
-            AssertEx.ThrowsException<InvalidOperationException>(() => ChromDataSet.GetObservedCcs(
-                new FakeCcsConverter(() => throw new InvalidOperationException(@"vendor library error")), im, 500, 2, null));
         }
 
         [TestMethod]

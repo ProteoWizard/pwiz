@@ -1733,7 +1733,19 @@ namespace pwiz.Skyline.Model.Results
         }
         public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
         {
-            var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            double ccs;
+            try
+            {
+                ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            }
+            catch (Exception)
+            {
+                // CCS is supplementary, and the conversion is a vendor black box that can fail for values
+                // at the fringe of its calibration (e.g. a MassLynx status error surfaces as an
+                // InvalidOperationException) while converting most others, so a failure is no conversion
+                // for this value rather than a failed import.
+                ccs = double.NaN;
+            }
             // Observed CCS converts every extracted point, so report only the first failure in a file
             if (double.IsNaN(ccs) && !_reportedCcsConversionFailure)
             {
