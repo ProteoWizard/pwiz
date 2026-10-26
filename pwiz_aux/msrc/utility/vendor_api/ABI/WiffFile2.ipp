@@ -175,6 +175,14 @@ struct Experiment2Impl : public Experiment
     /// centre of its isolation window. Empty for any other experiment, or if a range has none.
     const vector<double>& q1MultipleIonMzs() const;
 
+    /// This experiment's own sample id. Not the file's msSample, which setSample moves on to
+    /// whichever sample was opened last.
+    System::String^ sampleId() const
+    {
+        IList<ISample^>^ samples = wiffFile_->allSamples;
+        return samples[sample - 1]->Id;
+    }
+
     const WiffFile2Impl* wiffFile_;
     gcroot<IExperiment^> msExperiment;
     int sample, period, experiment;
@@ -278,7 +286,7 @@ struct Spectrum2Impl : public Spectrum
         if ((ISpectrum^) msSpectrum == nullptr)
         {
             auto spectrumRequest = experiment->wiffFile_->DataReader()->RequestFactory->CreateSpectraReadRequest();
-            spectrumRequest->SampleId = experiment->wiffFile_->msSample->Id;
+            spectrumRequest->SampleId = experiment->sampleId();
             spectrumRequest->ExperimentId = experiment->msExperiment->Id;
             spectrumRequest->Range->Start = scanTime;
             spectrumRequest->Range->End = scanTime;
@@ -581,7 +589,7 @@ void Experiment2Impl::initializeTIC() const
     try
     {
         auto experimentTicRequest = wiffFile_->DataReader()->RequestFactory->CreateExperimentTicReadRequest();
-        experimentTicRequest->SampleId = wiffFile_->msSample->Id;
+        experimentTicRequest->SampleId = sampleId();
         experimentTicRequest->ExperimentId = msExperiment->Id;
 
         auto experimentTic = wiffFile_->DataReader()->GetExperimentTic(experimentTicRequest);
@@ -695,7 +703,7 @@ void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
 
         auto xicRequest = wiffFile_->DataReader()->RequestFactory->CreateMrmXicReadRequest();
-        xicRequest->SampleId = wiffFile_->msSample->Id;
+        xicRequest->SampleId = sampleId();
         xicRequest->ExperimentId = msExperiment->Id;
         auto massIndexes = gcnew List<int>();
         massIndexes->Add((int) index);
