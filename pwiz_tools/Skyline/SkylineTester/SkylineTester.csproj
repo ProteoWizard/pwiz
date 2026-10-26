@@ -232,8 +232,14 @@
              Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm)" />
     <!-- The single-file copy goes to its own folder: the staging dir already holds the
          ordinary launcher .exe of the same name, which Skyline and SkylineTester use.
-         SelfContained comes from the item (see above). The projects list win-x64 in
-         RuntimeIdentifiers, so the restore above covers it. -->
+         SelfContained comes from the item (see above). A self-contained publish needs the
+         win-x64 runtime packs, so restore again with the publish's RID and SelfContained,
+         as dotnet publish -r does; the restore above alone does not promise them on a clean
+         agent. The extra property gives the restore its own evaluation, so the Publish
+         below re-evaluates and sees what it restored. -->
+    <MSBuild Condition="'$(_Wanted)' == 'true' AND '%(DistroZipPrereq.SingleFile)' == 'true'"
+             Projects="%(DistroZipPrereq.Identity)" Targets="Restore"
+             Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm);RuntimeIdentifier=win-x64;SelfContained=%(DistroZipPrereq.SelfContained);_SingleFileRestore=true" />
     <MSBuild Condition="'$(_Wanted)' == 'true' AND '%(DistroZipPrereq.SingleFile)' == 'true'"
              Projects="%(DistroZipPrereq.Identity)" Targets="Publish"
              Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm);RuntimeIdentifier=win-x64;SelfContained=%(DistroZipPrereq.SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;PublishDir=$(SkylineStageDir)\$(SingleFileNightlyDir)\" />

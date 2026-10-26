@@ -63,19 +63,27 @@ namespace SkylineNightly
         /// </summary>
         public static string DescribeInstalledRuntimes()
         {
-            var sharedDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "shared");
-            var versions = new List<string>();
-            foreach (var framework in SHARED_FRAMEWORKS)
+            try
             {
-                var frameworkDir = Path.Combine(sharedDir, framework);
-                if (!Directory.Exists(frameworkDir))
-                    continue;
-                versions.AddRange(Directory.GetDirectories(frameworkDir)
-                    .Select(Path.GetFileName)
-                    .OrderBy(v => v, StringComparer.Ordinal)
-                    .Select(v => framework + " " + v));
+                var sharedDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "shared");
+                var versions = new List<string>();
+                foreach (var framework in SHARED_FRAMEWORKS)
+                {
+                    var frameworkDir = Path.Combine(sharedDir, framework);
+                    if (!Directory.Exists(frameworkDir))
+                        continue;
+                    versions.AddRange(Directory.GetDirectories(frameworkDir)
+                        .Select(Path.GetFileName)
+                        .OrderBy(v => v, StringComparer.Ordinal)
+                        .Select(v => framework + " " + v));
+                }
+                return versions.Count > 0 ? string.Join(", ", versions) : "none";
             }
-            return versions.Count > 0 ? string.Join(", ", versions) : "none";
+            catch (Exception e)
+            {
+                // A diagnostic must never keep a run from starting
+                return "unknown (" + e.Message + ")";
+            }
         }
 
         /// <summary>
@@ -83,11 +91,18 @@ namespace SkylineNightly
         /// </summary>
         public static bool IsRestartPending()
         {
-            foreach (var keyName in REBOOT_PENDING_KEYS)
+            try
             {
-                using var key = Registry.LocalMachine.OpenSubKey(keyName);
-                if (key != null)
-                    return true;
+                foreach (var keyName in REBOOT_PENDING_KEYS)
+                {
+                    using var key = Registry.LocalMachine.OpenSubKey(keyName);
+                    if (key != null)
+                        return true;
+                }
+            }
+            catch (Exception)
+            {
+                // Unreadable is reported as not pending; this is only an early warning
             }
             return false;
         }
@@ -105,7 +120,8 @@ namespace SkylineNightly
                     var properties = record.Properties
                         .Select(p => Convert.ToString(p.Value, CultureInfo.InvariantCulture))
                         .ToArray();
-                    records.Add(new SystemEventRecord(record.TimeCreated ?? since, record.ProviderName, record.Id, properties));
+                    records.Add(new SystemEventRecord((record.TimeCreated ?? since).ToUniversalTime(), record.ProviderName,
+                        record.Id, properties));
                 }
             }
         }

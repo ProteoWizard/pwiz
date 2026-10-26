@@ -114,8 +114,8 @@ namespace SkylineNightly
         /// <summary>
         /// Classifies an interruption.
         /// </summary>
-        /// <param name="events">Events recorded since the interrupted run started</param>
-        /// <param name="lastActivity">When the interrupted run last wrote its log</param>
+        /// <param name="events">Events recorded since the interrupted run started, times in UTC</param>
+        /// <param name="lastActivity">When the interrupted run last wrote its log, in UTC</param>
         /// <param name="stillRunning">An earlier SkylineNightly was still running when this one started</param>
         /// <param name="runtimesAtStart">The interrupted run's <see cref="RUNTIMES_PREFIX"/> line value, or null</param>
         /// <param name="runtimesNow">The installed .NET runtimes now</param>
@@ -124,7 +124,9 @@ namespace SkylineNightly
         {
             var eventList = events.OrderBy(e => e.Time).ToList();
             var causeEvent = eventList.FirstOrDefault(e => e.Time >= lastActivity - CAUSE_SLACK && GetCause(e).HasValue);
-            var cutoff = causeEvent?.Time ?? DateTime.MaxValue;
+            // Without a cause event the run's end is unknown; its log's last write is the latest moment
+            // it is known to have been alive, so later updates are not blamed on it
+            var cutoff = causeEvent?.Time ?? lastActivity;
             var updates = eventList.Where(e => e.Time <= cutoff && IsReportableUpdate(e))
                 .Select(e => e.GetProperty(0)).Distinct().ToList();
             var runtimeChange = !string.IsNullOrEmpty(runtimesAtStart) && !string.IsNullOrEmpty(runtimesNow) &&
@@ -189,7 +191,7 @@ namespace SkylineNightly
                     case InterruptionCause.still_running:
                         return "still running";
                     default:
-                        return RuntimeChange != null ? ".NET runtime updated" : "cause unknown";
+                        return "cause unknown";
                 }
             }
         }
@@ -199,13 +201,13 @@ namespace SkylineNightly
             var sb = new StringBuilder();
             sb.Append("Cause: ").Append(ShortDescription);
             if (Time.HasValue)
-                sb.Append(" at ").Append(Time.Value.ToString("g"));
+                sb.Append(" at ").Append(Time.Value.ToLocalTime().ToString("g"));
             sb.AppendLine();
             sb.AppendLine(Detail);
             if (RuntimeChange != null)
             {
-                sb.Append(".NET runtimes changed during the run: ").AppendLine(RuntimeChange);
-                sb.AppendLine("A process started before the change can fail the first time it loads a framework assembly from the removed version.");
+                sb.Append(".NET runtimes changed since the run started: ").AppendLine(RuntimeChange);
+                sb.AppendLine("A process started before such a change can fail the first time it loads a framework assembly from the removed version.");
             }
             if (UpdatesInstalled.Count > 0)
             {

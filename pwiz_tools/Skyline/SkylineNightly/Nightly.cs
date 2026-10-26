@@ -99,10 +99,19 @@ namespace SkylineNightly
         /// other way: a restart, a crash, or a process still stuck when the next run started.
         /// </summary>
         private const string NIGHTLY_DONE = "Done.  Exit message: ";
-        private const string NIGHTLY_LOG_PATTERN = "SkylineNightly-*.log";
+        private const string NIGHTLY_LOG_PREFIX = "SkylineNightly-";
+
+        /// <summary>
+        /// Commands whose logs (see <see cref="ForCommand"/>) are not runs, and must not hide an
+        /// interrupted run that came before them.
+        /// </summary>
+        private static readonly string[] COMMAND_LOG_NAMES = { "parse", "post", "help" };
 
         /// <summary>The nightly log of the run in progress, for <see cref="LogUnhandledException"/>.</summary>
         private static string _currentLogFileName;
+
+        /// <summary>The main thread, the log monitor and the machine monitor all append to one log.</summary>
+        private static readonly object _logLock = new object();
 
         /// <summary>
         /// Records an exception that is about to terminate SkylineNightly in the nightly log, which
@@ -290,6 +299,7 @@ namespace SkylineNightly
             var skylineTesterZipName = _skylineTesterDir + ".zip";
 
             // Before anything stops the previous run or starts a new log: did that run end on its own?
+            // Not exact: any other SkylineNightly counts, including an open settings window.
             var unfinishedLog = FindUnfinishedNightlyLog();
             var earlierNightlyRunning = GetOtherNightlyProcesses().Any();
 
@@ -372,10 +382,11 @@ namespace SkylineNightly
             {
                 if (!Directory.Exists(_logDir))
                     return null;
-                var latest = new DirectoryInfo(_logDir).GetFiles(NIGHTLY_LOG_PATTERN)
-                    .OrderByDescending(f => f.LastWriteTime)
+                var latest = new DirectoryInfo(_logDir).GetFiles(NIGHTLY_LOG_PREFIX + "*.log")
+                    .Where(f => !COMMAND_LOG_NAMES.Any(c => f.Name.StartsWith(NIGHTLY_LOG_PREFIX + c + "-")))
+                    .OrderByDescending(f => f.LastWriteTimeUtc)
                     .FirstOrDefault();
-                if (latest == null || File.ReadAllText(latest.FullName).Contains(NIGHTLY_DONE))
+                if (latest == null || ReadSharedText(latest.FullName).Contains(NIGHTLY_DONE))
                     return null;
                 return latest.FullName;
             }
@@ -394,26 +405,42 @@ namespace SkylineNightly
             try
             {
                 var logInfo = new FileInfo(unfinishedLog);
-                var lastWrite = logInfo.LastWriteTime;
-                var interruption = RunInterruption.Diagnose(MachineState.ReadEvents(logInfo.CreationTime), lastWrite,
-                    earlierNightlyRunning, RunInterruption.ParseRuntimes(File.ReadAllText(unfinishedLog)),
+                // UTC throughout: an overnight run can span the fall-back hour
+                var lastWriteUtc = logInfo.LastWriteTimeUtc;
+                var interruption = RunInterruption.Diagnose(MachineState.ReadEvents(logInfo.CreationTimeUtc), lastWriteUtc,
+                    earlierNightlyRunning, RunInterruption.ParseRuntimes(ReadSharedText(unfinishedLog)),
                     MachineState.DescribeInstalledRuntimes());
-                var report = string.Format("Previous run did not finish: {0} (last written {1:g})", logInfo.Name, lastWrite) +
-                             Environment.NewLine + interruption;
+                var report = string.Format("Previous run did not finish: {0} (last written {1:g})", logInfo.Name,
+                                 lastWriteUtc.ToLocalTime()) + Environment.NewLine + interruption;
                 Log(report);
                 Log(unfinishedLog, "Run did not finish. Diagnosed by the next run:" + Environment.NewLine + interruption);
                 // Keep the old log older than the new one, so it is not mistaken for the latest run
-                File.SetLastWriteTime(unfinishedLog, lastWrite);
+                File.SetLastWriteTimeUtc(unfinishedLog, lastWriteUtc);
 
+                // In the background: with skyline.ms unreachable, the retries would hold up the run for minutes
                 var subject = string.Format("[{0}] !!! TestResults alert (previous run interrupted: {1})",
                     Environment.MachineName, interruption.ShortDescription);
-                if (SendEmailNotification(null, subject, Environment.MachineName + Environment.NewLine + report) == null)
-                    Log("Failed to send the interrupted run alert");
+                var message = Environment.MachineName + Environment.NewLine + report;
+                new Thread(() =>
+                {
+                    if (SendEmailNotification(null, subject, message) == null)
+                        Log("Failed to send the interrupted run alert");
+                }) { IsBackground = true }.Start();
             }
             catch (Exception e)
             {
                 Log("Failed to diagnose the unfinished previous run " + unfinishedLog + ": " + e.Message);
             }
+        }
+
+        /// <summary>
+        /// Reads a log another process may still be appending to, which File.ReadAllText refuses.
+        /// </summary>
+        private static string ReadSharedText(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
         }
 
         private static IEnumerable<Process> GetOtherNightlyProcesses()
@@ -1609,7 +1636,12 @@ namespace SkylineNightly
                 time.Second.ToString("D2"),
                 message);
             if (!string.IsNullOrEmpty(logFileName))
-                File.AppendAllText(logFileName, timestampedMessage + Environment.NewLine);
+            {
+                lock (_logLock)
+                {
+                    File.AppendAllText(logFileName, timestampedMessage + Environment.NewLine);
+                }
+            }
             return timestampedMessage;
         }
 

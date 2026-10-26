@@ -160,13 +160,17 @@ namespace pwiz.SkylineTest
 
         private static void TestRuntimeChangeOnly()
         {
-            var interruption = RunInterruption.Diagnose(new[] { Update(LAST_WRITE.AddMinutes(-5), DOTNET_UPDATE) },
-                LAST_WRITE, false, RUNTIMES_13, RUNTIMES_14);
+            // With no cause event, only updates before the log's last write belong to the run; the
+            // machine kept updating after the run was dead, and that must not be blamed on it
+            var events = new[]
+            {
+                Update(LAST_WRITE.AddMinutes(-5), DOTNET_UPDATE),
+                Update(LAST_WRITE.AddHours(15), CUMULATIVE_UPDATE)
+            };
+            var interruption = RunInterruption.Diagnose(events, LAST_WRITE, false, RUNTIMES_13, RUNTIMES_14);
             Assert.AreEqual(InterruptionCause.unknown, interruption.Cause);
             AssertEx.Contains(interruption.RuntimeChange, RUNTIMES_14);
             CollectionAssert.AreEqual(new[] { DOTNET_UPDATE }, interruption.UpdatesInstalled.ToArray());
-            Assert.AreNotEqual(RunInterruption.Diagnose(Array.Empty<SystemEventRecord>(), LAST_WRITE, false, null, RUNTIMES_14).ShortDescription,
-                interruption.ShortDescription);
         }
 
         private static void TestParseRuntimes()
@@ -190,7 +194,8 @@ namespace pwiz.SkylineTest
                 CollectionAssert.Contains(requestedIds, record.Id);
                 Assert.IsTrue(record.Time >= since.AddMinutes(-1));
             }
-            Assert.IsFalse(string.IsNullOrEmpty(MachineState.DescribeInstalledRuntimes()));
+            // Any machine that builds these tests has the .NET SDK, which installs a shared runtime
+            AssertEx.Contains(MachineState.DescribeInstalledRuntimes(), @"Microsoft.NETCore.App ");
             MachineState.IsRestartPending();
         }
 
