@@ -83,15 +83,31 @@ namespace pwiz.SkylineTestFunctional
             PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTest.sky"));
 
             // The install gate: with Osprey registered at a path that does not exist, the menu item
-            // offers the download and canceling it opens no wizard.
+            // offers the download and canceling it opens no wizard. A developer build, as the tests
+            // run, offers the latest successful master build; a release the pinned one. On TeamCity
+            // that package is the one EnsureOsprey just installed in the Tools folder, which the gate
+            // would register again instead of offering, so it is moved aside for the check.
             const string bogusPath = @"C:\__osprey_not_installed__\Osprey.exe";
             OspreyTestUtil.RegisterOsprey(bogusPath);
-            var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
-            // A developer build, as the tests run, offers the latest successful master build; a release the pinned one
             AssertEx.IsFalse(OspreyHelpers.UsesPinnedPackage);
-            AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.GetPackageVersion(OspreyHelpers.GetPackageDownloadInfo()));
-            OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
-            AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
+            var package = OspreyHelpers.GetPackageDownloadInfo();
+            string packageDir = Path.GetDirectoryName(package.ToolPath);
+            string asideDir = packageDir + @"-aside";
+            bool packageInstalled = Directory.Exists(packageDir);
+            if (packageInstalled)
+                Directory.Move(packageDir, asideDir);
+            try
+            {
+                var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
+                AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.GetPackageVersion(package));
+                OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
+                AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
+            }
+            finally
+            {
+                if (packageInstalled)
+                    Directory.Move(asideDir, packageDir);
+            }
 
             OspreyTestUtil.RegisterOsprey(ospreyExe);
 
