@@ -85,6 +85,15 @@ namespace pwiz.SkylineTest
             TestGetPrecursorTable(document, MIXED_PRECURSOR_TABLE_ANSWER);
             TestGetWarningMods(document, new[] { "Acetyl (N-term)" }); // 1 warning is generated
 
+            // An older document's own definition of Carbamidomethyl (C) - its formula on C, under its own
+            // name and with no UniMod id - is recognized by its definition: no warning, and the peptides
+            // predict with Carbamidomethyl@C instead of being skipped
+            document = CreateTestOldCarbamidomethylDocument();
+            TestGetWarningMods(document, Array.Empty<string>());
+            TestGetPrecursorTable(document, OLD_CARBAMIDOMETHYL_PRECURSOR_TABLE_ANSWER);
+
+            TestFineTunedModificationSupport();
+
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
             TestValidateModifications_Limited_Support();
@@ -126,7 +135,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetWarningMods"/>
+        /// Test of <see cref="AbstractDeepLibraryBuilder.GetWarningMods()"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> that may generate warnings about modifications.</param>
         /// <param name="expectedWarningMods">List of modifications for which warnings should be generated.</param>
@@ -673,6 +682,64 @@ namespace pwiz.SkylineTest
         {
             return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
+
+        /// <summary>
+        /// Cysteine peptides under an older document's definition of carbamidomethylation: the
+        /// formula of Carbamidomethyl (C) on C, under its own name and with no UniMod id.
+        /// </summary>
+        private SrmDocument CreateTestOldCarbamidomethylDocument()
+        {
+            var document = CreateTestSimpleDocument(new[] { new Peptide("CELVISK"), new Peptide("LIVECSK") });
+            var oldCarbamidomethyl = new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3NO");
+            var peptideSettings = document.Settings.PeptideSettings;
+            return document.ChangeSettings(document.Settings.ChangePeptideSettings(peptideSettings.ChangeModifications(
+                peptideSettings.Modifications.ChangeStaticModifications(new[] { oldCarbamidomethyl }))));
+        }
+
+        /// <summary>
+        /// A modification the pretrained models do not know (TMT6plex (K)) is supported for fragmentation
+        /// and retention time once a fine-tuned model says it was trained on it, while a document's own
+        /// Oxidation (M), with neutral losses and a relative retention time UniMod's definition has not,
+        /// is Oxidation (M) for prediction either way.
+        /// </summary>
+        private void TestFineTunedModificationSupport()
+        {
+            var tmt = UniMod.GetModification("TMT6plex (K)", true);
+            var metOx = new StaticMod("MetOx", "M", null, false, "O", LabelAtoms.None, RelativeRT.Unknown, null, null,
+                new[] { new FragmentLoss("H2O"), new FragmentLoss("H4COS") }, null, null);
+            var document = CreateTestSimpleDocument(new[] { new Peptide("ELVISMK"), new Peptide("MLIVESK") });
+            var peptideSettings = document.Settings.PeptideSettings;
+            document = document.ChangeSettings(document.Settings.ChangePeptideSettings(peptideSettings.ChangeModifications(
+                peptideSettings.Modifications.ChangeStaticModifications(new[] { tmt, metOx }))));
+
+            // Pretrained: TMT is unknown; MetOx is Oxidation (M) by its definition
+            var pretrained = AlphapeptdeepLibraryBuilder.MODEL_MODIFICATION_SUPPORT;
+            var warningMods = AbstractDeepLibraryBuilder.GetWarningMods(document, pretrained);
+            CollectionAssert.AreEquivalent(new[] { tmt.Name }, warningMods.Keys.ToList());
+            Assert.AreEqual(PredictionSupport.none, warningMods[tmt.Name]);
+            Assert.AreEqual(1, AbstractDeepLibraryBuilder.GetWarningMods(document, AlphapeptdeepLibraryBuilder.GetModificationSupport(null)).Count);
+
+            // Fine-tuned on TMT (and on a name nothing knows, which adds nothing): no warning
+            var fineTuned = pretrained.WithTrainingModifications(new[] { "TMT6plex@K", "Oxidation@M", "GlyGly@K", "Unknown@A" });
+            Assert.AreEqual(0, AbstractDeepLibraryBuilder.GetWarningMods(document, fineTuned).Count);
+            var tmtType = fineTuned.GetModificationType(tmt.UnimodId);
+            Assert.IsNotNull(tmtType);
+            Assert.IsTrue(tmtType.IsSupported(AbstractDeepLibraryBuilder.LIBRARY_PREDICTION_SUPPORT));
+            Assert.IsFalse(tmtType.IsSupported(PredictionSupport.ccs));
+            // The pretrained support stands where it is wider (Oxidation), and widens where it is
+            // narrower (GlyGly, fragmentation only in the pretrained models)
+            Assert.IsTrue(fineTuned.GetModificationType(35).IsSupported(PredictionSupport.all));
+            Assert.IsFalse(pretrained.GetModificationType(121).IsSupported(PredictionSupport.retention_time));
+            Assert.IsTrue(fineTuned.GetModificationType(121).IsSupported(AbstractDeepLibraryBuilder.LIBRARY_PREDICTION_SUPPORT));
+        }
+
+        /// <summary>The header and the 11 iRT standards, then the cysteine peptides carbamidomethylated.</summary>
+        private IEnumerable<string> OLD_CARBAMIDOMETHYL_PRECURSOR_TABLE_ANSWER =>
+            SIMPLE_PRECURSOR_TABLE_ANSWER.Take(12).Concat(new[]
+            {
+                "CELVISK\tCarbamidomethyl@C\t1\t2",
+                "LIVECSK\tCarbamidomethyl@C\t5\t2"
+            });
 
         private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {

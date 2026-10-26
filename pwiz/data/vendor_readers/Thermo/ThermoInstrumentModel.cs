@@ -160,9 +160,10 @@ public static class ThermoInstrumentModel
 
         // Orbitrap Excedion / GC / Eclipse / Astral / Fusion family
         new("ORBITRAP EXCEDION PRO",           CVID.MS_Orbitrap_Excedion_Pro,           MatchType.Contains),
-        new("ORBITRAP EXCEDION",               CVID.MS_Orbitrap_Excedion_Pro,           MatchType.Contains),
+        new("ORBITRAP EXCEDION",               CVID.MS_Orbitrap_Excedion,               MatchType.Contains),
         new("ORBITRAP GC",                     CVID.MS_Orbitrap_Exploris_480,           MatchType.Contains),
         new("ECLIPSE",                         CVID.MS_Orbitrap_Eclipse,                MatchType.Contains),
+        new("TRIBRID APEX",                    CVID.MS_Orbitrap_Tribrid_Apex,           MatchType.Contains),
         new("ASTRAL ZOOM",                     CVID.MS_Orbitrap_Astral_Zoom,            MatchType.Contains),
         new("ASTRAL",                          CVID.MS_Orbitrap_Astral,                 MatchType.Contains),
 

@@ -6,7 +6,7 @@ Build the pwiz-sharp installer (Inno Setup).
 End-to-end packaging pipeline:
   1. build/VendorPinsGenerator — bake the current vendor SDK commit pins into
      VendorSdkPins.generated.cs (no-op if pins haven't changed).
-  2. dotnet build pwiz_tools/MSConvertGUI/MsConvertGUI.csproj -c Release
+  2. dotnet build pwiz_tools/MSConvertGUI/MsConvertGUI.csproj -c Release -p:Platform=x64
      (transitively builds MsConvert, vendor projects, etc.)
   3. Stage a filtered copy of the build output (strips vendor SDK DLLs +
      debug symbols + cross-platform runtimes + BCL localization satellites)
@@ -51,10 +51,12 @@ $pwizSharp       = $PwizSharpRoot
 $msconvertGui    = Join-Path $pwizSharp "pwiz_tools/MSConvertGUI/MsConvertGUI.csproj"
 $seems           = Join-Path $pwizSharp "pwiz_tools/SeeMS/SeeMS.csproj"
 $msdiff          = Join-Path $pwizSharp "pwiz_tools/Commandline/MsDiff/src/MsDiff.csproj"
-$msconvertGuiOut = Join-Path $pwizSharp "pwiz_tools/MSConvertGUI/bin/Release/net10.0-windows"
-$seemsOut        = Join-Path $pwizSharp "pwiz_tools/SeeMS/bin/Release/net10.0-windows"
-$msconvertOut    = Join-Path $pwizSharp "pwiz_tools/Commandline/MsConvert/src/bin/Release/net10.0"
-$msdiffOut       = Join-Path $pwizSharp "pwiz_tools/Commandline/MsDiff/src/bin/Release/net10.0"
+# x64, as build.bat, Skyline and Osprey build pwiz-sharp, so the installer packages the same tree
+# the tests ran against (and reuses it instead of compiling a second copy).
+$msconvertGuiOut = Join-Path $pwizSharp "pwiz_tools/MSConvertGUI/bin/x64/Release/net10.0-windows"
+$seemsOut        = Join-Path $pwizSharp "pwiz_tools/SeeMS/bin/x64/Release/net10.0-windows"
+$msconvertOut    = Join-Path $pwizSharp "pwiz_tools/Commandline/MsConvert/src/bin/x64/Release/net10.0"
+$msdiffOut       = Join-Path $pwizSharp "pwiz_tools/Commandline/MsDiff/src/bin/x64/Release/net10.0"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"
@@ -85,13 +87,13 @@ if ($LASTEXITCODE -ne 0) { throw "VendorPinsGenerator failed (exit $LASTEXITCODE
 #    staging time).
 if (-not $SkipBuild) {
     Write-Host "`n==> dotnet build (Release)" -ForegroundColor Cyan
-    dotnet build $msconvertGui -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $msconvertGui -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "MSConvertGUI build failed (exit $LASTEXITCODE)" }
-    dotnet build $seems        -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $seems        -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "SeeMS build failed (exit $LASTEXITCODE)" }
     # Built on its own: msdiff is not in MSConvertGUI's or SeeMS's reference chain, so nothing
     # above produces it.
-    dotnet build $msdiff       -c Release "-p:IAgreeToVendorLicenses=true" --nologo
+    dotnet build $msdiff       -c Release -p:Platform=x64 "-p:IAgreeToVendorLicenses=true" --nologo
     if ($LASTEXITCODE -ne 0) { throw "MsDiff build failed (exit $LASTEXITCODE)" }
 }
 
@@ -205,6 +207,14 @@ if (Test-Path $wiff2Src) {
     }
     Write-Host "    from wiff2/: $n files"
 }
+
+# Vendor EULAs, beside the binaries where the C++ installer put them. Every variant reads
+# vendor files - the default ones fetch the SDKs on first use, the offline one carries them -
+# so every variant ships the license terms.
+$eulas = Get-ChildItem (Join-Path $pwizSharp "pwiz/data/vendor_readers") -Filter "EULA.*.txt" -Recurse -File
+if (-not $eulas) { throw "No vendor EULAs found under pwiz/data/vendor_readers" }
+$eulas | ForEach-Object { Copy-Item $_.FullName (Join-Path $DestRoot $_.Name) }
+Write-Host "    vendor EULAs: $($eulas.Count) files"
 }
 
 Build-Payload $stagingDir
@@ -395,9 +405,14 @@ if (-not $iscc) {
     $iscc = $iscc.Source
 }
 
-# 5. Stamp a build-time version: 4.0.YYDOY-gitsha.
+# 5. Stamp a version: 4.0.YYDOY-gitsha.
 #    Mirrors the cpp pwiz tagging convention (major 4 = the .NET-port lineage).
-#       YYDOY  = two-digit year + three-digit day-of-year (e.g. 26140 = 2026-05-20).
+#       YYDOY  = two-digit year + three-digit day-of-year (e.g. 26140 = 2026-05-20)
+#                of HEAD's committer date, as build/PwizVersion.targets computes it
+#                for the assembly versions, so a rebuild of a past commit (e.g. for
+#                the monthly release archive) is stamped with that commit's date.
+#                Like that target, it reads %ci (%cs needs git 2.20) and falls back
+#                to today's UTC date when git gives no date (no git, no history).
 #                Sortable, ~5 chars, unambiguous across years, and zero-padded so
 #                lexical sort matches chronological sort.
 #       gitsha = first 7 chars of HEAD; --short defaults to 7. We strip the leading
@@ -406,14 +421,19 @@ if (-not $iscc) {
 #                Win32 version-info parsers.
 #    Local "dev" builds with no git history fall back to 4.0.0-dev so direct
 #    ISCC invocations still produce a versioned installer.
-$today = Get-Date
-$yyDoy = "{0:00}{1:000}" -f ($today.Year % 100), $today.DayOfYear
 $gitSha = ""
+$commitDate = ""
 try {
     Push-Location $pwizSharp
     $gitSha = (git rev-parse --short=7 HEAD 2>$null).Trim()
+    $commitDate = (git log -1 --format=%ci HEAD 2>$null).Trim()
 } catch { }
 finally { Pop-Location }
+$versionDate = (Get-Date).ToUniversalTime()
+if ($commitDate -match '^\d{4}-\d{2}-\d{2}') {
+    $versionDate = [datetime]::ParseExact($commitDate.Substring(0, 10), 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+}
+$yyDoy = "{0:00}{1:000}" -f ($versionDate.Year % 100), $versionDate.DayOfYear
 if ([string]::IsNullOrWhiteSpace($gitSha)) {
     $appVersion = "4.0.0-dev"
 } else {

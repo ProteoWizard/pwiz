@@ -24,8 +24,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Threading;
+using Pwiz.Analysis;
+using Pwiz.Data.Common.Cv;
+using PwizSpectra = Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.ProteowizardWrapper;
 
@@ -79,15 +84,20 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file.
         /// </summary>
-        public static SpectrumFileResult LoadAllSpectra(string path)
+        /// <param name="path">The mzML or vendor instrument file.</param>
+        /// <param name="demultiplex">Demultiplexing settings: a run whose isolation windows
+        /// overlap (or that is MSX) is then read demultiplexed, by ProteoWizard, as msconvert's
+        /// demultiplex filter writes it. Null reads every run as acquired.</param>
+        public static SpectrumFileResult LoadAllSpectra(string path, SpectrumListDemux.Params demultiplex = null)
         {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
             int unsortedCount = 0;
+            SpectrumListDemux.Scheme demultiplexed = null;
+            SpectrumListDemux.Scheme notDemultiplexed = null;
 
             ReportVendorRegistrationFailures();
 
-            bool vendorFormat = IsVendorFormat(path);
             try
             {
                 // Every argument that differs from the wrapper's default is Osprey's read
@@ -123,13 +133,22 @@ namespace pwiz.Osprey.IO
                 // one-permit gate - so it is the caller the option was written for. Only the
                 // mzML reader honours it, and only on a forward index walk, which is what the
                 // loop below does. See OspreyEnvironment.MzmlDecodeThreads for the measurements.
-                using (var msData = new MsDataFileImpl(path,
-                           simAsSpectra: true,
-                           requireVendorCentroidedMS1: vendorFormat,
-                           requireVendorCentroidedMS2: vendorFormat,
-                           combineIonMobilitySpectra: false,
-                           mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads))
+                //
+                // demultiplex: ProteoWizard's own demultiplexer, applied after centroiding, so
+                // the spectra are those of msconvert --filter "demultiplex optimization=
+                // overlap_only" without the mzML in between.
+                using (var msData = OpenForSearch(path, demultiplex))
                 {
+                    // Which of the two this run is. Without demultiplex settings, a multiplexed
+                    // run is still detected (from the metadata of its first cycles), so the
+                    // caller can say that it was searched as acquired. That is only for a
+                    // warning, so a read it cannot finish leaves the run as it was before
+                    // detection existed; the read below reports a real reader error itself.
+                    if (demultiplex != null)
+                        demultiplexed = msData.DemultiplexScheme;
+                    else
+                        notDemultiplexed = TryDetectDemultiplexScheme(msData);
+
                     // A chromatogram-only file has no spectrum list, so SpectrumCount is 0
                     // and this reads nothing. Osprey has no use for such a file, but an
                     // empty result says so far more clearly than a throw would.
@@ -182,7 +201,101 @@ namespace pwiz.Osprey.IO
                     path, MSBUILD_VENDOR_LICENSES, OSPREY_SOLUTION, BJAM_VENDOR_LICENSES, CMD_MSCONVERT), ex);
             }
 
-            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);
+            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount)
+            {
+                DemultiplexScheme = demultiplexed,
+                MultiplexedSchemeNotDemultiplexed = notDemultiplexed,
+            };
+        }
+
+        /// <summary>
+        /// The multiplexing scheme of the run, or null when it is not multiplexed, from the
+        /// metadata of its first acquisition cycles. Opens the file without reading any spectra.
+        /// </summary>
+        public static SpectrumListDemux.Scheme DetectDemultiplexScheme(string path)
+        {
+            using (var msData = OpenForSearch(path, null))
+                return msData.DetectDemultiplexScheme();
+        }
+
+        /// <summary>
+        /// The multiplexing scheme of a run from the isolation window of every MS2 spectrum in
+        /// acquisition order, as a spectra cache records them, or null when it is not multiplexed.
+        /// The same ProteoWizard detection as <see cref="DetectDemultiplexScheme(string)"/>, over
+        /// the same spectra (the head, middle and end of the run), for a run whose source file is
+        /// not at hand. A cache records one window per spectrum, so an MSX run, whose spectra
+        /// each isolate several, cannot be told from ordinary DIA this way.
+        /// </summary>
+        public static SpectrumListDemux.Scheme DetectDemultiplexScheme(double[] centers, double[] lowerOffsets,
+            double[] upperOffsets)
+        {
+            return SpectrumListDemux.DetectScheme(new RecordedWindowSpectrumList(centers, lowerOffsets, upperOffsets));
+        }
+
+        private static SpectrumListDemux.Scheme TryDetectDemultiplexScheme(MsDataFileImpl msData)
+        {
+            try
+            {
+                return msData.DetectDemultiplexScheme();
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// MS2 spectra with only an isolation window, built when asked for: detection reads a few
+        /// thousand of a run's spectra, not all of them.
+        /// </summary>
+        private sealed class RecordedWindowSpectrumList : PwizSpectra.SpectrumListBase
+        {
+            private readonly double[] _centers;
+            private readonly double[] _lowerOffsets;
+            private readonly double[] _upperOffsets;
+
+            public RecordedWindowSpectrumList(double[] centers, double[] lowerOffsets, double[] upperOffsets)
+            {
+                _centers = centers;
+                _lowerOffsets = lowerOffsets;
+                _upperOffsets = upperOffsets;
+            }
+
+            public override int Count => _centers.Length;
+
+            public override PwizSpectra.SpectrumIdentity SpectrumIdentity(int index)
+            {
+                return new PwizSpectra.SpectrumIdentity { Index = index, Id = GetId(index) };
+            }
+
+            public override PwizSpectra.Spectrum GetSpectrum(int index, bool getBinaryData = false)
+            {
+                var spectrum = new PwizSpectra.Spectrum { Index = index, Id = GetId(index) };
+                spectrum.Params.Set(CVID.MS_ms_level, 2);
+                var precursor = new PwizSpectra.Precursor();
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, _centers[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, _lowerOffsets[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, _upperOffsets[index], CVID.MS_m_z);
+                spectrum.Precursors.Add(precursor);
+                return spectrum;
+            }
+
+            private static string GetId(int index)
+            {
+                return string.Format(CultureInfo.InvariantCulture, @"scan={0}", index + 1);
+            }
+        }
+
+        private static MsDataFileImpl OpenForSearch(string path, SpectrumListDemux.Params demultiplex)
+        {
+            bool vendorFormat = IsVendorFormat(path);
+            return new MsDataFileImpl(path,
+                simAsSpectra: true,
+                requireVendorCentroidedMS1: vendorFormat,
+                requireVendorCentroidedMS2: vendorFormat,
+                combineIonMobilitySpectra: false,
+                mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads,
+                demultiplex: demultiplex);
         }
 
         /// <summary>
@@ -337,7 +450,7 @@ namespace pwiz.Osprey.IO
             if (Interlocked.Exchange(ref _vendorFailuresReported, 1) != 0)
                 return;
             foreach (string failure in VendorReaderRegistration.Failures)
-                OspreyOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
+                CommandOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
         }
     }
 
@@ -356,5 +469,13 @@ namespace pwiz.Osprey.IO
             Ms1Spectra = ms1;
             UnsortedSpectrumCount = unsortedSpectrumCount;
         }
+
+        /// <summary>The multiplexing scheme the MS2 spectra were demultiplexed from, or null
+        /// when they were read as acquired.</summary>
+        public SpectrumListDemux.Scheme DemultiplexScheme { get; init; }
+
+        /// <summary>A multiplexing scheme the run has but was read without demultiplexing,
+        /// because no demultiplex settings were given; null otherwise.</summary>
+        public SpectrumListDemux.Scheme MultiplexedSchemeNotDemultiplexed { get; init; }
     }
 }

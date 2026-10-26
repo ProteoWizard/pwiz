@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="d8ba9747-ad5e-4a2e-af1a-cab0ce3e5c4b" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="d8ba9747-ad5e-4a2e-af1a-cab0ce3e5c4b" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
   <name>Push to Sourceforge</name>
   <description>Pushes build artifacts to Sourceforge</description>
   <settings>
@@ -37,10 +37,6 @@
       <dependency id="ARTIFACT_DEPENDENCY_260" sourceBuildTypeId="bt22" cleanDestination="true">
         <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
         <artifact sourcePath="pwiz-bin-*-release-?_*_*.tar.bz2=&gt;build" />
-      </dependency>
-      <dependency id="ARTIFACT_DEPENDENCY_261" sourceBuildTypeId="bt17" cleanDestination="true">
-        <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
-        <artifact sourcePath="pwiz-bin-*-release-?_*_*.tar.bz2=&gt;build&#xA;pwiz-src-*.tar.bz2=&gt;build" />
       </dependency>
       <dependency id="ARTIFACT_DEPENDENCY_263" sourceBuildTypeId="bt19" cleanDestination="true">
         <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />

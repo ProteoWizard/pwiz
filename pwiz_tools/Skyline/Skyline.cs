@@ -144,6 +144,9 @@ namespace pwiz.Skyline
         {
             InitializeComponent();
             InitializeMenus();
+            // Osprey is unreleased: the wizard and its test are complete, but the menu item shows only
+            // in a developer build until Osprey's release is decided.
+            ospreySearchMenuItem.Visible = Install.IsDeveloperInstall;
             _undoManager = new UndoManager(this);
             _undoRedoButtons = new UndoRedoButtons(_undoManager,
                 EditMenu.UndoMenuItem, undoToolBarButton,
@@ -201,8 +204,6 @@ namespace pwiz.Skyline
             //    .Attach(this);
 
             DocumentUIChangedEvent += AutoTrainCompleted;
-
-            checkForUpdatesMenuItem.Visible = checkForUpdatesSeparator.Visible = false;
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
@@ -3035,11 +3036,6 @@ namespace pwiz.Skyline
 
         public void CheckForUpdate()
         {
-            // Make sure the document is saved before doing this since it could
-            // restart the application
-            if (Dirty)
-                SaveDocument();
-
             UpgradeManager.CheckForUpdateAsync(this, false);
         }
 

@@ -21,6 +21,10 @@
          sibling .raw (via WatersPusherInterval) when none is forced, mirroring the native
          BlibBuild's USE_WATERS_READER path. -->
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Waters\Waters.csproj" />
+    <!-- The .blib schema and the one writer every tool of ours writes .blib files through:
+         BlibMaker (BlibBuild, BlibFilter) writes its libraries with BlibWriter, as Osprey and
+         CarafeSharp do, so a library any of them writes is the same database for every reader. -->
+    <ProjectReference Include="$(PwizRepoRoot)pwiz_tools\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,10 +51,14 @@
        consumed via P/Invoke from MascotShimInterop.cs.
        ============================================================ -->
   <PropertyGroup>
-    <!-- msparser ships in pwiz-msconvert-pr/libraries/, so Mascot support is ON
-         by default. Pass -p:MascotSupport=false (or build.bat 'without-mascot')
-         to compile the Mascot reader out of BiblioSpec. -->
-    <MascotSupport Condition="'$(MascotSupport)' == ''">true</MascotSupport>
+    <!-- msparser ships in libraries/ as an archive that is extracted only with the vendor
+         licenses agreed to, so Mascot support is ON by default exactly when they are (or a
+         prebuilt shim is supplied), as in the cpp build. Otherwise a no-vendor build would
+         depend on whether an earlier vendor build left msparser extracted. Pass
+         -p:MascotSupport=false (or build.bat 'without-mascot') to compile the Mascot reader
+         out of BiblioSpec. BiblioSpec.Tests.csproj repeats this default. -->
+    <MascotSupport Condition="'$(MascotSupport)' == '' AND ('$(IAgreeToVendorLicenses)' == 'true' OR '$(PwizPrebuiltNativeShimDir)' != '')">true</MascotSupport>
+    <MascotSupport Condition="'$(MascotSupport)' == ''">false</MascotSupport>
 
     <!-- $(PwizPrebuiltNativeShimDir): a directory holding MascotShim.dll, msparser.dll and
          msparser-config/ already built for Windows - the artifact of the Native shims CI config

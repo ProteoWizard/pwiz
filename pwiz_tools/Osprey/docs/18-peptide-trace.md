@@ -137,48 +137,32 @@ TSV record keyed by the detection, not the `[trace]`-log facility from the Rust 
 
 ### 3. `plan_reconciliation` — Rust `[trace] plan ...`
 
-Closest C# dump:
-
-- `OSPREY_DUMP_RECONCILIATION` → `WriteStage6ReconciliationDump`
-  (`IOspreyDiagnostics.cs:204`, gate `DumpReconciliation` at
-  `OspreyFileDiagnostics.cs:287`). Emits `cs_stage6_reconciliation.tsv`: the
-  per-(file, entry_id) `ReconcileAction` map produced by the reconciliation planner,
-  with the action variant plus apex / start / end / half-width fields — the C# analog
-  of the Rust trace's `→ <action>` (`Keep` / `UseCwtPeak` / `ForcedIntegration`) line.
-  See `11-boundary-overrides.md` and `10-cross-run-reconciliation.md` for the action
-  semantics.
-
-The Rust trace's tolerance-derivation narrative (`global_MAD`, `this_peptide_MAD`,
-`ceiling`, and the stored `cwt[i]` candidate rows) is not reproduced field-for-field
-in the C# TSV; the C# dump reports the chosen action and its integration window.
+No C# dump. `OSPREY_DUMP_RECONCILIATION` (`cs_stage6_reconciliation.tsv`, the
+per-(file, entry_id) `ReconcileAction` map) was removed from C# on 2026-10-11 because
+it held every run's entries at once (O(files x entries)) only to serve a diagnostic;
+it is Rust-only now. See `11-boundary-overrides.md` and
+`10-cross-run-reconciliation.md` for the action semantics.
 
 ### 4. Gap-fill identification — Rust `[trace] gap-fill: ...`
 
-The C# port folds gap-fill targets into the same Stage 6 planning path. The closest
-dumps are `OSPREY_DUMP_RECONCILIATION` (above) and `OSPREY_DUMP_MULTICHARGE` →
-`WriteStage6MultichargeDump` (`IOspreyDiagnostics.cs:197`, gate `DumpMulticharge` at
-`OspreyFileDiagnostics.cs:264`), which emits `cs_stage6_multicharge.tsv` — the per-file
-rescore targets. There is no dedicated `gap-fill` trace line; a missing-in-this-file
-target surfaces as a forced-integration `ReconcileAction` row rather than a distinct
-`gap-fill:` message.
+The C# port folds gap-fill targets into the same Stage 6 planning path and has no
+dedicated `gap-fill` trace line or dump. The Rust-side analogs
+(`OSPREY_DUMP_RECONCILIATION` and `OSPREY_DUMP_MULTICHARGE`, the per-file rescore
+targets) were removed from C# on 2026-10-11 and are Rust-only.
 
 ### 5. First-pass and second-pass FDR q-values — Rust `[trace] fdr(<stage>) ...`
 
 Closest C# dumps:
 
-- First pass: `OSPREY_DUMP_PERCOLATOR` → `WriteStage5PercolatorDump`
-  (`IOspreyDiagnostics.cs:191`, gate `DumpPercolator` at `OspreyFileDiagnostics.cs:150`).
-  Emits `cs_stage5_percolator.tsv`: per-precursor `score`, `pep`, and the four q-values
-  after first-pass Percolator FDR and before protein FDR / compaction.
-- Second pass: `OSPREY_DUMP_RESCORED` → `WriteStage6RescoredDump`
-  (`IOspreyDiagnostics.cs:193`, gate `DumpRescored` at `OspreyFileDiagnostics.cs:200`).
-  Emits `cs_stage6_rescored.tsv` with the same column shape after the Stage 6 rescore
-  (consensus + reconciliation overlay). Its doc comment states it "Mirrors Rust's
-  dump_stage6_rescored / OSPREY_DUMP_RESCORED gate."
+- First pass: none. `OSPREY_DUMP_PERCOLATOR` (`cs_stage5_percolator.tsv`) was removed on
+  2026-10-10 with the resident first-pass pool it read; the per-file
+  `.1st-pass.fdr_scores.bin` sidecars carry the same score / pep / q-values.
+- Second pass: none. `OSPREY_DUMP_RESCORED` (`cs_stage6_rescored.tsv`) was removed on
+  2026-10-11 because it pulled every run's rescored entries at once (O(files x entries))
+  only to serve a diagnostic; it is Rust-only now.
 
-Together these give the C# analog of the Rust trace's `fdr(first-pass)` /
-`fdr(second-pass)` per-entry q-value lines — the disposition of a precursor at both
-passes — but as full-population TSVs keyed by entry, not per-peptide log lines. See
+So the C# port has no analog of the Rust trace's `fdr(second-pass)` per-entry q-value
+line; the first-pass disposition is readable from the sidecars above. See
 `07-fdr-control.md`.
 
 ## Per-entry selectors (the closest thing to "trace one peptide")
@@ -227,10 +211,7 @@ default **off** (unset), so a production run carries no diagnostic state.
 | `OSPREY_DIAG_SEARCH_ENTRY_IDS=<ids>` (`OspreyFileDiagnostics.cs:393`) | unset | `cs_search_xic_entry_<ID>.txt` per selected entry during main search (deepest per-entry XIC view). Non-exiting. |
 | `OSPREY_DUMP_CONSENSUS` (`OspreyFileDiagnostics.cs:255`) | off | `cs_stage6_consensus.tsv` — per-peptide consensus RT planning (Rust trace stage 2 analog). |
 | `OSPREY_DUMP_INV_PREDICT` (`OspreyFileDiagnostics.cs:318`) | off | `cs_stage6_inv_predict.tsv` — per-detection `(apex_rt, library_rt, weight)` into consensus (Rust trace stage 2 per-detection analog). |
-| `OSPREY_DUMP_RECONCILIATION` (`OspreyFileDiagnostics.cs:287`) | off | `cs_stage6_reconciliation.tsv` — per-entry `ReconcileAction` (Rust trace stage 3/4 analog). |
-| `OSPREY_DUMP_MULTICHARGE` (`OspreyFileDiagnostics.cs:264`) | off | `cs_stage6_multicharge.tsv` — per-file rescore targets. |
-| `OSPREY_DUMP_PERCOLATOR` (`OspreyFileDiagnostics.cs:150`) | off | `cs_stage5_percolator.tsv` — first-pass per-precursor score/pep/q-values (Rust trace stage 5 first-pass analog). |
-| `OSPREY_DUMP_RESCORED` (`OspreyFileDiagnostics.cs:200`) | off | `cs_stage6_rescored.tsv` — second-pass per-precursor score/pep/q-values (Rust trace stage 5 second-pass analog). |
+| `OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_RESCORED` (+ `_ONLY`) | - | Rust-only. Removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic); set them only for the Rust process. |
 | `OSPREY_DIAG_XIC_ENTRY_ID=<id>` (`OspreyFileDiagnostics.cs:379`) | unset | `cs_xic_entry_<ID>.txt` for one entry during calibration; exits after dump. |
 | `OSPREY_DIAG_XIC_PASS={1,2}` (`OspreyFileDiagnostics.cs:386`) | 1 | Selects the calibration pass for the XIC dump. |
 | `OSPREY_DIAG_MP_SCAN=<scan>` (`OspreyFileDiagnostics.cs:400`) | unset | Dumps median-polish inputs for one scan (hardcoded DECOY_ALQFAQWWK filter). |

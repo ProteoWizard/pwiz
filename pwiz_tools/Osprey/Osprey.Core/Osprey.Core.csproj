@@ -10,6 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
     <Compile Update="OspreyCoreResources.Designer.cs">
       <DesignTime>True</DesignTime>

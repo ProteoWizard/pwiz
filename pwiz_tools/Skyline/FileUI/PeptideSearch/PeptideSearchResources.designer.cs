@@ -953,6 +953,123 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Osprey did not produce a spectral library..
+        /// </summary>
+        public static string OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_ {
+            get {
+                return ResourceManager.GetString("OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Added the modifications of an Osprey search.
+        /// </summary>
+        public static string OspreySearchDlg_AddSearchModificationsToDocument_Added_the_modifications_of_an_Osprey_search {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_AddSearchModificationsToDocument_Added_the_modifications_of_an_Osprey_search", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string OspreySearchDlg_FragmentUnit_m_z {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_FragmentUnit_m_z", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ppm.
+        /// </summary>
+        public static string OspreySearchDlg_FragmentUnit_ppm {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_FragmentUnit_ppm", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey did not write the spectral library {0}..
+        /// </summary>
+        public static string OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to High resolution (Orbitrap, TOF).
+        /// </summary>
+        public static string OspreySearchDlg_Resolution_High_resolution__Orbitrap__TOF_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_Resolution_High_resolution__Orbitrap__TOF_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unit resolution (Stellar).
+        /// </summary>
+        public static string OspreySearchDlg_Resolution_Unit_resolution__Stellar_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_Resolution_Unit_resolution__Stellar_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The document library {0} already exists. Overwrite it with the results of this search?.
+        /// </summary>
+        public static string OspreySearchDlg_StartSearch_The_document_library__0__already_exists__Overwrite_it_with_the_results_of_this_search_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_StartSearch_The_document_library__0__already_exists__Overwrite_it_with_the_results_of_this_search_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for an Osprey search..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_A_FASTA_file_is_required_for_an_Osprey_search_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_A_FASTA_file_is_required_for_an_Osprey_search_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey cannot predict a library for the enzyme &apos;{0}&apos;. Choose an enzyme with a standard cleavage rule..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey cannot predict a library with these modifications:.
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey searches {0} and {1} libraries, not {2}..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The existing library cannot be the document library {0}, which the search writes..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
         /// </summary>
         public static string SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_ {

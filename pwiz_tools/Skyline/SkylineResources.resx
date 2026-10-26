@@ -172,8 +172,8 @@
   <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
     <value>Error: The specified working directory {0} does not exist.</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
-    <value>Error: Unexpected argument --{0}</value>
+  <data name="CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_" xml:space="preserve">
+    <value>Unexpected argument {0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
     <value>No isolation list will be exported.</value>
@@ -616,9 +616,6 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   </data>
   <data name="Program_CheckNativeLibraries_Troubleshooting" xml:space="preserve">
     <value>Recovering From a Broken Installation</value>
-  </data>
-  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
-    <value>Error copying external tools from previous installation</value>
   </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>Copying external tools from a previous installation</value>
@@ -1196,11 +1193,8 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
     <value>No libraries to show. Would you like to add a library?</value>
   </data>
-  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
-    <value>Upgrading to {0} (downloading {1} of {2})</value>
-  </data>
-  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
-    <value>Upgrading {0}</value>
+  <data name="UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_" xml:space="preserve">
+    <value>The update information at {0} could not be read.</value>
   </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>
@@ -1228,6 +1222,18 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   </data>
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
     <value>Run Peptide Search</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_" xml:space="preserve">
+    <value>Osprey {0} is not installed. Skyline can download it (about {1} MB) to its Tools folder.</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Download" xml:space="preserve">
+    <value>&amp;Download</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey" xml:space="preserve">
+    <value>Downloading Osprey</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_" xml:space="preserve">
+    <value>Failed to download Osprey.</value>
   </data>
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
     <value>You must save this document before running a peptide search.</value>

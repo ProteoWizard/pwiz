@@ -2,12 +2,12 @@ targets = {}
 
 # Retired C++ build configurations. The C++ tree lives in ProteoWizard/pwiz-cpp now and these
 # configurations build from that repo; nothing in this repo may trigger them. Kept here,
-# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt17,
-# bt209 and the master Wine container are not among them: they took over the .NET builds below.
-#targets['CoreWindows'] = {'master': {"bt36": "Core Windows x86", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
+# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt143,
+# bt17, bt209, the master TestConnected config and the master Wine container are not among
+# them: they took over the .NET builds below.
+#targets['CoreWindows'] = {'master': {"bt36": "Core Windows x86"}}
 #targets['CoreWindowsDebug'] = {'master': {"bt84": "Core Windows x86_64 debug", "bt75": "Core Windows debug"}}
-#targets['SkylineRelease'] = {'master': {"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection",
-#                                        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"},
+#targets['SkylineRelease'] = {'master': {"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection"},
 #                             'release': {"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64",
 #                                         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection",
 #                                         "ProteoWizard_SkylineReleaseTestConnectedTests": "Skyline release TestConnected tests"}}
@@ -23,8 +23,9 @@ targets = {}
 # otherwise a cross-platform regression (a hardcoded 7za.exe, a backslash path, a
 # Windows-only vendor reference) only surfaces on the next unrelated Linux trigger. These are the
 # historic Core x86_64 configs, which took over the steps of the temporary Core Windows/Linux
-# .NET configs in Versioned Configs.
-targets['CoreWindowsNet'] = {'master': {"bt83": "Core Windows x86_64"}}
+# .NET configs in Versioned Configs. bt143 builds the same tree without vendor support (no
+# --i-agree-to-the-vendor-licenses), so the NO_VENDOR_SUPPORT build stays compiling and tested.
+targets['CoreWindowsNet'] = {'master': {"bt83": "Core Windows x86_64", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
 targets['CoreLinuxNet'] = {'master': {"bt17": "Core Linux x86_64"}}
 targets['CoreNet'] = merge(targets['CoreWindowsNet'], targets['CoreLinuxNet'])
 
@@ -59,17 +60,21 @@ targets['Skyline'] = targets['SkylineWindowsNet']
 # checks on GitHub; nothing here changes that for the standalone config.)
 extraStatuses = \
 {
-    "bt209": ["Skyline code inspection"]
+    "bt209": ["Skyline code inspection"],
+    # tcinspect.ps1's build-warnings status, posted by tcbuild.bat in vendor builds only, so
+    # bt143 (no vendor DLLs) has none.
+    "bt83": ["Core code inspection"]
 }
 
 targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        # TestConnected tests are not triggered: their config
-        # (ProteoWizard_SkylineMasterAndPRsTestConnectedTests, which depends on bt209) still has
-        # its cpp/MSVC steps. Re-enable once it runs the .NET tests.
-        #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"
+        # TestConnected runs TestConnected.dll from the staged output of the bt209 build it
+        # snapshot-depends on (same agent, same checkout). bt209 itself leaves that DLL out
+        # (pwiz_tools/Skyline/tcbuild.bat passes --skip-connected-tests), so remote-API changes
+        # are what get these tests run, as before the .NET port.
+        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests",
         "bt209": "Skyline master and PRs (Windows x86_64)"
     }
 }
@@ -114,7 +119,10 @@ targets['Linux'] = targets['CoreLinuxNet']
 # will only trigger the "pwiz_tools/BiblioSpec/.*" targets.
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    (".*/nightly_trigger_and_paths_config.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
+    # Run only by the "Publish monthly release" config, which no build depends on
+    (".*/publish_monthly_release.py", {}),
     (".*/ai/.*", {}),
     # TeamCity versioned settings: every UI edit to a config in the Versioned Configs
     # subproject is committed back to this branch by TeamCity itself, and those commits carry
@@ -177,10 +185,26 @@ matchPaths = [
     ("pwiz_tools/Skyline/Executables/Hardklor/.*", merge(targets['NativeShims'], targets['Skyline'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    # Osprey and CarafeSharp import Shared/Lib/Parquet/ParquetNet.targets and its patched Parquet.dll.
+    ("pwiz_tools/Shared/Lib/Parquet/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
+    # The Shared projects Osprey and CarafeSharp build from source (their csproj ProjectReferences):
+    # the .blib reader and writer every library they make or read goes through, the utilities, and
+    # the wrapper they read raw data through. A change to one is an Osprey change, so the Osprey
+    # configs run on it rather than on the next unrelated Osprey-side commit. Keep this list in
+    # step with the ProjectReferences under pwiz_tools/Osprey and pwiz_tools/CarafeSharp, and keep
+    # it ABOVE the generic pwiz_tools/Shared/.* pattern below, which does not include Osprey.
+    ("pwiz_tools/Shared/BiblioSpec/BiblioSpec.IO/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
+    ("pwiz_tools/Shared/CommonUtil/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
+    ("pwiz_tools/Shared/ProteowizardWrapper/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
     # pwiz compiles Shared/zedgraph + Shared/MSGraph in place and links Shared/Lib binaries.
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['Osprey']),
+    # CarafeSharp (the C# Carafe port) has no config of its own: Osprey's tcbuild.bat and
+    # tcbuild.sh build and test it.
+    ("pwiz_tools/CarafeSharp/.*", targets['Osprey']),
     ("pwiz_tools/.*", targets['All']),
     (".*\\.bat", targets['Windows']),
+    # Root .ps1 scripts (tcinspect.ps1) run from the Windows tcbuild.bat files.
+    (".*\\.ps1", targets['Windows']),
     (".*\\.sh", targets['Linux'])
 ]

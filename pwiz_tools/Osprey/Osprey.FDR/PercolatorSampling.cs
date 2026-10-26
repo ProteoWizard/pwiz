@@ -147,7 +147,7 @@ namespace pwiz.Osprey.FDR
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
         /// the direct (<see cref="PercolatorTrainer.RunPercolator"/>) and streaming
-        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
+        /// paths select identical subsets
         /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
         /// <returns>
@@ -237,8 +237,8 @@ namespace pwiz.Osprey.FDR
             // be survivable: every row would report run 0, the whole population would collapse to
             // one within-run comparison, and the selection would silently be the cross-run MAXIMUM
             // again while the log and the validity key both claim the reservoir. Unreachable from
-            // the three real callers - the projection path passes fileStart, the direct and
-            // RunPercolatorStreaming paths pass entries carrying FileName - which is why it throws
+            // the real callers - the projection path passes fileStart, the direct path passes
+            // entries carrying FileName - which is why it throws
             // rather than degrading.
             if (pickRun && n > 0 && fileStartLocal == null && entries.Count == 0)
             {

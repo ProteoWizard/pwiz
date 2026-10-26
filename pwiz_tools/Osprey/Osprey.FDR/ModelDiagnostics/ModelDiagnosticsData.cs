@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -554,6 +555,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         /// <summary>
         /// Build the full model-diagnostics data model from first-pass results.
+        ///
+        /// <para>A TEST ORACLE, internal so nothing outside this assembly and its tests can reach
+        /// it. It reduces a resident pool of every run's first-pass entries, which no
+        /// production route holds any more: the report is built from the streamed
+        /// <see cref="Accumulator"/>, and the tests hold that to this independent batch
+        /// reduction on the same rows.</para>
         /// </summary>
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
         /// <param name="contributions">The trained model's feature contributions (may be null: a tree model has none).</param>
@@ -587,7 +594,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Full entry id to library precursor m/z (NaN when unknown), for the co-assignment panel.
         /// Null skips that panel and leaves <see cref="CoAssignment"/> null.
         /// </param>
-        public static ModelDiagnosticsData Build(
+        internal static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -626,19 +633,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
             data.HasEntrapment = data.NPTarget > 0;
-            data.FeatureCount = contributions?.Features.Count ?? 0;
             data.NClassifiedFromManifest = nWithClass;
             data.NUnclassified = nWithoutClass;
 
             // ---- model table (pass 1) ----
-            if (contributions != null)
-            {
-                data.ModelComposite = contributions.Composite;
-                data.ModelDegenerate = contributions.IsDegenerate;
-                data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
-                data.FeatureHistEdges = contributions.HistogramEdges;
-                data.Model = BuildFeatureRows(contributions);
-            }
+            ModelView.ApplyTo(ModelView.From(contributions), data);
 
             // ---- score histogram + decoy normal fit ----
             data.Scores = BuildScoreHistogram(precs);
@@ -720,12 +719,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         /// <summary>
         /// Build the complete pass-2 (final reported pool) bundle behind the report's
-        /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
-        /// (SecondPassFdrTask) with the post-compaction, second-pass-q-valued pool
-        /// (<c>RescoredEntries</c>) -- the same pool the pass-2 FDRBench TSV is written
-        /// from -- so the HTML pass-2 cards and stock FDRBench see the identical
-        /// peptides and q-values. The classification / pairing / ratio inputs come
-        /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
+        /// top-level Pass 1 / Pass 2 switch from the post-compaction, second-pass-q-valued
+        /// pool - the same pool the pass-2 FDRBench TSV is written from - so the HTML pass-2
+        /// cards and stock FDRBench see the identical peptides and q-values. The
+        /// classification / pairing / ratio inputs come from the searched library exactly as
+        /// pass 1 (see ModelDiagnosticsReport).
+        ///
+        /// <para>A TEST ORACLE, internal for the reason <see cref="Build"/> gives: production
+        /// folds the pass-2 cards run by run through <see cref="Accumulator"/>, and the tests
+        /// hold that fold to this batch build over every run's survivors.</para>
         ///
         /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
         /// <paramref name="pass2Contributions"/> is non-null. Production passes null
@@ -741,7 +743,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// unknown) for the co-assignment panel; null skips that panel and leaves
         /// <see cref="Pass2Data.CoAssignment"/> null.
         /// </summary>
-        public static Pass2Data BuildPass2(
+        internal static Pass2Data BuildPass2(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
@@ -776,9 +778,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             bool structural = pass2Contributions != null;
             int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
             // NOT `using`d, matching LibraryDeduplicator: Dispose forces a final 100% from the
-            // finally block, and WritePass2AndFinalize catches and logs our exception as one
-            // line - so a card that threw would read "all cards done" immediately followed by
-            // "pass-2 enrichment failed". The last Report on the success path prints 100% anyway.
+            // finally block, and a report writer catches and logs our exception as one line - so
+            // a card that threw would read "all cards done" immediately followed by "pass-2
+            // enrichment failed". The last Report on the success path prints 100% anyway.
             // The heading counts CARDS because that is what the total is; labelling it with the
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;

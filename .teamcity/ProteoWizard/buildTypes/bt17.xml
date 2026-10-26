@@ -9,16 +9,28 @@
     </inherits>
     <options>
       <option name="allowExternalStatus" value="true" />
-      <option name="artifactRules" value="**/ProteoWizard-*.tar.gz&#xA;**/*.blib.observed" />
+      <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.tar.gz&#xA;scripts/installer/build/installer-version.txt&#xA;**/*.blib.observed" />
       <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
       <option name="checkoutMode" value="ON_AGENT" />
       <option name="executionTimeoutMin" value="60" />
     </options>
-    <build-runners order="RUNNER_simpleRunner_139">
+    <build-runners order="RUNNER_simpleRunner_139, RUNNER_80">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
           <param name="command.executable" value="tcbuild.sh" />
           <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated --require-vendor-support" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_80" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="scripts/installer/build/ProteoWizard-*.tar.gz,scripts/installer/build/installer-version.txt" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>

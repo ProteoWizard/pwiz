@@ -256,6 +256,15 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library {0} has no {1} table..
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_ReadFromDatabase_The_library__0__has_no__1__table {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_ReadFromDatabase_The_library__0__has_no__1__table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The redundant library {0} does not exist..
         /// </summary>
         public static string BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist {

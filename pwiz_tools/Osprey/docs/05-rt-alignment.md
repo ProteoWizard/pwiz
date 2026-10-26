@@ -54,7 +54,7 @@ The LOESS calibration also supports inverse prediction: mapping a measured RT ba
 
 ## Step 3 — Consensus library RT (Stage 6)
 
-Consensus RTs are computed by `ConsensusRts.Compute` (`Osprey.FDR/Reconciliation/ConsensusRts.cs:70`), invoked from `Stage6Planner.ComputeConsensusRts` (`Osprey.Tasks/Stage6Planner.cs:150`). Cross-file consensus only runs when `perFileEntries.Count > 1` (`Stage6Planner.cs:172`); single-file runs return an empty consensus and skip refit + reconciliation entirely.
+Consensus RTs are computed by `ConsensusRts` (`Osprey.FDR/Reconciliation/ConsensusRts.cs`) in FirstPassFDR. `Stage6Planner.ScanFiles` (`Osprey.Tasks/Stage6Planner.cs`) folds each run into a `ConsensusRts.Accumulator`, one run at a time, and `Stage6Planner.BuildConsensus` builds the consensus from it. Cross-file consensus only runs when there is more than one file (`ScanFiles` creates the accumulator only then); single-file runs return an empty consensus and skip refit + reconciliation entirely. The consensus is written to `<blib-stem>.1st-pass.consensus.json` (see `14-intermediate-files.md` section 5a) for the per-run steps below.
 
 The algorithm:
 
@@ -94,11 +94,11 @@ Targets and decoys receive independent consensus RTs — decoy consensus is comp
 
 ### Cross-impl bisection trace
 
-When `OSPREY_DUMP_INV_PREDICT` is set, `ConsensusRts.Compute` populates an `InvPredictRecord` list (`InvPredictRecord.cs:35`) with the `(fileName, modifiedSequence, isDecoy, apexRt, libraryRt, weight)` of every contributing detection (`ConsensusRts.cs:182`). The `Stage6Planner` drives the dump via the diagnostics sink (`Stage6Planner.cs:167`,`180`). This localizes any `ConsensusLibraryRt` divergence to either the loaded apex RT (Parquet decode) or the LOESS inverse-interpolation step.
+When `OSPREY_DUMP_INV_PREDICT` is set, the consensus build (`ConsensusRts.Accumulator.Build`) populates an `InvPredictRecord` list (`InvPredictRecord.cs:35`) with the `(fileName, modifiedSequence, isDecoy, apexRt, libraryRt, weight)` of every contributing detection (`ConsensusRts.cs:182`). `Stage6Planner.BuildConsensus` drives the dump via the diagnostics sink. This localizes any `ConsensusLibraryRt` divergence to either the loaded apex RT (Parquet decode) or the LOESS inverse-interpolation step.
 
 ## Step 4 — Refined calibration (Stage 6)
 
-During reconciliation the per-file calibration is **refit** from FDR-controlled consensus peptides by `CalibrationRefit.Refit` (`Osprey.FDR/Reconciliation/CalibrationRefit.cs:48`), called per file from `Stage6Planner.RefitCalibrations` (`Stage6Planner.cs:214`).
+During reconciliation the per-file calibration is **refit** from FDR-controlled consensus peptides by `CalibrationRefit.Refit` (`Osprey.FDR/Reconciliation/CalibrationRefit.cs:48`), called per file from `RunReconciliationPlanner.PlanRun` (`Osprey.Tasks/RunReconciliationPlanner.cs`). That runs in PerFileRescoring, on the node that rescores the run, just before the rescore. `PlanRun` refits over a canonically sorted copy of the run's survivors, because the LOESS input is built in entry order. The refit is saved as the `refined_rt_calibration` of the run's `<stem>.reconciliation.json`.
 
 - **Points**: `(consensus_library_rt -> measured_apex_rt)` for target peptides in this run whose `EffectiveExperimentQvalue(FdrLevel.Both) <= consensusFdr` and that have a consensus RT (`CalibrationRefit.cs:69`-`79`). Note this refit gate is **experiment-level** (`EffectiveExperimentQvalue`), distinct from the run-level precursor hard gate used to *select* consensus peptides in Step 3.
 - **LOESS config** (`CalibrationRefit.cs:92`): `Bandwidth = 0.3`, `OutlierRetention = 1.0` (no outlier removal — all points are FDR-controlled; LOESS robustness iterations still downweight stragglers), `MinPoints = MIN_CONSENSUS_POINTS = 20` (`CalibrationRefit.cs:39`), `ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust`.
@@ -108,7 +108,7 @@ This produces a tighter calibration because all points are high-confidence FDR-c
 
 ## Step 5 — Predicting expected measured RT and the reconciliation tolerance
 
-Reconciliation planning (`ReconciliationPlanner.Plan`, `Osprey.FDR/Reconciliation/ReconciliationPlanner.cs:65`) uses the consensus RTs and refined calibrations to decide, per (file, entry), whether to keep the current peak, switch to a stored CWT candidate, or force an integration window.
+Reconciliation planning (`ReconciliationPlanner.FilePlanner.PlanFile`, `Osprey.FDR/Reconciliation/ReconciliationPlanner.cs`, called one run at a time from `RunReconciliationPlanner.PlanRun`) uses the consensus RTs and refined calibrations to decide, per (file, entry), whether to keep the current peak, switch to a stored CWT candidate, or force an integration window.
 
 ### Expected measured RT
 
@@ -138,12 +138,12 @@ When no CWT candidate exists at the expected RT, `MedianPeakWidth` becomes the f
 
 ## Stage ordering
 
-`Stage6Planner.Plan` (`Stage6Planner.cs:80`) runs the four planning phases in Rust pipeline order:
+The planning steps keep Rust pipeline order, but are split across two tasks:
 
-1. Multi-charge consensus per file (independent; see `09-multi-charge-consensus.md`).
-2. Cross-run consensus RTs (`ComputeConsensusRts`).
-3. Per-file calibration refit (`RefitCalibrations`), which depends on (2).
-4. Reconciliation planning (`PlanReconciliation`), which depends on (2) and (3).
+1. FirstPassFDR, `Stage6Planner.Plan`: one pass over every run's survivors (`ScanFiles`) counts the multi-charge consensus targets (independent; see `09-multi-charge-consensus.md`) and folds the consensus accumulator; then `BuildConsensus` builds the cross-run consensus RTs. Written to `<blib-stem>.1st-pass.consensus.json`.
+2. PerFileRescoring, `RunReconciliationPlanner.PlanRun`, per run: calibration refit (`CalibrationRefit.Refit`), which depends on (1); then reconciliation planning and gap-fill targets, which depend on (1) and the refit. Written to the run's `<stem>.reconciliation.json` before the run is rescored.
+
+The per-run steps used to run in FirstPassFDR as a second pass over every run. See `10-cross-run-reconciliation.md` and `15-hpc-scoring-split.md`.
 
 ## Flags and switches
 
@@ -152,7 +152,7 @@ When no CWT candidate exists at the expected RT, `MedianPeakWidth` becomes the f
 | `ReconciliationConfig.ConsensusFdr` (config field) | `0.01` (`ReconciliationConfig.cs:39`) | FDR threshold for selecting consensus peptides (Step 3) and for the refit experiment-FDR gate (Step 4). Not exposed as a dedicated CLI flag; uses the default. |
 | `ReconciliationConfig.Enabled` | `true` (`ReconciliationConfig.cs:33`) | Enables inter-replicate reconciliation for multi-file runs. |
 | `ReconciliationConfig.TopNPeaks` | `5` (`ReconciliationConfig.cs:36`) | CWT candidate peaks stored per precursor for reconciliation planning. |
-| `--protein-fdr <t>` -> `OspreyConfig.EffectiveProteinFdr` | `0.01` (default threshold; machinery always runs) | When passed as `proteinFdrThreshold` to `ConsensusRts.Compute` (`Stage6Planner.cs:176`), enables protein-FDR rescue of borderline peptide-level detections in consensus selection. |
+| `--protein-fdr <t>` -> `OspreyConfig.EffectiveProteinFdr` | `0.01` (default threshold; machinery always runs) | When passed as `proteinFdrThreshold` to the `ConsensusRts.Accumulator` (`Stage6Planner.ScanFiles`), enables protein-FDR rescue of borderline peptide-level detections in consensus selection. |
 | `--experiment-fdr <t>` | `0.01` | Sets the experiment-level FDR threshold; passing precursors (any q-level) are the ones reconciliation includes per file. |
 | `RTCalibrationConfig.LoessBandwidth` | `0.3` (`RTCalibrationConfig.cs:38`) | LOESS bandwidth for both initial and refined RT calibration. |
 | `RTCalibrationConfig.MinCalibrationPoints` | `200` (`RTCalibrationConfig.cs:41`) | Minimum LOESS input points for initial-calibration pass 1. |
@@ -162,10 +162,10 @@ When no CWT candidate exists at the expected RT, `MedianPeakWidth` becomes the f
 | `ReconciliationPlanner.MIN_RT_TOLERANCE` (const) | `0.1` min (`ReconciliationPlanner.cs:40`) | Floor on the reconciliation RT tolerance. |
 | `ReconciliationPlanner.SIGMA_CLIP_MIN_SURVIVORS` (const) | `20` (`ReconciliationPlanner.cs:54`) | Minimum survivors before the sigma-clipped ceiling falls back to the unclipped median. |
 | `OSPREY_LOESS_CLASSICAL_ROBUST` (env) | `1`/true (`OspreyEnvironment.cs:72`) | Robustness-iteration mode for all LOESS fits. Set to `0` on both tools together to validate legacy behavior. |
-| `OSPREY_DUMP_INV_PREDICT` (`+ _ONLY`) (env) | off | Dumps the per-detection `(apex_rt, library_rt, weight)` inverse-prediction trace (`Stage6Planner.cs:167`). `_ONLY` exits after the dump. |
-| `OSPREY_DUMP_CONSENSUS` (`+ _ONLY`) | off | Dumps the consensus RT table (`Stage6Planner.cs:202`). |
-| `OSPREY_DUMP_REFIT` / `OSPREY_DUMP_LOESS_FIT` (`+ _ONLY`) | off | Dumps refined-calibration state (`Stage6Planner.cs:231`,`238`). |
-| `OSPREY_DUMP_RECONCILIATION` (`+ _ONLY`) | off | Dumps the per-(file,entry) reconciliation action plan (`Stage6Planner.cs:306`). |
+| `OSPREY_DUMP_INV_PREDICT` (`+ _ONLY`) (env) | off | Dumps the per-detection `(apex_rt, library_rt, weight)` inverse-prediction trace (`Stage6Planner.BuildConsensus`). `_ONLY` exits after the dump. |
+| `OSPREY_DUMP_CONSENSUS` (`+ _ONLY`) | off | Dumps the consensus RT table (`Stage6Planner.BuildConsensus`). |
+| `OSPREY_DUMP_REFIT` / `OSPREY_DUMP_LOESS_FIT` (`+ _ONLY`) | - | Removed from C# on 2026-10-16 (each wrote every run's refit at once, and the refit now runs per run in PerFileRescoring). Each run's refit is in its own `<stem>.reconciliation.json` as `refined_rt_calibration`. Setting either name now fails at startup like any unknown `OSPREY_*` name. |
+| `OSPREY_DUMP_RECONCILIATION` (`+ _ONLY`) | - | Rust-only. Removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic); the per-(file,entry) reconciliation action plan dump exists only in Rust Osprey. |
 
 ## Divergences from the Rust documentation
 
@@ -183,6 +183,6 @@ When no CWT candidate exists at the expected RT, `MedianPeakWidth` becomes the f
 
 - **[INTENTIONAL-CSHARP-DESIGN] Initial-calibration minimum-point gate differs from the doc's "50"** - Rust `14-rt-alignment.md` lists "Minimum points: 50" for initial calibration. In the C# discovery path pass 1 requires `MinCalibrationPoints` (default 200) and pass 2 requires 50 (`ABSOLUTE_MIN_CALIBRATION_POINTS`); the inner `RTCalibrator` requires only 20. The "50" figure corresponds to `RTStratifiedSampler.MinCalibrationPoints` and the pass-2 floor, not the pass-1 gate. This is a Stage 3 detail; see `04-calibration.md`. Evidence: `Osprey.Tasks/Calibrator.cs:60`,`259`; `Osprey.Core/RTCalibrationConfig.cs:41`. Severity: minor.
 
-- **[FLAG-GATED] `OSPREY_TRACE_PEPTIDE` per-peptide trace not present in this stage of the C# port** - Rust documents an `OSPREY_TRACE_PEPTIDE` env var that emits `[trace]` lines inside `compute_consensus_rts` and `plan_reconciliation`. The C# reconciliation code exposes structured *dump* diagnostics instead (`OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_RECONCILIATION`); no `OSPREY_TRACE_PEPTIDE` handling was found under `Osprey.FDR/Reconciliation` or `Osprey.Tasks`. A human should confirm whether the peptide trace exists elsewhere in the C# port before relying on it. Evidence: no match for `TRACE_PEPTIDE` in the C# tree. See `18-peptide-trace.md`. Severity: info.
+- **[FLAG-GATED] `OSPREY_TRACE_PEPTIDE` per-peptide trace not present in this stage of the C# port** - Rust documents an `OSPREY_TRACE_PEPTIDE` env var that emits `[trace]` lines inside `compute_consensus_rts` and `plan_reconciliation`. The C# reconciliation code exposes structured *dump* diagnostics instead (`OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_CONSENSUS`; `OSPREY_DUMP_RECONCILIATION` was removed from C# on 2026-10-11 and is Rust-only); no `OSPREY_TRACE_PEPTIDE` handling was found under `Osprey.FDR/Reconciliation` or `Osprey.Tasks`. A human should confirm whether the peptide trace exists elsewhere in the C# port before relying on it. Evidence: no match for `TRACE_PEPTIDE` in the C# tree. See `18-peptide-trace.md`. Severity: info.
 
 Verified against the Rust doc step for step: the three RT spaces, forward/inverse LOESS prediction, two-pass initial calibration, per-file consensus refit at bandwidth 0.3 / retention 1.0 / min-20, weighted-median consensus with independent target/decoy sets, `predict(consensus_library_rt)` for expected RT, apex-proximity reconcile action, and `median_peak_width/2` forced-integration window all match. The behavioral deltas above are all cases where the C# port tracks the *current* Rust code and the Rust `14-rt-alignment.md` prose is stale.

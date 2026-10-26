@@ -446,4 +446,43 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_" xml:space="preserve">
     <value>DIA-NN search did not produce a spectral library output.</value>
   </data>
+  <data name="OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_" xml:space="preserve">
+    <value>Osprey did not produce a spectral library.</value>
+  </data>
+  <data name="OspreySearchDlg_AddSearchModificationsToDocument_Added_the_modifications_of_an_Osprey_search" xml:space="preserve">
+    <value>Added the modifications of an Osprey search</value>
+  </data>
+  <data name="OspreySearchDlg_FragmentUnit_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="OspreySearchDlg_FragmentUnit_ppm" xml:space="preserve">
+    <value>ppm</value>
+  </data>
+  <data name="OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__" xml:space="preserve">
+    <value>Osprey did not write the spectral library {0}.</value>
+  </data>
+  <data name="OspreySearchDlg_Resolution_High_resolution__Orbitrap__TOF_" xml:space="preserve">
+    <value>High resolution (Orbitrap, TOF)</value>
+  </data>
+  <data name="OspreySearchDlg_Resolution_Unit_resolution__Stellar_" xml:space="preserve">
+    <value>Unit resolution (Stellar)</value>
+  </data>
+  <data name="OspreySearchDlg_StartSearch_The_document_library__0__already_exists__Overwrite_it_with_the_results_of_this_search_" xml:space="preserve">
+    <value>The document library {0} already exists. Overwrite it with the results of this search?</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_A_FASTA_file_is_required_for_an_Osprey_search_" xml:space="preserve">
+    <value>A FASTA file is required for an Osprey search.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_" xml:space="preserve">
+    <value>Osprey cannot predict a library for the enzyme '{0}'. Choose an enzyme with a standard cleavage rule.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_" xml:space="preserve">
+    <value>Osprey cannot predict a library with these modifications:</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__" xml:space="preserve">
+    <value>Osprey searches {0} and {1} libraries, not {2}.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_" xml:space="preserve">
+    <value>The existing library cannot be the document library {0}, which the search writes.</value>
+  </data>
 </root>

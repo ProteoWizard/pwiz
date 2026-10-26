@@ -10,6 +10,7 @@
 using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -85,6 +86,12 @@ public enum BuildInput
 /// </remarks>
 public class BlibBuilder : BlibMaker
 {
+    /// <summary>
+    /// The <c>LibMetadata</c> key under which BlibBuild records the command line it was run
+    /// with (see <see cref="BlibMaker.RecordCommandLine"/>).
+    /// </summary>
+    public const string CommandMetadataKey = "bibliospec.blibbuild.command";
+
     // cpp BlibBuilder.cpp:41 — defaults from the cpp constructor initializer list.
     private const int DefaultLevelCompress = 3;
     private const long DefaultFileSizeThresholdForCaching = 800_000_000L;
@@ -211,6 +218,25 @@ public class BlibBuilder : BlibMaker
     /// </summary>
     public IReadOnlyList<string> InputFiles => _inputFiles;
 
+    /// <summary>
+    /// True when readers may add the optional columns of experiment-wide values: the library is
+    /// new and built from a single input. Values from different inputs or an appended library
+    /// would come from different experiments, which mean nothing next to each other.
+    /// </summary>
+    public bool AllowsOptionalColumns => Overwrite && _inputFiles.Count <= 1;
+
+    /// <summary>
+    /// Opens the library, and drops the optional columns an appended library already has when
+    /// <see cref="AllowsOptionalColumns"/> is false, so its global values do not sit next to
+    /// spectra from another experiment.
+    /// </summary>
+    public override void Init()
+    {
+        base.Init();
+        if (!IsScoreLookupMode && !AllowsOptionalColumns)
+            RemoveOptionalColumns();
+    }
+
     /// <summary>Append an input file with no per-file score threshold override.</summary>
     public void AddInputFile(string file)
     {
@@ -307,37 +333,12 @@ public class BlibBuilder : BlibMaker
     /// cpp <c>attachAll</c>. No-op — the cpp implementation is empty (see BlibBuilder.cpp:305-316
     /// for the commented-out original ATTACH loop).
     /// </summary>
-    protected override void AttachAll()
-    {
-        // cpp parity: BlibBuilder no longer attaches all libraries up front; each
-        // .blib input is attached / detached individually by transferLibrary / commit.
-    }
-
     /// <summary>
-    /// cpp <c>commit</c>. After the BlibMaker commit, DETACH every <c>.blib</c> source library
-    /// that was ATTACHed during transfer. cpp BlibBuilder.cpp:491.
+    /// Whether peak blobs are compressed: cpp <c>insertPeaks</c> passed <see cref="LevelCompress"/>
+    /// through to zlib's <c>compress()</c>, which compresses at its default level for any
+    /// level but 0 (cpp BlibBuilder.cpp:741); the writer compresses at that level.
     /// </summary>
-    public override void Commit()
-    {
-        base.Commit();
-
-        for (var i = 0; i < _inputFiles.Count; i++)
-        {
-            if (HasExtensionCi(_inputFiles[i], ".blib"))
-            {
-                SqlStmt(string.Format(CultureInfo.InvariantCulture, "DETACH DATABASE tmp{0}", i));
-            }
-        }
-    }
-
-    /// <summary>
-    /// cpp <c>insertPeaks</c>. Forwards to <see cref="BlibMaker.InsertPeaks"/> with the
-    /// configured <see cref="LevelCompress"/>. cpp BlibBuilder.cpp:741.
-    /// </summary>
-    public void InsertPeaks(int spectraId, int peaksCount, ReadOnlySpan<double> mz, ReadOnlySpan<float> intensity)
-    {
-        InsertPeaks(spectraId, LevelCompress, peaksCount, mz, intensity);
-    }
+    public bool CompressPeaks => LevelCompress != 0;
 
     /// <summary>
     /// cpp <c>generateModifiedSeq</c>. Combine an unmodified sequence and a list of mods into
@@ -424,20 +425,14 @@ public class BlibBuilder : BlibMaker
 
         // Gather all .mzXML SpectrumSourceFiles into id -> filename map (insertion order
         // matters for deterministic iteration like cpp).
-        var fileIds = new SortedDictionary<string, int>(StringComparer.Ordinal);
-        using (var cmd = Db.CreateCommand())
+        var fileIds = new SortedDictionary<string, long>(StringComparer.Ordinal);
+        foreach (var file in Writer.ReadSourceFiles())
         {
-            cmd.CommandText = "SELECT id, filename FROM SpectrumSourceFiles";
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            var name = file.FileName ?? string.Empty;
+            if (name.Length >= reqExt.Length &&
+                name.AsSpan(name.Length - reqExt.Length).Equals(reqExt.AsSpan(), StringComparison.OrdinalIgnoreCase))
             {
-                var id = reader.GetInt32(0);
-                var name = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                if (name.Length >= reqExt.Length &&
-                    name.AsSpan(name.Length - reqExt.Length).Equals(reqExt.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                {
-                    fileIds[name] = id;
-                }
+                fileIds[name] = file.Id;
             }
         }
 
@@ -457,7 +452,7 @@ public class BlibBuilder : BlibMaker
                 if (pos < 0)
                     continue;
 
-                var groupIds = new List<int>();
+                var groupIds = new List<long>();
                 var found = true;
                 for (var p = 1; p < group.Length; p++)
                 {
@@ -475,42 +470,24 @@ public class BlibBuilder : BlibMaker
                 if (!found || groupIds.Count != group.Length - 1)
                     continue;
 
-                // Found a complete pattern group; reassign RefSpectra.fileID and delete the
-                // redundant SpectrumSourceFiles rows, then rename the survivor.
-                var update = new StringBuilder();
-                var delete = new StringBuilder();
-                update.Append(CultureInfo.InvariantCulture, $"UPDATE RefSpectra SET fileID = {sourceId} WHERE");
-                delete.Append("DELETE FROM SpectrumSourceFiles WHERE");
-                for (var k = 0; k < groupIds.Count; k++)
-                {
-                    if (k > 0)
-                    {
-                        update.Append(" OR");
-                        delete.Append(" OR");
-                    }
-                    update.Append(CultureInfo.InvariantCulture, $" fileID = {groupIds[k]}");
-                    delete.Append(CultureInfo.InvariantCulture, $" id = {groupIds[k]}");
-                }
-                SqlStmt(update.ToString());
-                SqlStmt(delete.ToString());
-
+                // Found a complete pattern group; the group's spectra move to the first file,
+                // the other files' rows go, and the survivor takes the common name.
                 var renamed = string.Concat(
                     sourceFile.AsSpan(0, pos),
                     ".".AsSpan(),
                     sourceFile.AsSpan(pos + firstPattern.Length));
-                SqlStmt(string.Format(
-                    CultureInfo.InvariantCulture,
-                    "UPDATE SpectrumSourceFiles SET fileName = '{0}' WHERE id = {1}",
-                    SqliteRoutine.EscapeApostrophes(renamed), sourceId));
+                Writer.MergeSourceFiles(sourceId, groupIds, renamed);
                 break;
             }
         }
     }
 
     /// <summary>
-    /// cpp <c>transferLibrary</c>. ATTACH the iLib-th input .blib, copy its source files,
-    /// then walk RefSpectra (optionally filtering by target sequences) calling
-    /// <see cref="BlibMaker.TransferSpectrum"/> for each row.
+    /// cpp <c>transferLibrary</c>. Reads the iLib-th input .blib through a <see cref="BlibReader"/>
+    /// and copies its source files, then every spectrum (optionally only those of the target
+    /// sequences) with its peaks, modifications, annotations and proteins, through a
+    /// <see cref="BlibCopier"/>. cpp attached the library and copied by SQL; a library of any
+    /// older schema reads through the same calls here.
     /// </summary>
     /// <returns>Number of spectra processed.</returns>
     public virtual int TransferLibrary(int iLib)
@@ -521,81 +498,49 @@ public class BlibBuilder : BlibMaker
         var path = _inputFiles[iLib];
         VerifyFileExists(path);
 
-        var schemaTmp = "tmp" + iLib.ToString(CultureInfo.InvariantCulture);
-        SqlStmt(string.Format(
-            CultureInfo.InvariantCulture,
-            "ATTACH DATABASE '{0}' as {1}",
-            SqliteRoutine.EscapeApostrophes(path), schemaTmp));
-
-        CreateUpdatedRefSpectraView(schemaTmp);
-
-        // cpp parity: BlibBuilder.cpp:334-356 — inspect columns to pick a tableVersion.
-        var tableVersion = 0;
-        if (TableColumnExists(schemaTmp, "RefSpectra", "retentionTime"))
-        {
-            if (TableColumnExists(schemaTmp, "RefSpectra", "startTime"))
-                tableVersion = BlibSchema.MinVersionTic;
-            else if (TableExists(schemaTmp, "RefSpectraPeakAnnotations"))
-                tableVersion = BlibSchema.MinVersionPeakAnnot;
-            else if (TableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyOffset"))
-                tableVersion = BlibSchema.MinVersionImsUnits;
-            else if (TableColumnExists(schemaTmp, "RefSpectra", "moleculeName"))
-                tableVersion = BlibSchema.MinVersionSmallMol;
-            else if (TableColumnExists(schemaTmp, "RefSpectra", "collisionalCrossSectionSqA"))
-                tableVersion = BlibSchema.MinVersionCcs;
-            else if (TableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyDriftTimeOffsetMsec"))
-                tableVersion = BlibSchema.MinVersionImsHeoff;
-            else if (TableColumnExists(schemaTmp, "RefSpectra", "ionMobilityValue"))
-                tableVersion = BlibSchema.MinVersionIms;
-            else
-                tableVersion = 1;
-        }
+        using var source = new BlibReader(path);
+        var copier = new BlibCopier(source, Writer);
 
         BeginTransaction();
 
         Message = "ERROR: Failed transferring spectra from " + path;
         Verbosity.Status($"Transferring spectra from {BaseName(path)}.");
 
-        TransferSpectrumFiles(schemaTmp);
+        copier.CopySourceFiles();
 
+        // With target sequences, most spectra are skipped: the scan reads no peaks, and the
+        // copier reads a kept spectrum's by id.
+        var selecting = _targetSequences != null || _targetSequencesModified != null;
         var processed = 0;
-        using (var cmd = Db.CreateCommand())
+        foreach (var spectrum in source.ReadSpectra(withPeaks: !selecting))
         {
-            cmd.CommandText = string.Format(
-                CultureInfo.InvariantCulture,
-                "SELECT id, peptideSeq, peptideModSeq FROM {0}.RefSpectra ORDER BY id",
-                schemaTmp);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            processed++;
+
+            var skip = false;
+            if (selecting)
             {
-                processed++;
-
-                var skip = false;
-                if (_targetSequences != null || _targetSequencesModified != null)
-                {
-                    var seqUnmodified = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                    var rawModSeq = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
-                    // cpp parity: BlibBuilder.cpp:389 normalises the modified sequence via
-                    // parseSequence(..., true) before comparing. parseSequence isn't ported yet
-                    // (it lives in the CLI / stdin path); we compare against the raw string.
-                    // The future stdin path will need to mirror the parse before populating
-                    // _targetSequencesModified.
-                    var inUnmod = _targetSequences != null && _targetSequences.Contains(seqUnmodified);
-                    var inMod = _targetSequencesModified != null && _targetSequencesModified.Contains(rawModSeq);
-                    skip = !(inUnmod || inMod);
-                }
-
-                if (!skip)
-                {
-                    var spectraId = reader.GetInt32(0);
-                    // cpp parity: BlibBuilder.cpp:402 — always passes copies=1, regardless of
-                    // whether the source library was redundant.
-                    TransferSpectrum(schemaTmp, spectraId, 1, tableVersion);
-                }
+                var seqUnmodified = spectrum.PeptideSeq ?? string.Empty;
+                var rawModSeq = spectrum.PeptideModSeq ?? string.Empty;
+                // cpp parity: BlibBuilder.cpp:389 normalises the modified sequence via
+                // parseSequence(..., true) before comparing. parseSequence isn't ported yet
+                // (it lives in the CLI / stdin path); we compare against the raw string.
+                // The future stdin path will need to mirror the parse before populating
+                // _targetSequencesModified.
+                var inUnmod = _targetSequences != null && _targetSequences.Contains(seqUnmodified);
+                var inMod = _targetSequencesModified != null && _targetSequencesModified.Contains(rawModSeq);
+                skip = !(inUnmod || inMod);
             }
+
+            // cpp parity: BlibBuilder.cpp:402 — always passes copies=1, regardless of
+            // whether the source library was redundant.
+            if (skip)
+                continue;
+            if (selecting)
+                copier.CopySpectrum(spectrum.Id, 1, keepId: false);
+            else
+                copier.CopySpectrum(spectrum, 1, keepId: false);
         }
 
-        SqlStmt("DROP VIEW RefSpectraTransfer");
         EndTransaction();
         return processed;
     }
@@ -713,11 +658,11 @@ public class BlibBuilder : BlibMaker
 
     /// <summary>
     /// cpp <c>BlibHandler::getScoreTypes</c> (BlibBuild.cpp:49-72). Opens the .blib read-only (never the
-    /// output BlibMaker.Db, which isn't open in score-lookup mode) and returns the distinct score types it
+    /// output library's writer, which isn't open in score-lookup mode) and returns the distinct score types it
     /// was built from. Mirrors cpp: skip UNKNOWN rows, and fall back to a single UNKNOWN when the library
     /// records none (or predates the ScoreTypes table), so the probe always yields a valid, non-erroring row.
     /// </summary>
-    private IList<PsmScoreType> GetBlibScoreTypes(int iLib)
+    private List<PsmScoreType> GetBlibScoreTypes(int iLib)
     {
         var path = _inputFiles[iLib];
         VerifyFileExists(path);
@@ -725,27 +670,23 @@ public class BlibBuilder : BlibMaker
         var scoreTypes = new List<PsmScoreType>();
         try
         {
-            using (var db = SqliteRoutine.Open(path, readOnly: true))
-            using (var cmd = db.CreateCommand())
+            using var reader = new BlibReader(path);
+            // The names of the score types the spectra carry; an older or consensus library
+            // without the ScoreTypes table, or the column, yields none.
+            var names = reader.ReadScoreTypes();
+            foreach (var id in reader.ReadScoreTypesInUse())
             {
-                cmd.CommandText =
-                    "SELECT DISTINCT(ScoreTypes.scoreType) FROM RefSpectra " +
-                    "JOIN ScoreTypes ON RefSpectra.scoreType = ScoreTypes.id";
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var scoreType = BlibUtils.StringToScoreType(reader[0]?.ToString() ?? string.Empty);
-                        if (scoreType != PsmScoreType.UnknownScoreType)
-                            scoreTypes.Add(scoreType);
-                    }
-                }
+                if (!names.TryGetValue(id, out var name))
+                    continue;
+                var scoreType = BlibUtils.StringToScoreType(name ?? string.Empty);
+                if (scoreType != PsmScoreType.UnknownScoreType)
+                    scoreTypes.Add(scoreType);
             }
         }
-        catch (SQLiteException)
+        catch (Exception ex) when (ex is SQLiteException or InvalidDataException)
         {
-            // Older/consensus .blibs may lack a ScoreTypes table; treat as no known score type
-            // rather than erroring (which would re-hang Skyline's Build Spectral Library page).
+            // A damaged library (no RefSpectra or LibInfo, or not a database) is no known score
+            // type rather than an error (which would re-hang Skyline's Build Spectral Library page).
             scoreTypes.Clear();
         }
 
@@ -843,7 +784,7 @@ public class BlibBuilder : BlibMaker
         // transfers the library's rows (needs the output Db open); in score-lookup mode it reports
         // the .blib's OWN score types via BlibHandler::getScoreTypes (BlibBuild.cpp:49-72). Score
         // lookup must NOT transfer: the output Db is never opened in that mode, so TransferLibrary
-        // would throw "Db not open. Call OpenDb first." — which the C# port previously did for every
+        // would throw "Db not open. Call Init first." — which the C# port previously did for every
         // .blib, erroring the score-type probe and hanging Skyline's Build Spectral Library page.
         if (HasExtensionCi(resultFile, ".blib"))
         {

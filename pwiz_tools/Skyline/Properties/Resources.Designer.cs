@@ -11513,15 +11513,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed attempting to upgrade..
-        /// </summary>
-        public static string UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_ {
-            get {
-                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to There was an error authenticating user credentials on the server {0}..
         /// </summary>
         public static string UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__ {

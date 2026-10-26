@@ -22,6 +22,7 @@
  */
 
 using System.Globalization;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Osprey.Core
 {
@@ -47,9 +48,21 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class NeutralLoss
     {
-        public const double H2OMass = 18.010565;
-        public const double NH3Mass = 17.026549;
-        public const double H3PO4Mass = 97.976896;
+        // From the formulas and the isotope table every tool in pwiz shares
+        // (pwiz.Common.Chemistry, the values Skyline calculates with), not a copy of them: the
+        // tools that compute peptide and fragment masses must agree to the last digit.
+        public static readonly double H2OMass = MonoisotopicMass(@"H2O");
+        public static readonly double NH3Mass = MonoisotopicMass(@"NH3");
+        public static readonly double H3PO4Mass = MonoisotopicMass(@"H3PO4");
+
+        /// <summary>The monoisotopic mass of <paramref name="formula"/> from <see cref="IsotopeAbundances.Default"/>, as <see cref="AminoAcidFormulas"/> sums a peptide's.</summary>
+        public static double MonoisotopicMass(string formula)
+        {
+            double mass = 0.0;
+            foreach (var element in Molecule.Parse(formula))
+                mass += IsotopeAbundances.Default[element.Key].MostAbundanceMass * element.Value;
+            return mass;
+        }
 
         /// <summary>
         /// Mass of the neutral loss for the given code, using

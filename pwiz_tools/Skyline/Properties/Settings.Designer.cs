@@ -1710,7 +1710,31 @@ namespace pwiz.Skyline.Properties {
                 this["LibraryKeepRedundant"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AlphaPeptDeepUseGpu {
+            get {
+                return ((bool)(this["AlphaPeptDeepUseGpu"]));
+            }
+            set {
+                this["AlphaPeptDeepUseGpu"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CarafeModelDirectory {
+            get {
+                return ((string)(this["CarafeModelDirectory"]));
+            }
+            set {
+                this["CarafeModelDirectory"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
@@ -3650,24 +3674,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3.9.13")]
-        public string PythonEmbeddableVersion {
-            get {
-                return ((string)(this["PythonEmbeddableVersion"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("57731cf80b1c429a0be7133266d7d7cf")]
-        public string PythonEmbeddableHash {
-            get {
-                return ((string)(this["PythonEmbeddableHash"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf")]
         public string MsFraggerLicenseUrl {
             get {
@@ -3692,7 +3698,25 @@ namespace pwiz.Skyline.Properties {
                 return ((string)(this["MsFraggerDownloadUrl"]));
             }
         }
-        
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://skyline.ms/_webdav/home/software/Skyline/daily/@files/")]
+        public string InstallUrl {
+            get {
+                return ((string)(this["InstallUrl"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Skyline-daily")]
+        public string ProductName {
+            get {
+                return ((string)(this["ProductName"]));
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -3762,6 +3786,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["EnableMcpAutoConnect"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CheckedForSettingsToImport {
+            get {
+                return ((bool)(this["CheckedForSettingsToImport"]));
+            }
+            set {
+                this["CheckedForSettingsToImport"] = value;
             }
         }
     }

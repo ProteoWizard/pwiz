@@ -2,6 +2,9 @@
 root = true
 
 # All files - UTF-8 without BOM, CRLF line endings (Windows project)
+# end_of_line describes the Windows working tree. Git stores text as LF (.gitattributes
+# "* text=auto") and core.autocrlf converts on checkout, so a file saved with either
+# ending commits the same way.
 [*]
 charset = utf-8
 end_of_line = crlf

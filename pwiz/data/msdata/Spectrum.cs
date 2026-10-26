@@ -226,11 +226,11 @@ public class ChromatogramIdentity
     public long SourceFilePosition { get; set; } = -1;
 }
 
-/// <summary>A single chromatogram. Port of pwiz::msdata::Chromatogram.</summary>
 /// <summary>Legacy pwiz.CLI helper: List of <see cref="TimeIntensityPair"/> populated by
 /// <see cref="Chromatogram.GetTimeIntensityPairs(ref TimeIntensityPairList)"/>.</summary>
 public sealed class TimeIntensityPairList : List<TimeIntensityPair> { }
 
+/// <summary>A single chromatogram. Port of pwiz::msdata::Chromatogram.</summary>
 public sealed class Chromatogram : ChromatogramIdentity
 {
     /// <summary>ParamContainer for this chromatogram.</summary>
