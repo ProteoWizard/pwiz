@@ -40,7 +40,9 @@ namespace pwiz.Common.CommandLine
         /// <summary>
         /// A parser over <paramref name="arguments"/> under the process-wide grammar: a host
         /// installs its grammar on <see cref="ArgUsage.Grammar"/> before it declares or parses
-        /// anything, the way it installs its <see cref="ArgUsage.Provider"/>.
+        /// anything, the way it installs its <see cref="ArgUsage.Provider"/>
+        /// (<see cref="ArgUsage.Install"/>); declarations hosted in another program's process
+        /// parse under that program's grammar.
         /// </summary>
         public CommandLineParser(IEnumerable<Argument<TContext>> arguments)
         {
@@ -159,7 +161,7 @@ namespace pwiz.Common.CommandLine
                     continue;
                 string name = SplitInline(token.Substring(prefix.Length), out inlineValue);
                 argText = prefix + name;
-                var arg = _arguments.FirstOrDefault(a => string.Equals(a.Name, name, StringComparison.Ordinal));
+                var arg = _arguments.FirstOrDefault(a => Grammar.NamesMatch(a.Name, name));
                 if (arg != null)
                     return arg;
             }

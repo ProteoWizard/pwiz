@@ -68,12 +68,18 @@ namespace pwiz.Skyline
         // such path touches a static member first).
         static CommandArgs()
         {
-            ArgUsage.Provider = new SkylineArgUsageProvider();
-            ArgUsage.IsRemoteUrl = IsRemoteUrl;
-            ArgUsage.IsWrappableListType = ve => WRAPPABLE_LIST_TYPE_VALUES.Contains(ve);
-            // Keep Skyline's usage HTML byte-identical to the committed goldens by using the
-            // same encoder it always has (HttpUtility); PortableUtil defaults to WebUtility.
-            ArgUsage.HtmlEncode = HttpUtility.HtmlEncode;
+            // Skyline's grammar is the default, strict --name=value. CarafeSharp's declarations,
+            // in this process for AlphaPeptDeep library builds, run under these settings; Carafe's
+            // own grammar is installed only by CarafeSharp.exe.
+            ArgUsage.Install(new ArgUsageSettings
+            {
+                Provider = new SkylineArgUsageProvider(),
+                IsRemoteUrl = IsRemoteUrl,
+                IsWrappableListType = ve => WRAPPABLE_LIST_TYPE_VALUES.Contains(ve),
+                // Keep Skyline's usage HTML byte-identical to the committed goldens by using the
+                // same encoder it always has (HttpUtility); PortableUtil defaults to WebUtility.
+                HtmlEncode = HttpUtility.HtmlEncode
+            });
         }
 
         // Argument value descriptions
@@ -325,7 +331,8 @@ namespace pwiz.Skyline
         // Parsing checks the value in SetCulture, which also accepts other spellings of a known culture name.
         public static readonly Argument ARG_CULTURE = new Argument(@"culture",
             () => DISPLAY_LANGUAGE_NAMES.Value, (c, p) => SetCulture(p))
-            { HasValueChecking = true, AcceptedValues = GetKnownCultureNames };
+            // The value is checked by SetCulture when parsed; a token built with + is checked by the same rule.
+            { HasValueChecking = true, AcceptsValue = name => GetKnownCulture(name) != null };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,

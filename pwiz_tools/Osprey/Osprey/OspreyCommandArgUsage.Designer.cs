@@ -97,11 +97,38 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to With {0}: where the library is predicted, {1} (default: the GPU when this computer has an NVIDIA GPU that can use the CUDA runtime and the runtime is installed, see {4}, else the CPU), {2} (the GPU; a run that cannot use it fails before it starts, saying why) or {3}. The log names the device every library phase ran on..
+        /// </summary>
+        public static string _device {
+            get {
+                return ResourceManager.GetString("_device", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Write developer diagnostic dump files, for comparison with the Rust implementation.
         /// </summary>
         public static string _diagnostics {
             get {
                 return ResourceManager.GetString("_diagnostics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1 [rest of string was truncated]";.
+        /// </summary>
+        public static string _entrapment {
+            get {
+                return ResourceManager.GetString("_entrapment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: draw the entrapment peptides, matched in mass, from this foreign-species protein FASTA  [rest of string was truncated]";.
+        /// </summary>
+        public static string _entrapment_fasta {
+            get {
+                return ResourceManager.GetString("_entrapment_fasta", resourceCulture);
             }
         }
         
@@ -120,6 +147,15 @@ namespace pwiz.Osprey {
         public static string _export_library {
             get {
                 return ResourceManager.GetString("_export_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in  [rest of string was truncated]";.
+        /// </summary>
+        public static string _fasta {
+            get {
+                return ResourceManager.GetString("_fasta", resourceCulture);
             }
         }
         
@@ -203,7 +239,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_input_list", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download the NVIDIA CUDA runtime from nuget.org (several GB; the size is logged first, and every package is checked against the hashes this build was tested with) into the {0} folder and exit, so that {1} can predict on the GPU. Needs nothing else on the command line..
+        /// </summary>
+        public static string _install_cuda_runtime {
+            get {
+                return ResourceManager.GetString("_install_cuda_runtime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Spectral library ({0}, {1}).
         /// </summary>
@@ -228,6 +273,15 @@ namespace pwiz.Osprey {
         public static string _memstamp {
             get {
                 return ResourceManager.GetString("_memstamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) [rest of string was truncated]";.
+        /// </summary>
+        public static string _model {
+            get {
+                return ResourceManager.GetString("_model", resourceCulture);
             }
         }
         
@@ -331,15 +385,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write TSV report to file.
-        /// </summary>
-        public static string _report {
-            get {
-                return ResourceManager.GetString("_report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resolution mode (default: {0}).
         /// </summary>
         public static string _resolution {
@@ -392,7 +437,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_timestamp", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: Osprey\torch under the user's local application data folder). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder..
+        /// </summary>
+        public static string _torch_runtimes {
+            get {
+                return ResourceManager.GetString("_torch_runtimes", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing..
         /// </summary>
@@ -430,6 +484,33 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With {0}: tune the models on these runs before the library is predicted. The runs are searched with  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input {
+            get {
+                return ResourceManager.GetString("_training_input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input_list {
+            get {
+                return ResourceManager.GetString("_training_input_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} and {1}: the stage {2} selects is a stage of the tuning runs&apos; search, not the output&apos;s: i [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _training_search {
+            get {
+                return ResourceManager.GetString("_training_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show more detail (e.g. per-fold Percolator iterations) that is hidden by default.
         /// </summary>
         public static string _verbose {
@@ -457,11 +538,11 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write PIN files for external tools.
+        ///   Looks up a localized string similar to With {0}: print the files the task reads and writes for this command line, one per line as input or  [rest of string was truncated]&quot;;.
         /// </summary>
-        public static string _write_pin {
+        public static string _task_files {
             get {
-                return ResourceManager.GetString("_write_pin", resourceCulture);
+                return ResourceManager.GetString("_task_files", resourceCulture);
             }
         }
     }

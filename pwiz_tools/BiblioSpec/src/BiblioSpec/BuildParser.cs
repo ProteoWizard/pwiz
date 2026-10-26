@@ -8,8 +8,8 @@
 // readers that need XML parsing will use System.Xml.XmlReader directly.
 
 using System.Buffers;
-using System.Data.SQLite;
 using System.Globalization;
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -33,9 +33,6 @@ public abstract class BuildParser : IDisposable
     /// <summary>Monoisotopic mass of H2O. Used by <see cref="CalculatePeptideMass"/>.</summary>
     /// <remarks>cpp parity: BuildParser.h:43 <c>H2O_MASS</c>.</remarks>
     public const double H2OMass = 18.01056469252;
-
-    // cpp: prepared INSERT INTO RefSpectra statement, lazily initialised in the ctor.
-    private SQLiteCommand? _insertSpectrumStmt;
 
     // cpp parity: full path to the result file (as supplied to the ctor).
     private readonly string _fullFilename;
@@ -156,26 +153,22 @@ public abstract class BuildParser : IDisposable
         // the C# port (see the SpecReader property): the wrapper is allocated on first read,
         // so tests / subclasses can inject a different reader before any code path triggers
         // the default — no resource leak if the default would have been replaced.
-
-        PrepareInsertSpectrumStatement();
     }
 
-    /// <summary>Releases the prepared INSERT statement and any owned spec reader.</summary>
+    /// <summary>Releases any owned spec reader.</summary>
     /// <remarks>cpp parity: BuildParser.cpp:58 — frees the PSM list, the prepared stmt,
-    /// and the spec reader. In C# the PSM list is GC-managed; we clean up the prepared
-    /// stmt and (if we own it) the spec reader.</remarks>
+    /// and the spec reader. In C# the PSM list is GC-managed, the RefSpectra insert is the
+    /// writer's; we clean up (if we own it) the spec reader.</remarks>
     public void Dispose()
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>Releases the prepared INSERT statement and any owned spec reader.</summary>
+    /// <summary>Releases any owned spec reader.</summary>
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
-        _insertSpectrumStmt?.Dispose();
-        _insertSpectrumStmt = null;
         // Touch the backing field directly so a never-accessed lazy default isn't
         // materialised purely to be disposed.
         _specReader?.Dispose();
@@ -218,34 +211,17 @@ public abstract class BuildParser : IDisposable
     /// <remarks>cpp parity: BuildParser.cpp:272.</remarks>
     protected internal string GetPsmFilePath() => _filepath;
 
-    /// <summary>cpp parity: BuildParser.cpp:73 — prepare the cached <c>INSERT INTO RefSpectra</c> statement.</summary>
-    protected internal void PrepareInsertSpectrumStatement()
+    /// <summary>
+    /// Adds one of the optional columns of experiment-wide values (<see cref="BlibSchema.PrecursorQValue"/>
+    /// and the others) to the library, so the values this reader sets on its <see cref="PSM"/>s and
+    /// <see cref="Protein"/>s are written. Call it only when the input has values for the column,
+    /// before the spectra are inserted. Does nothing when the library cannot hold experiment-wide
+    /// values (see <see cref="BlibBuilder.AllowsOptionalColumns"/>).
+    /// </summary>
+    protected internal void EnableOptionalColumn(BlibOptionalColumn column)
     {
-        // cpp parity: BuildParser.cpp:73 — cpp's sqlite3_prepare on a NULL db silently no-ops,
-        // which the PercolatorXmlReader relies on when it constructs a throwaway BlibBuilder
-        // just to drive an SQTreader for mod-table parsing. Mirror that here: skip when no DB.
-        if (!BlibMaker.IsDbOpen)
-            return;
-
-        // cpp parity: BuildParser.cpp:69-76. Column list matches the cpp string verbatim;
-        // the trailing 25 placeholders cover the 20 explicit cols + 5 SmallMolMetadata cols.
-        var stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-                 + "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
-                 + "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, totalIonCurrent, fileID, "
-                 + "specIDinFile, score, scoreType"
-                 + SmallMolMetadata.SqlColumnNamesCsv()
-                 + ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
-
-        _insertSpectrumStmt?.Dispose();
-        _insertSpectrumStmt = BlibMaker.Db.CreateCommand();
-        _insertSpectrumStmt.CommandText = stmt;
-        // 25 unnamed bind slots, matching the 25 question marks above.
-        for (var i = 0; i < 25; i++)
-        {
-            var p = _insertSpectrumStmt.CreateParameter();
-            _insertSpectrumStmt.Parameters.Add(p);
-        }
-        _insertSpectrumStmt.Prepare();
+        if (BlibMaker.IsDbOpen && BlibMaker.AllowsOptionalColumns)
+            BlibMaker.AddOptionalColumn(column);
     }
 
     // --- progress wiring ------------------------------------------------------------
@@ -643,34 +619,6 @@ public abstract class BuildParser : IDisposable
         return fileId;
     }
 
-    /// <summary>Insert a protein into the Proteins table if not already present.</summary>
-    /// <returns>The Proteins row id for this accession.</returns>
-    /// <remarks>cpp parity: BuildParser.cpp:326.</remarks>
-    protected internal long InsertProtein(Protein protein)
-    {
-        ArgumentNullException.ThrowIfNull(protein);
-
-        // cpp parity: SELECT id WHERE accession = '...'
-        var selectSql = "SELECT id FROM Proteins WHERE accession = '" +
-            SqliteRoutine.EscapeApostrophes(protein.Accession) + "'";
-
-        using (var selectCmd = BlibMaker.Db.CreateCommand())
-        {
-            selectCmd.CommandText = selectSql;
-            using var reader = selectCmd.ExecuteReader();
-            if (reader.Read())
-            {
-                return reader.GetInt64(0);
-            }
-        }
-
-        // cpp parity: INSERT then return last_insert_rowid().
-        var insertSql = "INSERT INTO Proteins (accession) VALUES('" +
-            SqliteRoutine.EscapeApostrophes(protein.Accession) + "')";
-        BlibMaker.SqlStmt(insertSql);
-        return BlibMaker.Db.LastInsertRowId;
-    }
-
     // --- sorting helpers -------------------------------------------------------------
 
     /// <summary>
@@ -894,8 +842,6 @@ public abstract class BuildParser : IDisposable
 
         Verbosity.Debug($"BuildParser lookup method is {BlibUtils.SpecIdTypeToString(LookUpBy)}");
 
-        var proteinIds = new Dictionary<Protein, long>();
-
         // cpp parity: BuildParser.cpp:468 — iterate every PSM.
         for (var i = 0; i < Psms.Count; i++)
         {
@@ -957,7 +903,7 @@ public abstract class BuildParser : IDisposable
 
             try
             {
-                InsertSpectrum(psm, curSpectrum, fileId, scoreType, proteinIds);
+                InsertSpectrum(psm, curSpectrum, fileId, scoreType);
 
                 if (showSpecProgress)
                     _specProgress?.Increment();
@@ -1020,16 +966,15 @@ public abstract class BuildParser : IDisposable
     /// <see cref="BuildTables"/>. cpp parity: BuildParser.cpp:556.
     /// </summary>
     /// <remarks>
-    /// cpp parity: this method binds the prepared INSERT INTO RefSpectra statement, runs
-    /// it, then inserts the peaks blob + the modifications + the protein mappings. Order
-    /// of binding MUST match the column list in <see cref="PrepareInsertSpectrumStatement"/>.
+    /// cpp bound its own INSERT INTO RefSpectra statement, then inserted the peaks blob, the
+    /// modifications and the protein mappings one statement each (BuildParser.cpp:590-680);
+    /// here the same values fill one <see cref="BlibSpectrumRecord"/> the writer inserts.
     /// </remarks>
     private void InsertSpectrum(
         PSM psm,
         SpecData curSpectrum,
         int fileId,
-        PsmScoreType scoreType,
-        Dictionary<Protein, long> proteins)
+        PsmScoreType scoreType)
     {
         // cpp parity: BuildParser.cpp:564 — pretty-print the PSM id once for log messages.
         var specIdStr = psm.IdAsString();
@@ -1059,121 +1004,110 @@ public abstract class BuildParser : IDisposable
             return;
 
         var nrpsm = psm as NonRedundantPSM;
+        var precursorOnly = psm.IsPrecursorOnly();
 
-        if (_insertSpectrumStmt is null)
-            throw new InvalidOperationException("INSERT statement not prepared.");
-
-        // cpp parity: the bind order MUST agree with PrepareInsertSpectrumStatement's
-        // column list. See BuildParser.cpp:590-635 for the cpp version.
-        var p = _insertSpectrumStmt.Parameters;
-
-        p[0].Value = psm.UnmodSeq;
-        p[1].Value = psm.SmallMolMetadata.PrecursorMzDeclared == 0
-            ? curSpectrum.Mz
-            : psm.SmallMolMetadata.PrecursorMzDeclared;
-        p[2].Value = psm.Charge;
-        p[3].Value = psm.ModifiedSeq;
-        p[4].Value = "-";
-        p[5].Value = "-";
-        p[6].Value = nrpsm?.Copies ?? 1;
-        p[7].Value = curSpectrum.NumPeaks;
-        // cpp parity: BuildParser.cpp:599 — if the PSM didn't supply an IM, fall back to
-        // the spectrum's.
-        p[8].Value = psm.IonMobilityType == IonMobilityType.None
-            ? (object)curSpectrum.IonMobility
-            : psm.IonMobility;
-        p[9].Value = curSpectrum.Ccs;
-        p[10].Value = curSpectrum.GetIonMobilityHighEnergyOffset();
-        p[11].Value = (int)(psm.IonMobilityType == IonMobilityType.None
-            ? curSpectrum.IonMobilityType
-            : psm.IonMobilityType);
-
-        // cpp parity: BuildParser.cpp:603 — null retentionTime if 0.
-        p[12].Value = curSpectrum.RetentionTime != 0 ? (object)curSpectrum.RetentionTime : DBNull.Value;
+        // cpp parity: BuildParser.cpp:590-635 for the column values.
+        var record = new BlibSpectrumRecord
+        {
+            PeptideSeq = psm.UnmodSeq,
+            PrecursorMz = psm.SmallMolMetadata.PrecursorMzDeclared == 0
+                ? curSpectrum.Mz
+                : psm.SmallMolMetadata.PrecursorMzDeclared,
+            PrecursorCharge = psm.Charge,
+            PeptideModSeq = psm.ModifiedSeq,
+            Copies = nrpsm?.Copies ?? 1,
+            NumPeaks = curSpectrum.NumPeaks,
+            // cpp parity: BuildParser.cpp:599 — if the PSM didn't supply an IM, fall back to
+            // the spectrum's. Every ion mobility column is written, zero included.
+            IonMobility = psm.IonMobilityType == IonMobilityType.None
+                ? curSpectrum.IonMobility
+                : psm.IonMobility,
+            CollisionalCrossSectionSqA = curSpectrum.Ccs,
+            IonMobilityHighEnergyOffset = curSpectrum.GetIonMobilityHighEnergyOffset(),
+            IonMobilityType = (int)(psm.IonMobilityType == IonMobilityType.None
+                ? curSpectrum.IonMobilityType
+                : psm.IonMobilityType),
+            // cpp parity: BuildParser.cpp:603 — null retentionTime if 0.
+            RetentionTime = curSpectrum.RetentionTime != 0 ? curSpectrum.RetentionTime : null,
+            // cpp parity: BuildParser.cpp:615 — null TIC for precursor-only.
+            TotalIonCurrent = precursorOnly ? null : curSpectrum.TotalIonCurrent,
+            MoleculeName = psm.SmallMolMetadata.MoleculeName,
+            ChemicalFormula = psm.SmallMolMetadata.ChemicalFormula,
+            PrecursorAdduct = psm.SmallMolMetadata.PrecursorAdduct,
+            InchiKey = psm.SmallMolMetadata.InchiKey,
+            OtherKeys = psm.SmallMolMetadata.OtherKeys,
+            // cpp parity: BuildParser.cpp:623 — NonRedundantPSM overrides fileId.
+            FileId = nrpsm?.FileId ?? fileId,
+            // cpp parity: BuildParser.cpp:624 — empty SpecID for precursor-only.
+            SpecIdInFile = precursorOnly ? string.Empty : specIdStr,
+            Score = psm.Score,
+            ScoreType = (int)scoreType,
+            // The experiment-wide values, written where the reader enabled their columns.
+            PrecursorQValue = psm.PrecursorQValue,
+            PrecursorPep = psm.PrecursorPep,
+            PeptideQValue = psm.PeptideQValue,
+            PeptidePep = psm.PeptidePep,
+        };
 
         // cpp parity: BuildParser.cpp:608 — startTime / endTime are linked.
         if (curSpectrum.StartTime != 0 && curSpectrum.EndTime != 0)
         {
-            p[13].Value = curSpectrum.StartTime;
-            p[14].Value = curSpectrum.EndTime;
+            record.StartTime = curSpectrum.StartTime;
+            record.EndTime = curSpectrum.EndTime;
         }
-        else
+
+        // cpp parity: BuildParser.cpp:649 — the peaks blob, and none at all for a spectrum
+        // without peaks.
+        if (curSpectrum.NumPeaks > 0)
         {
-            p[13].Value = DBNull.Value;
-            p[14].Value = DBNull.Value;
+            var mzs = curSpectrum.Mzs is null ? ReadOnlySpan<double>.Empty : curSpectrum.Mzs.AsSpan(0, curSpectrum.NumPeaks);
+            var intensities = curSpectrum.Intensities is null ? ReadOnlySpan<float>.Empty : curSpectrum.Intensities.AsSpan(0, curSpectrum.NumPeaks);
+            record.MzBlob = BlibWriter.EncodeMzs(mzs, BlibMaker.CompressPeaks);
+            record.IntensityBlob = BlibWriter.EncodeIntensities(intensities, BlibMaker.CompressPeaks);
         }
 
-        // cpp parity: BuildParser.cpp:615 — null TIC for precursor-only.
-        if (psm.IsPrecursorOnly())
-            p[15].Value = DBNull.Value;
-        else
-            p[15].Value = curSpectrum.TotalIonCurrent;
-
-        // cpp parity: BuildParser.cpp:623 — NonRedundantPSM overrides fileId.
-        p[16].Value = nrpsm?.FileId ?? fileId;
-
-        // cpp parity: BuildParser.cpp:624 — empty SpecID for precursor-only.
-        p[17].Value = psm.IsPrecursorOnly() ? string.Empty : specIdStr;
-
-        p[18].Value = psm.Score;
-        p[19].Value = (int)scoreType;
-
-        // small-mol columns (5)
-        p[20].Value = psm.SmallMolMetadata.MoleculeName;
-        p[21].Value = psm.SmallMolMetadata.ChemicalFormula;
-        p[22].Value = psm.SmallMolMetadata.PrecursorAdduct;
-        p[23].Value = psm.SmallMolMetadata.InchiKey;
-        p[24].Value = psm.SmallMolMetadata.OtherKeys;
-
-        try
-        {
-            _insertSpectrumStmt.ExecuteNonQuery();
-        }
-        catch (SQLiteException ex)
-        {
-            // cpp parity: BuildParser.cpp:638 — Verbosity::error logs and throws.
-            Verbosity.Error($"Error inserting spectrum row: {ex.Message}");
-        }
-
-        // cpp parity: BuildParser.cpp:646 — pull last_insert_rowid for the new spectrum.
-        var libSpecId = (int)BlibMaker.Db.LastInsertRowId;
-
-        // cpp parity: BuildParser.cpp:649 — write the peaks blob.
-        BlibMaker.InsertPeaks(
-            libSpecId,
-            curSpectrum.NumPeaks,
-            curSpectrum.Mzs is null ? ReadOnlySpan<double>.Empty : curSpectrum.Mzs.AsSpan(0, curSpectrum.NumPeaks),
-            curSpectrum.Intensities is null ? ReadOnlySpan<float>.Empty : curSpectrum.Intensities.AsSpan(0, curSpectrum.NumPeaks));
-
-        // cpp parity: BuildParser.cpp:656 — emit one row per non-zero modification.
+        // cpp parity: BuildParser.cpp:656 — one row per non-zero modification.
+        var modifications = new List<BlibModification>();
         foreach (var mod in psm.Mods)
         {
             if (mod.DeltaMass == 0) continue;
-            // cpp parity: BuildParser.cpp:656 uses `%f` (6 decimal places). .NET's default
-            // double format emits up to 17 sig digits, so a cpp golden of "15.994915" would
-            // render here as "15.99491463". `F6` matches cpp byte-for-byte.
-            var sql = string.Format(
-                CultureInfo.InvariantCulture,
-                "INSERT INTO Modifications(RefSpectraID, position, mass) VALUES({0},{1},{2:F6})",
-                libSpecId, mod.Position, mod.DeltaMass);
-            BlibMaker.SqlStmt(sql);
+            modifications.Add(new BlibModification(mod.Position, MassAsCppWrote(mod.DeltaMass)));
         }
+        record.Modifications = modifications;
 
-        // cpp parity: BuildParser.cpp:672 — emit one row per protein mapping; first
-        // insert the protein if we haven't seen it.
+        // cpp parity: BuildParser.cpp:672 — one row per protein mapping; the writer adds a
+        // protein the first time it sees its accession, here with the experiment-wide values
+        // the reader gave it, where it enabled their columns.
         foreach (var protein in psm.Proteins)
         {
-            if (!proteins.TryGetValue(protein, out var proteinId))
-            {
-                proteinId = InsertProtein(protein);
-                proteins[protein] = proteinId;
-            }
-            var sql = string.Format(
-                CultureInfo.InvariantCulture,
-                "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES ({0}, {1})",
-                libSpecId, proteinId);
-            BlibMaker.SqlStmt(sql);
+            if (!string.IsNullOrEmpty(protein.Accession) && (protein.QValue.HasValue || protein.Pep.HasValue))
+                BlibMaker.AddProtein(protein.Accession, protein.QValue, protein.Pep);
         }
+        record.Proteins = psm.Proteins.Select(protein => protein.Accession).ToList();
+
+        // cpp parity: BuildParser.cpp:638 - a failed insert is a BlibException, which
+        // BuildTables annotates with the PSM.
+        OnSpectrumInserted(psm, BlibMaker.InsertSpectrum(record));
+    }
+
+    /// <summary>
+    /// Called with each PSM's new <c>RefSpectra</c> id as <see cref="BuildTables"/> writes it,
+    /// for a reader that writes rows referring to its spectra after the duplicate filtering
+    /// has decided which are written (the DIA-NN reader's retention times).
+    /// </summary>
+    protected virtual void OnSpectrumInserted(PSM psm, int refSpectraId)
+    {
+    }
+
+    /// <summary>
+    /// A modification mass as cpp stored it: BuildParser.cpp:656 printed it with <c>%f</c>, six
+    /// decimals, into the INSERT, and SQLite read that text back as the REAL. The writer binds
+    /// the double itself, so it is taken through the same text first; the reference .check
+    /// files hold cpp's six-decimal values.
+    /// </summary>
+    private static double MassAsCppWrote(double mass)
+    {
+        return double.Parse(mass.ToString("F6", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
     }
 
     // --- filter / dedupe -------------------------------------------------------------

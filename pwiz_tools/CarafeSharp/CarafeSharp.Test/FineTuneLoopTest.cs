@@ -33,6 +33,7 @@ using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
 using TorchSharp;
 using static TorchSharp.torch;
@@ -207,8 +208,8 @@ namespace pwiz.CarafeSharp.Test
             // One run's export of six clean precursors, trained -tf ms2 from a random -ms2_model.
             string export = WriteCleanExport(@"run_a");
             string output = Path.Combine(_folder, @"out");
-            var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-tf", @"ms2", @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"start_ms2", 9), @"-device", @"cpu", @"-nce", @"28" }).TrainingSettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", output, @"--tf", @"ms2", @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"start_ms2", 9), @"--device", @"cpu", @"--nce", @"28" }).TrainingSettings;
             var log = new StringWriter();
             string pretrainedAsked = null;
             var trainer = new ModelTrainer(settings, log, zip =>
@@ -343,8 +344,8 @@ namespace pwiz.CarafeSharp.Test
             string export = WriteCleanExport(@"run_sciex", null, null, footer);
             string output = Path.Combine(_folder, @"sciex");
             var log = new StringWriter();
-            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-tf", @"ms2", @"-seed", @"9",
-                @"-ms2_model", start, @"-device", @"cpu" }).TrainingSettings, log, zip => null).Run();
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", output, @"--tf", @"ms2", @"--seed", @"9",
+                @"--ms2-model", start, @"--device", @"cpu" }).TrainingSettings, log, zip => null).Run();
             // What the start model calibrates on the rows the run trained on, as its training tables hold them.
             double expected;
             using (var model = Ms2Model.FromSafetensors(start, CPU))
@@ -370,8 +371,8 @@ namespace pwiz.CarafeSharp.Test
 
             // -nce names it instead.
             string named = Path.Combine(_folder, @"sciex_nce");
-            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", named, @"-tf", @"ms2", @"-seed", @"9",
-                @"-ms2_model", start, @"-device", @"cpu", @"-nce", @"28" }).TrainingSettings, null, zip => null).Run();
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", named, @"--tf", @"ms2", @"--seed", @"9",
+                @"--ms2-model", start, @"--device", @"cpu", @"--nce", @"28" }).TrainingSettings, null, zip => null).Run();
             var namedRun = CarafeModelFile.Open(Path.Combine(named, CarafeModelFile.DEFAULT_FILE_NAME)).Training.Runs.Single();
             Assert.AreEqual(28.0, namedRun.Nce);
             Assert.AreEqual(RunCollisionEnergy.COMMAND_LINE, namedRun.NceSource);
@@ -396,11 +397,16 @@ namespace pwiz.CarafeSharp.Test
             File.Copy(RandomRtModel(@"base_rt", 12), Path.Combine(baseFolder, ModelFiles.RT_SAFETENSORS));
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":true}}");
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.META), @"{""earlier.mzML"":{""ms_file"":""earlier.mzML"",""nce"":30.0,""rt_max"":40.0}}");
-            string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
+            // Named as model files were before the rename to .model.zip: it still lists, and still
+            // opens to be fine-tuned further below, since a model file is known by its manifest.
+            string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.LEGACY_EXTENSION);
             var written = CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null,
                 TestModels.PretrainedOrigin(), TestModels.PretrainedOrigin());
             Assert.IsTrue(written.Ms2Used && written.RtUsed);
             Assert.AreEqual(0, written.BaseModels.Count);
+            Assert.IsTrue(CarafeModelFile.IsModelFileName(baseFile));
+            CollectionAssert.AreEqual(new[] { baseFile },
+                CarafeModelFile.FilePatterns.SelectMany(pattern => Directory.GetFiles(_folder, pattern)).ToArray());
 
             // Fine-tuned further at learning rate 0: the fine-tuned models are the saved ones, so the MS2 model does not beat it.
             string first = Path.Combine(_folder, @"first");
@@ -426,7 +432,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(written.Entries[ModelFiles.MS2_SAFETENSORS], saved.Entries[ModelFiles.MS2_BASE_SAFETENSORS], @"the saved model's MS2 model, as it was");
             Assert.IsTrue(saved.RtUsed);
             var chain = saved.BaseModels.Single();
-            Assert.AreEqual(@"earlier" + CarafeModelFile.EXTENSION, chain.File);
+            Assert.AreEqual(Path.GetFileName(baseFile), chain.File);
             Assert.AreEqual(written.FileSha256, chain.Sha256);
             Assert.AreEqual(written.Created, chain.Created);
             CollectionAssert.AreEqual(new[] { @"earlier.mzML" }, chain.Runs.ToArray());
@@ -442,7 +448,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(12.1, saved.RtMax, 1e-12);
             string info = saved.FormatInfo();
             StringAssert.Contains(info, @"MS2 model: the base model's (the fine-tuned model did not beat it)");
-            StringAssert.Contains(info, @"Fine-tuned further from earlier" + CarafeModelFile.EXTENSION + @" (SHA-256 " + written.FileSha256);
+            StringAssert.Contains(info, @"Fine-tuned further from " + Path.GetFileName(baseFile) + @" (SHA-256 " + written.FileSha256);
             StringAssert.Contains(info, @"Held-out metrics (start model -> fine-tuned)");
             // A library from the new file predicts with the kept model.
             var extracted = saved.Extract(Path.Combine(_folder, @"first_extracted"));
@@ -456,7 +462,7 @@ namespace pwiz.CarafeSharp.Test
             again.Run();
             Assert.AreEqual(trainer.Result.Ms2Pretrained.ToString(), again.Result.Ms2Pretrained.ToString());
             var twice = CarafeModelFile.Open(Path.Combine(second, CarafeModelFile.DEFAULT_FILE_NAME));
-            CollectionAssert.AreEqual(new[] { CarafeModelFile.DEFAULT_FILE_NAME, @"earlier" + CarafeModelFile.EXTENSION },
+            CollectionAssert.AreEqual(new[] { CarafeModelFile.DEFAULT_FILE_NAME, Path.GetFileName(baseFile) },
                 twice.BaseModels.Select(b => b.File).ToArray());
             Assert.AreEqual(saved.FileSha256, twice.BaseModels[0].Sha256);
             // The RT model's lineage, back through the chain: base, base, pretrained.
@@ -465,8 +471,8 @@ namespace pwiz.CarafeSharp.Test
             StringAssert.Contains(twice.FormatInfo(), @"its MS2: alphapeptdeep v1, fine-tuned from the base model; its RT: alphapeptdeep v1, fine-tuned from the base model");
 
             // A run without -model into the first folder does not predict with the model kept there.
-            var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", first, @"-tf", @"ms2", @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"other_ms2", 13), @"-device", @"cpu" }).TrainingSettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", first, @"--tf", @"ms2", @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"other_ms2", 13), @"--device", @"cpu" }).TrainingSettings;
             new ModelTrainer(settings, null, zip => null).Run();
             Assert.IsFalse(File.Exists(Path.Combine(first, ModelFiles.MS2_BASE_SAFETENSORS)));
             Assert.IsFalse(CarafeModelFile.Open(Path.Combine(first, CarafeModelFile.DEFAULT_FILE_NAME)).Ms2FromBase);
@@ -491,9 +497,9 @@ namespace pwiz.CarafeSharp.Test
             File.WriteAllText(Path.Combine(output, ModelFiles.RT_CHECKPOINT), @"not a checkpoint");
             string fasta = Path.Combine(_folder, @"proteins.fasta");
             File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
-            var settings = CarafeCommandLine.Parse(new[] { @"-i", exportA + @"," + exportB, @"-o", output, @"-tf", @"ms2",
-                @"-seed", @"9", @"-ms2_model", RandomMs2Model(@"start_ms2", 9), @"-device", @"cpu", @"-nce", @"28", @"-no_masking",
-                @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--i", exportA + @"," + exportB, @"--o", output, @"--tf", @"ms2",
+                @"--seed", @"9", @"--ms2-model", RandomMs2Model(@"start_ms2", 9), @"--device", @"cpu", @"--nce", @"28", @"--no-masking",
+                @"--db", fasta, @"--lf-type", LibraryOutputs.BLIB_FORMAT, @"--lf-min-n-frag", @"1" }).TrainingSettings;
             var log = new StringWriter();
             new ModelTrainer(settings, log, zip => null).Run();
             string text = log.ToString();
@@ -501,7 +507,7 @@ namespace pwiz.CarafeSharp.Test
             StringAssert.Contains(text, string.Format(@"WARNING: {0} took its run q-values from Osprey's first pass", exportB));
             Assert.IsFalse(text.Contains(exportA + @" took its run q-values"), @"a second-pass export is not warned about");
             StringAssert.Contains(text, @"come from different Osprey searches");
-            StringAssert.Contains(text, @"-no_masking: training on every ion of the kept spectra");
+            StringAssert.Contains(text, @"--no-masking: training on every ion of the kept spectra");
             // The library opens the model this run wrote, over the stale checkpoint beside it.
             StringAssert.Contains(text, string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT,
                 Path.Combine(output, ModelFiles.MS2_SAFETENSORS), staleCheckpoint));
@@ -523,9 +529,9 @@ namespace pwiz.CarafeSharp.Test
             string fasta = Path.Combine(_folder, @"proteins.fasta");
             File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
             string output = Path.Combine(_folder, @"chronologer");
-            var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-seed", @"9", @"-ms2_model", RandomMs2Model(@"start_ms2", 9),
-                @"-device", @"cpu", @"-nce", @"28", @"-rt_model", @"chronologer", @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT,
-                @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", output, @"--seed", @"9", @"--ms2-model", RandomMs2Model(@"start_ms2", 9),
+                @"--device", @"cpu", @"--nce", @"28", @"--rt-model", @"chronologer", @"--db", fasta, @"--lf-type", LibraryOutputs.BLIB_FORMAT,
+                @"--lf-min-n-frag", @"1" }).TrainingSettings;
             var log = new StringWriter();
             var trainer = new ModelTrainer(settings, log, zip => null) { ConfigureFineTune = ShortFineTune };
             trainer.Run();
@@ -563,8 +569,8 @@ namespace pwiz.CarafeSharp.Test
             // -tf ms2: the saved model holds no RT model and names the pretrained Chronologer, which a library from it
             // predicts with, in iRT, without -rt_model.
             string ms2Only = Path.Combine(_folder, @"ms2_only");
-            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", ms2Only, @"-tf", @"ms2", @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"start_ms2_only", 9), @"-device", @"cpu", @"-nce", @"28", @"-rt_model", @"chronologer" }).TrainingSettings,
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", ms2Only, @"--tf", @"ms2", @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"start_ms2_only", 9), @"--device", @"cpu", @"--nce", @"28", @"--rt-model", @"chronologer" }).TrainingSettings,
                 null, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             string ms2SavedPath = Path.Combine(ms2Only, CarafeModelFile.DEFAULT_FILE_NAME);
             var ms2Saved = CarafeModelFile.Open(ms2SavedPath);
@@ -601,10 +607,10 @@ namespace pwiz.CarafeSharp.Test
             // -rt_model chronologer on a saved AlphaPeptDeep model: Chronologer starts from its pretrained model.
             string toChronologer = Path.Combine(_folder, @"to_chronologer");
             var log = new StringWriter();
-            new ModelTrainer(TrainFrom(export, toChronologer, baseFile, @"-rt_model", @"chronologer"), log, zip => null)
+            new ModelTrainer(TrainFrom(export, toChronologer, baseFile, @"--rt-model", @"chronologer"), log, zip => null)
                 { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(),
-                @"WARNING: -rt_model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not fine-tuned further");
+                @"WARNING: --rt-model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not fine-tuned further");
             StringAssert.Contains(log.ToString(), @"RT: fine-tuning Chronologer ");
             string chronologerFile = Path.Combine(toChronologer, CarafeModelFile.DEFAULT_FILE_NAME);
             var toChronologerSaved = CarafeModelFile.Open(chronologerFile);
@@ -622,7 +628,7 @@ namespace pwiz.CarafeSharp.Test
             log = new StringWriter();
             new ModelTrainer(TrainFrom(export, further, chronologerFile), log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(), @"RT: fine-tuning the Chronologer model ");
-            Assert.IsFalse(log.ToString().Contains(@"WARNING: -rt_model"), log.ToString());
+            Assert.IsFalse(log.ToString().Contains(@"WARNING: --rt-model"), log.ToString());
             var furtherSaved = CarafeModelFile.Open(Path.Combine(further, CarafeModelFile.DEFAULT_FILE_NAME));
             Assert.AreEqual(RtModelType.chronologer, furtherSaved.RtModel);
             Assert.AreEqual(CarafeModelOrigin.START_BASE, furtherSaved.RtOrigin.Start);
@@ -633,10 +639,10 @@ namespace pwiz.CarafeSharp.Test
             // An explicit -rt_model alphapeptdeep fine-tunes AlphaPeptDeep's pretrained RT model instead.
             string back = Path.Combine(_folder, @"back");
             log = new StringWriter();
-            new ModelTrainer(TrainFrom(export, back, chronologerFile, @"-rt_model", @"alphapeptdeep"), log)
+            new ModelTrainer(TrainFrom(export, back, chronologerFile, @"--rt-model", @"alphapeptdeep"), log)
                 { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(),
-                @"WARNING: -rt_model alphapeptdeep: the saved model's fine-tuned chronologer RT model is not fine-tuned further");
+                @"WARNING: --rt-model alphapeptdeep: the saved model's fine-tuned chronologer RT model is not fine-tuned further");
             Assert.IsFalse(ChronologerModel.IsChronologerFile(Path.Combine(back, ModelFiles.RT_SAFETENSORS)));
             var backSaved = CarafeModelFile.Open(Path.Combine(back, CarafeModelFile.DEFAULT_FILE_NAME));
             Assert.AreEqual(RtModelType.alphapeptdeep, backSaved.RtModel);
@@ -701,9 +707,9 @@ namespace pwiz.CarafeSharp.Test
             string fasta = Path.Combine(_folder, @"proteins.fasta");
             File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
             string output = Path.Combine(_folder, @"aligned");
-            var settings = CarafeCommandLine.Parse(new[] { @"-i", string.Join(@",", exports), @"-o", output, @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"aligned_ms2", 9), @"-device", @"cpu", @"-nce", @"28",
-                @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--i", string.Join(@",", exports), @"--o", output, @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"aligned_ms2", 9), @"--device", @"cpu", @"--nce", @"28",
+                @"--db", fasta, @"--lf-type", LibraryOutputs.BLIB_FORMAT, @"--lf-min-n-frag", @"1" }).TrainingSettings;
             Assert.AreEqual(RtAlignmentType.kde, settings.RtAlignment);
             var log = new StringWriter();
             new ModelTrainer(settings, log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
@@ -725,37 +731,37 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(CarafeModelFile.Open(savedPath).Entries.ContainsKey(ModelFiles.RT_MAPS));
             StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"aligned_from_file"), @"Library RT: rt_pred * rt_max");
             // -rt_reference takes one run's minutes instead, by its name or the end of it.
-            StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"aligned_run_b", @"-rt_reference", @"_b"),
-                @"Library RT: minutes of training run drift_b (-rt_reference");
+            StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"aligned_run_b", @"--rt-reference", @"_b"),
+                @"Library RT: minutes of training run drift_b (--rt-reference");
             StringAssert.Contains(Assert.ThrowsException<ArgumentException>(() =>
-                PredictFromSavedModel(savedPath, fasta, @"aligned_run_c", @"-rt_reference", @"drift_c")).Message, @"drift_a, drift_b");
+                PredictFromSavedModel(savedPath, fasta, @"aligned_run_c", @"--rt-reference", @"drift_c")).Message, @"drift_a, drift_b");
             // A model of the median minutes goes back to them by the training's normalizer, so -rt_max does not move it.
-            string withRtMax = PredictFromSavedModel(savedPath, fasta, @"aligned_run_b_rt_max", @"-rt_reference", @"_b", @"-rt_max", @"60");
-            StringAssert.Contains(withRtMax, @"Ignored -rt_max 60");
+            string withRtMax = PredictFromSavedModel(savedPath, fasta, @"aligned_run_b_rt_max", @"--rt-reference", @"_b", @"--rt-max", @"60");
+            StringAssert.Contains(withRtMax, @"Ignored --rt-max 60");
             CollectionAssert.AreEqual(LibraryRetentionTimes(Path.Combine(_folder, @"aligned_run_b")),
                 LibraryRetentionTimes(Path.Combine(_folder, @"aligned_run_b_rt_max")));
             // A run -rt_reference cannot name fails before the training, not after it.
             string early = Path.Combine(_folder, @"aligned_reference_typo");
-            var typo = CarafeCommandLine.Parse(new[] { @"-i", string.Join(@",", exports), @"-o", early, @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"typo_ms2", 9), @"-device", @"cpu", @"-nce", @"28", @"-rt_reference", @"drift_c",
-                @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var typo = CarafeCommandLine.Parse(new[] { @"--i", string.Join(@",", exports), @"--o", early, @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"typo_ms2", 9), @"--device", @"cpu", @"--nce", @"28", @"--rt-reference", @"drift_c",
+                @"--db", fasta, @"--lf-type", LibraryOutputs.BLIB_FORMAT, @"--lf-min-n-frag", @"1" }).TrainingSettings;
             StringAssert.Contains(Assert.ThrowsException<ArgumentException>(() =>
                 new ModelTrainer(typo, null, zip => null) { ConfigureFineTune = ShortFineTune }.Run()).Message, @"drift_a, drift_b");
             Assert.IsFalse(File.Exists(Path.Combine(early, ModelFiles.RT_SAFETENSORS)));
             Assert.ThrowsException<InvalidOperationException>(() =>
-                PredictFromSavedModel(savedPath, fasta, @"aligned_apd", @"-rt_reference", @"_b", @"-rt_model", @"alphapeptdeep"));
+                PredictFromSavedModel(savedPath, fasta, @"aligned_apd", @"--rt-reference", @"_b", @"--rt-model", @"alphapeptdeep"));
 
             // -tf ms2 leaves the pretrained Chronologer, which predicts HI: its library is the runs' median minutes.
-            var ms2Only = CarafeCommandLine.Parse(new[] { @"-i", string.Join(@",", exports), @"-o", Path.Combine(_folder, @"aligned_ms2_only"),
-                @"-tf", @"ms2", @"-seed", @"9", @"-ms2_model", RandomMs2Model(@"aligned_ms2_only", 9), @"-device", @"cpu", @"-nce", @"28",
-                @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var ms2Only = CarafeCommandLine.Parse(new[] { @"--i", string.Join(@",", exports), @"--o", Path.Combine(_folder, @"aligned_ms2_only"),
+                @"--tf", @"ms2", @"--seed", @"9", @"--ms2-model", RandomMs2Model(@"aligned_ms2_only", 9), @"--device", @"cpu", @"--nce", @"28",
+                @"--db", fasta, @"--lf-type", LibraryOutputs.BLIB_FORMAT, @"--lf-min-n-frag", @"1" }).TrainingSettings;
             var ms2Log = new StringWriter();
             new ModelTrainer(ms2Only, ms2Log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(ms2Log.ToString(), @"Library RT: minutes of the training runs' median map");
 
             // With -rt_align none, a run into the same folder neither keeps nor uses the earlier run's maps.
-            var unaligned = CarafeCommandLine.Parse(new[] { @"-i", string.Join(@",", exports), @"-o", output, @"-tf", @"ms2", @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"unaligned_ms2", 9), @"-device", @"cpu", @"-nce", @"28", @"-rt_align", @"none" }).TrainingSettings;
+            var unaligned = CarafeCommandLine.Parse(new[] { @"--i", string.Join(@",", exports), @"--o", output, @"--tf", @"ms2", @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"unaligned_ms2", 9), @"--device", @"cpu", @"--nce", @"28", @"--rt-align", @"none" }).TrainingSettings;
             Assert.AreEqual(RtAlignmentType.none, unaligned.RtAlignment);
             new ModelTrainer(unaligned, null, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             Assert.IsFalse(File.Exists(maps));
@@ -773,8 +779,8 @@ namespace pwiz.CarafeSharp.Test
             string fastaOne = Path.Combine(_folder, @"one_gradient.fasta");
             File.WriteAllText(fastaOne, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
             string oneGradient = Path.Combine(_folder, @"one_gradient");
-            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", string.Join(@",", WriteDriftingExports(130)), @"-o", oneGradient, @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"one_gradient_ms2", 9), @"-device", @"cpu", @"-nce", @"28" }).TrainingSettings,
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"--i", string.Join(@",", WriteDriftingExports(130)), @"--o", oneGradient, @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"one_gradient_ms2", 9), @"--device", @"cpu", @"--nce", @"28" }).TrainingSettings,
                 null, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             string minutesModel = Path.Combine(oneGradient, CarafeModelFile.DEFAULT_FILE_NAME);
 
@@ -782,9 +788,9 @@ namespace pwiz.CarafeSharp.Test
             string fasta = Path.Combine(_folder, @"proteins.fasta");
             File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
             string output = Path.Combine(_folder, @"mixed");
-            var settings = CarafeCommandLine.Parse(new[] { @"-i", string.Join(@",", exports), @"-o", output, @"-seed", @"9",
-                @"-ms2_model", RandomMs2Model(@"mixed_ms2", 9), @"-device", @"cpu", @"-nce", @"28",
-                @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--i", string.Join(@",", exports), @"--o", output, @"--seed", @"9",
+                @"--ms2-model", RandomMs2Model(@"mixed_ms2", 9), @"--device", @"cpu", @"--nce", @"28",
+                @"--db", fasta, @"--lf-type", LibraryOutputs.BLIB_FORMAT, @"--lf-min-n-frag", @"1" }).TrainingSettings;
             var log = new StringWriter();
             new ModelTrainer(settings, log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             string text = log.ToString();
@@ -799,8 +805,8 @@ namespace pwiz.CarafeSharp.Test
 
             string savedPath = Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME);
             StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"mixed_from_file"), @"Library RT: iRT");
-            StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"mixed_run_b", @"-rt_reference", @"drift_b"),
-                @"Library RT: minutes of training run drift_b (-rt_reference");
+            StringAssert.Contains(PredictFromSavedModel(savedPath, fasta, @"mixed_run_b", @"--rt-reference", @"drift_b"),
+                @"Library RT: minutes of training run drift_b (--rt-reference");
 
             // Fine-tuned further from the model of one gradient's minutes, which these runs do not share, Chronologer starts
             // over from its pretrained model on the hydrophobic index.
@@ -1033,7 +1039,7 @@ namespace pwiz.CarafeSharp.Test
         /// </summary>
         private static TrainingSettings TrainFrom(string export, string output, string baseModel, params string[] options)
         {
-            return CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-model", baseModel, @"-seed", @"9", @"-device", @"cpu", @"-nce", @"28" }
+            return CarafeCommandLine.Parse(new[] { @"--i", export, @"--o", output, @"--model", baseModel, @"--seed", @"9", @"--device", @"cpu", @"--nce", @"28" }
                     .Concat(options).ToArray())
                 .TrainingSettings;
         }
@@ -1048,8 +1054,8 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>A library of <paramref name="fasta"/> predicted from the saved model <paramref name="modelFile"/> into a folder of its own; returns its log.</summary>
         private string PredictFromSavedModel(string modelFile, string fasta, string name, params string[] options)
         {
-            var settings = CarafeCommandLine.Parse(new[] { @"-db", fasta, @"-model", modelFile, @"-o", Path.Combine(_folder, name), @"-device", @"cpu",
-                @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }.Concat(options).ToArray()).LibrarySettings;
+            var settings = CarafeCommandLine.Parse(new[] { @"--db", fasta, @"--model", modelFile, @"--o", Path.Combine(_folder, name), @"--device", @"cpu",
+                @"--lf-type", LibraryOutputs.BLIB_FORMAT, @"--lf-min-n-frag", @"1" }.Concat(options).ToArray()).LibrarySettings;
             var log = new StringWriter();
             var generator = new LibraryGenerator(settings, log);
             generator.Run();

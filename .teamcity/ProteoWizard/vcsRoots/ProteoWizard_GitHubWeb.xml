@@ -8,7 +8,7 @@
   <param name="ignoreKnownHosts" value="true" />
   <param name="submoduleCheckout" value="CHECKOUT" />
   <param name="teamcity:branchSpec"><![CDATA[+:refs/heads/(master)
-+:refs/(pull/*)/head]]></param>
++:refs/(pull/*/head)]]></param>
   <param name="url" value="https://github.com/ProteoWizard/web.git" />
   <param name="useAlternates" value="USE_MIRRORS" />
   <param name="usernameStyle" value="USERID" />

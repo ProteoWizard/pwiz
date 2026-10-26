@@ -58,8 +58,8 @@ namespace pwiz.CarafeSharp.Test
                     Assert.AreEqual(3, writer.WriteBatch(spectra.Skip(2).ToList()));
                     writer.WriteDecoyPairs(new[]
                     {
-                        new DecoyPairRow(1, false, false, 1, null),
-                        new DecoyPairRow(2, true, false, 1, @"reverse"),
+                        new DecoyPairRow(1, false, false, 1, null, null),
+                        new DecoyPairRow(2, true, false, 1, 1, @"reverse"),
                     });
                     writer.Complete();
                 }
@@ -214,10 +214,10 @@ namespace pwiz.CarafeSharp.Test
                     Assert.AreEqual(6, writer.WriteBatch(Array.Empty<LibrarySpectrum>()));
                     writer.WriteDecoyPairs(new[]
                     {
-                        new DecoyPairRow(1, false, false, 1, null),
-                        new DecoyPairRow(2, true, false, 1, @"reverse"),
-                        new DecoyPairRow(3, false, true, 2, null),
-                        new DecoyPairRow(4, true, true, 2, @"cycle"),
+                        new DecoyPairRow(1, false, false, 1, null, null),
+                        new DecoyPairRow(2, true, false, 1, 1, @"reverse"),
+                        new DecoyPairRow(3, false, true, 2, null, null),
+                        new DecoyPairRow(4, true, true, 2, 3, @"cycle"),
                     });
                     writer.Complete();
                 }
@@ -243,14 +243,14 @@ namespace pwiz.CarafeSharp.Test
                         Column<string>(connection, @"SELECT accession FROM Proteins ORDER BY id").ToArray());
                     CollectionAssert.AreEqual(new[] { @"1:1", @"1:2", @"2:3", @"3:2", @"4:4" },
                         Column<string>(connection, @"SELECT RefSpectraId || ':' || ProteinId FROM RefSpectraProteins ORDER BY RefSpectraId, ProteinId").ToArray());
-                    // The decoy pairs join back to their spectra: each PairID has one target and
-                    // one decoy of the same charge, the decoy's proteins carry the decoy prefix, and
-                    // the entrapment pair is flagged.
-                    var pairs = Rows(connection, @"SELECT d.PairID, d.IsDecoy, d.IsEntrapment, d.Method, r.precursorCharge, p.accession " +
+                    // The decoy pairs join back to their spectra: each PairingID has one target and
+                    // one decoy of the same charge, the decoy naming the target, the decoy's
+                    // proteins carry the decoy prefix, and the entrapment pair is flagged.
+                    var pairs = Rows(connection, @"SELECT d.PairingID, d.IsDecoy, d.IsEntrapment, d.Method, r.precursorCharge, p.accession, d.TargetRefSpectraID, d.RefSpectraID " +
                                                  @"FROM DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID " +
                                                  @"JOIN RefSpectraProteins rp ON rp.RefSpectraId = r.id JOIN Proteins p ON p.id = rp.ProteinId " +
                                                  @"WHERE rp.ProteinId = (SELECT MIN(ProteinId) FROM RefSpectraProteins WHERE RefSpectraId = r.id) " +
-                                                 @"ORDER BY d.PairID, d.IsDecoy");
+                                                 @"ORDER BY d.PairingID, d.IsDecoy");
                     Assert.AreEqual(4, pairs.Count);
                     foreach (var pair in pairs.GroupBy(p => (long)p[0]))
                     {
@@ -260,9 +260,11 @@ namespace pwiz.CarafeSharp.Test
                         Assert.IsTrue(((string)members[1][5]).StartsWith(@"decoy_", StringComparison.Ordinal));
                         Assert.IsTrue(members[0][3] is DBNull);
                         Assert.AreEqual(pair.Key == 2 ? 1L : 0L, (long)members[0][2]);
+                        Assert.IsTrue(members[0][6] is DBNull);
+                        Assert.AreEqual(members[0][7], members[1][6]);
                     }
                     Assert.AreEqual(@"cycle", pairs[3][3]);
-                    CollectionAssert.Contains(Column<string>(connection, @"SELECT name FROM sqlite_master WHERE type='index'"), @"idx_DecoyPairs_PairID");
+                    CollectionAssert.Contains(Column<string>(connection, @"SELECT name FROM sqlite_master WHERE type='index'"), @"idx_DecoyPairs_TargetRefSpectraID");
                 }
 
                 // A library that cannot be created fails at once and leaves nothing behind: here its
@@ -366,8 +368,8 @@ namespace pwiz.CarafeSharp.Test
                 CollectionAssert.AreEqual(new object[] { 5L, 57.02146372057 },
                     Row(connection, @"SELECT position, mass FROM Modifications WHERE RefSpectraID = 1"));
                 Assert.AreEqual(0L, Scalar(connection, @"SELECT COUNT(*) FROM Modifications WHERE RefSpectraID = 3"));
-                CollectionAssert.AreEqual(new object[] { 2L, 1L, 0L, 1L, @"reverse" },
-                    Row(connection, @"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID, Method FROM DecoyPairs WHERE IsDecoy = 1"));
+                CollectionAssert.AreEqual(new object[] { 2L, 1L, 0L, 1L, 1L, @"reverse" },
+                    Row(connection, @"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID, Method FROM DecoyPairs WHERE IsDecoy = 1"));
                 Assert.IsTrue(Row(connection, @"SELECT Method FROM DecoyPairs WHERE IsDecoy = 0")[0] is DBNull);
             }
         }

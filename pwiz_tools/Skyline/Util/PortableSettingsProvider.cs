@@ -424,19 +424,11 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        /// <summary>
-        /// Writes to a temporary file and moves it into place, so that a failure partway through
-        /// leaves the last good user.config rather than a truncated one.
-        /// </summary>
         private void SaveDocument(XDocument document)
         {
-            var path = ConfigFilePath;
-            var folder = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(folder))
-                Directory.CreateDirectory(folder);
-            var tempPath = path + @".tmp";
-            document.Save(tempPath);
-            File.Move(tempPath, path, true);
+            using var saver = new FileSaver(ConfigFilePath);
+            document.Save(saver.SafeName);
+            saver.Commit();
         }
 
         /// <summary>

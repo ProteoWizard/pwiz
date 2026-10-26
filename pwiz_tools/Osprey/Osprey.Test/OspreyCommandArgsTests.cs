@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -98,6 +99,11 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML", @"a.mzML", @"b.mzML" },
                     Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath, OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
+                // --training-input-list is the same list for the tuning runs, after any --training-input.
+                CollectionAssert.AreEqual(new[] { @"t.mzML", @"a.mzML", @"b.mzML" },
+                    Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_TRAINING_INPUT + @"t.mzML",
+                        OspreyCommandArgs.ARG_TRAINING_INPUT_LIST + listPath).LibraryBuild.TrainingInputs.ToArray());
+
                 // A list that names nothing is fatal, not an empty cohort.
                 File.WriteAllLines(listPath, new[] { @"# nothing but a comment", string.Empty });
                 Assert.ThrowsException<InvalidDataException>(() => Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath));
@@ -132,8 +138,6 @@ namespace pwiz.Osprey.Test
             // Backslashes before the closing quote or an embedded quote are doubled, so the text parses back.
             Assert.AreEqual(@"""C:\out dir\\""", CommandLineText.Quote(@"C:\out dir\"));
             Assert.AreEqual(@"""a\\\""b c""", CommandLineText.Quote(@"a\""b c"));
-
-            Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.
             var work = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w");
@@ -199,7 +203,6 @@ namespace pwiz.Osprey.Test
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
-            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
 
             // Training export: off by default, and each setting lands where the task reads it.
             var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
@@ -387,8 +390,7 @@ namespace pwiz.Osprey.Test
             var commaDecimal = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
             var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
-            string ospreySeparator = ArgUsage.ArgumentValueSeparator;
-            var ospreyProvider = ArgUsage.ValueFormatProvider;
+            var osprey = ArgUsage.Current;
             var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
             try
             {
@@ -399,17 +401,15 @@ namespace pwiz.Osprey.Test
 
                 // A host that parses in the current culture leaves the provider unset and gets
                 // the value the way its user would type it.
-                ArgUsage.ValueFormatProvider = null;
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ArgumentValueSeparator = osprey.ArgumentValueSeparator });
                 Assert.AreEqual(argTolerance.ArgumentText + @" 0,5", argTolerance + 0.5);
-                ArgUsage.ValueFormatProvider = ospreyProvider;
 
-                ArgUsage.ArgumentValueSeparator = @"=";
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ValueFormatProvider = osprey.ValueFormatProvider });
                 Assert.AreEqual(argThreads.ArgumentText + @"=8", argThreads + 8);
             }
             finally
             {
-                ArgUsage.ArgumentValueSeparator = ospreySeparator;
-                ArgUsage.ValueFormatProvider = ospreyProvider;
+                ArgUsage.Install(osprey);
                 System.Threading.Thread.CurrentThread.CurrentCulture = culture;
             }
 
@@ -533,8 +533,24 @@ namespace pwiz.Osprey.Test
                 .Where(f => typeof(OspreyArgument).IsAssignableFrom(f.FieldType))
                 .Select(f => (OspreyArgument) f.GetValue(null))
                 .ToList();
-            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(), declared.Count,
+            // The hosted CarafeSharp declarations are listed, not declared one by one: they are
+            // counted against CarafeSharp's lists, and described by CarafeSharp's text.
+            var hosted = OspreyCommandArgs.HostedArguments.ToList();
+            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(a => !a.IsHosted), declared.Count,
                 @"Every declared argument must be in a help group");
+            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count +
+                            CarafeCommandLine.HostedTrainingArguments.Count, hosted.Count);
+            Assert.AreEqual(hosted.Count, OspreyCommandArgs.AllArguments.Count(a => a.IsHosted));
+            foreach (var arg in hosted)
+            {
+                seen.TryGetValue(arg.Name, out int groupCount);
+                Assert.AreEqual(1, groupCount, string.Format(@"Hosted argument {0} must be in exactly one group", arg.Name));
+                Assert.IsNull(OspreyCommandArgUsage.ResourceManager.GetString(OspreyCommandArgs.UsageKey(arg.Name)),
+                    string.Format(@"Hosted argument {0} is described by CarafeSharp, not OspreyCommandArgUsage.resx", arg.Name));
+                Assert.AreEqual(CarafeCommandLine.GetUsageText(arg.Name), ArgUsage.Provider.GetDescription(arg.Name), arg.Name);
+                Assert.IsFalse(string.IsNullOrEmpty(ArgUsage.Provider.GetDescription(arg.Name)), arg.Name);
+                Assert.IsFalse(declared.Any(d => d.Name == arg.Name), string.Format(@"{0} is both Osprey's and CarafeSharp's", arg.Name));
+            }
 
             var usageKeys = new HashSet<string>();
             foreach (var arg in declared)
@@ -606,8 +622,12 @@ namespace pwiz.Osprey.Test
 
             // section filter: only the matching group.
             string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
-            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText);
+            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
+            // The enzyme and modification tables come with the digest section that refers to them.
+            string digest = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Library_Digest);
+            StringAssert.Contains(digest, EnzymeTable.All.Last().Name);
+            StringAssert.Contains(digest, CarafeModification.TopModifications.Last().Name);
 
             // unknown section: a helpful message, no crash.
             Assert.AreEqual(string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,

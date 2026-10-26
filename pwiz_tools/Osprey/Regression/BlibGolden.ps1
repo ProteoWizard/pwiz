@@ -68,11 +68,11 @@ $script:BlibTables = @(
         Sql = @'
 SELECT peptideModSeq, precursorCharge, peptideSeq, prevAA, nextAA, copies,
        numPeaks, ionMobility, retentionTime, startTime, endTime,
-       precursorMZ, score, scoreType
+       precursorMZ, score, scoreType, PrecursorQValue, PrecursorPep, PeptideQValue
 FROM RefSpectra
 '@
         Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility')
+        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility', 'PrecursorQValue', 'PrecursorPep', 'PeptideQValue')
         Exact = @('peptideSeq', 'prevAA', 'nextAA', 'copies', 'numPeaks', 'scoreType')
     },
     @{
@@ -113,9 +113,9 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
     },
     @{
         Name = 'Proteins'; Scope = 'Full'
-        Sql = 'SELECT accession FROM Proteins'
+        Sql = 'SELECT accession, QValue FROM Proteins'
         Key = @('accession')
-        Numeric = @()
+        Numeric = @('QValue')
         Exact = @()
     },
     @{
@@ -581,7 +581,11 @@ function Compare-BlibGolden {
         [string]$ProteinFdrTsv,
         [int]$Modulus = $script:DefaultModulus,
         [double]$Tolerance = 1e-9,
-        [double]$SummaryRelTolerance = 1e-6
+        [double]$SummaryRelTolerance = 1e-6,
+        # The run searched the library as a .blib exported from the golden's .tsv (regression.ps1
+        # -LibraryAsBlib): the library file name Osprey records in SpectrumSourceFiles.idFileName
+        # differs by extension and nothing else, so that one column is left out of the comparison.
+        [switch]$LibraryAsBlib
     )
     $tablesDir = Join-Path $GoldenDir 'tables'
     $issues = [System.Collections.Generic.List[string]]::new()
@@ -591,9 +595,13 @@ function Compare-BlibGolden {
         if (-not (Test-Path $goldenPath)) { $issues.Add("missing golden table: $($t.Name)"); continue }
         $golden = Read-Tsv -Path $goldenPath
         $fresh = Get-TableProjection -Blib $Blib -Table $t -SubsetFilter:$true -Modulus $Modulus
+        $exactCols = $t.Exact
+        if ($LibraryAsBlib -and $t.Name -eq 'SpectrumSourceFiles') {
+            $exactCols = @($t.Exact | Where-Object { $_ -ne 'idFileName' })
+        }
         $cmp = Compare-RowSets -Label $t.Name -Header $golden.Header `
             -RowsA $golden.Rows -RowsB $fresh.Rows `
-            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $t.Exact -Tolerance $Tolerance
+            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $exactCols -Tolerance $Tolerance
         foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
     }
 

@@ -137,7 +137,7 @@ namespace pwiz.CarafeSharp.IO
         {
             _writer.BeginBatch();
             foreach (var row in rows)
-                _writer.AddDecoyPair(row.RefSpectraId, row.IsDecoy, row.IsEntrapment, row.PairId, row.Method);
+                _writer.AddDecoyPair(row.RefSpectraId, row.IsDecoy, row.IsEntrapment, row.PairingId, row.TargetRefSpectraId, row.Method);
             _writer.CommitBatch();
         }
 

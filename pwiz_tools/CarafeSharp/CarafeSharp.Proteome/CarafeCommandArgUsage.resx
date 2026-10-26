@@ -68,19 +68,19 @@
     <value>Build the peptide FASTA a library is predicted from: the digest of the proteins of --db, with decoys and, with --entrapment, entrapment peptides; the pairing manifest goes to --manifest.</value>
   </data>
   <data name="_reconcile_manifest" xml:space="preserve">
-    <value>Write the pairing manifest of --manifest reconciled against the predicted library of --predicted_library, dropping the pairs the library did not keep whole.</value>
+    <value>Write the pairing manifest of --manifest reconciled against the predicted library of --predicted-library, dropping the pairs the library did not keep whole.</value>
   </data>
   <data name="_manifest" xml:space="preserve">
-    <value>The pairing manifest: written by --build_entrapment_fasta, read by --reconcile_manifest.</value>
+    <value>The pairing manifest: written by --build-entrapment-fasta, read by --reconcile-manifest.</value>
   </data>
   <data name="_predicted_library" xml:space="preserve">
     <value>The predicted library (a TSV, or a .blib) a manifest is reconciled against.</value>
   </data>
   <data name="_model_info" xml:space="preserve">
-    <value>Describe a saved model (.carafemodel): what it was trained on, and how.</value>
+    <value>Describe a saved model (.model.zip, a ZIP archive): what it was trained on, and how.</value>
   </data>
   <data name="_db" xml:space="preserve">
-    <value>The FASTA to predict a library from (peptides, as --build_entrapment_fasta writes them, or proteins), or the proteins --build_entrapment_fasta digests. With training (--i), the library predicted with the fine-tuned models afterwards.</value>
+    <value>The FASTA to predict a library from (peptides, as --build-entrapment-fasta writes them, or proteins), or the proteins --build-entrapment-fasta digests. With training (--i), the library predicted with the fine-tuned models afterwards.</value>
   </data>
   <data name="_i" xml:space="preserve">
     <value>Osprey's results to train on: its .blib with --ms, or its training exports (one run's .training.parquet, a comma-separated list of them, or a folder of them) with or without --ms. With a .blib and no --ms a library is predicted instead, as in Carafe.</value>
@@ -89,33 +89,33 @@
     <value>The runs trained on, comma-separated. CarafeSharp reads no spectra: the fragment matches, XICs and peak boundaries come from Osprey's training export, so --ms only names the runs.</value>
   </data>
   <data name="_o" xml:space="preserve">
-    <value>The output folder: the library, and for training the fine-tuned model folder and the saved .carafemodel.</value>
+    <value>The output folder: the library, and for training the fine-tuned model folder and the saved .model.zip.</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>Print this usage and exit. An optional value picks the form: ascii or unicode (the default) tables, sections (the section names only), html, or a section name for that section alone.</value>
   </data>
   <data name="_enzyme" xml:space="preserve">
-    <value>The enzyme, by Carafe's index (default 1, trypsin), or NoCut for the non-specific digest, which forces 100 missed cleavages.</value>
+    <value>The enzyme, by its index or name in the Enzymes table below (default 1, Trypsin). Index 0, non-specific, cleaves after every residue and forces 100 missed cleavages; NoCut, the last, never cleaves, so each FASTA record is one peptide.</value>
   </data>
   <data name="_miss_c" xml:space="preserve">
     <value>Maximum missed cleavages (default 2).</value>
   </data>
-  <data name="_minLength" xml:space="preserve">
+  <data name="_min_length" xml:space="preserve">
     <value>Minimum peptide length (default 7).</value>
   </data>
-  <data name="_maxLength" xml:space="preserve">
+  <data name="_max_length" xml:space="preserve">
     <value>Maximum peptide length (default 35).</value>
   </data>
   <data name="_clip_n_m" xml:space="preserve">
     <value>Also digest each protein with its N-terminal methionine removed.</value>
   </data>
-  <data name="_fixMod" xml:space="preserve">
-    <value>Fixed modifications, Carafe's ids comma-separated (default 1, carbamidomethyl C).</value>
+  <data name="_fix_mod" xml:space="preserve">
+    <value>Fixed modifications, by their ids in the Modifications table below, comma-separated (default 1, Carbamidomethyl of C).</value>
   </data>
-  <data name="_varMod" xml:space="preserve">
-    <value>Variable modifications, Carafe's ids comma-separated (default 2, oxidation M).</value>
+  <data name="_var_mod" xml:space="preserve">
+    <value>Variable modifications, by their ids in the Modifications table below, comma-separated (default 2, Oxidation of M).</value>
   </data>
-  <data name="_maxVar" xml:space="preserve">
+  <data name="_max_var" xml:space="preserve">
     <value>Maximum variable modifications per peptide (default 1).</value>
   </data>
   <data name="_min_pep_mz" xml:space="preserve">
@@ -130,11 +130,11 @@
   <data name="_max_pep_charge" xml:space="preserve">
     <value>Maximum precursor charge (default 3 for the FASTA build, 4 for library prediction).</value>
   </data>
-  <data name="_I2L" xml:space="preserve">
+  <data name="_i2l" xml:space="preserve">
     <value>Convert isoleucine to leucine in every sequence.</value>
   </data>
   <data name="_entrapment" xml:space="preserve">
-    <value>Add entrapment peptides, shuffled from the targets, or taken from the proteins of --entrapment_db.</value>
+    <value>Add entrapment peptides, shuffled from the targets, or taken from the proteins of --entrapment-db.</value>
   </data>
   <data name="_no_decoys" xml:space="preserve">
     <value>Write no decoy peptides.</value>
@@ -143,7 +143,7 @@
     <value>The prefix of decoy protein names (default decoy_ for the FASTA build, rev_ for a library).</value>
   </data>
   <data name="_mz_filter" xml:space="preserve">
-    <value>Keep only the peptides with a precursor m/z inside --min_pep_mz to --max_pep_mz at some charge of --min_pep_charge to --max_pep_charge, modifications counted.</value>
+    <value>Keep only the peptides with a precursor m/z inside --min-pep-mz to --max-pep-mz at some charge of --min-pep-charge to --max-pep-charge, modifications counted.</value>
   </data>
   <data name="_entrapment_seed" xml:space="preserve">
     <value>The seed of the entrapment shuffle (default 42).</value>
@@ -167,7 +167,7 @@
     <value>The library format, comma-separated for more than one: DIA-NN (default), EncyclopeDIA or Skyline, a TSV in that notation, or blib, a BiblioSpec library. Skyline with --fast writes a .blib too.</value>
   </data>
   <data name="_fast" xml:space="preserve">
-    <value>With --lf_type Skyline, write the library as a .blib; without --fast Carafe writes a generic TSV.</value>
+    <value>With --lf-type Skyline, write the library as a .blib; without --fast Carafe writes a generic TSV.</value>
   </data>
   <data name="_lf_frag_mz_min" xml:space="preserve">
     <value>Minimum fragment m/z (default 200).</value>
@@ -185,16 +185,16 @@
     <value>Lowest fragment ordinal kept, b and y alike (default 2).</value>
   </data>
   <data name="_nce" xml:space="preserve">
-    <value>The normalized collision energy the MS2 model predicts at (default 27, or a model folder's).</value>
+    <value>The normalized collision energy the MS2 model predicts at (default 27, or the one the fine-tuned model it predicts with was trained at).</value>
   </data>
   <data name="_ms_instrument" xml:space="preserve">
-    <value>The instrument the MS2 model predicts for, by AlphaPeptDeep's name (default Eclipse, or a model folder's).</value>
+    <value>The instrument the MS2 model predicts for, by AlphaPeptDeep's name (default Eclipse, or the one the fine-tuned model it predicts with was trained on).</value>
   </data>
   <data name="_activation" xml:space="preserve">
-    <value>The activation predicted for, else a training run's. CarafeSharp only.</value>
+    <value>The activation predicted for, else a training run's. Not in Java Carafe.</value>
   </data>
   <data name="_analyzer" xml:space="preserve">
-    <value>The MS2 analyzer predicted for, else a training run's. CarafeSharp only.</value>
+    <value>The MS2 analyzer predicted for, else a training run's. Not in Java Carafe.</value>
   </data>
   <data name="_rt_max" xml:space="preserve">
     <value>The gradient length the library's retention times are scaled to, in minutes; absent, iRT.</value>
@@ -203,28 +203,28 @@
     <value>Predict ion mobility (1/K0) for timsTOF.</value>
   </data>
   <data name="_pairing_manifest" xml:space="preserve">
-    <value>The pairing manifest of --build_entrapment_fasta: the library then carries Carafe's DecoyPairs table, every pair written whole or not at all.</value>
+    <value>The pairing manifest of --build-entrapment-fasta: the library then carries Carafe's DecoyPairs table, every pair written whole or not at all.</value>
   </data>
   <data name="_library_contract" xml:space="preserve">
-    <value>Check the library against the Osprey library contract (one row per precursor, clean accessions, decoys and entrapment marked, the manifest authoritative, pairs whole) before predicting and after writing, refuse or discard it on a violation, and mark the .blib as meeting the contract so Osprey checks it at load instead of repairing it. Needs --lf_type blib and --pairing_manifest, and a FASTA built without Carafe's per-peptide accession suffix.</value>
+    <value>Check the library against the Osprey library contract (one row per precursor, clean accessions, decoys and entrapment marked, the manifest authoritative, pairs whole) before predicting and after writing, refuse or discard it on a violation, and mark the .blib as meeting the contract so Osprey checks it at load instead of repairing it. Needs --lf-type blib and --pairing-manifest, and a FASTA built without Carafe's per-peptide accession suffix.</value>
   </data>
   <data name="_rt_reference" xml:space="preserve">
-    <value>With a model trained with --rt_align kde, the training run whose minutes the library takes; else the model's, and iRT for a model of runs on different gradients. CarafeSharp only.</value>
+    <value>With a model trained with --rt-align kde, the training run whose minutes the library takes; else the model's, and iRT for a model of runs on different gradients. Not in Java Carafe.</value>
   </data>
   <data name="_model_dir" xml:space="preserve">
-    <value>A Carafe fine-tuned model folder to predict with: its MS2 and RT models, metrics and training-run summary.</value>
+    <value>A Carafe fine-tuned model folder to predict with: its MS2 and RT models (those --tf names), metrics and training-run summary.</value>
   </data>
   <data name="_model" xml:space="preserve">
-    <value>A saved model (.carafemodel), which every training run writes into --o: predict a library with it, or with --i fine-tune it further. CarafeSharp only.</value>
+    <value>A saved model (.model.zip, a ZIP archive), which every training run writes into --o: predict a library with it, or with --i fine-tune it further. Not in Java Carafe.</value>
   </data>
   <data name="_pretrained" xml:space="preserve">
-    <value>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). CarafeSharp only.</value>
+    <value>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</value>
   </data>
   <data name="_tf" xml:space="preserve">
-    <value>The models to train, or to predict with from --model_dir: all (default), ms2 or rt.</value>
+    <value>The models to train: all (default), ms2 or rt.</value>
   </data>
   <data name="_rt_model" xml:space="preserve">
-    <value>The retention-time model (default: the one of --model or --model_dir, else chronologer). A different one from a fine-tuned model's predicts with its pretrained model, Chronologer's in iRT. CarafeSharp only.</value>
+    <value>The retention-time model (default: the fine-tuned model's, else chronologer). A different one from a fine-tuned model's predicts with its pretrained model, Chronologer's in iRT. Not in Java Carafe.</value>
   </data>
   <data name="_device" xml:space="preserve">
     <value>Where the models run: cpu, or gpu / cuda (default; the CPU when there is no CUDA device).</value>
@@ -263,22 +263,22 @@
     <value>The random seed of training (default 2024; not negative).</value>
   </data>
   <data name="_rt_align" xml:space="preserve">
-    <value>How the training runs' retention times are aligned before the RT model is fine-tuned: kde (default; each run's minutes mapped onto Chronologer's hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe's one rt_max). CarafeSharp only.</value>
+    <value>How the training runs' retention times are aligned before the RT model is fine-tuned: kde (default; each run's minutes mapped onto Chronologer's hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe's one rt_max). Not in Java Carafe.</value>
   </data>
   <data name="_rt_select" xml:space="preserve">
-    <value>With aligned runs, the retention time a peptide form trains on: its best run, or the runs' median. CarafeSharp only.</value>
+    <value>With aligned runs, the retention time a peptide form trains on: its best run, or the runs' median. Not in Java Carafe.</value>
   </data>
   <data name="_log_file" xml:space="preserve">
-    <value>Write every line of output and error to this file instead of the console. CarafeSharp only, any mode.</value>
+    <value>Write every line of output and error to this file instead of the console. Not in Java Carafe; any mode.</value>
   </data>
   <data name="_timestamp" xml:space="preserve">
-    <value>Prefix each line with the time. CarafeSharp only.</value>
+    <value>Prefix each line with the time. Not in Java Carafe.</value>
   </data>
   <data name="_memstamp" xml:space="preserve">
-    <value>Prefix each line with the managed and private memory in use. CarafeSharp only.</value>
+    <value>Prefix each line with the managed and private memory in use. Not in Java Carafe.</value>
   </data>
   <data name="_itol" xml:space="preserve">
-    <value>Carafe's XIC extraction settings (--itol, --itolu, --sg, --min_mz, --rf, --rf_rt_win, --rt_win_offset) are Osprey's to decide: the matches, XICs and peak boundaries come from its training export, so each is reported and ignored.</value>
+    <value>Carafe's XIC extraction settings (--itol, --itolu, --sg, --min-mz, --rf, --rf-rt-win, --rt-win-offset) are Osprey's to decide: the matches, XICs and peak boundaries come from its training export, so each is reported and ignored.</value>
   </data>
   <data name="_itolu" xml:space="preserve">
     <value>See --itol.</value>
@@ -311,7 +311,7 @@
     <value>Carafe's library file format; parquet is not supported.</value>
   </data>
   <data name="_ez" xml:space="preserve">
-    <value>A Carafe diagnostic file (--ez, --xic, --export_mgf, --skyline) CarafeSharp does not write; reported and ignored.</value>
+    <value>A Carafe diagnostic file (--ez, --xic, --export-mgf, --skyline) CarafeSharp does not write; reported and ignored.</value>
   </data>
   <data name="_xic" xml:space="preserve">
     <value>See --ez.</value>
@@ -322,7 +322,7 @@
   <data name="_skyline" xml:space="preserve">
     <value>See --ez.</value>
   </data>
-  <data name="_printPTM" xml:space="preserve">
+  <data name="_print_ptm" xml:space="preserve">
     <value>Not supported by CarafeSharp.</value>
   </data>
   <data name="_build_koina_library" xml:space="preserve">

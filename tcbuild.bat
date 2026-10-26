@@ -102,6 +102,26 @@ for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executabl
     )
 )
 
+REM # Build-warnings check. tcinspect.ps1 pre-builds what build.bat builds, with the same
+REM # properties, logging every restore and build warning. Running first is the point: it is
+REM # then the build's one from-scratch compile, and build.bat's build is incremental on top
+REM # of it. A warning turns its own GitHub status, "Core code inspection", red; the script
+REM # always exits 0 and leaves this build's status alone, so build.bat and the tests run and
+REM # pass or fail on their own. Vendor builds only - see tcinspect.ps1 for why. The flags it
+REM # needs are the subset of %* that change build.bat's MSBUILD_PROPS.
+set IAGREE=0
+set INSPECT_ARGS=
+for %%A in (%*) do (
+    if /i "%%~A"=="--i-agree-to-the-vendor-licenses" (set "IAGREE=1" & set "INSPECT_ARGS=!INSPECT_ARGS! -IAgreeToVendorLicenses")
+    if /i "%%~A"=="--automated" set "INSPECT_ARGS=!INSPECT_ARGS! -AutomatedBuild"
+    if /i "%%~A"=="--without-mascot" set "INSPECT_ARGS=!INSPECT_ARGS! -WithoutMascot"
+    if /i "%%~A"=="Debug" set "INSPECT_ARGS=!INSPECT_ARGS! -Configuration Debug"
+)
+if %IAGREE%==1 (
+    echo ##teamcity[progressMessage 'tcinspect.ps1%INSPECT_ARGS% ^(build warnings^)']
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\tcinspect.ps1"%INSPECT_ARGS%
+)
+
 REM # --with-vendor-sdks is added here rather than left to the caller: the
 REM # vendor-bundled installer is a CI deliverable (the wine container installs
 REM # it, and it is the only variant that needs no network at run time), while a
@@ -118,9 +138,8 @@ REM # so a developer without it can still build, but a vendor build here is the 
 REM # whose installers get published - Core Windows x86_64 uploads them to the download
 REM # page and the container installs one - and a partial set would replace a working
 REM # download list. The names carry the version build.ps1 wrote, so leftovers from an
-REM # earlier build cannot pass (clean.bat removes them above anyway).
-set IAGREE=0
-for %%A in (%*) do if /i "%%~A"=="--i-agree-to-the-vendor-licenses" set IAGREE=1
+REM # earlier build cannot pass (clean.bat removes them above anyway). IAGREE was parsed
+REM # for the build-warnings check above.
 if %IAGREE%==1 (
     call :check_installers
     if !EXIT! NEQ 0 goto error

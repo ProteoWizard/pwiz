@@ -43,7 +43,7 @@ librarySuppliesDecoys = config.LibrarySuppliesDecoys   // DecoysInLibrary || Dec
    list is replaced with the collision-filtered `validTargets`
    (`PerFileScoringTask.cs`).
 3. **Library-supplied decoys** — nothing to dispatch: marking and pairing already ran
-   INSIDE `LibraryLoader.Load`, ahead of the `.libcache` write (issue #4650), so the
+   INSIDE `LibraryLoader.Load`, ahead of the derived library's write (issue #4650), so the
    library arrives finished and the target count below already reflects marking. A pairing
    failure surfaces as the loader's `out error`, which the caller reports with
    `ExitCode = 1` exactly as it did when it owned the work.
@@ -280,12 +280,25 @@ so their `base_id`s match — required for SVM competition, LDA calibration, and
 fold grouping (see 07-fdr-control.md, 16-determinism.md).
 
 A **`.blib` pairs from its `DecoyPairs` table** and nothing else (`Osprey.IO/BlibDecoyPairs.cs`,
-decision of 2026-10-15; see [24](24-library-contract.md), "Osprey, pairing a blib's decoys"): the
-table's `IsDecoy` is authoritative over the accession prefixes, and each `PairID` names the
-target and the decoy at one charge. A blib searched with its own decoys but without the table is
-refused at load. The rows are read by RefSpectra id before the deduplicator renumbers the
-entries and carried by entry object into the pairing. The two stages below are the **TSV**
-library's, which has no table to carry its pairing.
+decisions of 2026-10-15 and 2026-10-17; see [24](24-library-contract.md), "Osprey, pairing a
+blib's decoys"): the table's `IsDecoy` is authoritative over the accession prefixes, each decoy
+row's `TargetRefSpectraID` names its target at one charge, and `PairingID` (the manifest's
+`peptide_pair_index`) becomes the entry's `PairingId`, which pairs an entrapment peptide with
+its original target for the diagnostics and the FDRBench output - so a blib needs no manifest.
+A blib searched with its own decoys but without the table is refused at load. The rows are read
+by RefSpectra id before the deduplicator renumbers the entries and carried by entry object into
+the pairing. The two stages below are the **TSV** library's, which has no table to carry its
+pairing; after them `PairingIds.Assign` gives every entry its pairing id - from the table's rows
+for a blib, from the manifest for a TSV (the Met-clip reconciliation that
+`EntrapmentPairing.Build` used to redo per task lives there now), a standalone index for a
+peptide in neither - and the library cache keeps it. Every entry has one; an entrapment peptide
+whose id no original target shares is the orphan `EntrapmentPairing.Build` excludes from the
+FDRBench input and the diagnostics. A library searched with generated decoys takes the same
+id assignment (its table, or the manifest given with it), so an entrapment library's pairing
+ids do not depend on where its decoys come from; the manifest's rewrite of accessions and decoy
+marks (`ApplyToLibrary`) stays the supplied-decoy route's, as before. An entrapment library
+(`_p_target` accessions) that brings neither a table nor a manifest is refused at load: its
+paired FDP and FDRBench output would be guesses, and the message names what to supply.
 
 First, a **hard guard**: if there are no library decoys at all,
 the load returns that fault as `error` and the caller exits with code 1
@@ -331,9 +344,8 @@ manifest-paired target (`LibraryLoader.cs`).
 
 The breakdown is logged as
 `Library-decoy pairing: paired A/B decoys (P%); manifest=M, composition=C; U unpaired decoys, V unpaired targets`
-(`LibraryLoader.cs`). A load served from the `.libcache` did no pairing work - the cache
-holds the finished library - so it reports the same TOTAL from a separate line that omits
-the manifest/composition split, which a finished library does not record. If `PairingStats.PairedFraction <
+(`LibraryLoader.cs`). A load served from the derived `.blib` pairs from its `DecoyPairs`
+table and reports that table's line. If `PairingStats.PairedFraction <
 config.DecoyPairMinFraction` (default **0.80**), Osprey logs an error and exits with
 code 1 rather than run with broken competition (`LibraryLoader.cs`).
 `PairedFraction` returns 1.0 when there are no decoys
@@ -363,7 +375,6 @@ All flags parsed in `Osprey/OspreyCommandArgs.cs`; defaults in
 | `config.DecoyPrefixes` | `["DECOY_", "rev_", "decoy_"]` (`OspreyConfig.cs`) | Case-insensitive protein-accession prefixes used by marking and by composition-fallback stripping. No CLI flag; config-file only. |
 | `config.DecoyPairMinFraction` | `0.80` (`OspreyConfig.cs`) | Minimum fraction of decoys that must pair with a target in library-decoy mode; below it Osprey errors out. Config-file only. |
 | `--decoy-pairing-manifest <manifest.tsv>` (`config.DecoyPairingManifestPath`) | unset (`null`) | FDRBench 5-column manifest for authoritative pairing + classification + protein-ID substitution (`OspreyCommandArgs.cs`). Requires `--decoys-in-library`; setting it without that flag is rejected during validation (`OspreyCommandArgs.cs`). |
-| `--write-pin` (`config.WritePin`) | off (`false`) | Writes PIN files for external tools (`OspreyCommandArgs.cs`). Does not change decoy content; downstream of this stage. |
 
 Generation is not otherwise flag-gated: with none of the above set, Osprey
 generates reverse decoys with the cycling fallback (the default path). No decoy

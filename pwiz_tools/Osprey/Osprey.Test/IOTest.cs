@@ -483,6 +483,108 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Verifies the experiment-level columns of a search blib: absent from a library export,
+        /// present once <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> asks for them, then
+        /// a precursor q-value, precursor PEP and peptide q-value on each spectrum and a q-value
+        /// on each protein group, with a group shared by two spectra written once and a spectrum
+        /// linked to two groups.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchGlobalColumns()
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                using (var writer = new OspreyBlibWriter(path))
+                {
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    AddTestSpectrum(writer, fileId, 2);
+                    writer.Complete();
+                }
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorQValue"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorPep"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(conn, "Proteins", "QValue"));
+                }
+
+                long refId2, refId3;
+                using (var writer = new OspreyBlibWriter(path))
+                {
+                    writer.AddSearchGlobalColumns();
+                    writer.BeginBatch();
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004));
+                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004));
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
+                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002));
+                    writer.AddSpectrumProtein(refId2, groupA);
+                    writer.AddSpectrumProtein(refId2, groupC);
+                    writer.AddSpectrumProtein(refId3, groupA);
+                    writer.CommitBatch();
+                    writer.Complete();
+                }
+
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.AreEqual(0.003, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.006, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.02, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
+                    Assert.AreEqual(0.002, QueryDouble(conn,
+                        "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
+                    Assert.AreEqual(2L, QueryLong(conn,
+                        "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
+                        "WHERE p.accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"));
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        private static long AddTestSpectrum(OspreyBlibWriter writer, long fileId, int charge, SearchGlobalValues globalValues = null)
+        {
+            return writer.AddSpectrum("PEPTIDE", "PEPTIDE", 800.0 / charge, charge,
+                10.0, 9.0, 11.0, new[] { 300.0 }, new[] { 100.0f }, 0.01, fileId, 1, 0.0, null, null, globalValues);
+        }
+
+        private static bool HasColumn(SQLiteConnection conn, string table, string column)
+        {
+            using (var cmd = new SQLiteCommand("PRAGMA table_info(" + table + ")", conn))
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    if (reader.GetString(1) == column)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static double QueryDouble(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToDouble(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        private static long QueryLong(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Verifies that StripFlankingChars correctly removes flanking amino acid notation.
         /// </summary>
         [TestMethod]
@@ -1214,524 +1316,7 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
-        #region LibraryCache Tests
-
-        [TestMethod]
-        public void TestLibraryCacheRoundTrip()
-        {
-            var entries = new List<LibraryEntry>
-            {
-                MakeTestEntry(0),
-                MakeTestEntry(1)
-            };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "round-trip-hash");
-                var loaded = LibraryCache.LoadCache(tempPath);
-
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(2, loaded.Count);
-
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    var orig = entries[i];
-                    var copy = loaded[i];
-
-                    Assert.AreEqual(orig.Id, copy.Id);
-                    Assert.AreEqual(orig.Sequence, copy.Sequence);
-                    Assert.AreEqual(orig.ModifiedSequence, copy.ModifiedSequence);
-                    Assert.AreEqual(orig.Charge, copy.Charge);
-                    Assert.AreEqual(orig.PrecursorMz, copy.PrecursorMz, 1e-10);
-                    Assert.AreEqual(orig.RetentionTime, copy.RetentionTime, 1e-10);
-                    Assert.AreEqual(orig.RtCalibrated, copy.RtCalibrated);
-                    Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
-                    Assert.AreEqual(orig.Fragments.Count, copy.Fragments.Count);
-                    Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
-                    CollectionAssert.AreEqual(orig.ProteinIds.ToArray(), copy.ProteinIds.ToArray());
-                    CollectionAssert.AreEqual(orig.GeneNames.ToArray(), copy.GeneNames.ToArray());
-
-                    // Check fragment details
-                    for (int f = 0; f < orig.Fragments.Count; f++)
-                    {
-                        Assert.AreEqual(orig.Fragments[f].Mz, copy.Fragments[f].Mz, 1e-10);
-                        Assert.AreEqual(orig.Fragments[f].RelativeIntensity,
-                            copy.Fragments[f].RelativeIntensity, 1e-6);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.IonType,
-                            copy.Fragments[f].Annotation.IonType);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.Ordinal,
-                            copy.Fragments[f].Annotation.Ordinal);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.Charge,
-                            copy.Fragments[f].Annotation.Charge);
-
-                        Assert.AreEqual(orig.Fragments[f].Annotation.HasNeutralLoss,
-                            copy.Fragments[f].Annotation.HasNeutralLoss);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.NeutralLossMass,
-                            copy.Fragments[f].Annotation.NeutralLossMass, 1e-10);
-                    }
-
-                    // Check modification details
-                    for (int m = 0; m < orig.Modifications.Count; m++)
-                    {
-                        Assert.AreEqual(orig.Modifications[m].Position,
-                            copy.Modifications[m].Position);
-                        Assert.AreEqual(orig.Modifications[m].UnimodId,
-                            copy.Modifications[m].UnimodId);
-                        Assert.AreEqual(orig.Modifications[m].MassDelta,
-                            copy.Modifications[m].MassDelta, 1e-10);
-                        Assert.AreEqual(orig.Modifications[m].Name,
-                            copy.Modifications[m].Name);
-                    }
-                }
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheRetainMatchesRelease()
-        {
-            // RetainFragmentsFor's contract is EQUIVALENCE, not leanness: loading with a retain
-            // set must leave the library in exactly the state that loading everything and then
-            // calling LibraryFragmentRelease.ReleaseFragments with the same set would leave. A
-            // direct swap, differing only in what was allocated on the way.
-            //
-            // The state is what this pins, and it is not a detail. A skipped entry that kept
-            // Array.Empty would be a READABLE empty spectrum, which every scorer's
-            // `Fragments == null || Fragments.Count == 0` guard absorbs as "this entry has no
-            // spectrum" - scoring a degenerate zero where the released state throws. Skipping
-            // the allocation must not also skip the tripwire that says the skip was wrong, so
-            // the assertion below is on IsSpectrumReleased and on the throw, never on "is it
-            // empty". That is the exact difference this test exists for: before issue #4650's
-            // review, the skip produced the empty state and no caller assigned the option, so
-            // nothing would have caught it.
-            //
-            // Ids 10 and 11 are targets, each with its paired decoy sharing the base_id. The
-            // retain set names 10 only, so the pair rides along on the base_id and the 11 pair
-            // is dropped - a set that both retains and releases, since one that did neither
-            // would pass whatever the code did.
-            const uint DECOY_BIT = 0x80000000;
-            var entries = new List<LibraryEntry>
-            {
-                MakeTestEntry(10),
-                MakeTestEntry(10 | DECOY_BIT),
-                MakeTestEntry(11),
-                MakeTestEntry(11 | DECOY_BIT)
-            };
-            var retained = new HashSet<uint> { 10u };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_retain_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "retain-hash");
-
-                // Route A: load everything, then release. The shape this is a swap FOR.
-                var released = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
-                    out LibraryCache.LibraryCacheStatus releasedStatus);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, releasedStatus);
-                int nReleased = LibraryFragmentRelease.ReleaseFragments(released, retained);
-
-                // Route B: load only what the set names.
-                var skipped = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
-                    out LibraryCache.LibraryCacheStatus skippedStatus, retained);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, skippedStatus);
-
-                // The set has to do both jobs, or the comparison below proves nothing.
-                Assert.AreEqual(2, nReleased,
-                    @"the retain set must release the 11 pair and keep the 10 pair");
-
-                Assert.AreEqual(released.Count, skipped.Count);
-                for (int i = 0; i < released.Count; i++)
-                {
-                    var a = released[i];
-                    var b = skipped[i];
-                    string what = string.Format(CultureInfo.InvariantCulture, @"entry {0} (id {1})", i, a.Id);
-
-                    // Identity is untouched on BOTH sides, including on a released entry:
-                    // protein parsimony walks the whole library after the spectra are gone.
-                    Assert.AreEqual(a.Id, b.Id, what);
-                    Assert.AreEqual(a.Sequence, b.Sequence, what);
-                    Assert.AreEqual(a.ModifiedSequence, b.ModifiedSequence, what);
-                    Assert.AreEqual(a.Charge, b.Charge, what);
-                    Assert.AreEqual(a.PrecursorMz, b.PrecursorMz, 1e-10, what);
-                    Assert.AreEqual(a.RetentionTime, b.RetentionTime, 1e-10, what);
-                    Assert.AreEqual(a.RtCalibrated, b.RtCalibrated, what);
-                    Assert.AreEqual(a.IsDecoy, b.IsDecoy, what);
-                    Assert.AreEqual(a.Modifications.Count, b.Modifications.Count, what);
-                    CollectionAssert.AreEqual(a.ProteinIds.ToArray(), b.ProteinIds.ToArray(), what);
-                    CollectionAssert.AreEqual(a.GeneNames.ToArray(), b.GeneNames.ToArray(), what);
-
-                    // The state itself. Asked through IsSpectrumReleased because reading
-                    // Fragments to find out is what throws - which is the point of the state.
-                    Assert.AreEqual(a.IsSpectrumReleased, b.IsSpectrumReleased, what);
-                    bool expectReleased = !retained.Contains(a.Id & ScoringTaskShared.BASE_ID_MASK);
-                    Assert.AreEqual(expectReleased, b.IsSpectrumReleased, what);
-
-                    if (expectReleased)
-                    {
-                        // The tripwire, on the skipped side specifically. Equality above would
-                        // also hold if BOTH sides had quietly become readable-empty, so the
-                        // throw is asserted rather than inferred.
-                        Assert.ThrowsException<InvalidOperationException>(() =>
-                        {
-                            int unused = b.Fragments.Count;
-                        }, what + @": a skipped spectrum must throw on read, not read as empty");
-                        continue;
-                    }
-
-                    // A retained entry carries the identical peaks, read rather than skipped.
-                    Assert.AreEqual(a.Fragments.Count, b.Fragments.Count, what);
-                    for (int f = 0; f < a.Fragments.Count; f++)
-                    {
-                        var fa = a.Fragments[f];
-                        var fb = b.Fragments[f];
-                        Assert.AreEqual(fa.Mz, fb.Mz, 1e-10, what);
-                        Assert.AreEqual(fa.RelativeIntensity, fb.RelativeIntensity, what);
-                        Assert.AreEqual(fa.Annotation.IonType, fb.Annotation.IonType, what);
-                        Assert.AreEqual(fa.Annotation.Ordinal, fb.Annotation.Ordinal, what);
-                        Assert.AreEqual(fa.Annotation.Charge, fb.Annotation.Charge, what);
-                        Assert.AreEqual(fa.Annotation.NeutralLoss, fb.Annotation.NeutralLoss, what);
-                        Assert.AreEqual(fa.Annotation.CustomLossMass, fb.Annotation.CustomLossMass, 1e-10, what);
-                    }
-                }
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheOmitFragments()
-        {
-            // A FirstPassFDR / StopAfterStage5 worker loads the library lean: the
-            // six identity scalars per entry are kept, but the fragment peaks
-            // (~3.2 GB at SEA-AD scale) are read past and discarded. The skip must
-            // land the reader on the same following bytes as a full read, so the
-            // scalars, sequence, RT, modifications, protein IDs and gene names all
-            // stay byte-identical -- only Fragments is emptied. MakeTestEntry's
-            // custom-neutral-loss fragment exercises the variable-length skip.
-            var entries = new List<LibraryEntry>
-            {
-                MakeTestEntry(0),
-                MakeTestEntry(1)
-            };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_omit_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "omit-hash");
-
-                // Control: a normal (full) load still carries every fragment.
-                var full = LibraryCache.LoadCache(tempPath, "omit-hash", false, null,
-                    out LibraryCache.LibraryCacheStatus fullStatus);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, fullStatus);
-                Assert.IsNotNull(full);
-                Assert.AreEqual(3, full[0].Fragments.Count);
-
-                // Lean: same entry count, every non-fragment member preserved,
-                // Fragments emptied.
-                var lean = LibraryCache.LoadCache(tempPath, "omit-hash", true, null,
-                    out LibraryCache.LibraryCacheStatus leanStatus);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, leanStatus);
-                Assert.IsNotNull(lean);
-                Assert.AreEqual(entries.Count, lean.Count);
-
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    var orig = entries[i];
-                    var copy = lean[i];
-
-                    // The six scalars the FDR stages read must be intact...
-                    Assert.AreEqual(orig.Id, copy.Id);
-                    Assert.AreEqual(orig.ModifiedSequence, copy.ModifiedSequence);
-                    Assert.AreEqual(orig.Charge, copy.Charge);
-                    Assert.AreEqual(orig.PrecursorMz, copy.PrecursorMz, 1e-10);
-                    Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
-                    CollectionAssert.AreEqual(orig.ProteinIds.ToArray(), copy.ProteinIds.ToArray());
-
-                    // ...along with the other non-fragment members that follow the
-                    // fragment block on disk (proving the skip advanced correctly)...
-                    Assert.AreEqual(orig.Sequence, copy.Sequence);
-                    Assert.AreEqual(orig.RetentionTime, copy.RetentionTime, 1e-10);
-                    Assert.AreEqual(orig.RtCalibrated, copy.RtCalibrated);
-                    Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
-                    CollectionAssert.AreEqual(orig.GeneNames.ToArray(), copy.GeneNames.ToArray());
-
-                    // ...but the fragment peaks are dropped.
-                    Assert.AreEqual(0, copy.Fragments.Count);
-                }
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheRejectsPeaklessEntry()
-        {
-            // Peak-less (0-fragment) entries are a BiblioSpec MS1-feature-finding artifact and are
-            // not valid for DIA search: the cache reader must fail fast (PR #4434 review) rather than
-            // let one reach decoy generation (which would silently exclude it) or a lean OmitFragments
-            // load (which would retain a phantom and diverge the FirstPassFDR reconciliation bytes).
-            var entries = new List<LibraryEntry>
-            {
-                MakeTestEntry(0),                                    // fragment-carrying: valid
-                new LibraryEntry(1, "BBB", "BBB", 2, 400.0, 20.0)    // no fragments: must be rejected
-            };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_peakless_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "peakless-hash");
-
-                // Both the full and the lean (OmitFragments) cache reads must fail fast on the
-                // 0-fragment entry (the guard is upstream of the omit branch).
-                Assert.ThrowsException<InvalidDataException>(() =>
-                    LibraryCache.LoadCache(tempPath, "peakless-hash", false, null, out _));
-                Assert.ThrowsException<InvalidDataException>(() =>
-                    LibraryCache.LoadCache(tempPath, "peakless-hash", true, null, out _));
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheIdentityHash()
-        {
-            // The .libcache stamps the source library's identity hash into its
-            // header (v2). A cache is reused only when the caller-supplied
-            // expected hash matches the stored one; a mismatch reports
-            // IdentityMismatch and does NOT read the entries (so a stale cache
-            // from a rebuilt-in-place library, whose decoys/pairing no longer
-            // match the current run, is rebuilt from source rather than loaded).
-            var entries = new List<LibraryEntry>
-            {
-                MakeTestEntry(0),
-                MakeTestEntry(1)
-            };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_identity_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "hash-A");
-
-                // Matching hash -> loaded with entries.
-                LibraryCache.LibraryCacheStatus status;
-                var loadedMatch = LibraryCache.LoadCache(tempPath, "hash-A", out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
-                Assert.IsNotNull(loadedMatch);
-                Assert.AreEqual(2, loadedMatch.Count);
-
-                // Different hash -> identity mismatch, no entries read.
-                var loadedMismatch = LibraryCache.LoadCache(tempPath, "hash-B", out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
-                Assert.IsNull(loadedMismatch);
-
-                // Null expected hash -> identity check skipped, entries loaded.
-                var loadedNoCheck = LibraryCache.LoadCache(tempPath, null, out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
-                Assert.IsNotNull(loadedNoCheck);
-                Assert.AreEqual(2, loadedNoCheck.Count);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheRealIdentityHash()
-        {
-            // End-to-end: stamp a cache with the REAL LibraryIdentityHash of a
-            // temp library file, then change the file's size and mtime and
-            // confirm the recomputed hash no longer matches the stored one, so
-            // the cache reports IdentityMismatch. This locks the size+mtime
-            // sensitivity of SearchIdentity.LibraryIdentityHash to the actual
-            // file, catching even a timestamp-preserving swap that the old
-            // mtime-ordering check would have missed.
-            string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cache_identity_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            string source = Path.Combine(dir, "lib.tsv");
-            string cachePath = Path.Combine(dir, "lib.tsv.libcache");
-            try
-            {
-                File.WriteAllText(source, "original library contents");
-                var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(source) };
-                string hashBefore = config.Identity.LibraryIdentityHash();
-
-                var entries = new List<LibraryEntry> { MakeTestEntry(0) };
-                LibraryCache.SaveCache(cachePath, entries, hashBefore);
-
-                // The cache is reused while the file identity is unchanged.
-                LibraryCache.LibraryCacheStatus status;
-                var loaded = LibraryCache.LoadCache(cachePath, hashBefore, out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(1, loaded.Count);
-
-                // Rebuild the library in place with a different size and mtime.
-                File.WriteAllText(source, "a rebuilt library with different contents and length");
-                File.SetLastWriteTimeUtc(source,
-                    File.GetLastWriteTimeUtc(source).AddHours(1));
-                string hashAfter = config.Identity.LibraryIdentityHash();
-                Assert.AreNotEqual(hashBefore, hashAfter,
-                    "changing the library's size and mtime must change its identity hash");
-
-                // The stale cache is now detected and rebuilt from source.
-                var stale = LibraryCache.LoadCache(cachePath, hashAfter, out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
-                Assert.IsNull(stale);
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheStaleVersionInvalid()
-        {
-            // A cache whose header carries an unsupported version -- e.g. a pre-v2
-            // cache left on disk from an older build -- reads as Invalid and is
-            // rebuilt; its body is never reinterpreted under the current layout.
-            // Poke the version field (the uint32 immediately after the 8-byte
-            // magic) down to v1 to simulate that, and confirm both the
-            // identity-checked and the no-check load report Invalid rather than
-            // misparsing the body.
-            var entries = new List<LibraryEntry> { MakeTestEntry(0) };
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_version_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "hash-A");
-
-                byte[] bytes = File.ReadAllBytes(tempPath);
-                BitConverter.GetBytes((uint)1).CopyTo(bytes, 8); // version at offset 8
-                File.WriteAllBytes(tempPath, bytes);
-
-                LibraryCache.LibraryCacheStatus status;
-                var loaded = LibraryCache.LoadCache(tempPath, "hash-A", out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Invalid, status);
-                Assert.IsNull(loaded);
-
-                // The version gate precedes the identity check, so the identity-
-                // agnostic overload is Invalid too, not silently accepted.
-                Assert.IsNull(LibraryCache.LoadCache(tempPath));
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheEmpty()
-        {
-            var entries = new List<LibraryEntry>();
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_empty_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "empty-hash");
-                var loaded = LibraryCache.LoadCache(tempPath);
-
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(0, loaded.Count);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheInvalidMagic()
-        {
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_bad_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-
-            try
-            {
-                File.WriteAllBytes(tempPath, Encoding.ASCII.GetBytes("NOTVALID"));
-
-                var result = LibraryCache.LoadCache(tempPath);
-                Assert.IsNull(result);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheNeutralLossCollapse()
-        {
-            // A Custom neutral-loss mass within 1e-6 of a named loss must serialize
-            // to the named tag (byte-identity with the legacy reference-type writer)
-            // and read back as the named code -- the most byte-sensitive
-            // WriteNeutralLoss branch, which the round-trip test does not exercise.
-            var entry = new LibraryEntry(1, "PEPTIDER", "PEPTIDER", 2, 500.0, 10.0);
-            entry.Fragments = new List<LibraryFragment>
-            {
-                new LibraryFragment
-                {
-                    Mz = 200.0,
-                    RelativeIntensity = 1.0f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.B,
-                        Ordinal = 1,
-                        Charge = 1,
-                        NeutralLoss = NeutralLossCode.Custom,
-                        CustomLossMass = NeutralLoss.H2OMass
-                    }
-                }
-            };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_nl_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
-            try
-            {
-                LibraryCache.SaveCache(tempPath, new List<LibraryEntry> { entry }, "hash");
-                var loaded = LibraryCache.LoadCache(tempPath);
-                Assert.AreEqual(1, loaded.Count);
-                var ann = loaded[0].Fragments[0].Annotation;
-                Assert.AreEqual(NeutralLossCode.H2O, ann.NeutralLoss);
-                Assert.AreEqual(NeutralLoss.H2OMass, ann.NeutralLossMass, 1e-10);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
+        #region Library string interning
 
         [TestMethod]
         public void TestLibraryStringInterning()
@@ -1822,8 +1407,8 @@ namespace pwiz.Osprey.Test
             byte[] compressedMz = ZlibCompress(mzBytes);
             byte[] compressedInt = ZlibCompress(intBytes);
 
-            // Decompress and verify
-            byte[] decompressedMz = BlibLoader.TryZlibDecompress(compressedMz, mzBytes.Length);
+            // Decompress and verify through the shared reader's decoders
+            byte[] decompressedMz = BlibWriter.DecodeBlob(compressedMz, mzBytes.Length);
             Assert.IsNotNull(decompressedMz);
             Assert.AreEqual(mzBytes.Length, decompressedMz.Length);
 
@@ -1834,9 +1419,38 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(mzValues[i], mz, 1e-10);
             }
 
-            byte[] decompressedInt = BlibLoader.TryZlibDecompress(compressedInt, intBytes.Length);
+            byte[] decompressedInt = BlibWriter.DecodeBlob(compressedInt, intBytes.Length);
             Assert.IsNotNull(decompressedInt);
             Assert.AreEqual(intBytes.Length, decompressedInt.Length);
+
+            // Decoded together, scaled to the base peak, as the loader makes fragments of them.
+            var peaks = BlibReader.DecodePeaks(compressedMz, compressedInt, mzValues.Length);
+            Assert.IsNotNull(peaks);
+            CollectionAssert.AreEqual(mzValues, peaks.Mzs);
+            CollectionAssert.AreEqual(intValues, peaks.Intensities);
+            var fragments = BlibLoader.ToFragments(peaks);
+            CollectionAssert.AreEqual(new[] { 1f, 0.5f, 0.25f }, fragments.Select(f => f.RelativeIntensity).ToArray());
+
+            // Eight bytes per peak is a float64 intensity blob, which an early writer stored.
+            byte[] doubleIntBytes = new byte[intValues.Length * 8];
+            for (int i = 0; i < intValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)intValues[i]), 0, doubleIntBytes, i * 8, 8);
+            CollectionAssert.AreEqual(intValues, BlibWriter.DecodeIntensities(doubleIntBytes, intValues.Length));
+            // Compressed too, on enough values that the zlib bytes cannot be a raw length.
+            float[] manyValues = Enumerable.Range(0, 64).Select(i => 1000f - i * 7.5f).ToArray();
+            byte[] manyDoubleBytes = new byte[manyValues.Length * 8];
+            for (int i = 0; i < manyValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)manyValues[i]), 0, manyDoubleBytes, i * 8, 8);
+            byte[] compressedDoubleInt = ZlibCompress(manyDoubleBytes);
+            Assert.AreNotEqual(manyValues.Length * 4, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            Assert.AreNotEqual(manyValues.Length * 8, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            CollectionAssert.AreEqual(manyValues, BlibWriter.DecodeIntensities(compressedDoubleInt, manyValues.Length));
+
+            // A blob that inflates to another length than numPeaks says, or that is neither raw
+            // nor zlib, is refused as library data, not misread.
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(compressedMz, mzBytes.Length + 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(mzBytes, mzBytes.Length - 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeIntensities(compressedMz, intValues.Length + 1));
         }
 
         #endregion
@@ -2904,64 +2518,6 @@ namespace pwiz.Osprey.Test
                     Charge = 1
                 }
             };
-        }
-
-        private static LibraryEntry MakeTestEntry(uint id)
-        {
-            var entry = new LibraryEntry(id, "PEPTIDEK", "PEPTIDEK", 2, 471.2567, 25.3);
-            entry.Modifications = new List<Modification>
-            {
-                new Modification
-                {
-                    Position = 0,
-                    UnimodId = 1,
-                    MassDelta = 42.010565,
-                    Name = "Acetyl"
-                }
-            };
-            entry.Fragments = new List<LibraryFragment>
-            {
-                new LibraryFragment
-                {
-                    Mz = 147.1128,
-                    RelativeIntensity = 1.0f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.Y,
-                        Ordinal = 1,
-                        Charge = 1
-                    }
-                },
-                new LibraryFragment
-                {
-                    Mz = 262.1398,
-                    RelativeIntensity = 0.5f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.B,
-                        Ordinal = 3,
-                        Charge = 1,
-                        NeutralLoss = NeutralLossCode.H2O
-                    }
-                },
-                new LibraryFragment
-                {
-                    Mz = 500.0,
-                    RelativeIntensity = 0.3f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.Y,
-                        Ordinal = 5,
-                        Charge = 2,
-                        NeutralLoss = NeutralLossCode.Custom,
-                        CustomLossMass = 98.0
-                    }
-                }
-            };
-            entry.ProteinIds = new List<string> { "P12345", "Q67890" };
-            entry.GeneNames = new List<string> { "GENE1" };
-
-            return entry;
         }
 
         /// <summary>
@@ -4675,6 +4231,65 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The v9 first-pass sidecar's feature sums - the run's share of the model diagnostics
+        /// Model tab - round-trip exactly beside unchanged records; a sidecar written without
+        /// them reads as having none; and a share whose counts are corrupt reads as none rather
+        /// than throwing, which would abort a resume or a report fold.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarFeatureSums()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_sums_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var sums = new FeatureSums(2, 3) { TargetCount = 5, DecoyCount = 4 };
+                sums.TargetSums[0] = 1.25;
+                sums.TargetSums[1] = -0.1;
+                sums.DecoySums[0] = double.NaN;
+                sums.DecoySums[1] = 3e-300;
+                sums.TargetHistograms[1][2] = 7;
+                sums.DecoyHistograms[0][0] = 2;
+                var records = new List<FdrScoreRecord> { new FdrScoreRecord(3, 0.5, 0.01, 0.02, 12.5) };
+
+                string path = Path.Combine(dir, "with.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any, sums);
+                var read = FdrScoresSidecar.ReadFeatureSums(path);
+                Assert.IsNotNull(read);
+                Assert.AreEqual(sums.TargetCount, read.TargetCount);
+                Assert.AreEqual(sums.DecoyCount, read.DecoyCount);
+                for (int j = 0; j < 2; j++)
+                {
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sums.TargetSums[j]), BitConverter.DoubleToInt64Bits(read.TargetSums[j]));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sums.DecoySums[j]), BitConverter.DoubleToInt64Bits(read.DecoySums[j]));
+                    CollectionAssert.AreEqual(sums.TargetHistograms[j], read.TargetHistograms[j]);
+                    CollectionAssert.AreEqual(sums.DecoyHistograms[j], read.DecoyHistograms[j]);
+                }
+                var readRecords = new List<FdrScoreRecord>();
+                Assert.IsTrue(FdrScoresSidecar.ReadRecords(path, FdrScoresSidecar.Pass.FirstPass, readRecords.Add));
+                Assert.AreEqual(1, readRecords.Count);
+                Assert.AreEqual(3u, readRecords[0].EntryId);
+                Assert.AreEqual(TestStamps.Any.ToString(), FdrScoresSidecar.ReadStamp(path, FdrScoresSidecar.Pass.FirstPass)?.ToString());
+
+                string without = Path.Combine(dir, "without.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(without, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+                Assert.IsNull(FdrScoresSidecar.ReadFeatureSums(without));
+
+                // Feature and bin counts large enough that the implied length overflows an int.
+                byte[] data = File.ReadAllBytes(path);
+                int sumsOffset = FdrScoresSidecar.HeaderLength + FdrScoresSidecar.RecordLength;
+                BitConverter.GetBytes(20000u).CopyTo(data, sumsOffset);
+                BitConverter.GetBytes(20000u).CopyTo(data, sumsOffset + 4);
+                File.WriteAllBytes(path, data);
+                Assert.IsNull(FdrScoresSidecar.ReadFeatureSums(path));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// A 1st-pass sidecar must NOT load into a TryRead call that
         /// expects 2nd-pass (and vice versa) — would otherwise scramble
         /// q-values silently because the records are positionally
@@ -4725,8 +4340,6 @@ namespace pwiz.Osprey.Test
                     new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                FileStems = new List<string> { "round_trip" },
-                FirstPassBaseIds = new[] { 3u, 100u, 101u, 200u, 201u },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -4739,7 +4352,6 @@ namespace pwiz.Osprey.Test
                         TargetEntryId = 3,
                     },
                 },
-                LibraryHash = "lib-hash-abc",
                 RefinedRtCalibration = new RefinedRtCalibrationJson
                 {
                     AbsResiduals = new[] { 0.01, 0.02, 0.015 },
@@ -4747,7 +4359,6 @@ namespace pwiz.Osprey.Test
                     LibraryRts   = new[] { 10.0, 20.0, 30.0 },
                     ResidualSd   = 0.123,
                 },
-                SearchHash = "search-hash-xyz",
                 UseCwtPeakActions = new List<UseCwtPeakEntry>
                 {
                     new UseCwtPeakEntry { ApexRt = 23.45, CandidateIdx = 1, EndRt = 23.80, EntryId = 100, StartRt = 23.10 },
@@ -4780,8 +4391,6 @@ namespace pwiz.Osprey.Test
                 var parsed = ReconciliationFile.Load(path);
 
                 Assert.AreEqual(file.FormatVersion, parsed.FormatVersion);
-                Assert.AreEqual(file.SearchHash, parsed.SearchHash);
-                Assert.AreEqual(file.LibraryHash, parsed.LibraryHash);
                 Assert.AreEqual(file.UseCwtPeakActions.Count, parsed.UseCwtPeakActions.Count);
                 Assert.AreEqual(file.ForcedIntegrationActions.Count, parsed.ForcedIntegrationActions.Count);
                 Assert.AreEqual(file.GapFillTargets.Count, parsed.GapFillTargets.Count);
@@ -4835,7 +4444,7 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(string.Format(
                         OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
                         path, 99, ReconciliationFile.CurrentFormatVersion, "format_version",
-                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN), ex.Message);
+                        "*" + ReconciliationFile.EXT), ex.Message);
                 }
             }
             finally
@@ -5031,8 +4640,15 @@ namespace pwiz.Osprey.Test
             ReconciliationFile.Save(reconciliation, new ReconciliationFile
             {
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                FileStems = new List<string> { "run" },
-                FirstPassBaseIds = Enumerable.Range(0, 200000).Select(i => (uint)i).ToArray(),
+                GapFillTargets = Enumerable.Range(0, 20000).Select(i => new GapFillEntry
+                {
+                    Charge = 2,
+                    DecoyEntryId = (uint)i | 0x80000000u,
+                    ExpectedRt = i * 0.01,
+                    HalfWidth = 0.1,
+                    ModifiedSequence = "PEPTIDE",
+                    TargetEntryId = (uint)i,
+                }).ToList(),
             }, stamp);
             Assert.IsTrue(new FileInfo(reconciliation).Length > 1024 * 1024);
             AssertStampRead(reconciliation, stamp);

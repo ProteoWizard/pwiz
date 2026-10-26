@@ -53,18 +53,19 @@ namespace pwiz.Osprey.IO
     /// records + the validity stamp, all little-endian; see <see cref="BinarySidecarStamp"/>):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 8)
+    ///   version       [8]      = u8 (= 9)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   stamp_length  [24..28] = u32
-    ///   reserved      [28..32] = 4 bytes (zero)
+    ///   sums_length   [28..32] = u32, the length of feature_sums (0 when absent)
     ///   body          [32..]   = entry_count * 36 bytes:
     ///                            [0..4]   u32 entry_id
     ///                            [4..12]  f64 svm_score
     ///                            [12..20] f64 run_precursor_qvalue
     ///                            [20..28] f64 run_peptide_qvalue
     ///                            [28..36] f64 apex_rt
+    ///   feature_sums  [..]     = sums_length bytes, the run's <see cref="FeatureSums"/>
     ///   stamp         [..end]  = stamp_length bytes, the writing task's <see cref="ArtifactStamp"/>
     /// </code>
     /// Records are written pre-compaction at the Stage 5 → Stage 6
@@ -155,6 +156,14 @@ namespace pwiz.Osprey.IO
     /// the records, replacing the <c>.osprey.task</c> file that used to sit beside every
     /// sidecar. The records keep their offsets; only the exact-length check now adds the stamp.
     ///
+    /// v8 -> v9 (2026-10-17): the first-pass sidecar carries the run's <see cref="FeatureSums"/> -
+    /// its share of the first-pass model's feature report - between the records and the stamp,
+    /// its length in the header's last four bytes. The share is computed from the run's
+    /// standardized feature vectors while the score pass has them, and nothing later does, so
+    /// a report asked for after the analysis (or over runs that resumed from this file) had no
+    /// Model tab without it (doc 00, P16). Written on every first-pass write, with or without
+    /// <c>--model-diagnostics</c>; about 10 KB at 21 features. Second-pass sidecars carry none.
+    ///
     /// No conversion path is written: pre-first-public-release, an older sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
     /// costs a re-run rather than risking a misread record. A version bump is
@@ -178,7 +187,7 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 8;
+        public const byte FormatVersion = 9;
         public const int HeaderLength = BinarySidecarStamp.HEADER_LENGTH;
         public const int RecordLength = 36;
 
@@ -364,8 +373,10 @@ namespace pwiz.Osprey.IO
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
-                // than a corrupt one. The validity stamp after the records is not payload.
-                long payload = len - HeaderLength - BinarySidecarStamp.ReadLength(header);
+                // than a corrupt one. The feature sums and validity stamp after the records are
+                // not payload.
+                long payload = len - HeaderLength - BinarySidecarStamp.ReadExtensionLength(header) -
+                               BinarySidecarStamp.ReadLength(header);
                 if (payload < 0 || payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
@@ -455,7 +466,8 @@ namespace pwiz.Osprey.IO
         /// single-sourced with the FdrEntry overload via
         /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
         /// </summary>
-        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass, ArtifactStamp stamp)
+        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass, ArtifactStamp stamp,
+            FeatureSums featureSums = null)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (records == null) throw new ArgumentNullException(nameof(records));
@@ -467,7 +479,41 @@ namespace pwiz.Osprey.IO
                     WriteRecord(bw, r.EntryId, r.Score,
                         r.RunPrecursorQvalue, r.RunPeptideQvalue, r.ApexRt);
                 }
-            });
+            }, featureSums);
+        }
+
+        /// <summary>
+        /// The run's <see cref="FeatureSums"/> from a current-format first-pass sidecar, or null
+        /// when the file is missing, not current, or carries none.
+        /// </summary>
+        public static FeatureSums ReadFeatureSums(string path)
+        {
+            if (!IsCurrentFormat(path, Pass.FirstPass))
+                return null;
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var br = new BinaryReader(fs))
+                {
+                    var header = br.ReadBytes(HeaderLength);
+                    uint sumsLength = BinarySidecarStamp.ReadExtensionLength(header);
+                    if (sumsLength == 0 || sumsLength > int.MaxValue ||
+                        !TryComputeExpectedLen(header, out int recordCount, out _))
+                    {
+                        return null;
+                    }
+                    fs.Seek(HeaderLength + (long)recordCount * RecordLength, SeekOrigin.Begin);
+                    return FeatureSums.Read(br, (int)sumsLength);
+                }
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -510,10 +556,12 @@ namespace pwiz.Osprey.IO
         /// exception the SimpleFileSaver disposes and deletes the temp without touching
         /// the destination. The FileStream is disposed before Commit so the file is
         /// unlocked when File.Move runs. <paramref name="stamp"/> is written after the body,
-        /// inside the same commit, so the file and its validity record land together.
+        /// inside the same commit, so the file and its validity record land together, and
+        /// <paramref name="featureSums"/>, when given, between the body and the stamp.
         /// </summary>
         private static void WriteInternal(
-            string path, int entryCount, Pass pass, ArtifactStamp stamp, Action<BinaryWriter> writeBody)
+            string path, int entryCount, Pass pass, ArtifactStamp stamp, Action<BinaryWriter> writeBody,
+            FeatureSums featureSums = null)
         {
             byte[] stampBytes = BinarySidecarStamp.Encode(stamp);
             AssertNotWrittenAlready(path);
@@ -534,9 +582,11 @@ namespace pwiz.Osprey.IO
                     bw.Write((byte)pass);                             // [9]
                     bw.Write(new byte[6]);                            // [10..16] reserved
                     bw.Write((ulong)entryCount);                      // [16..24]
-                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes);  // [24..32]
+                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes,
+                        featureSums?.ByteLength ?? 0);               // [24..32]
 
                     writeBody(bw);
+                    featureSums?.Write(bw);
                     bw.Write(stampBytes);
                 }
                 saver.Commit();
@@ -818,12 +868,16 @@ namespace pwiz.Osprey.IO
                 // the second-pass protein FDR has yet to write its value, so an entry is
                 // entitled to the pass-1 protein q it already carries - which is exactly what
                 // the pre-split sidecar column held here too.
+                //
+                // The PEP is applied with the precursor q because the blib reports the two side
+                // by side, and the record's PEP comes from the same competition as its q.
                 if (experimentRecords != null &&
                     experimentRecords.TryGetValue(recordEntryId, out var exp))
                 {
                     e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    e.Pep                       = exp.Pep;
                 }
                 return true;
             });

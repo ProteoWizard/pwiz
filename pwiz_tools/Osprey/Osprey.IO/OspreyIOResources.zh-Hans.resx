@@ -97,14 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
-    <value>峰强度 blob 大小无效：应为 {0} 或 {1} 字节，实际为 {2}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
-    <value>峰质荷比 blob 大小无效：{0} 字节（不是 8 的倍数）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>BiblioSpec 库无效：未找到 {0} 表。</value>
     <comment>Needs Review:New resource</comment>
@@ -129,18 +121,6 @@
     <value>库文件为空：没有标题行。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
-    <value>正在加载库缓存（{0:N0} 个母离子）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
-    <value>正在写入库缓存</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
-    <value>库缓存已损坏（未知的中性丢失标签 {0}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
     <value>正在合并重复的库母离子</value>
     <comment>Needs Review:New resource</comment>
@@ -157,40 +137,16 @@
     <value>库母离子 ID {0}：</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
-    <value>无法加载库缓存：{0}。改为读取库文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>保存库缓存失败：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
-    <value>库缓存“{0}”由不同版本的源库构建；将忽略该过期缓存并从源库重新构建。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
     <value>已加载 {0:N0} 个库母离子</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
-    <value>已从缓存“{1}”加载 {0:N0} 个库母离子</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>正在从 {0} 加载谱图库…</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>已将库缓存（{0:N0} 个母离子）保存到“{1}”</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
     <value>不支持的库格式：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
-    <value>已将 {1:N0} 个库诱饵中的 {0:N0} 个与其目标配对（{2:F1}%，来自库缓存）。{3:N0} 个诱饵和 {4:N0} 个目标没有配对对象。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
@@ -331,14 +287,6 @@
   </data>
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>读取中间文件“{0}”时中途失败，已读取 {1:N0} 条记录。运行在此停止，而不是使用该文件的部分值继续运行。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
-    <value>协调文件 {0} 的 {2} 为 {1}，但不包含第一轮母离子集合。请删除此分析的 {3} 文件，然后重新运行第一轮。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
-    <value>协调文件 {0} 的 {2} 为 {1}，但未列出其涵盖的输入文件（{3}）。请删除此分析的 {4} 文件，然后重新运行第一轮。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">

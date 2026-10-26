@@ -49,6 +49,13 @@ namespace CommonTest
             public bool CountSeen;
             public bool Flag;
             public bool Stop;
+            public string TwoWords;
+        }
+
+        /// <summary>A second tool's context, which hosts some of the first tool's declarations.</summary>
+        private class HostContext
+        {
+            public readonly Dictionary<string, string> Recorded = new Dictionary<string, string>();
         }
 
         private static readonly Argument<Context> ARG_INPUT = new Argument<Context>(@"input", () => @"<file>",
@@ -77,10 +84,13 @@ namespace CommonTest
             c.Stop = true;
             return false;
         });
+        // A hyphenated name, for the grammar that reads an underscore as a hyphen.
+        private static readonly Argument<Context> ARG_TWO_WORDS = new Argument<Context>(@"two-words", () => @"<v>",
+            (c, p) => c.TwoWords = p.Value);
 
         private static readonly Argument<Context>[] ARGUMENTS =
         {
-            ARG_INPUT, ARG_OUTPUT, ARG_MODE, ARG_HELP, ARG_COUNT, ARG_FLAG, ARG_STOP, ARG_RAGGED
+            ARG_INPUT, ARG_OUTPUT, ARG_MODE, ARG_HELP, ARG_COUNT, ARG_FLAG, ARG_STOP, ARG_RAGGED, ARG_TWO_WORDS
         };
 
         /// <summary>
@@ -90,29 +100,29 @@ namespace CommonTest
         [TestMethod, DoNotParallelize]
         public void TestCommandLineParserGrammars()
         {
-            var grammar = ArgUsage.Grammar;
-            var provider = ArgUsage.Provider;
-            string separator = ArgUsage.ArgumentValueSeparator;
-            try
+            // The process's own settings go back whatever the grammars below installed
+            var settings = ArgUsage.Current;
+            using (new ScopedAction(() => ArgUsage.Install(new ArgUsageSettings { Provider = new TestProvider() }),
+                       () => ArgUsage.Install(settings)))
             {
-                ArgUsage.Provider = new TestProvider();
                 TestStrictGrammar();
                 TestNextTokenGrammar();
                 TestSingleDashGrammar();
+                TestEquivalentSeparators();
+                TestHostedDeclarations();
             }
-            finally
-            {
-                ArgUsage.Grammar = grammar;
-                ArgUsage.Provider = provider;
-                ArgUsage.ArgumentValueSeparator = separator;
-            }
+        }
+
+        /// <summary>Installs a grammar to test under, keeping the test's provider.</summary>
+        private static void Install(CommandLineGrammar grammar, string argumentValueSeparator = @"=")
+        {
+            ArgUsage.Install(new ArgUsageSettings { Grammar = grammar, ArgumentValueSeparator = argumentValueSeparator, Provider = ArgUsage.Provider });
         }
 
         /// <summary>Skyline's: inline values only, no short aliases, a bare word ignored, listed values enforced.</summary>
         private static void TestStrictGrammar()
         {
-            ArgUsage.Grammar = CommandLineGrammar.STRICT;
-            ArgUsage.ArgumentValueSeparator = @"=";
+            Install(CommandLineGrammar.STRICT);
             AssertEx.AreEqual(@"--out", ARG_OUTPUT.ArgumentText);
             AssertEx.IsNull(ARG_OUTPUT.ShortArgumentText, @"no short prefix, no short spelling");
             AssertEx.AreEqual(@"--out=x", ARG_OUTPUT + @"x");
@@ -149,7 +159,7 @@ namespace CommonTest
             AssertEx.IsNull(context.Output);
             CollectionAssert.AreEqual(new[] { ARG_FLAG, ARG_STOP }, parser.SeenArguments.ToArray());
             // A stray word is an error on request, when no positional handler takes it.
-            ArgUsage.Grammar = new CommandLineGrammar { StrayTokens = StrayTokenPolicy.error };
+            Install(new CommandLineGrammar { StrayTokens = StrayTokenPolicy.error });
             parser = new CommandLineParser<Context>(ARGUMENTS);
             AssertEx.AreEqual(@"unknown stray", Assert.ThrowsException<UnknownArgumentException>(() => parser.Parse(new Context(), new[] { @"stray" })).Message);
         }
@@ -157,8 +167,7 @@ namespace CommonTest
         /// <summary>Osprey's: a value as the next token, short aliases, variadic and optional-count arguments, a positional fallback, listed values left to the handler.</summary>
         private static void TestNextTokenGrammar()
         {
-            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false };
-            ArgUsage.ArgumentValueSeparator = @" ";
+            Install(new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false }, @" ");
             AssertEx.AreEqual(@"-o", ARG_OUTPUT.ShortArgumentText);
             AssertEx.AreEqual(@"--out x", ARG_OUTPUT + @"x");
             AssertEx.AreEqual(@"--count [<N>]", ARG_COUNT.ArgumentDescription);
@@ -184,7 +193,7 @@ namespace CommonTest
             AssertEx.AreEqual(@"unknown -x", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"-x")).Message);
             // A listed value refused under an alias names the alias, and an argument may own
             // its missing-value text.
-            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true };
+            Install(new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true }, @" ");
             ARG_MODE.ShortName = @"m";
             try
             {
@@ -203,7 +212,7 @@ namespace CommonTest
             {
                 ARG_OUTPUT.MissingValueMessage = null;
             }
-            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false };
+            Install(new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false }, @" ");
             AssertEx.AreEqual(@"unknown --bogus", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--bogus", @"1")).Message);
             // An optional count takes only a token its filter accepts; the rest is positional.
             context = Parse(@"--count", @"3", @"--count", @"a.mzML", @"--count");
@@ -228,7 +237,7 @@ namespace CommonTest
         /// <summary>CarafeSharp's: the standard spelling shown, Carafe's single dash accepted for every name, a prefixed token a value unless it names an option, the first of a repeat winning.</summary>
         private static void TestSingleDashGrammar()
         {
-            ArgUsage.Grammar = new CommandLineGrammar
+            Install(new CommandLineGrammar
             {
                 AcceptedPrefixes = new[] { @"--", @"-" },
                 ShortPrefix = @"-",
@@ -236,8 +245,7 @@ namespace CommonTest
                 PrefixedTokenEndsValue = false,
                 FirstValueWins = true,
                 ValidatesListedValues = false,
-            };
-            ArgUsage.ArgumentValueSeparator = @" ";
+            }, @" ");
             AssertEx.AreEqual(@"--out", ARG_OUTPUT.ArgumentText);
             AssertEx.AreEqual(@"-o", ARG_OUTPUT.ShortArgumentText);
             AssertEx.AreEqual(@"--out x", ARG_OUTPUT + @"x");
@@ -260,6 +268,83 @@ namespace CommonTest
             AssertEx.AreEqual(@"unknown --bogus", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--bogus")).Message);
             AssertEx.AreEqual(@"unexpected -flag", Assert.ThrowsException<ValueUnexpectedException>(() => Parse(@"-flag=1")).Message);
             AssertEx.AreEqual(@"unknown -", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"-")).Message);
+        }
+
+        /// <summary>
+        /// With <see cref="CommandLineGrammar.NameSeparatorsEquivalent"/> an underscore or a camel-case
+        /// boundary in a typed name matches a hyphen in the declared one (Osprey and CarafeSharp, whose
+        /// declarations are hyphenated and whose users have Carafe's spellings in scripts); the
+        /// declaration still spells itself with the hyphen, and without the rule the underscore
+        /// spelling is an unknown argument, as Skyline's grammar has always treated it.
+        /// </summary>
+        private static void TestEquivalentSeparators()
+        {
+            Install(CommandLineGrammar.STRICT);
+            AssertEx.AreEqual(@"x", Parse(@"--two-words=x").TwoWords);
+            AssertEx.AreEqual(@"unknown --two_words=x", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_words=x")).Message);
+
+            Install(new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, NameSeparatorsEquivalent = true }, @" ");
+            AssertEx.AreEqual(@"--two-words", ARG_TWO_WORDS.ArgumentText);
+            AssertEx.AreEqual(@"--two-words x", ARG_TWO_WORDS + @"x");
+            // Carafe's camel case too (-minLength for min-length): a lower-to-upper boundary is a
+            // separator, and case is otherwise ignored.
+            foreach (var spelling in new[] { @"--two-words", @"--two_words", @"--twoWords", @"--Two_Words" })
+            {
+                AssertEx.AreEqual(@"x", Parse(spelling, @"x").TwoWords, spelling);
+                AssertEx.AreEqual(@"y", Parse(spelling + @"=y").TwoWords, spelling);
+            }
+            AssertEx.AreEqual(@"min-length", CommandLineGrammar.StandardName(@"minLength"));
+            AssertEx.AreEqual(@"i2l", CommandLineGrammar.StandardName(@"I2L"));
+            AssertEx.AreEqual(@"print-ptm", CommandLineGrammar.StandardName(@"printPTM"));
+            // A separator matches only a separator, in the same place; an unknown name is reported as typed.
+            AssertEx.AreEqual(@"unknown --two_word", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_word", @"x")).Message);
+            AssertEx.AreEqual(@"unknown --twowords", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--twowords", @"x")).Message);
+            AssertEx.AreEqual(@"unknown --two_words_", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_words_", @"x")).Message);
+            // FindValue follows the same rule.
+            AssertEx.AreEqual(@"x", new CommandLineParser<Context>(ARGUMENTS).FindValue(new[] { @"--two_words", @"x" }, ARG_TWO_WORDS));
+        }
+
+        /// <summary>
+        /// A host declares another tool's argument again for its own context: the name, the value
+        /// example, the listed values and the value flags come from the template, the handler is
+        /// the host's, and the short name is not copied (the two tools' short names collide).
+        /// </summary>
+        private static void TestHostedDeclarations()
+        {
+            Install(new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false }, @" ");
+            var hosted = new[]
+            {
+                new Argument<HostContext>(ARG_INPUT, (c, p) => c.Recorded[p.Name] = (c.Recorded.TryGetValue(p.Name, out string v) ? v + @"," : string.Empty) + p.Value),
+                new Argument<HostContext>(ARG_MODE, (c, p) => c.Recorded[p.Name] = p.Value),
+                new Argument<HostContext>(ARG_COUNT, (c, p) => c.Recorded[p.Name] = p.Value ?? @"(none)"),
+                new Argument<HostContext>(ARG_FLAG, (c, p) => c.Recorded[p.Name] = @"on"),
+            };
+            AssertEx.AreEqual(ARG_MODE.Name, hosted[1].Name);
+            AssertEx.AreEqual(ARG_MODE.ValueExample(), hosted[1].ValueExample());
+            CollectionAssert.AreEqual(ARG_MODE.Values, hosted[1].Values);
+            AssertEx.AreEqual(ARG_MODE.ArgumentDescription, hosted[1].ArgumentDescription);
+            AssertEx.IsTrue(hosted[0].Variadic);
+            AssertEx.IsNull(hosted[0].ShortName, @"a short name is the host's to give");
+            AssertEx.IsTrue(hosted[2].OptionalValue);
+            AssertEx.IsFalse(hosted[3].TakesValue);
+
+            var host = new HostContext();
+            var parser = new CommandLineParser<HostContext>(hosted);
+            AssertEx.IsTrue(parser.Parse(host, new[] { @"--input", @"a", @"b", @"--mode", @"slow", @"--count", @"--flag" }));
+            AssertEx.AreEqual(@"a,b", host.Recorded[@"input"]);
+            AssertEx.AreEqual(@"slow", host.Recorded[@"mode"]);
+            AssertEx.AreEqual(@"(none)", host.Recorded[@"count"]);
+            AssertEx.AreEqual(@"on", host.Recorded[@"flag"]);
+            AssertEx.AreEqual(@"3", ParseHost(hosted, @"--count", @"3").Recorded[@"count"]);
+            AssertEx.AreEqual(@"unknown -i", Assert.ThrowsException<UnknownArgumentException>(() => ParseHost(hosted, @"-i", @"a")).Message);
+            Assert.ThrowsException<ValueInvalidException>(() => hosted[1] + @"bogus");
+        }
+
+        private static HostContext ParseHost(Argument<HostContext>[] hosted, params string[] args)
+        {
+            var host = new HostContext();
+            AssertEx.IsTrue(new CommandLineParser<HostContext>(hosted).Parse(host, args));
+            return host;
         }
 
         private static Context Parse(params string[] args)

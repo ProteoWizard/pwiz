@@ -131,17 +131,16 @@
     <Compile Remove="Controls\Graphs\ReplicateValue.cs" />
   </ItemGroup>
 
-  <!-- NHibernate mapping XMLs. Six Skyline models use NHibernate for
-       persistence (BlibData spec libs, ChromLib chromatogram libs, IonMobility
-       libraries, Irt tables, Midas libs, Optimization libraries). Each has a
-       DataModel-adjacent mapping.xml that must be embedded, not deployed -
-       SessionFactoryFactory loads via assembly.GetManifestResourceStream.
-       SDK default globs don't include .xml as EmbeddedResource. -->
+  <!-- NHibernate mapping XMLs. Five Skyline models use NHibernate for
+       persistence (ChromLib chromatogram libs, IonMobility libraries, Irt
+       tables, Midas libs, Optimization libraries; the BlibData spectral
+       libraries moved onto BiblioSpec.IO). Each has a DataModel-adjacent
+       mapping.xml that must be embedded, not deployed - SessionFactoryFactory
+       loads via assembly.GetManifestResourceStream. SDK default globs don't
+       include .xml as EmbeddedResource. -->
   <ItemGroup>
     <EmbeddedResource Include="Model\IonMobility\mapping.xml" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
@@ -164,14 +163,6 @@
        mapping.xml files above, the SDK default globs don't embed .sky files. -->
   <ItemGroup>
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\*.sky" />
-  </ItemGroup>
-
-  <!-- NVIDIA install/uninstall .bat templates loaded via
-       GetManifestResourceStream(typeof(PythonInstaller), "...-bat.txt").
-       SDK default globs don't embed .txt. -->
-  <ItemGroup>
-    <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt" />
-    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
   </ItemGroup>
 
   <!-- log4net runtime config - [DeploymentItem("SkylineLog4Net.config")] in
@@ -204,6 +195,7 @@
   <ItemGroup>
     <!-- Shared dep tree - all multi-targeted in the same session as this csproj.
          Each follows the same net472/net10.0-windows split internally. -->
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
     <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
@@ -232,7 +224,7 @@
   </ItemGroup>
 
   <!-- Deploy the output of every ProjectReference marked DeployOutput="true" (BlibBuild,
-       BlibFilter, msconvert, bullseye-sharp) to Skyline's bin dir AND to any project that
+       BlibFilter, msconvert, bullseye-sharp, SkylineProcessRunner) to Skyline's bin dir AND to any project that
        references Skyline via ProjectReference (test assemblies). Content items propagate
        through ProjectReference by default.
 
@@ -314,11 +306,44 @@
     </ItemGroup>
   </Target>
 
+  <!-- AlphaPeptDeep library prediction runs in process through CarafeSharp's TorchSharp port of the
+       peptdeep MS2 and RT models (pwiz_tools\CarafeSharp). Skyline ships the CPU libtorch in torch\cpu
+       and downloads the CUDA libtorch the first time it predicts on a computer with a GPU that can use
+       it; the layout, shared with Osprey, is CarafeSharp's LibTorchRuntimeLayout.targets, and
+       AlphapeptdeepLibraryBuilder loads the runtime it chooses (TorchRuntimes). The libtorch version
+       is the one CarafeSharp's LibTorch.props pairs with its TorchSharp version. -->
+  <Import Project="..\CarafeSharp\LibTorchRuntimeLayout.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <!-- Reads the fine-tuned models CarafeSharp saves as .model.zip files -->
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+    <!-- The pinned AlphaPeptDeep v1 pretrained models, beside the executable where
+         AlphapeptdeepLibraryBuilder looks for them. -->
+    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\pretrained_models.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\alphapeptdeep-v1\pretrained_models.zip</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\alphapeptdeep-v1\LICENSE.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+    <!-- The pinned Chronologer RT model, which a fine-tuned model file's RT model can be. -->
+    <Content Include="..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.pt;..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json;..\CarafeSharp\models\chronologer-20220601193755\LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\chronologer-20220601193755\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and
        EncyclopeDIA demultiplexing conversions, expecting msconvert.exe next to Skyline in the bin
        dir (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the
        _DeployBundledToolOutputs target above deploys its output. net8-only: the net472 build gets
-       the native msconvert from the Jam toolchain. -->
+       the native msconvert from the Jam toolchain. That deployment also brings msconvert's wiff2\
+       folder, which Skyline's own in-process .wiff2 reading depends on; see
+       Shared\Lib\SciexWiff2Staging.targets. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
@@ -408,20 +433,15 @@
   <!-- SkylineProcessRunner (tiny console helper Skyline shells out to, often elevated, to run a
        command via cmd.exe and stream output back over a named pipe - used by the R/Python/tool
        installers). Skyline resolves SkylineProcessRunner.exe from its own assembly directory
-       (UtilIO.GetSkylineProcessRunnerExePath). Reference the project so it builds first; the Content
-       include deploys its net8 apphost bundle (.exe + .dll + .runtimeconfig.json + .deps.json) next
-       to Skyline. net8-only: the net472 build gets SkylineProcessRunner.exe from the Jam toolchain. -->
+       (UtilIO.GetSkylineProcessRunnerExePath). Reference the project so it builds first; the
+       _DeployBundledToolOutputs target above deploys its net8 apphost bundle (.exe + .dll +
+       .runtimeconfig.json + .deps.json) next to Skyline. net8-only: the net472 build gets
+       SkylineProcessRunner.exe from the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="Executables\SkylineProcessRunner\SkylineProcessRunner\SkylineProcessRunner.csproj"
                       ReferenceOutputAssembly="false"
-                      Private="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows')">
-    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
+                      Private="false"
+                      DeployOutput="true" />
   </ItemGroup>
 
   <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
@@ -476,7 +496,6 @@
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />

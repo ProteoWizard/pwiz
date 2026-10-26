@@ -37,7 +37,7 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public static class BlibMetadata
     {
-        public const string TABLE = @"LibMetadata";
+        public const string TABLE = BlibSchema.TABLE_LIB_METADATA;
 
         /// <summary>
         /// The table's name in libraries Osprey wrote before 2026-10-15. Read, never written, for
@@ -59,13 +59,8 @@ namespace pwiz.BiblioSpec.IO
                 return null;
             try
             {
-                // A ';' in the path must not end the connection string early: the builder quotes it.
-                var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3, ReadOnly = true };
-                using (var connection = new SQLiteConnection(connectionString.ToString()))
-                {
-                    connection.Open();
+                using (var connection = BlibSqlite.OpenReadOnly(path))
                     return Read(connection, TABLE, key) ?? Read(connection, LEGACY_TABLE, key);
-                }
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
@@ -75,22 +70,13 @@ namespace pwiz.BiblioSpec.IO
 
         private static string Read(SQLiteConnection connection, string table, string key)
         {
-            if (!TableExists(connection, table))
+            if (!BlibSqlite.TableExists(connection, table))
                 return null;
             // The legacy table spelled its columns Key and Value; SQLite names are case-insensitive.
             using (var command = new SQLiteCommand(@"SELECT value FROM " + table + @" WHERE key = @key", connection))
             {
                 command.Parameters.AddWithValue(@"@key", key);
                 return command.ExecuteScalar() as string;
-            }
-        }
-
-        private static bool TableExists(SQLiteConnection connection, string table)
-        {
-            using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = @name", connection))
-            {
-                command.Parameters.AddWithValue(@"@name", table);
-                return Convert.ToInt64(command.ExecuteScalar()) > 0;
             }
         }
     }

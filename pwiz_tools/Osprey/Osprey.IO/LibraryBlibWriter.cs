@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
@@ -60,11 +59,17 @@ namespace pwiz.Osprey.IO
         /// library the entries were loaded from, recorded as the spectrum source.
         /// <paramref name="decoyPrefixes"/> are the accession prefixes that mark a library decoy
         /// (a search's defaults when none are given), and <paramref name="commandLine"/> the
-        /// command that made the library, recorded in its metadata when given. Returns the
-        /// number of spectra written.
+        /// command that made the library, recorded in its metadata when given.
+        /// <paramref name="libraryHash"/> is the validity hash a library derived from a .tsv
+        /// source is reused by (<see cref="OspreyBlibWriter.KEY_LIBRARY_HASH"/>), recorded when
+        /// given. With <paramref name="prefixDecoyAccessions"/> a decoy no prefix marks gets one,
+        /// so a search of the export recognizes it; the derived library passes false and keeps
+        /// every accession as loaded, since its <c>DecoyPairs</c> table marks the decoys and a
+        /// later run must read the entries the parse made. Returns the number of spectra written.
         /// </summary>
         public static int Write(string path, IReadOnlyList<LibraryEntry> entries, string librarySource,
-            int nThreads = 0, IList<string> decoyPrefixes = null, string commandLine = null)
+            int nThreads = 0, IList<string> decoyPrefixes = null, string commandLine = null, string libraryHash = null,
+            bool prefixDecoyAccessions = true)
         {
             var parallelOptions = new ParallelOptions
             {
@@ -93,7 +98,7 @@ namespace pwiz.Osprey.IO
                         {
                             var entry = entries[blockStart + i];
                             block[i] = BlibSpectrum.FromLibraryEntry(entry,
-                                DecoyAccessions(entry, prefixes, decoyPrefix));
+                                prefixDecoyAccessions ? DecoyAccessions(entry, prefixes, decoyPrefix) : null);
                         });
                         for (int i = 0; i < count; i++)
                         {
@@ -111,6 +116,8 @@ namespace pwiz.Osprey.IO
                 writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_SOURCE, sourceName);
                 if (commandLine != null)
                     writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, commandLine);
+                if (libraryHash != null)
+                    writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_HASH, libraryHash);
                 writer.Complete();
             }
             return entries.Count;
@@ -131,41 +138,34 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The <c>DecoyPairs</c> rows of a library that supplies its decoys: one pair per decoy
-        /// whose target is in the library (the load paired it, so its id is the target's with
-        /// the decoy bit), numbered in target order, with the entrapment partition marked from
-        /// the accessions. Written so the exported blib searches back with its own decoys, which
-        /// a blib without the table cannot. A library of generated or unpaired decoys writes none.
+        /// The <c>DecoyPairs</c> rows of a library with a decoy or entrapment design: one per
+        /// entry, with its pairing id, its side, the entrapment partition from the accessions,
+        /// and for a decoy the load paired (its id is the target's with the decoy bit) its
+        /// target. Written so the exported blib searches back with no manifest, as the loaded
+        /// library did. A plain library - no decoys, no entrapment - writes none: its pairing
+        /// ids are each peptide's own, numbered the same at every load.
         /// </summary>
         private static void WriteDecoyPairs(OspreyBlibWriter writer, IReadOnlyList<LibraryEntry> entries, long[] refIds)
         {
+            // Generated decoys are not in the loaded library the export writes, so a decoy here
+            // is a supplied one.
+            if (!entries.Any(e => e.IsDecoy || EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+                return;
             var targetIndexById = new Dictionary<uint, int>();
             for (int i = 0; i < entries.Count; i++)
             {
                 if (!entries[i].IsDecoy)
                     targetIndexById[entries[i].Id] = i;
             }
-            int pairId = 0;
             for (int i = 0; i < entries.Count; i++)
             {
-                var decoy = entries[i];
-                if (!decoy.IsDecoy || (decoy.Id & LibraryEntry.DECOY_ID_BIT) == 0 ||
-                    !targetIndexById.TryGetValue(decoy.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex))
-                {
-                    continue;
-                }
-                pairId++;
-                bool entrapment = IsEntrapment(entries[targetIndex]);
-                writer.AddDecoyPair(refIds[targetIndex], false, entrapment, pairId);
-                writer.AddDecoyPair(refIds[i], true, entrapment, pairId);
+                var entry = entries[i];
+                long? targetRefId = entry.IsDecoy && (entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 &&
+                                    targetIndexById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex)
+                    ? refIds[targetIndex] : null;
+                writer.AddDecoyPair(refIds[i], entry.IsDecoy, EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                    (int)entry.PairingId, targetRefId);
             }
-        }
-
-        /// <summary>An entrapment target or decoy, by the accession marker the pairing manifest spells.</summary>
-        private static bool IsEntrapment(LibraryEntry entry)
-        {
-            return entry.ProteinIds != null &&
-                   entry.ProteinIds.Any(p => p != null && p.IndexOf(LibraryContract.ENTRAPMENT_MARKER, StringComparison.Ordinal) >= 0);
         }
     }
 }

@@ -109,14 +109,11 @@
   <data name="FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks" xml:space="preserve">
     <value>Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey's own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable)</value>
   </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
-    <value>Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}</value>
-  </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
-    <value>Invalid peak m/z blob size: {0} bytes (not a multiple of 8)</value>
-  </data>
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>Invalid BiblioSpec library: the {0} table was not found.</value>
+  </data>
+  <data name="BlibLoader_LoadSpectra_Reading__0_N0__library_spectra" xml:space="preserve">
+    <value>Reading {0:N0} library spectra</value>
   </data>
   <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
     <value>Library protein accessions carry the per-peptide '{4}' suffix that Carafe adds (e.g. '{2}' -&gt; '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein.</value>
@@ -148,15 +145,6 @@
   <data name="LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_" xml:space="preserve">
     <value>Writing {0:N0} library precursors to {1}</value>
   </data>
-  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
-    <value>Loading library cache ({0:N0} precursors)</value>
-  </data>
-  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
-    <value>Writing library cache</value>
-  </data>
-  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
-    <value>The library cache is damaged (unknown neutral loss tag {0}).</value>
-  </data>
   <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
     <value>Merging duplicate library precursors</value>
   </data>
@@ -169,32 +157,35 @@
   <data name="LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__" xml:space="preserve">
     <value>Library precursor ID {0}:</value>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
-    <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
+  <data name="LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_" xml:space="preserve">
+    <value>Failed to remove the library cache '{0}': {1}</value>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>Failed to save library cache: {0}</value>
+  <data name="LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_" xml:space="preserve">
+    <value>Removed the library cache '{0}': the derived library replaces it.</value>
   </data>
-  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
-    <value>Library cache '{0}' was built from a different version of the source library; ignoring the stale cache and rebuilding from source.</value>
+  <data name="LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_" xml:space="preserve">
+    <value>Failed to read the derived library '{0}': {1} Reading the library file instead.</value>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_save_the_derived_library___0_" xml:space="preserve">
+    <value>Failed to save the derived library: {0}</value>
   </data>
   <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
     <value>Loaded {0:N0} library precursors</value>
   </data>
-  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
-    <value>Loaded {0:N0} library precursors from cache '{1}'</value>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__" xml:space="preserve">
+    <value>Loaded {0:N0} library precursors from the derived library '{1}'</value>
   </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>Loading spectral library from {0}...</value>
   </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>Saved library cache ({0:N0} precursors) to '{1}'</value>
+  <data name="LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__" xml:space="preserve">
+    <value>Saved the derived library ({0:N0} precursors) to '{1}'</value>
+  </data>
+  <data name="LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_" xml:space="preserve">
+    <value>The derived library '{0}' was built from a different version or configuration; rebuilding it from the source library.</value>
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
     <value>Unsupported library format: {0}</value>
-  </data>
-  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
-    <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the library cache). {3:N0} decoys and {4:N0} targets have no partner.</value>
   </data>
   <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
     <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} targets have no partner.</value>
@@ -208,8 +199,11 @@
   <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_" xml:space="preserve">
     <value>Pairing library decoys to targets from the library's DecoyPairs table.</value>
   </data>
-  <data name="LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_DecoyPairs__the_pairing_manifest__0__serves_entrapment_pairing_only_" xml:space="preserve">
-    <value>The library pairs its own decoys from DecoyPairs; the pairing manifest {0} serves entrapment pairing only.</value>
+  <data name="LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_" xml:space="preserve">
+    <value>The library {0} has entrapment peptides (protein accessions marked _p_target) but nothing pairs them with their targets. Give the pairing manifest with {1}, or search a BiblioSpec library that carries a DecoyPairs table.</value>
+  </data>
+  <data name="LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_" xml:space="preserve">
+    <value>The library's DecoyPairs table carries its pairing design; the pairing manifest {0} is not read.</value>
   </data>
   <data name="LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_s_decoys_are_paired_with_a_target_in_its_DecoyPairs_table__at_least__1___is_needed___" xml:space="preserve">
     <value>Only {0:F1}% of the library's decoys are paired with a target in its DecoyPairs table (at least {1:F0}% is needed), so FDR estimates would be unreliable. The library must pair each decoy with its target at one charge, or leave out {2} so Osprey generates its own decoys.</value>
@@ -319,14 +313,8 @@
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>Reading the intermediate file '{0}' failed partway, after {1:N0} records were read. The run stops here rather than continue with part of the file's values.</value>
   </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
-    <value>Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis's {3} files and run the first pass again.</value>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
-    <value>Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis's {4} files and run the first pass again.</value>
-  </data>
   <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
-    <value>Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis's {4} files and run the first pass again.</value>
+    <value>Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis's {4} files and run the analysis again.</value>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
     <value>Reconciliation file not found: {0}</value>
@@ -427,5 +415,17 @@
   </data>
   <data name="LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_" xml:space="preserve">
     <value>The library claims the Osprey library contract; checking it before any repair.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
+    <value>Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_" xml:space="preserve">
+    <value>Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_" xml:space="preserve">
+    <value>Excluded {0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_" xml:space="preserve">
+    <value>Excluded {0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest.</value>
   </data>
 </root>

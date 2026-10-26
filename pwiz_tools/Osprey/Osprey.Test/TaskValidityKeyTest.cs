@@ -73,11 +73,11 @@ namespace pwiz.Osprey.Test
         /// <list type="bullet">
         /// <item>every blib is read differently since the reader started typing its peaks from
         /// m/z (and reading modification text residue- and precision-aware), so every task of a
-        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the
-        /// <c>.libcache</c> composition carries the reader version with the fragment tolerance
-        /// the cached types were computed within;</item>
+        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the derived
+        /// library's composition carries the reader version with the fragment tolerance the
+        /// typed peaks were computed within;</item>
         /// <item>a DIA-NN TSV search keys exactly as before - its columns are still the typing -
-        /// while its <c>.libcache</c> is re-read once through the validating reader;</item>
+        /// while its derived library is rebuilt once through the validating reader;</item>
         /// <item>the output blib's rows changed for every library, so SecondPassFDR keys on
         /// <c>;blibout</c> for both.</item>
         /// </list>
@@ -95,12 +95,11 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig), tsvKeys[PerFileScoringTask.TASK_NAME],
-                    @"a TSV search keys as before the reader change");
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
+                    @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
-                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION),
-                    LibraryLoader.LibraryReaderTerms(tsvConfig));
+                Assert.AreEqual(DiannTsvLoader.CacheTerm(tsvConfig.FragmentTolerance), LibraryLoader.LibraryReaderTerms(tsvConfig));
 
                 var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
@@ -242,7 +241,13 @@ namespace pwiz.Osprey.Test
                     @"decoys stamped by a run under another key are not this run's worker answer");
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
-                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
+                // The run's plan is part of the same answer: the worker writes it, under the same
+                // stamp, just before the rescore it describes.
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"a worker answer without the run's reconciliation plan is not complete");
+                ReconciliationFile.Save(ReconciliationFile.PathForInput(runA),
+                    new ReconciliationFile { FormatVersion = ReconciliationFile.CurrentFormatVersion }, workerStamp);
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp, decoys and plan make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
                 current = RunKey(runA);

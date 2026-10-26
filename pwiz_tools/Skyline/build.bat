@@ -18,7 +18,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
-REM #             [--build-only] [--with-tutorial-perf]
+REM #             [--build-only] [--with-tutorial-perf] [--no-warnings-as-errors]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -61,6 +61,11 @@ REM #   --skip-connected-tests
 REM #       Same for TestConnected (skip=TestConnected.dll). tcbuild.bat always passes
 REM #       it: the TestConnected config runs those tests on bt209's staged build, and
 REM #       only when the smart trigger sees a remote-API change.
+REM #   --no-warnings-as-errors
+REM #       Leave warnings as warnings (-p:PwizWarningsAsErrors=false), as TeamCity
+REM #       builds do. A developer build otherwise promotes them to errors - see the
+REM #       root Directory.Build.props. SkylineTester's nightly passes this, so a
+REM #       warning cannot stop a nightly from building and running its tests.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -109,6 +114,7 @@ set NOTESTS=0
 set SEQUENTIAL=1
 set BUILDONLY=0
 set WITHTUTORIALPERF=0
+set WARNINGSASERRORS=1
 set TEST_SKIP=
 set SKIP_DLLS=
 set PERF_TESTS=
@@ -141,6 +147,7 @@ if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
 if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
+if /i "%~1"=="--no-warnings-as-errors" (set WARNINGSASERRORS=0) else ^
 if /i "%~1"=="--skip-tutorial-tests" (set "SKIP_DLLS=!SKIP_DLLS!,TestTutorial.dll") else ^
 if /i "%~1"=="--skip-connected-tests" (set "SKIP_DLLS=!SKIP_DLLS!,TestConnected.dll") else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
@@ -193,6 +200,7 @@ REM # reuse into a full rebuild.
 set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
+if %WARNINGSASERRORS%==0 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:PwizWarningsAsErrors=false
 
 if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: ENABLED']
@@ -200,17 +208,17 @@ if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: DISABLED ^(no --i-agree-to-the-vendor-licenses^); building core only']
 )
 
-REM # Build targets: Skyline.csproj pulls in every ProjectReference (BiblioSpec,
-REM # CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp
-REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
-REM # and TestRunner is the harness that stages + runs them.
+REM # Build target: SkylineBuild.proj builds Skyline.csproj, which pulls in every
+REM # ProjectReference (BiblioSpec, CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph,
+REM # the pwiz-sharp vendor + BiblioSpec tool projects, ...), every test project, and
+REM # TestRunner, the harness that stages + runs them - all in one MSBuild session.
 REM # Every test project is built, so SkylineTester.zip carries every test DLL and a
 REM # nightly can select tutorial and perf tests at run time. Leaving one out does not
 REM # fail anything - TestRunner's stager only logs "Skipping TestTutorial - no output ...
-REM # (build it first)" - so a smaller set here silently drops those tests from every
+REM # (build it first)" - so a smaller set there silently drops those tests from every
 REM # consumer of the staged build. Keeping them out of a test RUN is --skip-tutorial-tests
 REM # (and perftests, for TestPerf), not a smaller build.
-set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestTutorial\TestTutorial.csproj TestPerf\TestPerf.csproj TestRunner\TestRunner.csproj
+set BUILD_TARGET=SkylineBuild.proj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
@@ -274,11 +282,11 @@ REM # ------------------------------------------------------------------------
 call :build_hardklor
 if %EXIT% NEQ 0 goto error
 
-for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
-if %EXIT% NEQ 0 goto error
-
-for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
-if %EXIT% NEQ 0 goto error
+REM # Restore and build in one dotnet build: SkylineBuild.proj restores its projects as one
+REM # graph first, then builds them. No -f here, unlike :build_one - see SkylineBuild.proj.
+echo ##teamcity[progressMessage 'dotnet build %BUILD_TARGET% (%CONFIG%)']
+dotnet build "%BUILD_TARGET%" -nologo %MSBUILD_PROPS%
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %BUILD_TARGET% failed" & goto error)
 
 REM # --build-only stops here, before staging and before the distro zips. Only this
 REM # flag may exit at this point: --no-tests still has to stage, because the caller
@@ -325,7 +333,7 @@ REM # directories looking for Skyline.sln - all three hold for bin\staging\<cfg>
 REM # ------------------------------------------------------------------------
 if not defined ZIPS goto skipzips
 
-REM # SkylineTester is not in BUILD_TARGET, so the restore loop above skipped it;
+REM # SkylineTester is not in BUILD_TARGET, so the restore above skipped it;
 REM # :build_one passes --no-restore, which needs an assets file to already exist.
 call :restore_one "%SCRIPT_DIR%\SkylineTester\SkylineTester.csproj"
 if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet restore SkylineTester.csproj failed" & goto error)

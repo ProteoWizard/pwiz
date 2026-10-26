@@ -7,11 +7,10 @@
 // remain byte-for-byte identical to cpp because Skyline's schema-doc generator and
 // downstream BlibUtil readers compare against these literals.
 //
-// A copy of pwiz_tools/BiblioSpec/src/BiblioSpec/BlibSchema.cs, the port's own, which
-// BlibMaker still writes with; the port's BlibSchemaIdentity test holds the two identical
-// member by member, so the port takes no dependency on this project until BlibMaker itself
-// writes through BlibWriter. The small-molecule columns here are the port's
-// SmallMolMetadata.SqlColumns. Osprey and CarafeSharp write through this copy.
+// The one definition of the schema: the BiblioSpec port's BlibMaker (BlibBuild, BlibFilter),
+// Osprey and CarafeSharp all write through BlibWriter with it, and the port's
+// SmallMolMetadata.SqlColumns are the small-molecule columns here. Until 2026-10-16 the port
+// kept its own copy, held identical by a test, so that it took no dependency on this project.
 
 using System;
 using System.Collections.Generic;
@@ -92,6 +91,39 @@ namespace pwiz.BiblioSpec.IO
             "-- Version 4 added collisional cross section for ion mobility, still supports drift time only\n" +
             "-- Version 3 added product ion mobility offset information for Waters Mse IMS\n" +
             "-- Version 2 added ion mobility information\n";
+
+        // --- table names ---------------------------------------------------------------------------
+        // The one spelling of each table, for the writer's and reader's probes and statements and
+        // for a tool asking the reader about a table; the CREATE statements below spell them again
+        // as the literal SQL BiblioSpec has always written.
+
+        public const string TABLE_LIB_INFO = "LibInfo";
+        public const string TABLE_REF_SPECTRA = "RefSpectra";
+        public const string TABLE_MODIFICATIONS = "Modifications";
+        public const string TABLE_REF_SPECTRA_PEAKS = "RefSpectraPeaks";
+        public const string TABLE_PROTEINS = "Proteins";
+        public const string TABLE_REF_SPECTRA_PROTEINS = "RefSpectraProteins";
+        public const string TABLE_REF_SPECTRA_PEAK_ANNOTATIONS = "RefSpectraPeakAnnotations";
+        public const string TABLE_SPECTRUM_SOURCE_FILES = "SpectrumSourceFiles";
+        public const string TABLE_SCORE_TYPES = "ScoreTypes";
+        public const string TABLE_ION_MOBILITY_TYPES = "IonMobilityTypes";
+        /// <summary>The per-observation table of a non-redundant library; a redundant library has none.</summary>
+        public const string TABLE_RETENTION_TIMES = "RetentionTimes";
+        /// <summary>Optional: the library's key-value metadata (<see cref="BlibMetadata"/>).</summary>
+        public const string TABLE_LIB_METADATA = "LibMetadata";
+        /// <summary>Optional: the decoy and entrapment design of a library that supplies its own decoys.</summary>
+        public const string TABLE_DECOY_PAIRS = "DecoyPairs";
+
+        /// <summary>
+        /// Every table of the format, the optional ones included, in creation order: what a
+        /// writer making a library anew in a file drops first.
+        /// </summary>
+        public static IReadOnlyList<string> AllTableNames { get; } = new[]
+        {
+            TABLE_LIB_INFO, TABLE_REF_SPECTRA, TABLE_MODIFICATIONS, TABLE_REF_SPECTRA_PEAKS, TABLE_PROTEINS,
+            TABLE_REF_SPECTRA_PROTEINS, TABLE_REF_SPECTRA_PEAK_ANNOTATIONS, TABLE_SPECTRUM_SOURCE_FILES, TABLE_SCORE_TYPES,
+            TABLE_ION_MOBILITY_TYPES, TABLE_RETENTION_TIMES, TABLE_LIB_METADATA, TABLE_DECOY_PAIRS,
+        };
 
         // --- small-molecule columns ---------------------------------------------------------------
 
@@ -250,6 +282,49 @@ namespace pwiz.BiblioSpec.IO
             "bestSpectrum INTEGER, " +
             "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )";
 
+        // --- seed rows -----------------------------------------------------------------------------
+
+        /// <summary>
+        /// BiblioSpec's <c>ScoreTypes</c> rows, in id order: the score's name and how to read it
+        /// (<c>PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT</c>, <c>..._INCORRECT</c> or
+        /// <c>NOT_A_PROBABILITY_VALUE</c>). The id is the port's <c>PsmScoreType</c> ordinal and
+        /// <c>RefSpectra.scoreType</c>. cpp BlibUtils.cpp:37 and BlibMaker.cpp:441-446.
+        /// </summary>
+        public static readonly (string ScoreType, string ProbabilityType)[] ScoreTypes =
+        {
+            ("UNKNOWN", "NOT_A_PROBABILITY_VALUE"),
+            ("PERCOLATOR QVALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PEPTIDE PROPHET SOMETHING", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("SPECTRUM MILL", "NOT_A_PROBABILITY_VALUE"),
+            ("IDPICKER FDR", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MASCOT IONS SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("TANDEM EXPECTATION VALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PROTEIN PILOT CONFIDENCE", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("SCAFFOLD SOMETHING", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("WATERS MSE PEPTIDE SCORE", "NOT_A_PROBABILITY_VALUE"),
+            ("OMSSA EXPECTATION SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PROTEIN PROSPECTOR EXPECTATION SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("SEQUEST XCORR", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MAXQUANT SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MORPHEUS SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MSGF+ SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PEAKS CONFIDENCE SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("BYONIC SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PEPTIDE SHAKER CONFIDENCE", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("GENERIC Q-VALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("HARDKLOR IDOTP", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+        };
+
+        /// <summary>
+        /// BiblioSpec's <c>IonMobilityTypes</c> rows, in id order; the id is the port's
+        /// <c>IonMobilityType</c> ordinal and <c>RefSpectra.ionMobilityType</c>. cpp
+        /// BlibUtils.cpp and BlibMaker.cpp:456-460.
+        /// </summary>
+        public static readonly string[] IonMobilityTypes =
+        {
+            "none", "driftTime(msec)", "inverseK0(Vsec/cm^2)", "compensation(V)",
+        };
+
         // --- index statements (emitted at COMMIT, see cpp BlibMaker::commit) ---------------------
 
         /// <summary>cpp BlibMaker.cpp:312.</summary>
@@ -284,18 +359,64 @@ namespace pwiz.BiblioSpec.IO
         public const string CreateLibMetadata = "CREATE TABLE LibMetadata (key TEXT PRIMARY KEY, value TEXT)";
 
         /// <summary>
-        /// CREATE TABLE for <c>DecoyPairs</c>: a library that supplies its own decoys marks each
-        /// row decoy or target, entrapment or not, and gives a target and its decoy at one charge
-        /// one <c>PairID</c>; <c>Method</c> names how a decoy was made (<c>reverse</c>,
-        /// <c>cycle</c>) and is null on a target. Carafe's table (its SkylineIO), written by
-        /// CarafeSharp and read by Osprey, which pairs library decoys from it. Optional, as above.
+        /// CREATE TABLE for <c>DecoyPairs</c>: the decoy and entrapment design of a library that
+        /// supplies its own decoys, one row per spectrum in the design. <c>IsDecoy</c> and
+        /// <c>IsEntrapment</c> give a row's side and partition (the four kinds of an FDRBench
+        /// pairing manifest: target, p_target, decoy, p_decoy); <c>PairingID</c> is the manifest's
+        /// <c>peptide_pair_index</c>, shared by a target, its entrapment target and both their
+        /// decoys, which is what pairs an entrapment peptide with its original target;
+        /// <c>TargetRefSpectraID</c> is a decoy's target spectrum at the same charge, null on a
+        /// target or a decoy with no target; <c>Method</c> names how the row's sequence was made
+        /// from the row it was made from - <c>reverse</c> or <c>cycle</c> on a decoy,
+        /// <c>shuffle</c> or <c>foreign</c> on an entrapment target - and is null on an original
+        /// target. Written by CarafeSharp and by
+        /// Osprey's library export, read by Osprey, which pairs library decoys and entrapment
+        /// from it with no manifest. Optional, as above.
         /// </summary>
         public const string CreateDecoyPairs =
             "CREATE TABLE DecoyPairs (RefSpectraID INTEGER NOT NULL PRIMARY KEY, IsDecoy INTEGER NOT NULL, " +
-            "IsEntrapment INTEGER NOT NULL, PairID INTEGER NOT NULL, Method TEXT)";
+            "IsEntrapment INTEGER NOT NULL, PairingID INTEGER NOT NULL, " +
+            "TargetRefSpectraID INTEGER REFERENCES RefSpectra(id), Method TEXT)";
 
-        /// <summary>The index a reader walking <c>DecoyPairs</c> by pair needs.</summary>
-        public const string CreateIdxDecoyPairsPairId = "CREATE INDEX idx_DecoyPairs_PairID ON DecoyPairs(PairID)";
+        /// <summary>The index a reader joining a target to its decoy needs; the primary key serves the other direction.</summary>
+        public const string IdxDecoyPairsTargetName = "idx_DecoyPairs_TargetRefSpectraID";
+        public const string CreateIdxDecoyPairsTarget = "CREATE INDEX " + IdxDecoyPairsTargetName + " ON DecoyPairs(TargetRefSpectraID)";
+
+        // --- optional columns (BlibOptionalColumn) ---------------------------------------------
+        // Not versioned: adding one does not change CurrentMinorVersion, and readers test for the
+        // column instead of the version. Each is written only by a source whose value is known to
+        // be experiment-wide (global): DIA-NN's Global.Q.Value and Global.PG.Q.Value, Proteome
+        // Discoverer's peptide groups and master proteins, Osprey's experiment-level FDR.
+
+        /// <summary>Global (experiment-wide) precursor q-value.</summary>
+        public static readonly BlibOptionalColumn PrecursorQValue = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PrecursorQValue", "REAL");
+
+        /// <summary>Global precursor posterior error probability.</summary>
+        public static readonly BlibOptionalColumn PrecursorPep = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PrecursorPep", "REAL");
+
+        /// <summary>Global peptide q-value, from a peptide-level competition: one value per modified sequence.</summary>
+        public static readonly BlibOptionalColumn PeptideQValue = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PeptideQValue", "REAL");
+
+        /// <summary>Global peptide posterior error probability.</summary>
+        public static readonly BlibOptionalColumn PeptidePep = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PeptidePep", "REAL");
+
+        /// <summary>Global protein-group q-value; a <c>Proteins</c> row with it is a protein group.</summary>
+        public static readonly BlibOptionalColumn ProteinQValue = new BlibOptionalColumn(TABLE_PROTEINS, "QValue", "REAL");
+
+        /// <summary>Global protein-group posterior error probability.</summary>
+        public static readonly BlibOptionalColumn ProteinPep = new BlibOptionalColumn(TABLE_PROTEINS, "Pep", "REAL");
+
+        /// <summary>The optional <c>RefSpectra</c> columns, in the order they are written.</summary>
+        public static IReadOnlyList<BlibOptionalColumn> OptionalRefSpectraColumns { get; } = new[]
+        {
+            PrecursorQValue, PrecursorPep, PeptideQValue, PeptidePep,
+        };
+
+        /// <summary>The optional <c>Proteins</c> columns, in the order they are written.</summary>
+        public static IReadOnlyList<BlibOptionalColumn> OptionalProteinsColumns { get; } = new[]
+        {
+            ProteinQValue, ProteinPep,
+        };
 
         /// <summary>
         /// All CREATE TABLE statements that <c>BlibMaker.CreateTables</c> emits, in the
@@ -318,6 +439,58 @@ namespace pwiz.BiblioSpec.IO
             CreateScoreTypes,
             CreateIonMobilityTypes,
         };
+
+        /// <summary>
+        /// The statements that create an empty library and seed it, in the order
+        /// <see cref="AllCreateTableStatements"/> lists the tables: the <c>LibInfo</c> row under
+        /// <paramref name="lsid"/> and <paramref name="createTime"/> (<see cref="FormatCreateTime"/>),
+        /// then one <c>ScoreTypes</c> row per <see cref="ScoreTypes"/> entry and one
+        /// <c>IonMobilityTypes</c> row per <see cref="IonMobilityTypes"/> entry, as literal SQL for
+        /// a documentation dump (<c>blibbuild -d</c>) or a tool creating a library by hand. The
+        /// tables and seeds are the ones <see cref="BlibWriter.CreateSchema"/> writes.
+        /// </summary>
+        public static IReadOnlyList<string> CreateScript(string lsid, string createTime)
+        {
+            if (lsid == null)
+                throw new ArgumentNullException(nameof(lsid));
+            if (createTime == null)
+                throw new ArgumentNullException(nameof(createTime));
+            var script = new List<string>();
+            foreach (string create in AllCreateTableStatements)
+            {
+                script.Add(create);
+                if (create == CreateLibInfo)
+                {
+                    // -1 spectra and revision 0: a library not yet counted, as BiblioSpec has always begun one
+                    script.Add(string.Format(CultureInfo.InvariantCulture, "INSERT INTO LibInfo values('{0}','{1}',{2},{3},{4})",
+                        EscapeApostrophes(lsid), EscapeApostrophes(createTime), -1, CurrentMajorVersion, CurrentMinorVersion));
+                }
+                else if (create == CreateScoreTypes)
+                {
+                    for (int i = 0; i < ScoreTypes.Length; i++)
+                    {
+                        script.Add(string.Format(CultureInfo.InvariantCulture,
+                            "INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES({0}, '{1}', '{2}')",
+                            i, ScoreTypes[i].ScoreType, ScoreTypes[i].ProbabilityType));
+                    }
+                }
+                else if (create == CreateIonMobilityTypes)
+                {
+                    for (int i = 0; i < IonMobilityTypes.Length; i++)
+                    {
+                        script.Add(string.Format(CultureInfo.InvariantCulture,
+                            "INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES({0}, '{1}')", i, IonMobilityTypes[i]));
+                    }
+                }
+            }
+            return script;
+        }
+
+        /// <summary>A text value as a SQL literal's body: each apostrophe doubled.</summary>
+        private static string EscapeApostrophes(string value)
+        {
+            return value.Replace("'", "''");
+        }
 
         /// <summary>
         /// All CREATE INDEX statements that <c>BlibMaker.Commit</c> emits, in the

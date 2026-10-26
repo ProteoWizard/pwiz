@@ -24,16 +24,23 @@ using System.IO;
 
 namespace ImageComparer.Core
 {
+    /// <summary>
+    /// Git operations for reviewing changed screenshots. The Git index (staging area) records which
+    /// changes have been accepted: accepting a screenshot stages it, so the changes still to review
+    /// are the ones in the working tree that differ from the index. Until a file is accepted, its
+    /// index version is the HEAD version.
+    /// </summary>
     public static class GitFileHelper
     {
         /// <summary>
-        /// Retrieves the committed binary content of a file in a Git repository.
+        /// Retrieves the binary content of a file in the Git index: the accepted version if the file
+        /// has been accepted, and otherwise the committed (HEAD) version.
         /// </summary>
         /// <param name="fullPath">The fully qualified path of the file.</param>
-        /// <returns>The committed binary content of the file.</returns>
+        /// <returns>The binary content of the file in the index.</returns>
         public static byte[] GetGitFileBinaryContent(string fullPath)
         {
-            return RunGitCommand(GetPathInfo(fullPath), "show HEAD:{RelativePath}", process =>
+            return RunGitCommand(GetPathInfo(fullPath), "show :{RelativePath}", process =>
             {
                 using (var memoryStream = new MemoryStream())
                 {
@@ -57,10 +64,12 @@ namespace ImageComparer.Core
         }
 
         /// <summary>
-        /// Gets a list of changed file paths under a specific directory.
+        /// Gets the paths of modified files under a directory that still need review: files whose
+        /// working tree content differs from the index. A file that has been accepted (staged) and
+        /// not changed since is left out; one changed again after it was accepted is included.
         /// </summary>
         /// <param name="directoryPath">The fully qualified directory path.</param>
-        /// <returns>An enumerable of file paths that have been modified, added, or deleted.</returns>
+        /// <returns>An enumerable of file paths modified in the working tree.</returns>
         public static IEnumerable<string> GetChangedFilePaths(string directoryPath)
         {
             var output = RunGitCommand(GetPathInfo(directoryPath), "status --porcelain \"{RelativePath}\"");
@@ -70,24 +79,35 @@ namespace ImageComparer.Core
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    // 'git status --porcelain' format: XY path/to/file
-                    // For modified have seen " M " and "M  "
-                    line = line.Trim();
-                    if (!line.StartsWith("M"))
+                    // 'git status --porcelain' format: XY path/to/file, where X is the index status
+                    // and Y the working tree status. " M" is a change not yet accepted, "MM" one changed
+                    // again after it was accepted, and "M " an accepted change with nothing new.
+                    if (line.Length < 4 || line[1] != 'M')
                         continue;
-                    var filePath = line.Substring(1).Trim().Replace('/', Path.DirectorySeparatorChar);
+                    var filePath = line.Substring(3).Trim().Replace('/', Path.DirectorySeparatorChar);
                     yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
                 }
             }
         }
 
         /// <summary>
-        /// Reverts a file to its state in the HEAD commit.
+        /// Accepts a changed file by staging it in the Git index, so that it is included in the next
+        /// commit and no longer listed by <see cref="GetChangedFilePaths"/>.
+        /// </summary>
+        /// <param name="fullPath">The fully qualified path of the file to accept.</param>
+        public static void AcceptFile(string fullPath)
+        {
+            RunGitCommand(GetPathInfo(fullPath), "add -- \"{RelativePath}\"");
+        }
+
+        /// <summary>
+        /// Reverts a file to its version in the Git index: the accepted version if the file has been
+        /// accepted, and otherwise the committed (HEAD) version.
         /// </summary>
         /// <param name="fullPath">The fully qualified path of the file to revert.</param>
-        public static void RevertFileToHead(string fullPath)
+        public static void RevertFile(string fullPath)
         {
-            RunGitCommand(GetPathInfo(fullPath), "checkout HEAD -- \"{RelativePath}\"");
+            RunGitCommand(GetPathInfo(fullPath), "checkout -- \"{RelativePath}\"");
         }
 
         /// <summary>

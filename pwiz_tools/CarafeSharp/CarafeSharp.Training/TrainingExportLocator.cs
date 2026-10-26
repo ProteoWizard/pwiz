@@ -88,13 +88,13 @@ namespace pwiz.CarafeSharp.Training
             if (missing.Length > 0)
             {
                 throw new FileNotFoundException(string.Format(
-                    @"No Osprey training export ({0}) for {1} in -i {2} or beside the run. Run Osprey with --training-export.",
+                    @"No Osprey training export ({0}) for {1} in --i {2} or beside the run. Run Osprey with --training-export.",
                     TrainingExportParquet.EXT, string.Join(@", ", missing), identifications));
             }
             if (result.Length == 0)
             {
                 throw new FileNotFoundException(string.Format(
-                    @"No Osprey training export ({0}) found for -i {1}. Run Osprey with --training-export.",
+                    @"No Osprey training export ({0}) found for --i {1}. Run Osprey with --training-export.",
                     TrainingExportParquet.EXT, identifications));
             }
             var warnings = CheckOneSearch(inputs, readFooter);

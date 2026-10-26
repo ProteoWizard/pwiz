@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Osprey DIA pipeline workflow</title>
+<title>Osprey workflow</title>
 <style>
   html, body {
     margin: 0;
@@ -38,25 +38,885 @@
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
-  footer {
-    max-width: 1200px;
-    margin: 20px auto 40px auto;
-    padding: 0 20px;
+  nav.contents {
+    margin: 10px 0 0 0;
+    font-size: 13px;
+  }
+  nav.contents a { color: #1565c0; margin-right: 18px; text-decoration: none; }
+  nav.contents a:hover { text-decoration: underline; }
+  section { margin: 0 0 36px 0; }
+  section h2 {
+    margin: 26px 0 6px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  section p.sub {
+    margin: 0 0 12px 0;
+    color: #616161;
+    font-size: 13px;
+  }
+  section h3 {
+    margin: 28px 0 6px 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  div.notes {
+    margin: 16px 0 0 0;
     color: #616161;
     font-size: 12px;
   }
-  footer code {
+  div.notes code, div.notes pre {
     background: #f5f5f5;
     padding: 1px 4px;
     border-radius: 3px;
     font-size: 11px;
   }
+  div.notes pre {
+    padding: 8px 10px;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+  div.notes table.phases, div.notes > table:not([style]) {
+    margin: 8px 0;
+    font-size: 11px;
+    border-collapse: collapse;
+  }
+  div.notes > table:not([style]) th { text-align: left; padding: 2px 12px 2px 0; border-bottom: 1px solid #888; }
+  div.notes > table:not([style]) td { padding: 2px 12px 2px 0; vertical-align: top; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Osprey DIA pipeline workflow</h1>
+  <h1>Osprey workflow</h1>
   <p class="sub">
+    One <code>Osprey</code> command from DIA runs to a BiblioSpecLite (<code>.blib</code>) result for
+    Skyline. Given a spectral library (<code>-l</code>), the command is the search pipeline of part 2.
+    Given a protein FASTA (<code>--fasta</code>), it first builds the library in the same process -
+    predicting it, tuning the models on runs first, or predicting with a saved model - and then
+    searches it with the same pipeline: part 1.
+  </p>
+  <nav class="contents">
+    <a href="#library-build">1. Building the library (--fasta)</a>
+    <a href="#library-cluster">1.1 On a cluster</a>
+    <a href="#library-phases">1.2 Inside the library phases</a>
+    <a href="#library-carafe">1.3 CarafeSharp and Carafe 2.2.0</a>
+    <a href="#search">2. The search pipeline</a>
+  </nav>
+</header>
+
+<main>
+<section id="library-build">
+<h2>1. Building the library (<code>--fasta</code>)</h2>
+<p class="sub">
+  The three ways one command goes from a protein FASTA and DIA runs to a <code>.blib</code>: one
+  column per mode, one box per phase, the file each phase leaves for the next named on the arrow.
+  Purple boxes are CarafeSharp's tasks, run in-process through the shared pipeline driver; red boxes
+  are Osprey's own four-stage analysis, drawn in full in part 2. The search with a given library
+  (<code>-l library.blib</code>) is the red box alone.
+</p>
+<svg class="pipeline" viewBox="0 0 1200 930" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="lb-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#424242"/>
+  </marker>
+  <marker id="lb-arrow-loop" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a1b9a"/>
+  </marker>
+
+  <style>
+    .title       { font-size: 24px; font-weight: 700; fill: #0d1b2a; }
+    .subtitle    { font-size: 12px; font-weight: 400; fill: #607d8b; }
+
+    .phase-label { font-size: 12px; font-weight: 600; fill: #5e35b1;
+                   text-transform: uppercase; letter-spacing: 1.5px; }
+    .phase-title { font-size: 16px; font-weight: 600; fill: #1a237e; }
+    .phase-cmd   { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 10px; fill: #37474f; }
+
+    .stage-title { font-size: 13px; font-weight: 600; fill: #263238; }
+    .stage-desc  { font-size: 11px; fill: #455a64; }
+
+    .legend-title { font-size: 11px; font-weight: 600; fill: #455a64;
+                    text-transform: uppercase; letter-spacing: 1px; }
+    .legend-label { font-size: 11px; fill: #455a64; }
+
+    .phase-bg   { fill: #fbfbfc; stroke: #cfd8dc; stroke-width: 1;
+                  stroke-dasharray: 2,2; }
+
+    .flow       { stroke: #424242; stroke-width: 2; fill: none; }
+    .flow-loop  { stroke: #6a1b9a; stroke-width: 2; fill: none;
+                  stroke-dasharray: 6,3; }
+    .flow-loop-label { font-size: 10px; fill: #6a1b9a; font-weight: 600; }
+
+    .input-pill { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2; }
+    .input-pill-opt { fill: #e8eaf6; stroke: #3949ab; stroke-width: 2;
+                      stroke-dasharray: 5,3; }
+    .output-pill { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+
+    /* Phase boxes: whose code runs */
+    .task-carafe { fill: #ede7f6; stroke: #5e35b1; stroke-width: 1.5; }
+    .task-osprey { fill: #fce4ec; stroke: #c62828; stroke-width: 1.5; }
+    .task-role   { font-size: 10px; font-weight: 700; fill: #5e35b1;
+                   text-transform: uppercase; letter-spacing: 1px; }
+    .task-role-osprey { font-size: 10px; font-weight: 700; fill: #c62828;
+                   text-transform: uppercase; letter-spacing: 1px; }
+    .task-name   { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 10px; font-weight: 700; fill: #4527a0; }
+
+    /* The file on an arrow */
+    .file        { font-family: ui-monospace, SFMono-Regular, monospace;
+                   font-size: 10px; fill: #a35200; font-weight: 700; }
+    .file-note   { font-size: 10px; fill: #78909c; font-style: italic; }
+    .sc-flow-sw  { fill: #ffe0b2; stroke: #a35200; stroke-width: 1; }
+  </style>
+</defs>
+
+<!-- ================================================================= -->
+<!-- TITLE + SUBTITLE                                                   -->
+<!-- ================================================================= -->
+<g transform="translate(40, 40)">
+  <text class="title">Osprey one-command workflows</text>
+  <text class="subtitle" y="22">
+    Protein FASTA + DIA runs to a .blib in one process: predict, tune, or predict with a saved model. The search itself is unchanged; the library build runs in front of it.
+  </text>
+  <text class="subtitle" y="38">
+    Phase detail: Osprey's docs/20-command-line ("Library build") and 00-pipeline-architecture; CarafeSharp's docs 02-masking, 06-saved-models, 08-command-line.
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- LEGEND                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(40, 100)">
+  <text class="legend-title">Who runs the phase</text>
+  <g transform="translate(0, 16)">
+    <rect class="task-carafe" x="0" y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">CarafeSharp's task, in Osprey's process through the shared pipeline driver</text>
+
+    <rect class="task-osprey" x="620" y="0" width="16" height="12"/>
+    <text class="legend-label" x="642" y="10">Osprey's analysis: the four stages, one output directory</text>
+
+    <rect class="sc-flow-sw" x="960" y="0" width="16" height="12"/>
+    <text class="legend-label" x="982" y="10">the checkpoint file between phases</text>
+  </g>
+</g>
+
+<!-- ================================================================= -->
+<!-- INPUTS                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(0, 150)">
+  <text class="phase-label" x="40" y="0">inputs</text>
+
+  <rect class="input-pill" x="40" y="10" width="200" height="44" rx="22"/>
+  <text class="stage-title" x="140" y="29" text-anchor="middle">Protein FASTA</text>
+  <text class="stage-desc"  x="140" y="45" text-anchor="middle">--fasta proteome.fasta</text>
+
+  <rect class="input-pill" x="260" y="10" width="200" height="44" rx="22"/>
+  <text class="stage-title" x="360" y="29" text-anchor="middle">DIA runs</text>
+  <text class="stage-desc"  x="360" y="45" text-anchor="middle">-i run1 run2 ... (.raw or mzML)</text>
+
+  <rect class="input-pill-opt" x="480" y="10" width="220" height="44" rx="22"/>
+  <text class="stage-title" x="590" y="29" text-anchor="middle">Tuning runs</text>
+  <text class="stage-desc"  x="590" y="45" text-anchor="middle">--training-input run2 ... (mode 2)</text>
+
+  <rect class="input-pill-opt" x="720" y="10" width="200" height="44" rx="22"/>
+  <text class="stage-title" x="820" y="29" text-anchor="middle">Saved model</text>
+  <text class="stage-desc"  x="820" y="45" text-anchor="middle">--model out.model.zip (mode 3)</text>
+
+  <rect class="input-pill" x="940" y="10" width="220" height="44" rx="22"/>
+  <text class="stage-title" x="1050" y="29" text-anchor="middle">Pretrained models</text>
+  <text class="stage-desc"  x="1050" y="45" text-anchor="middle">bundled: AlphaPeptDeep v1, Chronologer</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- MODE 1: PREDICT                                                    -->
+<!-- ================================================================= -->
+<g transform="translate(40, 230)">
+  <rect class="phase-bg" x="0" y="0" width="360" height="666" rx="6"/>
+  <text class="phase-label" x="20" y="22">mode 1</text>
+  <text class="phase-title" x="20" y="40">Predict</text>
+  <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
+  <text class="phase-cmd" x="20" y="71">(no -l, no --training-input, no --model)</text>
+
+  <!-- A: digest -->
+  <g transform="translate(16, 86)">
+    <rect x="0" y="0" width="328" height="66" rx="6" fill="none" stroke="#5e35b1" stroke-width="1" stroke-dasharray="4,3"/>
+    <text class="stage-title" x="12" y="17">Digest the proteome, in memory</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">no task, no file</text>
+    <text class="stage-desc" x="12" y="33">--fasta &#8594; an enumerable of peptides with their proteins,</text>
+    <text class="stage-desc" x="12" y="47">decoys and pair ids; Carafe's digest options apply</text>
+    <text class="stage-desc" x="12" y="61">seconds, so the predicted .blib is the first checkpoint</text>
+  </g>
+  <path class="flow" d="M 180 152 L 180 172" marker-end="url(#lb-arrow)"/>
+  <text class="file-note" x="188" y="166">streamed into the predictor</text>
+
+  <!-- B: predict -->
+  <g transform="translate(16, 174)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictLibrary</text>
+    <text class="stage-desc" x="12" y="45">pretrained AlphaPeptDeep MS2 + Chronologer RT (iRT)</text>
+    <text class="stage-desc" x="12" y="59">Stellar 967K precursors 3 min, Astral 6.2M 18 min (GPU)</text>
+  </g>
+  <path class="flow" d="M 180 240 L 180 524" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="376">out.predicted.blib</text>
+  <text class="file-note" x="188" y="390">no tuning phases: the library</text>
+  <text class="file-note" x="188" y="403">goes straight to the search</text>
+
+  <!-- F: search -->
+  <g transform="translate(16, 526)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search every run</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the canonical four stages</text>
+    <text class="stage-desc" x="12" y="45">scoring &#8594; 1st-pass FDR &#8594; rescoring &#8594; 2nd-pass FDR</text>
+    <text class="stage-desc" x="12" y="59">the library's own decoys (DecoyPairs); no DecoyGenerator</text>
+  </g>
+  <path class="flow" d="M 180 592 L 180 606" marker-end="url(#lb-arrow)"/>
+
+  <!-- G: output -->
+  <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
+  <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib (reusable with -l)</text>
+</g>
+
+<!-- ================================================================= -->
+<!-- MODE 2: TUNE                                                       -->
+<!-- ================================================================= -->
+<g transform="translate(420, 230)">
+  <rect class="phase-bg" x="0" y="0" width="360" height="666" rx="6"/>
+  <text class="phase-label" x="20" y="22">mode 2</text>
+  <text class="phase-title" x="20" y="40">Tune, then predict</text>
+  <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
+  <text class="phase-cmd" x="20" y="71">       --training-input run2 [--model prior.model.zip]</text>
+
+  <!-- A: digest -->
+  <g transform="translate(16, 86)">
+    <rect x="0" y="0" width="328" height="66" rx="6" fill="none" stroke="#5e35b1" stroke-width="1" stroke-dasharray="4,3"/>
+    <text class="stage-title" x="12" y="17">Digest the proteome, in memory</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">no task, no file</text>
+    <text class="stage-desc" x="12" y="33">--fasta &#8594; an enumerable of peptides with their proteins,</text>
+    <text class="stage-desc" x="12" y="47">decoys and pair ids; entrapment-free here, quartets at the</text>
+    <text class="stage-desc" x="12" y="61">final library when --entrapment is given; seconds of CPU</text>
+  </g>
+  <path class="flow" d="M 180 152 L 180 172" marker-end="url(#lb-arrow)"/>
+  <text class="file-note" x="188" y="166">streamed into the predictor</text>
+
+  <!-- B: predict the training library -->
+  <g transform="translate(16, 174)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the training library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictTrainingLibrary</text>
+    <text class="stage-desc" x="12" y="45">pretrained models, or --model to tune a saved one further</text>
+    <text class="stage-desc" x="12" y="59">the training library: targets and decoys, no entrapment</text>
+  </g>
+  <path class="flow" d="M 180 240 L 180 260" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="254">out.predicted/initial.blib</text>
+
+  <!-- C: search the tuning runs -->
+  <g transform="translate(16, 262)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search the tuning runs</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the four stages, in out.predicted/training/</text>
+    <text class="stage-desc" x="12" y="45">four stages over --training-input, --training-export on</text>
+    <text class="stage-desc" x="12" y="59">a run also in -i is parsed once: shared spectra cache</text>
+  </g>
+  <path class="flow" d="M 180 328 L 180 348" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="342">&lt;stem&gt;.training.parquet, per run</text>
+
+  <!-- D: tune -->
+  <g transform="translate(16, 350)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Tune the models</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task TrainModel</text>
+    <text class="stage-desc" x="12" y="45">Carafe's masking on Osprey's evidence; RT, then MS2</text>
+    <text class="stage-desc" x="12" y="59">MS2 kept only when it beats the pretrained on held-out</text>
+  </g>
+  <path class="flow" d="M 180 416 L 180 436" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="430">out.model.zip</text>
+
+  <!-- E: predict the library -->
+  <g transform="translate(16, 438)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictLibrary</text>
+    <text class="stage-desc" x="12" y="45">the tuned models; RT in the tuning runs' minutes</text>
+    <text class="stage-desc" x="12" y="59">entrapment quartets here when --entrapment is given</text>
+  </g>
+  <path class="flow" d="M 180 504 L 180 524" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="518">out.predicted.blib</text>
+
+  <!-- F: search -->
+  <g transform="translate(16, 526)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search every run</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the canonical four stages</text>
+    <text class="stage-desc" x="12" y="45">scoring &#8594; 1st-pass FDR &#8594; rescoring &#8594; 2nd-pass FDR</text>
+    <text class="stage-desc" x="12" y="59">a tuning run not in -i is absent from the output</text>
+  </g>
+  <path class="flow" d="M 180 592 L 180 606" marker-end="url(#lb-arrow)"/>
+
+  <!-- G: output -->
+  <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
+  <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib + out.model.zip</text>
+</g>
+
+<!-- The tuned model of mode 2 is the saved model of mode 3 -->
+<path class="flow-loop" d="M 764 613 L 790 613 L 790 222 L 820 222 L 820 206" marker-end="url(#lb-arrow-loop)"/>
+<text class="flow-loop-label" x="791" y="440" text-anchor="middle" transform="rotate(-90 791 440)">out.model.zip is a --model next time</text>
+
+<!-- ================================================================= -->
+<!-- MODE 3: SAVED MODEL                                                -->
+<!-- ================================================================= -->
+<g transform="translate(800, 230)">
+  <rect class="phase-bg" x="0" y="0" width="360" height="666" rx="6"/>
+  <text class="phase-label" x="20" y="22">mode 3</text>
+  <text class="phase-title" x="20" y="40">Predict with a saved model</text>
+  <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
+  <text class="phase-cmd" x="20" y="71">       --model out.model.zip</text>
+
+  <!-- A: digest -->
+  <g transform="translate(16, 86)">
+    <rect x="0" y="0" width="328" height="66" rx="6" fill="none" stroke="#5e35b1" stroke-width="1" stroke-dasharray="4,3"/>
+    <text class="stage-title" x="12" y="17">Digest the proteome, in memory</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">no task, no file</text>
+    <text class="stage-desc" x="12" y="33">--fasta &#8594; an enumerable of peptides with their proteins,</text>
+    <text class="stage-desc" x="12" y="47">decoys and pair ids; any proteome, since a saved model</text>
+    <text class="stage-desc" x="12" y="61">predicts any peptides; seconds of CPU</text>
+  </g>
+  <path class="flow" d="M 180 152 L 180 172" marker-end="url(#lb-arrow)"/>
+  <text class="file-note" x="188" y="166">streamed into the predictor</text>
+
+  <!-- B: predict with the saved model -->
+  <g transform="translate(16, 174)">
+    <rect class="task-carafe" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Predict the library</text>
+    <text class="task-role" x="316" y="17" text-anchor="end">CarafeSharp &#183; GPU</text>
+    <text class="task-name" x="12" y="31">task PredictLibrary</text>
+    <text class="stage-desc" x="12" y="45">the saved model's MS2 and RT weights (06-saved-models)</text>
+    <text class="stage-desc" x="12" y="59">NCE, instrument, rt_max from its training unless given</text>
+  </g>
+  <path class="flow" d="M 180 240 L 180 524" marker-end="url(#lb-arrow)"/>
+  <text class="file" x="188" y="376">out.predicted.blib</text>
+  <text class="file-note" x="188" y="390">no tuning phases: mode 1 with</text>
+  <text class="file-note" x="188" y="403">a tuned model in place of the pretrained</text>
+
+  <!-- F: search -->
+  <g transform="translate(16, 526)">
+    <rect class="task-osprey" x="0" y="0" width="328" height="66" rx="6"/>
+    <text class="stage-title" x="12" y="17">Search every run</text>
+    <text class="task-role-osprey" x="316" y="17" text-anchor="end">Osprey</text>
+    <text class="task-name" x="12" y="31">the canonical four stages</text>
+    <text class="stage-desc" x="12" y="45">scoring &#8594; 1st-pass FDR &#8594; rescoring &#8594; 2nd-pass FDR</text>
+    <text class="stage-desc" x="12" y="59">the library's own decoys (DecoyPairs); no DecoyGenerator</text>
+  </g>
+  <path class="flow" d="M 180 592 L 180 606" marker-end="url(#lb-arrow)"/>
+
+  <!-- G: output -->
+  <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
+  <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib (reusable with -l)</text>
+</g>
+
+</svg>
+<div class="notes">
+  <p>
+    <strong>The phases and their checkpoints.</strong> Every phase is a task on the shared pipeline
+    contract (<code>PipelineTask</code> in CommonUtil) with a validity key over its settings and
+    inputs, and leaves a stamped file the next phase reads. A re-run of the same command therefore
+    skips every phase whose output is current and resumes a run that stopped at the first one that
+    is not: a change to a digest option re-runs everything, a tuning option re-tunes and
+    re-predicts without searching the tuning runs again, <code>--entrapment</code> or <code>-i</code>
+    alone re-runs only the final library and search. <code>OSPREY_STOP_AFTER_TASKS=N</code> (a
+    developer variable) ends a run cleanly after N tasks; run again and again, the command advances
+    one task at a time and re-runs nothing (<code>SubsetPipelineTest.TestSubsetLibraryBuildTunedStepwise</code>,
+    and at real scale <code>regression.ps1 -StepwiseOneCommand</code>). On a cluster each phase is a
+    <code>--task</code> node of the same command line (<a href="#library-cluster">1.1</a>); what each
+    phase does inside is <a href="#library-phases">1.2</a>.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Task (<code>--task</code>)</th><th>Code</th><th>Reads</th><th>Writes (the checkpoint)</th><th>Modes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Digest (inside the prediction tasks)</td><td>none</td><td>CarafeSharp <code>Digester</code> + the decoy and entrapment steps of <code>EntrapmentFastaBuilder</code></td><td><code>--fasta</code></td><td>nothing: an in-memory enumerable of peptides, proteins, decoys and pair ids that the predictor and the blib writer consume</td><td>1, 2, 3</td></tr>
+      <tr><td>Predict the training library</td><td><code>PredictTrainingLibrary</code></td><td>CarafeSharp <code>PredictLibraryTask</code></td><td>the entrapment-free digest; pretrained models or <code>--model</code></td><td><code>out.predicted/initial.blib</code></td><td>2</td></tr>
+      <tr><td>Search the tuning runs</td><td>the four stage tasks with <code>--training-search</code></td><td>Osprey, its own task set and output folder</td><td><code>initial.blib</code>, <code>--training-input</code></td><td><code>out.predicted/training/&lt;stem&gt;.training.parquet</code> per run, that analysis's artifacts, <code>training.blib</code></td><td>2</td></tr>
+      <tr><td>Tune</td><td><code>TrainModel</code></td><td>CarafeSharp <code>TrainTask</code></td><td>the exports; pretrained models or <code>--model</code></td><td><code>out.model.zip</code> and Carafe's model folder <code>out.predicted/model/</code></td><td>2</td></tr>
+      <tr><td>Predict the library</td><td><code>PredictLibrary</code></td><td>CarafeSharp <code>PredictLibraryTask</code></td><td>the digest (quartets with <code>--entrapment</code>); pretrained, <code>--model</code>, or the tuned model folder</td><td><code>out.predicted.blib</code></td><td>1, 2, 3</td></tr>
+      <tr><td>Search</td><td>the four stage tasks</td><td>Osprey</td><td><code>out.predicted.blib</code>, <code>-i</code></td><td><code>out.blib</code> and its sidecars (part 2)</td><td>all</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>What the user gets</strong> (<code>--output-dir</code> relocates it as it relocates the search's sidecars):</p>
+<pre>out.blib                  the result: what the search detected, for Skyline (-o), sidecars as for any search
+out.predicted.blib        the predicted library it was searched with (modes 1-3); -l takes it next time
+out.model.zip             the tuned model (mode 2); --model takes it next time; CarafeSharp --model-info describes it
+out.predicted/            working files of the library build - one folder a user can delete
+  pairing.tsv             only with --entrapment: the FDRBench quartets
+  initial.blib            the training library (mode 2)
+  training/               the tuning runs' search: parquets, sidecars, the exports, training.blib
+  model/                  Carafe's model folder, which the library is predicted from (mode 2)</pre>
+
+  <p>
+    <strong>Against DIA-NN.</strong> <code>--fasta</code> with no <code>-l</code> is DIA-NN's
+    <code>--fasta --gen-spec-lib --predictor</code>; <code>-i</code> is <code>--f</code>;
+    <code>out.predicted.blib</code> is <code>--out-lib</code>. The digest and modification options are
+    CarafeSharp's (<code>--enzyme</code>, <code>--miss-c</code>, <code>--min-length</code>,
+    <code>--max-length</code>, <code>--fix-mod</code>, <code>--var-mod</code>, ...), surfaced as the
+    Library Digest, Prediction and Tuning sections of Osprey's help, where DIA-NN has
+    <code>--cut</code>, <code>--missed-cleavages</code>, <code>--min-pep-len</code>,
+    <code>--unimod4</code>, <code>--var-mods</code>. Mode 2 has no DIA-NN counterpart: its
+    <code>--reanalyse</code> builds an empirical library from a first pass and never adapts the
+    predictor. Mode 3 is what makes mode 2 reusable: tune once per instrument and method, predict any
+    proteome with the saved model after that.
+  </p>
+</div>
+<h3 id="library-cluster">1.1 On a cluster</h3>
+<div class="notes">
+  <p>
+    Every library phase is also a <code>--task</code> node, so a cluster runs the one command as a
+    chain of jobs. Every node gets the same command line - the <code>--fasta ... -o ...</code> a
+    workstation would run - plus its <code>--task</code>; the node derives the phase's inputs and
+    outputs exactly as the in-process workflow does, and the checkpoint files of the table above are
+    what one node leaves for the next. The search of the tuning runs is Osprey's four stage tasks with
+    <code>--training-search</code> added, which selects the <code>--training-input</code> runs, the
+    training library, the export and the output folder <code>out.predicted/training/</code>; the same
+    four tasks without it are the final search of <code>-i</code> against
+    <code>out.predicted.blib</code>, drawn in part 2. The per-run stages fan out over their runs as in
+    part 2 (a node of the tuning runs' search names its run with <code>--training-input</code>, a node of the
+    final search with <code>-i</code>), and <code>--task-files</code> prints the files any node reads and writes; the three CarafeSharp tasks are one node each, on a GPU node where there is one. Mode 2,
+    with <code>&lt;cmd&gt;</code> standing for <code>-i runs... --fasta proteome.fasta
+    --training-input run2 -o out.blib</code>:
+  </p>
+<pre>Osprey &lt;cmd&gt; --task PredictTrainingLibrary                  out.predicted/initial.blib                      1 node, GPU
+Osprey &lt;cmd&gt; --task PerFileScoring   --training-search      out.predicted/training/  (the tuning runs)      per-run fan-out
+Osprey &lt;cmd&gt; --task FirstPassFDR     --training-search                                                      join, 1 node
+Osprey &lt;cmd&gt; --task PerFileRescoring --training-search      out.predicted/training/&lt;stem&gt;.training.parquet  per-run fan-out
+Osprey &lt;cmd&gt; --task SecondPassFDR    --training-search      out.predicted/training/training.blib            join, 1 node
+Osprey &lt;cmd&gt; --task TrainModel                              out.model.zip, out.predicted/model/             1 node, GPU
+Osprey &lt;cmd&gt; --task PredictLibrary                          out.predicted.blib                              1 node, GPU
+Osprey &lt;cmd&gt; --task PerFileScoring ... SecondPassFDR        out.blib and its sidecars (part 2, over -i)</pre>
+  <p>
+    Modes 1 and 3 are the last two lines: <code>--task PredictLibrary</code>, then the four stage
+    tasks. A node whose checkpoint is already current does nothing, as in the in-process run.
+    The chain has this shape whatever the number of tuning runs: with one (the lab's habit) its
+    <code>FirstPassFDR</code> node has no other run to reconcile against, and its <code>PerFileRescoring</code> node still
+    re-scores the run's multi-charge consensus and writes its half of the second pass.
+  </p>
+</div>
+
+<h3 id="library-phases">1.2 Inside the library phases</h3>
+<p class="sub">
+  What each phase does, drawn top to bottom in mode 2's order, with the files each phase's
+  <code>--task</code> reads and writes in the banner heading it. The library phases are CarafeSharp, a
+  cross-implementation port of Carafe 2.2.0 (maccoss/Carafe): box color shows where a step reproduces
+  Carafe, where it differs by design, and what CarafeSharp adds. CarafeSharp reads no spectra: Osprey
+  searches the tuning runs and exports its per-ion evidence (<code>&lt;stem&gt;.training.parquet</code>),
+  and CarafeSharp applies Carafe's masking rules to that evidence instead of matching peaks itself.
+  The comparison numbers are in 1.3.
+</p>
+<svg class="pipeline" viewBox="0 0 1200 2560" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="lp-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#424242"/>
+  </marker>
+  <marker id="lp-arrow-loop" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a1b9a"/>
+  </marker>
+
+  <style>
+    /* Box status: how the step relates to Carafe 2.2.0 */
+    .st-parity  { fill: #c8e6c9; stroke: #2e7d32; stroke-width: 2; }
+    .st-design  { fill: #fff9c4; stroke: #f9a825; stroke-width: 2; }
+    .st-beyond  { fill: #e1f5fe; stroke: #0277bd; stroke-width: 2; }
+    .st-osprey  { fill: #ede7f6; stroke: #5e35b1; stroke-width: 2; }
+
+    /* Phase banners: Osprey's analyses in red, CarafeSharp's tasks in purple */
+    .task-hdr-bg-osprey { fill: #fce4ec; stroke: #c62828; stroke-width: 1.5; }
+    .phase-owner { font-size: 11px; font-weight: 700; fill: #c62828;
+                   text-transform: uppercase; letter-spacing: 1px; }
+    .stage-link  { font-size: 11px; fill: #1565c0; text-decoration: underline; }
+  </style>
+</defs>
+
+<!-- ================================================================= -->
+<!-- TITLE + SUBTITLE                                                   -->
+<!-- ================================================================= -->
+<g transform="translate(40, 40)">
+  <text class="title">Inside the library phases</text>
+  <text class="subtitle" y="22">
+    Digest in memory, predict the training library, search the tuning runs with Osprey, tune on their evidence, predict the library, search every run.
+  </text>
+  <text class="subtitle" y="38">
+    Detail: CarafeSharp's <a href="../CarafeSharp/docs/02-masking.md">02-masking</a>, <a href="../CarafeSharp/docs/01-model-spec.md">01-model-spec</a>, <a href="../CarafeSharp/docs/07-chronologer.md">07-chronologer</a>, <a href="../CarafeSharp/docs/06-saved-models.md">06-saved-models</a>, <a href="../CarafeSharp/docs/08-command-line.md">08-command-line</a>; Osprey's <a href="docs/22-training-export.md">22-training-export</a>.
+  </text>
+</g>
+
+<!-- ================================================================= -->
+<!-- LEGEND                                                             -->
+<!-- ================================================================= -->
+<g transform="translate(40, 106)">
+  <text class="legend-title">Relation to Carafe 2.2.0</text>
+  <g transform="translate(0, 16)">
+    <rect class="st-parity" x="0"   y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">reproduces Carafe (parity test against a recorded Carafe run)</text>
+
+    <rect class="st-design" x="400" y="0" width="16" height="12"/>
+    <text class="legend-label" x="422" y="10">differs by design (Osprey's evidence, the similarity gate)</text>
+
+    <rect class="st-beyond" x="760" y="0" width="16" height="12"/>
+    <text class="legend-label" x="782" y="10">CarafeSharp only, no Carafe counterpart</text>
+
+    <rect class="st-osprey" x="1020" y="0" width="16" height="12"/>
+    <text class="legend-label" x="1042" y="10">Osprey's search</text>
+  </g>
+
+  <text class="legend-title" y="46">File scope</text>
+  <g transform="translate(0, 62)">
+    <rect class="sc-exp-sw"   x="0"   y="0" width="16" height="12"/>
+    <text class="legend-label" x="22" y="10">one per command &#183; the next phase's input and its checkpoint</text>
+
+    <rect class="sc-run-sw"   x="480" y="0" width="16" height="12"/>
+    <text class="legend-label" x="502" y="10">per-run &#183; one per tuning run</text>
+
+    <rect class="sc-cache-sw" x="760" y="0" width="16" height="12"/>
+    <text class="legend-label" x="782" y="10">cache &#183; the spectra cache, shared by both searches, rebuildable</text>
+  </g>
+</g>
+
+<!-- ================================================================= -->
+<!-- DIGEST: in memory, inside both prediction tasks                    -->
+<!-- ================================================================= -->
+<g transform="translate(0, 200)">
+  <rect class="phase-bg" x="40" y="10" width="1120" height="300" rx="6"/>
+  <text class="phase-label" x="60" y="30">digest</text>
+  <text class="phase-title" x="60" y="48">Digest, decoys and entrapment, in memory inside both prediction tasks (Digester, EntrapmentFastaBuilder)</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">EntrapmentFastaParityTest (byte-identical to the 2.2.0 build with the gate off, to maccoss/Carafe main with it on), EntrapmentFastaBuilderTest, ProteinDigestTest</tspan></text>
+
+  <rect class="st-parity" x="80" y="70" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="90" text-anchor="middle">Digest --fasta (Carafe's enzyme table, missed cleavages, length, N-terminal Met clipping, I2L)</text>
+  <text class="stage-desc"  x="600" y="104" text-anchor="middle">Carafe's effective defaults, not its help text's (--enzyme 2, --miss-c 1, 7-35 residues, charges 2-3); the non-specific NoCut enzyme forces 100 missed cleavages; one entry per unique sequence</text>
+
+  <path class="flow" d="M 600 112 L 600 128" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="130" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="150" text-anchor="middle">Decoys, and with --entrapment the entrapment peptides, grouped under one pair id</text>
+  <text class="stage-desc"  x="600" y="164" text-anchor="middle">decoy = reverse preserving the C-terminus (Java's random, seed 24); entrapment = shuffled anagram of its target (seed 42) or a foreign proteome's peptides (--entrapment-fasta)</text>
+
+  <path class="flow" d="M 600 172 L 600 186" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-design" x="80" y="188" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="208" text-anchor="middle">Decoy and entrapment similarity gate (max fragment overlap 0.40)</text>
+  <text class="stage-desc"  x="600" y="222" text-anchor="middle">a shuffle that shares too many fragment masses with its target is redrawn, not dropped (maccoss/Carafe main; the 2.2.0 build and Noble-Lab/Carafe predate it; CarafeSharp --no-similarity-gate reproduces them)</text>
+
+  <path class="flow" d="M 600 230 L 600 244" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-beyond" x="80" y="246" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="266" text-anchor="middle">Hand the peptides to the predictor: (peptide, proteins, kind, pair id), no peptide FASTA, no manifest</text>
+  <text class="stage-desc"  x="600" y="280" text-anchor="middle">one digest feeds the predictor and the .blib's Proteins and DecoyPairs; only --entrapment writes a file, the FDRBench quartets in out.predicted/pairing.tsv; seconds of CPU, seeded</text>
+</g>
+
+<!-- With --entrapment the quartets go to the final library only -->
+<path class="flow-loop" d="M 1160 340 L 1182 340 L 1182 1930 L 1080 1930" marker-end="url(#lp-arrow-loop)"/>
+<text class="flow-loop-label" x="1178" y="1130" text-anchor="middle" transform="rotate(-90 1178 1130)">with --entrapment: the quartets, to PredictLibrary only; the training library is entrapment-free</text>
+
+<path class="flow" d="M 600 510 L 600 532" marker-end="url(#lp-arrow)"/>
+
+<!-- ================================================================= -->
+<!-- PREDICTION: one code path, two tasks                               -->
+<!-- ================================================================= -->
+<g transform="translate(0, 534)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PredictTrainingLibrary   (and --task PredictLibrary, the same path)</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">CarafeSharp &#183; library prediction</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>the digest (in memory), pretrained AlphaPeptDeep + Chronologer (bundled), or --model to start from a saved model</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">out.predicted/initial.blib</tspan>  (mode 2; RT in iRT: the pretrained Chronologer's hydrophobic index by one fixed line)</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan>--rt-model chronologer|alphapeptdeep, --lf-top-n-frag, --lf-min-n-frag, --ccs adds 1/K0, --device</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-role">GPU or CPU; Stellar 3 min, Astral 18 min (GTX 1650)</text>
+</g>
+
+<!-- Modes 1 and 3 run this path as PredictLibrary, straight to the search -->
+<path class="flow-loop" d="M 40 840 L 18 840 L 18 2320 L 120 2320" marker-end="url(#lp-arrow-loop)"/>
+<text class="flow-loop-label" x="22" y="1580" text-anchor="middle" transform="rotate(-90 22 1580)">modes 1 and 3: this path is --task PredictLibrary, writing out.predicted.blib, then the search</text>
+
+<path class="flow" d="M 600 632 L 600 646" marker-end="url(#lp-arrow)"/>
+
+<g transform="translate(0, 648)">
+  <rect class="phase-bg" x="40" y="10" width="1120" height="360" rx="6"/>
+  <text class="phase-label" x="60" y="30">predict</text>
+  <text class="phase-title" x="60" y="48">Library prediction (LibraryGenerator): the training library and the library, one code path</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">LibraryParityTest, CarafeParityTest, PeptdeepFeaturizerTest, PretrainedModelTest, ChronologerModelTest, BlibLibraryWriterTest</tspan></text>
+
+  <rect class="st-parity" x="80" y="70" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="90" text-anchor="middle">List every peptidoform and precursor</text>
+  <text class="stage-desc"  x="600" y="104" text-anchor="middle">fixed and variable modifications by Carafe's ids (alphabase masses, Java's order), charges 2-3, precursor m/z window; batches of 200,000 forms, chunks of 10,000 in peptidoform mass order</text>
+
+  <path class="flow" d="M 600 112 L 600 128" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="130" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="150" text-anchor="middle">MS2 prediction: AlphaPeptDeep's ModelMS2Bert, featurized as peptdeep does (NCE, instrument, charge)</text>
+  <text class="stage-desc"  x="600" y="164" text-anchor="middle">b/y 1+ and 2+ per cleavage position (the "slots"); pretrained predictions match Carafe's (cosine over 0.99999998 on the shared precursors)</text>
+
+  <path class="flow" d="M 600 172 L 600 186" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-beyond" x="80" y="188" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="208" text-anchor="middle">RT prediction: Chronologer by default (--rt-model chronologer), AlphaPeptDeep's LSTM/CNN as Carafe's (--rt-model alphapeptdeep)</text>
+  <text class="stage-desc"  x="600" y="222" text-anchor="middle">pretrained Chronologer predicts a hydrophobic index, scaled to iRT by one line (iRT = 7.254 x HI - 45.47); forms it cannot encode fall back to AlphaPeptDeep on the same scale</text>
+
+  <path class="flow" d="M 600 230 L 600 244" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="246" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="266" text-anchor="middle">Spectrum assembly: fragment m/z window, top N fragments (--lf-top-n-frag), minimums (--lf-min-n-frag, --lf-frag-n-min)</text>
+  <text class="stage-desc"  x="600" y="280" text-anchor="middle">a precursor below the minimum is left out, and a target and its decoy are kept or dropped together (DecoyPairGate), so no target faces no decoy in Osprey's competition</text>
+
+  <path class="flow" d="M 600 288 L 600 302" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-beyond" x="80" y="304" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="324" text-anchor="middle">Write the .blib (BlibLibraryWriter): RefSpectra, compressed peaks, annotations, Modifications, Proteins, RetentionTimes, DecoyPairs</text>
+  <text class="stage-desc"  x="600" y="338" text-anchor="middle">a writer thread one chunk behind prediction (1.36x; writing is hidden); doubles and floats, not Carafe's 4-decimal TSV; atomic commit; identical tables run to run on the GPU</text>
+</g>
+
+<path class="flow" d="M 600 1018 L 600 1040" marker-end="url(#lp-arrow)"/>
+
+<!-- ================================================================= -->
+<!-- SEARCH THE TUNING RUNS: Osprey, with the training export           -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1042)">
+  <rect class="task-hdr-bg-osprey" x="120" y="0" width="960" height="96" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring ... SecondPassFDR  --training-search</text>
+  <text x="1060" y="22" text-anchor="end" class="phase-owner">Osprey: the tuning runs, the training library</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">out.predicted/initial.blib</tspan>, the --training-input runs (in -i or not)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">out.predicted/training/&lt;stem&gt;.training.parquet</tspan> (the per-ion evidence), <tspan class="sc-exp">training.blib</tspan>, that analysis's sidecars</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan> (--cache-dir; the final search reuses it, so a tuning run also in -i is parsed once)</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-role">--training-export implied; per-run stages fan out as in part 2</text>
+</g>
+
+<path class="flow" d="M 600 1140 L 600 1152" marker-end="url(#lp-arrow)"/>
+
+<g transform="translate(0, 1154)">
+  <rect class="phase-bg" x="40" y="10" width="1120" height="130" rx="6"/>
+  <text class="phase-label" x="60" y="30">tuning search</text>
+  <text class="phase-title" x="60" y="48">Osprey DIA search of the tuning runs, with the training export</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">SubsetPipelineTest (TestSubsetLibraryBuildTuned, ...Stepwise), regression.ps1 -StepwiseOneCommand</tspan></text>
+
+  <rect class="st-osprey" x="80" y="70" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="90" text-anchor="middle">PerFileScoring &#8594; FirstPassFDR &#8594; PerFileRescoring (+ the training export) &#8594; SecondPassFDR</text>
+  <text class="stage-desc"  x="600" y="104" text-anchor="middle">the export is a PerFileRescoring product: one record per precursor at the reconciled peak, every ladder ion's matched flag, apex intensity, m/z error, XIC bounds, median-polish correlation and shared-peak count,</text>
+  <text class="stage-desc"  x="600" y="118" text-anchor="middle">plus the run's rt_max, collision energies, instrument model and isolation range in the footer. Reads .raw directly with vendor centroiding, so no msconvert.  <a class="stage-link" href="#search">part 2</a></text>
+</g>
+
+<path class="flow" d="M 600 1294 L 600 1316" marker-end="url(#lp-arrow)"/>
+
+<!-- ================================================================= -->
+<!-- TUNE: fine-tune on Osprey's evidence                               -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1318)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task TrainModel</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">CarafeSharp &#183; fine-tuning, no spectra read</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.training.parquet</tspan> per tuning run, pretrained models, or --model to tune a saved model further</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">out.model.zip</tspan> + Carafe's model folder <tspan class="sc-exp">out.predicted/model/</tspan> (ms2 + rt safetensors, rt_maps.json, metrics, meta.json)</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan>--tf all|ms2|rt, --rt-align kde|none, --rt-select best|median, --seed 2024, --nce, --ms-instrument, --activation, --analyzer</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-role">GPU or CPU; RT, then MS2</text>
+</g>
+
+<path class="flow" d="M 600 1416 L 600 1428" marker-end="url(#lp-arrow)"/>
+
+<g transform="translate(0, 1430)">
+  <rect class="phase-bg" x="40" y="10" width="1120" height="420" rx="6"/>
+  <text class="phase-label" x="60" y="30">tune</text>
+  <text class="phase-title" x="60" y="48">Training rows from Osprey's evidence, run alignment, fine-tuning (ModelTrainer, FineTuneRun)</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">OspreyMaskingParityTest, OspreyMaskingPolicyTest, OspreyTrainingSetTest, RtAlignmentTest, FineTuneLoopTest, FineTuneSamplingTest, CarafeFineTuneParityTest</tspan></text>
+
+  <rect class="st-design" x="80" y="70" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="90" text-anchor="middle">Training set: targets at run q within the cutoff, entrapment left out, one spectrum per precursor from its best run, one RT row per form (lowest q)</text>
+  <text class="stage-desc"  x="600" y="104" text-anchor="middle">Carafe matches peaks, extracts XICs and refines boundaries itself; CarafeSharp reads Osprey's reconciled peak and evidence instead (85.7-85.9% slot agreement on the June Stellar run)</text>
+
+  <path class="flow" d="M 600 112 L 600 128" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="130" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="150" text-anchor="middle">Carafe's masking rules per slot and per PSM (OspreyMaskingPolicy): matched-valid, unmatched-valid (trains to 0), or masked</text>
+  <text class="stage-desc"  x="600" y="164" text-anchor="middle">shared peak, correlation &gt;= --cor, boundary skew, m/z outside the scan window, intense low ordinals, ordinal floor (b1, y1); per PSM --nf, --min-n, --valid; intensities over the top ion</text>
+
+  <path class="flow" d="M 600 172 L 600 186" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-beyond" x="80" y="188" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="208" text-anchor="middle">Align the runs (--rt-align kde): each run's minutes onto the pretrained Chronologer's hydrophobic index, as Chronologer aligns its sources</text>
+  <text class="stage-desc"  x="600" y="222" text-anchor="middle">per run a KDE ridge (1,000+ forms), a robust LOESS (100-999) or a Theil-Sen line (15-99), made monotone; rows train on HI, the median map takes them back to minutes; one gradient or several is detected</text>
+
+  <path class="flow" d="M 600 230 L 600 244" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="246" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="266" text-anchor="middle">Fine-tune as ai.py v2 does: RT then MS2, Adam at 1e-4, cosine schedule with warmup, seed 2024, last epoch kept</text>
+  <text class="stage-desc"  x="600" y="280" text-anchor="middle">MS2: 20 epochs, batch 512, masked L1 over the slot grid; RT: 40 epochs, batch 1024, L1 on normalized RT; Carafe's test split and modification sampling; Chronologer's BatchNorm frozen for one run</text>
+
+  <path class="flow" d="M 600 288 L 600 302" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="304" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="324" text-anchor="middle">Held-out metrics: Pearson, cosine, spectral angle, Spearman; the fine-tuned MS2 model is used only if all four medians beat the pretrained</text>
+  <text class="stage-desc"  x="600" y="338" text-anchor="middle">the fine-tuned RT model is always used; model_evaluation_metrics.json records both; on the Stellar subset the pretrained MS2 model won, so that saved model holds only the RT model</text>
+
+  <path class="flow" d="M 600 346 L 600 360" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-beyond" x="80" y="362" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="382" text-anchor="middle">Save: Carafe's model folder (what PredictLibrary reads) and out.model.zip (a zip: manifest.json, the safetensors, rt_maps.json, metrics, meta)</text>
+  <text class="stage-desc"  x="600" y="396" text-anchor="middle">the manifest records what the model was trained on (instruments, activation, NCE, gradient, windows, charges, peptides, scores) for --model next time and CarafeSharp --model-info</text>
+</g>
+
+<path class="flow" d="M 600 1850 L 600 1872" marker-end="url(#lp-arrow)"/>
+
+<!-- ================================================================= -->
+<!-- PREDICT THE LIBRARY: the tuned models                              -->
+<!-- ================================================================= -->
+<g transform="translate(0, 1874)">
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PredictLibrary</text>
+  <text x="1060" y="22" text-anchor="end" class="task-hdr-role">CarafeSharp &#183; the predict path, tuned models</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>the digest (quartets with --entrapment), the tuned model folder <tspan class="sc-exp">out.predicted/model/</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">out.predicted.blib</tspan>  (RT in the tuning runs' minutes, or --rt-reference's run; iRT for different gradients)</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">out.predicted/pairing.tsv</tspan>  (only with --entrapment: the FDRBench quartets)</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-role">Stellar 967K precursors in 179 s, Astral 6.17M in 1,054 s (GTX 1650)</text>
+</g>
+
+<path class="flow" d="M 600 1972 L 600 1984" marker-end="url(#lp-arrow)"/>
+
+<g transform="translate(0, 1986)">
+  <rect class="phase-bg" x="40" y="10" width="1120" height="242" rx="6"/>
+  <text class="phase-label" x="60" y="30">predict again</text>
+  <text class="phase-title" x="60" y="48">The predict path again, three things changed</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">LibraryParityTest (the fine-tuned library against Carafe's), RegressionTest (CPU golden), PairingReconciliationTest</tspan></text>
+
+  <rect class="st-design" x="80" y="70" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="90" text-anchor="middle">The models are TrainModel's: the fine-tuned MS2 model when it won, the fine-tuned RT model always</text>
+  <text class="stage-desc"  x="600" y="104" text-anchor="middle">two different fine-tunes give two different libraries: against Carafe's, median sampled cosine 0.998-0.999 and median RT difference 0.016-0.017 min; CarafeSharp writes about one fewer weak fragment per precursor</text>
+
+  <path class="flow" d="M 600 112 L 600 128" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-beyond" x="80" y="130" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="150" text-anchor="middle">RT in minutes (rt_pred x rt_max): the median tuning run's, or --rt-reference's run; runs on different gradients give iRT, with their maps beside the model</text>
+  <text class="stage-desc"  x="600" y="164" text-anchor="middle">NCE, instrument, activation, analyzer and rt_max come from the tuning runs unless given; peptides, windows, charges and digest from this command line</text>
+
+  <path class="flow" d="M 600 172 L 600 186" marker-end="url(#lp-arrow)"/>
+
+  <rect class="st-parity" x="80" y="188" width="1040" height="42" rx="4"/>
+  <text class="stage-title" x="600" y="208" text-anchor="middle">With --entrapment: targets, decoys, entrapment targets and entrapment decoys, the pairs written whole under DecoyPairs</text>
+  <text class="stage-desc"  x="600" y="222" text-anchor="middle">entrapment is the true-FDP oracle of the search: the FDRBench input Osprey writes pairs each target with its entrapment through peptide_pair_index (pairing.tsv)</text>
+</g>
+
+<path class="flow" d="M 600 2238 L 600 2270" marker-end="url(#lp-arrow)"/>
+
+<!-- ================================================================= -->
+<!-- SEARCH: Osprey, every run                                          -->
+<!-- ================================================================= -->
+<g transform="translate(0, 2272)">
+  <rect class="task-hdr-bg-osprey" x="120" y="0" width="960" height="96" rx="8"/>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring ... SecondPassFDR</text>
+  <text x="1060" y="22" text-anchor="end" class="phase-owner">Osprey: every -i run, the predicted library</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">out.predicted.blib</tspan>, every -i run, <tspan class="sc-exp">out.predicted/pairing.tsv</tspan> (with --entrapment), <tspan class="sc-cache">the spectra cache</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">out.blib</tspan> and its sidecars; with --fdrbench the FDRBench input; with --model-diagnostics the report</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">key&#160;</tspan>entrapment FDP from FDRBench is the oracle the library build is judged by: measured FDP against Osprey's reported q at 1%</text>
+  <text x="1060" y="88" text-anchor="end" class="task-hdr-role">the four stage tasks of part 2, unchanged</text>
+</g>
+
+<path class="flow" d="M 600 2370 L 600 2382" marker-end="url(#lp-arrow)"/>
+
+<g transform="translate(0, 2384)">
+  <rect class="phase-bg" x="40" y="10" width="1120" height="130" rx="6"/>
+  <text class="phase-label" x="60" y="30">search</text>
+  <text class="phase-title" x="60" y="48">Osprey DIA search of every run with the predicted library</text>
+  <text x="1115" y="30" text-anchor="end"><tspan class="badge-label badge-test">Tests: </tspan><tspan class="badge-value badge-test">Osprey's StellarGenDecoyEntrap regression leg (entrapment retained as the true-FDP oracle), the FDRBench validation</tspan></text>
+
+  <rect class="st-osprey" x="80" y="70" width="1040" height="56" rx="4"/>
+  <text class="stage-title" x="600" y="90" text-anchor="middle">PerFileScoring &#8594; FirstPassFDR &#8594; PerFileRescoring &#8594; SecondPassFDR, on the library's own decoys (no DecoyGenerator)</text>
+  <text class="stage-desc"  x="600" y="104" text-anchor="middle">the result the library build is measured by: identifications at matched entrapment FDP and wall time, against Carafe 2.2.0's arm of the same phases;</text>
+  <text class="stage-desc"  x="600" y="118" text-anchor="middle">tuning on runs that are then searched versus held-out tuning runs is the overtraining question the entrapment FDR answers.  <a class="stage-link" href="#search">part 2</a></text>
+</g>
+
+</svg>
+
+<h3 id="library-carafe">1.3 CarafeSharp on its own, and against Carafe 2.2.0</h3>
+<div class="notes">
+  <p>
+    <strong>CarafeSharp.exe, the library-only route.</strong> The library phases are CarafeSharp's
+    code, and <code>CarafeSharp.exe</code> stays as their front end without a search: it accepts
+    Carafe's command lines (Carafe's underscore spellings are accepted beside the hyphens) and
+    writes to files what the one command keeps in memory. Its training input is any Osprey search
+    run with <code>--training-export</code>, not only the one command's.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>CarafeSharp command line</th><th>Writes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Digest</td><td><code>--build-entrapment-fasta --db proteome.fasta [--entrapment]</code></td><td>the peptide FASTA and the FDRBench pairing manifest (sequence, decoy, proteins, peptide_type, peptide_pair_index), byte for byte as Carafe writes them</td></tr>
+      <tr><td>Predict</td><td><code>--db peptides.fasta --pairing-manifest pairing.tsv -o folder</code></td><td><code>folder/carafe_spectral_library.blib</code>; <code>--lf-type DIA-NN|EncyclopeDIA|Skyline</code> writes a TSV instead</td></tr>
+      <tr><td>Tune, then predict</td><td><code>-i &lt;exports&gt; --ms &lt;runs&gt; --db peptides.fasta -o folder</code></td><td><code>carafe_fine_tuned.model.zip</code> and Carafe's model folder, then the library, in one command</td></tr>
+      <tr><td>Predict with a saved model</td><td><code>--db peptides.fasta --model x.model.zip</code> (or <code>--model-dir</code>)</td><td>the library from the saved model's weights</td></tr>
+      <tr><td>Describe a model</td><td><code>--model-info x.model.zip</code></td><td>what it was trained on (from its manifest)</td></tr>
+      <tr><td>Prune a manifest</td><td><code>--reconcile-manifest</code></td><td>a manifest cut to the peptides a library kept (TSV-era; the <code>.blib</code>'s DecoyPairs carries the pairs)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Against Carafe 2.2.0, phase by phase</strong> (one end-to-end run per tool and dataset,
+    2026-09-28 and 29, Stellar HeLa <code>_21</code> and Astral HeLa <code>_55</code> as the tuning
+    runs, the same Osprey build searching both arms; measured with the stage-by-stage CarafeSharp
+    script that came before the one command, whose phases run the same code; the full account is
+    CarafeSharp's <code>docs/05-carafe-comparison.md</code>):
+  </p>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Result</th><th>Why</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Digest</td><td>Differs by design</td><td>The similarity gate from maccoss/Carafe main, which the 2.2.0 build predates; with <code>--no-similarity-gate</code> the peptide FASTAs are byte-identical.</td></tr>
+      <tr><td>Training library</td><td>The same library</td><td>Fragment lists identical on the shared precursors, cosine over 0.99999998; the precursor sets differ only by the redrawn decoys.</td></tr>
+      <tr><td>Search of the tuning run</td><td>Nearly the same IDs</td><td>Totals within 0.6%; precursor Jaccard 0.977 (Stellar) and 0.896 (Astral); the IDs one arm has sit near the 1% threshold.</td></tr>
+      <tr><td>Training set</td><td>85.7-85.9% slot agreement</td><td>Masking from Osprey's evidence rather than Carafe's own peak matching (CarafeSharp's <code>docs/02-masking.md</code>).</td></tr>
+      <tr><td>Tuned library</td><td>Two different fine-tunes</td><td>Median sampled cosine 0.998-0.999, median RT difference 0.016-0.017 min; about one fewer weak fragment per precursor.</td></tr>
+      <tr><td>Time</td><td>CarafeSharp 1.34x (Stellar) and 1.50x (Astral) faster end to end</td><td>No msconvert, and no second pass over the spectra.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    <strong>Library prediction</strong> (CarafeSharp's <code>docs/03-performance.md</code>, GeForce
+    GTX 1650, CUDA build, medians of interleaved runs): Stellar 967,226 precursors in 179 s, Astral
+    6,170,973 in 1,054 s, 1.36x faster since the writer thread; prediction is the whole cost and
+    writing is hidden. The phase is deterministic on the GPU: two runs of one build give identical
+    tables.
+  </p>
+  <p>
+    <strong>What CarafeSharp adds over Carafe</strong> (blue boxes): Chronologer as the default RT
+    model and its fine-tuning (<code>docs/07-chronologer.md</code>); run alignment onto the
+    hydrophobic index so runs of different gradients train one model; the saved
+    <code>.model.zip</code> that predicts any peptides later without training again
+    (<code>docs/06-saved-models.md</code>); the <code>.blib</code> writer with peak annotations and
+    whole decoy pairs; and training on Osprey's exports, with no spectra read. What it leaves to
+    Osprey (yellow): peak matching, XICs and boundaries, which Carafe computes itself and CarafeSharp
+    takes from the training export.
+  </p>
+  <p style="font-size: 11px; color: #757575;">
+    Sections 1.2 and 1.3 were CarafeSharp's own workflow page, drawn 2026-10-14 around the six stages
+    of <code>Run-CarafeSharpWorkflow.ps1</code>, and folded in here once the one command ran those
+    stages as its phases. The CarafeSharp command-line reference is
+    <code>pwiz_tools/CarafeSharp/Documentation/Help/en/CommandLine.html</code>.
+  </p>
+</div>
+</section>
+
+<section id="search">
+<h2>2. The search pipeline</h2>
+<p class="sub">
     Top-to-bottom data flow from mzML + spectral library to BiblioSpecLite
     (<code>.blib</code>) output, drawn around the join / per-file-fan-out
     boundaries that matter for HPC distribution. The four <code>--task</code>
@@ -80,9 +940,6 @@
     detail and end-to-end performance are in the tables near the bottom of the
     page.
   </p>
-</header>
-
-<main>
 <svg class="pipeline" viewBox="0 0 1200 2900" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
@@ -254,11 +1111,11 @@
 <!-- ================================================================= -->
 <g transform="translate(0, 286)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 2 files/run<title>Per run: .scores.parquet, .calibration.json. Plus caches outside the output directory: 1 .spectra.bin per run and 1 .libcache. 164 files at 82 runs.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileScoring<tspan class="task-hdr-count">   &#183; out: 2 files/run<title>Per run: .scores.parquet, .calibration.json. Plus caches outside the output directory: 1 .spectra.bin per run and, for a .tsv library, 1 derived .blib. 164 files at 82 runs.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; any batch size, 1..N nodes</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>spectral library (.blib / DIA-NN TSV), DIA mzML file(s)  &mdash; via  -i</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>, <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>   &#183;   validity stamped in each file</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.libcache</tspan>   &#183;   caches, written to --work-dir / --cache-dir; rebuildable</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-cache">&lt;stem&gt;.spectra.bin</tspan>, <tspan class="sc-cache">&lt;library-leaf&gt;.blib</tspan>   &#183;   caches, written to --work-dir / --cache-dir; rebuilt from their source, never upgraded</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: each node needs only its own runs</text>
 </g>
 
@@ -276,8 +1133,8 @@
   <text class="phase-title" x="60"  y="48">Library preparation</text>
 
   <rect class="st-done" x="80" y="70" width="460" height="42" rx="4"/>
-  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + binary cache</text>
-  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, .blib peaks typed b/y from m/z, .libcache for fast reload</text>
+  <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + derived library</text>
+  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, .blib peaks typed b/y from m/z, a .tsv's finished form kept as a .blib</text>
 
   <rect class="st-done" x="80" y="130" width="460" height="42" rx="4"/>
   <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>
@@ -403,11 +1260,11 @@
 
 <g transform="translate(0, 1484)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR<tspan class="task-hdr-count">   &#183; out: 4 files/run <tspan class="sc-exp">+ 2</tspan><title>Per run: .1st-pass.fdr_scores.bin, .reconciliation.json, .1st-pass.model.json, .1st-pass.stratum.json (protein-compact only). Experiment-wide: .1st-pass.fdr_experiment.bin, .1st-pass.retained_base_ids.bin. 330 files at 82 runs. --model-diagnostics adds 1, --fdrbench adds 2.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task FirstPassFDR<tspan class="task-hdr-count">   &#183; out: 1 file/run <tspan class="sc-exp">+ 5</tspan><title>Per run: .1st-pass.fdr_scores.bin. Experiment-wide, written once: .1st-pass.fdr_experiment.bin, .1st-pass.retained_base_ids.bin, .1st-pass.consensus.json, .1st-pass.model.json, .1st-pass.stratum.json (protein-compact only). 87 files at 82 runs. --model-diagnostics adds 1, --fdrbench adds 2.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; holds O(distinct), never O(runs x entries)</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>, <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>  (every run, derived from --input)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.1st-pass.model.json</tspan>, <tspan class="sc-run">.1st-pass.stratum.json</tspan>   &#183;   validity stamped in each file</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan> (compaction key)</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.consensus.json</tspan> (every run's plan reads it)   &#183;   validity stamped in each file</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan> (compaction key), <tspan class="sc-exp">.1st-pass.model.json</tspan>, <tspan class="sc-exp">.1st-pass.stratum.json</tspan></text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-exp">.1st-pass.model-diagnostics.json</tspan>, <tspan class="sc-exp">.model-diagnostics.html</tspan>  (--model-diagnostics)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every experiment-wide file to EVERY downstream node</text>
 </g>
@@ -420,10 +1277,10 @@
 <g transform="translate(0, 1600)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="500" rx="8"/>
   <text class="phase-label" x="60" y="24">stage 5</text>
-  <text class="phase-title" x="60" y="42">First-pass FDR + reconciliation planning</text>
+  <text class="phase-title" x="60" y="42">First-pass FDR + cross-run consensus</text>
   <text class="phase-shape-join" x="1115" y="24" text-anchor="end">join - needs all-run representation</text>
   <text class="phase-note"  x="60" y="58">First-pass FDR across all files. Runs Percolator SVM on the joined per-file scores, computes cross-run consensus RTs,</text>
-  <text class="phase-note"  x="60" y="72">refits per-file calibration, and emits a per-(file, entry) reconciliation plan. All work that needs all-file representation lives here.</text>
+  <text class="phase-note"  x="60" y="72">and writes them once for stage 6. Each run's refit and reconciliation plan are made in stage 6, on the node that rescores the run.</text>
 
   <!-- Sub-phase 1: first-pass Percolator -->
   <text class="phase-label" x="80" y="92" fill="#2e7d32">first-pass percolator</text>
@@ -441,20 +1298,20 @@
   <text class="stage-title" x="600" y="256" text-anchor="middle">Target-decoy competition + q-values (run + experiment x precursor + peptide) + first-pass compaction + first-pass protein FDR</text>
 
   <!-- Sub-phase 2: reconciliation planning -->
-  <text class="phase-label" x="80" y="296" fill="#ef6c00">reconciliation planning</text>
+  <text class="phase-label" x="80" y="296" fill="#ef6c00">cross-run consensus (one run resident at a time)</text>
 
   <rect class="st-done" x="80" y="306" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="326" text-anchor="middle">Multi-charge consensus per file (post-compaction)</text>
-  <text class="stage-desc"  x="600" y="340" text-anchor="middle">SelectRescoreTargets dump bit-identical (31,270 rows on Stellar 3-file)</text>
+  <text class="stage-title" x="600" y="326" text-anchor="middle">Consensus pass over every run's survivors</text>
+  <text class="stage-desc"  x="600" y="340" text-anchor="middle">consensus detections, passing base-id and precursor sets, compaction set, multi-charge target count</text>
 
   <rect class="st-done" x="80" y="366" width="1040" height="56" rx="4"/>
-  <text class="stage-title" x="600" y="386" text-anchor="middle">Cross-run consensus RTs + per-file calibration refit</text>
+  <text class="stage-title" x="600" y="386" text-anchor="middle">Cross-run consensus RTs -&gt; &lt;blib-stem&gt;.1st-pass.consensus.json</text>
   <text class="stage-desc"  x="600" y="400" text-anchor="middle">sigmoid(score)-weighted median, hard run_precursor_qvalue gate, protein-FDR rescue</text>
-  <text class="stage-desc"  x="600" y="414" text-anchor="middle">consensus + inv_predict + loess_fit + refit dumps bit-identical on Stellar + Astral 3-file</text>
+  <text class="stage-desc"  x="600" y="414" text-anchor="middle">consensus + inv_predict dumps bit-identical on Stellar + Astral 3-file</text>
 
   <rect class="st-done" x="80" y="440" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="460" text-anchor="middle">Reconciliation plan: per-(file, entry) {Keep | UseCwtPeak | ForcedIntegration}</text>
-  <text class="stage-desc"  x="600" y="474" text-anchor="middle">reconciliation dump bit-identical on Stellar (172,548 actions) + Astral (248,711 actions)</text>
+  <text class="stage-title" x="600" y="460" text-anchor="middle">Retained base_id summary -&gt; &lt;blib-stem&gt;.1st-pass.retained_base_ids.bin</text>
+  <text class="stage-desc"  x="600" y="474" text-anchor="middle">the compaction set every rescore node and stage 7 read; no per-run plan is written here</text>
 
   <!-- Inter-substep arrows (sub-phase 1) -->
   <path class="flow" d="M 600 144 L 600 160" marker-end="url(#arrow)"/>
@@ -471,11 +1328,11 @@
 
 <g transform="translate(0, 2116)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring<tspan class="task-hdr-count">   &#183; out: 3 files/run<title>Per run: .scores-reconciled.parquet and .2nd-pass.fdr_scores.bin, plus .2nd-pass.fdr_decoys.bin under protein-compact (2 files/run under transfer). 246 files at 82 runs. --training-export adds 1 per run.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring<tspan class="task-hdr-count">   &#183; out: 4 files/run<title>Per run: .reconciliation.json (the run's plan), .scores-reconciled.parquet and .2nd-pass.fdr_scores.bin, plus .2nd-pass.fdr_decoys.bin under protein-compact (3 files/run under transfer). 328 files at 82 runs. --training-export adds 1 per run.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; reads its own runs + the experiment baseline only</text>
-  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (derived from --input) + <tspan class="sc-run">.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-run">.1st-pass.model.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan></text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan>   &#183;   resident baseline</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (pass-2 worker, every run)   &#183;   validity stamped in each file</text>
+  <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (derived from --input) + <tspan class="sc-run">.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.{fdr_experiment.bin, retained_base_ids.bin, consensus.json, model.json, stratum.json}</tspan>   &#183;   resident baseline</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.scores-reconciled.parquet</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan>   &#183;   one stamp across the run's set</text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.training.parquet</tspan>  (--training-export)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: the run's own set + every experiment-wide file</text>
 </g>
@@ -490,12 +1347,12 @@
   <text class="phase-label" x="60" y="24">stage 6</text>
   <text class="phase-title" x="60" y="42">Per-file rescore + gap-fill + parquet write-back</text>
   <text class="phase-shape-fanout" x="1115" y="24" text-anchor="end">per-run fan-out - 1..N nodes</text>
-  <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file independently reloads its mzML, re-invokes the search engine with the reconciled boundary overrides,</text>
+  <text class="phase-note"  x="60" y="58">Second per-file fan-out. Each file plans its reconciliation from the cross-run consensus, reloads its spectra, re-scores at the planned boundaries,</text>
   <text class="phase-note"  x="60" y="72">runs the gap-fill two-pass for missing precursors, and writes a SEPARATE &lt;stem&gt;.scores-reconciled.parquet - never back over its input. No cross-run work.</text>
 
   <rect class="st-done" x="80" y="90" width="1040" height="42" rx="4"/>
-  <text class="stage-title" x="600" y="110" text-anchor="middle">Per-file rescore at reconciled boundaries</text>
-  <text class="stage-desc"  x="600" y="124" text-anchor="middle">consensus + reconciliation overlay; cross-impl byte-parity validated on Stellar + Astral</text>
+  <text class="stage-title" x="600" y="110" text-anchor="middle">Per-run plan (refit, {Keep | UseCwtPeak | ForcedIntegration}, gap-fill targets), then rescore</text>
+  <text class="stage-desc"  x="600" y="124" text-anchor="middle">plan written to &lt;stem&gt;.reconciliation.json before the rescore; cross-impl parity validated on Stellar + Astral</text>
 
   <rect class="st-done" x="80" y="148" width="1040" height="42" rx="4"/>
   <text class="stage-title" x="600" y="168" text-anchor="middle">Gap-fill (two-pass: CWT with prefilter off, then forced integration)</text>
@@ -519,7 +1376,7 @@
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR<tspan class="task-hdr-count">   &#183; out: <tspan class="sc-exp">4 files</tspan><title>Experiment-wide: the .blib, .protein_groups.tsv, .stats.tsv and .2nd-pass.fdr_experiment.bin. No per-run file in any pass-2 mode. --model-diagnostics adds 2 (product and page), --fdrbench adds 2.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (every run - one parquet per run, no <tspan class="sc-run">.scores.parquet</tspan> fallback), <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (worker)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.model.json</tspan>, <tspan class="sc-run">.1st-pass.stratum.json</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan></text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>   &#183;   <tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.{fdr_experiment.bin, retained_base_ids.bin, model.json, stratum.json}</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">.protein_groups.tsv</tspan>, <tspan class="sc-exp">.stats.tsv</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>   &#183;   validity stamped in the .blib and the sidecar</text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-exp">.2nd-pass.model-diagnostics.json</tspan>, <tspan class="sc-exp">.model-diagnostics.html</tspan>  (--model-diagnostics)</text>
   <text x="140" y="104" class="task-hdr-relay">holds O(distinct) &#183; folds the runs one at a time, rebuilding each from its own artifacts and dropping it</text>
@@ -534,8 +1391,8 @@
 <!-- protein parsimony / picked-protein FDR, and .blib SQLite output;   -->
 <!-- they all run on SecondPassFDR in a single process. Mirrors the     -->
 <!-- way Stage 5 already absorbs many sub-steps (first-pass Percolator, -->
-<!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
-<!-- planning) under the FirstPassFDR phase.                            -->
+<!-- experiment-level FDR, first-pass protein FDR, the cross-run       -->
+<!-- consensus) under the FirstPassFDR phase.                           -->
 <!-- ================================================================= -->
 <path class="flow" d="M 600 2620 L 600 2638" marker-end="url(#arrow)"/>
 
@@ -563,9 +1420,7 @@
 </g>
 
 </svg>
-</main>
-
-<footer>
+<div class="notes">
   <p>
     <strong>Cross-impl parity (Stellar <code>--resolution unit</code>, Astral
     <code>--resolution hram</code>):</strong>
@@ -934,6 +1789,8 @@
     above — lives in the completed TODOs at
     <code>pwiz-ai/todos/completed/TODO-*osprey*.md</code>.
   </p>
-</footer>
+</div>
+</section>
+</main>
 </body>
 </html>

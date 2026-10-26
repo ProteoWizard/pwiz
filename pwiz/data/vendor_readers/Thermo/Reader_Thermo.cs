@@ -567,7 +567,8 @@ public sealed class Reader_Thermo : IReader
                 or CVID.MS_Orbitrap_Exploris_GC_240
                 or CVID.MS_Orbitrap_Exploris_GC_MS
                 or CVID.MS_Orbitrap_Exploris_480
-                or CVID.MS_Orbitrap_Excedion_Pro => OrbitrapQuadHybridRecipe,
+                or CVID.MS_Orbitrap_Excedion_Pro
+                or CVID.MS_Orbitrap_Excedion => OrbitrapQuadHybridRecipe,
 
             // Exactive (no quad pre-filter): orbitrap + inductive.
             CVID.MS_Exactive or CVID.MS_Exactive_Plus => ExactiveRecipe,
@@ -578,15 +579,16 @@ public sealed class Reader_Thermo : IReader
             // LTQ-FT family: FT-ICR + linear trap (two ICs).
             CVID.MS_LTQ_FT or CVID.MS_LTQ_FT_Ultra => LtqFtRecipe,
 
-            // Orbitrap Fusion / Lumos / ETD / Ascend / IDX / IQX / Eclipse: quad+orbitrap +
-            // quad+linear-trap (two ICs).
+            // Orbitrap Fusion / Lumos / ETD / Ascend / IDX / IQX / Eclipse / Tribrid Apex:
+            // quad+orbitrap + quad+linear-trap (two ICs).
             CVID.MS_Orbitrap_Fusion
                 or CVID.MS_Orbitrap_Fusion_Lumos
                 or CVID.MS_Orbitrap_Fusion_ETD
                 or CVID.MS_Orbitrap_Ascend
                 or CVID.MS_Orbitrap_ID_X
                 or CVID.MS_Orbitrap_IQ_X
-                or CVID.MS_Orbitrap_Eclipse => FusionRecipe,
+                or CVID.MS_Orbitrap_Eclipse
+                or CVID.MS_Orbitrap_Tribrid_Apex => FusionRecipe,
 
             // LTQ-Orbitrap family: orbitrap + linear-trap (two ICs, no quad pre-filter).
             // Also includes the MALDI LTQ Orbitrap variants — cpp's switch puts these in the

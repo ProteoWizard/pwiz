@@ -323,6 +323,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline chooses between the CPU and the GPU when it first predicts a library. Restart Skyline to change it..
+        /// </summary>
+        public static string BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_G" +
+                        "PU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
         /// </summary>
         public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
@@ -340,7 +350,53 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Download {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download the NVIDIA CUDA runtime..
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk..
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_ru" +
+                        "ntime", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Limited or no support for: {0}.
+        /// </summary>
+        public static string BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for an NVIDIA GPU.
+        /// </summary>
+        public static string BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Access violation attempting to write to {0}..
         /// </summary>
@@ -406,7 +462,43 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuned Carafe models.
+        /// </summary>
+        public static string EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The model {0} already exists..
+        /// </summary>
+        public static string EditCarafeModelDlg_OkDialog_The_model__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_OkDialog_The_model__0__already_exists_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a valid fine-tuned Carafe model..
+        /// </summary>
+        public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library {0}.
         /// </summary>
@@ -427,6 +519,33 @@ namespace pwiz.Skyline.SettingsUI {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to {0} min gradient.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails__0__min_gradient {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails__0__min_gradient", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NCE {0}.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails_NCE__0_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails_NCE__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}-{1}.
+        /// </summary>
+        public static string CarafeModelChoice_PrecursorMzRange__0___1_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_PrecursorMzRange__0___1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Window width must be an integer value when optimize window placement is selected..
         /// </summary>
@@ -2185,7 +2304,43 @@ namespace pwiz.Skyline.SettingsUI {
                         "n_any_spectral_libraries_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide q-value.
+        /// </summary>
+        public static string GlobalQValueFilterControls_LevelItem_Peptide_q_value {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Peptide_q_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor q-value.
+        /// </summary>
+        public static string GlobalQValueFilterControls_LevelItem_Precursor_q_value {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Precursor_q_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein q-value.
+        /// </summary>
+        public static string GlobalQValueFilterControls_LevelItem_Protein_q_value {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Protein_q_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The q-value cutoff must be a number between 0 and 1, or empty to add every entry..
+        /// </summary>
+        public static string GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to on line {0}.
         /// </summary>
@@ -2971,7 +3126,16 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__existing", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} library entries fail the global cutoff and will not be added..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0} proteins,.
         /// </summary>
@@ -3251,7 +3415,7 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("ViewLibraryDlg_MatchModifications_Yes", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Updating list of peptides.
         /// </summary>

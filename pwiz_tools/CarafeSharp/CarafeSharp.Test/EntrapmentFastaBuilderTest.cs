@@ -153,7 +153,8 @@ namespace pwiz.CarafeSharp.Test
                     var result = Build(build.Arguments, targets, foreign, outputFolder);
                     Assert.IsTrue(result.KeptQuartets > 0, build.Name);
                     string fastaSha = Sha256File(Path.Combine(outputFolder, @"peptides.fasta"));
-                    string manifestSha = Sha256File(Path.Combine(outputFolder, @"pairing.tsv"));
+                    // Carafe wrote FDRBench's five columns; the entrapment_method column is cut first.
+                    string manifestSha = Sha256File(TestData.FdrBenchColumnsOf(Path.Combine(outputFolder, @"pairing.tsv")));
                     TestContext.WriteLine(@"{0}: {1} quartets, FASTA {2}, manifest {3}", build.Name, result.KeptQuartets,
                         fastaSha == build.FastaSha256 ? @"match" : @"DIFFERS", manifestSha == build.ManifestSha256 ? @"match" : @"DIFFERS");
                     if (fastaSha != build.FastaSha256 || manifestSha != build.ManifestSha256)
@@ -225,7 +226,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestCommandLine()
         {
             // Carafe's effective defaults, not its help text's.
-            var build = CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"out.fasta", @"-db", @"in.fasta" });
+            var build = CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"out.fasta", @"--db", @"in.fasta" });
             Assert.AreEqual(CarafeCommandMode.build_entrapment_fasta, build.Mode);
             var settings = build.BuildSettings;
             Assert.AreEqual(@"in.fasta", settings.InputFasta);
@@ -249,9 +250,9 @@ namespace pwiz.CarafeSharp.Test
             // down collapses to its minimum, and options these modes do not read are ignored.
             settings = CarafeCommandLine.Parse(new[]
             {
-                @"-build_entrapment_fasta", @"out.fasta", @"-db=in.fasta", @"-enzyme", @"0", @"-enzyme", @"2", @"-miss_c", @"1",
-                @"-entrapment_seed", @"-5", @"-min_pep_charge", @"3", @"-max_pep_charge", @"2", @"-entrapment", @"-no_similarity_gate",
-                @"-ignore_pairing_errors", @"-o", @"ignored", @"-I2L", @"stray", @"-entrapment_ratio", @" 0.5d ",
+                @"--build-entrapment-fasta", @"out.fasta", @"--db=in.fasta", @"--enzyme", @"0", @"--enzyme", @"2", @"--miss-c", @"1",
+                @"--entrapment-seed", @"-5", @"--min-pep-charge", @"3", @"--max-pep-charge", @"2", @"--entrapment", @"--no-similarity-gate",
+                @"--ignore-pairing-errors", @"--o", @"ignored", @"--i2l", @"stray", @"--entrapment-ratio", @" 0.5d ",
             }).BuildSettings;
             Assert.AreEqual(@"in.fasta", settings.InputFasta);
             Assert.AreEqual(0, settings.Digest.EnzymeIndex);
@@ -261,10 +262,10 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsFalse(settings.SimilarityGate);
             Assert.IsFalse(settings.FailOnPairingViolation);
             Assert.AreEqual(0.5, settings.EntrapmentRatio);
-            Assert.AreEqual(18, CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"o", @"-db", @"i", @"-enzyme", @"nocut" })
+            Assert.AreEqual(18, CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"o", @"--db", @"i", @"--enzyme", @"nocut" })
                 .BuildSettings.Digest.EnzymeIndex);
 
-            var reconcile = CarafeCommandLine.Parse(new[] { @"-reconcile_manifest", @"out.tsv", @"-manifest", @"in.tsv", @"-predicted_library", @"lib.blib" });
+            var reconcile = CarafeCommandLine.Parse(new[] { @"--reconcile-manifest", @"out.tsv", @"--manifest", @"in.tsv", @"--predicted-library", @"lib.blib" });
             Assert.AreEqual(CarafeCommandMode.reconcile_manifest, reconcile.Mode);
             Assert.AreEqual(@"out.tsv", reconcile.ReconcileManifestOut);
             Assert.AreEqual(@"in.tsv", reconcile.ReconcileManifestIn);
@@ -279,22 +280,24 @@ namespace pwiz.CarafeSharp.Test
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 1.5");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 0.05");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme 19");
-            AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme Trypsin");
+            // An enzyme name is accepted (CarafeSharp takes any name in the table, Carafe only NoCut);
+            // one not in the table is refused.
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme NotAnEnzyme");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -not_an_option");
             AssertCommandLineError(@"-build_entrapment_fasta o -db -entrapment");
             AssertCommandLineError(@"-reconcile_manifest o -manifest m");
             // -db on its own is library prediction, which takes a FASTA.
-            Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"-db", @"i.fasta" }).Mode);
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"i" }));
+            Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"--db", @"i.fasta" }).Mode);
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"i" }));
         }
 
         private static EntrapmentFastaResult Build(string arguments, string targets, string foreign, string outputFolder)
         {
             var args = new List<string>
             {
-                @"-build_entrapment_fasta", Path.Combine(outputFolder, @"peptides.fasta"),
-                @"-db", targets,
-                @"-manifest", Path.Combine(outputFolder, @"pairing.tsv"),
+                @"--build-entrapment-fasta", Path.Combine(outputFolder, @"peptides.fasta"),
+                @"--db", targets,
+                @"--manifest", Path.Combine(outputFolder, @"pairing.tsv"),
             };
             // Substituted after splitting: the test folder's path can contain spaces.
             args.AddRange(arguments.Split(' ').Select(arg => arg == FOREIGN_PLACEHOLDER ? foreign : arg));
@@ -323,8 +326,8 @@ namespace pwiz.CarafeSharp.Test
                 @">db2|ACC5_pep00001|ACC5", @"MSTNPKPQRKTKRNTNRRPQDVKFPGGGQIVGGVYLLPRRGPRLGVRATRKTSERSQPR",
             }, ReadLfLines(Path.Combine(folder, @"peptides.fasta")));
             var manifest = ReadLfLines(Path.Combine(folder, @"pairing.tsv"));
-            Assert.AreEqual(PairingManifest.HEADER, manifest[0]);
-            Assert.AreEqual("K\tNo\tsp|P10010|SINGLE_HUMAN\ttarget\t1", manifest[2]);
+            Assert.AreEqual(PairingManifest.HEADER_WITH_ENTRAPMENT_METHOD, manifest[0]);
+            Assert.AreEqual("K\tNo\tsp|P10010|SINGLE_HUMAN\ttarget\t1\t", manifest[2]);
             Assert.AreEqual(10, manifest.Length);
         }
 
@@ -333,9 +336,9 @@ namespace pwiz.CarafeSharp.Test
         {
             var manifest = ReadLfLines(manifestPath);
             CollectionAssert.Contains(manifest,
-                "DAHKSEVAHR\tNo\tsp|P10001|ALPHA_HUMAN;tr|P10001|ALPHA_HUMAN;sp|plainident|plainident\ttarget\t6");
+                "DAHKSEVAHR\tNo\tsp|P10001|ALPHA_HUMAN;tr|P10001|ALPHA_HUMAN;sp|plainident|plainident\ttarget\t6\t");
             CollectionAssert.Contains(manifest,
-                "HAVESKHADR\tYes\tdecoy_sp|P10001|ALPHA_HUMAN;decoy_tr|P10001|ALPHA_HUMAN;decoy_sp|plainident|plainident\tdecoy\t6");
+                "HAVESKHADR\tYes\tdecoy_sp|P10001|ALPHA_HUMAN;decoy_tr|P10001|ALPHA_HUMAN;decoy_sp|plainident|plainident\tdecoy\t6\t");
         }
 
         /// <summary>
@@ -350,7 +353,16 @@ namespace pwiz.CarafeSharp.Test
             WriteLibrary(tsv, librarySequences);
             string reconciled = Path.Combine(folder, @"reconciled.tsv");
             var result = PairingManifestReconciler.Run(manifest, tsv, reconciled);
-            Assert.AreEqual(RECONCILED_SHA256, Sha256File(reconciled));
+            Assert.AreEqual(RECONCILED_SHA256, Sha256File(TestData.FdrBenchColumnsOf(reconciled)));
+            // The entrapment_method column survives reconciliation: on the p_target rows alone.
+            var reconciledLines = ReadLfLines(reconciled);
+            Assert.AreEqual(PairingManifest.HEADER_WITH_ENTRAPMENT_METHOD, reconciledLines[0]);
+            foreach (string line in reconciledLines.Skip(1))
+            {
+                string[] fields = line.Split('\t');
+                Assert.AreEqual(6, fields.Length, line);
+                Assert.AreEqual(fields[3] == PairingManifest.KIND_P_TARGET ? PairingManifest.ENTRAPMENT_METHOD_SHUFFLE : string.Empty, fields[5], line);
+            }
             Assert.AreEqual(99, result.GroupsIn);
             Assert.AreEqual(11, result.GroupsKept);
             Assert.AreEqual(88, result.GroupsDropped);
@@ -365,7 +377,7 @@ namespace pwiz.CarafeSharp.Test
             WriteBlib(blib, librarySequences);
             string fromBlib = Path.Combine(folder, @"reconciled-blib.tsv");
             PairingManifestReconciler.Run(manifest, blib, fromBlib);
-            Assert.AreEqual(RECONCILED_SHA256, Sha256File(fromBlib));
+            Assert.AreEqual(RECONCILED_SHA256, Sha256File(TestData.FdrBenchColumnsOf(fromBlib)));
             TestContext.WriteLine(@"reconciled: {0}/{1} groups, {2}/{3} rows", result.GroupsKept, result.GroupsIn, result.RowsKept, result.RowsIn);
         }
 

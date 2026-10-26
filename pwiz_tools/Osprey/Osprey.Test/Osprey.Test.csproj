@@ -7,6 +7,12 @@
     <GenerateProgramFile>true</GenerateProgramFile>
     <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>
+    <!-- The libtorch runtime (torch\cpu) and the pretrained models come with the Osprey project's
+         output, so the one-command library build runs in-process in SubsetPipelineTest the way
+         Osprey.exe runs it: the runtime chosen and loaded by LibTorchRuntimes, never found beside
+         TorchSharp.dll - an output folder built before this layout still holds one there, which
+         the build removes (LibTorch.targets). -->
+    <RemoveLibTorchBesideTorchSharp>true</RemoveLibTorchBesideTorchSharp>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />

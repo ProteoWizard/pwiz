@@ -491,7 +491,7 @@ namespace pwiz.Osprey.Test
             // Flags (long or short) and file extensions, the tokens a user types or matches. A
             // hyphen after a format hole is a compound word ("{0}-fold"), not a flag.
             var resxToken = new Regex(@"(?<![\w}-])--?[a-z][a-z0-9-]*|(?<![\w{}])\.(?:[\w-]+\.)*" +
-                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|libcache|html|sln)\b");
+                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|html|sln)\b");
             foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
             {
                 var resxRoot = XDocument.Load(file).Root;
