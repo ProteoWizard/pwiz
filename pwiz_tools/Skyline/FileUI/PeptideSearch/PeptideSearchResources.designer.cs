@@ -1140,7 +1140,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
                 return ResourceManager.GetString("SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The log file {0} has not been written yet..
+        /// </summary>
+        public static string SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_ {
+            get {
+                return ResourceManager.GetString("SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>

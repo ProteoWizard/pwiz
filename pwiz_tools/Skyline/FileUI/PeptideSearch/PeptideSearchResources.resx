@@ -449,6 +449,9 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_" xml:space="preserve">
     <value>Osprey did not produce a spectral library.</value>
   </data>
+  <data name="SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_" xml:space="preserve">
+    <value>The log file {0} has not been written yet.</value>
+  </data>
   <data name="OspreySearchDlg_AddSearchModificationsToDocument_Added_the_modifications_of_an_Osprey_search" xml:space="preserve">
     <value>Added the modifications of an Osprey search</value>
   </data>

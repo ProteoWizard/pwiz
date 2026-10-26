@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -1172,6 +1173,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = progressBar.Visible = true;
+            // The bar names the task Osprey is on (OspreyProgressMonitor) while the run lasts, and
+            // the Open Log button opens the console output teed to the working folder.
+            SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);
+            SetLogFilePath(Path.Combine(SearchConfig.WorkDirectory, OspreyHelpers.STDOUT_LOG_NAME));
 
             _cancelToken = new CancellationTokenSource();
 
@@ -1190,10 +1195,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 success = Search(_cancelToken, status);
 
-                Invoke(new MethodInvoker(() => UpdateSearchEngineProgressMilestone(status, success, status.SegmentCount,
-                    Resources.DDASearchControl_SearchProgress_Search_canceled,
-                    PeptideSearchResources.DDASearchControl_SearchProgress_Search_failed,
-                    Resources.DDASearchControl_SearchProgress_Search_done)));
+                Invoke(new MethodInvoker(() =>
+                {
+                    SetProgressBarDisplayStyle(ProgressBarDisplayText.Percentage);
+                    UpdateSearchEngineProgressMilestone(status, success, status.SegmentCount,
+                        Resources.DDASearchControl_SearchProgress_Search_canceled,
+                        PeptideSearchResources.DDASearchControl_SearchProgress_Search_failed,
+                        Resources.DDASearchControl_SearchProgress_Search_done);
+                }));
             }
 
             Invoke(new MethodInvoker(() =>

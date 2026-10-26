@@ -786,6 +786,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = progressBar.Visible = true;
+            // The Open Log button opens DIA-NN's console output, teed beside the document as it runs
+            string documentDir = Path.GetDirectoryName(HostDialog.SkylineWindow.DocumentFilePath);
+            SetLogFilePath(string.IsNullOrEmpty(documentDir) ? null : Path.Combine(documentDir, DiannHelpers.STDOUT_LOG_NAME));
 
             _cancelToken = new CancellationTokenSource();
 

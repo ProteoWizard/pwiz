@@ -221,6 +221,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.Contains(commandLine, @"--enzyme 1 ");   // Carafe's Trypsin, matched on behavior
                 AssertEx.Contains(commandLine, @"--min-pep-charge 2 ", @"--max-pep-charge 3 "); // The DIA defaults for a default document
             AssertEx.Contains(commandLine, OspreyHelpers.ARG_CULTURE + @" " + CultureInfo.CurrentUICulture.Name); // Osprey writes in Skyline's language
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_TIMESTAMP); // The log on disk is stamped; the run page strips the stamps
                 AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_LIBRARY + @" "));
             }
             else
@@ -252,6 +253,9 @@ namespace pwiz.SkylineTestFunctional
             // Subscribe before Run, so an Osprey that fails at once cannot finish before the subscription.
             bool? searchSucceeded = null;
             searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
+            // An earlier search's console log rolls aside under its own last write before this one starts
+            string stdoutLogPath = Path.Combine(workDir, OspreyHelpers.STDOUT_LOG_NAME);
+            DateTime? previousLogWritten = File.Exists(stdoutLogPath) ? File.GetLastWriteTime(stdoutLogPath) : null;
             if (File.Exists(docBlibPath))
             {
                 var overwritePrompt = ShowDialog<MultiButtonMsgDlg>(searchDlg.NextPage);
@@ -282,7 +286,15 @@ namespace pwiz.SkylineTestFunctional
 
             AssertEx.AreEqual(docBlibPath, searchDlg.SearchControl.OutputLibraryPath);
             AssertEx.FileExists(docBlibPath);
-            AssertEx.FileExists(Path.Combine(workDir, OspreyHelpers.STDOUT_LOG_NAME));
+            // The run page's Open Log button opens the console output teed to the working folder
+            AssertEx.FileExists(stdoutLogPath);
+            RunUI(() =>
+            {
+                AssertEx.IsTrue(searchDlg.SearchControl.CanOpenLog);
+                AssertEx.AreEqual(stdoutLogPath, searchDlg.SearchControl.LogFilePath);
+            });
+            if (previousLogWritten.HasValue)
+                AssertEx.FileExists(FileTimeEx.GetTimeStampedPath(stdoutLogPath, previousLogWritten.Value));
         }
 
         /// <summary>
