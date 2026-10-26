@@ -136,10 +136,17 @@ namespace TestPerf
         // Full paths to the mzML the wizard searches.
         private string[] DiaSearchPaths => MZML_FILES.Select(f => Path.Combine(CacheDir, f)).ToArray();
 
+        // While this tutorial is a draft, its screenshots live under Documentation\Tutorial-Drafts.
+        protected override string TutorialDocumentationFolder => "Tutorial-Drafts";
+
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
-        public void TestDiannSearchTutorial()
+        public void TestDiannSearchTutorialDraft()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Name contains "Tutorial" so AbstractFunctionalTest's IsTutorial returns true,
             // which routes PauseForScreenShot output into
             // Documentation/Tutorials/<CoverShotName>/<lang>/ when -TakeScreenshots is used.

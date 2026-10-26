@@ -246,19 +246,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override bool IsRedrawRequired(Graphics g)
         {
-            if (base.IsRedrawRequired(g))
-                return true;
+            // Not short-circuited: a redraw for the base class reasons must not skip adding the labels
+            bool redrawRequired = base.IsRedrawRequired(g);
 
             // Have to call AddDotProductLabels twice, since the X-scale may not be up
             // to date before calling Draw.  If nothing changes, this will be a no-op
             if (DotProductLabelsVisible)
             {
                 int dotpLabelsCount = _dotpLabels.Count;
+                int labelHeight = _labelHeight;
                 AddDotProductLabels(g, ParentGroupNode, SumAreas);
-                if (dotpLabelsCount != _dotpLabels.Count)
-                    return true;
+                if (dotpLabelsCount != _dotpLabels.Count || labelHeight != _labelHeight)
+                    redrawRequired = true;
             }
-            return false;
+            return redrawRequired;
         }
 
         private PeptidesAndTransitionGroups GetSelectedPeptides()
@@ -967,7 +968,16 @@ namespace pwiz.Skyline.Controls.Graphs
             RemoveInvalidPointValues();
             AxisChange();
 
-            // Reformat Y-Axis for labels and whiskers
+            ReformatYAxisForLabels();
+        }
+
+        /// <summary>
+        /// Raises the Y-axis maximum to leave room above the bars for the dot-product labels and whiskers.
+        /// The label height is only known once the labels have been measured during a draw, so this is
+        /// called again from <see cref="AddDotProductLabels"/> when that height changes.
+        /// </summary>
+        private void ReformatYAxisForLabels()
+        {
             var maxY = GraphHelper.GetMaxY(CurveList,this);
             if ((DotProductLabelsVisible || DotProductLineVisible) && !YAxis.Scale.IsLog)
             {
@@ -1041,6 +1051,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (GraphObj pa in _dotpLabels)
                 GraphObjList.Remove(pa);
             _dotpLabels.Clear();
+            int previousLabelHeight = _labelHeight;
             _labelHeight = 0;
 
             if (visible)
@@ -1072,6 +1083,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     _dotpLabels.Add(textObj);
                 }
             }
+
+            // UpdateGraph scaled the Y-axis with the label height known then, which is 0 for a new pane,
+            // so without this the labels over the tallest bars are clipped above the chart
+            if (_labelHeight != previousLabelHeight)
+                ReformatYAxisForLabels();
         }
 
         private int? GetDotProductsPointSize(Graphics g)
