@@ -127,6 +127,22 @@ int main(int argc, char* argv[])
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("7600ZenoTOFMSMS_EAD_TestData.wiff2"), subsetConfig);
         }
 
+        {
+            // compound optimization (ACO-CE) wiff2 with triple-quad scan types: "ProductIon" MSn
+            // spectra with a CE per experiment, and "Q1MI" SIM - a SIM chromatogram by default,
+            // single-point SIM spectra (and no SIM chromatogram) with simAsSpectra
+            const char* acoCe = "ACO-CE-DKTGKN_2-332-Positive-2026-10-21-10-20-43.wiff2";
+            auto subsetConfig = config;
+            subsetConfig.indexRange = make_pair(0, 20);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile(acoCe), subsetConfig);
+
+            subsetConfig.simAsSpectra = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile(acoCe), subsetConfig);
+
+            subsetConfig.peakPicking = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile(acoCe), subsetConfig);
+        }
+
         result.check();
     }
     catch (exception& e)
