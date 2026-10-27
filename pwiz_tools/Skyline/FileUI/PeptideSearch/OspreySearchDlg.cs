@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -809,18 +808,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             lblTitle.Text = wizardPages.SelectedTab?.Text;
         }
 
-        /// <summary>
-        /// Places a page's control below its header text, filling the page to its borders and
-        /// stretching with it: the way every wizard page hosts the control that is its content.
-        /// </summary>
-        public static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header, int footer)
-            where TControl : UserControl
+        private static void AddPageControl(UserControl pageControl, TabPage tabPage, int border, int header, int footer)
         {
-            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pageControl.Location = new Point(border, header);
-            pageControl.Width = tabPage.Width - border * 2;
-            pageControl.Height = tabPage.Height - header - border - footer;
-            tabPage.Controls.Add(pageControl);
+            WizardPages.AddPageControl(pageControl, tabPage, border, header, footer);
         }
     }
 

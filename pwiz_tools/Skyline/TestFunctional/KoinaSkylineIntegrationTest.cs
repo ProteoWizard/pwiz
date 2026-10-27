@@ -279,6 +279,12 @@ namespace pwiz.SkylineTestFunctional
                 buildLibrary.LibraryPath = outBlib;
                 // buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
             });
+            // Next goes to the Predict For page, whose Finish needs precursors in the document
+            RunUI(() =>
+            {
+                buildLibrary.OkWizardPage();
+                Assert.AreEqual(BuildLibraryDlg.Pages.predict_for, buildLibrary.CurrentPage);
+            });
             if (newDocument)
             {
                 RunDlg<MessageDlg>(buildLibrary.OkWizardPage, dlg =>

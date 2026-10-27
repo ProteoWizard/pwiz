@@ -265,6 +265,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Osprey did not write the fine-tuned model {0}..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuning the model and running AlphaPeptDeep.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_the_model_and_running_AlphaPeptDeep {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_the_model_and_running_AlphaPeptDeep", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed at {0}..
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_ {

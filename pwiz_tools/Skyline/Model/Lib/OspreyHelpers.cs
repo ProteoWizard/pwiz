@@ -283,6 +283,16 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
+        /// A library's fine-tuned model: the model Build Library tuned before predicting the library,
+        /// beside the library and named after it (&lt;library&gt;.model.zip), a support file of the
+        /// library as the document's model is of the document, and added to the model list the same way.
+        /// </summary>
+        public static string GetLibraryModelPath(string libraryPath)
+        {
+            return GetDocumentModelPath(libraryPath);
+        }
+
+        /// <summary>
         /// True when the .blib at <paramref name="libraryPath"/> carries the DecoyPairs table Osprey
         /// and CarafeSharp write, which pairs each decoy with its target: the one case Osprey can
         /// search a library's own decoys (<c>--decoys-in-library</c>), as it does the library it
@@ -401,7 +411,10 @@ namespace pwiz.Skyline.Model.Lib
         /// existing library in its place) with the saved model to predict with and the runs to tune
         /// on, the output, the working folder, the libtorch runtimes folder shared with Skyline's own
         /// prediction, and the digest, modification, scoring and FDR settings. Paths are quoted;
-        /// numbers are written in the invariant culture, which Osprey reads them in.
+        /// numbers are written in the invariant culture, which Osprey reads them in. For Build
+        /// Library's fine-tune the runs are the precursor table (<see cref="OspreyConfig.PrecursorTablePath"/>):
+        /// the tuning runs are searched against the FASTA's library, and the tuned models predict
+        /// the table, with no search of the result.
         /// </summary>
         public static string BuildCommandLine(OspreyConfig config)
         {
@@ -409,10 +422,19 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(OspreyArgs))
                 sb.Append(OspreyArgs).Append(' ');
 
-            sb.Append(ARG_INPUT);
-            foreach (var file in config.DataFiles)
-                sb.Append(' ').Append(file.Quote());
-            sb.Append(' ');
+            if (config.PrecursorTablePath != null)
+            {
+                sb.Append(ARG_PRECURSORS).Append(' ').Append(config.PrecursorTablePath.Quote()).Append(' ');
+                if (!string.IsNullOrEmpty(config.Task))
+                    sb.Append(ARG_TASK).Append(' ').Append(config.Task).Append(' ');
+            }
+            else
+            {
+                sb.Append(ARG_INPUT);
+                foreach (var file in config.DataFiles)
+                    sb.Append(' ').Append(file.Quote());
+                sb.Append(' ');
+            }
 
             if (!string.IsNullOrEmpty(config.LibraryPath))
             {
@@ -422,7 +444,8 @@ namespace pwiz.Skyline.Model.Lib
             }
             else
             {
-                sb.Append(ARG_FASTA).Append(' ').Append(config.FastaPath.Quote()).Append(' ');
+                if (!string.IsNullOrEmpty(config.FastaPath))
+                    sb.Append(ARG_FASTA).Append(' ').Append(config.FastaPath.Quote()).Append(' ');
                 // A saved model is predicted with as it is, or, with tuning runs, is the model the
                 // tuning starts from; with neither Osprey predicts with the pretrained models.
                 if (!string.IsNullOrEmpty(config.ModelPath))
@@ -438,36 +461,44 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             sb.Append(ARG_OUTPUT).Append(' ').Append(config.OutputPath.Quote()).Append(' ');
-            sb.Append(ARG_WORK_DIR).Append(' ').Append(config.WorkDirectory.Quote()).Append(' ');
+            if (!string.IsNullOrEmpty(config.WorkDirectory))
+                sb.Append(ARG_WORK_DIR).Append(' ').Append(config.WorkDirectory.Quote()).Append(' ');
 
-            sb.Append(ARG_RESOLUTION).Append(' ').Append(config.Resolution).Append(' ');
-            AppendNumber(sb, ARG_FRAGMENT_TOLERANCE, config.FragmentTolerance);
-            sb.Append(ARG_FRAGMENT_UNIT).Append(' ').Append(config.FragmentUnit).Append(' ');
-            AppendNumber(sb, ARG_RUN_FDR, config.RunFdr);
-            AppendNumber(sb, ARG_EXPERIMENT_FDR, config.ExperimentFdr);
-            AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
-            AppendNumber(sb, ARG_THREADS, config.Threads);
+            // The search settings, for a run that searches: the data files, or the tuning runs
+            if (config.DataFiles.Count > 0 || config.TrainingInputs.Count > 0)
+            {
+                sb.Append(ARG_RESOLUTION).Append(' ').Append(config.Resolution).Append(' ');
+                AppendNumber(sb, ARG_FRAGMENT_TOLERANCE, config.FragmentTolerance);
+                sb.Append(ARG_FRAGMENT_UNIT).Append(' ').Append(config.FragmentUnit).Append(' ');
+                AppendNumber(sb, ARG_RUN_FDR, config.RunFdr);
+                AppendNumber(sb, ARG_EXPERIMENT_FDR, config.ExperimentFdr);
+                AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
+                AppendNumber(sb, ARG_THREADS, config.Threads);
+            }
             // A child process starts in the OS culture, not Skyline's UI language, so Osprey is told
             // which to write its messages in; the numbers above are invariant either way.
             if (!string.IsNullOrEmpty(config.CultureName))
                 sb.Append(ARG_CULTURE).Append(' ').Append(config.CultureName).Append(' ');
             // Every line stamped with its time, for the log teed to the working folder; the wizard's
             // run page strips the stamp and shows the lines under its own Show timestamps box.
-            sb.Append(ARG_TIMESTAMP);
+            if (config.Timestamp)
+                sb.Append(ARG_TIMESTAMP);
 
             return sb.ToString().TrimEnd();
         }
 
         /// <summary>
         /// The library-build options: the device and the runtimes folder Osprey finds the CUDA
-        /// runtime in when Skyline has installed one, and CarafeSharp's digest options in Osprey's
-        /// hyphenated spelling.
+        /// runtime in when Skyline has installed one, and, with a FASTA to digest, CarafeSharp's
+        /// digest options in Osprey's hyphenated spelling.
         /// </summary>
         private static void AppendLibraryBuildArgs(StringBuilder sb, OspreyConfig config)
         {
             sb.Append(ARG_DEVICE).Append(' ').Append(config.Device).Append(' ');
             if (!string.IsNullOrEmpty(config.TorchRuntimesDirectory))
                 sb.Append(ARG_TORCH_RUNTIMES).Append(' ').Append(config.TorchRuntimesDirectory.Quote()).Append(' ');
+            if (string.IsNullOrEmpty(config.FastaPath))
+                return;
             if (config.EnzymeIndex.HasValue)
                 AppendNumber(sb, CarafeCommandLine.ARG_ENZYME.ArgumentText, config.EnzymeIndex.Value);
             AppendNumber(sb, CarafeCommandLine.ARG_MISS_C.ArgumentText, config.MaxMissedCleavages);
@@ -618,6 +649,23 @@ namespace pwiz.Skyline.Model.Lib
     {
         public IList<string> DataFiles { get; set; } = new List<string>();
 
+        /// <summary>
+        /// A precursor table to predict in place of data files to search (Build Library): alone,
+        /// the PredictLibrary phase over the table; with <see cref="TrainingInputs"/> and a
+        /// <see cref="FastaPath"/>, the tuning runs' search against the FASTA's library, the
+        /// fine-tune, and the tuned models' prediction of the table.
+        /// </summary>
+        public string PrecursorTablePath { get; set; }
+
+        /// <summary>The one phase to run (<c>--task</c>), or null for the whole run.</summary>
+        public string Task { get; set; }
+
+        /// <summary>
+        /// Whether every line Osprey prints is stamped with its time (<c>--timestamp</c>), for the
+        /// log teed to disk; <see cref="OspreyProgressMonitor"/> strips the stamp for the display.
+        /// </summary>
+        public bool Timestamp { get; set; } = true;
+
         /// <summary>The FASTA the library is predicted from, and the proteins the results are matched to.</summary>
         public string FastaPath { get; set; }
 
@@ -715,6 +763,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (!string.IsNullOrEmpty(config.LibraryPath))
                 return SEARCH_TASK_COUNT;
+            // A precursor table is predicted, never searched: alone, or after the tuning runs' search
+            // and the fine-tune
+            if (config.PrecursorTablePath != null)
+                return config.TrainingInputs.Count > 0 ? 1 + SEARCH_TASK_COUNT + 1 + 1 : 1;
             if (config.TrainingInputs.Count > 0)
                 return 1 + SEARCH_TASK_COUNT + 1 + 1 + SEARCH_TASK_COUNT;
             return 1 + SEARCH_TASK_COUNT;

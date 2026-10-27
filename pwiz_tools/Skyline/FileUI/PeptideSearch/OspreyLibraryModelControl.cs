@@ -75,6 +75,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>Raised when the model chosen in the combo changes.</summary>
         public event EventHandler ModelChanged;
 
+        /// <summary>Raised when the choice between the model as it is and a new fine-tune changes.</summary>
+        public event EventHandler UseExistingModelChanged;
+
         /// <summary>
         /// Takes the searched-files choice off the page, for a host that searches nothing itself,
         /// and gives its room to the list.
@@ -186,7 +189,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void radioModel_CheckedChanged(object sender, EventArgs e)
         {
+            // Both radios fire; once is enough
+            if (!((RadioButton)sender).Checked)
+                return;
             UpdateTuningControls();
+            UseExistingModelChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>

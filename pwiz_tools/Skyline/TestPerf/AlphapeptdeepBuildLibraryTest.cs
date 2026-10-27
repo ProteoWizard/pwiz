@@ -127,6 +127,12 @@ namespace TestPerf
                 Assert.AreSame(radioAlpha, buildLibraryDlg.ActiveControl);
             });
 
+            // Next goes to the Predict For page, whose Next needs precursors in the document
+            RunUI(() =>
+            {
+                buildLibraryDlg.OkWizardPage();
+                Assert.AreEqual(BuildLibraryDlg.Pages.predict_for, buildLibraryDlg.CurrentPage);
+            });
             RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
             {
                 Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_,
@@ -161,11 +167,19 @@ namespace TestPerf
                     buildLibraryDlg.IrtStandard = iRTtype;
             });
 
-            // The modification Carafe knows only in part is flagged as soon as the source is chosen,
+            // Next to the Predict For page (the document's precursors) and the Library Model page.
+            // The modification Carafe knows only in part is flagged as soon as the model is shown,
             // and asked about before the form closes, so Cancel would return to it
-            RunUI(() => Assert.AreEqual(
-                string.Format(SettingsUIResources.BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_, @"Phospho (ST)"),
-                buildLibraryDlg.ModificationWarning));
+            RunUI(() =>
+            {
+                buildLibraryDlg.OkWizardPage();
+                Assert.AreEqual(BuildLibraryDlg.Pages.predict_for, buildLibraryDlg.CurrentPage);
+                buildLibraryDlg.OkWizardPage();
+                Assert.AreEqual(BuildLibraryDlg.Pages.library_model, buildLibraryDlg.CurrentPage);
+                Assert.AreEqual(
+                    string.Format(SettingsUIResources.BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_, @"Phospho (ST)"),
+                    buildLibraryDlg.ModificationWarning);
+            });
             var limitedModelAlert = ShowDialog<AlertDlg>(buildLibraryDlg.OkWizardPage);
             Assert.AreEqual(TextUtil.LineSeparate(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)),
                 Environment.NewLine, ModelResources.Alphapeptdeep_Warn_continue_building), limitedModelAlert.Message);

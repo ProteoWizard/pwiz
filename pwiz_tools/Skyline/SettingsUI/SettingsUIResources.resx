@@ -1229,6 +1229,24 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
     <value>You must specify a valid path to a Skyline document to learn from.</value>
   </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings" xml:space="preserve">
+    <value>Digesting {0} with the document settings</value>
+  </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA" xml:space="preserve">
+    <value>Digesting FASTA</value>
+  </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__" xml:space="preserve">
+    <value>Failed digesting the FASTA file {0}.</value>
+  </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_" xml:space="preserve">
+    <value>The FASTA file {0} gave no peptides with the document settings.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_" xml:space="preserve">
+    <value>Choose the protein FASTA file to predict the library for.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_" xml:space="preserve">
+    <value>The FASTA file {0} does not exist.</value>
+  </data>
   <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
     <value>MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature.</value>
   </data>

@@ -93,6 +93,8 @@ namespace pwiz.SkylineTestConnected
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
                 buildLibraryDlg.Koina = true;
             });
+            // Next to the Predict For page (the document's precursors), then Finish
+            RunUI(buildLibraryDlg.OkWizardPage);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
             buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
@@ -104,6 +106,7 @@ namespace pwiz.SkylineTestConnected
                 buildLibraryDlg.Koina = true;
                 buildLibraryDlg.IrtStandard = IrtStandard.PIERCE;
             });
+            RunUI(buildLibraryDlg.OkWizardPage);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             var addIrtPeptidesDlg = WaitForOpenForm<AddIrtPeptidesDlg>();
             OkDialog(addIrtPeptidesDlg, addIrtPeptidesDlg.OkDialog);

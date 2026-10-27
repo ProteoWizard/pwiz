@@ -342,6 +342,42 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Digesting {0} with the document settings.
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Digesting FASTA.
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed digesting the FASTA file {0}..
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The FASTA file {0} gave no peptides with the document settings..
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Download.
         /// </summary>
         public static string BuildLibraryDlg_InstallCudaRuntime_Download {
@@ -450,6 +486,24 @@ namespace pwiz.Skyline.SettingsUI {
         public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the protein FASTA file to predict the library for..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The FASTA file {0} does not exist..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_", resourceCulture);
             }
         }
 
