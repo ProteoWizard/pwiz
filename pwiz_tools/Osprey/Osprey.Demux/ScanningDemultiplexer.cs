@@ -338,6 +338,9 @@ namespace pwiz.Osprey.Demux
         /// <see cref="ElutionDemuxParams.ShareUnexplained"/>, shared equally among the spectrum's bins.
         /// </summary>
         public double IonsUnexplained { get; set; }
+
+        /// <summary>Seconds spent making the unit on the solve's own thread, for a unit made just before its solve.</summary>
+        public double UnitSeconds { get; set; }
     }
 
     /// <summary>

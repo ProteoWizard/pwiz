@@ -664,18 +664,17 @@ namespace pwiz.Osprey.DemuxTool
         }
 
         /// <summary>
-        /// The joint solve's settings, so each run's log records what produced its file: only those that take effect (a
-        /// relaxed refit needs a lasso, and a looser first descent a lasso and a reweighting).
+        /// The joint solve's settings, so each run's log records what produced its file: only those that take effect, as
+        /// the solve decides (<see cref="JointDemuxParams.RefitsRelaxed"/>, <see cref="JointDemuxParams.FirstDescentTolerance"/>).
         /// </summary>
         private static string JointSolveSettings(JointDemuxParams parameters)
         {
-            bool lasso = parameters.L1Z > 0;
             var settings = string.Format(CultureInfo.InvariantCulture, @"joint profile demux and centroiding, L1 z {0}{1}, min-out {2}",
-                parameters.L1Z, parameters.Relaxed && lasso ? @", relaxed" : string.Empty, parameters.MinOutputIons);
+                parameters.L1Z, parameters.RefitsRelaxed ? @", relaxed" : string.Empty, parameters.MinOutputIons);
             if (parameters.WarmStart)
                 settings += @", warm start";
-            if (parameters.Reweight && lasso && parameters.FirstRelativeTolerance > parameters.RelativeTolerance)
-                settings += string.Format(CultureInfo.InvariantCulture, @", first descent to {0}", parameters.FirstRelativeTolerance);
+            if (parameters.FirstDescentTolerance > parameters.RelativeTolerance)
+                settings += string.Format(CultureInfo.InvariantCulture, @", first descent to {0}", parameters.FirstDescentTolerance);
             if (parameters.GrowRelativeTolerance > 0)
                 settings += string.Format(CultureInfo.InvariantCulture, @", growth to {0}", parameters.GrowRelativeTolerance);
             return settings;

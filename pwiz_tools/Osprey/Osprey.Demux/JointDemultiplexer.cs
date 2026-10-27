@@ -69,6 +69,9 @@ namespace pwiz.Osprey.Demux
         /// <summary>Refit the coefficients the lasso kept without the penalty.</summary>
         public bool Relaxed { get; set; }
 
+        /// <summary>Whether the solve runs the <see cref="Relaxed"/> refit: only with a lasso to relax.</summary>
+        public bool RefitsRelaxed => Relaxed && L1Z > 0;
+
         /// <summary>
         /// Solve a second time with Poisson weights from the first solution's expected counts. The first
         /// solve's weights come from the data itself, each row's profile smoothed by the TOF peak.
@@ -108,8 +111,10 @@ namespace pwiz.Osprey.Demux
         /// <summary>
         /// After reweighting, a grid point is solved again only where some position's lambda moved by more than
         /// this fraction (0: every point), as Centrix refits only the regions whose lambda moved by more than
-        /// 20%; elsewhere the first solution stands, and a refitted point's moves still reach its neighbours.
-        /// Where the counts are below the weight floor both weightings agree.
+        /// 20%; elsewhere the first solution stands, and a refitted point's moves still reach its neighbors. A
+        /// lambda is z times the square root of its coefficient's curvature, so that root is what is compared: it
+        /// moves with the weights without a lasso too. Where the counts are below the weight floor both weightings
+        /// agree.
         /// </summary>
         public double RefitLambdaChange { get; set; } = 0.2;
 
@@ -140,13 +145,18 @@ namespace pwiz.Osprey.Demux
         public double RelativeTolerance { get; set; } = 1e-4;
 
         /// <summary>
-        /// The first descent's <see cref="RelativeTolerance"/> when a reweighted descent with a lasso follows it (0: the
-        /// same; never tighter than <see cref="RelativeTolerance"/>). The reweighted descent re-solves the grid points
-        /// whose lambda moved by more than <see cref="RefitLambdaChange"/> and, through their moves, most of their
-        /// neighbors, so this decides the output only at the rest (a few percent of the points of a Stellar run).
-        /// Without a lasso no lambda moves and nothing is refit, so the first descent is not loosened.
+        /// The first descent's <see cref="RelativeTolerance"/> when a reweighted descent follows it (0: the same; never
+        /// tighter than <see cref="RelativeTolerance"/>; as applied, <see cref="FirstDescentTolerance"/>). The
+        /// reweighted descent re-solves the grid points whose weights moved by more than
+        /// <see cref="RefitLambdaChange"/> and, through their moves, most of their neighbors, so this decides the
+        /// output only at the rest (a few percent of the points of a Stellar run). Without Poisson weights no weight
+        /// moves and nothing is refit, so the first descent is not loosened.
         /// </summary>
         public double FirstRelativeTolerance { get; set; }
+
+        /// <summary>The first descent's relative tolerance as the solve applies it (<see cref="FirstRelativeTolerance"/>).</summary>
+        public double FirstDescentTolerance =>
+            Reweight && PoissonWeights ? Math.Max(RelativeTolerance, FirstRelativeTolerance) : RelativeTolerance;
 
         /// <summary>
         /// Stop growing the active set after a round whose additions together promise to lower the objective by at most
@@ -195,15 +205,17 @@ namespace pwiz.Osprey.Demux
         /// The staggered joint solve's settings, where the fit splits each measured profile among its bins (a Thermo
         /// Stellar's interpolated pseudo-sweeps): <see cref="WarmStart"/>, <see cref="FirstRelativeTolerance"/> 1e-3 and
         /// <see cref="GrowRelativeTolerance"/> 1e-4, each unless <paramref name="isSet"/> says the caller set it, and
-        /// none when the caller set <see cref="RelativeTolerance"/>, <see cref="MaxRounds"/> or <see cref="MaxPasses"/>,
-        /// asking for a convergence of its own. On three whole Stellar SuperOverlap profile runs they took 12.6% less
-        /// time with the same detections; on a ZT Scan slice they moved the output away from the converged solve, so
-        /// the scanning solve keeps the defaults. Returns these settings.
+        /// none when the caller set <see cref="RelativeTolerance"/>, <see cref="ToleranceIons"/>,
+        /// <see cref="MaxRounds"/> or <see cref="MaxPasses"/>, asking for a convergence of its own. On a 2-minute Stellar
+        /// SuperOverlap slice they took 21% less time (37% less solve work) and came closer to the converged solve (0.88%
+        /// of its intensity unmatched, against 1.02%); on three whole runs the detections were level. On a ZT Scan slice
+        /// they moved the output away from the converged solve, so the scanning solve keeps the defaults. Returns these
+        /// settings.
         /// </summary>
         public JointDemuxParams UseStaggeredDefaults(Func<string, bool> isSet = null)
         {
             bool Set(string name) => isSet != null && isSet(name);
-            if (Set(nameof(RelativeTolerance)) || Set(nameof(MaxRounds)) || Set(nameof(MaxPasses)))
+            if (Set(nameof(RelativeTolerance)) || Set(nameof(ToleranceIons)) || Set(nameof(MaxRounds)) || Set(nameof(MaxPasses)))
                 return this;
             if (!Set(nameof(WarmStart)))
                 WarmStart = true;
@@ -630,6 +642,7 @@ namespace pwiz.Osprey.Demux
             private double[] _beta = Array.Empty<double>();  // points x columns
             private double[] _curvature = Array.Empty<double>();
             private double[] _lambda = Array.Empty<double>();
+            private double[] _rootCurvature = Array.Empty<double>();  // the last descent's, for the selective refit
             private bool[] _active = Array.Empty<bool>();
             private bool[] _everActive = Array.Empty<bool>();   // profiling: active at some point in this descent
             // Screening: a coefficient whose gradient from the data alone cannot beat its lambda. Within one descent
@@ -863,6 +876,7 @@ namespace pwiz.Osprey.Demux
                 Array.Clear(_beta, 0, cp);
                 Array.Clear(_curvature, 0, cp);
                 Array.Clear(_lambda, 0, cp);
+                Array.Clear(_rootCurvature, 0, cp);
                 Array.Clear(_active, 0, cp);
                 Array.Clear(_activeCount, 0, _points);
                 Array.Copy(_y, _residual, _rows * _samples);
@@ -880,7 +894,7 @@ namespace pwiz.Osprey.Demux
                     Descend(_parameters.L1Z, true, _parameters.RefitLambdaChange > 0);
                 }
                 // 3. Relaxed: the kept coefficients without the penalty.
-                if (_parameters.Relaxed && _parameters.L1Z > 0)
+                if (_parameters.RefitsRelaxed)
                 {
                     _stage = 2;
                     Descend(0, false);
@@ -994,6 +1008,7 @@ namespace pwiz.Osprey.Demux
                     _beta = new double[cp];
                     _curvature = new double[cp];
                     _lambda = new double[cp];
+                    _rootCurvature = new double[cp];
                     _active = new bool[cp];
                     _everActive = new bool[cp];
                     _screened = new bool[cp];
@@ -1162,11 +1177,8 @@ namespace pwiz.Osprey.Demux
             private void Descend(double z, bool grow = true, bool selective = false, bool screen = false)
             {
                 long rounds0 = _rounds, passes0 = _passes, solves0 = _blockSolves, gradient0 = _gradientTicks, pass0 = _passTicks;
-                double relativeTolerance = _parameters.RelativeTolerance;
-                // The first descent decides the output only where the reweighted one refits nothing, which without a
-                // lasso is everywhere (no lambda moves).
-                if (_stage == 0 && _parameters.Reweight && _parameters.L1Z > 0)
-                    relativeTolerance = Math.Max(relativeTolerance, _parameters.FirstRelativeTolerance);
+                // The first descent decides the output only where the reweighted one refits nothing.
+                double relativeTolerance = _stage == 0 ? _parameters.FirstDescentTolerance : _parameters.RelativeTolerance;
                 double change = _parameters.RefitLambdaChange;
                 _screening = screen && grow && _parameters.Screen;
                 _screenReady = false;
@@ -1177,11 +1189,13 @@ namespace pwiz.Osprey.Demux
                     bool refit = !selective;
                     for (int j = 0; j < _columns; j++)
                     {
-                        double lambda = z > 0 ? z * Math.Sqrt(_curvature[oc + j]) : 0;
-                        double before = _lambda[oc + j];
-                        if (!refit && before > 0 && Math.Abs(lambda / before - 1) > change)
+                        // Its lambda's change, as the change in the root of its curvature, which z only multiplies.
+                        double root = Math.Sqrt(_curvature[oc + j]);
+                        double before = _rootCurvature[oc + j];
+                        if (!refit && before > 0 && Math.Abs(root / before - 1) > change)
                             refit = true;
-                        _lambda[oc + j] = lambda;
+                        _rootCurvature[oc + j] = root;
+                        _lambda[oc + j] = z > 0 ? z * root : 0;
                         _active[oc + j] = _beta[oc + j] > 0;
                         if (_active[oc + j])
                             count++;

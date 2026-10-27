@@ -237,26 +237,30 @@ namespace pwiz.Osprey.Demux
                 var centrix = _options.JointCentroid ? _centrix : null;
                 var passPerIon = _passPerIon;
                 bool apportion = _options.JointApportion;
-                // Each unit is made on its solve's thread just before its solve, so only the units being solved are
-                // held, not a batch's: a unit, every pass's pseudo-sweep, is several times the read it is made from.
+                // Each unit is planned here and made on its solve's thread just before its solve, so only the units being
+                // solved are held, not a batch's: a unit, every pass's pseudo-sweep, is several times the read it is made
+                // from.
                 for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
                 {
                     int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
+                    int lo = Math.Max(padLo, k0 - _options.CyclePad), hi = Math.Min(padHi, k1 + _options.CyclePad);
                     for (int g0 = 0; g0 < binCount; g0 += _options.GroupBins)
                     {
-                        var block = (K0: k0, K1: k1, G0: g0, G1: Math.Min(binCount - 1, g0 + _options.GroupBins - 1),
-                            Lo: Math.Max(padLo, k0 - _options.CyclePad), Hi: Math.Min(padHi, k1 + _options.CyclePad));
-                        long size = JointUnitSize(inBlock, peaks, block.K0, block.K1, block.G0, block.G1, contextBins);
-                        if (size == 0)
+                        int g1 = Math.Min(binCount - 1, g0 + _options.GroupBins - 1);
+                        var plan = PlanJointUnit(inBlock, peaks, lo, hi, k0, k1, g0, g1, contextBins);
+                        if (plan == null)
                             continue;
                         work.Add(new DemuxWork(() =>
                         {
-                            var unit = MakeJointUnit(inBlock, peaks, grid, block.Lo, block.Hi, block.K0, block.K1, block.G0,
-                                block.G1, contextBins, out var observed);
-                            return apportion
+                            var making = Stopwatch.StartNew();
+                            var unit = MakeJointUnit(plan, peaks, grid, out var observed);
+                            double unitSeconds = making.Elapsed.TotalSeconds;
+                            var result = apportion
                                 ? SolveJointApportioned(unit, observed, parameters, grid, centrix, passPerIon)
                                 : JointDemultiplexer.DemuxUnit(unit, parameters, grid);
-                        }, size));
+                            result.UnitSeconds = unitSeconds;
+                            return result;
+                        }, plan.Size));
                     }
                 }
                 return work;
@@ -358,38 +362,18 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// A joint unit's size before it is made, so the largest solves start first: the points its rows' acquired
-        /// spectra hold in its core cycles (the unit holds about that times the passes per cycle), each counted at least
-        /// once. 0 when the block has no core pass in these bins, and so no unit.
+        /// What a joint unit is made from, chosen on the pipeline's thread: the block's layout, each row's acquisitions
+        /// in the padded block (in time order), the core passes and their times, and the unit's size, so the largest
+        /// solves start first (the points of the core acquisitions, each counted at least once; the unit holds about
+        /// that times the passes per cycle). Null when the block has no core pass in these bins, and so no unit.
         /// </summary>
-        private long JointUnitSize(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, int k0, int k1,
-            int g0, int g1, int contextBins)
+        private JointUnitPlan PlanJointUnit(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, int lo, int hi,
+            int k0, int k1, int g0, int g1, int contextBins)
         {
-            BlockLayout(g0, g1, contextBins, out _, out _, out var rowOfWindow);
-            long size = 0;
-            foreach (int i in inBlock)
-            {
-                if (_cycleOfMs2[i] >= k0 && _cycleOfMs2[i] <= k1 && rowOfWindow.ContainsKey(Scheme.WindowOfSpectrum[i]))
-                    size += peaks[i].Mz.Length + 1;
-            }
-            return size;
-        }
-
-        /// <summary>
-        /// One joint solve's input: for each pass of the block, every window covering the unit's bins, those of the
-        /// pass as acquired and the others interpolated (makima, sample by sample, in rates) to the pass's time: a
-        /// pseudo-sweep in which every window is seen at once, as a ZT Scan sweep is. All in ions at the pass's fill
-        /// time. Null when the block has no core pass in these bins.
-        /// </summary>
-        private ScanningUnit MakeJointUnit(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, LinearGrid grid,
-            int lo, int hi, int k0, int k1, int g0, int g1, int contextBins, out bool[] observed)
-        {
-            observed = null;
             var a = BlockLayout(g0, g1, contextBins, out var columnBins, out var rowWindows, out var rowOfWindow);
-
-            // Each row's acquisitions in the padded block, in time order; the core passes and their times.
             var acquisitions = rowWindows.Select(w => new List<int>()).ToArray();
             var passTimes = new SortedDictionary<int, List<double>>();
+            long size = 0;
             foreach (int i in inBlock)
             {
                 if (_cycleOfMs2[i] < lo || _cycleOfMs2[i] > hi || !rowOfWindow.TryGetValue(Scheme.WindowOfSpectrum[i], out int r))
@@ -403,11 +387,28 @@ namespace pwiz.Osprey.Demux
                     passTimes[_passOfMs2[i]] = times;
                 }
                 times.Add(_ms2Time[i]);
+                size += peaks[i].Mz.Length + 1;
             }
             if (passTimes.Count == 0)
                 return null;
             var passes = passTimes.Keys.ToArray();
             var passTime = passes.Select(p => MedianMath.SelectInPlace(passTimes[p].ToArray(), passTimes[p].Count / 2)).ToArray();
+            return new JointUnitPlan(a, columnBins, rowWindows, acquisitions, passes, passTime, g0, g1, size);
+        }
+
+        /// <summary>
+        /// One joint solve's input: for each pass of the block, every window covering the unit's bins, those of the
+        /// pass as acquired and the others interpolated (makima, sample by sample, in rates) to the pass's time: a
+        /// pseudo-sweep in which every window is seen at once, as a ZT Scan sweep is. All in ions at the pass's fill
+        /// time.
+        /// </summary>
+        private ScanningUnit MakeJointUnit(JointUnitPlan plan, Dictionary<int, (double[] Mz, double[] Ions)> peaks,
+            LinearGrid grid, out bool[] observed)
+        {
+            var rowWindows = plan.RowWindows;
+            var acquisitions = plan.Acquisitions;
+            var passes = plan.Passes;
+            var passTime = plan.PassTime;
 
             // Each row's rates by grid sample, over its acquisitions.
             var rowTimes = new double[rowWindows.Length][];
@@ -497,8 +498,8 @@ namespace pwiz.Osprey.Demux
                 }
             }
             observed = acquiredPoint.ToArray();
-            return new ScanningUnit(a, rowWindows.Select(w => Scheme.Windows[w].FirstBin).ToArray(), columnBins, passes, g0, g1,
-                passes[0], passes[passes.Length - 1])
+            return new ScanningUnit(plan.Transmission, rowWindows.Select(w => Scheme.Windows[w].FirstBin).ToArray(),
+                plan.ColumnBins, passes, plan.FirstBin, plan.LastBin, passes[0], passes[passes.Length - 1])
             {
                 Mz = mz.ToArray(),
                 Ions = ions.ToArray(),
@@ -822,6 +823,34 @@ namespace pwiz.Osprey.Demux
                 byKey[key] = list;
             }
             list.Add(peak);
+        }
+
+        /// <summary>What a joint unit is made from (<see cref="PlanJointUnit"/>).</summary>
+        private sealed class JointUnitPlan
+        {
+            public JointUnitPlan(double[,] transmission, int[] columnBins, int[] rowWindows, List<int>[] acquisitions,
+                int[] passes, double[] passTime, int firstBin, int lastBin, long size)
+            {
+                Transmission = transmission;
+                ColumnBins = columnBins;
+                RowWindows = rowWindows;
+                Acquisitions = acquisitions;
+                Passes = passes;
+                PassTime = passTime;
+                FirstBin = firstBin;
+                LastBin = lastBin;
+                Size = size;
+            }
+
+            public double[,] Transmission { get; }
+            public int[] ColumnBins { get; }
+            public int[] RowWindows { get; }
+            public List<int>[] Acquisitions { get; }
+            public int[] Passes { get; }
+            public double[] PassTime { get; }
+            public int FirstBin { get; }
+            public int LastBin { get; }
+            public long Size { get; }
         }
     }
 

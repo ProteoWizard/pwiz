@@ -50,14 +50,6 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private const double RESIDUE_IONS = 0.01;
 
-        /// <summary>
-        /// The solve's residue when each sweep starts from the previous sweep's solve: the block descent can stop with a
-        /// few hundredths of an ion on a neighbor two samples from a source, each pass moving it by less than
-        /// <see cref="JointDemuxParams.ToleranceIons"/> (0.02 ions beside a 500-ion source here, the same at a relative
-        /// tolerance of 1e-8, and gone at 1e-5 ions).
-        /// </summary>
-        private const double WARM_RESIDUE_IONS = 0.05;
-
         /// <summary>ZT Scan's detector counts of one ion, near enough (99.665 measured).</summary>
         private const double COUNTS_PER_ION = 100;
 
@@ -251,27 +243,18 @@ namespace pwiz.Osprey.Test
         /// its precursor's position at its own m/z and intensity, with and without the relaxed lasso; two
         /// fragments of different precursors two samples apart, within one TOF peak, keep their own
         /// positions, m/z and intensities; with counting noise, the three positions centered on each
-        /// precursor hold its intensity; and the result is the same twice. Solving neighbouring grid points two to
+        /// precursor hold its intensity; and the result is the same twice. Solving neighboring grid points two to
         /// five at a time gives the same recoveries, and so do the staggered defaults: each sweep started from the
         /// previous sweep's solve, a looser first descent and a tolerance on the active set's growth.
         /// </summary>
         [TestMethod]
         public void TestJointDemuxRecovers()
         {
-            var centers = Enumerable.Range(0, BINS).Select(b => FIRST_CENTER + b * STEP).ToArray();
-            var a = ScanningDemultiplexer.TransmissionMatrix(ScanningDemuxTest.TrapezoidKernel(), centers, centers, STEP);
-            var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
+            var (a, grid, sources) = RecoverySetup();
             long Sample(double mz) => grid.Index(mz);
             // A source's intensity found in its own bin and the bins either side, within 3 samples of it.
             double Around(ScanningUnitResult result, (int Bin, long Sample, double Amount) s) =>
                 Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(result.Demultiplexed, bin, grid, s.Sample, 3));
-            var sources = new[]
-            {
-                (Bin: 20, Sample: Sample(412.2345), Amount: 1000.0),
-                (Bin: 20, Sample: Sample(655.4321), Amount: 400.0),
-                (Bin: 34, Sample: Sample(520.3456), Amount: 800.0),
-                (Bin: 28, Sample: Sample(733.1111), Amount: 500.0),
-            };
             var exactParams = new JointDemuxParams { L1Z = 0, ChunkSamples = 256 };
             AssertRecovered(Demux(a, grid, sources, null, exactParams), grid, sources, 0.01, @"unpenalized");
             var relaxedParams = new JointDemuxParams { L1Z = 2, Relaxed = true, ChunkSamples = 256 };
@@ -292,7 +275,7 @@ namespace pwiz.Osprey.Test
             var again = Demux(a, grid, sources, new Random(5), noisyParams);
             CollectionAssert.AreEqual(noisy.Demultiplexed, again.Demultiplexed);
 
-            // Neighbouring grid points solved together, two to five at a time: the same recoveries.
+            // Neighboring grid points solved together, two to five at a time: the same recoveries.
             for (int points = 2; points <= JointDemultiplexer.MAX_BLOCK_POINTS; points++)
             {
                 string label = string.Format(@"{0}-point blocks", points);
@@ -310,9 +293,8 @@ namespace pwiz.Osprey.Test
             // The staggered defaults: the same recoveries, and with counting noise the same sums as each sweep solved from
             // zero.
             var staggered = new JointDemuxParams { L1Z = 0, ChunkSamples = 256 }.UseStaggeredDefaults();
-            AssertRecovered(Demux(a, grid, sources, null, staggered), grid, sources, 0.01, @"staggered defaults", WARM_RESIDUE_IONS);
-            AssertRecovered(Demux(a, grid, close, null, staggered), grid, close, 0.02, @"staggered defaults, near-isobaric",
-                WARM_RESIDUE_IONS);
+            AssertRecovered(Demux(a, grid, sources, null, staggered), grid, sources, 0.01, @"staggered defaults");
+            AssertRecovered(Demux(a, grid, close, null, staggered), grid, close, 0.02, @"staggered defaults, near-isobaric");
             var warmNoisy = Demux(a, grid, sources, new Random(5), new JointDemuxParams { ChunkSamples = 256 }.UseStaggeredDefaults());
             foreach (var s in sources)
             {
@@ -322,8 +304,9 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The staggered defaults are applied where the caller left them, and not at all when the caller asked for a
-        /// convergence of its own.
+        /// The staggered defaults are applied where the caller left them, a setting the caller named is kept, on or off,
+        /// and none is applied when the caller asked for a convergence of its own. The first descent is loosened only
+        /// where a reweighting can refit (Poisson weights, which move), and never past the second descent's tolerance.
         /// </summary>
         [TestMethod]
         public void TestJointStaggeredDefaults()
@@ -332,19 +315,72 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(defaults.WarmStart);
             Assert.AreEqual(1e-3, defaults.FirstRelativeTolerance);
             Assert.AreEqual(1e-4, defaults.GrowRelativeTolerance);
+            Assert.AreEqual(1e-3, defaults.FirstDescentTolerance);
 
-            var named = new JointDemuxParams { GrowRelativeTolerance = 1e-3 }
-                .UseStaggeredDefaults(name => name == nameof(JointDemuxParams.GrowRelativeTolerance));
-            Assert.IsTrue(named.WarmStart);
+            var named = new JointDemuxParams { WarmStart = false, GrowRelativeTolerance = 1e-3 }
+                .UseStaggeredDefaults(name => name == nameof(JointDemuxParams.WarmStart) ||
+                                              name == nameof(JointDemuxParams.GrowRelativeTolerance));
+            Assert.IsFalse(named.WarmStart);
+            Assert.AreEqual(1e-3, named.FirstRelativeTolerance);
             Assert.AreEqual(1e-3, named.GrowRelativeTolerance);
 
-            foreach (var convergence in new[] { nameof(JointDemuxParams.RelativeTolerance), nameof(JointDemuxParams.MaxRounds),
-                         nameof(JointDemuxParams.MaxPasses) })
+            foreach (var convergence in new[] { nameof(JointDemuxParams.RelativeTolerance), nameof(JointDemuxParams.ToleranceIons),
+                         nameof(JointDemuxParams.MaxRounds), nameof(JointDemuxParams.MaxPasses) })
             {
                 var converged = new JointDemuxParams().UseStaggeredDefaults(name => name == convergence);
                 Assert.IsFalse(converged.WarmStart, convergence);
                 Assert.AreEqual(0, converged.FirstRelativeTolerance, convergence);
                 Assert.AreEqual(0, converged.GrowRelativeTolerance, convergence);
+            }
+
+            Assert.AreEqual(1e-4, new JointDemuxParams { FirstRelativeTolerance = 1e-3, Reweight = false }.FirstDescentTolerance);
+            Assert.AreEqual(1e-4, new JointDemuxParams { FirstRelativeTolerance = 1e-3, PoissonWeights = false }.FirstDescentTolerance);
+            Assert.AreEqual(1e-2, new JointDemuxParams { FirstRelativeTolerance = 1e-3, RelativeTolerance = 1e-2 }.FirstDescentTolerance);
+        }
+
+        /// <summary>
+        /// Each speed setting changes the solve where it should and nowhere else, output against output, with counting
+        /// noise: the looser first descent changes a weighted solve but not an unweighted one, which reweighting cannot
+        /// refit; a growth stop at every round after the first solves that round's additions, as a solve of two rounds
+        /// does; and without a lasso the reweighting still refits, its weights having moved. And a warm start carries each
+        /// sweep's coefficients to the next sweep's scale: noiseless sweeps on scales powers of two apart, solved with one
+        /// pass each (so each result is close to its start), come back as the same sweeps' coefficients on one scale times
+        /// their scales.
+        /// </summary>
+        [TestMethod]
+        public void TestJointSolveSettingsTakeEffect()
+        {
+            var (a, grid, sources) = RecoverySetup();
+            List<ScanningPeak> Noisy(JointDemuxParams parameters) => Demux(a, grid, sources, new Random(5), parameters).Demultiplexed;
+
+            var weighted = Noisy(new JointDemuxParams { ChunkSamples = 256 });
+            CollectionAssert.AreNotEqual(weighted, Noisy(new JointDemuxParams { ChunkSamples = 256, FirstRelativeTolerance = 1e-3 }));
+            CollectionAssert.AreEqual(Noisy(new JointDemuxParams { ChunkSamples = 256, PoissonWeights = false }),
+                Noisy(new JointDemuxParams { ChunkSamples = 256, PoissonWeights = false, FirstRelativeTolerance = 1e-3 }));
+
+            var stopAtOnce = Noisy(new JointDemuxParams { ChunkSamples = 256, GrowRelativeTolerance = 1e300 });
+            CollectionAssert.AreEqual(Noisy(new JointDemuxParams { ChunkSamples = 256, MaxRounds = 2 }), stopAtOnce);
+            CollectionAssert.AreNotEqual(Noisy(new JointDemuxParams { ChunkSamples = 256, MaxRounds = 1 }), stopAtOnce);
+
+            CollectionAssert.AreNotEqual(Noisy(new JointDemuxParams { ChunkSamples = 256, L1Z = 0, Reweight = false }),
+                Noisy(new JointDemuxParams { ChunkSamples = 256, L1Z = 0 }));
+
+            // Without a lasso, weights or a tolerance in ions, whose thresholds are not on the sweeps' scales; the
+            // coefficients themselves (each sweep's are what the next starts from).
+            var onePass = new JointDemuxParams
+            {
+                ChunkSamples = 256, L1Z = 0, Reweight = false, PoissonWeights = false, ToleranceIons = 0, MaxRounds = 1,
+                MaxPasses = 1, WarmStart = true, KeepCoefficients = true,
+            };
+            var unit = SimulateProfile(a, grid, sources, null, onePass);
+            var scale = new[] { 1.0, 2, 0.5, 4, 1, 0.25, 2, 1, 8 };
+            var oneScale = JointDemultiplexer.DemuxUnit(unit, onePass, grid).Demultiplexed;
+            var scaled = JointDemultiplexer.DemuxUnit(Rescaled(unit, scale), onePass, grid).Demultiplexed;
+            Assert.AreEqual(oneScale.Count, scaled.Count);
+            for (int i = 0; i < oneScale.Count; i++)
+            {
+                double expected = oneScale[i].Ions * scale[oneScale[i].Cycle];
+                Assert.AreEqual(expected, scaled[i].Ions, 1e-12 * expected, string.Format(@"coefficient {0}, sweep {1}", i, oneScale[i].Cycle));
             }
         }
 
@@ -414,20 +450,52 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>The recovery tests' transmission, grid and sources: two in one bin, two in bins of their own.</summary>
+        private static (double[,] A, TofGrid Grid, (int Bin, long Sample, double Amount)[] Sources) RecoverySetup()
+        {
+            var centers = Enumerable.Range(0, BINS).Select(b => FIRST_CENTER + b * STEP).ToArray();
+            var a = ScanningDemultiplexer.TransmissionMatrix(ScanningDemuxTest.TrapezoidKernel(), centers, centers, STEP);
+            var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
+            var sources = new[]
+            {
+                (Bin: 20, Sample: grid.Index(412.2345), Amount: 1000.0),
+                (Bin: 20, Sample: grid.Index(655.4321), Amount: 400.0),
+                (Bin: 34, Sample: grid.Index(520.3456), Amount: 800.0),
+                (Bin: 28, Sample: grid.Index(733.1111), Amount: 500.0),
+            };
+            return (a, grid, sources);
+        }
+
+        /// <summary>
+        /// The unit with each sweep's values times its scale, which it carries as <see cref="ScanningUnit.SweepScale"/>.
+        /// </summary>
+        private static ScanningUnit Rescaled(ScanningUnit unit, double[] scale)
+        {
+            return new ScanningUnit(unit.Transmission, unit.RowBins, unit.ColumnBins, unit.Cycles, unit.FirstCoreBin,
+                unit.LastCoreBin, unit.FirstCoreCycle, unit.LastCoreCycle)
+            {
+                Mz = unit.Mz,
+                Ions = unit.Ions.Select((ions, p) => ions * scale[unit.Cycle[p]]).ToArray(),
+                Row = unit.Row,
+                Cycle = unit.Cycle,
+                SweepScale = scale,
+            };
+        }
+
         /// <summary>
         /// Each source's intensity, over the core sweeps, in its own position within half a sample of its
         /// m/z, within a relative tolerance; and each centroid there within 0.2 samples of the source, apart from the
-        /// solve's residue (<see cref="RESIDUE_IONS"/> unless given).
+        /// solve's residue (<see cref="RESIDUE_IONS"/>).
         /// </summary>
         private static void AssertRecovered(ScanningUnitResult result, TofGrid grid,
-            (int Bin, long Sample, double Amount)[] sources, double tolerance, string label, double residueIons = RESIDUE_IONS)
+            (int Bin, long Sample, double Amount)[] sources, double tolerance, string label)
         {
             foreach (var s in sources)
             {
                 double expected = s.Amount * ScanningDemuxTest.TotalElution();
                 Assert.AreEqual(expected, Sum(result.Demultiplexed, s.Bin, grid, s.Sample, 3), tolerance * expected,
                     string.Format(@"{0}, bin {1}, sample {2}", label, s.Bin, s.Sample));
-                foreach (var peak in result.Demultiplexed.Where(p => p.Bin == s.Bin && p.Ions >= residueIons &&
+                foreach (var peak in result.Demultiplexed.Where(p => p.Bin == s.Bin && p.Ions >= RESIDUE_IONS &&
                     Math.Abs(grid.Position(p.Mz) - s.Sample) < 3))
                 {
                     Assert.AreEqual(s.Sample, grid.Position(peak.Mz), 0.2, string.Format(@"{0}, bin {1} centroid", label, s.Bin));

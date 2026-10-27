@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -236,9 +237,14 @@ namespace pwiz.Osprey.Demux
             _plan.LayOut(firstCycle, lastCycle, batch.Results, _built);
             if (batch.Results.Length > 0)
             {
-                _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s (waited {3:F1} s), layout {4:F1} s ({5} units)",
-                    batch.ReadSeconds, batch.UnitSeconds, batch.SolveSeconds, waitSeconds, layoutClock.Elapsed.TotalSeconds,
-                    batch.Results.Length);
+                // Units a plan makes on the solve threads, just before their solves, are timed there, summed over threads.
+                double unitThreadSeconds = batch.Results.Sum(result => result.UnitSeconds);
+                string onSolveThreads = unitThreadSeconds > 0
+                    ? string.Format(CultureInfo.InvariantCulture, @" (and {0:F1} s on the solve threads)", unitThreadSeconds)
+                    : string.Empty;
+                _log.WriteLine(@"  read {0:F1} s, units {1:F1} s{2}, solve {3:F1} s (waited {4:F1} s), layout {5:F1} s ({6} units)",
+                    batch.ReadSeconds, batch.UnitSeconds, onSolveThreads, batch.SolveSeconds, waitSeconds,
+                    layoutClock.Elapsed.TotalSeconds, batch.Results.Length);
             }
         }
 

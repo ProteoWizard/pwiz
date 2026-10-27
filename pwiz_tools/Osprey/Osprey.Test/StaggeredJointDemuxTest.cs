@@ -53,13 +53,26 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Each output spectrum of an interior bin holds its own precursor's fragments, at their m/z and rates, and not
         /// its neighbors', with fill times varying 100-fold between scans. Measured: m/z within 0.0005 Th, rates within
-        /// 1.2% (median) and 1.8% (worst) on 819 fragments, no crosstalk; the bounds are about twice that.
+        /// 1.2% (median) and 1.8% (worst) on 819 fragments, no crosstalk; the bounds are about twice that. The same
+        /// with the staggered defaults, each pass started from the previous pass's solve carried to its own scale.
         /// </summary>
         [TestMethod]
         public void TestStaggeredJointRecovers()
         {
+            AssertRecovers(Options(), @"without the staggered defaults");
+            var staggered = Options();
+            staggered.JointParameters.UseStaggeredDefaults();
+            AssertRecovers(staggered, @"staggered defaults");
+        }
+
+        /// <summary>
+        /// The spectra under each varied-fill-time run's interior bins against the rates the run was made from (see
+        /// <see cref="TestStaggeredJointRecovers"/>).
+        /// </summary>
+        private static void AssertRecovers(ScanningDemuxOptions options, string label)
+        {
             var source = new StaggeredProfileRun(true, -1);
-            var pipeline = new StaggeredDemuxPipeline(source, Options(), TextWriter.Null);
+            var pipeline = new StaggeredDemuxPipeline(source, options, TextWriter.Null);
             var rateErrors = new List<double>();
             double worstMz = 0, worstCrosstalk = 0;
             foreach (int output in DemultiplexedOutputs(pipeline, source))
@@ -93,13 +106,13 @@ namespace pwiz.Osprey.Test
             }
             rateErrors.Sort(); // Array.Sort OK: equal doubles are indistinguishable
             double medianRate = rateErrors[rateErrors.Count / 2], worstRate = rateErrors[rateErrors.Count - 1];
-            Console.WriteLine(@"{0} fragments: worst m/z error {1:F4} Th; rate error median {2:P2}, worst {3:P2}; crosstalk {4:P2}",
-                rateErrors.Count, worstMz, medianRate, worstRate, worstCrosstalk);
-            Assert.IsTrue(rateErrors.Count > 500, rateErrors.Count.ToString());
-            Assert.IsTrue(worstMz < 0.001, worstMz.ToString(@"F4"));
-            Assert.IsTrue(medianRate < 0.025, medianRate.ToString(@"P2"));
-            Assert.IsTrue(worstRate < 0.04, worstRate.ToString(@"P2"));
-            Assert.IsTrue(worstCrosstalk < 0.02, worstCrosstalk.ToString(@"P2"));
+            Console.WriteLine(@"{0}: {1} fragments: worst m/z error {2:F4} Th; rate error median {3:P2}, worst {4:P2}; crosstalk {5:P2}",
+                label, rateErrors.Count, worstMz, medianRate, worstRate, worstCrosstalk);
+            Assert.IsTrue(rateErrors.Count > 500, label + @": " + rateErrors.Count);
+            Assert.IsTrue(worstMz < 0.001, label + @": " + worstMz.ToString(@"F4"));
+            Assert.IsTrue(medianRate < 0.025, label + @": " + medianRate.ToString(@"P2"));
+            Assert.IsTrue(worstRate < 0.04, label + @": " + worstRate.ToString(@"P2"));
+            Assert.IsTrue(worstCrosstalk < 0.02, label + @": " + worstCrosstalk.ToString(@"P2"));
         }
 
         /// <summary>

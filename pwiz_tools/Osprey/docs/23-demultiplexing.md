@@ -337,7 +337,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--ions` | off | ions from each spectrum's fill time and its analyzer's ion response (see [Ions from the fill time](#ions-from-the-fill-time)): spectra combined as rates and written in their own units; each observation's own ions set the Poisson weights and channel thresholds |
 | `--ion-response A` | 1 | with `--ions`: the ion response of spectra whose file names no analyzer the table knows |
 | `--peak-sigma-th S` | from the input | staggered `--joint` on a linear grid: the profile peak sigma, Th; absent, as `--centrix-sigma` |
-| `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it |
+| `--joint-profile` | off | staggered `--joint`: write each bin's measured share as profile instead of centroiding it. With `--centroid centrix` the writer then centroids every output spectrum on its one thread: the same centroids as Centrix inside the solve (cosine 1.0000 on a Stellar slice), about 20% more time on a whole Stellar run |
 | `--joint-fitted` | off | staggered `--joint`: write the fitted peaks instead of splitting the measurements |
 | `--joint-centrix-fit` | off | ZT Scan `--joint`: centroid each source position's fitted profile with Centrix on the TOF grid, in place of the fit's own centroids |
 | `--joint-centrix` | off | ZT Scan `--joint`: split the measured profile among the source positions by the fit, as the staggered joint solve does, and centroid each position's share with Centrix on the TOF grid instead of writing the fit's own centroids (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
@@ -824,14 +824,17 @@ Two ways through `Osprey.DemuxTool --scheme staggered`:
 
   The fit runs with the staggered settings (`JointDemuxParams.UseStaggeredDefaults`), which
   DemuxTool applies except with `--joint-fitted`, and except to a setting `--joint-param` names or
-  when it names `RelativeTolerance`, `MaxRounds` or `MaxPasses` (a convergence of its own): each
-  pass starts from the previous pass's solve, carried to its own ion scale (`WarmStart`); the first
-  descent stops at a relative decrease of 1e-3 where the reweighted descent refits
-  (`FirstRelativeTolerance`); and the active set stops growing after a round whose additions promise
-  at most 1e-4 of the objective, that round's still solved (`GrowRelativeTolerance`). The default
-  solve's late rounds mostly re-add coefficients the passes set to zero earlier in the same descent.
-  On three whole SuperOverlap profile runs these took 12.6% less time with the same detections. The
-  ZT Scan solve keeps the defaults: on its slice the same settings moved the output away from the
+  when it names `RelativeTolerance`, `ToleranceIons`, `MaxRounds` or `MaxPasses` (a convergence of
+  its own): within each unit (a block of `BlockCycles` cycles by a group of bins) each pass starts
+  from the previous pass's solve, carried to its own ion scale, the unit's first pass from zero
+  (`WarmStart`); the first descent stops at a relative decrease of 1e-3, which decides the output
+  only where the reweighted descent refits nothing (`FirstRelativeTolerance`); and the active set
+  stops growing after a round whose additions promise at most 1e-4 of the objective, that round's
+  still solved (`GrowRelativeTolerance`). The default solve's late rounds mostly re-add
+  coefficients the passes set to zero earlier in the same descent. On a 2-minute SuperOverlap slice
+  these took 21% less time (37% less solve work) and came closer to the converged solve (0.88% of
+  its intensity unmatched, against 1.02%); on three whole runs the detections were level. The ZT
+  Scan solve keeps the defaults: on its slice the same settings moved the output away from the
   converged solve.
 
 **The truth benchmark.** `--remultiplex K` sums a 2 Th run's adjacent narrow windows into K-fold
