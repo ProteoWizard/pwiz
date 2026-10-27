@@ -92,8 +92,8 @@
   <Target Name="ExtractSciexAssemblies"
           Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(SciexArchive)"
-          Outputs="$(SciexAssembliesDir)/Clearcore2.Data.AnalystDataProvider.dll;$(SciexAssembliesDir)/SQLite.Interop.dll">
+          Inputs="$(SciexArchive);$(SciexAssembliesDir)/Clearcore2.Data.AnalystDataProvider.dll;$(SciexAssembliesDir)/SQLite.Interop.dll"
+          Outputs="$(SciexAssembliesDir)/.ExtractSciexAssemblies.stamp">
     <MakeDir Directories="$(SciexAssembliesDir)" />
     <!-- 7za uses case-insensitive globbing on Windows; *.dll picks up Sciex.Data.Processing.DLL too.
          x64\SQLite.Interop.dll is extracted alongside so the StageWiff2NativeAssemblies target
@@ -107,6 +107,8 @@
       <_SciexExtracted Include="$(SciexAssembliesDir)/vendor_api/ABI/x64/SQLite.Interop.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_SciexExtracted)" DestinationFolder="$(SciexAssembliesDir)" SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(SciexAssembliesDir)/.ExtractSciexAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <!-- Reference the Clearcore2 + Wiff assemblies. CopyLocal=true so they land next to the
