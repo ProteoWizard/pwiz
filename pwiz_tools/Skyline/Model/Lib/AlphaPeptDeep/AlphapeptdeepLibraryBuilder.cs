@@ -153,6 +153,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// </summary>
         public string CarafeModelName { get; set; }
 
+        /// <summary>True when <paramref name="modelPath"/> names the model beside this library, <see cref="TunedModelPath"/>.</summary>
+        private bool IsTunedModelPath(string modelPath)
+        {
+            return modelPath != null && string.Equals(Path.GetFullPath(modelPath), Path.GetFullPath(TunedModelPath),
+                StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// The libtorch runtimes Osprey predicts with: where the CUDA runtime is installed, passed to Osprey.
         /// </summary>
@@ -356,10 +363,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 progressStatus = progressStatus.NextSegment();
                 CopyTunedModel();
             }
-            else if (File.Exists(TunedModelPath))
+            else if (File.Exists(TunedModelPath) && !IsTunedModelPath(CarafeModelPath))
             {
                 // The library is rebuilt without a tuning: the model an earlier build left beside
-                // it did not predict this one, so it goes, as the library it belonged to does
+                // it did not predict this one, so it goes, as the library it belonged to does -
+                // unless it is the saved model this build predicted with, which stays in the list
                 FileEx.SafeDelete(TunedModelPath);
             }
             timer.Stop();

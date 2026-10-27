@@ -425,7 +425,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (doc == null)
                     return null;
             }
-            if (AddEntrapment)
+            if (PredictEntrapment)
             {
                 // Digested on their own and added as they are, so the document's own proteins are untouched
                 List<PeptideGroupDocNode> entrapmentGroups;
@@ -444,7 +444,7 @@ namespace pwiz.Skyline.SettingsUI
                 _entrapmentTargets = entrapmentGroups.SelectMany(g => g.Peptides).Select(p => p.Target).ToList();
                 doc = doc.AddPeptideGroups(entrapmentGroups, peptideList, null, out _, out _);
             }
-            if (AddDecoys)
+            if (PredictDecoys)
             {
                 var refine = new RefinementSettings { NumberOfDecoys = doc.PeptideCount, DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE };
                 doc = refine.GenerateDecoys(doc);
@@ -542,8 +542,17 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>The entrapment FASTA's peptides in the document last made to predict for, for the library's DecoyPairs table.</summary>
         private List<Target> _entrapmentTargets;
 
+        /// <summary>
+        /// Decoys and entrapment peptides are the FASTA route's choices: the Predict For page's
+        /// boxes count only when the route goes through that page, not when it was visited and
+        /// then left for the document's precursors.
+        /// </summary>
+        private bool PredictDecoys => !PredictForDocument && AddDecoys;
+
+        private bool PredictEntrapment => !PredictForDocument && AddEntrapment;
+
         /// <summary>The DecoyPairs Method the library records for Skyline's reverse-sequence decoys, or null when none are added.</summary>
-        private string DecoyMethod => AddDecoys ? DECOY_METHOD_REVERSE : null;
+        private string DecoyMethod => PredictDecoys ? DECOY_METHOD_REVERSE : null;
 
         /// <summary>The DecoyPairs Method recorded for reverse-sequence decoys, beside Carafe's "shuffle".</summary>
         public const string DECOY_METHOD_REVERSE = @"reverse";
@@ -817,7 +826,7 @@ namespace pwiz.Skyline.SettingsUI
             if (doc == null)
                 return false;
             // The document's own decoys stay out, as always; the decoys asked for here go in
-            var peptides = doc.Peptides.Where(pep => AddDecoys || !pep.IsDecoy).ToArray();
+            var peptides = doc.Peptides.Where(pep => PredictDecoys || !pep.IsDecoy).ToArray();
             var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
             var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
             var precursors = new TransitionGroupDocNode[precursorCount];
@@ -965,9 +974,10 @@ namespace pwiz.Skyline.SettingsUI
         public void OkWizardPage()
         {
             var page = CurrentPage;
-            if (!ValidatePage(page))
-                return;
             var next = GetNextPage(page);
+            // Finish from the first page checks it as the builder's own validation, in full, below
+            if ((next != null || page != Pages.properties) && !ValidatePage(page))
+                return;
             if (next == null)
             {
                 if (ValidateBuilder(true))

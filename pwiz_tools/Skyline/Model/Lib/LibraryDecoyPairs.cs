@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Model.Lib
             var entrapment = new HashSet<string>((entrapmentTargets ?? new List<Target>()).Select(t => t.Sequence));
             using var connection = SqliteOperations.OpenConnection(blibPath);
             var ids = ReadSpectrumIds(connection);
-            var rows = new List<string>();
+            var rows = new List<object[]>();
             int pairingId = 0;
             // The targets first, each with its pairing id, then the decoys pointing at them
             var targetPairings = new Dictionary<SpectrumKey, KeyValuePair<long, int>>();
@@ -96,10 +97,28 @@ namespace pwiz.Skyline.Model.Lib
                 Execute(connection, BlibSchema.CreateDecoyPairs);
                 Execute(connection, BlibSchema.CreateIdxDecoyPairsTarget);
             }
+            // One prepared statement for every row: a FASTA build with decoys and entrapment has
+            // many thousands, and a statement parsed per row is a stall after the build
             using (var transaction = connection.BeginTransaction())
+            using (var command = connection.CreateCommand())
             {
+                command.Transaction = transaction;
+                command.CommandText = @"INSERT OR REPLACE INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID, Method) " +
+                                      @"VALUES (@id, @isDecoy, @isEntrapment, @pairingId, @targetId, @method)";
+                var parameters = new[] { @"@id", @"@isDecoy", @"@isEntrapment", @"@pairingId", @"@targetId", @"@method" }
+                    .Select(name =>
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = name;
+                        command.Parameters.Add(parameter);
+                        return parameter;
+                    }).ToArray();
                 foreach (var row in rows)
-                    Execute(connection, @"INSERT OR REPLACE INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID, Method) VALUES " + row);
+                {
+                    for (int i = 0; i < row.Length; i++)
+                        parameters[i].Value = row[i];
+                    command.ExecuteNonQuery();
+                }
                 transaction.Commit();
             }
             return rows.Count;
@@ -116,12 +135,15 @@ namespace pwiz.Skyline.Model.Lib
             entrapment = ExecuteCount(connection, @"SELECT COUNT(*) FROM DecoyPairs WHERE IsEntrapment = 1 AND IsDecoy = 0");
         }
 
-        private static string FormatRow(long id, bool isDecoy, bool isEntrapment, int pairingId, long? targetId, string method)
+        /// <summary>One row's values, in the insert statement's parameter order.</summary>
+        private static object[] FormatRow(long id, bool isDecoy, bool isEntrapment, int pairingId, long? targetId, string method)
         {
-            return string.Format(CultureInfo.InvariantCulture, @"({0}, {1}, {2}, {3}, {4}, {5})",
+            return new object[]
+            {
                 id, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairingId,
-                targetId.HasValue ? targetId.Value.ToString(CultureInfo.InvariantCulture) : @"NULL",
-                method != null ? @"'" + method.Replace(@"'", @"''") + @"'" : @"NULL");
+                targetId.HasValue ? targetId.Value : DBNull.Value,
+                method != null ? method : DBNull.Value
+            };
         }
 
         /// <summary>The library's spectra by unmodified sequence and charge; a sequence and charge with more than one spectrum is left out, since the pairing could not name one.</summary>

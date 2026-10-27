@@ -44,6 +44,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly CarafeModelCombo _modelCombo;
         private UseGpuDriver _useGpuDriver;
         private bool _useGpuUpdated;
+        private bool _modelChoiceHidden;
 
         public OspreyLibraryModelControl()
         {
@@ -92,8 +93,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public void HideModelChoice()
         {
-            if (!comboModel.Visible)
+            if (_modelChoiceHidden)
                 return;
+            _modelChoiceHidden = true;
             foreach (var control in new Control[] { lblModel, comboModel, cbUseGpu, radioUseExistingModel, radioTuneModel })
                 control.Visible = false;
             int delta = listTuningFiles.Top - lblModel.Top;
@@ -219,7 +221,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void UpdateTuningControls()
         {
             bool tune = !UseExistingModel;
-            _modelCombo.SetTuning(tune);
+            // A hidden combo is never filled: each saved model's name reads its file, and the host's own combo did that
+            if (!_modelChoiceHidden)
+                _modelCombo.SetTuning(tune);
             listTuningFiles.Enabled = btnBrowseTuningFiles.Enabled = cbChooseFromSearchedFiles.Enabled = tune;
         }
 
@@ -374,11 +378,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public bool ValidatePage()
         {
-            var model = Model;
-            if (!model.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, model.FilePath))
+            if (!_modelChoiceHidden)
             {
-                comboModel.Focus();
-                return false;
+                var model = Model;
+                if (!model.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, model.FilePath))
+                {
+                    comboModel.Focus();
+                    return false;
+                }
             }
             if (UseExistingModel)
                 return true;
