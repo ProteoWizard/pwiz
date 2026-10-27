@@ -368,6 +368,10 @@ namespace pwiz.SkylineTestFunctional
             var entrapmentSet = new HashSet<Target>(builder.EntrapmentTargets);
             int entrapmentPrecursors = builder.Document.Peptides.Where(p => !p.IsDecoy && entrapmentSet.Contains(p.Target)).Sum(p => p.TransitionGroupCount);
             AssertEx.AreEqual(entrapmentPrecursors, entrapmentRows);
+            // The counts go to the test output as the record of what the library holds
+            Console.WriteLine(@"DecoyPairs of {0}: {1} decoy rows, {2} entrapment rows for {3} entrapment peptides ({4} precursors); first entrapment peptides: {5}",
+                Path.GetFileName(libraryPath), decoyRows, entrapmentRows, entrapmentCount, entrapmentPrecursors,
+                string.Join(@", ", builder.EntrapmentTargets.Take(3).Select(t => t.Sequence)));
             RunUI(() => peptideSettings.PickedLibraries = new[] { FASTA_LIBRARY_NAME });
             OkDialog(peptideSettings, peptideSettings.OkDialog);
             WaitForDocumentLoaded();
