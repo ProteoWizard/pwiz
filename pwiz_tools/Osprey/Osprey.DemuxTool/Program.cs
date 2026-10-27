@@ -522,7 +522,9 @@ namespace pwiz.Osprey.DemuxTool
             if (centrix)
                 msd.Run.SpectrumList = CentrixCentroided(msd.Run.SpectrumList, spectra, centrixMs2, centrixSigmaMs1, centrixSigmaMs2);
 
+            var writing = Stopwatch.StartNew();
             WriteMzml(msd, output);
+            double writeSeconds = writing.Elapsed.TotalSeconds;
 
             long channels = stepped?.Channels ?? scanning.Channels;
             long solved = stepped?.ChannelsSolved ?? scanning.ChannelsSolved;
@@ -535,8 +537,18 @@ namespace pwiz.Osprey.DemuxTool
                 Console.WriteLine(@"Elution fit: {0:P2} of the ions unexplained ({1})", stepped.IonsUnexplained / Math.Max(ionsIn, 1e-30),
                     options.Elution.ShareUnexplained ? @"shared equally among their spectrum's bins" : @"dropped");
             }
+            if (JointDemuxProfile.Enabled && stepped != null)
+            {
+                // The rest is the output's wrappers (Centrix on MS1) and the writer's encoding and file.
+                Console.WriteLine(@"writing: {0:F1} s; reading each output's acquired spectrum {1:F1} s, its peaks {2:F1} s " +
+                    @"(the batches' solves waited for and laid out included), the rest {3:F1} s",
+                    writeSeconds, stepped.SourceSeconds, stepped.PeaksSeconds,
+                    writeSeconds - stepped.SourceSeconds - stepped.PeaksSeconds);
+            }
             if (JointDemuxProfile.Enabled)
             {
+                Console.WriteLine(@"garbage collection: {0} gen 0, {1} gen 1, {2} gen 2 collections, {3:F1} s paused",
+                    GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2), GC.GetTotalPauseDuration().TotalSeconds);
                 Console.WriteLine(JointDemuxProfile.Summary());
                 Console.WriteLine(JointDemuxProfile.StageSummary());
                 Console.WriteLine(JointDemuxProfile.PassSummary());
