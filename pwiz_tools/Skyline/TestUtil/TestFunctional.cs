@@ -2049,20 +2049,28 @@ namespace pwiz.SkylineTestUtil
 
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             allChromGraph.SetFrozenProgress(totalProgress, elapsedTime, graphTime, graphIntensityMax, fileProgress);
-            WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
-
-            // Output the current intensity max to help determine what value to use
-            if (!graphIntensityMax.HasValue)
+            try
             {
-                var currentMax = allChromGraph.CurrentIntensityMax;
-                Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
-            }
+                WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
 
-            PauseForScreenShot(allChromGraph, description,
-                processShot: bmp => bmp.CleanupBorder()
-                    .FillProgressBar(allChromGraph.ProgressBarTotal)
-                    .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
-            allChromGraph.ReleaseFrozenProgress();
+                // Output the current intensity max to help determine what value to use
+                if (!graphIntensityMax.HasValue)
+                {
+                    var currentMax = allChromGraph.CurrentIntensityMax;
+                    Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
+                }
+
+                PauseForScreenShot(allChromGraph, description,
+                    processShot: bmp => bmp.CleanupBorder()
+                        .FillProgressBar(allChromGraph.ProgressBarTotal)
+                        .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
+            }
+            finally
+            {
+                // Otherwise a failure leaves the import blocked behind the freeze, and every later test
+                // in the same process fails waiting for its own import
+                allChromGraph.ReleaseFrozenProgress();
+            }
 
             if (IsTestingResultsProgressOnly)
             {
