@@ -233,16 +233,31 @@ namespace pwiz.Osprey.Demux
             if (_options.Joint)
             {
                 var grid = GridOf(peaks);
-                foreach (var (unit, observed) in MakeJointUnits(inBlock, peaks, grid, firstCycle, lastCycle, padLo, padHi, contextBins))
+                var parameters = _options.JointParameters;
+                var centrix = _options.JointCentroid ? _centrix : null;
+                var passPerIon = _passPerIon;
+                bool apportion = _options.JointApportion;
+                // Each unit is made on its solve's thread just before its solve, so only the units being solved are
+                // held, not a batch's: a unit, every pass's pseudo-sweep, is several times the read it is made from.
+                for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
                 {
-                    if (unit == null)
-                        continue;
-                    var parameters = _options.JointParameters;
-                    var centrix = _options.JointCentroid ? _centrix : null;
-                    var passPerIon = _passPerIon;
-                    work.Add(new DemuxWork(_options.JointApportion
-                        ? (Func<ScanningUnitResult>)(() => SolveJointApportioned(unit, observed, parameters, grid, centrix, passPerIon))
-                        : () => JointDemultiplexer.DemuxUnit(unit, parameters, grid), unit.Mz.Length));
+                    int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
+                    for (int g0 = 0; g0 < binCount; g0 += _options.GroupBins)
+                    {
+                        var block = (K0: k0, K1: k1, G0: g0, G1: Math.Min(binCount - 1, g0 + _options.GroupBins - 1),
+                            Lo: Math.Max(padLo, k0 - _options.CyclePad), Hi: Math.Min(padHi, k1 + _options.CyclePad));
+                        long size = JointUnitSize(inBlock, peaks, block.K0, block.K1, block.G0, block.G1, contextBins);
+                        if (size == 0)
+                            continue;
+                        work.Add(new DemuxWork(() =>
+                        {
+                            var unit = MakeJointUnit(inBlock, peaks, grid, block.Lo, block.Hi, block.K0, block.K1, block.G0,
+                                block.G1, contextBins, out var observed);
+                            return apportion
+                                ? SolveJointApportioned(unit, observed, parameters, grid, centrix, passPerIon)
+                                : JointDemultiplexer.DemuxUnit(unit, parameters, grid);
+                        }, size));
+                    }
                 }
                 return work;
             }
@@ -343,31 +358,21 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// The batch's joint units, block of cycles by group of bins, null where a block has no core pass in the
-        /// group's bins. Made on up to <see cref="ScanningDemuxOptions.Threads"/> threads, each into its own slot, so
-        /// they come back in the order one thread would make them: each reads only the batch's read and the plan.
+        /// A joint unit's size before it is made, so the largest solves start first: the points its rows' acquired
+        /// spectra hold in its core cycles (the unit holds about that times the passes per cycle), each counted at least
+        /// once. 0 when the block has no core pass in these bins, and so no unit.
         /// </summary>
-        private (ScanningUnit Unit, bool[] Observed)[] MakeJointUnits(int[] inBlock,
-            Dictionary<int, (double[] Mz, double[] Ions)> peaks, LinearGrid grid, int firstCycle, int lastCycle,
-            int padLo, int padHi, int contextBins)
+        private long JointUnitSize(int[] inBlock, Dictionary<int, (double[] Mz, double[] Ions)> peaks, int k0, int k1,
+            int g0, int g1, int contextBins)
         {
-            int binCount = Scheme.Bins.Count;
-            var blocks = new List<(int K0, int K1, int G0, int G1)>();
-            for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
+            BlockLayout(g0, g1, contextBins, out _, out _, out var rowOfWindow);
+            long size = 0;
+            foreach (int i in inBlock)
             {
-                int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
-                for (int g0 = 0; g0 < binCount; g0 += _options.GroupBins)
-                    blocks.Add((k0, k1, g0, Math.Min(binCount - 1, g0 + _options.GroupBins - 1)));
+                if (_cycleOfMs2[i] >= k0 && _cycleOfMs2[i] <= k1 && rowOfWindow.ContainsKey(Scheme.WindowOfSpectrum[i]))
+                    size += peaks[i].Mz.Length + 1;
             }
-            var units = new (ScanningUnit Unit, bool[] Observed)[blocks.Count];
-            Parallel.For(0, blocks.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _options.Threads) }, b =>
-            {
-                var (k0, k1, g0, g1) = blocks[b];
-                int lo = Math.Max(padLo, k0 - _options.CyclePad), hi = Math.Min(padHi, k1 + _options.CyclePad);
-                var unit = MakeJointUnit(inBlock, peaks, grid, lo, hi, k0, k1, g0, g1, contextBins, out var observed);
-                units[b] = (unit, observed);
-            });
-            return units;
+            return size;
         }
 
         /// <summary>
@@ -452,11 +457,20 @@ namespace pwiz.Osprey.Demux
 
             // Each row's samples in grid order, sorted once for every pass.
             var rowSamples = rowRates.Select(rates => rates.OrderBy(e => e.Key).ToArray()).ToArray();
-            var mz = new List<double>();
-            var ions = new List<double>();
-            var row = new List<int>();
-            var cycle = new List<int>();
-            var acquiredPoint = new List<bool>();
+            // Sized once for every pass's every sample: grown point by point, a unit's lists of millions of points
+            // allocate about twice their size again on the way.
+            int bound = 0;
+            for (int r = 0; r < rowWindows.Length; r++)
+            {
+                if (rowTimes[r].Length > 0)
+                    bound += rowSamples[r].Length;
+            }
+            bound *= passes.Length;
+            var mz = new List<double>(bound);
+            var ions = new List<double>(bound);
+            var row = new List<int>(bound);
+            var cycle = new List<int>(bound);
+            var acquiredPoint = new List<bool>(bound);
             for (int c = 0; c < passes.Length; c++)
             {
                 double perIonRef = _passPerIon[passes[c]];

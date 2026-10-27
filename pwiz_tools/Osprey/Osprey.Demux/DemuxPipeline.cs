@@ -252,13 +252,19 @@ namespace pwiz.Osprey.Demux
             var work = _plan.MakeWork(firstCycle, lastCycle, out double readSeconds);
             double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
             var batch = new DemuxBatch(firstCycle, lastCycle, work.Count, readSeconds, unitSeconds);
-            var order = Enumerable.Range(0, work.Count).OrderByDescending(i => work[i].Size).ToArray();
+            // Each solve takes its own work from its slot, so what that work holds (its unit) is freed once it is solved,
+            // not when the batch's last solve is: the tasks share these, never the list.
+            var solves = work.Select(w => w.Solve).ToArray();
+            var sizes = work.Select(w => w.Size).ToArray();
+            var order = Enumerable.Range(0, sizes.Length).OrderByDescending(i => sizes[i]).ToArray();
             for (int n = 0; n < order.Length; n++)
             {
                 int i = order[n];
                 batch.Solves[n] = Task.Factory.StartNew(() =>
                 {
-                    batch.Results[i] = work[i].Solve();
+                    var solve = solves[i];
+                    solves[i] = null;
+                    batch.Results[i] = solve();
                     batch.Solved();
                 }, CancellationToken.None, TaskCreationOptions.None, SolveScheduler);
             }
