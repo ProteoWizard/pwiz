@@ -50,6 +50,14 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private const double RESIDUE_IONS = 0.01;
 
+        /// <summary>
+        /// The solve's residue when each sweep starts from the previous sweep's solve: the block descent can stop with a
+        /// few hundredths of an ion on a neighbor two samples from a source, each pass moving it by less than
+        /// <see cref="JointDemuxParams.ToleranceIons"/> (0.02 ions beside a 500-ion source here, the same at a relative
+        /// tolerance of 1e-8, and gone at 1e-5 ions).
+        /// </summary>
+        private const double WARM_RESIDUE_IONS = 0.05;
+
         /// <summary>ZT Scan's detector counts of one ion, near enough (99.665 measured).</summary>
         private const double COUNTS_PER_ION = 100;
 
@@ -244,7 +252,8 @@ namespace pwiz.Osprey.Test
         /// fragments of different precursors two samples apart, within one TOF peak, keep their own
         /// positions, m/z and intensities; with counting noise, the three positions centered on each
         /// precursor hold its intensity; and the result is the same twice. Solving neighbouring grid points in
-        /// pairs or threes gives the same recoveries.
+        /// pairs or threes gives the same recoveries, and so do the staggered defaults: each sweep started from the
+        /// previous sweep's solve, a looser first descent and a tolerance on the active set's growth.
         /// </summary>
         [TestMethod]
         public void TestJointDemuxRecovers()
@@ -295,6 +304,24 @@ namespace pwiz.Osprey.Test
                     double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(blockNoisy.Demultiplexed, bin, grid, s.Sample, 3));
                     Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"{0}, noisy, sample {1}", label, s.Sample));
                 }
+            }
+
+            // The staggered defaults (DemuxTool's for a Stellar): the same recoveries, and with counting noise the same
+            // sums as each sweep solved from zero.
+            JointDemuxParams Staggered(double l1Z) => new JointDemuxParams
+            {
+                L1Z = l1Z, ChunkSamples = 256, WarmStart = true, FirstRelativeTolerance = 1e-3, GrowRelativeTolerance = 1e-4,
+            };
+            AssertRecovered(Demux(a, grid, sources, null, Staggered(0)), grid, sources, 0.01, @"staggered defaults",
+                WARM_RESIDUE_IONS);
+            AssertRecovered(Demux(a, grid, close, null, Staggered(0)), grid, close, 0.02, @"staggered defaults, near-isobaric",
+                WARM_RESIDUE_IONS);
+            var warmNoisy = Demux(a, grid, sources, new Random(5), Staggered(noisyParams.L1Z));
+            foreach (var s in sources)
+            {
+                double fromZero = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(noisy.Demultiplexed, bin, grid, s.Sample, 3));
+                double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(warmNoisy.Demultiplexed, bin, grid, s.Sample, 3));
+                Assert.AreEqual(fromZero, found, 0.01 * fromZero, string.Format(@"staggered defaults, noisy, sample {0}", s.Sample));
             }
         }
 
@@ -367,17 +394,17 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Each source's intensity, over the core sweeps, in its own position within half a sample of its
         /// m/z, within a relative tolerance; and each centroid there within 0.2 samples of the source, apart from the
-        /// solve's residue (<see cref="RESIDUE_IONS"/>).
+        /// solve's residue (<see cref="RESIDUE_IONS"/> unless given).
         /// </summary>
         private static void AssertRecovered(ScanningUnitResult result, TofGrid grid,
-            (int Bin, long Sample, double Amount)[] sources, double tolerance, string label)
+            (int Bin, long Sample, double Amount)[] sources, double tolerance, string label, double residueIons = RESIDUE_IONS)
         {
             foreach (var s in sources)
             {
                 double expected = s.Amount * ScanningDemuxTest.TotalElution();
                 Assert.AreEqual(expected, Sum(result.Demultiplexed, s.Bin, grid, s.Sample, 3), tolerance * expected,
                     string.Format(@"{0}, bin {1}, sample {2}", label, s.Bin, s.Sample));
-                foreach (var peak in result.Demultiplexed.Where(p => p.Bin == s.Bin && p.Ions >= RESIDUE_IONS &&
+                foreach (var peak in result.Demultiplexed.Where(p => p.Bin == s.Bin && p.Ions >= residueIons &&
                     Math.Abs(grid.Position(p.Mz) - s.Sample) < 3))
                 {
                     Assert.AreEqual(s.Sample, grid.Position(peak.Mz), 0.2, string.Format(@"{0}, bin {1} centroid", label, s.Bin));

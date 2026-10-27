@@ -140,6 +140,26 @@ namespace pwiz.Osprey.Demux
         public double RelativeTolerance { get; set; } = 1e-4;
 
         /// <summary>
+        /// The first descent's <see cref="RelativeTolerance"/> when <see cref="Reweight"/> follows it (0: the same): its
+        /// solution only sets the second descent's weights and starting point.
+        /// </summary>
+        public double FirstRelativeTolerance { get; set; }
+
+        /// <summary>
+        /// Stop growing the active set when a round's new coefficients, each solved alone, would lower the objective by
+        /// at most this fraction of it in total (0: grow while any would move by more than <see cref="ToleranceIons"/>):
+        /// the same test of worth the passes stop on.
+        /// </summary>
+        public double GrowRelativeTolerance { get; set; }
+
+        /// <summary>
+        /// Start each sweep's chunks from the previous sweep's coefficients in the same unit instead of from zero:
+        /// consecutive sweeps see mostly the same peaks. The first descent then skips the screen, which assumes a
+        /// start from zero.
+        /// </summary>
+        public bool WarmStart { get; set; }
+
+        /// <summary>
         /// Skip, in a descent's later gradient checks, the coefficients whose gradient from the data alone cannot
         /// beat their lambda (they can never violate; the solution is the same).
         /// </summary>
@@ -270,6 +290,51 @@ namespace pwiz.Osprey.Demux
         public static long SingleSolves;
         public static long MovedSolves;
         public static long EmptyVisits;
+        // Per descent (1: the first, 2: after reweighting, 3: relaxed): descents, rounds, passes, block solves, gradient
+        // and pass time, descents stopped by MaxRounds while still growing, and rounds stopped by MaxPasses.
+        public static readonly long[] StageDescents = new long[3];
+        public static readonly long[] StageRounds = new long[3];
+        public static readonly long[] StagePasses = new long[3];
+        public static readonly long[] StageBlockSolves = new long[3];
+        public static readonly long[] StageGradientTicks = new long[3];
+        public static readonly long[] StagePassTicks = new long[3];
+        public static readonly long[] StageRoundCapped = new long[3];
+        public static readonly long[] StagePassCapped = new long[3];
+        // Coefficients added after a descent's first round, and of those, the ones active earlier in it and pruned.
+        public static readonly long[] StageLateAdds = new long[3];
+        public static readonly long[] StageReAdds = new long[3];
+        // Rounds after the first that added coefficients; the sum of what each round's additions, each alone, would
+        // lower the objective by as a fraction of it; and the rounds where that was at most 1e-3 and 1e-4.
+        public static readonly long[] StageLateRounds = new long[3];
+        public static readonly double[] StageLateGain = new double[3];
+        public static readonly long[] StageSmallRounds3 = new long[3];
+        public static readonly long[] StageSmallRounds4 = new long[3];
+
+        /// <summary>Each descent's share, one line per descent that ran.</summary>
+        public static string StageSummary()
+        {
+            double f = 1.0 / Stopwatch.Frequency;
+            var lines = new List<string>();
+            for (int s = 0; s < 3; s++)
+            {
+                if (StageDescents[s] == 0)
+                    continue;
+                lines.Add(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    @"descent {0}: {1} chunks; per chunk {2:F2} rounds, {3:F2} passes, {4:F0} block solves; gradient {5:F1} s, " +
+                    @"passes {6:F1} s; {7:P1} stopped by MaxRounds still growing, {8:P1} of rounds stopped by MaxPasses; " +
+                    @"{9:F1} coefficients added after the first round per chunk, {10:P1} of them active earlier and pruned; " +
+                    @"a later round's additions would lower the objective by {11:E2} of it on average, at most 1e-3 in {12:P1} " +
+                    @"and 1e-4 in {13:P1} of those rounds",
+                    s + 1, StageDescents[s], StageRounds[s] / (double)StageDescents[s], StagePasses[s] / (double)StageDescents[s],
+                    StageBlockSolves[s] / (double)StageDescents[s], StageGradientTicks[s] * f, StagePassTicks[s] * f,
+                    StageRoundCapped[s] / (double)StageDescents[s], StagePassCapped[s] / (double)Math.Max(StageRounds[s], 1),
+                    StageLateAdds[s] / (double)StageDescents[s], StageReAdds[s] / (double)Math.Max(StageLateAdds[s], 1),
+                    StageLateGain[s] / Math.Max(StageLateRounds[s], 1), StageSmallRounds3[s] / (double)Math.Max(StageLateRounds[s], 1),
+                    StageSmallRounds4[s] / (double)Math.Max(StageLateRounds[s], 1)));
+            }
+            return string.Join(Environment.NewLine, lines);
+        }
+
         /// <summary>The pass's parts, one line.</summary>
         public static string PassSummary()
         {
@@ -366,17 +431,24 @@ namespace pwiz.Osprey.Demux
                 allColumns[j] = true;
             int margin = 2 * parameters.PeakHalfWidth + 2;
             var kept = new List<(int Column, long Sample, double Beta)>();
+            // With WarmStart, the previous sweep's coefficients, every column's, sorted by sample; and this sweep's.
+            var warm = parameters.WarmStart ? new List<(int Column, long Sample, double Beta)>() : null;
+            var warmNext = parameters.WarmStart ? new List<(int Column, long Sample, double Beta)>() : null;
             for (int c = 0; c < cycles; c++)
             {
                 var points = bySweep[c];
                 if (points.Count == 0)
+                {
+                    warm?.Clear();
                     continue;
+                }
                 // Grid order, then row: the order every later step visits them in.
                 points.Sort((a, b) => a.Sample != b.Sample ? a.Sample.CompareTo(b.Sample) : a.Row.CompareTo(b.Row)); // Array.Sort OK: (sample, row) is unique
                 kept.Clear();
                 solver.RowExposure = unit.RowExposure?[c];
                 long first = points[0].Sample, last = points[points.Count - 1].Sample;
-                int start = 0;
+                int start = 0, warmFrom = 0;
+                warmNext?.Clear();
                 for (long core0 = first; core0 <= last; core0 += parameters.ChunkSamples)
                 {
                     long core1 = Math.Min(core0 + parameters.ChunkSamples - 1, last);
@@ -391,9 +463,21 @@ namespace pwiz.Osprey.Demux
                     if (end == start)
                         continue;
                     double centerMz = grid.Mz(0.5 * (core0 + core1));
-                    solver.Solve(points, start, end, lo, hi, parameters.PeakAt(centerMz));
+                    if (warm != null)
+                    {
+                        while (warmFrom < warm.Count && warm[warmFrom].Sample < lo)
+                            warmFrom++;
+                    }
+                    solver.Solve(points, start, end, lo, hi, parameters.PeakAt(centerMz), warm, warmFrom);
                     solver.Keep(core0, core1, parameters.KeepCoefficients ? allColumns : coreColumn, kept);
+                    if (warmNext != null)
+                        solver.Keep(core0, core1, allColumns, warmNext);
                     result.ChannelsSolved++;
+                }
+                if (warmNext != null)
+                {
+                    (warm, warmNext) = (warmNext, warm);
+                    warm.Sort((a, b) => a.Sample != b.Sample ? a.Sample.CompareTo(b.Sample) : a.Column.CompareTo(b.Column)); // Array.Sort OK: (sample, column) is unique
                 }
                 if (parameters.KeepCoefficients)
                 {
@@ -492,6 +576,7 @@ namespace pwiz.Osprey.Demux
             private double[] _curvature = Array.Empty<double>();
             private double[] _lambda = Array.Empty<double>();
             private bool[] _active = Array.Empty<bool>();
+            private bool[] _everActive = Array.Empty<bool>();   // profiling: active at some point in this descent
             // Screening: a coefficient whose gradient from the data alone cannot beat its lambda. Within one descent
             // the weights are fixed and the model only adds non-negative peaks, so the residual stays at or below
             // the data and no coefficient's gradient exceeds its value at zero: a screened coefficient never
@@ -548,6 +633,15 @@ namespace pwiz.Osprey.Demux
             private long _dataPoints;
             private long _refitPoints;
             private long _tGrad, _tGram, _tNnls, _tUpdate, _singles, _moves, _empty;
+            private int _stage;                              // the descent running: 0 first, 1 reweighted, 2 relaxed
+            private int _round;                              // the descent's round
+            private double _addedGain;                       // the last gradient check's additions' decrease, each alone
+            private readonly double[] _stageLateGain = new double[3];
+            private readonly long[] _stageLateRounds = new long[3], _stageSmallRounds3 = new long[3], _stageSmallRounds4 = new long[3];
+            private readonly long[] _stageDescents = new long[3], _stageRounds = new long[3], _stagePasses = new long[3],
+                _stageBlockSolves = new long[3], _stageGradientTicks = new long[3], _stagePassTicks = new long[3],
+                _stageRoundCapped = new long[3], _stagePassCapped = new long[3], _stageLateAdds = new long[3],
+                _stageReAdds = new long[3];
             private double _decrease;                        // the objective's decrease over the current pass
 
             public ChunkSolver(double[,] a, JointDemuxParams parameters)
@@ -651,9 +745,13 @@ namespace pwiz.Osprey.Demux
             /// </summary>
             public double[] RowExposure { get; set; }
 
-            /// <summary>Solves the coefficients of grid points [lo, hi] from points[start, end).</summary>
+            /// <summary>
+            /// Solves one chunk: the grid points [lo, hi] fitted to points [start, end). With <paramref name="warm"/>,
+            /// the previous sweep's coefficients sorted by sample, the first descent starts from those from
+            /// <paramref name="warmFrom"/> on that fall in the chunk.
+            /// </summary>
             public void Solve(List<(long Sample, int Row, double Ions)> points, int start, int end, long lo, long hi,
-                double[] kernel)
+                double[] kernel, List<(int Column, long Sample, double Beta)> warm = null, int warmFrom = 0)
             {
                 long t0 = Now();
                 _lo = lo;
@@ -721,18 +819,46 @@ namespace pwiz.Osprey.Demux
                 long t1 = Now();
                 // 1. Poisson weights from the data smoothed by the peak, with the z-scaled lasso.
                 FillWeights(false);
-                Descend(_parameters.L1Z, true, false, true);
+                bool warmed = warm != null && Warm(warm, warmFrom, hi);
+                _stage = 0;
+                Descend(_parameters.L1Z, true, false, !warmed);
                 // 2. Poisson weights from that solution's expected counts.
                 if (_parameters.Reweight)
                 {
                     FillWeights(true);
+                    _stage = 1;
                     Descend(_parameters.L1Z, true, _parameters.RefitLambdaChange > 0);
                 }
                 // 3. Relaxed: the kept coefficients without the penalty.
                 if (_parameters.Relaxed && _parameters.L1Z > 0)
+                {
+                    _stage = 2;
                     Descend(0, false);
+                }
                 if (JointDemuxProfile.Enabled)
                     Flush(t1 - t0);
+            }
+
+            /// <summary>
+            /// Sets the previous sweep's coefficients from <paramref name="from"/> through sample <paramref name="hi"/>
+            /// where this chunk can solve them (grid points with data in reach, used columns with curvature), and takes
+            /// their peaks off the residual. Returns whether any was set.
+            /// </summary>
+            private bool Warm(List<(int Column, long Sample, double Beta)> warm, int from, long hi)
+            {
+                bool any = false;
+                for (int i = from; i < warm.Count && warm[i].Sample <= hi; i++)
+                {
+                    var (j, sample, beta) = warm[i];
+                    int q = (int)(sample - _lo), index = q * _columns + j;
+                    if (!_inReach[q] || !_columnUsed[j] || _curvature[index] <= 0)
+                        continue;
+                    _beta[index] = beta;
+                    for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                        SubtractPeak(_columnRow[k] * _samples + q, _columnA[k] * beta);
+                    any = true;
+                }
+                return any;
             }
 
             /// <summary>Adds the positive coefficients of the core grid points [core0, core1], core columns only.</summary>
@@ -787,6 +913,29 @@ namespace pwiz.Osprey.Demux
                 Interlocked.Add(ref JointDemuxProfile.SingleSolves, _singles);
                 Interlocked.Add(ref JointDemuxProfile.MovedSolves, _moves);
                 Interlocked.Add(ref JointDemuxProfile.EmptyVisits, _empty);
+                for (int s = 0; s < 3; s++)
+                {
+                    Interlocked.Add(ref JointDemuxProfile.StageDescents[s], _stageDescents[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageRounds[s], _stageRounds[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StagePasses[s], _stagePasses[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageBlockSolves[s], _stageBlockSolves[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageGradientTicks[s], _stageGradientTicks[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StagePassTicks[s], _stagePassTicks[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageRoundCapped[s], _stageRoundCapped[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StagePassCapped[s], _stagePassCapped[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageLateAdds[s], _stageLateAdds[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageReAdds[s], _stageReAdds[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageLateRounds[s], _stageLateRounds[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageSmallRounds3[s], _stageSmallRounds3[s]);
+                    Interlocked.Add(ref JointDemuxProfile.StageSmallRounds4[s], _stageSmallRounds4[s]);
+                    lock (JointDemuxProfile.StageLateGain)
+                        JointDemuxProfile.StageLateGain[s] += _stageLateGain[s];
+                    _stageLateRounds[s] = _stageSmallRounds3[s] = _stageSmallRounds4[s] = 0;
+                    _stageLateGain[s] = 0;
+                    _stageDescents[s] = _stageRounds[s] = _stagePasses[s] = _stageBlockSolves[s] = 0;
+                    _stageGradientTicks[s] = _stagePassTicks[s] = _stageRoundCapped[s] = _stagePassCapped[s] = 0;
+                    _stageLateAdds[s] = _stageReAdds[s] = 0;
+                }
                 _tGrad = _tGram = _tNnls = _tUpdate = _singles = _moves = _empty = 0;
                 _refitPoints = 0;
                 _weightTicks = _gradientTicks = _passTicks = _objectiveTicks = _rounds = _passes = _blockSolves = _blockColumnCount = 0;
@@ -807,6 +956,7 @@ namespace pwiz.Osprey.Demux
                     _curvature = new double[cp];
                     _lambda = new double[cp];
                     _active = new bool[cp];
+                    _everActive = new bool[cp];
                     _screened = new bool[cp];
                 }
                 if (_v.Length < rp)
@@ -972,6 +1122,10 @@ namespace pwiz.Osprey.Demux
             /// </summary>
             private void Descend(double z, bool grow = true, bool selective = false, bool screen = false)
             {
+                long rounds0 = _rounds, passes0 = _passes, solves0 = _blockSolves, gradient0 = _gradientTicks, pass0 = _passTicks;
+                double relativeTolerance = _parameters.RelativeTolerance, growTolerance = _parameters.GrowRelativeTolerance;
+                if (_stage == 0 && _parameters.Reweight && _parameters.FirstRelativeTolerance > 0)
+                    relativeTolerance = _parameters.FirstRelativeTolerance;
                 double change = _parameters.RefitLambdaChange;
                 _screening = screen && grow && _parameters.Screen;
                 _screenReady = false;
@@ -996,12 +1150,16 @@ namespace pwiz.Osprey.Demux
                     if (selective && refit)
                         _refitPoints++;
                 }
+                if (JointDemuxProfile.Enabled)
+                    Array.Copy(_active, _everActive, _points * _columns);
                 long o0 = Now();
                 double objective = Objective();
                 _objectiveTicks += Now() - o0;
+                bool settled = !grow;
                 for (int round = 0; round < _parameters.MaxRounds; round++)
                 {
                     long t0 = Now();
+                    _round = round;
                     int added = grow ? AddViolators() : 0;
                     if (_screening)
                     {
@@ -1010,9 +1168,24 @@ namespace pwiz.Osprey.Demux
                     }
                     long t1 = Now();
                     _gradientTicks += t1 - t0;
-                    if (grow && added == 0 && round > 0)
+                    if (grow && round > 0 && JointDemuxProfile.Enabled && added > 0)
+                    {
+                        double share = _addedGain / Math.Max(objective, 1e-300);
+                        _stageLateGain[_stage] += share;
+                        _stageLateRounds[_stage]++;
+                        if (share <= 1e-3)
+                            _stageSmallRounds3[_stage]++;
+                        if (share <= 1e-4)
+                            _stageSmallRounds4[_stage]++;
+                    }
+                    bool worthless = growTolerance > 0 && _addedGain <= growTolerance * objective;
+                    if (grow && round > 0 && (added == 0 || worthless))
+                    {
+                        settled = true;
                         break;
+                    }
                     _rounds++;
+                    bool converged = false;
                     for (int pass = 0; pass < _parameters.MaxPasses; pass++)
                     {
                         long t2 = Now();
@@ -1023,12 +1196,25 @@ namespace pwiz.Osprey.Demux
                         _passes++;
                         // Each block step's decrease is exact, so the objective is tracked, not recomputed.
                         objective -= _decrease;
-                        if (largest < _parameters.ToleranceIons || _decrease <= _parameters.RelativeTolerance * objective)
+                        if (largest < _parameters.ToleranceIons || _decrease <= relativeTolerance * objective)
+                        {
+                            converged = true;
                             break;
+                        }
                     }
+                    if (!converged)
+                        _stagePassCapped[_stage]++;
                     if (!grow)
                         break;
                 }
+                _stageDescents[_stage]++;
+                _stageRounds[_stage] += _rounds - rounds0;
+                _stagePasses[_stage] += _passes - passes0;
+                _stageBlockSolves[_stage] += _blockSolves - solves0;
+                _stageGradientTicks[_stage] += _gradientTicks - gradient0;
+                _stagePassTicks[_stage] += _passTicks - pass0;
+                if (!settled)
+                    _stageRoundCapped[_stage]++;
             }
 
             /// <summary>
@@ -1323,6 +1509,7 @@ namespace pwiz.Osprey.Demux
             /// </remarks>
             private int AddViolators()
             {
+                _addedGain = 0;
                 int groups = _groupPoints / WIDTH;
                 Array.Clear(_groupCheck, 0, groups);
                 bool any = false;
@@ -1404,6 +1591,18 @@ namespace pwiz.Osprey.Demux
                                 _activeCount[q]++;
                                 _dirty[q] = true;
                                 added++;
+                                double excess = g - _lambda[index];
+                                _addedGain += excess * excess / (2 * _curvature[index]);
+                                if (JointDemuxProfile.Enabled)
+                                {
+                                    if (_round > 0)
+                                    {
+                                        _stageLateAdds[_stage]++;
+                                        if (_everActive[index])
+                                            _stageReAdds[_stage]++;
+                                    }
+                                    _everActive[index] = true;
+                                }
                             }
                         }
                     }

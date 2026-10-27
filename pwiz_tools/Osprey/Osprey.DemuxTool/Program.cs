@@ -59,6 +59,7 @@ namespace pwiz.Osprey.DemuxTool
             bool countsPerIonSet = false, ms1Set = false, schemeSet = false, noDemux = false, centrix = false;
             bool jointCentrix = false;
             var filters = new List<string>();
+            var jointSet = new HashSet<string>();   // the joint settings --joint-param named, which defaults leave alone
             var options = new ScanningDemuxOptions();
             // The staggered joint solve's Centrix settings serve --centroid centrix too; the joint solve takes its sigma
             // from --peak-sigma-th.
@@ -293,6 +294,7 @@ namespace pwiz.Osprey.DemuxTool
                             Console.Error.WriteLine(@"Unknown joint setting: {0}", value);
                             return 1;
                         }
+                        jointSet.Add(value.Substring(0, value.IndexOf('=')));
                         break;
                     case @"--joint-keep-active":
                         // Keep coefficients that reach zero in the active set for the rest of the round.
@@ -348,6 +350,21 @@ namespace pwiz.Osprey.DemuxTool
             // centroids (DIA-NN's tolerance pinned), at a CV 0.002-0.003 worse.
             if (options.Joint && !ms1Set)
                 options.JointMs1 = !staggered;
+            // Staggered, each sweep's chunks start from the previous sweep's solve, the first descent (which only sets
+            // the second's weights) stops at 1e-3, and the active set stops growing once a round's additions would lower
+            // the objective by 1e-4 of it or less: on three whole Stellar SuperOverlap profile runs, 12.6% less time with
+            // the same detections, and on a slice closer to the converged solve than without. On a ZT Scan slice the
+            // same settings moved the output away from it.
+            if (options.Joint && staggered)
+            {
+                var joint = options.JointParameters;
+                if (!jointSet.Contains(nameof(joint.WarmStart)))
+                    joint.WarmStart = true;
+                if (!jointSet.Contains(nameof(joint.FirstRelativeTolerance)))
+                    joint.FirstRelativeTolerance = 1e-3;
+                if (!jointSet.Contains(nameof(joint.GrowRelativeTolerance)))
+                    joint.GrowRelativeTolerance = 1e-4;
+            }
             // A scanning acquisition keeps the fit's own centroids unless asked to split and centroid with Centrix,
             // until that is shown to do better on the slice.
             if (!staggered)
@@ -375,9 +392,7 @@ namespace pwiz.Osprey.DemuxTool
             Console.WriteLine(@"Layout: {0}{1}", staggered ? @"staggered bins" : options.Raw ? @"raw" : options.Layout.Name,
                 options.Parameters.PoissonWeights ? string.Empty : @", unweighted");
             Console.WriteLine(@"Solve: {0}", options.Joint
-                ? string.Format(CultureInfo.InvariantCulture, @"joint profile demux and centroiding, L1 z {0}{1}, min-out {2}",
-                    options.JointParameters.L1Z, options.JointParameters.Relaxed ? @", relaxed" : string.Empty,
-                    options.JointParameters.MinOutputIons)
+                ? JointSolveSettings(options.JointParameters)
                 : SolveSettings(options.Parameters));
             if (staggered)
             {
@@ -534,6 +549,7 @@ namespace pwiz.Osprey.DemuxTool
             if (JointDemuxProfile.Enabled)
             {
                 Console.WriteLine(JointDemuxProfile.Summary());
+                Console.WriteLine(JointDemuxProfile.StageSummary());
                 Console.WriteLine(JointDemuxProfile.PassSummary());
             }
             return 0;
@@ -655,6 +671,20 @@ namespace pwiz.Osprey.DemuxTool
             }
             if (parameters.BlockSupportZ > 0 && !parameters.SourcePositions)
                 settings += string.Format(CultureInfo.InvariantCulture, @", block support z {0}", parameters.BlockSupportZ);
+            return settings;
+        }
+
+        /// <summary>The joint solve's settings, so each run's log records what produced its file.</summary>
+        private static string JointSolveSettings(JointDemuxParams parameters)
+        {
+            var settings = string.Format(CultureInfo.InvariantCulture, @"joint profile demux and centroiding, L1 z {0}{1}, min-out {2}",
+                parameters.L1Z, parameters.Relaxed ? @", relaxed" : string.Empty, parameters.MinOutputIons);
+            if (parameters.WarmStart)
+                settings += @", warm start";
+            if (parameters.FirstRelativeTolerance > 0)
+                settings += string.Format(CultureInfo.InvariantCulture, @", first descent to {0}", parameters.FirstRelativeTolerance);
+            if (parameters.GrowRelativeTolerance > 0)
+                settings += string.Format(CultureInfo.InvariantCulture, @", growth to {0}", parameters.GrowRelativeTolerance);
             return settings;
         }
     }
