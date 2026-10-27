@@ -108,13 +108,15 @@
   <Target Name="ExtractBrukerCompassXtractInterop"
           Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(BrukerArchive)"
-          Outputs="$(BrukerAssembliesDir)\Interop.EDAL.dll">
+          Inputs="$(BrukerArchive);$(BrukerAssembliesDir)\Interop.EDAL.dll"
+          Outputs="$(BrukerAssembliesDir)/.ExtractBrukerCompassXtractInterop.stamp">
     <MakeDir Directories="$(BrukerAssembliesDir)" />
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(BrukerAssembliesDir)&quot; &quot;$(BrukerArchive)&quot; &quot;vendor_api/Bruker/x64/Interop.EDAL.dll&quot;" StandardOutputImportance="low" />
     <Copy SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\x64\Interop.EDAL.dll"
           DestinationFolder="$(BrukerAssembliesDir)"
           SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(BrukerAssembliesDir)/.ExtractBrukerCompassXtractInterop.stamp" AlwaysCreate="true" />
   </Target>
 
   <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
@@ -171,8 +173,8 @@
   <Target Name="ExtractBrukerAssemblies"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(BrukerArchive)"
-          Outputs="$(BrukerAssembliesDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\$(BrukerBafLib)">
+          Inputs="$(BrukerArchive);$(BrukerAssembliesDir)\$(BrukerTimsLib);$(BrukerAssembliesDir)\$(BrukerBafLib)"
+          Outputs="$(BrukerAssembliesDir)/.ExtractBrukerAssemblies-$(BrukerArchiveDir).stamp">
     <MakeDir Directories="$(BrukerAssembliesDir)" />
     <!-- timsdata is the TDF/TSF reader; baf2sql_c is the SQL-cached BAF reader. -->
     <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
@@ -195,6 +197,8 @@
           SourceFiles="$(BrukerAssembliesDir)\vendor_api\Bruker\$(BrukerArchiveDir)\$(BrukerOpenMpLib)"
           DestinationFolder="$(BrukerAssembliesDir)"
           SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(BrukerAssembliesDir)/.ExtractBrukerAssemblies-$(BrukerArchiveDir).stamp" AlwaysCreate="true" />
   </Target>
 
   <!--
