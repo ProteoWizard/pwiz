@@ -2180,15 +2180,30 @@ namespace pwiz.Skyline
         {
             // get all the valid data sources (files and sub directories) in this directory.
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
-            try
+            if (sourceDir.StartsWith(WatersConnectUrl.UrlPrefix))
             {
-                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir, recursive).ToArray();
+                try
+                {
+                    listNamedPaths = GetWatersConnectDataSources(sourceDir);
+                }
+                catch (Exception e)
+                {
+                    _out.WriteException(Resources.Error___0_, e);
+                    return null;
+                }
             }
-            catch(IOException e)
+            else
             {
-                _out.WriteLine(SkylineResources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
-                _out.WriteException(e);
-                return null;
+                try
+                {
+                    listNamedPaths = DataSourceUtil.GetDataSources(sourceDir, recursive).ToArray();
+                }
+                catch (IOException e)
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
+                    _out.WriteException(e);
+                    return null;
+                }
             }
             if (!listNamedPaths.Any())
             {
@@ -2208,6 +2223,20 @@ namespace pwiz.Skyline
             }
             
             return listNamedPaths;
+        }
+
+        /// <summary>
+        /// Lists the injections in a waters_connect sample set, named by a friendly path, a path-form URL
+        /// or "waters_connect:sampleSetId=...", as one replicate per injection named after the injection.
+        /// A sample set holds no sub-folders, so --import-all and --import-all-files behave the same.
+        /// </summary>
+        private static IList<KeyValuePair<string, MsDataFileUri[]>> GetWatersConnectDataSources(string sampleSetPath)
+        {
+            var sampleSetUrl = (WatersConnectUrl) CommandArgs.ParseImportFileValue(sampleSetPath);
+            return sampleSetUrl.ListSampleSetInjections()
+                .Select(injectionUrl => new KeyValuePair<string, MsDataFileUri[]>(
+                    injectionUrl.GetFileNameWithoutExtension(), new MsDataFileUri[] { injectionUrl }))
+                .ToArray();
         }
 
         private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, Regex namingPattern, 
@@ -3711,13 +3740,14 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Resolves a waters_connect data source specified on the command line to a concrete injection.
-        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection" or a path-form URL without
-        /// an injection id is navigated on the server (via the saved account) to fill in the ids the import
-        /// requires. Non-waters_connect and already-resolved URLs are returned unchanged.
+        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection", a path-form URL, or an
+        /// id form "waters_connect:sampleSetId=...&amp;injectionId=..." is looked up on the server (via the
+        /// saved account) to fill in the ids and path the import requires. Non-waters_connect and
+        /// already-resolved URLs are returned unchanged.
         /// </summary>
         private static MsDataFileUri ResolveWatersConnectImportUri(MsDataFileUri uri)
         {
-            if (uri is WatersConnectUrl watersConnectUrl && watersConnectUrl.InjectionId == null)
+            if (uri is WatersConnectUrl watersConnectUrl)
                 return watersConnectUrl.ResolveInjection();
             return uri;
         }
