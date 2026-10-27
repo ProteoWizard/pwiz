@@ -21,6 +21,11 @@
       <?define ProductName="Skyline-Daily (32 bit)"?>
     <?endif?>
   <?endif?>
+  <?if $(sys.BUILDARCH) = x64 ?>
+    <?define RuntimeIdentifier="win-x64"?>
+  <?else?>
+    <?define RuntimeIdentifier="win-x86"?>
+  <?endif?>
 
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="MacCoss Lab, UW" UpgradeCode="$(var.UpgradeCode)">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
@@ -64,6 +69,7 @@
       <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
       <ComponentGroupRef Id="Microsoft.VC90.CRT_files"/>
       <ComponentGroupRef Id="percolator_files"/>
+      <ComponentGroupRef Id="runtimes_native_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
 
@@ -114,6 +120,11 @@
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
       <Directory Id="Microsoft.VC90.CRT_directory" Name="Microsoft.VC90.CRT"/>
       <Directory Id="percolator_directory" Name="percolator"/>
+      <Directory Id="runtimes_directory" Name="runtimes">
+        <Directory Id="runtimes_win_directory" Name="$(var.RuntimeIdentifier)">
+          <Directory Id="runtimes_native_directory" Name="native"/>
+        </Directory>
+      </Directory>
     </DirectoryRef>
   </Fragment>
 
@@ -351,6 +362,18 @@
       <Component Id="SharedBatch.dll">
         <File Source="$(var.Skyline.TargetDir)/SharedBatch.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Sprache.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sprache.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Web.WebView2.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Web.WebView2.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Web.WebView2.WinForms.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Web.WebView2.WinForms.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Web.WebView2.Wpf.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Web.WebView2.Wpf.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Skyline.exe" Guid="{9C43D011-2748-480D-95EF-E7298E4E1B55}">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
         <ProgId Id="Skyline.Document.0" Description="Skyline Document" Icon="SkylineDoc.ico">
@@ -475,6 +498,9 @@
       <Component Id="ja_ProteomeDb.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\ProteomeDb.resources.dll" Id="ja_ProteomeDb.resources.dll_file" KeyPath="yes"/>
       </Component>
+      <Component Id="ja_PanoramaClient.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\PanoramaClient.resources.dll" Id="ja_PanoramaClient.resources.dll_file" KeyPath="yes"/>
+      </Component>
       <Component Id="ja_pwiz.Common.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\pwiz.Common.resources.dll" Id="ja_pwiz.Common.resources.dll_file" KeyPath="yes"/>
       </Component>
@@ -492,6 +518,9 @@
       </Component>
       <Component Id="ja_SkylineCmd.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\SkylineCmd.resources.dll" Id="ja_SkylineCmd.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_SkylineBatch.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\SkylineBatch.resources.dll" Id="ja_SkylineBatch.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="ja_ZedGraph.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\ZedGraph.resources.dll" Id="ja_ZedGraph.resources.dll_file" KeyPath="yes"/>
@@ -535,6 +564,9 @@
       <Component Id="zh_CHS_ProteomeDb.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\ProteomeDb.resources.dll" Id="zh_CHS_ProteomeDb.resources.dll_file" KeyPath="yes"/>
       </Component>
+      <Component Id="zh_CHS_PanoramaClient.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\PanoramaClient.resources.dll" Id="zh_CHS_PanoramaClient.resources.dll_file" KeyPath="yes"/>
+      </Component>
       <Component Id="zh_CHS_pwiz.Common.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.Common.resources.dll" Id="zh_CHS_pwiz.Common.resources.dll_file" KeyPath="yes"/>
       </Component>
@@ -552,6 +584,9 @@
       </Component>
       <Component Id="zh_CHS_SkylineCmd.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\SkylineCmd.resources.dll" Id="zh_CHS_SkylineCmd.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_SkylineBatch.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\SkylineBatch.resources.dll" Id="zh_CHS_SkylineBatch.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_ZedGraph.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\ZedGraph.resources.dll" Id="zh_CHS_ZedGraph.resources.dll_file" KeyPath="yes"/>
@@ -826,6 +861,9 @@
       <Component Id="Method_Thermo_Thermo.TNG.MethodXMLInterface.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Thermo\Thermo.TNG.MethodXMLInterface.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_Thermo_Thermo.TNG.MethodXMLInterface2.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll" KeyPath="yes"/>
+      </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Waters_files" Directory="Method_Waters_directory">
       <Component Id="Method_Waters_BuildWatersMethod.exe">
@@ -879,6 +917,11 @@
       </Component>
       <Component Id="percolator_vcruntime140.dll">
         <File Id="percolator_vcruntime140.dll" Source="$(var.Skyline.TargetDir)/vcruntime140.dll" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="runtimes_native_files" Directory="runtimes_native_directory">
+      <Component Id="runtimes_native_WebView2Loader.dll">
+        <File Id="runtimes_native_WebView2Loader.dll" Source="$(var.Skyline.TargetDir)/runtimes\$(var.RuntimeIdentifier)\native\WebView2Loader.dll" KeyPath="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>
