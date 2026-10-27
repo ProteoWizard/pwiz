@@ -378,7 +378,7 @@ namespace pwiz.SkylineTestFunctional
         private void PauseForDemo(string description)
         {
             if (IsDemo)
-                PauseTest(description);
+                PauseForManualTutorialStep(description);
         }
     }
 }
