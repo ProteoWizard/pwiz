@@ -1504,6 +1504,7 @@ namespace pwiz.SkylineTest
             "PRECURSORTYPE: [M+I]-\n" +
             "FORMULA: C9H11NO3\n" +
             "INCHIKEY: OUYCCCASQSFEME-QMMMGPOBSA-N\n" +
+            "RETENTIONTIME: NOT FOUND\n" + // Must not make the RT below look like seconds
             "RT: 5.25\n" +
             "IONMODE: negative\n" +
             "INSTRUMENTTYPE: LC-ITFT\n" +

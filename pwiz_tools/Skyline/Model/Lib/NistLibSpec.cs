@@ -383,7 +383,8 @@ namespace pwiz.Skyline.Model.Lib
 
         // Version 6 adds peak annotations
         // Version 7 adds ion mobility
-        private const int FORMAT_VERSION_CACHE = 7; 
+        // Version 8 reads MS-DIAL and FragHub retention times as minutes, and PRECURSORTYPE as the adduct
+        private const int FORMAT_VERSION_CACHE = 8;
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
@@ -1680,7 +1681,7 @@ namespace pwiz.Skyline.Model.Lib
                     var units = match.Groups[1].Value; // RetentionTime: vs RetentionTimeMins: vs RetentionTimeSecs:
                     var isMinutes = isMzVault || units.Length > 0 && !units.Equals(@"Secs", StringComparison.OrdinalIgnoreCase);
                     rt = GetRetentionTime(match.Groups[2].Value, isMinutes);
-                    rtAssumedSeconds = !isMzVault && units.Length == 0;
+                    rtAssumedSeconds = !isMzVault && units.Length == 0 && rt.HasValue; // Unparsed, as in "RETENTIONTIME: NOT FOUND", leaves room for another RT source
                     return true;  // Line is fully consumed
                 }
 
