@@ -139,11 +139,10 @@ namespace pwiz.CarafeSharp.Tasks
                     Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
                     LibraryModels.ApplyModelDirectoryMeta(_settings, modelDirectory, Log);
                 }
-                else
-                {
-                    // The pretrained models, with peptdeep's own RT model (iRT), not Carafe's Chronologer default
+                // Without a fine-tuned RT model, peptdeep's own RT model (iRT), not Carafe's
+                // Chronologer default: the table route's RT scale
+                if (modelDirectory.GetRtModelPath(_settings.TrainingType) == null)
                     _settings.RtModelType ??= RtModelType.alphapeptdeep;
-                }
             }
 
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);

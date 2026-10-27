@@ -96,6 +96,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 listBox.Items.RemoveAt(listBox.SelectedIndex);
         }
 
+        /// <summary>The page's modifications as Carafe's ids, for Osprey's command line: the one mapping both hosts use.</summary>
+        public void ApplyTo(OspreyConfig config)
+        {
+            config.FixedModificationIds = OspreyHelpers.GetCarafeModificationIds(FixedMods, out _);
+            config.VariableModificationIds = OspreyHelpers.GetCarafeModificationIds(VariableMods, out _);
+        }
+
         /// <summary>
         /// Next from the page: every modification must be one Carafe's table describes, since the
         /// library is predicted with them.

@@ -251,6 +251,8 @@ namespace pwiz.Osprey.Test
                 args.Select(a => a == LibraryBuildConfig.PREDICT_LIBRARY ? LibraryBuildConfig.PREDICT_TRAINING_LIBRARY : a).ToArray(),
                 args.Select(a => a == table ? Path.Combine(workDir, @"missing.tsv") : a).ToArray(),
                 tunedArgs.Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText }).ToArray(),
+                // Inputs, which a table never searches
+                tunedArgs.Concat(InputArgs(DataInputs().Take(1))).ToArray(),
             };
             foreach (var refusedArgs in refused)
                 RunOspreyExpecting(refusedArgs, Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);

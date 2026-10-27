@@ -95,29 +95,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateTitle();
 
             DataFileResults = new ImportResultsDIAControl(this);
-            AddPageControl(DataFileResults, dataFilesPage, 2, 60, 0);
+            WizardPages.AddPageControl(DataFileResults, dataFilesPage, 2, 60, 0);
 
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
             // Leave the bottom of the FASTA page to the existing-library alternative.
-            AddPageControl(ImportFastaControl, fastaPage, 2, 60, fastaPage.Height - cbUseExistingLibrary.Top + 6);
+            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60, fastaPage.Height - cbUseExistingLibrary.Top + 6);
 
             LibraryModelControl = new OspreyLibraryModelControl
             {
                 SearchedFiles = () => SearchedFilePaths,
                 DocumentFilePath = skylineWindow.DocumentFilePath
             };
-            AddPageControl(LibraryModelControl, libraryModelPage, 10, 55, 4);
+            WizardPages.AddPageControl(LibraryModelControl, libraryModelPage, 10, 55, 4);
 
             ModificationsControl = new OspreyModificationsControl();
-            AddPageControl(ModificationsControl, modificationsPage, 10, 55, 4);
+            WizardPages.AddPageControl(ModificationsControl, modificationsPage, 10, 55, 4);
             ModificationsControl.SetModifications(Document.Settings.PeptideSettings.Modifications.StaticModifications);
 
             SearchSettingsControl = new OspreySearchSettingsControl();
-            AddPageControl(SearchSettingsControl, searchSettingsPage, 20, 45, 4);
+            WizardPages.AddPageControl(SearchSettingsControl, searchSettingsPage, 20, 45, 4);
 
             SearchControl = new OspreySearchControl(this);
-            AddPageControl(SearchControl, runSearchPage, 2, 0, 0);
+            WizardPages.AddPageControl(SearchControl, runSearchPage, 2, 0, 0);
             SearchControl.SearchFinished += SearchControlSearchFinished;
 
             UpdateExistingLibraryControls();
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             var peptideSettings = Document.Settings.PeptideSettings;
             var charges = GetPrecursorCharges();
-            return new OspreyConfig
+            var config = new OspreyConfig
             {
                 DataFiles = DataFileResults.FoundResultsFiles.Select(f => f.Path).ToList(),
                 FastaPath = ImportFastaControl.FastaFile,
@@ -384,13 +384,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 WorkDirectory = OspreyHelpers.GetWorkDirectory(SkylineWindow.DocumentFilePath),
                 TorchRuntimesDirectory = TorchRuntimes.RuntimesDirectory,
                 Device = UseGpu ? OspreyHelpers.DEVICE_GPU : OspreyHelpers.DEVICE_CPU,
-                Resolution = IsHighResolution ? OspreyHelpers.RESOLUTION_HRAM : OspreyHelpers.RESOLUTION_UNIT,
-                FragmentTolerance = FragmentTolerance,
-                FragmentUnit = IsFragmentTolerancePpm ? OspreyHelpers.FRAGMENT_UNIT_PPM : OspreyHelpers.FRAGMENT_UNIT_MZ,
-                RunFdr = RunFdr,
-                ExperimentFdr = ExperimentFdr,
-                ProteinFdr = ProteinFdr,
-                Threads = Threads,
                 EnzymeIndex = OspreyHelpers.GetCarafeEnzymeIndex(ImportFastaControl.Enzyme),
                 MaxMissedCleavages = ImportFastaControl.MaxMissedCleavages,
                 MinPeptideLength = peptideSettings.Filter.MinPeptideLength,
@@ -398,10 +391,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MinCharge = charges.Count > 0 ? charges.Min() : 2,
                 MaxCharge = charges.Count > 0 ? charges.Max() : 3,
                 MaxVariableMods = peptideSettings.Modifications.MaxVariableMods,
-                FixedModificationIds = OspreyHelpers.GetCarafeModificationIds(FixedMods, out _),
-                VariableModificationIds = OspreyHelpers.GetCarafeModificationIds(VariableMods, out _),
                 CultureName = CultureInfo.CurrentUICulture.Name
             };
+            SearchSettingsControl.ApplyTo(config);
+            ModificationsControl.ApplyTo(config);
+            return config;
         }
 
         /// <summary>
@@ -806,11 +800,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void UpdateTitle()
         {
             lblTitle.Text = wizardPages.SelectedTab?.Text;
-        }
-
-        private static void AddPageControl(UserControl pageControl, TabPage tabPage, int border, int header, int footer)
-        {
-            WizardPages.AddPageControl(pageControl, tabPage, border, header, footer);
         }
     }
 

@@ -960,6 +960,15 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0} predicts a library and searches nothing, so {1} cannot be given with it..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} builds the library and {1} names one; give one or the other..
         /// </summary>
         public static string Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_ {

@@ -22,6 +22,7 @@ using System;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -118,6 +119,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get => (int)numThreads.Value;
             set => numThreads.Value = Math.Min(value, MAX_THREAD_COUNT);
+        }
+
+        /// <summary>The page's settings, as Osprey's command line takes them: the one mapping both hosts use.</summary>
+        public void ApplyTo(OspreyConfig config)
+        {
+            config.Resolution = IsHighResolution ? OspreyHelpers.RESOLUTION_HRAM : OspreyHelpers.RESOLUTION_UNIT;
+            config.FragmentTolerance = FragmentTolerance;
+            config.FragmentUnit = IsFragmentTolerancePpm ? OspreyHelpers.FRAGMENT_UNIT_PPM : OspreyHelpers.FRAGMENT_UNIT_MZ;
+            config.RunFdr = RunFdr;
+            config.ExperimentFdr = ExperimentFdr;
+            config.ProteinFdr = ProteinFdr;
+            config.Threads = Threads;
         }
 
         /// <summary>Next from the page: each threshold is a fraction in (0, 1]. A threshold of 0 is a search that reports nothing, so the range excludes it.</summary>

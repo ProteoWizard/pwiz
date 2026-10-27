@@ -334,6 +334,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 progressStatus = progressStatus.NextSegment();
                 CopyTunedModel();
             }
+            else if (File.Exists(TunedModelPath))
+            {
+                // The library is rebuilt without a tuning: the model an earlier build left beside
+                // it did not predict this one, so it goes, as the library it belonged to does
+                FileEx.SafeDelete(TunedModelPath);
+            }
             timer.Stop();
             Messages.WriteAsyncUserMessage(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_,
                 timer.Elapsed.Minutes, timer.Elapsed.Seconds));
@@ -346,7 +352,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// </summary>
         private OspreyConfig GetTuningCommand()
         {
-            var config = TuningConfig;
+            // A copy: what the form handed in stays as it was
+            var config = TuningConfig.Clone();
             config.PrecursorTablePath = InputFilePath;
             config.Task = null;
             config.OutputPath = OspreyOutputPath;

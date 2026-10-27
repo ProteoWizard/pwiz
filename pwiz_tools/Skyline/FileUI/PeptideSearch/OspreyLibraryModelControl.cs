@@ -41,7 +41,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     /// </summary>
     public partial class OspreyLibraryModelControl : UserControl
     {
-        private readonly SettingsListComboDriver<CarafeModelSpec> _driverModel;
+        private SettingsListComboDriver<CarafeModelSpec> _driverModel;
         private UseGpuDriver _useGpuDriver;
         private CarafeModelSpec _modelBeforeTuning;
         private bool _useGpuUpdated;
@@ -49,15 +49,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public OspreyLibraryModelControl()
         {
             InitializeComponent();
-
-            // The model list as Build Library offers it: the pretrained models, the saved ones, Add,
-            // Edit current and Edit list
-            _driverModel = new SettingsListComboDriver<CarafeModelSpec>(comboModel, Settings.Default.CarafeModelList);
-            _driverModel.LoadList(null);
             UpdateTuningControls();
         }
 
         private Form WizardForm => FormEx.GetParentForm(this);
+
+        /// <summary>
+        /// The model list as Build Library offers it: the pretrained models, the saved ones, Add,
+        /// Edit current and Edit list. Filled when first asked for, since each saved model's display
+        /// name reads its file, and a host may never show this page.
+        /// </summary>
+        private SettingsListComboDriver<CarafeModelSpec> DriverModel
+        {
+            get
+            {
+                if (_driverModel == null)
+                {
+                    _driverModel = new SettingsListComboDriver<CarafeModelSpec>(comboModel, Settings.Default.CarafeModelList);
+                    _driverModel.LoadList(null);
+                }
+                return _driverModel;
+            }
+        }
 
         /// <summary>The Use GPU checkbox's driver, made once the control has a form to ask its questions from.</summary>
         private UseGpuDriver UseGpuDriver => _useGpuDriver ??= new UseGpuDriver(this, cbUseGpu);
@@ -97,9 +110,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public CarafeModelSpec Model
         {
-            get => _driverModel?.SelectedItem ?? CarafeModelSpec.DEFAULT;
+            get => DriverModel.SelectedItem ?? CarafeModelSpec.DEFAULT;
             // The driver selects by the combo's text, which is the display name, not the key
-            set => _driverModel.LoadList(Settings.Default.CarafeModelList.GetDisplayName(value));
+            set => DriverModel.LoadList(Settings.Default.CarafeModelList.GetDisplayName(value));
         }
 
         private void comboModel_SelectedIndexChanged(object sender, EventArgs e)
@@ -112,19 +125,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ModelChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>Fills the model combo, for a host showing the page.</summary>
+        public void LoadModels()
+        {
+            var unused = DriverModel;
+        }
+
         /// <summary>
         /// The combo's Add..., for tests: opens the model editor, which names a model file (the
         /// document's fine-tuned model, say) and adds it to the list, selected.
         /// </summary>
         public void AddModel()
         {
-            _driverModel.AddItem();
+            DriverModel.AddItem();
         }
 
         /// <summary>The combo's Edit list..., for tests: opens the grid of models.</summary>
         public void EditModelList()
         {
-            _driverModel.EditList();
+            DriverModel.EditList();
         }
 
         /// <summary>

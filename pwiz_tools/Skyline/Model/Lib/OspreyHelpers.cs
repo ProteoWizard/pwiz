@@ -724,6 +724,12 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>The culture Osprey writes its messages in: Skyline's UI language, which the child would not inherit.</summary>
         public string CultureName { get; set; }
+
+        /// <summary>A copy to fill in further without changing this one; the lists are shared.</summary>
+        public OspreyConfig Clone()
+        {
+            return (OspreyConfig)MemberwiseClone();
+        }
     }
 
     /// <summary>

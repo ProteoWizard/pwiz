@@ -117,18 +117,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>Browse... chooses the FASTA file, starting in the folder the last one came from.</summary>
         public void BrowseFasta()
         {
+            string path = BrowseFasta(WizardForm, DocumentFilePath);
+            if (path != null)
+                FastaFile = path;
+        }
+
+        /// <summary>
+        /// The Open FASTA dialog, starting in the folder the last FASTA came from, else the
+        /// document's; the chosen file, or null. Remembers the folder for the next time.
+        /// </summary>
+        public static string BrowseFasta(IWin32Window owner, string documentFilePath)
+        {
             string initialDir = Settings.Default.FastaDirectory;
-            if (string.IsNullOrEmpty(initialDir) && !string.IsNullOrEmpty(DocumentFilePath))
-                initialDir = Path.GetDirectoryName(DocumentFilePath);
+            if (string.IsNullOrEmpty(initialDir) && !string.IsNullOrEmpty(documentFilePath))
+                initialDir = Path.GetDirectoryName(documentFilePath);
             using var dlg = new OpenFileDialog();
             dlg.Title = PeptideSearchResources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA;
             dlg.InitialDirectory = initialDir;
             dlg.CheckPathExists = true;
             dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(PeptideSearchResources.OspreyFastaControl_BrowseFasta_FASTA_files, @".fasta", @".fa", @".faa"));
-            if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
-                return;
+            if (dlg.ShowDialog(owner) != DialogResult.OK)
+                return null;
             Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
-            FastaFile = dlg.FileName;
+            return dlg.FileName;
         }
 
         /// <summary>

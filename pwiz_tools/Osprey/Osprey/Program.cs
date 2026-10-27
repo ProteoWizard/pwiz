@@ -1139,15 +1139,26 @@ namespace pwiz.Osprey
                     return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
                         precursorsArg, OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY));
                 }
+                // Nothing of the table is searched: not the inputs, not with entrapment, not as a
+                // stage of a search
+                var notWithTable = new List<string>();
+                if (config.InputFiles.Count > 0)
+                    notWithTable.Add(OspreyCommandArgs.ARG_INPUT.ShortArgumentText);
+                if (build.Entrapment)
+                    notWithTable.Add(OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
+                if (build.EntrapmentFastaPath != null)
+                    notWithTable.Add(OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText);
+                if (build.TrainingSearch)
+                    notWithTable.Add(OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText);
+                if (notWithTable.Count > 0)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_,
+                        precursorsArg, string.Join(@", ", notWithTable));
+                }
+                // The tuning runs and the digest options need the FASTA they describe
                 var fastaOnly = new List<string>();
                 if (build.Tuning && build.FastaPath == null)
                     fastaOnly.Add(OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
-                if (build.Entrapment)
-                    fastaOnly.Add(OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
-                if (build.EntrapmentFastaPath != null)
-                    fastaOnly.Add(OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText);
-                if (build.TrainingSearch)
-                    fastaOnly.Add(OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText);
                 fastaOnly.AddRange(build.DigestOptionsWithPrecursors);
                 if (fastaOnly.Count > 0)
                 {

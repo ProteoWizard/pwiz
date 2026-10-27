@@ -19,7 +19,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -365,27 +364,21 @@ namespace pwiz.Skyline.SettingsUI
         {
             var settings = _documentUiContainer.DocumentUI.Settings;
             var charges = settings.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).ToList();
-            return new OspreyConfig
+            var config = new OspreyConfig
             {
                 FastaPath = FastaControl.FastaFile,
                 TrainingInputs = LibraryModelControl.TuningFiles,
-                Resolution = SearchSettingsControl.IsHighResolution ? OspreyHelpers.RESOLUTION_HRAM : OspreyHelpers.RESOLUTION_UNIT,
-                FragmentTolerance = SearchSettingsControl.FragmentTolerance,
-                FragmentUnit = SearchSettingsControl.IsFragmentTolerancePpm ? OspreyHelpers.FRAGMENT_UNIT_PPM : OspreyHelpers.FRAGMENT_UNIT_MZ,
-                RunFdr = SearchSettingsControl.RunFdr,
-                ExperimentFdr = SearchSettingsControl.ExperimentFdr,
-                ProteinFdr = SearchSettingsControl.ProteinFdr,
-                Threads = SearchSettingsControl.Threads,
                 EnzymeIndex = OspreyHelpers.GetCarafeEnzymeIndex(FastaControl.Enzyme),
                 MaxMissedCleavages = FastaControl.MaxMissedCleavages,
                 MinPeptideLength = settings.PeptideSettings.Filter.MinPeptideLength,
                 MaxPeptideLength = settings.PeptideSettings.Filter.MaxPeptideLength,
                 MinCharge = charges.Count > 0 ? charges.Min() : 2,
                 MaxCharge = charges.Count > 0 ? charges.Max() : 3,
-                MaxVariableMods = settings.PeptideSettings.Modifications.MaxVariableMods,
-                FixedModificationIds = OspreyHelpers.GetCarafeModificationIds(ModificationsControl.FixedMods, out _),
-                VariableModificationIds = OspreyHelpers.GetCarafeModificationIds(ModificationsControl.VariableMods, out _)
+                MaxVariableMods = settings.PeptideSettings.Modifications.MaxVariableMods
             };
+            SearchSettingsControl.ApplyTo(config);
+            ModificationsControl.ApplyTo(config);
+            return config;
         }
 
         /// <summary>
@@ -463,18 +456,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnBrowseFasta_Click(object sender, EventArgs e)
         {
-            string initialDir = Settings.Default.FastaDirectory;
-            if (string.IsNullOrEmpty(initialDir) && !string.IsNullOrEmpty(_skylineWindow.DocumentFilePath))
-                initialDir = Path.GetDirectoryName(_skylineWindow.DocumentFilePath);
-            using var dlg = new OpenFileDialog();
-            dlg.Title = PeptideSearchResources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA;
-            dlg.InitialDirectory = initialDir;
-            dlg.CheckPathExists = true;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(PeptideSearchResources.OspreyFastaControl_BrowseFasta_FASTA_files, @".fasta", @".fa", @".faa"));
-            if (dlg.ShowDialog(this) != DialogResult.OK)
+            string path = OspreyFastaControl.BrowseFasta(this, _skylineWindow.DocumentFilePath);
+            if (path == null)
                 return;
-            Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
-            PredictForFastaPath = dlg.FileName;
+            PredictForFastaPath = path;
             PredictForDocument = false;
         }
 
@@ -810,6 +795,8 @@ namespace pwiz.Skyline.SettingsUI
                     // Only now, so the NVIDIA driver is not loaded for the other sources, and only
                     // once, so Previous and Next keep the user's choice. Osprey was installed when
                     // the source was chosen: its package lists the CUDA runtime the box checks for.
+                    // The model list is read only now, since each saved model's name reads its file.
+                    LibraryModelControl.LoadModels();
                     LibraryModelControl.UpdateUseGpu();
                     UpdateModificationWarning();
                     btnNext.Enabled = true;
