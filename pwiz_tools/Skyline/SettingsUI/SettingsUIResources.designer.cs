@@ -341,12 +341,11 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from Carafe predictions..
         /// </summary>
-        public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
+        public static string BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_ {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_buil" +
-                        "d_a_library_from_AlphaPeptDeep_predictions_", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_", resourceCulture);
             }
         }
         

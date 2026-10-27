@@ -46,9 +46,9 @@ namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
     /// Build Library: the library's name and output, its data source, and the pages the source
-    /// leads to. The Files source goes on to its input files; the AlphaPeptDeep and Koina sources
+    /// leads to. The Files source goes on to its input files; the Carafe and Koina sources
     /// to what the library is predicted for (the document's precursors, or a protein FASTA's); and
-    /// AlphaPeptDeep then to the model Osprey predicts with, which may be fine-tuned first on DIA
+    /// Carafe then to the model Osprey predicts with, which may be fine-tuned first on DIA
     /// runs Osprey searches against a protein FASTA - the Osprey Search wizard's Library Model,
     /// Modifications and Search Settings pages, hosted here. Everything is chosen before Finish;
     /// the tuning, the prediction and the import then run as one job.
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-                    if (!CreateAlphaBuilder(name, outputPath))
+                    if (!CreateCarafeBuilder(name, outputPath))
                         return false;
                 }
                 else
@@ -333,11 +333,11 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool CreateAlphaBuilder(string name, string outputPath)
+        private bool CreateCarafeBuilder(string name, string outputPath)
         {
             if (PredictForDocument && !_documentUiContainer.DocumentUI.HasPeptides)
             {
-                MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_);
+                MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_);
                 return false;
             }
             // A model added to the list some time ago may have been moved or damaged since
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.SettingsUI
             if (doc == null)
                 return false;
 
-            var builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
+            var builder = new CarafeLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
                 CarafeModelPath = carafeModel.FilePath,
                 CarafeModelName = carafeModel.Name,
@@ -562,7 +562,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// True predicts the library for the document's precursors, and Finish is on the first
         /// page; false for <see cref="PredictForFastaPath"/>'s, chosen on the Predict For page.
-        /// The AlphaPeptDeep and Koina tabs each show the choice, kept the same on both.
+        /// The Carafe and Koina tabs each show the choice, kept the same on both.
         /// </summary>
         public bool PredictForDocument
         {
@@ -690,7 +690,7 @@ namespace pwiz.Skyline.SettingsUI
         private UseGpuDriver UseGpuDriver => _useGpuDriver ??= new UseGpuDriver(this, cbUseGpu);
 
         /// <summary>
-        /// The libtorch runtimes AlphaPeptDeep predicts with, which decide whether Use GPU can be checked.
+        /// The libtorch runtimes the prediction runs with, which decide whether Use GPU can be checked.
         /// </summary>
         public TorchRuntimes TorchRuntimes
         {
@@ -699,7 +699,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Whether AlphaPeptDeep predicts on the GPU. Checking it says why when the GPU cannot be used,
+        /// Whether the prediction runs on the GPU. Checking it says why when the GPU cannot be used,
         /// and otherwise downloads the NVIDIA CUDA runtime first, if it is not installed.
         /// </summary>
         public bool UseGpu
@@ -715,7 +715,7 @@ namespace pwiz.Skyline.SettingsUI
 
         /// <summary>
         /// Checks Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is
-        /// installed. Called when the AlphaPeptDeep source is chosen, so the NVIDIA driver is not
+        /// installed. Called when the Carafe source is chosen, so the NVIDIA driver is not
         /// loaded for the other sources, and only once, so the user's choice is kept after that.
         /// </summary>
         private void UpdateUseGpu()
@@ -789,7 +789,7 @@ namespace pwiz.Skyline.SettingsUI
             // What the chosen model supports: the pretrained models' modifications, and a fine-tuned
             // model's training modifications with them
             var warningMods = AbstractDeepLibraryBuilder.GetWarningMods(_documentUiContainer.DocumentUI,
-                AlphapeptdeepLibraryBuilder.GetModificationSupport(CarafeModel.FilePath));
+                CarafeLibraryBuilder.GetModificationSupport(CarafeModel.FilePath));
             labelModWarning.Visible = warningMods.Count > 0;
             if (warningMods.Count > 0)
             {
@@ -1392,7 +1392,7 @@ namespace pwiz.Skyline.SettingsUI
             set { radioKoinaSource.Checked = value; }
         }
 
-        public bool AlphaPeptDeep
+        public bool Carafe
         {
             get { return radioAlphaSource.Checked; }
             set { radioAlphaSource.Checked = value; }

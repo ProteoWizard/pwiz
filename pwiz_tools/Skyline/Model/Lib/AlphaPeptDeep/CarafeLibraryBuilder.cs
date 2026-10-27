@@ -35,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
     /// <summary>
-    /// Builds a library of AlphaPeptDeep MS2 and RT predictions for the document's precursors. The
+    /// Builds a library of Carafe's MS2 and RT predictions (the pretrained AlphaPeptDeep models, or a fine-tuned model) for the document's precursors. The
     /// precursors go to Osprey as the table Skyline once wrote for peptdeep, and Osprey's PredictLibrary
     /// phase (CarafeSharp's TorchSharp port of peptdeep, in Osprey's own process) predicts them, on an
     /// NVIDIA GPU when the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     /// defaults, and are then imported through BlibBuild as before. The library keeps the predicted
     /// CCS, which Skyline converts to ion mobility with each data file's calibration.
     /// </summary>
-    public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
+    public class CarafeLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
 
@@ -247,19 +247,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             };
 
         /// <summary>
-        /// Constructor for AlphaPeptDeep Library Builder.
+        /// Constructor for the Carafe library builder.
         /// </summary>
         /// <param name="libName">Name of the library to build.</param>
         /// <param name="libOutPath">Path to the blib final product.</param>
         /// <param name="document">Input document for building the library.</param>
         /// <param name="irtStandard">iRT peptide standard to include in the library.</param>
-        public AlphapeptdeepLibraryBuilder(string libName, string libOutPath,
+        public CarafeLibraryBuilder(string libName, string libOutPath,
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             string rootProcessingDir = Path.GetDirectoryName(libOutPath);
             if (string.IsNullOrEmpty(rootProcessingDir))
-                throw new ArgumentException($@"AlphapeptdeepLibraryBuilder libOutputPath {libOutPath} must be a full path.");
+                throw new ArgumentException($@"CarafeLibraryBuilder libOutputPath {libOutPath} must be a full path.");
 
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
             _rootProcessingDir = rootProcessingDir;
@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             try
             {
-                RunAlphapeptdeep(progress, ref progressStatus);
+                RunPrediction(progress, ref progressStatus);
                 if (progressStatus.IsCanceled)
                     return false;
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
-        private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private void RunPrediction(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // Note: Segments are distributed to balance the expected work of each task
             // One end per step, including the last: NextSegment() never advances past the final end
@@ -319,12 +319,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private void ExecuteOsprey(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus.ChangeMessage(IsTuning
-                ? ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library
-                : string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model,
+                ? ModelResources.CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library
+                : string.Format(ModelResources.CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model,
                     CarafeModelName ?? CarafeModelSpec.DEFAULT.Name)));
             if (!File.Exists(OspreyHelpers.OspreyBinary))
             {
-                throw new IOException(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_,
+                throw new IOException(string.Format(ModelResources.CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_,
                     OspreyHelpers.OspreyBinary));
             }
             var timer = Stopwatch.StartNew();
@@ -351,12 +351,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
             catch (Exception ex)
             {
-                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_, ex);
+                throw new IOException(ModelResources.CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_, ex);
             }
             if (progressStatus.IsCanceled)
                 return;
             if (!File.Exists(OutputSpectraLibFilepath))
-                throw new FileNotFoundException(ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_, OutputSpectraLibFilepath);
+                throw new FileNotFoundException(ModelResources.CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_, OutputSpectraLibFilepath);
             if (IsTuning)
             {
                 // ProcessRunner advanced the segment itself only when it read the NN% lines
@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 FileEx.SafeDelete(TunedModelPath);
             }
             timer.Stop();
-            Messages.WriteAsyncUserMessage(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_,
+            Messages.WriteAsyncUserMessage(string.Format(ModelResources.CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_,
                 timer.Elapsed.Minutes, timer.Elapsed.Seconds));
         }
 
@@ -404,14 +404,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             string modelPath = OspreyHelpers.GetTunedModelPath(OspreyOutputPath, OspreyWorkDirectory);
             if (!File.Exists(modelPath))
-                throw new FileNotFoundException(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_, modelPath), modelPath);
+                throw new FileNotFoundException(string.Format(ModelResources.CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_, modelPath), modelPath);
             File.Copy(modelPath, TunedModelPath, true);
         }
 
         public void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library));
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Importing_spectral_library));
 
             var result = new List<string>();
 
@@ -489,7 +489,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var build = new BlibBuild(incompleteBlibPath, inputFile);
 
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library));
+                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Importing_spectral_library));
 
             string[] ambiguous;
             bool completed = build.BuildLibrary(LibraryBuildAction.Create, progress, ref progressStatus, out ambiguous);
@@ -517,9 +517,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (progress.IsCanceled)
                 throw new OperationCanceledException();
             if (!completed)
-                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
+                throw new IOException(ModelResources.CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
 
-            Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
+            Messages.WriteAsyncUserMessage(ModelResources.CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
         }
     }
 }

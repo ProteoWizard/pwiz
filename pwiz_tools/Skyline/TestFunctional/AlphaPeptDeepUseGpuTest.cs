@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
             OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
-            RunUI(() => buildLibraryDlg.AlphaPeptDeep = true);
+            RunUI(() => buildLibraryDlg.Carafe = true);
 
             // Tests find no driver
             CheckUseGpuRefused(buildLibraryDlg, null,

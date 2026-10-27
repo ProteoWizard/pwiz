@@ -882,17 +882,14 @@
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>正在准备用于训练的输入文件</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>正在导入谱图库</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
     <value>成功完成 BlibBuild。</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
     <value>无法完成 BlibBuild。</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
-    <value>AlphaPeptDeep 在 {0} 分 {1} 秒内完成。</value>
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>详细日志</value>

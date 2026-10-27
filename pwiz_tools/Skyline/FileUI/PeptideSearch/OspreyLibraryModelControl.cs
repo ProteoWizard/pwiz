@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     /// <summary>
-    /// The Library Model page of the Osprey Search wizard and of Build Library's AlphaPeptDeep
+    /// The Library Model page of the Osprey Search wizard and of Build Library's Carafe
     /// source: the model Osprey predicts with (the pretrained models or a saved fine-tuned model
     /// from the list), used as it is or as the start of a new fine-tune on the runs listed below,
     /// and whether Osprey predicts on the GPU. The wizard offers its searched files for the tuning

@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibraryDlg.LibraryName = TUNED_LIBRARY_NAME;
                 buildLibraryDlg.LibraryPath = libraryPath;
-                buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.Carafe = true;
                 // Tune and predict on the CPU, whatever GPU this computer has
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.properties, buildLibraryDlg.CurrentPage);
@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
             // runs after the form closes
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
-            var builder = (AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder;
+            var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsTrue(builder.IsTuning);
             AssertEx.IsNull(builder.CarafeModelPath);
             AssertEx.AreEqual(fastaPath, builder.TuningConfig.FastaPath);
@@ -260,7 +260,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibraryDlg.LibraryName = SAVED_LIBRARY_NAME;
                 buildLibraryDlg.LibraryPath = libraryPath;
-                buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.Carafe = true;
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
             });
             RunDlg<EditCarafeModelDlg>(buildLibraryDlg.AddCarafeModel, dlg =>
@@ -280,7 +280,7 @@ namespace pwiz.SkylineTestFunctional
             PauseForDemo("Build Library: the library's model, saved to the list and used as it is");
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
-            var builder = (AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder;
+            var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsFalse(builder.IsTuning);
             AssertEx.AreEqual(tunedModelPath, builder.CarafeModelPath);
             WaitForClosedForm<BuildLibraryDlg>();
@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibraryDlg.LibraryName = FASTA_LIBRARY_NAME;
                 buildLibraryDlg.LibraryPath = libraryPath;
-                buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.Carafe = true;
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
             });
             // A FASTA's precursors: the first page's choice leads to the Predict For page
@@ -351,7 +351,7 @@ namespace pwiz.SkylineTestFunctional
             PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and shuffled entrapment peptides");
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
-            var builder = (AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder;
+            var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsFalse(builder.IsTuning);
             // The FASTA's document, not the open one: the same peptides, digested the same way,
             // then the entrapment peptides, and a decoy for each
