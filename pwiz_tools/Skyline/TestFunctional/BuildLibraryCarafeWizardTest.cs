@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -304,11 +305,19 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// A library predicted for a protein FASTA's precursors, digested with the document's
         /// settings, with the pretrained models: the same peptides as the document's, since the
-        /// document was made from the same FASTA.
+        /// document was made from the same FASTA; plus the peptides of an entrapment FASTA and a
+        /// shuffled decoy of every peptide, which the library marks in its DecoyPairs table.
         /// </summary>
         private void BuildForFasta(string fastaPath)
         {
             string libraryPath = TestFilesDir.GetTestPath("StellarSubsetFasta.blib");
+            // Two made-up proteins no subset peptide shares a sequence with
+            string entrapmentFasta = TestFilesDir.GetTestPath("entrapment.fasta");
+            File.WriteAllLines(entrapmentFasta, new[]
+            {
+                @">ENTRAP1 made-up", @"MAGWNDEILSTVKPEAFTGYLQDRVNEWSMKLTPDHGIYAEQR",
+                @">ENTRAP2 made-up", @"MSTQLFDAVNEGYKWHELPITGSDRAQVFNLDMEYTKGPSWLAHR"
+            });
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() =>
@@ -323,8 +332,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibraryDlg.PredictForDocument = false;
                 buildLibraryDlg.PredictForFastaPath = fastaPath;
+                buildLibraryDlg.AddDecoys = true;
+                buildLibraryDlg.AddEntrapment = true;
             });
-            PauseForDemo("Predict For: a protein FASTA's precursors");
+            // The entrapment FASTA is required once asked for
+            ShowAndDismissMessage(buildLibraryDlg, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_,
+                BuildLibraryDlg.Pages.predict_for);
+            RunUI(() => buildLibraryDlg.EntrapmentFastaPath = entrapmentFasta);
+            PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and entrapment peptides");
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
             RunUI(() =>
             {
@@ -335,12 +350,27 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             var builder = (AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsFalse(builder.IsTuning);
-            // The FASTA's document, not the open one: the same peptides, digested the same way
+            // The FASTA's document, not the open one: the same peptides, digested the same way,
+            // then the entrapment peptides, and a decoy for each
             AssertEx.IsFalse(ReferenceEquals(SkylineWindow.Document, builder.Document));
-            AssertEx.AreEqual(SkylineWindow.Document.PeptideCount, builder.Document.PeptideCount);
+            int targetCount = builder.Document.Peptides.Count(p => !p.IsDecoy);
+            int entrapmentCount = builder.EntrapmentTargets.Count;
+            AssertEx.IsTrue(entrapmentCount > 0, @"the entrapment FASTA added no peptides");
+            AssertEx.AreEqual(SkylineWindow.Document.PeptideCount + entrapmentCount, targetCount);
+            AssertEx.AreEqual(targetCount, builder.Document.Peptides.Count(p => p.IsDecoy));
+            AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_SHUFFLE, builder.DecoyMethod);
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(OspreySearchTest.SEARCH_TIMEOUT_MILLIS, () => peptideSettings.AvailableLibraries.Contains(FASTA_LIBRARY_NAME));
             AssertEx.FileExists(libraryPath);
+            // The library pairs its decoys with their targets and flags the entrapment peptides,
+            // as Osprey's own libraries do
+            AssertEx.IsTrue(OspreyHelpers.LibraryHasDecoyPairs(libraryPath), @"the library has no DecoyPairs table");
+            LibraryDecoyPairs.Count(libraryPath, out int decoyRows, out int entrapmentRows);
+            AssertEx.IsTrue(decoyRows > 0, @"no decoy rows in DecoyPairs");
+            // One row per entrapment precursor (charges 2 and 3)
+            var entrapmentSet = new HashSet<Target>(builder.EntrapmentTargets);
+            int entrapmentPrecursors = builder.Document.Peptides.Where(p => !p.IsDecoy && entrapmentSet.Contains(p.Target)).Sum(p => p.TransitionGroupCount);
+            AssertEx.AreEqual(entrapmentPrecursors, entrapmentRows);
             RunUI(() => peptideSettings.PickedLibraries = new[] { FASTA_LIBRARY_NAME });
             OkDialog(peptideSettings, peptideSettings.OkDialog);
             WaitForDocumentLoaded();

@@ -490,6 +490,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Choose the FASTA file of the entrapment peptides..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Choose the protein FASTA file to predict the library for..
         /// </summary>
         public static string BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_ {

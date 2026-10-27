@@ -1528,6 +1528,111 @@ The pages that follow choose what to predict for and the model: the pretrained m
   <data name="&gt;&gt;labelSearchSettings.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="cbAddDecoys.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAddDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 125</value>
+  </data>
+  <data name="cbAddDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>250, 17</value>
+  </data>
+  <data name="cbAddDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbAddDecoys.Text" xml:space="preserve">
+    <value>Add shuffled-sequence &amp;decoys, one per peptide</value>
+  </data>
+  <data name="&gt;&gt;cbAddDecoys.Name" xml:space="preserve">
+    <value>cbAddDecoys</value>
+  </data>
+  <data name="&gt;&gt;cbAddDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAddDecoys.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;cbAddDecoys.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="cbAddEntrapment.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAddEntrapment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 151</value>
+  </data>
+  <data name="cbAddEntrapment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>250, 17</value>
+  </data>
+  <data name="cbAddEntrapment.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="cbAddEntrapment.Text" xml:space="preserve">
+    <value>Add &amp;entrapment peptides from a FASTA file:</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.Name" xml:space="preserve">
+    <value>cbAddEntrapment</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;cbAddEntrapment.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="textEntrapmentFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textEntrapmentFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 175</value>
+  </data>
+  <data name="textEntrapmentFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 20</value>
+  </data>
+  <data name="textEntrapmentFasta.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentFasta.Name" xml:space="preserve">
+    <value>textEntrapmentFasta</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentFasta.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;textEntrapmentFasta.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="btnBrowseEntrapment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowseEntrapment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>483, 173</value>
+  </data>
+  <data name="btnBrowseEntrapment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseEntrapment.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="btnBrowseEntrapment.Text" xml:space="preserve">
+    <value>Bro&amp;wse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseEntrapment.Name" xml:space="preserve">
+    <value>btnBrowseEntrapment</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseEntrapment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseEntrapment.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseEntrapment.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>

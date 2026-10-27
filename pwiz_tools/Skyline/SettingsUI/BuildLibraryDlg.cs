@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina;
@@ -337,7 +338,9 @@ namespace pwiz.Skyline.SettingsUI
                 CarafeModelPath = carafeModel.FilePath,
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu,
-                TuningConfig = IsTuning ? GetTuningConfig() : null
+                TuningConfig = IsTuning ? GetTuningConfig() : null,
+                DecoyMethod = DecoyMethod,
+                EntrapmentTargets = _entrapmentTargets
             };
             // Asked here, while this form is still up, so that Cancel returns to it rather than to
             // Peptide Settings with everything chosen here gone
@@ -384,26 +387,61 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// The precursors the library is predicted for: the document's, or a protein FASTA's,
         /// digested with the document's settings into a document of its own, as Import FASTA would
-        /// add them to the document. Null when the digest is cancelled, fails or gives no peptides,
-        /// after reporting it.
+        /// add them to the document; then the entrapment FASTA's peptides, if asked for, and a
+        /// shuffled decoy of every peptide, if asked for, which the library marks in its DecoyPairs
+        /// table (<see cref="LibraryDecoyPairs"/>). The open document itself is never changed. Null
+        /// when a digest is cancelled, fails or gives no peptides, after reporting it.
         /// </summary>
         private SrmDocument GetDocumentToPredict()
         {
             var doc = _documentUiContainer.DocumentUI;
-            if (PredictForDocument)
-                return doc;
+            _entrapmentTargets = null;
+            // A digest for prediction keeps every peptide the filter allows: the library-match pick
+            // would keep only peptides with spectra already, which is the opposite of the point
+            var settingsDigest = doc.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.filter));
+            if (!PredictForDocument)
+            {
+                doc = ImportFastaToPredict(new SrmDocument(settingsDigest), PredictForFastaPath, out _);
+                if (doc == null)
+                    return null;
+            }
+            if (AddEntrapment)
+            {
+                // Digested on their own and added as they are, so the document's own proteins are untouched
+                var docEntrapment = ImportFastaToPredict(new SrmDocument(settingsDigest), EntrapmentFastaPath, out var entrapmentGroups);
+                if (docEntrapment == null)
+                    return null;
+                _entrapmentTargets = entrapmentGroups.SelectMany(g => g.Peptides).Select(p => p.Target).ToList();
+                doc = doc.AddPeptideGroups(entrapmentGroups, false, null, out _, out _);
+            }
+            if (AddDecoys)
+            {
+                var refine = new RefinementSettings { NumberOfDecoys = doc.PeptideCount, DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE };
+                doc = refine.GenerateDecoys(doc);
+            }
+            return doc;
+        }
 
-            string fastaPath = PredictForFastaPath;
+        /// <summary>
+        /// Adds <paramref name="fastaPath"/>'s proteins to <paramref name="doc"/>, digested with its
+        /// settings, under a cancellable wait; <paramref name="groupsNew"/> are the proteins added.
+        /// Null, after reporting it, when the digest is cancelled, fails or gives no peptides.
+        /// </summary>
+        private SrmDocument ImportFastaToPredict(SrmDocument doc, string fastaPath, out List<PeptideGroupDocNode> groupsNew)
+        {
             SrmDocument docFasta = null;
+            List<PeptideGroupDocNode> groupsAdded = null;
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.Text = SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA;
                 longWaitDlg.Message = string.Format(SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings, fastaPath);
                 var status = longWaitDlg.PerformWork(this, 800, monitor =>
                 {
-                    docFasta = ImportPeptideSearch.ImportFasta(new SrmDocument(doc.Settings), fastaPath, null, monitor,
-                        null, out _, out _, out _);
+                    docFasta = ImportPeptideSearch.ImportFasta(doc, fastaPath, null, monitor, null, out _, out _, out groupsAdded);
                 });
+                // The proteins as the document holds them: their peptides are made when they join it
+                var idsAdded = new HashSet<Identity>((groupsAdded ?? new List<PeptideGroupDocNode>()).Select(g => g.Id));
+                groupsNew = docFasta?.PeptideGroups.Where(g => idsAdded.Contains(g.Id)).ToList() ?? new List<PeptideGroupDocNode>();
                 if (status.IsCanceled)
                     return null;
                 if (status.IsError)
@@ -413,7 +451,7 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 }
             }
-            if (docFasta == null || docFasta.PeptideCount == 0)
+            if (docFasta == null || !groupsNew.Any(g => g.PeptideCount > 0))
             {
                 MessageDlg.Show(this, string.Format(
                     SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_, fastaPath));
@@ -421,6 +459,15 @@ namespace pwiz.Skyline.SettingsUI
             }
             return docFasta;
         }
+
+        /// <summary>The entrapment FASTA's peptides in the document last made to predict for, for the library's DecoyPairs table.</summary>
+        private List<Target> _entrapmentTargets;
+
+        /// <summary>The DecoyPairs Method the library records for Skyline's shuffled decoys, or null when none are added.</summary>
+        private string DecoyMethod => AddDecoys ? DECOY_METHOD_SHUFFLE : null;
+
+        /// <summary>Carafe's name for the shuffled-sequence decoy method, as its DecoyPairs table records it.</summary>
+        public const string DECOY_METHOD_SHUFFLE = @"shuffle";
 
         #region Predict For page
 
@@ -444,7 +491,33 @@ namespace pwiz.Skyline.SettingsUI
             set => textFastaPath.Text = value;
         }
 
+        /// <summary>Whether a shuffled-sequence decoy of every peptide is predicted too, paired with its target in the library.</summary>
+        public bool AddDecoys
+        {
+            get => cbAddDecoys.Checked;
+            set => cbAddDecoys.Checked = value;
+        }
+
+        /// <summary>Whether the peptides of <see cref="EntrapmentFastaPath"/> are predicted too, flagged as entrapment in the library.</summary>
+        public bool AddEntrapment
+        {
+            get => cbAddEntrapment.Checked;
+            set => cbAddEntrapment.Checked = value;
+        }
+
+        /// <summary>The FASTA of the entrapment proteins, digested with the document settings like the others.</summary>
+        public string EntrapmentFastaPath
+        {
+            get => textEntrapmentFasta.Text;
+            set => textEntrapmentFasta.Text = value;
+        }
+
         private void radioPredictFor_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePredictForControls();
+        }
+
+        private void cbAddEntrapment_CheckedChanged(object sender, EventArgs e)
         {
             UpdatePredictForControls();
         }
@@ -452,6 +525,14 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdatePredictForControls()
         {
             textFastaPath.Enabled = btnBrowseFasta.Enabled = !PredictForDocument;
+            textEntrapmentFasta.Enabled = btnBrowseEntrapment.Enabled = AddEntrapment;
+        }
+
+        private void btnBrowseEntrapment_Click(object sender, EventArgs e)
+        {
+            string path = OspreyFastaControl.BrowseFasta(this, _skylineWindow.DocumentFilePath);
+            if (path != null)
+                EntrapmentFastaPath = path;
         }
 
         private void btnBrowseFasta_Click(object sender, EventArgs e)
@@ -478,19 +559,28 @@ namespace pwiz.Skyline.SettingsUI
                         : SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_);
                     return false;
                 }
-                return true;
             }
-            string fastaPath = PredictForFastaPath;
+            else if (!ValidateFastaPath(textFastaPath, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_))
+            {
+                return false;
+            }
+            return !AddEntrapment || ValidateFastaPath(textEntrapmentFasta, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_);
+        }
+
+        /// <summary>A FASTA box must name a file that exists; <paramref name="emptyMessage"/> is the refusal of an empty box.</summary>
+        private bool ValidateFastaPath(TextBox textFasta, string emptyMessage)
+        {
+            string fastaPath = textFasta.Text;
             if (string.IsNullOrWhiteSpace(fastaPath))
             {
-                MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_);
-                textFastaPath.Focus();
+                MessageDlg.Show(this, emptyMessage);
+                textFasta.Focus();
                 return false;
             }
             if (!File.Exists(fastaPath))
             {
                 MessageDlg.Show(this, string.Format(SettingsUIResources.BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_, fastaPath));
-                textFastaPath.Focus();
+                textFasta.Focus();
                 return false;
             }
             return true;
@@ -603,7 +693,8 @@ namespace pwiz.Skyline.SettingsUI
             var doc = GetDocumentToPredict();
             if (doc == null)
                 return false;
-            var peptides = doc.Peptides.Where(pep=>!pep.IsDecoy).ToArray();
+            // The document's own decoys stay out, as always; the decoys asked for here go in
+            var peptides = doc.Peptides.Where(pep => AddDecoys || !pep.IsDecoy).ToArray();
             var precursorCount = peptides.Sum(pep=>pep.TransitionGroupCount);
             var peptidesPerPrecursor = new PeptideDocNode[precursorCount];
             var precursors = new TransitionGroupDocNode[precursorCount];
@@ -631,7 +722,11 @@ namespace pwiz.Skyline.SettingsUI
                 // Still construct the library builder, otherwise a user might configure Koina
                 // incorrectly, causing the build to silently fail
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
-                    peptidesPerPrecursor, precursors, nce);
+                    peptidesPerPrecursor, precursors, nce)
+                {
+                    DecoyMethod = DecoyMethod,
+                    EntrapmentTargets = _entrapmentTargets
+                };
             }
             catch (Exception ex)
             {

@@ -72,6 +72,10 @@ namespace pwiz.Skyline.SettingsUI
             this.radioFastaPrecursors = new System.Windows.Forms.RadioButton();
             this.textFastaPath = new System.Windows.Forms.TextBox();
             this.btnBrowseFasta = new System.Windows.Forms.Button();
+            this.cbAddDecoys = new System.Windows.Forms.CheckBox();
+            this.cbAddEntrapment = new System.Windows.Forms.CheckBox();
+            this.textEntrapmentFasta = new System.Windows.Forms.TextBox();
+            this.btnBrowseEntrapment = new System.Windows.Forms.Button();
             this.tabLibraryModel = new System.Windows.Forms.TabPage();
             this.labelLibraryModel = new System.Windows.Forms.Label();
             this.labelModWarning = new System.Windows.Forms.Label();
@@ -318,6 +322,10 @@ namespace pwiz.Skyline.SettingsUI
             // tabPredictFor
             //
             this.tabPredictFor.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPredictFor.Controls.Add(this.btnBrowseEntrapment);
+            this.tabPredictFor.Controls.Add(this.textEntrapmentFasta);
+            this.tabPredictFor.Controls.Add(this.cbAddEntrapment);
+            this.tabPredictFor.Controls.Add(this.cbAddDecoys);
             this.tabPredictFor.Controls.Add(this.btnBrowseFasta);
             this.tabPredictFor.Controls.Add(this.textFastaPath);
             this.tabPredictFor.Controls.Add(this.radioFastaPrecursors);
@@ -358,6 +366,31 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBrowseFasta.Name = "btnBrowseFasta";
             this.btnBrowseFasta.UseVisualStyleBackColor = true;
             this.btnBrowseFasta.Click += new System.EventHandler(this.btnBrowseFasta_Click);
+            //
+            // cbAddDecoys
+            //
+            resources.ApplyResources(this.cbAddDecoys, "cbAddDecoys");
+            this.cbAddDecoys.Name = "cbAddDecoys";
+            this.cbAddDecoys.UseVisualStyleBackColor = true;
+            //
+            // cbAddEntrapment
+            //
+            resources.ApplyResources(this.cbAddEntrapment, "cbAddEntrapment");
+            this.cbAddEntrapment.Name = "cbAddEntrapment";
+            this.cbAddEntrapment.UseVisualStyleBackColor = true;
+            this.cbAddEntrapment.CheckedChanged += new System.EventHandler(this.cbAddEntrapment_CheckedChanged);
+            //
+            // textEntrapmentFasta
+            //
+            resources.ApplyResources(this.textEntrapmentFasta, "textEntrapmentFasta");
+            this.textEntrapmentFasta.Name = "textEntrapmentFasta";
+            //
+            // btnBrowseEntrapment
+            //
+            resources.ApplyResources(this.btnBrowseEntrapment, "btnBrowseEntrapment");
+            this.btnBrowseEntrapment.Name = "btnBrowseEntrapment";
+            this.btnBrowseEntrapment.UseVisualStyleBackColor = true;
+            this.btnBrowseEntrapment.Click += new System.EventHandler(this.btnBrowseEntrapment_Click);
             //
             // tabLibraryModel
             //
@@ -561,6 +594,10 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.RadioButton radioFastaPrecursors;
         private System.Windows.Forms.TextBox textFastaPath;
         private System.Windows.Forms.Button btnBrowseFasta;
+        private System.Windows.Forms.CheckBox cbAddDecoys;
+        private System.Windows.Forms.CheckBox cbAddEntrapment;
+        private System.Windows.Forms.TextBox textEntrapmentFasta;
+        private System.Windows.Forms.Button btnBrowseEntrapment;
         private System.Windows.Forms.TabPage tabLibraryModel;
         private System.Windows.Forms.Label labelLibraryModel;
         private System.Windows.Forms.Label labelModWarning;

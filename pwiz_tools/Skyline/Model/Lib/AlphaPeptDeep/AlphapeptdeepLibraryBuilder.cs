@@ -172,6 +172,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public bool IsTuning => TuningConfig != null && TuningConfig.TrainingInputs.Count > 0;
 
         /// <summary>
+        /// How the document's decoys were made (<see cref="LibraryDecoyPairs"/>'s Method), when the
+        /// library is to carry its decoys paired with their targets in a DecoyPairs table; null
+        /// writes no table unless there are <see cref="EntrapmentTargets"/>.
+        /// </summary>
+        public string DecoyMethod { get; set; }
+
+        /// <summary>The entrapment peptides among the document's, flagged as such in the DecoyPairs table; null for none.</summary>
+        public ICollection<Target> EntrapmentTargets { get; set; }
+
+        /// <summary>Whether the built library gets a DecoyPairs table marking its decoys and entrapment peptides.</summary>
+        public bool WritesDecoyPairs => DecoyMethod != null || (EntrapmentTargets != null && EntrapmentTargets.Count > 0);
+
+        /// <summary>
         /// Osprey's working folder for the fine-tune: the tuning runs' spectra caches, the training
         /// library and its search, the model folder and the model file. Beside the per-build APD
         /// folders and kept between builds, so a library built again on the same runs finds the
@@ -275,6 +288,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
+            if (WritesDecoyPairs)
+                LibraryDecoyPairs.Write(LibrarySpec.FilePath, Document, EntrapmentTargets, DecoyMethod);
         }
 
         /// <summary>
