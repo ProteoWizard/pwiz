@@ -38,12 +38,14 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class UseGpuDriver
     {
-        private readonly Form _owner;
+        private readonly Control _owner;
         private readonly CheckBox _checkBox;
         private TorchRuntimes _torchRuntimes;
         private bool _updating;
 
-        public UseGpuDriver(Form owner, CheckBox checkBox)
+        /// <param name="owner">The form, or a control of it, the driver's questions and waits are shown from.</param>
+        /// <param name="checkBox">The Use GPU box.</param>
+        public UseGpuDriver(Control owner, CheckBox checkBox)
         {
             _owner = owner;
             _checkBox = checkBox;

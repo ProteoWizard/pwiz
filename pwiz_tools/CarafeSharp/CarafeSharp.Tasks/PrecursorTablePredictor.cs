@@ -128,11 +128,22 @@ namespace pwiz.CarafeSharp.Tasks
             }
             else
             {
-                // The pretrained models, with peptdeep's own RT model (iRT), not Carafe's Chronologer default
-                modelDirectory = CarafeModelDirectory.Open(_settings.ModelDirectory ?? outputDirectory, _settings.PreferSafetensors);
+                string folder = _settings.ModelDirectory ?? outputDirectory;
+                modelDirectory = CarafeModelDirectory.Open(folder, _settings.PreferSafetensors);
                 foreach (string warning in modelDirectory.Warnings)
                     Log(warning);
-                _settings.RtModelType ??= RtModelType.alphapeptdeep;
+                if (_settings.ModelDirectory != null)
+                {
+                    // A model folder (the fine-tune's, when the table is predicted right after one):
+                    // its models, of whatever kind the tuning wrote, and its training run's values
+                    Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
+                    LibraryModels.ApplyModelDirectoryMeta(_settings, modelDirectory, Log);
+                }
+                else
+                {
+                    // The pretrained models, with peptdeep's own RT model (iRT), not Carafe's Chronologer default
+                    _settings.RtModelType ??= RtModelType.alphapeptdeep;
+                }
             }
 
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
