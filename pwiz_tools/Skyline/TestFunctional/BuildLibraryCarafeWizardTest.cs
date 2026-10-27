@@ -305,19 +305,14 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// A library predicted for a protein FASTA's precursors, digested with the document's
         /// settings, with the pretrained models: the same peptides as the document's, since the
-        /// document was made from the same FASTA; plus the peptides of an entrapment FASTA and a
-        /// shuffled decoy of every peptide, which the library marks in its DecoyPairs table.
+        /// document was made from the same FASTA; plus CarafeSharp's entrapment peptides, shuffled
+        /// from the FASTA's own, and a shuffled decoy of every peptide, which the library marks in
+        /// its DecoyPairs table. On the way, the document route's refusal of an empty entrapment
+        /// FASTA, which it cannot shuffle from.
         /// </summary>
         private void BuildForFasta(string fastaPath)
         {
             string libraryPath = TestFilesDir.GetTestPath("StellarSubsetFasta.blib");
-            // Two made-up proteins no subset peptide shares a sequence with
-            string entrapmentFasta = TestFilesDir.GetTestPath("entrapment.fasta");
-            File.WriteAllLines(entrapmentFasta, new[]
-            {
-                @">ENTRAP1 made-up", @"MAGWNDEILSTVKPEAFTGYLQDRVNEWSMKLTPDHGIYAEQR",
-                @">ENTRAP2 made-up", @"MSTQLFDAVNEGYKWHELPITGSDRAQVFNLDMEYTKGPSWLAHR"
-            });
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() =>
@@ -330,16 +325,18 @@ namespace pwiz.SkylineTestFunctional
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.predict_for);
             RunUI(() =>
             {
-                buildLibraryDlg.PredictForDocument = false;
-                buildLibraryDlg.PredictForFastaPath = fastaPath;
                 buildLibraryDlg.AddDecoys = true;
                 buildLibraryDlg.AddEntrapment = true;
             });
-            // The entrapment FASTA is required once asked for
+            // The document route has no FASTA to shuffle from, so it needs the entrapment FASTA
             ShowAndDismissMessage(buildLibraryDlg, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_,
                 BuildLibraryDlg.Pages.predict_for);
-            RunUI(() => buildLibraryDlg.EntrapmentFastaPath = entrapmentFasta);
-            PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and entrapment peptides");
+            RunUI(() =>
+            {
+                buildLibraryDlg.PredictForDocument = false;
+                buildLibraryDlg.PredictForFastaPath = fastaPath;
+            });
+            PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and shuffled entrapment peptides");
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
             RunUI(() =>
             {

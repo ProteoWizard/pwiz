@@ -1568,7 +1568,7 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>6</value>
   </data>
   <data name="cbAddEntrapment.Text" xml:space="preserve">
-    <value>Add &amp;entrapment peptides from a FASTA file:</value>
+    <value>Add &amp;entrapment peptides, shuffled from the FASTA's peptides, or from a FASTA file:</value>
   </data>
   <data name="&gt;&gt;cbAddEntrapment.Name" xml:space="preserve">
     <value>cbAddEntrapment</value>

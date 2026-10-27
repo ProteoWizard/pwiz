@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -408,11 +409,21 @@ namespace pwiz.Skyline.SettingsUI
             if (AddEntrapment)
             {
                 // Digested on their own and added as they are, so the document's own proteins are untouched
-                var docEntrapment = ImportFastaToPredict(new SrmDocument(settingsDigest), EntrapmentFastaPath, out var entrapmentGroups);
-                if (docEntrapment == null)
+                List<PeptideGroupDocNode> entrapmentGroups;
+                bool peptideList = string.IsNullOrWhiteSpace(EntrapmentFastaPath);
+                if (peptideList)
+                {
+                    // Carafe's entrapment peptides, shuffled from the predicted FASTA's own peptides, as a peptide list
+                    var docEntrapment = ImportEntrapmentPeptides(new SrmDocument(settingsDigest), PredictForFastaPath, out entrapmentGroups);
+                    if (docEntrapment == null)
+                        return null;
+                }
+                else if (ImportFastaToPredict(new SrmDocument(settingsDigest), EntrapmentFastaPath, out entrapmentGroups) == null)
+                {
                     return null;
+                }
                 _entrapmentTargets = entrapmentGroups.SelectMany(g => g.Peptides).Select(p => p.Target).ToList();
-                doc = doc.AddPeptideGroups(entrapmentGroups, false, null, out _, out _);
+                doc = doc.AddPeptideGroups(entrapmentGroups, peptideList, null, out _, out _);
             }
             if (AddDecoys)
             {
@@ -459,6 +470,55 @@ namespace pwiz.Skyline.SettingsUI
             }
             return docFasta;
         }
+
+        /// <summary>
+        /// Entrapment peptides generated in process by CarafeSharp from <paramref name="fastaPath"/>'s
+        /// proteins (<see cref="EntrapmentFastaBuilder"/>: the FASTA's peptides shuffled, one per
+        /// target, the entrapment Osprey's own FASTA route adds), under a cancellable wait, then added
+        /// to <paramref name="doc"/> as a peptide list, since they are peptides, not proteins to digest.
+        /// Null, after reporting it, when cancelled, failed or empty.
+        /// </summary>
+        private SrmDocument ImportEntrapmentPeptides(SrmDocument doc, string fastaPath, out List<PeptideGroupDocNode> groupsNew)
+        {
+            var peptides = new List<string>();
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.Text = SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA;
+                longWaitDlg.Message = string.Format(SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings, fastaPath);
+                var status = longWaitDlg.PerformWork(this, 800, (IProgressMonitor monitor) =>
+                {
+                    var settings = new EntrapmentFastaSettings { InputFasta = fastaPath, AddEntrapment = true, AddDecoys = false };
+                    var quartets = new EntrapmentFastaBuilder(settings).Build(new EntrapmentFastaResult(), out _);
+                    peptides.AddRange(quartets.Where(q => q.EntrapmentSelected && !string.IsNullOrEmpty(q.PTarget)).Select(q => q.PTarget).Distinct());
+                });
+                groupsNew = new List<PeptideGroupDocNode>();
+                if (status.IsCanceled)
+                    return null;
+                if (status.IsError)
+                {
+                    MessageDlg.ShowWithException(this, string.Format(
+                        SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__, fastaPath), status.ErrorException);
+                    return null;
+                }
+            }
+            SrmDocument docList = null;
+            if (peptides.Count > 0)
+            {
+                using var reader = new StringReader(TextUtil.LineSeparate(new[] { @">" + ENTRAPMENT_LIST_NAME }.Concat(peptides)));
+                docList = doc.ImportFasta(reader, true, null, out _);
+                groupsNew = docList.PeptideGroups.ToList();
+            }
+            if (docList == null || !groupsNew.Any(g => g.PeptideCount > 0))
+            {
+                MessageDlg.Show(this, string.Format(
+                    SettingsUIResources.BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_, fastaPath));
+                return null;
+            }
+            return docList;
+        }
+
+        /// <summary>The name of the peptide list the generated entrapment peptides form.</summary>
+        private const string ENTRAPMENT_LIST_NAME = @"Entrapment";
 
         /// <summary>The entrapment FASTA's peptides in the document last made to predict for, for the library's DecoyPairs table.</summary>
         private List<Target> _entrapmentTargets;
@@ -564,7 +624,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return false;
             }
-            return !AddEntrapment || ValidateFastaPath(textEntrapmentFasta, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_);
+            // The FASTA route can shuffle its own FASTA's peptides for the entrapment; the document route needs a file
+            if (AddEntrapment && (PredictForDocument || !string.IsNullOrWhiteSpace(EntrapmentFastaPath)))
+                return ValidateFastaPath(textEntrapmentFasta, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_);
+            return true;
         }
 
         /// <summary>A FASTA box must name a file that exists; <paramref name="emptyMessage"/> is the refusal of an empty box.</summary>
