@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.CarafeSharp.Proteome;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;

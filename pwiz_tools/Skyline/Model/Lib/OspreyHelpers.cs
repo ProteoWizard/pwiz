@@ -136,24 +136,57 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// The download of the latest successful Osprey build on <see cref="TEAMCITY_BRANCH"/>, which
-        /// tests follow as SkylineNightly follows Skyline's head. The build is found through the REST
-        /// API, its zip named from the build's artifact list (the version is in the name), and the
-        /// download addressed by build id, so a build finishing between the two requests cannot
-        /// change what is downloaded. Throws with the reason when TeamCity cannot be reached or the
-        /// build has no package; these are developer messages, not user-facing text.
+        /// tests follow as SkylineNightly follows Skyline's head - or, for tests running in a TeamCity
+        /// build of another branch (a pull request), the latest on that branch when it has one, so a
+        /// change to both Skyline and Osprey is tested with its own Osprey before it reaches master.
+        /// The build is found through the REST API, its zip named from the build's artifact list
+        /// (the version is in the name), and the download addressed by build id, so a build
+        /// finishing between the two requests cannot change what is downloaded. Throws with the
+        /// reason when TeamCity cannot be reached or the build has no package; these are developer
+        /// messages, not user-facing text.
         /// </summary>
         public static FileDownloadInfo GetLatestBuildDownloadInfo()
         {
+            string branch = GetTeamCityBuildBranch();
+            if (branch != null && TryFindLatestBuildDownloadInfo(branch, out var download))
+                return download;
+            if (TryFindLatestBuildDownloadInfo(TEAMCITY_BRANCH, out download))
+                return download;
+            throw new IOException(string.Format(@"No successful {0} build on branch {1} at {2}",
+                TEAMCITY_BUILD_TYPE, TEAMCITY_BRANCH, TEAMCITY_SERVER));
+        }
+
+        /// <summary>
+        /// The branch of the TeamCity build this process runs in, from the agent's build properties
+        /// file (teamcity.build.branch); null outside TeamCity, and on master, whose builds take
+        /// <see cref="TEAMCITY_BRANCH"/> as they would anyway.
+        /// </summary>
+        public static string GetTeamCityBuildBranch()
+        {
+            string propertiesFile = Environment.GetEnvironmentVariable(@"TEAMCITY_BUILD_PROPERTIES_FILE");
+            if (string.IsNullOrEmpty(propertiesFile) || !File.Exists(propertiesFile))
+                return null;
+            const string key = @"teamcity.build.branch=";
+            string branch = File.ReadLines(propertiesFile).FirstOrDefault(line => line.StartsWith(key))?.Substring(key.Length).Trim();
+            // A Java properties value escapes ':' and '=' with a backslash
+            branch = branch?.Replace(@"\:", @":").Replace(@"\=", @"=");
+            if (string.IsNullOrEmpty(branch) || branch == @"<default>" || branch == TEAMCITY_BRANCH)
+                return null;
+            return branch;
+        }
+
+        /// <summary>The latest successful build's package on <paramref name="branch"/>; false when the branch has no successful build.</summary>
+        private static bool TryFindLatestBuildDownloadInfo(string branch, out FileDownloadInfo download)
+        {
+            download = default;
             using var client = new HttpClientWithProgress();
-            string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},branch:{TEAMCITY_BRANCH},status:SUCCESS,count:1";
-            // A locator in the path answers with the one build as the document root
-            var build = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/{buildLocator}")).Root;
-            string buildId = build?.Name.LocalName == @"build" ? build.Attribute(@"id")?.Value : null;
+            string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},branch:{branch},status:SUCCESS,count:1";
+            // A locator in the query answers with a list, empty when nothing matches
+            var builds = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/?locator={buildLocator}")).Root;
+            var build = builds?.Elements(@"build").FirstOrDefault();
+            string buildId = build?.Attribute(@"id")?.Value;
             if (string.IsNullOrEmpty(buildId))
-            {
-                throw new IOException(string.Format(@"No successful {0} build on branch {1} at {2}",
-                    TEAMCITY_BUILD_TYPE, TEAMCITY_BRANCH, TEAMCITY_SERVER));
-            }
+                return false;
             var artifacts = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/id:{buildId}/artifacts/children/"));
             string zipName = artifacts.Root?.Elements(@"file").Select(f => f.Attribute(@"name")?.Value)
                 .FirstOrDefault(n => n != null && n.StartsWith(@"Osprey-") && n.EndsWith(OSPREY_ZIP_SUFFIX));
@@ -164,7 +197,8 @@ namespace pwiz.Skyline.Model.Lib
             }
             // The zip's top-level folder is its name without the extension
             string folderName = zipName.Substring(0, zipName.Length - 4);
-            return CreateDownloadInfo(folderName, GetArtifactUrl(buildId, zipName));
+            download = CreateDownloadInfo(folderName, GetArtifactUrl(buildId, zipName));
+            return true;
         }
 
         private static Uri GetArtifactUrl(string buildId, string artifactName)

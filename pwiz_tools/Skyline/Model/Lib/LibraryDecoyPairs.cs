@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public static class LibraryDecoyPairs
     {
-        private struct SpectrumKey
+        private readonly struct SpectrumKey : IEquatable<SpectrumKey>
         {
             public SpectrumKey(string sequence, int charge)
             {
@@ -49,6 +49,21 @@ namespace pwiz.Skyline.Model.Lib
 
             public string Sequence { get; }
             public int Charge { get; }
+
+            public bool Equals(SpectrumKey other)
+            {
+                return Sequence == other.Sequence && Charge == other.Charge;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is SpectrumKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return ((Sequence?.GetHashCode() ?? 0) * 397) ^ Charge;
+            }
         }
 
         /// <summary>
@@ -181,7 +196,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             using var command = connection.CreateCommand();
             command.CommandText = sql;
-            return System.Convert.ToInt32(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+            return Convert.ToInt32(command.ExecuteScalar(), CultureInfo.InvariantCulture);
         }
     }
 }

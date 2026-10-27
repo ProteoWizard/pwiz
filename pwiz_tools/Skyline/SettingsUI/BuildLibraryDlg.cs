@@ -948,9 +948,9 @@ namespace pwiz.Skyline.SettingsUI
                         return Pages.files;
                     if (!PredictForDocument)
                         return Pages.predict_for;
-                    return IsTuning ? Pages.library_model : (Pages?)null;
+                    return IsTuning ? Pages.library_model : null;
                 case Pages.predict_for:
-                    return IsTuning ? Pages.library_model : (Pages?)null;
+                    return IsTuning ? Pages.library_model : null;
                 case Pages.library_model:
                     return Pages.fasta;
                 case Pages.fasta:
