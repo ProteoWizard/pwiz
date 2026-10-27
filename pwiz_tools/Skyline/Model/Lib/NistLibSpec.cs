@@ -783,7 +783,9 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
         private static readonly Regex REGEX_RTINSECONDS = new Regex(@" RTINSECONDS=([^ ,]+)", NOCASE); // In a comment
-        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*:\s*([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins|Secs)?:\s*([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_RT_MINUTES_LINE = new Regex(@"^RT:\s*([^ ]+)", NOCASE); // On its own line, as in FragHub
+        private static readonly Regex REGEX_MSDIAL = new Regex(@"^(?:PrecursorType|InstrumentType|Ontology):", NOCASE); // MS-DIAL spellings, where NIST uses "Precursor_type" etc
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_RI_LINE = SynonPrefixedOrBare(@"RI:", @"\s*([^ ]+)"); // Retention Index for GC
@@ -802,7 +804,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_KEGG = SynonPrefixedOrBare(@"KEGG:", @"\s*(.*)");
         private static readonly Regex REGEX_SMILES = SynonPrefixedOrBare(@"SMILES:", @"\s*(.*)");
         private static readonly Regex REGEX_SMILES_COMMENT = new Regex(@"SMILES\=([^ ""]*)", NOCASE);
-        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_?type:\s*(.*)", NOCASE); // NIST "Precursor_type", MS-DIAL "PRECURSORTYPE"
         private static readonly Regex REGEX_ADDUCT_COMMENT = new Regex(@"Adduct=([^ ,""]+)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
@@ -863,6 +865,7 @@ namespace pwiz.Skyline.Model.Lib
                 lineCount = 0;
                 string line;
                 long nMasslessEntries = 0;
+                bool warnedRtSeconds = false, warnedRtMinutes = false;
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineCount++;
@@ -902,6 +905,9 @@ namespace pwiz.Skyline.Model.Lib
                     int numPeaksDeclared = 0;
                     float? tfRatio = null;
                     double? rt = null, irt = null;
+                    var rtAssumedSeconds = false; // Set when a bare "RetentionTime:" was read, whose units depend on the writer
+                    long rtLine = 0;
+                    var isMsDial = false;
                     int? copies = null;
                     double? precursorMz = null;
                     double? molWeight = null;
@@ -922,11 +928,18 @@ namespace pwiz.Skyline.Model.Lib
                         // "SYNON" is a clue that this isn't actually peptide data
                         isPeptide &= !line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase);
 
+                        // Note MS-DIAL style without consuming the line, which may also carry the adduct
+                        isMsDial = isMsDial || REGEX_MSDIAL.IsMatch(line);
+
                         //
                         // Note the following parsing steps are ordered in descending likelihood of matching, for efficiency
                         //
-                        if (ParseRT(line, isMzVault, ref rt, ref isGC))
+                        if (ParseRT(line, isMzVault, ref rt, ref rtAssumedSeconds, ref isGC))
                         {
+                            if (rtAssumedSeconds && rtLine == 0)
+                            {
+                                rtLine = lineCount;
+                            }
                             continue; // Line is fully consumed
                         }
 
@@ -964,6 +977,26 @@ namespace pwiz.Skyline.Model.Lib
                             break; // Start of next section - no peaks declared for this one, apparently, but not necessarily an error
 
                     } // End parser loop
+
+                    // MS-DIAL writes "RETENTIONTIME:" in minutes, where other writers use seconds.
+                    // The MS-DIAL cues may follow the RT line, so the units are only known now.
+                    // Not every writer that uses the MS-DIAL field names uses minutes, so say once per file what was assumed.
+                    if (rtAssumedSeconds && rt.HasValue)
+                    {
+                        if (isMsDial)
+                        {
+                            rt *= 60;
+                        }
+                        if (isMsDial ? !warnedRtMinutes : !warnedRtSeconds)
+                        {
+                            Messages.WriteAsyncUserMessage(isMsDial
+                                    ? LibResources.NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_minutes
+                                    : LibResources.NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_seconds,
+                                FilePath, rtLine, sequence);
+                            warnedRtMinutes |= isMsDial;
+                            warnedRtSeconds |= !isMsDial;
+                        }
+                    }
 
                     var accessionNumbers = MoleculeAccessionNumbers.Create(accessions);
 
@@ -1637,15 +1670,24 @@ namespace pwiz.Skyline.Model.Lib
         /// Parse line for RT information
         /// </summary>
         /// <returns>true if line was shown to be RT info, and parser can advance to next line</returns>
-        private static bool ParseRT(string line, bool isMzVault, ref double? rt, ref bool isGC)
+        private static bool ParseRT(string line, bool isMzVault, ref double? rt, ref bool rtAssumedSeconds, ref bool isGC)
         {
             if (!rt.HasValue)
             {
                 var match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
                 if (match.Success)
                 {
-                    rt = GetRetentionTime(match.Groups[2].Value,
-                        isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
+                    var units = match.Groups[1].Value; // RetentionTime: vs RetentionTimeMins: vs RetentionTimeSecs:
+                    var isMinutes = isMzVault || units.Length > 0 && !units.Equals(@"Secs", StringComparison.OrdinalIgnoreCase);
+                    rt = GetRetentionTime(match.Groups[2].Value, isMinutes);
+                    rtAssumedSeconds = !isMzVault && units.Length == 0;
+                    return true;  // Line is fully consumed
+                }
+
+                match = REGEX_RT_MINUTES_LINE.Match(line);
+                if (match.Success)
+                {
+                    rt = GetRetentionTime(match.Groups[1].Value, true); // May be "RT: NOT FOUND", which leaves rt null
                     return true;  // Line is fully consumed
                 }
 
