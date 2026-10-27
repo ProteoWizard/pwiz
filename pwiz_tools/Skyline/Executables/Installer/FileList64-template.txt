@@ -107,6 +107,7 @@ it\ZedGraph.resources.dll
 ja\BiblioSpec.resources.dll
 ja\DigitalRune.Windows.Docking.resources.dll
 ja\MSGraph.resources.dll
+ja\PanoramaClient.resources.dll
 ja\ProteomeDb.resources.dll
 ja\pwiz.Common.resources.dll
 ja\pwiz.CommonFileDialogs.resources.dll
@@ -201,6 +202,7 @@ Method\Thermo\BuildThermoMethod.exe
 Method\Thermo\BuildTSQEZMethod.exe
 Method\Thermo\Thermo.TNG.MethodXMLFactory.dll
 Method\Thermo\Thermo.TNG.MethodXMLInterface.dll
+Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll
 Method\Waters\BuildWatersMethod.exe
 Method\Waters\VerifyESkylineLibrary.dll
 MethodConverter.dll
@@ -210,6 +212,9 @@ Microsoft.IO.RecyclableMemoryStream.dll
 Microsoft.Practices.ServiceLocation.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Microsoft.Practices.Unity.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Microsoft.Web.WebView2.Core.dll
+Microsoft.Web.WebView2.WinForms.dll
+Microsoft.Web.WebView2.Wpf.dll
 MIDAC.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 modifications.xml
 msconvert.exe
@@ -262,6 +267,7 @@ QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS
 Remotion.Linq.dll
 Remotion.Linq.EagerFetching.dll
 ru\ZedGraph.resources.dll
+runtimes\win-x64\native\WebView2Loader.dll
 Sciex.Clearcore.FMan.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Sciex.Data.Processing.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Sciex.Data.SimpleTypes.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
@@ -284,6 +290,7 @@ SkylineDocPointer.ico
 SkylineProcessRunner.exe
 SkylineTool.dll
 SkylineTool.pdb
+Sprache.dll
 sv\ZedGraph.resources.dll
 System.Data.SQLite.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Interactive.Async.dll
@@ -308,10 +315,12 @@ ZstdSharp.dll
 zh-CHS\BiblioSpec.resources.dll
 zh-CHS\DigitalRune.Windows.Docking.resources.dll
 zh-CHS\MSGraph.resources.dll
+zh-CHS\PanoramaClient.resources.dll
 zh-CHS\ProteomeDb.resources.dll
 zh-CHS\pwiz.Common.resources.dll
 zh-CHS\pwiz.CommonFileDialogs.resources.dll
 zh-CHS\pwiz.CommonMsData.resources.dll
+zh-CHS\pwiz.CommonUtil.resources.dll
 zh-CHS\SkylineCmd.resources.dll
 zh-CHS\Skyline-daily.resources.dll
 zh-CHS\ZedGraph.resources.dll
