@@ -251,8 +251,8 @@ namespace pwiz.Osprey.Test
         /// its precursor's position at its own m/z and intensity, with and without the relaxed lasso; two
         /// fragments of different precursors two samples apart, within one TOF peak, keep their own
         /// positions, m/z and intensities; with counting noise, the three positions centered on each
-        /// precursor hold its intensity; and the result is the same twice. Solving neighbouring grid points in
-        /// pairs or threes gives the same recoveries, and so do the staggered defaults: each sweep started from the
+        /// precursor hold its intensity; and the result is the same twice. Solving neighbouring grid points two to
+        /// five at a time gives the same recoveries, and so do the staggered defaults: each sweep started from the
         /// previous sweep's solve, a looser first descent and a tolerance on the active set's growth.
         /// </summary>
         [TestMethod]
@@ -262,6 +262,9 @@ namespace pwiz.Osprey.Test
             var a = ScanningDemultiplexer.TransmissionMatrix(ScanningDemuxTest.TrapezoidKernel(), centers, centers, STEP);
             var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
             long Sample(double mz) => grid.Index(mz);
+            // A source's intensity found in its own bin and the bins either side, within 3 samples of it.
+            double Around(ScanningUnitResult result, (int Bin, long Sample, double Amount) s) =>
+                Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(result.Demultiplexed, bin, grid, s.Sample, 3));
             var sources = new[]
             {
                 (Bin: 20, Sample: Sample(412.2345), Amount: 1000.0),
@@ -284,13 +287,12 @@ namespace pwiz.Osprey.Test
             foreach (var s in sources)
             {
                 double expected = s.Amount * ScanningDemuxTest.TotalElution();
-                double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(noisy.Demultiplexed, bin, grid, s.Sample, 3));
-                Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"noisy, sample {0}, 3 bins", s.Sample));
+                Assert.AreEqual(expected, Around(noisy, s), 0.15 * expected, string.Format(@"noisy, sample {0}, 3 bins", s.Sample));
             }
             var again = Demux(a, grid, sources, new Random(5), noisyParams);
             CollectionAssert.AreEqual(noisy.Demultiplexed, again.Demultiplexed);
 
-            // Neighbouring grid points solved together, two or three at a time: the same recoveries.
+            // Neighbouring grid points solved together, two to five at a time: the same recoveries.
             for (int points = 2; points <= JointDemultiplexer.MAX_BLOCK_POINTS; points++)
             {
                 string label = string.Format(@"{0}-point blocks", points);
@@ -301,27 +303,48 @@ namespace pwiz.Osprey.Test
                 foreach (var s in sources)
                 {
                     double expected = s.Amount * ScanningDemuxTest.TotalElution();
-                    double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(blockNoisy.Demultiplexed, bin, grid, s.Sample, 3));
-                    Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"{0}, noisy, sample {1}", label, s.Sample));
+                    Assert.AreEqual(expected, Around(blockNoisy, s), 0.15 * expected, string.Format(@"{0}, noisy, sample {1}", label, s.Sample));
                 }
             }
 
-            // The staggered defaults (DemuxTool's for a Stellar): the same recoveries, and with counting noise the same
-            // sums as each sweep solved from zero.
-            JointDemuxParams Staggered(double l1Z) => new JointDemuxParams
-            {
-                L1Z = l1Z, ChunkSamples = 256, WarmStart = true, FirstRelativeTolerance = 1e-3, GrowRelativeTolerance = 1e-4,
-            };
-            AssertRecovered(Demux(a, grid, sources, null, Staggered(0)), grid, sources, 0.01, @"staggered defaults",
+            // The staggered defaults: the same recoveries, and with counting noise the same sums as each sweep solved from
+            // zero.
+            var staggered = new JointDemuxParams { L1Z = 0, ChunkSamples = 256 }.UseStaggeredDefaults();
+            AssertRecovered(Demux(a, grid, sources, null, staggered), grid, sources, 0.01, @"staggered defaults", WARM_RESIDUE_IONS);
+            AssertRecovered(Demux(a, grid, close, null, staggered), grid, close, 0.02, @"staggered defaults, near-isobaric",
                 WARM_RESIDUE_IONS);
-            AssertRecovered(Demux(a, grid, close, null, Staggered(0)), grid, close, 0.02, @"staggered defaults, near-isobaric",
-                WARM_RESIDUE_IONS);
-            var warmNoisy = Demux(a, grid, sources, new Random(5), Staggered(noisyParams.L1Z));
+            var warmNoisy = Demux(a, grid, sources, new Random(5), new JointDemuxParams { ChunkSamples = 256 }.UseStaggeredDefaults());
             foreach (var s in sources)
             {
-                double fromZero = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(noisy.Demultiplexed, bin, grid, s.Sample, 3));
-                double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(warmNoisy.Demultiplexed, bin, grid, s.Sample, 3));
-                Assert.AreEqual(fromZero, found, 0.01 * fromZero, string.Format(@"staggered defaults, noisy, sample {0}", s.Sample));
+                double fromZero = Around(noisy, s);
+                Assert.AreEqual(fromZero, Around(warmNoisy, s), 0.01 * fromZero, string.Format(@"staggered defaults, noisy, sample {0}", s.Sample));
+            }
+        }
+
+        /// <summary>
+        /// The staggered defaults are applied where the caller left them, and not at all when the caller asked for a
+        /// convergence of its own.
+        /// </summary>
+        [TestMethod]
+        public void TestJointStaggeredDefaults()
+        {
+            var defaults = new JointDemuxParams().UseStaggeredDefaults();
+            Assert.IsTrue(defaults.WarmStart);
+            Assert.AreEqual(1e-3, defaults.FirstRelativeTolerance);
+            Assert.AreEqual(1e-4, defaults.GrowRelativeTolerance);
+
+            var named = new JointDemuxParams { GrowRelativeTolerance = 1e-3 }
+                .UseStaggeredDefaults(name => name == nameof(JointDemuxParams.GrowRelativeTolerance));
+            Assert.IsTrue(named.WarmStart);
+            Assert.AreEqual(1e-3, named.GrowRelativeTolerance);
+
+            foreach (var convergence in new[] { nameof(JointDemuxParams.RelativeTolerance), nameof(JointDemuxParams.MaxRounds),
+                         nameof(JointDemuxParams.MaxPasses) })
+            {
+                var converged = new JointDemuxParams().UseStaggeredDefaults(name => name == convergence);
+                Assert.IsFalse(converged.WarmStart, convergence);
+                Assert.AreEqual(0, converged.FirstRelativeTolerance, convergence);
+                Assert.AreEqual(0, converged.GrowRelativeTolerance, convergence);
             }
         }
 

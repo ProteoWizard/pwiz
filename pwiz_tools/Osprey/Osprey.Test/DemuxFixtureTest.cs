@@ -130,6 +130,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(11, scheme.Bins.Count);
 
             var options = new ScanningDemuxOptions { Joint = true, IonsFromFillTime = true, Threads = 4 };
+            options.JointParameters.UseStaggeredDefaults();
             var pipeline = new StaggeredDemuxPipeline(new SpectraDemuxSource(ms2, acquisitions), options, TextWriter.Null);
             Assert.AreEqual(4 * ms2.Count, pipeline.OutputCount);
             var lines = new List<string>();

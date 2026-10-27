@@ -491,6 +491,7 @@ namespace pwiz.Osprey.Demux
                 Row = row.ToArray(),
                 Cycle = cycle.ToArray(),
                 RowExposure = rowExposure,
+                SweepScale = _options.IonsFromFillTime ? passes.Select(p => 1 / _passPerIon[p]).ToArray() : null,
             };
         }
 

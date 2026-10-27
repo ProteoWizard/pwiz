@@ -208,6 +208,14 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public double[][] RowExposure { get; set; }
 
+        /// <summary>
+        /// Each sweep's values per unit of rate, by sweep (an index into <see cref="Cycles"/>), when the sweeps are on
+        /// different scales (staggered passes, each in ions at its own median fill time): a warm start
+        /// (<see cref="JointDemuxParams.WarmStart"/>) carries a coefficient to the next sweep times the ratio. Null when
+        /// every sweep is on the same scale.
+        /// </summary>
+        public double[] SweepScale { get; set; }
+
         /// <summary>Center m/z of each row's encoded bin; needed by <see cref="ScanningDemuxParams.SourcePositions"/>.</summary>
         public double[] RowCenters { get; set; }
 

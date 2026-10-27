@@ -350,21 +350,10 @@ namespace pwiz.Osprey.DemuxTool
             // centroids (DIA-NN's tolerance pinned), at a CV 0.002-0.003 worse.
             if (options.Joint && !ms1Set)
                 options.JointMs1 = !staggered;
-            // Staggered, each sweep's chunks start from the previous sweep's solve, the first descent (which only sets
-            // the second's weights) stops at 1e-3, and the active set stops growing once a round's additions would lower
-            // the objective by 1e-4 of it or less: on three whole Stellar SuperOverlap profile runs, 12.6% less time with
-            // the same detections, and on a slice closer to the converged solve than without. On a ZT Scan slice the
-            // same settings moved the output away from it.
-            if (options.Joint && staggered)
-            {
-                var joint = options.JointParameters;
-                if (!jointSet.Contains(nameof(joint.WarmStart)))
-                    joint.WarmStart = true;
-                if (!jointSet.Contains(nameof(joint.FirstRelativeTolerance)))
-                    joint.FirstRelativeTolerance = 1e-3;
-                if (!jointSet.Contains(nameof(joint.GrowRelativeTolerance)))
-                    joint.GrowRelativeTolerance = 1e-4;
-            }
+            // Staggered, where the fit splits the measured profile, the solve's staggered settings; not where the fit's
+            // own centroids are written (--joint-fitted), which they were not measured on.
+            if (options.Joint && staggered && options.JointApportion)
+                options.JointParameters.UseStaggeredDefaults(jointSet.Contains);
             // A scanning acquisition keeps the fit's own centroids unless asked to split and centroid with Centrix,
             // until that is shown to do better on the slice.
             if (!staggered)
@@ -674,14 +663,18 @@ namespace pwiz.Osprey.DemuxTool
             return settings;
         }
 
-        /// <summary>The joint solve's settings, so each run's log records what produced its file.</summary>
+        /// <summary>
+        /// The joint solve's settings, so each run's log records what produced its file: only those that take effect (a
+        /// relaxed refit needs a lasso, and a looser first descent a lasso and a reweighting).
+        /// </summary>
         private static string JointSolveSettings(JointDemuxParams parameters)
         {
+            bool lasso = parameters.L1Z > 0;
             var settings = string.Format(CultureInfo.InvariantCulture, @"joint profile demux and centroiding, L1 z {0}{1}, min-out {2}",
-                parameters.L1Z, parameters.Relaxed ? @", relaxed" : string.Empty, parameters.MinOutputIons);
+                parameters.L1Z, parameters.Relaxed && lasso ? @", relaxed" : string.Empty, parameters.MinOutputIons);
             if (parameters.WarmStart)
                 settings += @", warm start";
-            if (parameters.FirstRelativeTolerance > 0)
+            if (parameters.Reweight && lasso && parameters.FirstRelativeTolerance > parameters.RelativeTolerance)
                 settings += string.Format(CultureInfo.InvariantCulture, @", first descent to {0}", parameters.FirstRelativeTolerance);
             if (parameters.GrowRelativeTolerance > 0)
                 settings += string.Format(CultureInfo.InvariantCulture, @", growth to {0}", parameters.GrowRelativeTolerance);

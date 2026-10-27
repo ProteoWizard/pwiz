@@ -323,7 +323,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--merge-sigmas F` | 2 | with `--joint`: neighbouring positions' centroids closer than F TOF peak sigmas are summed |
 | `--ms1 vendor\|joint` | joint with `--joint` on ZT Scan, else vendor | MS1 as the vendor's centroids, or (ZT Scan only) centroided by the joint solve on its own grid; staggered MS1 is centroided by `--centroid centrix` |
 | `--peak-shape gaussian\|measured` | gaussian | with `--joint`: the TOF peak as the Gaussian of the sigma table, or as kernels measured from the file |
-| `--joint-param Name=Value` | - | with `--joint`: any scalar setting of `JointDemuxParams`, for tuning |
+| `--joint-param Name=Value` | - | with `--joint`: any scalar setting of `JointDemuxParams`, for tuning; staggered, it also keeps the staggered settings off what it names (see the staggered joint solve) |
 | `--solve-profile` | off | with `--joint`: print where the solve's time went |
 | `--ppm` | 10 | the channel tolerance |
 | `--unweighted` | off | skip the Poisson refit |
@@ -821,6 +821,18 @@ Two ways through `Osprey.DemuxTool --scheme staggered`:
   `--joint-profile` writes step 4's shares as profile instead of centroiding them, and
   `--joint-fitted` writes the fitted peaks themselves instead of splitting the measurements. MS1
   passes through unless `--centroid centrix` centroids it too.
+
+  The fit runs with the staggered settings (`JointDemuxParams.UseStaggeredDefaults`), which
+  DemuxTool applies except with `--joint-fitted`, and except to a setting `--joint-param` names or
+  when it names `RelativeTolerance`, `MaxRounds` or `MaxPasses` (a convergence of its own): each
+  pass starts from the previous pass's solve, carried to its own ion scale (`WarmStart`); the first
+  descent stops at a relative decrease of 1e-3 where the reweighted descent refits
+  (`FirstRelativeTolerance`); and the active set stops growing after a round whose additions promise
+  at most 1e-4 of the objective, that round's still solved (`GrowRelativeTolerance`). The default
+  solve's late rounds mostly re-add coefficients the passes set to zero earlier in the same descent.
+  On three whole SuperOverlap profile runs these took 12.6% less time with the same detections. The
+  ZT Scan solve keeps the defaults: on its slice the same settings moved the output away from the
+  converged solve.
 
 **The truth benchmark.** `--remultiplex K` sums a 2 Th run's adjacent narrow windows into K-fold
 staggered windows (each window's ions added through its own fill time), so a demultiplexer's output

@@ -113,12 +113,16 @@ namespace pwiz.Osprey.Test
         /// coefficients the solve takes up, and the equal split of a sample no bin is fitted at, are discrete choices
         /// the scale can tip. Combining spectra in ions instead would err at the peaks by the ratio of fill times, here
         /// 0.04 to 4.</para>
+        /// <para>The same with the staggered defaults, each pass started from the previous pass's solve.</para>
         /// </summary>
         [TestMethod]
         public void TestStaggeredJointFillTimeInvariance()
         {
             AssertSameInteriorRates(Demultiplex(new StaggeredProfileRun(false, -1), Unweighted()),
                 Demultiplex(new StaggeredProfileRun(true, -1), Unweighted()));
+            // The staggered defaults, each pass started from the previous pass's solve carried to its own scale.
+            AssertSameInteriorRates(Demultiplex(new StaggeredProfileRun(false, -1), Unweighted(true)),
+                Demultiplex(new StaggeredProfileRun(true, -1), Unweighted(true)));
         }
 
         /// <summary>
@@ -154,6 +158,10 @@ namespace pwiz.Osprey.Test
             AssertSameOutput(one, Demultiplex(source, many));
             var midPass = new SkipFirst(source, StaggeredProfileRun.SpectrumIndex(0, 0, 5));
             AssertSameOutput(Demultiplex(midPass, single), Demultiplex(midPass, many));
+            // With the staggered defaults, each pass started from the previous one's solve within its block.
+            single.JointParameters.UseStaggeredDefaults();
+            many.JointParameters.UseStaggeredDefaults();
+            AssertSameOutput(Demultiplex(source, single), Demultiplex(source, many));
 
             var pipeline = new StaggeredDemuxPipeline(source, single, TextWriter.Null);
             var ofEmpty = Enumerable.Range(0, pipeline.OutputCount).Where(o => pipeline.BaseIndex(o) == source.EmptyIndex).ToArray();
@@ -231,12 +239,14 @@ namespace pwiz.Osprey.Test
             return options;
         }
 
-        private static ScanningDemuxOptions Unweighted()
+        private static ScanningDemuxOptions Unweighted(bool staggeredDefaults = false)
         {
             var options = Options(0);
             options.JointParameters.Reweight = false;
             options.JointParameters.PoissonWeights = false;
             options.JointCentroid = false;
+            if (staggeredDefaults)
+                options.JointParameters.UseStaggeredDefaults();
             return options;
         }
 
