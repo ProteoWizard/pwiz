@@ -566,7 +566,7 @@ you can append more spectra in the future.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFilesSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 130</value>
+    <value>326, 154</value>
   </data>
   <data name="tabFilesSource.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -590,7 +590,7 @@ you can append more spectra in the future.</value>
     <value>4, 22</value>
   </data>
   <data name="tabAlphaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 130</value>
+    <value>326, 154</value>
   </data>
   <data name="tabAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -668,7 +668,7 @@ you can append more spectra in the future.</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabKoinaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 130</value>
+    <value>326, 154</value>
   </data>
   <data name="tabKoinaSource.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -692,7 +692,7 @@ you can append more spectra in the future.</value>
     <value>226, 124</value>
   </data>
   <data name="tabControlDataSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>334, 156</value>
+    <value>334, 180</value>
   </data>
   <data name="tabControlDataSource.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -1100,35 +1100,6 @@ library will be created.</value>
   <data name="&gt;&gt;tabControlMain.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelAlphaInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="labelAlphaInfo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 8</value>
-  </data>
-  <data name="labelAlphaInfo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>314, 100</value>
-  </data>
-  <data name="labelAlphaInfo.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="labelAlphaInfo.Text" xml:space="preserve">
-    <value>Osprey predicts fragment intensities and retention times for the precursors with AlphaPeptDeep's models.
-
-The pages that follow choose what to predict for and the model: the pretrained models, a saved fine-tuned model, or one fine-tuned on DIA runs first.</value>
-  </data>
-  <data name="&gt;&gt;labelAlphaInfo.Name" xml:space="preserve">
-    <value>labelAlphaInfo</value>
-  </data>
-  <data name="&gt;&gt;labelAlphaInfo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelAlphaInfo.Parent" xml:space="preserve">
-    <value>tabAlphaSource</value>
-  </data>
-  <data name="&gt;&gt;labelAlphaInfo.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="tabPredictFor.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
@@ -1155,138 +1126,6 @@ The pages that follow choose what to predict for and the model: the pretrained m
   </data>
   <data name="&gt;&gt;tabPredictFor.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="labelPredictFor.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelPredictFor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 12</value>
-  </data>
-  <data name="labelPredictFor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 13</value>
-  </data>
-  <data name="labelPredictFor.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="labelPredictFor.Text" xml:space="preserve">
-    <value>Predict spectra and retention times for:</value>
-  </data>
-  <data name="&gt;&gt;labelPredictFor.Name" xml:space="preserve">
-    <value>labelPredictFor</value>
-  </data>
-  <data name="&gt;&gt;labelPredictFor.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelPredictFor.Parent" xml:space="preserve">
-    <value>tabPredictFor</value>
-  </data>
-  <data name="&gt;&gt;labelPredictFor.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="radioDocumentPrecursors.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioDocumentPrecursors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 40</value>
-  </data>
-  <data name="radioDocumentPrecursors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>220, 17</value>
-  </data>
-  <data name="radioDocumentPrecursors.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="radioDocumentPrecursors.Text" xml:space="preserve">
-    <value>This &amp;document's peptides and precursors</value>
-  </data>
-  <data name="&gt;&gt;radioDocumentPrecursors.Name" xml:space="preserve">
-    <value>radioDocumentPrecursors</value>
-  </data>
-  <data name="&gt;&gt;radioDocumentPrecursors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioDocumentPrecursors.Parent" xml:space="preserve">
-    <value>tabPredictFor</value>
-  </data>
-  <data name="&gt;&gt;radioDocumentPrecursors.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="radioFastaPrecursors.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioFastaPrecursors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 66</value>
-  </data>
-  <data name="radioFastaPrecursors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>480, 17</value>
-  </data>
-  <data name="radioFastaPrecursors.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="radioFastaPrecursors.Text" xml:space="preserve">
-    <value>The peptides and precursors of a protein &amp;FASTA file, digested with the document settings:</value>
-  </data>
-  <data name="&gt;&gt;radioFastaPrecursors.Name" xml:space="preserve">
-    <value>radioFastaPrecursors</value>
-  </data>
-  <data name="&gt;&gt;radioFastaPrecursors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioFastaPrecursors.Parent" xml:space="preserve">
-    <value>tabPredictFor</value>
-  </data>
-  <data name="&gt;&gt;radioFastaPrecursors.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="textFastaPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="textFastaPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 90</value>
-  </data>
-  <data name="textFastaPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 20</value>
-  </data>
-  <data name="textFastaPath.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textFastaPath.Name" xml:space="preserve">
-    <value>textFastaPath</value>
-  </data>
-  <data name="&gt;&gt;textFastaPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textFastaPath.Parent" xml:space="preserve">
-    <value>tabPredictFor</value>
-  </data>
-  <data name="&gt;&gt;textFastaPath.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnBrowseFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowseFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 88</value>
-  </data>
-  <data name="btnBrowseFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnBrowseFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnBrowseFasta.Text" xml:space="preserve">
-    <value>B&amp;rowse...</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseFasta.Name" xml:space="preserve">
-    <value>btnBrowseFasta</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseFasta.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseFasta.Parent" xml:space="preserve">
-    <value>tabPredictFor</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseFasta.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="tabLibraryModel.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
@@ -1328,7 +1167,7 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>0</value>
   </data>
   <data name="labelLibraryModel.Text" xml:space="preserve">
-    <value>Choose the model AlphaPeptDeep predicts the library with, or fine-tune a new model on DIA runs, which Osprey searches against a protein FASTA first.</value>
+    <value>The DIA runs the model is fine-tuned on. They are searched against the protein FASTA of the next page first, and the pretrained models are tuned on what is found.</value>
   </data>
   <data name="&gt;&gt;labelLibraryModel.Name" xml:space="preserve">
     <value>labelLibraryModel</value>
@@ -1341,30 +1180,6 @@ The pages that follow choose what to predict for and the model: the pretrained m
   </data>
   <data name="&gt;&gt;labelLibraryModel.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="labelModWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="labelModWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 280</value>
-  </data>
-  <data name="labelModWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>551, 13</value>
-  </data>
-  <data name="labelModWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelModWarning.Name" xml:space="preserve">
-    <value>labelModWarning</value>
-  </data>
-  <data name="&gt;&gt;labelModWarning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelModWarning.Parent" xml:space="preserve">
-    <value>tabLibraryModel</value>
-  </data>
-  <data name="&gt;&gt;labelModWarning.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="tabFasta.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
@@ -1406,7 +1221,7 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>0</value>
   </data>
   <data name="labelFasta.Text" xml:space="preserve">
-    <value>The protein FASTA the fine-tuning runs are searched against, and how Osprey digests it for the training library.</value>
+    <value>The protein FASTA the fine-tuning runs are searched against, and how it is digested for the training library.</value>
   </data>
   <data name="&gt;&gt;labelFasta.Name" xml:space="preserve">
     <value>labelFasta</value>
@@ -1460,7 +1275,7 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>0</value>
   </data>
   <data name="labelModifications.Text" xml:space="preserve">
-    <value>The fixed and variable modifications the training library carries. They start as the document's modifications.</value>
+    <value>The fixed and variable modifications applied to the digested peptides.</value>
   </data>
   <data name="&gt;&gt;labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>
@@ -1514,7 +1329,7 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>0</value>
   </data>
   <data name="labelSearchSettings.Text" xml:space="preserve">
-    <value>Configure the Osprey search of the fine-tuning runs. Peptide length, precursor charges and the modification limit come from the document settings.</value>
+    <value>The peptide search settings for the fine-tuning runs.</value>
   </data>
   <data name="&gt;&gt;labelSearchSettings.Name" xml:space="preserve">
     <value>labelSearchSettings</value>
@@ -1528,20 +1343,392 @@ The pages that follow choose what to predict for and the model: the pretrained m
   <data name="&gt;&gt;labelSearchSettings.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="groupAlphaOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="groupAlphaOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="groupAlphaOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>320, 148</value>
+  </data>
+  <data name="groupAlphaOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="groupAlphaOptions.Text" xml:space="preserve">
+    <value>Carafe options</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.Name" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.Parent" xml:space="preserve">
+    <value>tabAlphaSource</value>
+  </data>
+  <data name="&gt;&gt;groupAlphaOptions.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelCarafeModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="labelCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 13</value>
+  </data>
+  <data name="labelCarafeModel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelCarafeModel.Text" xml:space="preserve">
+    <value>&amp;Model:</value>
+  </data>
+  <data name="&gt;&gt;labelCarafeModel.Name" xml:space="preserve">
+    <value>labelCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;labelCarafeModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCarafeModel.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;labelCarafeModel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="comboCarafeModel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="comboCarafeModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 35</value>
+  </data>
+  <data name="comboCarafeModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 21</value>
+  </data>
+  <data name="comboCarafeModel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboCarafeModel.Name" xml:space="preserve">
+    <value>comboCarafeModel</value>
+  </data>
+  <data name="&gt;&gt;comboCarafeModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCarafeModel.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;comboCarafeModel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="cbUseGpu.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="cbUseGpu.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseGpu.Location" type="System.Drawing.Point, System.Drawing">
+    <value>246, 37</value>
+  </data>
+  <data name="cbUseGpu.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 17</value>
+  </data>
+  <data name="cbUseGpu.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="cbUseGpu.Text" xml:space="preserve">
+    <value>Use &amp;GPU</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Name" xml:space="preserve">
+    <value>cbUseGpu</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelCarafePredictFor.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCarafePredictFor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 63</value>
+  </data>
+  <data name="labelCarafePredictFor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 13</value>
+  </data>
+  <data name="labelCarafePredictFor.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelCarafePredictFor.Text" xml:space="preserve">
+    <value>&amp;Predict for:</value>
+  </data>
+  <data name="&gt;&gt;labelCarafePredictFor.Name" xml:space="preserve">
+    <value>labelCarafePredictFor</value>
+  </data>
+  <data name="&gt;&gt;labelCarafePredictFor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCarafePredictFor.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;labelCarafePredictFor.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboCarafePredictFor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="comboCarafePredictFor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 79</value>
+  </data>
+  <data name="comboCarafePredictFor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>305, 21</value>
+  </data>
+  <data name="comboCarafePredictFor.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboCarafePredictFor.Name" xml:space="preserve">
+    <value>comboCarafePredictFor</value>
+  </data>
+  <data name="&gt;&gt;comboCarafePredictFor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCarafePredictFor.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;comboCarafePredictFor.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbCarafeFineTune.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbCarafeFineTune.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 104</value>
+  </data>
+  <data name="cbCarafeFineTune.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 17</value>
+  </data>
+  <data name="cbCarafeFineTune.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbCarafeFineTune.Text" xml:space="preserve">
+    <value>&amp;Fine-tune the model on DIA runs...</value>
+  </data>
+  <data name="&gt;&gt;cbCarafeFineTune.Name" xml:space="preserve">
+    <value>cbCarafeFineTune</value>
+  </data>
+  <data name="&gt;&gt;cbCarafeFineTune.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbCarafeFineTune.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;cbCarafeFineTune.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboCarafePredictFor.Items" xml:space="preserve">
+    <value>The precursors in this document</value>
+  </data>
+  <data name="comboCarafePredictFor.Items1" xml:space="preserve">
+    <value>The peptides of a protein FASTA file...</value>
+  </data>
+  <data name="labelModWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelModWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 128</value>
+  </data>
+  <data name="labelModWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>308, 13</value>
+  </data>
+  <data name="labelModWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.Name" xml:space="preserve">
+    <value>labelModWarning</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.Parent" xml:space="preserve">
+    <value>groupAlphaOptions</value>
+  </data>
+  <data name="&gt;&gt;labelModWarning.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelKoinaPredictFor.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelKoinaPredictFor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 52</value>
+  </data>
+  <data name="labelKoinaPredictFor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 13</value>
+  </data>
+  <data name="labelKoinaPredictFor.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelKoinaPredictFor.Text" xml:space="preserve">
+    <value>&amp;Predict for:</value>
+  </data>
+  <data name="&gt;&gt;labelKoinaPredictFor.Name" xml:space="preserve">
+    <value>labelKoinaPredictFor</value>
+  </data>
+  <data name="&gt;&gt;labelKoinaPredictFor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelKoinaPredictFor.Parent" xml:space="preserve">
+    <value>tabKoinaSource</value>
+  </data>
+  <data name="&gt;&gt;labelKoinaPredictFor.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboKoinaPredictFor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="comboKoinaPredictFor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 68</value>
+  </data>
+  <data name="comboKoinaPredictFor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>305, 21</value>
+  </data>
+  <data name="comboKoinaPredictFor.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboKoinaPredictFor.Name" xml:space="preserve">
+    <value>comboKoinaPredictFor</value>
+  </data>
+  <data name="&gt;&gt;comboKoinaPredictFor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboKoinaPredictFor.Parent" xml:space="preserve">
+    <value>tabKoinaSource</value>
+  </data>
+  <data name="&gt;&gt;comboKoinaPredictFor.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelPredictFor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelPredictFor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 12</value>
+  </data>
+  <data name="labelPredictFor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>551, 30</value>
+  </data>
+  <data name="labelPredictFor.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelPredictFor.Text" xml:space="preserve">
+    <value>The FASTA file digested with the document settings to produce the peptide precursors the library is predicted for.</value>
+  </data>
+  <data name="&gt;&gt;labelPredictFor.Name" xml:space="preserve">
+    <value>labelPredictFor</value>
+  </data>
+  <data name="&gt;&gt;labelPredictFor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPredictFor.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;labelPredictFor.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="labelFastaPath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFastaPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 52</value>
+  </data>
+  <data name="labelFastaPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="labelFastaPath.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelFastaPath.Text" xml:space="preserve">
+    <value>&amp;FASTA file:</value>
+  </data>
+  <data name="&gt;&gt;labelFastaPath.Name" xml:space="preserve">
+    <value>labelFastaPath</value>
+  </data>
+  <data name="&gt;&gt;labelFastaPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFastaPath.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;labelFastaPath.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="textFastaPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textFastaPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 68</value>
+  </data>
+  <data name="textFastaPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>463, 20</value>
+  </data>
+  <data name="textFastaPath.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textFastaPath.Name" xml:space="preserve">
+    <value>textFastaPath</value>
+  </data>
+  <data name="&gt;&gt;textFastaPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textFastaPath.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;textFastaPath.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="btnBrowseFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowseFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>483, 66</value>
+  </data>
+  <data name="btnBrowseFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseFasta.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnBrowseFasta.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseFasta.Name" xml:space="preserve">
+    <value>btnBrowseFasta</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseFasta.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseFasta.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="cbAddDecoys.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbAddDecoys.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 125</value>
+    <value>13, 104</value>
   </data>
   <data name="cbAddDecoys.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 17</value>
+    <value>124, 17</value>
   </data>
   <data name="cbAddDecoys.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="cbAddDecoys.Text" xml:space="preserve">
-    <value>Add shuffled-sequence &amp;decoys, one per peptide</value>
+    <value>Add &amp;decoy peptides</value>
   </data>
   <data name="&gt;&gt;cbAddDecoys.Name" xml:space="preserve">
     <value>cbAddDecoys</value>
@@ -1553,22 +1740,22 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>tabPredictFor</value>
   </data>
   <data name="&gt;&gt;cbAddDecoys.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>5</value>
   </data>
   <data name="cbAddEntrapment.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="cbAddEntrapment.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 151</value>
+    <value>13, 128</value>
   </data>
   <data name="cbAddEntrapment.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 17</value>
+    <value>148, 17</value>
   </data>
   <data name="cbAddEntrapment.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="cbAddEntrapment.Text" xml:space="preserve">
-    <value>Add &amp;entrapment peptides, shuffled from the FASTA's peptides, or from a FASTA file:</value>
+    <value>Add &amp;entrapment peptides</value>
   </data>
   <data name="&gt;&gt;cbAddEntrapment.Name" xml:space="preserve">
     <value>cbAddEntrapment</value>
@@ -1580,19 +1767,67 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>tabPredictFor</value>
   </data>
   <data name="&gt;&gt;cbAddEntrapment.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelEntrapmentMethod.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelEntrapmentMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 154</value>
+  </data>
+  <data name="labelEntrapmentMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>98, 13</value>
+  </data>
+  <data name="labelEntrapmentMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelEntrapmentMethod.Text" xml:space="preserve">
+    <value>&amp;Peptide sequence source:</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentMethod.Name" xml:space="preserve">
+    <value>labelEntrapmentMethod</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentMethod.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;labelEntrapmentMethod.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="comboEntrapmentMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>34, 170</value>
+  </data>
+  <data name="comboEntrapmentMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>250, 21</value>
+  </data>
+  <data name="comboEntrapmentMethod.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboEntrapmentMethod.Name" xml:space="preserve">
+    <value>comboEntrapmentMethod</value>
+  </data>
+  <data name="&gt;&gt;comboEntrapmentMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboEntrapmentMethod.Parent" xml:space="preserve">
+    <value>tabPredictFor</value>
+  </data>
+  <data name="&gt;&gt;comboEntrapmentMethod.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="textEntrapmentFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textEntrapmentFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 175</value>
+    <value>34, 200</value>
   </data>
   <data name="textEntrapmentFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 20</value>
+    <value>442, 20</value>
   </data>
   <data name="textEntrapmentFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;textEntrapmentFasta.Name" xml:space="preserve">
     <value>textEntrapmentFasta</value>
@@ -1604,22 +1839,22 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>tabPredictFor</value>
   </data>
   <data name="&gt;&gt;textEntrapmentFasta.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>1</value>
   </data>
   <data name="btnBrowseEntrapment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnBrowseEntrapment.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 173</value>
+    <value>483, 198</value>
   </data>
   <data name="btnBrowseEntrapment.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnBrowseEntrapment.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="btnBrowseEntrapment.Text" xml:space="preserve">
-    <value>Bro&amp;wse...</value>
+    <value>B&amp;rowse...</value>
   </data>
   <data name="&gt;&gt;btnBrowseEntrapment.Name" xml:space="preserve">
     <value>btnBrowseEntrapment</value>
@@ -1631,7 +1866,19 @@ The pages that follow choose what to predict for and the model: the pretrained m
     <value>tabPredictFor</value>
   </data>
   <data name="&gt;&gt;btnBrowseEntrapment.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>0</value>
+  </data>
+  <data name="comboKoinaPredictFor.Items" xml:space="preserve">
+    <value>The precursors in this document</value>
+  </data>
+  <data name="comboKoinaPredictFor.Items1" xml:space="preserve">
+    <value>The peptides of a protein FASTA file...</value>
+  </data>
+  <data name="comboEntrapmentMethod.Items" xml:space="preserve">
+    <value>Shuffled target sequences</value>
+  </data>
+  <data name="comboEntrapmentMethod.Items1" xml:space="preserve">
+    <value>A FASTA file of entrapment proteins</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

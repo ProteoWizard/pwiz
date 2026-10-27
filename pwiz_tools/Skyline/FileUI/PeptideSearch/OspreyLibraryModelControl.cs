@@ -41,36 +41,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     /// </summary>
     public partial class OspreyLibraryModelControl : UserControl
     {
-        private SettingsListComboDriver<CarafeModelSpec> _driverModel;
+        private readonly CarafeModelCombo _modelCombo;
         private UseGpuDriver _useGpuDriver;
-        private CarafeModelSpec _modelBeforeTuning;
         private bool _useGpuUpdated;
 
         public OspreyLibraryModelControl()
         {
             InitializeComponent();
+            _modelCombo = new CarafeModelCombo(comboModel);
             UpdateTuningControls();
         }
 
         private Form WizardForm => FormEx.GetParentForm(this);
-
-        /// <summary>
-        /// The model list as Build Library offers it: the pretrained models, the saved ones, Add,
-        /// Edit current and Edit list. Filled when first asked for, since each saved model's display
-        /// name reads its file, and a host may never show this page.
-        /// </summary>
-        private SettingsListComboDriver<CarafeModelSpec> DriverModel
-        {
-            get
-            {
-                if (_driverModel == null)
-                {
-                    _driverModel = new SettingsListComboDriver<CarafeModelSpec>(comboModel, Settings.Default.CarafeModelList);
-                    _driverModel.LoadList(null);
-                }
-                return _driverModel;
-            }
-        }
 
         /// <summary>The Use GPU checkbox's driver, made once the control has a form to ask its questions from.</summary>
         private UseGpuDriver UseGpuDriver => _useGpuDriver ??= new UseGpuDriver(this, cbUseGpu);
@@ -104,31 +86,46 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
+        /// Takes the model choice off the page, for a host whose first page already made it
+        /// (Build Library: the model, Use GPU and whether to fine-tune), leaving the runs the
+        /// model is fine-tuned on, which take the room.
+        /// </summary>
+        public void HideModelChoice()
+        {
+            if (!comboModel.Visible)
+                return;
+            foreach (var control in new Control[] { lblModel, comboModel, cbUseGpu, radioUseExistingModel, radioTuneModel })
+                control.Visible = false;
+            int delta = listTuningFiles.Top - lblModel.Top;
+            listTuningFiles.Top -= delta;
+            listTuningFiles.Height += delta;
+            btnBrowseTuningFiles.Top -= delta;
+            int indent = listTuningFiles.Left - lblModel.Left;
+            listTuningFiles.Left -= indent;
+            listTuningFiles.Width += indent;
+        }
+
+        /// <summary>
         /// The model to predict the library with: the default, the pretrained AlphaPeptDeep models,
         /// or a saved fine-tuned model from the list; the default while a new model is fine-tuned,
         /// since the tuning starts from the pretrained models. Setting it selects that model in the combo.
         /// </summary>
         public CarafeModelSpec Model
         {
-            get => DriverModel.SelectedItem ?? CarafeModelSpec.DEFAULT;
-            // The driver selects by the combo's text, which is the display name, not the key
-            set => DriverModel.LoadList(Settings.Default.CarafeModelList.GetDisplayName(value));
+            get => _modelCombo.Model;
+            set => _modelCombo.Model = value;
         }
 
         private void comboModel_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Add, Edit current and Edit list reload the list, which fires this event again from
-            // within the driver's handling
-            if (_driverModel == null || _driverModel.IsInSelectedIndexChangedEvent)
-                return;
-            _driverModel.SelectedIndexChangedEvent(sender, e);
-            ModelChanged?.Invoke(this, EventArgs.Empty);
+            if (_modelCombo.SelectedIndexChanged(sender, e))
+                ModelChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>Fills the model combo, for a host showing the page.</summary>
         public void LoadModels()
         {
-            var unused = DriverModel;
+            _modelCombo.Load();
         }
 
         /// <summary>
@@ -137,13 +134,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public void AddModel()
         {
-            DriverModel.AddItem();
+            _modelCombo.AddItem();
         }
 
         /// <summary>The combo's Edit list..., for tests: opens the grid of models.</summary>
         public void EditModelList()
         {
-            DriverModel.EditList();
+            _modelCombo.EditList();
         }
 
         /// <summary>
@@ -216,26 +213,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
-        /// Fine-tuning starts from the pretrained models: the combo is set to them and disabled, so
-        /// the page says what the tuning starts from, and the model chosen before comes back when
-        /// "Use this model" is chosen again. (Osprey can tune a saved model further, but chaining
-        /// fine-tunes compounds their drift, so it is not offered here.)
+        /// Fine-tuning starts from the pretrained models, which the combo then shows, disabled
+        /// (<see cref="CarafeModelCombo.SetTuning"/>), and enables the tuning list.
         /// </summary>
         private void UpdateTuningControls()
         {
             bool tune = !UseExistingModel;
-            if (tune && comboModel.Enabled)
-            {
-                _modelBeforeTuning = Model;
-                Model = CarafeModelSpec.DEFAULT;
-                comboModel.Enabled = false;
-            }
-            else if (!tune && !comboModel.Enabled)
-            {
-                comboModel.Enabled = true;
-                if (_modelBeforeTuning != null && Settings.Default.CarafeModelList.Contains(_modelBeforeTuning))
-                    Model = _modelBeforeTuning;
-            }
+            _modelCombo.SetTuning(tune);
             listTuningFiles.Enabled = btnBrowseTuningFiles.Enabled = cbChooseFromSearchedFiles.Enabled = tune;
         }
 

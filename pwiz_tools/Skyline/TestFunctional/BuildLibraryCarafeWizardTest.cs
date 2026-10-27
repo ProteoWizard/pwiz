@@ -114,10 +114,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// The whole route: the source, what to predict for (the document, after the FASTA route's
-        /// refusals), the model (a fine-tune, after the page's refusal of no runs), the FASTA (after
-        /// its refusal of none), the modifications, the search settings, Previous back and Next
-        /// forward with every choice kept, and Finish. The build tunes on the three runs and predicts
+        /// The whole route: the source and its first-page options (the pretrained models, the
+        /// document's precursors, with Finish there until the fine-tune box is checked), the runs
+        /// (after the page's refusal of none), the FASTA (after its refusal of none), the
+        /// modifications, the search settings, Previous back to the first page and Next forward
+        /// with every choice kept, and Finish. The build tunes on the three runs and predicts
         /// the document's precursors with the tuned model; the model lands beside the library and
         /// records the runs. Returns the library's model.
         /// </summary>
@@ -135,28 +136,11 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.properties, buildLibraryDlg.CurrentPage);
             });
-            PauseForDemo("Build Library: the AlphaPeptDeep source");
-
-            // Predict For: the document's precursors by default; the FASTA route needs a file
-            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.predict_for);
+            // The first page's Carafe options: the pretrained models, the document's precursors
+            // and no fine-tune, so Finish is on this page; the fine-tune box turns it into Next
             RunUI(() =>
             {
                 AssertEx.IsTrue(buildLibraryDlg.PredictForDocument);
-                buildLibraryDlg.PredictForDocument = false;
-            });
-            ShowAndDismissMessage(buildLibraryDlg, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_,
-                BuildLibraryDlg.Pages.predict_for);
-            string missingFasta = TestFilesDir.GetTestPath("missing.fasta");
-            RunUI(() => buildLibraryDlg.PredictForFastaPath = missingFasta);
-            ShowAndDismissMessage(buildLibraryDlg, string.Format(SettingsUIResources.BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_, missingFasta),
-                BuildLibraryDlg.Pages.predict_for);
-            RunUI(() => buildLibraryDlg.PredictForDocument = true);
-            PauseForDemo("Predict For: the document's precursors");
-
-            // Library Model: the defaults, then a fine-tune on the three runs, browsed in
-            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
-            RunUI(() =>
-            {
                 AssertEx.IsTrue(buildLibraryDlg.UseExistingModel);
                 AssertEx.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
                 AssertEx.IsFalse(buildLibraryDlg.UseGpu);
@@ -165,6 +149,10 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.UseExistingModel = false;
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_btnPrevious_Click__Next__, buildLibraryDlg.NextButtonText);
             });
+            PauseForDemo("Build Library: the AlphaPeptDeep source, fine-tuning a new model");
+
+            // The tuning runs: the page refuses none, then the three runs, browsed in
+            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
             ShowAndDismissMessage(buildLibraryDlg, PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_,
                 BuildLibraryDlg.Pages.library_model);
             RunUI(() =>
@@ -172,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.AddTuningFiles(diaFilePaths);
                 AssertEx.AreEqualDeep(diaFilePaths, buildLibraryDlg.TuningFiles);
             });
-            PauseForDemo("Library Model: a new model fine-tuned on the three runs");
+            PauseForDemo("Tuning runs: the three runs the new model is fine-tuned on");
 
             // Training FASTA: required; the document's enzyme and missed cleavages to start
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.fasta);
@@ -216,8 +204,12 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.fasta, buildLibraryDlg.CurrentPage);
                 buildLibraryDlg.PreviousPage();
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.library_model, buildLibraryDlg.CurrentPage);
-                AssertEx.IsFalse(buildLibraryDlg.UseExistingModel);
                 AssertEx.AreEqualDeep(diaFilePaths, buildLibraryDlg.TuningFiles);
+                buildLibraryDlg.PreviousPage();
+                AssertEx.AreEqual(BuildLibraryDlg.Pages.properties, buildLibraryDlg.CurrentPage);
+                AssertEx.IsFalse(buildLibraryDlg.UseExistingModel);
+                buildLibraryDlg.OkWizardPage();
+                AssertEx.AreEqual(BuildLibraryDlg.Pages.library_model, buildLibraryDlg.CurrentPage);
                 buildLibraryDlg.OkWizardPage();
                 AssertEx.AreEqual(fastaPath, buildLibraryDlg.FastaControl.FastaFile);
                 buildLibraryDlg.OkWizardPage();
@@ -271,8 +263,6 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.AlphaPeptDeep = true;
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
             });
-            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.predict_for);
-            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
             RunDlg<EditCarafeModelDlg>(buildLibraryDlg.AddCarafeModel, dlg =>
             {
                 dlg.ModelName = SAVED_MODEL_NAME;
@@ -285,8 +275,9 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(SAVED_MODEL_NAME, buildLibraryDlg.CarafeModel.Name);
                 AssertEx.AreEqual(tunedModelPath, buildLibraryDlg.CarafeModelPath);
                 AssertEx.IsTrue(buildLibraryDlg.UseExistingModel);
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
             });
-            PauseForDemo("Library Model: the library's model, saved to the list");
+            PauseForDemo("Build Library: the library's model, saved to the list and used as it is");
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             var builder = (AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder;
@@ -306,9 +297,9 @@ namespace pwiz.SkylineTestFunctional
         /// A library predicted for a protein FASTA's precursors, digested with the document's
         /// settings, with the pretrained models: the same peptides as the document's, since the
         /// document was made from the same FASTA; plus CarafeSharp's entrapment peptides, shuffled
-        /// from the FASTA's own, and a shuffled decoy of every peptide, which the library marks in
-        /// its DecoyPairs table. On the way, the document route's refusal of an empty entrapment
-        /// FASTA, which it cannot shuffle from.
+        /// from the FASTA's own, and a reverse-sequence decoy of every peptide, which the library
+        /// marks in its DecoyPairs table. On the way, the page's refusals of an empty or missing
+        /// FASTA, and of entrapment from a FASTA file not named.
         /// </summary>
         private void BuildForFasta(string fastaPath)
         {
@@ -322,27 +313,42 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.AlphaPeptDeep = true;
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
             });
-            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.predict_for);
-            RunUI(() =>
-            {
-                buildLibraryDlg.AddDecoys = true;
-                buildLibraryDlg.AddEntrapment = true;
-            });
-            // The document route has no FASTA to shuffle from, so it needs the entrapment FASTA
-            ShowAndDismissMessage(buildLibraryDlg, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_,
-                BuildLibraryDlg.Pages.predict_for);
-            RunUI(() =>
-            {
-                buildLibraryDlg.PredictForDocument = false;
-                buildLibraryDlg.PredictForFastaPath = fastaPath;
-            });
-            PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and shuffled entrapment peptides");
-            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
+            // A FASTA's precursors: the first page's choice leads to the Predict For page
             RunUI(() =>
             {
                 buildLibraryDlg.CarafeModel = CarafeModelSpec.DEFAULT;
                 AssertEx.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
+                buildLibraryDlg.PredictForDocument = false;
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_btnPrevious_Click__Next__, buildLibraryDlg.NextButtonText);
             });
+            PauseForDemo("Build Library: the pretrained models, for a protein FASTA's precursors");
+            NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.predict_for);
+            // The FASTA box starts empty and must name a file that exists
+            RunUI(() => AssertEx.IsTrue(string.IsNullOrEmpty(buildLibraryDlg.PredictForFastaPath)));
+            ShowAndDismissMessage(buildLibraryDlg, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_,
+                BuildLibraryDlg.Pages.predict_for);
+            string missingFasta = TestFilesDir.GetTestPath("missing.fasta");
+            RunUI(() => buildLibraryDlg.PredictForFastaPath = missingFasta);
+            ShowAndDismissMessage(buildLibraryDlg, string.Format(SettingsUIResources.BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_, missingFasta),
+                BuildLibraryDlg.Pages.predict_for);
+            RunUI(() =>
+            {
+                buildLibraryDlg.PredictForFastaPath = fastaPath;
+                buildLibraryDlg.AddDecoys = true;
+                buildLibraryDlg.AddEntrapment = true;
+                AssertEx.IsFalse(buildLibraryDlg.EntrapmentFromFasta);
+                buildLibraryDlg.EntrapmentFromFasta = true;
+            });
+            // Entrapment from a FASTA file needs the file; shuffled from the predicted FASTA's own peptides needs nothing more
+            ShowAndDismissMessage(buildLibraryDlg, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_,
+                BuildLibraryDlg.Pages.predict_for);
+            RunUI(() =>
+            {
+                buildLibraryDlg.EntrapmentFromFasta = false;
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
+            });
+            PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and shuffled entrapment peptides");
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             var builder = (AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder;
@@ -355,7 +361,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(entrapmentCount > 0, @"the entrapment FASTA added no peptides");
             AssertEx.AreEqual(SkylineWindow.Document.PeptideCount + entrapmentCount, targetCount);
             AssertEx.AreEqual(targetCount, builder.Document.Peptides.Count(p => p.IsDecoy));
-            AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_SHUFFLE, builder.DecoyMethod);
+            AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_REVERSE, builder.DecoyMethod);
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(OspreySearchTest.SEARCH_TIMEOUT_MILLIS, () => peptideSettings.AvailableLibraries.Contains(FASTA_LIBRARY_NAME));
             AssertEx.FileExists(libraryPath);

@@ -323,6 +323,24 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A reverse-sequence decoy of every peptide, paired with its target in the library..
+        /// </summary>
+        public static string BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides not expected in the sample, flagged as entrapment in the library, to measure the false discovery rate of a search..
+        /// </summary>
+        public static string BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
         /// </summary>
         public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {

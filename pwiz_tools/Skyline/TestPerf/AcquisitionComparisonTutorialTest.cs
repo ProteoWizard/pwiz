@@ -251,9 +251,7 @@ namespace TestPerf
             RunUI(() => buildLibraryDlg.NCE = 31);
             
             PauseForScreenShot<BuildLibraryDlg>("Build Library form with Koina and NCE 31");
-
-            // Next to the Predict For page (the document's precursors), then Finish
-            RunUI(buildLibraryDlg.OkWizardPage);
+            
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             WaitForConditionUI(() =>
                 peptideSettingsUI.PickedLibraries.Any(libName => Equals(libName, PROCAL_KOINA_LIBRARY)));

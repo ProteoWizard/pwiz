@@ -124,6 +124,9 @@ namespace pwiz.Skyline.SettingsUI
 
         // The pages visited before the current one, for Previous
         private readonly Stack<Pages> _pageHistory = new Stack<Pages>();
+        private readonly CarafeModelCombo _carafeModelCombo;
+        private UseGpuDriver _useGpuDriver;
+        private bool _useGpuUpdated;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -144,6 +147,16 @@ namespace pwiz.Skyline.SettingsUI
                 cbFilter.Checked = Settings.Default.LibraryFilterDocumentPeptides;
 
             cbKeepRedundant.Checked = Settings.Default.LibraryKeepRedundant;
+
+            _carafeModelCombo = new CarafeModelCombo(comboCarafeModel);
+            // Use GPU is as wide as its caption in the current language, so it is placed from the
+            // group box's right edge, and the model combo ends before it, whatever that width is
+            cbUseGpu.Left = groupAlphaOptions.ClientSize.Width - cbUseGpu.Width - labelCarafeModel.Left;
+            comboCarafeModel.Width = cbUseGpu.Left - comboCarafeModel.Left - labelCarafeModel.Left;
+            PredictForDocument = true;
+            EntrapmentFromFasta = false;
+            helpTip.SetToolTip(cbAddDecoys, SettingsUIResources.BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library);
+            helpTip.SetToolTip(cbAddEntrapment, SettingsUIResources.BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate);
 
             ceCombo.Items.AddRange(
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
@@ -168,14 +181,14 @@ namespace pwiz.Skyline.SettingsUI
             if (modeUIHandler.ComponentsDisabledForModeUI(dataSourceGroupBox))
                 tabControlDataSource.Left = dataSourceGroupBox.Left;
 
-            // The Osprey Search wizard's pages, for the fine-tune: the model, the FASTA the tuning
-            // runs are searched against, the modifications and the search settings
+            // The Osprey Search wizard's pages, for the fine-tune: the runs, the FASTA they are
+            // searched against, the modifications and the search settings. The model and Use GPU
+            // are on the first page, so the runs page shows the runs alone.
             var document = _documentUiContainer.DocumentUI;
             LibraryModelControl = new OspreyLibraryModelControl { DocumentFilePath = skylineWindow.DocumentFilePath };
             LibraryModelControl.HideSearchedFilesChoice();
-            LibraryModelControl.ModelChanged += (sender, e) => UpdateModificationWarning();
-            LibraryModelControl.UseExistingModelChanged += (sender, e) => UpdateNextButton();
-            WizardPages.AddPageControl(LibraryModelControl, tabLibraryModel, 10, 50, labelModWarning.Height + 12);
+            LibraryModelControl.HideModelChoice();
+            WizardPages.AddPageControl(LibraryModelControl, tabLibraryModel, 10, 50, 4);
             FastaControl = new OspreyFastaControl { DocumentFilePath = skylineWindow.DocumentFilePath };
             FastaControl.Initialize(document.Settings.PeptideSettings);
             WizardPages.AddPageControl(FastaControl, tabFasta, 10, 50, 4);
@@ -322,6 +335,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool CreateAlphaBuilder(string name, string outputPath)
         {
+            if (PredictForDocument && !_documentUiContainer.DocumentUI.HasPeptides)
+            {
+                MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_);
+                return false;
+            }
             // A model added to the list some time ago may have been moved or damaged since
             var carafeModel = CarafeModel;
             if (!carafeModel.IsDefault && !EditCarafeModelDlg.ValidateModelPath(this, carafeModel.FilePath))
@@ -337,6 +355,7 @@ namespace pwiz.Skyline.SettingsUI
             var builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
                 CarafeModelPath = carafeModel.FilePath,
+                CarafeModelName = carafeModel.Name,
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu,
                 TuningConfig = IsTuning ? GetTuningConfig() : null,
@@ -352,7 +371,7 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
             Builder = builder;
-            LibraryModelControl.SaveUseGpuSetting();
+            UseGpuDriver.SaveSetting();
 
             return true;
         }
@@ -388,8 +407,8 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// The precursors the library is predicted for: the document's, or a protein FASTA's,
         /// digested with the document's settings into a document of its own, as Import FASTA would
-        /// add them to the document; then the entrapment FASTA's peptides, if asked for, and a
-        /// shuffled decoy of every peptide, if asked for, which the library marks in its DecoyPairs
+        /// add them to the document; then the entrapment peptides, if asked for, and a
+        /// reverse-sequence decoy of every peptide, if asked for, which the library marks in its DecoyPairs
         /// table (<see cref="LibraryDecoyPairs"/>). The open document itself is never changed. Null
         /// when a digest is cancelled, fails or gives no peptides, after reporting it.
         /// </summary>
@@ -410,7 +429,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Digested on their own and added as they are, so the document's own proteins are untouched
                 List<PeptideGroupDocNode> entrapmentGroups;
-                bool peptideList = string.IsNullOrWhiteSpace(EntrapmentFastaPath);
+                bool peptideList = !EntrapmentFromFasta;
                 if (peptideList)
                 {
                     // Carafe's entrapment peptides, shuffled from the predicted FASTA's own peptides, as a peptide list
@@ -427,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (AddDecoys)
             {
-                var refine = new RefinementSettings { NumberOfDecoys = doc.PeptideCount, DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE };
+                var refine = new RefinementSettings { NumberOfDecoys = doc.PeptideCount, DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE };
                 doc = refine.GenerateDecoys(doc);
             }
             return doc;
@@ -523,25 +542,33 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>The entrapment FASTA's peptides in the document last made to predict for, for the library's DecoyPairs table.</summary>
         private List<Target> _entrapmentTargets;
 
-        /// <summary>The DecoyPairs Method the library records for Skyline's shuffled decoys, or null when none are added.</summary>
-        private string DecoyMethod => AddDecoys ? DECOY_METHOD_SHUFFLE : null;
+        /// <summary>The DecoyPairs Method the library records for Skyline's reverse-sequence decoys, or null when none are added.</summary>
+        private string DecoyMethod => AddDecoys ? DECOY_METHOD_REVERSE : null;
 
-        /// <summary>Carafe's name for the shuffled-sequence decoy method, as its DecoyPairs table records it.</summary>
-        public const string DECOY_METHOD_SHUFFLE = @"shuffle";
+        /// <summary>The DecoyPairs Method recorded for reverse-sequence decoys, beside Carafe's "shuffle".</summary>
+        public const string DECOY_METHOD_REVERSE = @"reverse";
 
         #region Predict For page
 
-        /// <summary>True predicts the library for the document's precursors; false for <see cref="PredictForFastaPath"/>'s.</summary>
+        /// <summary>
+        /// True predicts the library for the document's precursors, and Finish is on the first
+        /// page; false for <see cref="PredictForFastaPath"/>'s, chosen on the Predict For page.
+        /// The AlphaPeptDeep and Koina tabs each show the choice, kept the same on both.
+        /// </summary>
         public bool PredictForDocument
         {
-            get => radioDocumentPrecursors.Checked;
-            set
-            {
-                if (value)
-                    radioDocumentPrecursors.Checked = true;
-                else
-                    radioFastaPrecursors.Checked = true;
-            }
+            get => comboCarafePredictFor.SelectedIndex == 0;
+            set => comboCarafePredictFor.SelectedIndex = comboKoinaPredictFor.SelectedIndex = value ? 0 : 1;
+        }
+
+        private void comboPredictFor_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // The other tab's combo follows, so the choice is one whichever tab shows it
+            var combo = (ComboBox)sender;
+            var other = ReferenceEquals(combo, comboCarafePredictFor) ? comboKoinaPredictFor : comboCarafePredictFor;
+            if (other.SelectedIndex != combo.SelectedIndex)
+                other.SelectedIndex = combo.SelectedIndex;
+            UpdateNextButton();
         }
 
         /// <summary>The protein FASTA whose peptides and precursors, digested with the document settings, the library is predicted for.</summary>
@@ -572,9 +599,15 @@ namespace pwiz.Skyline.SettingsUI
             set => textEntrapmentFasta.Text = value;
         }
 
-        private void radioPredictFor_CheckedChanged(object sender, EventArgs e)
+        /// <summary>
+        /// True takes the entrapment peptides from <see cref="EntrapmentFastaPath"/>, digested
+        /// with the document settings; false shuffles them from the predicted FASTA's own peptides
+        /// (CarafeSharp's <see cref="EntrapmentFastaBuilder"/>), the default.
+        /// </summary>
+        public bool EntrapmentFromFasta
         {
-            UpdatePredictForControls();
+            get => comboEntrapmentMethod.SelectedIndex == 1;
+            set => comboEntrapmentMethod.SelectedIndex = value ? 1 : 0;
         }
 
         private void cbAddEntrapment_CheckedChanged(object sender, EventArgs e)
@@ -582,10 +615,16 @@ namespace pwiz.Skyline.SettingsUI
             UpdatePredictForControls();
         }
 
+        private void comboEntrapmentMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdatePredictForControls();
+        }
+
+        /// <summary>The entrapment method shows once entrapment is asked for, and its FASTA box once a FASTA is the method.</summary>
         private void UpdatePredictForControls()
         {
-            textFastaPath.Enabled = btnBrowseFasta.Enabled = !PredictForDocument;
-            textEntrapmentFasta.Enabled = btnBrowseEntrapment.Enabled = AddEntrapment;
+            labelEntrapmentMethod.Visible = comboEntrapmentMethod.Visible = AddEntrapment;
+            textEntrapmentFasta.Visible = btnBrowseEntrapment.Visible = AddEntrapment && EntrapmentFromFasta;
         }
 
         private void btnBrowseEntrapment_Click(object sender, EventArgs e)
@@ -598,34 +637,19 @@ namespace pwiz.Skyline.SettingsUI
         private void btnBrowseFasta_Click(object sender, EventArgs e)
         {
             string path = OspreyFastaControl.BrowseFasta(this, _skylineWindow.DocumentFilePath);
-            if (path == null)
-                return;
-            PredictForFastaPath = path;
-            PredictForDocument = false;
+            if (path != null)
+                PredictForFastaPath = path;
         }
 
         /// <summary>
-        /// Next from the Predict For page: the document must have precursors to predict for, or the
-        /// FASTA must exist.
+        /// Next or Finish from the Predict For page: the FASTA must exist, and the entrapment
+        /// FASTA too when it is the entrapment method.
         /// </summary>
         private bool ValidatePredictForPage()
         {
-            if (PredictForDocument)
-            {
-                if (!_documentUiContainer.DocumentUI.HasPeptides)
-                {
-                    MessageDlg.Show(this, radioKoinaSource.Checked
-                        ? Resources.BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_
-                        : SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_);
-                    return false;
-                }
-            }
-            else if (!ValidateFastaPath(textFastaPath, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_))
-            {
+            if (!ValidateFastaPath(textFastaPath, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_))
                 return false;
-            }
-            // The FASTA route can shuffle its own FASTA's peptides for the entrapment; the document route needs a file
-            if (AddEntrapment && (PredictForDocument || !string.IsNullOrWhiteSpace(EntrapmentFastaPath)))
+            if (AddEntrapment && EntrapmentFromFasta)
                 return ValidateFastaPath(textEntrapmentFasta, SettingsUIResources.BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_);
             return true;
         }
@@ -651,15 +675,18 @@ namespace pwiz.Skyline.SettingsUI
 
         #endregion
 
-        #region Library Model page
+        #region Carafe options
+
+        /// <summary>The Use GPU checkbox's driver, which asks its questions from this form.</summary>
+        private UseGpuDriver UseGpuDriver => _useGpuDriver ??= new UseGpuDriver(this, cbUseGpu);
 
         /// <summary>
         /// The libtorch runtimes AlphaPeptDeep predicts with, which decide whether Use GPU can be checked.
         /// </summary>
         public TorchRuntimes TorchRuntimes
         {
-            get { return LibraryModelControl.TorchRuntimes; }
-            set { LibraryModelControl.TorchRuntimes = value; }
+            get { return UseGpuDriver.TorchRuntimes; }
+            set { UseGpuDriver.TorchRuntimes = value; }
         }
 
         /// <summary>
@@ -668,8 +695,26 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool UseGpu
         {
-            get { return LibraryModelControl.UseGpu; }
-            set { LibraryModelControl.UseGpu = value; }
+            get { return UseGpuDriver.UseGpu; }
+            set { UseGpuDriver.UseGpu = value; }
+        }
+
+        private void cbUseGpu_CheckedChanged(object sender, EventArgs e)
+        {
+            UseGpuDriver.CheckedChanged();
+        }
+
+        /// <summary>
+        /// Checks Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is
+        /// installed. Called when the AlphaPeptDeep source is chosen, so the NVIDIA driver is not
+        /// loaded for the other sources, and only once, so the user's choice is kept after that.
+        /// </summary>
+        private void UpdateUseGpu()
+        {
+            if (_useGpuUpdated)
+                return;
+            UseGpuDriver.Update();
+            _useGpuUpdated = true;
         }
 
         /// <summary>
@@ -678,8 +723,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public CarafeModelSpec CarafeModel
         {
-            get { return LibraryModelControl.Model; }
-            set { LibraryModelControl.Model = value; }
+            get { return _carafeModelCombo.Model; }
+            set { _carafeModelCombo.Model = value; }
         }
 
         /// <summary>The chosen model's file, or null for the pretrained models.</summary>
@@ -688,14 +733,29 @@ namespace pwiz.Skyline.SettingsUI
             get { return CarafeModel.FilePath; }
         }
 
+        private void comboCarafeModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_carafeModelCombo.SelectedIndexChanged(sender, e))
+                UpdateModificationWarning();
+        }
+
         /// <summary>
-        /// True predicts with the chosen model as it is; false fine-tunes a new model on
-        /// <see cref="TuningFiles"/> first, which the pages after the Library Model page configure.
+        /// True predicts with the chosen model as it is, and Finish is on the first page; false
+        /// fine-tunes a new model on <see cref="TuningFiles"/> first, which the pages the Fine-tune
+        /// box leads to configure.
         /// </summary>
         public bool UseExistingModel
         {
-            get { return LibraryModelControl.UseExistingModel; }
-            set { LibraryModelControl.UseExistingModel = value; }
+            get { return !cbCarafeFineTune.Checked; }
+            set { cbCarafeFineTune.Checked = !value; }
+        }
+
+        private void cbCarafeFineTune_CheckedChanged(object sender, EventArgs e)
+        {
+            // The tuning starts from the pretrained models, and the runs page enables its list
+            _carafeModelCombo.SetTuning(cbCarafeFineTune.Checked);
+            LibraryModelControl.UseExistingModel = UseExistingModel;
+            UpdateNextButton();
         }
 
         /// <summary>A fine-tuned build: Osprey searches the tuning runs against the FASTA, tunes the models and predicts with them.</summary>
@@ -739,13 +799,13 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>The combo's Add..., for tests: opens the model editor and adds its model to the list.</summary>
         public void AddCarafeModel()
         {
-            LibraryModelControl.AddModel();
+            _carafeModelCombo.AddItem();
         }
 
         /// <summary>The combo's Edit list..., for tests: opens the grid of models.</summary>
         public void EditCarafeModelList()
         {
-            LibraryModelControl.EditModelList();
+            _carafeModelCombo.EditList();
         }
 
         #endregion
@@ -864,21 +924,26 @@ namespace pwiz.Skyline.SettingsUI
         public string NextButtonText => btnNext.Text;
 
         /// <summary>
-        /// The page after <paramref name="page"/> on the route the choices so far set, or null when
-        /// the next step is Finish: the Files source goes to its files; the predicted sources to
-        /// what to predict for, then AlphaPeptDeep to its model and, for a fine-tune, the FASTA,
-        /// the modifications and the search settings of the tuning runs' search.
+        /// The page after <paramref name="page"/> on the route the first page's choices set, or
+        /// null when the next step is Finish: the Files source goes to its files; a FASTA's
+        /// precursors to the Predict For page; a fine-tune to its runs, then the FASTA, the
+        /// modifications and the search settings of the tuning runs' search. The defaults (the
+        /// chosen model, the document's precursors) finish from the first page.
         /// </summary>
         private Pages? GetNextPage(Pages page)
         {
             switch (page)
             {
                 case Pages.properties:
-                    return radioFilesSource.Checked ? Pages.files : Pages.predict_for;
+                    if (radioFilesSource.Checked)
+                        return Pages.files;
+                    if (!PredictForDocument)
+                        return Pages.predict_for;
+                    return IsTuning ? Pages.library_model : (Pages?)null;
                 case Pages.predict_for:
-                    return radioAlphaSource.Checked ? Pages.library_model : (Pages?)null;
+                    return IsTuning ? Pages.library_model : (Pages?)null;
                 case Pages.library_model:
-                    return UseExistingModel ? (Pages?)null : Pages.fasta;
+                    return Pages.fasta;
                 case Pages.fasta:
                     return Pages.modifications;
                 case Pages.modifications:
@@ -948,16 +1013,6 @@ namespace pwiz.Skyline.SettingsUI
             {
                 case Pages.files:
                     btnNext.Enabled = Grid.IsReady;
-                    break;
-                case Pages.library_model:
-                    // Only now, so the NVIDIA driver is not loaded for the other sources, and only
-                    // once, so Previous and Next keep the user's choice. Osprey was installed when
-                    // the source was chosen: its package lists the CUDA runtime the box checks for.
-                    // The model list is read only now, since each saved model's name reads its file.
-                    LibraryModelControl.LoadModels();
-                    LibraryModelControl.UpdateUseGpu();
-                    UpdateModificationWarning();
-                    btnNext.Enabled = true;
                     break;
                 default:
                     btnNext.Enabled = true;
@@ -1426,8 +1481,13 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     // Only now, so Osprey is not downloaded for the other library sources. Its
-                    // package lists the CUDA runtime the Library Model page's Use GPU box checks for.
+                    // package lists the CUDA runtime the Use GPU box checks for; the box, the
+                    // model list (each saved model's name reads its file) and the modification
+                    // warning follow, for the same reason.
                     OspreyInstaller.EnsureInstalled(this);
+                    _carafeModelCombo.Load();
+                    UpdateUseGpu();
+                    UpdateModificationWarning();
                 }
                 else // must be Koina
                 {

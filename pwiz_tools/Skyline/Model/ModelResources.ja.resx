@@ -881,9 +881,6 @@
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>トレーニング入力ファイルを準備中</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-    <value>AlphaPeptDeepを実行中</value>
-  </data>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>スペクトルライブラリをインポート中</value>
   </data>

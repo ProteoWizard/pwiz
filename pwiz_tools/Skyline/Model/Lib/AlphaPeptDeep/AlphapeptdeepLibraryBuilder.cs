@@ -148,6 +148,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         /// <summary>
+        /// The name the model list gives <see cref="CarafeModelPath"/>'s model, for the progress
+        /// text; the pretrained models' name when none is given.
+        /// </summary>
+        public string CarafeModelName { get; set; }
+
+        /// <summary>
         /// The libtorch runtimes Osprey predicts with: where the CUDA runtime is installed, passed to Osprey.
         /// </summary>
         public TorchRuntimes TorchRuntimes { get; set; } = new TorchRuntimes();
@@ -306,8 +312,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private void ExecuteOsprey(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus.ChangeMessage(IsTuning
-                ? ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_the_model_and_running_AlphaPeptDeep
-                : ModelResources.AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep));
+                ? ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library
+                : string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model,
+                    CarafeModelName ?? CarafeModelSpec.DEFAULT.Name)));
             if (!File.Exists(OspreyHelpers.OspreyBinary))
             {
                 throw new IOException(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_,
@@ -389,7 +396,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             string modelPath = OspreyHelpers.GetTunedModelPath(OspreyOutputPath, OspreyWorkDirectory);
             if (!File.Exists(modelPath))
-                throw new FileNotFoundException(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__, modelPath), modelPath);
+                throw new FileNotFoundException(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_, modelPath), modelPath);
             File.Copy(modelPath, TunedModelPath, true);
         }
 

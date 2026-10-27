@@ -58,6 +58,13 @@ namespace pwiz.Skyline.SettingsUI
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.ceLabel = new System.Windows.Forms.Label();
             this.tabAlphaSource = new System.Windows.Forms.TabPage();
+            this.groupAlphaOptions = new System.Windows.Forms.GroupBox();
+            this.labelCarafeModel = new System.Windows.Forms.Label();
+            this.comboCarafeModel = new System.Windows.Forms.ComboBox();
+            this.cbUseGpu = new System.Windows.Forms.CheckBox();
+            this.labelCarafePredictFor = new System.Windows.Forms.Label();
+            this.comboCarafePredictFor = new System.Windows.Forms.ComboBox();
+            this.cbCarafeFineTune = new System.Windows.Forms.CheckBox();
             this.tabFilesSource = new System.Windows.Forms.TabPage();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
@@ -65,20 +72,22 @@ namespace pwiz.Skyline.SettingsUI
             this.actionLabel = new System.Windows.Forms.Label();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
             this.tabControlMain = new pwiz.Skyline.Controls.WizardPages();
-            this.labelAlphaInfo = new System.Windows.Forms.Label();
             this.tabPredictFor = new System.Windows.Forms.TabPage();
             this.labelPredictFor = new System.Windows.Forms.Label();
-            this.radioDocumentPrecursors = new System.Windows.Forms.RadioButton();
-            this.radioFastaPrecursors = new System.Windows.Forms.RadioButton();
+            this.labelFastaPath = new System.Windows.Forms.Label();
             this.textFastaPath = new System.Windows.Forms.TextBox();
             this.btnBrowseFasta = new System.Windows.Forms.Button();
             this.cbAddDecoys = new System.Windows.Forms.CheckBox();
             this.cbAddEntrapment = new System.Windows.Forms.CheckBox();
+            this.labelEntrapmentMethod = new System.Windows.Forms.Label();
+            this.comboEntrapmentMethod = new System.Windows.Forms.ComboBox();
             this.textEntrapmentFasta = new System.Windows.Forms.TextBox();
             this.btnBrowseEntrapment = new System.Windows.Forms.Button();
+            this.labelModWarning = new System.Windows.Forms.Label();
+            this.labelKoinaPredictFor = new System.Windows.Forms.Label();
+            this.comboKoinaPredictFor = new System.Windows.Forms.ComboBox();
             this.tabLibraryModel = new System.Windows.Forms.TabPage();
             this.labelLibraryModel = new System.Windows.Forms.Label();
-            this.labelModWarning = new System.Windows.Forms.Label();
             this.tabFasta = new System.Windows.Forms.TabPage();
             this.labelFasta = new System.Windows.Forms.Label();
             this.tabModifications = new System.Windows.Forms.TabPage();
@@ -97,6 +106,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControlDataSource.SuspendLayout();
             this.tabKoinaSource.SuspendLayout();
             this.tabAlphaSource.SuspendLayout();
+            this.groupAlphaOptions.SuspendLayout();
             this.tabFilesSource.SuspendLayout();
             this.tabControlMain.SuspendLayout();
             this.SuspendLayout();
@@ -290,6 +300,8 @@ namespace pwiz.Skyline.SettingsUI
             // tabKoinaSource
             // 
             this.tabKoinaSource.BackColor = System.Drawing.SystemColors.Control;
+            this.tabKoinaSource.Controls.Add(this.comboKoinaPredictFor);
+            this.tabKoinaSource.Controls.Add(this.labelKoinaPredictFor);
             this.tabKoinaSource.Controls.Add(this.ceLabel);
             this.tabKoinaSource.Controls.Add(this.ceCombo);
             resources.ApplyResources(this.tabKoinaSource, "tabKoinaSource");
@@ -306,30 +318,106 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.ceLabel, "ceLabel");
             this.ceLabel.Name = "ceLabel";
+            //
+            // labelKoinaPredictFor
+            //
+            resources.ApplyResources(this.labelKoinaPredictFor, "labelKoinaPredictFor");
+            this.labelKoinaPredictFor.Name = "labelKoinaPredictFor";
+            //
+            // comboKoinaPredictFor
+            //
+            this.comboKoinaPredictFor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboKoinaPredictFor.FormattingEnabled = true;
+            this.comboKoinaPredictFor.Items.AddRange(new object[] {
+            resources.GetString("comboKoinaPredictFor.Items"),
+            resources.GetString("comboKoinaPredictFor.Items1")});
+            resources.ApplyResources(this.comboKoinaPredictFor, "comboKoinaPredictFor");
+            this.comboKoinaPredictFor.Name = "comboKoinaPredictFor";
+            this.comboKoinaPredictFor.SelectedIndexChanged += new System.EventHandler(this.comboPredictFor_SelectedIndexChanged);
             // 
             // tabAlphaSource
             // 
             this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
-            this.tabAlphaSource.Controls.Add(this.labelAlphaInfo);
+            this.tabAlphaSource.Controls.Add(this.groupAlphaOptions);
             resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
             this.tabAlphaSource.Name = "tabAlphaSource";
             //
-            // labelAlphaInfo
+            // groupAlphaOptions
             //
-            resources.ApplyResources(this.labelAlphaInfo, "labelAlphaInfo");
-            this.labelAlphaInfo.Name = "labelAlphaInfo";
+            this.groupAlphaOptions.Controls.Add(this.labelModWarning);
+            this.groupAlphaOptions.Controls.Add(this.cbCarafeFineTune);
+            this.groupAlphaOptions.Controls.Add(this.comboCarafePredictFor);
+            this.groupAlphaOptions.Controls.Add(this.labelCarafePredictFor);
+            this.groupAlphaOptions.Controls.Add(this.cbUseGpu);
+            this.groupAlphaOptions.Controls.Add(this.comboCarafeModel);
+            this.groupAlphaOptions.Controls.Add(this.labelCarafeModel);
+            resources.ApplyResources(this.groupAlphaOptions, "groupAlphaOptions");
+            this.groupAlphaOptions.Name = "groupAlphaOptions";
+            this.groupAlphaOptions.TabStop = false;
+            //
+            // cbCarafeFineTune
+            //
+            resources.ApplyResources(this.cbCarafeFineTune, "cbCarafeFineTune");
+            this.cbCarafeFineTune.Name = "cbCarafeFineTune";
+            this.cbCarafeFineTune.UseVisualStyleBackColor = true;
+            this.cbCarafeFineTune.CheckedChanged += new System.EventHandler(this.cbCarafeFineTune_CheckedChanged);
+            //
+            // labelModWarning
+            //
+            resources.ApplyResources(this.labelModWarning, "labelModWarning");
+            this.labelModWarning.AutoEllipsis = true;
+            this.labelModWarning.ForeColor = System.Drawing.Color.DarkRed;
+            this.labelModWarning.Name = "labelModWarning";
+            this.labelModWarning.Visible = false;
+            //
+            // comboCarafePredictFor
+            //
+            this.comboCarafePredictFor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboCarafePredictFor.FormattingEnabled = true;
+            this.comboCarafePredictFor.Items.AddRange(new object[] {
+            resources.GetString("comboCarafePredictFor.Items"),
+            resources.GetString("comboCarafePredictFor.Items1")});
+            resources.ApplyResources(this.comboCarafePredictFor, "comboCarafePredictFor");
+            this.comboCarafePredictFor.Name = "comboCarafePredictFor";
+            this.comboCarafePredictFor.SelectedIndexChanged += new System.EventHandler(this.comboPredictFor_SelectedIndexChanged);
+            //
+            // labelCarafePredictFor
+            //
+            resources.ApplyResources(this.labelCarafePredictFor, "labelCarafePredictFor");
+            this.labelCarafePredictFor.Name = "labelCarafePredictFor";
+            //
+            // cbUseGpu
+            //
+            resources.ApplyResources(this.cbUseGpu, "cbUseGpu");
+            this.cbUseGpu.Name = "cbUseGpu";
+            this.cbUseGpu.UseVisualStyleBackColor = true;
+            this.cbUseGpu.CheckedChanged += new System.EventHandler(this.cbUseGpu_CheckedChanged);
+            //
+            // comboCarafeModel
+            //
+            this.comboCarafeModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboCarafeModel.FormattingEnabled = true;
+            resources.ApplyResources(this.comboCarafeModel, "comboCarafeModel");
+            this.comboCarafeModel.Name = "comboCarafeModel";
+            this.comboCarafeModel.SelectedIndexChanged += new System.EventHandler(this.comboCarafeModel_SelectedIndexChanged);
+            //
+            // labelCarafeModel
+            //
+            resources.ApplyResources(this.labelCarafeModel, "labelCarafeModel");
+            this.labelCarafeModel.Name = "labelCarafeModel";
             //
             // tabPredictFor
             //
             this.tabPredictFor.BackColor = System.Drawing.SystemColors.Control;
             this.tabPredictFor.Controls.Add(this.btnBrowseEntrapment);
             this.tabPredictFor.Controls.Add(this.textEntrapmentFasta);
+            this.tabPredictFor.Controls.Add(this.comboEntrapmentMethod);
+            this.tabPredictFor.Controls.Add(this.labelEntrapmentMethod);
             this.tabPredictFor.Controls.Add(this.cbAddEntrapment);
             this.tabPredictFor.Controls.Add(this.cbAddDecoys);
             this.tabPredictFor.Controls.Add(this.btnBrowseFasta);
             this.tabPredictFor.Controls.Add(this.textFastaPath);
-            this.tabPredictFor.Controls.Add(this.radioFastaPrecursors);
-            this.tabPredictFor.Controls.Add(this.radioDocumentPrecursors);
+            this.tabPredictFor.Controls.Add(this.labelFastaPath);
             this.tabPredictFor.Controls.Add(this.labelPredictFor);
             resources.ApplyResources(this.tabPredictFor, "tabPredictFor");
             this.tabPredictFor.Name = "tabPredictFor";
@@ -339,21 +427,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.labelPredictFor, "labelPredictFor");
             this.labelPredictFor.Name = "labelPredictFor";
             //
-            // radioDocumentPrecursors
+            // labelFastaPath
             //
-            resources.ApplyResources(this.radioDocumentPrecursors, "radioDocumentPrecursors");
-            this.radioDocumentPrecursors.Checked = true;
-            this.radioDocumentPrecursors.Name = "radioDocumentPrecursors";
-            this.radioDocumentPrecursors.TabStop = true;
-            this.radioDocumentPrecursors.UseVisualStyleBackColor = true;
-            this.radioDocumentPrecursors.CheckedChanged += new System.EventHandler(this.radioPredictFor_CheckedChanged);
-            //
-            // radioFastaPrecursors
-            //
-            resources.ApplyResources(this.radioFastaPrecursors, "radioFastaPrecursors");
-            this.radioFastaPrecursors.Name = "radioFastaPrecursors";
-            this.radioFastaPrecursors.UseVisualStyleBackColor = true;
-            this.radioFastaPrecursors.CheckedChanged += new System.EventHandler(this.radioPredictFor_CheckedChanged);
+            resources.ApplyResources(this.labelFastaPath, "labelFastaPath");
+            this.labelFastaPath.Name = "labelFastaPath";
             //
             // textFastaPath
             //
@@ -380,6 +457,22 @@ namespace pwiz.Skyline.SettingsUI
             this.cbAddEntrapment.UseVisualStyleBackColor = true;
             this.cbAddEntrapment.CheckedChanged += new System.EventHandler(this.cbAddEntrapment_CheckedChanged);
             //
+            // labelEntrapmentMethod
+            //
+            resources.ApplyResources(this.labelEntrapmentMethod, "labelEntrapmentMethod");
+            this.labelEntrapmentMethod.Name = "labelEntrapmentMethod";
+            //
+            // comboEntrapmentMethod
+            //
+            this.comboEntrapmentMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboEntrapmentMethod.FormattingEnabled = true;
+            this.comboEntrapmentMethod.Items.AddRange(new object[] {
+            resources.GetString("comboEntrapmentMethod.Items"),
+            resources.GetString("comboEntrapmentMethod.Items1")});
+            resources.ApplyResources(this.comboEntrapmentMethod, "comboEntrapmentMethod");
+            this.comboEntrapmentMethod.Name = "comboEntrapmentMethod";
+            this.comboEntrapmentMethod.SelectedIndexChanged += new System.EventHandler(this.comboEntrapmentMethod_SelectedIndexChanged);
+            //
             // textEntrapmentFasta
             //
             resources.ApplyResources(this.textEntrapmentFasta, "textEntrapmentFasta");
@@ -395,7 +488,6 @@ namespace pwiz.Skyline.SettingsUI
             // tabLibraryModel
             //
             this.tabLibraryModel.BackColor = System.Drawing.SystemColors.Control;
-            this.tabLibraryModel.Controls.Add(this.labelModWarning);
             this.tabLibraryModel.Controls.Add(this.labelLibraryModel);
             resources.ApplyResources(this.tabLibraryModel, "tabLibraryModel");
             this.tabLibraryModel.Name = "tabLibraryModel";
@@ -404,14 +496,6 @@ namespace pwiz.Skyline.SettingsUI
             //
             resources.ApplyResources(this.labelLibraryModel, "labelLibraryModel");
             this.labelLibraryModel.Name = "labelLibraryModel";
-            //
-            // labelModWarning
-            //
-            resources.ApplyResources(this.labelModWarning, "labelModWarning");
-            this.labelModWarning.AutoEllipsis = true;
-            this.labelModWarning.ForeColor = System.Drawing.Color.DarkRed;
-            this.labelModWarning.Name = "labelModWarning";
-            this.labelModWarning.Visible = false;
             //
             // tabFasta
             //
@@ -537,7 +621,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabKoinaSource.ResumeLayout(false);
             this.tabKoinaSource.PerformLayout();
             this.tabAlphaSource.ResumeLayout(false);
-            this.tabAlphaSource.PerformLayout();
+            this.groupAlphaOptions.ResumeLayout(false);
+            this.groupAlphaOptions.PerformLayout();
             this.tabFilesSource.ResumeLayout(false);
             this.tabFilesSource.PerformLayout();
             this.tabControlMain.ResumeLayout(false);
@@ -571,6 +656,13 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.TabPage tabAlphaSource;
+        private System.Windows.Forms.GroupBox groupAlphaOptions;
+        private System.Windows.Forms.Label labelCarafeModel;
+        private System.Windows.Forms.ComboBox comboCarafeModel;
+        private System.Windows.Forms.CheckBox cbUseGpu;
+        private System.Windows.Forms.Label labelCarafePredictFor;
+        private System.Windows.Forms.ComboBox comboCarafePredictFor;
+        private System.Windows.Forms.CheckBox cbCarafeFineTune;
         private System.Windows.Forms.TabPage tabKoinaSource;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
@@ -587,20 +679,22 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Label label2;
         private Controls.WizardPages tabControlMain;
-        private System.Windows.Forms.Label labelAlphaInfo;
         private System.Windows.Forms.TabPage tabPredictFor;
         private System.Windows.Forms.Label labelPredictFor;
-        private System.Windows.Forms.RadioButton radioDocumentPrecursors;
-        private System.Windows.Forms.RadioButton radioFastaPrecursors;
+        private System.Windows.Forms.Label labelFastaPath;
         private System.Windows.Forms.TextBox textFastaPath;
         private System.Windows.Forms.Button btnBrowseFasta;
         private System.Windows.Forms.CheckBox cbAddDecoys;
         private System.Windows.Forms.CheckBox cbAddEntrapment;
+        private System.Windows.Forms.Label labelEntrapmentMethod;
+        private System.Windows.Forms.ComboBox comboEntrapmentMethod;
         private System.Windows.Forms.TextBox textEntrapmentFasta;
         private System.Windows.Forms.Button btnBrowseEntrapment;
+        private System.Windows.Forms.Label labelModWarning;
+        private System.Windows.Forms.Label labelKoinaPredictFor;
+        private System.Windows.Forms.ComboBox comboKoinaPredictFor;
         private System.Windows.Forms.TabPage tabLibraryModel;
         private System.Windows.Forms.Label labelLibraryModel;
-        private System.Windows.Forms.Label labelModWarning;
         private System.Windows.Forms.TabPage tabFasta;
         private System.Windows.Forms.Label labelFasta;
         private System.Windows.Forms.TabPage tabModifications;

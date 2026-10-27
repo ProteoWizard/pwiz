@@ -896,14 +896,14 @@ Please consider using the fine-tuning method provided by Carafe for building thi
   <data name="AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_" xml:space="preserve">
     <value>Osprey, which predicts the library, is not installed at {0}.</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_the_model_and_running_AlphaPeptDeep" xml:space="preserve">
-    <value>Fine-tuning the model and running AlphaPeptDeep</value>
+  <data name="AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library" xml:space="preserve">
+    <value>Fine-tuning a model on the DIA runs and predicting the library</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__" xml:space="preserve">
-    <value>Osprey did not write the fine-tuned model {0}.</value>
+  <data name="AlphapeptdeepLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model" xml:space="preserve">
+    <value>Predicting the library with the {0} model</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-    <value>Running AlphaPeptDeep</value>
+  <data name="AlphapeptdeepLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_" xml:space="preserve">
+    <value>The fine-tuned model {0} was not written.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>Importing spectral library</value>

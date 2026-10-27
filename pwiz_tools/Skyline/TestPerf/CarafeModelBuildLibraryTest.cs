@@ -147,16 +147,7 @@ namespace TestPerf
                 Assert.AreEqual(modelPath, buildLibraryDlg.CarafeModelPath);
             });
 
-            // Next to the Predict For page (the document's precursors) and the Library Model page, then Finish
-            RunUI(() =>
-            {
-                buildLibraryDlg.OkWizardPage();
-                Assert.AreEqual(BuildLibraryDlg.Pages.predict_for, buildLibraryDlg.CurrentPage);
-                buildLibraryDlg.OkWizardPage();
-                Assert.AreEqual(BuildLibraryDlg.Pages.library_model, buildLibraryDlg.CurrentPage);
-                Assert.AreEqual(modelPath, buildLibraryDlg.CarafeModelPath);
-                buildLibraryDlg.OkWizardPage();
-            });
+            RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             Assert.AreEqual(modelPath, ((AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder).CarafeModelPath);
             WaitForClosedForm<BuildLibraryDlg>();

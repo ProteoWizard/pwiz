@@ -882,9 +882,6 @@
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>正在准备用于训练的输入文件</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-    <value>正在运行 AlphaPeptDeep</value>
-  </data>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>正在导入谱图库</value>
   </data>

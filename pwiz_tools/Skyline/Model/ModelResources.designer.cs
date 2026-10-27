@@ -265,20 +265,29 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey did not write the fine-tuned model {0}..
+        ///   Looks up a localized string similar to The fine-tuned model {0} was not written..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__ {
+        public static string AlphapeptdeepLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__", resourceCulture);
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Fine-tuning the model and running AlphaPeptDeep.
+        ///   Looks up a localized string similar to Fine-tuning a model on the DIA runs and predicting the library.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_the_model_and_running_AlphaPeptDeep {
+        public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_the_model_and_running_AlphaPeptDeep", resourceCulture);
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting the library with the {0} model.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model", resourceCulture);
             }
         }
 
@@ -338,15 +347,6 @@ namespace pwiz.Skyline.Model {
             }
         }
 
-        /// <summary>
-        ///   Looks up a localized string similar to Running AlphaPeptDeep.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
