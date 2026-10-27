@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var buildPepSearchCtrl = importPeptideSearchDlg.BuildPepSearchLibControl;
-                buildPepSearchCtrl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                buildPepSearchCtrl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
                 buildPepSearchCtrl.UseExistingLibrary = true;
                 buildPepSearchCtrl.ExistingLibraryPath = TestFilesDir.GetTestPath("quantreport.elib");
                 // Go to the "Extract Chromatograms" page

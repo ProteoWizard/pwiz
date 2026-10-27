@@ -369,11 +369,11 @@ namespace TestPerf
         {
             RunUI(() => SkylineWindow.NewDocument());
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Tutorial_DIA" + SrmDocument.EXT)));
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() => SkylineWindow.ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.dia));
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() => SkylineWindow.ShowImportPeptideSearchDlg(PeptideSearchWizardDlg.Workflow.dia));
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new []{GetTestPath(Path.Combine(DIA_DATA_DIR, "DIA_PROCAL.tsv.speclib"))});
             });
             WaitForConditionUI(() =>
@@ -385,11 +385,11 @@ namespace TestPerf
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("DIA Import Peptide Search - Build Spectral Library populated page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("DIA Import Peptide Search - Build Spectral Library populated page");
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
 
             var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsControl;
             Assert.IsNotNull(importResults);
@@ -400,16 +400,16 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count));
 
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("DIA Import PeptideSearch - Extract chromatograms page with files");
+            PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsDiaPage>("DIA Import PeptideSearch - Extract chromatograms page with files");
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
 
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                     ImportPeptideSearchDlg.Pages.match_modifications_page);
+                                     PeptideSearchWizardDlg.Pages.match_modifications_page);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = false; // Can't do this with use results
@@ -431,11 +431,11 @@ namespace TestPerf
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("DIA Import Peptide Search - Transition settings");
+            PauseForScreenShot<PeptideSearchWizardDlg.TransitionSettingsPage>("DIA Import Peptide Search - Transition settings");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             
             WaitForConditionUI(() =>
-                importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             RunUI(() =>
             {
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
@@ -459,12 +459,12 @@ namespace TestPerf
             OkDialog(isolationScheme, isolationScheme.OkDialog);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("DIA Import Peptide Search - Full-Scan settings");
+            PauseForScreenShot<PeptideSearchWizardDlg.Ms2FullScanPage>("DIA Import Peptide Search - Full-Scan settings");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
                 Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(Path.Combine(PRM_DATA_DIR, "PROCAL.fasta")));
@@ -476,7 +476,7 @@ namespace TestPerf
             });
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("DIA Import Peptide Search - Import FASTA page");
+            PauseForScreenShot<PeptideSearchWizardDlg.FastaPage>("DIA Import Peptide Search - Import FASTA page");
 
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
@@ -516,11 +516,11 @@ namespace TestPerf
             RunUI(() => SkylineWindow.NewDocument());
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Tutorial_DDA" + SrmDocument.EXT)));
 
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() => SkylineWindow.ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.dda));
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() => SkylineWindow.ShowImportPeptideSearchDlg(PeptideSearchWizardDlg.Workflow.dda));
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] { GetTestPath(Path.Combine(DDA_DATA_DIR, "msms.txt")) });
             });
             WaitForConditionUI(() =>
@@ -532,13 +532,13 @@ namespace TestPerf
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("DDA Import Peptide Search - Build Spectral Library populated page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("DDA Import Peptide Search - Build Spectral Library populated page");
 
             var messageDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(messageDlg.Message, Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
             OkDialog(messageDlg, messageDlg.OkDialog);
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
 
             var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsControl;
             Assert.IsNotNull(importResults);
@@ -548,19 +548,19 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count)); // Found because BlibBuild found them
 
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("DDA Import PeptideSearch - Extract chromatograms page with files");
+            PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsDiaPage>("DDA Import PeptideSearch - Extract chromatograms page with files");
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
 
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                     ImportPeptideSearchDlg.Pages.match_modifications_page);
+                                     PeptideSearchWizardDlg.Pages.match_modifications_page);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("DDA Import PeptideSearch - Modifications page");
+            PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsDiaPage>("DDA Import PeptideSearch - Modifications page");
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             RunUI(() =>
             {
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
@@ -572,12 +572,12 @@ namespace TestPerf
                 Assert.AreEqual(10, importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("DIA Import Peptide Search - Transition settings");
+            PauseForScreenShot<PeptideSearchWizardDlg.TransitionSettingsPage>("DIA Import Peptide Search - Transition settings");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
                 Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(Path.Combine(PRM_DATA_DIR, "PROCAL.fasta")));
@@ -585,7 +585,7 @@ namespace TestPerf
             });
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("DDA Import Peptide Search - Import FASTA page");
+            PauseForScreenShot<PeptideSearchWizardDlg.FastaPage>("DDA Import Peptide Search - Import FASTA page");
 
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);

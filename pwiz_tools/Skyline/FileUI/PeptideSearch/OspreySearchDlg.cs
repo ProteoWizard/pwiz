@@ -979,7 +979,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
 
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
-                ImportPeptideSearchDlg.Workflow.dia, DataFileResults.FoundResultsFiles,
+                PeptideSearchWizardDlg.Workflow.dia, DataFileResults.FoundResultsFiles,
                 ImportFastaControl.ImportSettings, new[] { blibPath });
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)

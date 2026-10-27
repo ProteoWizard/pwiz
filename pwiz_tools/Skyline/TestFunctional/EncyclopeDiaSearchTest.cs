@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
                 importPeptideSearchDlg.ClickNextButton();
                 importPeptideSearchDlg.ClickCancelButton();
             });
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
             // starts on chromatogram page because we're using existing library
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
                 //importPeptideSearchDlg.ClickNextButton();
             });
 
@@ -178,13 +178,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 // modifications page is skipped
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.ClickNextButton();
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.ClickNextButton();
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.AutoTrain = false;
             });

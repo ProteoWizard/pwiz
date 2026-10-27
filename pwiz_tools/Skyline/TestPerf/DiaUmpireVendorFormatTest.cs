@@ -155,7 +155,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // delete -diaumpire files so they get regenerated instead of reused
             RemoveDiaUmpireFiles();
@@ -168,16 +168,16 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.CIRT_SHORT;
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
+                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -185,7 +185,7 @@ namespace TestPerf
 
             WaitForDocumentLoaded();
 
-            RunUI(() => Assert.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage));
+            RunUI(() => Assert.AreEqual(PeptideSearchWizardDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage));
 
             var editStructModListUI =
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
@@ -200,7 +200,7 @@ namespace TestPerf
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = false;
@@ -232,7 +232,7 @@ namespace TestPerf
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 if (_instrumentValues.KeepPrecursors)
                     importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
                 importPeptideSearchDlg.FullScanSettingsControl.ProductRes = 20;
@@ -265,7 +265,7 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
                 Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPathForSearch);
@@ -293,7 +293,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                              ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                              PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;

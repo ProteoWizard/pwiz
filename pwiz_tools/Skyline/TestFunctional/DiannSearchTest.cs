@@ -330,9 +330,9 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
 
                 // DiannSearchDlg pre-populated the chromatograms page with the searched
                 // files, so all should appear in Found and Missing should be empty
@@ -352,18 +352,18 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 // DIA-NN default mods (Carbamidomethyl C, Oxidation M) are detected from
                 // the library; add them all so library precursors match document targets.
                 importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName =
                     PropertiesResources.IsolationSchemeList_GetDefaults_Results_only;
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.AutoTrain = false;
             });

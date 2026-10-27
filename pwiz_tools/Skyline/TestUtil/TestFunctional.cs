@@ -885,7 +885,9 @@ namespace pwiz.SkylineTestUtil
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formTypeName += "." + GetUIValue(() => multipleViewProvider.ShowingFormView.GetType().Name);
+                        // Named by the class that declares the view, as FormSeen and the form lookup do,
+                        // which for views a base form declares is the base, not the form shown
+                        formTypeName = FormSeen.GetViewType(GetUIValue(() => multipleViewProvider.ShowingFormView.GetType()));
                         var formName = "(" + formType.Name + ")";
                         RunUI(() =>
                         {

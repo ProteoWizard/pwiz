@@ -146,7 +146,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // build the document library.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
             });

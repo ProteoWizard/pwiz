@@ -479,13 +479,13 @@ namespace TestPerf
             WaitForConditionUI(() => importDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
 
             // Spectral library page — wizard lands here after the search wraps up.
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>(@"Spectral library page");
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>(@"Spectral library page");
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
             // Extract chromatograms page.
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>(@"Extract chromatograms page");
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
+            PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsDiaPage>(@"Extract chromatograms page");
             // With >1 file the rename/prefix dialog pops up; accept defaults.
             if (MZML_FILES.Length > 1)
             {
@@ -500,25 +500,25 @@ namespace TestPerf
             WaitForDocumentLoaded();
 
             // Match modifications page.
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             RunUI(() => importDlg.MatchModificationsControl.ChangeAll(true));
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>(@"Match modifications page (all matched)");
+            PauseForScreenShot<PeptideSearchWizardDlg.MatchModsPage>(@"Match modifications page (all matched)");
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
             // Transition settings page (defaults).
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
-            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>(@"Transition settings page (defaults)");
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
+            PauseForScreenShot<PeptideSearchWizardDlg.TransitionSettingsPage>(@"Transition settings page (defaults)");
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
             // Full-scan settings page — pick the "Results only" isolation scheme.
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             RunUI(() => importDlg.FullScanSettingsControl.IsolationSchemeName =
                 PropertiesResources.IsolationSchemeList_GetDefaults_Results_only);
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>(@"Full-scan settings page (Results only)");
+            PauseForScreenShot<PeptideSearchWizardDlg.Ms2FullScanPage>(@"Full-scan settings page (Results only)");
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
             // Import FASTA page.
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
             RunUI(() =>
             {
                 importDlg.ImportFastaControl.DecoyGenerationEnabled = false;
@@ -526,7 +526,7 @@ namespace TestPerf
             });
             // Show the filename portion of the FASTA path instead of the leftmost characters.
             RunUI(() => importDlg.ImportFastaControl.ShowFastaPathFileName());
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>(@"Import FASTA page (with file selected)");
+            PauseForScreenShot<PeptideSearchWizardDlg.FastaPage>(@"Import FASTA page (with file selected)");
 
             var associate = ShowDialog<AssociateProteinsDlg>(importDlg.ClickNextButtonNoCheck);
             WaitForConditionUI(() => associate.DocumentFinalCalculated);

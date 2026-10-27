@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -382,6 +384,16 @@ namespace pwiz.Skyline.Model.Lib
         public override string ToString()
         {
             return KeyString; // For debugging convenience, not user facing
+        }
+
+        /// <summary>
+        /// Key for sorting library entries in natural order: by unmodified target, then adduct, then the full key.
+        /// </summary>
+        public static Tuple<NaturalStringComparer.CompareKey, Adduct, NaturalStringComparer.CompareKey> MakeCompareKey(
+            ViewLibraryPepInfo info)
+        {
+            return Tuple.Create(NaturalStringComparer.MakeCompareKey(info.UnmodifiedTargetText), info.Adduct,
+                NaturalStringComparer.MakeCompareKey(info.KeyString));
         }
     }
 }

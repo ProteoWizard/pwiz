@@ -306,7 +306,7 @@ namespace TestPerf
             // starts on chromatogram page because we're using existing library
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
                 //importPeptideSearchDlg.ClickNextButton();
             });
 
@@ -319,7 +319,7 @@ namespace TestPerf
             {
                 // modifications page is skipped 
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 3;
                 importPeptideSearchDlg.TransitionSettingsControl.IonCount = 5;
                 importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.005;
@@ -331,7 +331,7 @@ namespace TestPerf
                 }
                 importPeptideSearchDlg.ClickNextButton();
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
 
                 importPeptideSearchDlg.FullScanSettingsControl.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 2);
                 if (_analysisValues.IsWholeProteome)
@@ -341,7 +341,7 @@ namespace TestPerf
                 }
                 importPeptideSearchDlg.ClickNextButton();
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
             });
 

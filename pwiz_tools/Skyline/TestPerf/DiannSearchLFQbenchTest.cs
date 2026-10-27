@@ -208,27 +208,27 @@ namespace TestPerf
             WaitForDocumentLoaded();
             WaitForConditionUI(() => importDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
 
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
             var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importDlg.ClickNextButton());
             OkDialog(removeSuffix, () => removeSuffix.YesDialog());
             WaitForDocumentLoaded();
 
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             RunUI(() => importDlg.MatchModificationsControl.ChangeAll(true));
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             RunUI(() => importDlg.FullScanSettingsControl.IsolationSchemeName =
                 PropertiesResources.IsolationSchemeList_GetDefaults_Results_only);
             RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
             RunUI(() =>
             {
                 importDlg.ImportFastaControl.DecoyGenerationEnabled = false;

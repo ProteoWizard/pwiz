@@ -413,7 +413,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         doc.Settings.PeptideSettings.Libraries.ChangeLibraries(librarySpecs, libraries)))),
                 FormSettings.EntryCreator.Create);
 
-            using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager, ImportPeptideSearchDlg.Workflow.dia,
+            using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager, PeptideSearchWizardDlg.Workflow.dia,
                 WideWindowResults.FoundResultsFiles, ImportFastaControl.ImportSettings, libraryPaths);
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)

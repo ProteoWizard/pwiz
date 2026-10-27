@@ -54,7 +54,7 @@ namespace TestPerf
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             RunUI(() =>
             {
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
                 importPeptideSearchDlg.BuildPepSearchLibControl.UseExistingLibrary = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.ExistingLibraryPath =
                     TestFilesDir.GetTestPath("DiaNnPeakImputationTest.blib");
@@ -67,7 +67,7 @@ namespace TestPerf
                 importPeptideSearchDlg.ClickNextButton();
             });
 
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
             var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsDIAControl;
             Assert.IsNotNull(importResults);
             RunDlg<OpenDataSourceDialog>(
@@ -80,19 +80,19 @@ namespace TestPerf
             RunDlg<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton(),
                 importResultsNameDlg => importResultsNameDlg.YesDialog());
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                     ImportPeptideSearchDlg.Pages.match_modifications_page);
+                                     PeptideSearchWizardDlg.Pages.match_modifications_page);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.AreEqual(ImportPeptideSearchDlg.Pages.full_scan_settings_page,
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.full_scan_settings_page,
                     importPeptideSearchDlg.CurrentPage);
             });
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.AreEqual(ImportPeptideSearchDlg.Pages.import_fasta_page, importPeptideSearchDlg.CurrentPage);
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.import_fasta_page, importPeptideSearchDlg.CurrentPage);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(TestFilesDir.GetTestPath("target_protein_sequences.fasta"));
             });
             RunLongDlg<AssociateProteinsDlg>(()=>importPeptideSearchDlg.ClickNextButton(), associateProteinsDlg =>

@@ -155,11 +155,11 @@ namespace pwiz.SkylineTestTutorial
             foreach (var searchFile in searchFiles)
                 Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
 
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page");
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
 
                 // Sanity check here, because of failure getting both files for results import below
@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page");
 
             var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestTutorial
             // All the test results files are in the same directory as the 
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page &&
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page &&
                                      importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Count > 0 &&
                                      importPeptideSearchDlg.IsNextButtonEnabled);
 
@@ -249,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
                     PathsMessage("File names do not have a common prefix.", resultsNames));
                 Assert.AreEqual("100803_000", commonPrefix);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search - Extract Chromatograms page");
+            PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsPage>("Import Peptide Search - Extract Chromatograms page");
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix form");
@@ -257,20 +257,20 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
             // Wait for the "Add Modifications" page of the wizard.
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
 
             List<string> modsToCheck = new List<string> { "Phospho (ST)", "Phospho (Y)", "Oxidation (M)" }; // Not L10N
             RunUI(() =>
             {
                 importPeptideSearchDlg.MatchModificationsControl.CheckedModifications = modsToCheck;
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - Add Modifications page");
+            PauseForScreenShot<PeptideSearchWizardDlg.MatchModsPage>("Import Peptide Search - Add Modifications page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Configure MS1 Full-Scan Settings" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10*1000;
@@ -282,7 +282,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(RetentionTimeFilterType.ms2_ids, importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType);
                 Assert.AreEqual(5, importPeptideSearchDlg.FullScanSettingsControl.TimeAroundMs2Ids);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page");
+            PauseForScreenShot<PeptideSearchWizardDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page");
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
@@ -290,13 +290,13 @@ namespace pwiz.SkylineTestTutorial
             string fastaPath = GetTestPath("11_proteins.fasta"); // Only 11 proteins in a file once called 12_proteins
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 2;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPath);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page");
+            PauseForScreenShot<PeptideSearchWizardDlg.FastaPage>("Import Peptide Search - Import FASTA page");
 
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             PauseForScreenShot<AssociateProteinsDlg>("Associate Proteins");

@@ -311,7 +311,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() =>
             {
-                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
                 var foundPaths = importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles.Select(f => f.Path).ToHashSet();
                 AssertEx.AreEqual(diaFilePaths.Length, foundPaths.Count);
                 foreach (var p in diaFilePaths)
@@ -329,13 +329,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // The match modifications page is skipped on the existing-library route.
-                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.transition_settings_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.transition_settings_page, importPeptideSearchDlg.CurrentPage);
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.full_scan_settings_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.full_scan_settings_page, importPeptideSearchDlg.CurrentPage);
                 importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName =
                     PropertiesResources.IsolationSchemeList_GetDefaults_Results_only;
                 AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.import_fasta_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.import_fasta_page, importPeptideSearchDlg.CurrentPage);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.AutoTrain = false;
             });

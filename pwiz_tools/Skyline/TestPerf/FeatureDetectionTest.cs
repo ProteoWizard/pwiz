@@ -223,17 +223,17 @@ namespace TestPerf
                 pwiz.Skyline.Properties.Resources.ReportSpecList_GetDefaults_Transition_Results, null);
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
             importPeptideSearchDlg.IsAutomatedTest = true; // Prevents form-called-by-form blockage TODO(bspratt) there must be a cleaner way
 
             // We're on the "Select Files to Search" page of the wizard.
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
-                AssertEx.AreEqual(ImportPeptideSearchDlg.Workflow.feature_detection, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType); 
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Workflow.feature_detection, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType); 
             });
             PauseForScreenShot("these are MaxQuant label free data set files");
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -248,7 +248,7 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 });
                 PauseForScreenShot("and forward again");
                 importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -260,7 +260,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 // We're on the MS1 full scan settings page.
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
@@ -297,7 +297,7 @@ namespace TestPerf
                     // Run the search
                     Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 });
-                TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
+                TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));   // Stop to show this form during form testing
 
                 // Wait for the mzML conversion to complete before canceling
                 foreach (var searchFile in SearchFiles)
@@ -348,7 +348,7 @@ namespace TestPerf
                 
                 RunUI(() =>
                 {
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                     importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                     importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;  // Per MS1 filtering tutorial
                     importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
