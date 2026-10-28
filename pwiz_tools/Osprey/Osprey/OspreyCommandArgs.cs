@@ -455,10 +455,7 @@ namespace pwiz.Osprey
             { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
-            {
-                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.path,
-                DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB }
-            };
+            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
@@ -471,21 +468,18 @@ namespace pwiz.Osprey
         // only the exports and re-scores nothing.
         public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(OspreyArgNames.TRAINING_EXPORT,
             (c, p) => c._config.TrainingExport.Enabled = true)
-            { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
+            { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_MAX_Q = new OspreyArgument(@"training-export-max-q",
             () => @"<q>", (c, p) => c._config.TrainingExport.MaxQ = ParseDouble(p))
             {
-                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, MinValue = 0, MaxValue = 1,
+                Scope = OspreyPropertyScope.tuning, PropertyType = ArgumentPropertyType.number, MinValue = 0, MaxValue = 1,
                 DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, ARG_RUN_FDR.ArgumentText }
             };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_CLAIMANT_Q = new OspreyArgument(@"training-export-claimant-q",
             () => @"<q>", (c, p) => c._config.TrainingExport.ClaimantQ = ParseDouble(p))
-            {
-                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, DefaultValue = Default(() => TrainingExportConfig.DEFAULT_CLAIMANT_Q), MinValue = 0, MaxValue = 1,
-                DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, TrainingExportConfig.DEFAULT_CLAIMANT_Q }
-            };
+            { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, TrainingExportConfig.DEFAULT_CLAIMANT_Q } };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_XICS = new OspreyArgument(@"training-export-xics",
-            (c, p) => c._config.TrainingExport.WriteXics = true) { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText } };
+            (c, p) => c._config.TrainingExport.WriteXics = true) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_TRAINING_EXPORT =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Training_Export, true,
@@ -598,7 +592,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => GetPathToFile(string.Empty), (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
-            (c, p) => c._config.PerfStats = true) { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { @"[COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]" } }; // Log tag OK: help text naming the tags
+            (c, p) => c._config.PerfStats = true) { DescriptionArgs = () => new object[] { @"[COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]" } }; // Log tag OK: help text naming the tags
         public static readonly OspreyArgument ARG_VERBOSE = new OspreyArgument(OspreyArgNames.VERBOSE,
             (c, p) => c._config.Verbose = true) { Scope = OspreyPropertyScope.search };
 
@@ -611,7 +605,7 @@ namespace pwiz.Osprey
         // version and exit 0. --help accepts an optional format/section value
         // (ascii | unicode | sections | html | <Section>); the description names the values.
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
-            (c, p) => c._config.Diagnostics = true) { ShortName = @"d", Scope = OspreyPropertyScope.search };
+            (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
         // One flag, everything we know how to show. An opt-in token per expensive panel was built
         // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
         // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
@@ -1445,7 +1439,8 @@ namespace pwiz.Osprey
         {
             get
             {
-                if (base.PropertyName != null || !Scope.HasValue)
+                // A hosted declaration is a property only when CarafeSharp labels it
+                if (base.PropertyName != null || !Scope.HasValue || IsHosted)
                     return base.PropertyName;
                 return () => OspreyCommandArgs.GetPropertyLabel(Name);
             }

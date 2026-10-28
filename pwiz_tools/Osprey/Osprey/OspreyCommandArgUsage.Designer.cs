@@ -97,15 +97,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Decoy pairing manifest.
-        /// </summary>
-        public static string _decoy_pairing_manifest_property {
-            get {
-                return ResourceManager.GetString("_decoy_pairing_manifest_property", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Trust decoys already in the spectral library instead of generating reverse decoys. Stops with an error if none are recognized..
         /// </summary>
         public static string _decoys_in_library {
@@ -164,15 +155,6 @@ namespace pwiz.Osprey {
         public static string _diagnostics {
             get {
                 return ResourceManager.GetString("_diagnostics", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Write diagnostic dump files.
-        /// </summary>
-        public static string _diagnostics_property {
-            get {
-                return ResourceManager.GetString("_diagnostics_property", resourceCulture);
             }
         }
         
@@ -543,23 +525,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write performance statistics.
-        /// </summary>
-        public static string _perf_stats_property {
-            get {
-                return ResourceManager.GetString("_perf_stats_property", resourceCulture);
-            }
-        }
-        /// <summary>
-        ///   Looks up a localized string similar to With {0} and {1}: predict a spectral library for exactly the precursors of this tab-separated table (columns {2}, in alphabase&apos;s notation, as Skyline writes it for its Build Library) and write it beside the output as {3}, the TSV peptdeep writes. The pretrained models or {4} predict; the Library Prediction options apply, the Library Digest options, the entrapment and the tuning do not..
-        /// </summary>
-        public static string _precursors {
-            get {
-                return ResourceManager.GetString("_precursors", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Protein-level FDR threshold (optional).
         /// </summary>
         public static string _protein_fdr {
@@ -713,15 +678,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Training export claimant q-value.
-        /// </summary>
-        public static string _training_export_claimant_q_property {
-            get {
-                return ResourceManager.GetString("_training_export_claimant_q_property", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to With {0}: the run precursor q-value a target must reach to be exported (default: {1}).
         /// </summary>
         public static string _training_export_max_q {
@@ -740,29 +696,11 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write training export.
-        /// </summary>
-        public static string _training_export_property {
-            get {
-                return ResourceManager.GetString("_training_export_property", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to With {0}: also write each precursor&apos;s per-ion XIC matrix over its final peak boundaries.
         /// </summary>
         public static string _training_export_xics {
             get {
                 return ResourceManager.GetString("_training_export_xics", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Training export XICs.
-        /// </summary>
-        public static string _training_export_xics_property {
-            get {
-                return ResourceManager.GetString("_training_export_xics_property", resourceCulture);
             }
         }
         

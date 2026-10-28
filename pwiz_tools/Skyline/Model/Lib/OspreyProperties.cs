@@ -131,18 +131,25 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// The tooltip of the grid row: the argument and its usage text, and for an optional-value
-        /// argument how to give it without a value.
+        /// The help text of the property: its usage text, and for an optional-value argument how to
+        /// give it without a value. The argument itself is not named: a user of the page need not
+        /// know that a command line runs under it.
         /// </summary>
-        public string Tooltip
+        public string HelpText
         {
             get
             {
-                var sb = new StringBuilder(ArgumentText).AppendLine().Append(Description);
+                var sb = new StringBuilder(Description);
                 if (Optional)
                     sb.AppendLine().Append(string.Format(ModelResources.OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_, AUTO_VALUE));
                 return sb.ToString();
             }
+        }
+
+        /// <summary>The tooltip of a plain grid row: the argument and its <see cref="HelpText"/>.</summary>
+        public string Tooltip
+        {
+            get { return ArgumentText + Environment.NewLine + HelpText; }
         }
 
         /// <summary>

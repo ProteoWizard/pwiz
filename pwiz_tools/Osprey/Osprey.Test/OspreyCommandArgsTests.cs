@@ -639,15 +639,20 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
                 OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
                 OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"version", @"culture",
+                // Developer options and outputs a user of a host's settings page has no use for
+                OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
+                @"training-export-xics", @"diagnostics", @"perf-stats",
+                // CarafeSharp's, hosted: the training seed
+                CarafeCommandLine.ARG_SEED.Name,
             };
             var all = OspreyCommandArgs.AllArguments.ToList();
             CollectionAssert.AreEquivalent(notProperties, all.Where(a => a.PropertyName == null).Select(a => a.Name).ToList(),
                 @"An argument is a setting (Scope) or is listed here as none");
             var properties = all.Where(a => a.PropertyName != null).ToList();
             Assert.IsTrue(properties.All(a => a.Scope.HasValue));
-            // Every hosted argument is a setting, labeled by CarafeSharp
+            // A hosted argument that is a setting is labeled by CarafeSharp, and one that is not has no label there
             foreach (var arg in all.Where(a => a.IsHosted))
-                Assert.AreEqual(CarafeCommandLine.GetPropertyName(arg.Name), arg.PropertyName(), arg.Name);
+                Assert.AreEqual(CarafeCommandLine.GetPropertyName(arg.Name), arg.PropertyName?.Invoke(), arg.Name);
 
             string json;
             using (var writer = new StringWriter())

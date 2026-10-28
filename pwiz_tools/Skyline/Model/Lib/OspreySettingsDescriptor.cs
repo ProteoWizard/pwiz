@@ -123,7 +123,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string DisplayName => _property.Label;
 
-        public override string Description => _property.Tooltip;
+        // The usage text alone: the argument it spells is of no help to a user of the page
+        public override string Description => _property.HelpText;
 
         // A PropertyGrid draws a category with mnemonics, so an ampersand in a section title ("FDR & Protein Inference") is doubled
         public override string Category => _property.Group?.Replace(@"&", @"&&");

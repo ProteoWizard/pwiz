@@ -162,7 +162,7 @@ namespace pwiz.SkylineTest
             var verboseProperty = properties.Find(@"verbose");
             AssertEx.AreEqual(verboseProperty.Name, verbose.Name);
             AssertEx.AreEqual(verboseProperty.Group, verbose.Category);
-            AssertEx.AreEqual(verboseProperty.Tooltip, verbose.Description);
+            AssertEx.AreEqual(verboseProperty.HelpText, verbose.Description);
             AssertEx.AreEqual(typeof(bool), verbose.PropertyType);
             AssertEx.IsFalse(verbose.IsReadOnly);
             AssertEx.IsTrue(ReferenceEquals(settings.Settings[@"verbose"], verbose.Setting));

@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
             var grid = ShowDialog<OspreySettingsGridDlg>(buildLibraryDlg.SearchSettingsControl.ShowAdditionalSettings);
             RunUI(() =>
             {
-                AssertEx.IsTrue(grid.Labels.Contains(settings.Properties.Find(@"seed").Label));
+                AssertEx.IsTrue(grid.Labels.Contains(settings.Properties.Find(@"tf").Label));
                 grid.SetValue(settings.Properties.Find(@"verbose").Label, true.ToString());
             });
             PauseForDemo("Additional Settings: every setting of a fine-tuned build");

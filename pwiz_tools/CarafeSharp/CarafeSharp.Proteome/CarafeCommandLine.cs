@@ -215,7 +215,7 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_LF_MIN_N_FRAG = Value(@"lf-min-n-frag", @"<n>");
         public static readonly CarafeArgument ARG_LF_FRAG_N_MIN = Value(@"lf-frag-n-min", @"<n>");
         public static readonly CarafeArgument ARG_NCE = Value(@"nce", @"<nce>");
-        public static readonly CarafeArgument ARG_MS_INSTRUMENT = Value(@"ms-instrument", @"<name>");
+        public static readonly CarafeArgument ARG_MS_INSTRUMENT = Choice(@"ms-instrument", PeptdeepInstruments.NAMES.ToArray());
         public static readonly CarafeArgument ARG_ACTIVATION = Choice(@"activation", AcquisitionVocabulary.KNOWN_ACTIVATIONS.ToArray());
         public static readonly CarafeArgument ARG_ANALYZER = Choice(@"analyzer", AcquisitionVocabulary.KNOWN_ANALYZERS.ToArray());
         public static readonly CarafeArgument ARG_RT_MAX = Value(@"rt-max", @"<minutes>");
@@ -519,7 +519,7 @@ namespace pwiz.CarafeSharp.Proteome
             Property(ARG_LF_MIN_N_FRAG, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_MIN_FRAGMENTS, 1);
             Property(ARG_LF_FRAG_N_MIN, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_MIN_FRAGMENT_NUMBER, 1);
             Property(ARG_NCE, ArgumentPropertyType.number, LibrarySettings.DEFAULT_NCE, 0);
-            Property(ARG_MS_INSTRUMENT, ArgumentPropertyType.text, LibrarySettings.DEFAULT_INSTRUMENT);
+            Property(ARG_MS_INSTRUMENT, null, LibrarySettings.DEFAULT_INSTRUMENT);
             Property(ARG_ACTIVATION);
             Property(ARG_ANALYZER);
             Property(ARG_RT_MAX, ArgumentPropertyType.number, null, 0);
@@ -535,7 +535,6 @@ namespace pwiz.CarafeSharp.Proteome
             Property(ARG_MIN_N, ArgumentPropertyType.integer, TrainingSettings.DEFAULT_MIN_VALID_IONS, 0);
             Property(ARG_VALID);
             Property(ARG_NO_MASKING);
-            Property(ARG_SEED, ArgumentPropertyType.integer, TrainingSettings.DEFAULT_SEED, 0);
             Property(ARG_RT_ALIGN, null, TrainingSettings.DEFAULT_RT_ALIGNMENT);
             Property(ARG_RT_SELECT, null, new TrainingSettings().RtSelection);
             Property(ARG_RT_REFERENCE, ArgumentPropertyType.text);
