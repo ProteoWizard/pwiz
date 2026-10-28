@@ -675,9 +675,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!ReloadDocumentLibrary())
                 return;
 
+            // The search's settings go in the import's audit log entry, as a DDA search engine's do.
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
                 ImportPeptideSearchDlg.Workflow.dia, DataFileResults.FoundResultsFiles,
-                ImportFastaControl.ImportSettings, new[] { blibPath });
+                ImportFastaControl.ImportSettings, new[] { blibPath })
+            {
+                OspreySearchSettings = new OspreySearchSettings(SearchControl.SearchConfig)
+            };
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;
@@ -898,6 +902,61 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 btnCancel.Enabled = false;
                 OnSearchFinished(success);
             }));
+        }
+    }
+
+    /// <summary>
+    /// The settings an Osprey search ran with, for the document's audit log. They are recorded
+    /// inside the Import Peptide Search wizard's entry
+    /// (<see cref="ImportPeptideSearchDlg.ImportPeptideSearchSettings"/>), as a DDA search
+    /// engine's settings are, since that wizard's final import is the document change the search
+    /// leads to. Each tracked property is named by its PropertyNames resource.
+    /// </summary>
+    public class OspreySearchSettings
+    {
+        public OspreySearchSettings(OspreyConfig config)
+        {
+            Resolution = config.Resolution;
+            FragmentTolerance = config.FragmentTolerance;
+            FragmentUnit = config.FragmentUnit;
+            RunFdr = config.RunFdr;
+            ExperimentFdr = config.ExperimentFdr;
+            ProteinFdr = config.ProteinFdr;
+            Threads = config.Threads;
+            NonDefaultAdditionalSettings = GetNonDefaultAdditionalSettings(config);
+        }
+
+        [Track]
+        public string Resolution { get; }
+        [Track]
+        public double FragmentTolerance { get; }
+        [Track]
+        public string FragmentUnit { get; }
+        [Track]
+        public double RunFdr { get; }
+        [Track]
+        public double ExperimentFdr { get; }
+        [Track]
+        public double ProteinFdr { get; }
+        [Track]
+        public int Threads { get; }
+
+        /// <summary>
+        /// The additional settings the run changed from their defaults, among those in the run's
+        /// scopes (the only ones its command line carried); null when there are none.
+        /// </summary>
+        [Track(defaultValues: typeof(DefaultValuesNullOrEmpty))]
+        public IEnumerable<AbstractDdaSearchEngine.Setting> NonDefaultAdditionalSettings { get; }
+
+        private static IList<AbstractDdaSearchEngine.Setting> GetNonDefaultAdditionalSettings(OspreyConfig config)
+        {
+            var additionalSettings = config.AdditionalSettings;
+            if (additionalSettings == null)
+                return null;
+            var scopes = OspreyAdditionalSettings.ScopesFor(config);
+            var changedInScope = additionalSettings.ChangedSettings
+                .Where(s => scopes.Contains(additionalSettings.GetProperty(s).Scope)).ToList();
+            return changedInScope.Count > 0 ? changedInScope : null;
         }
     }
 }

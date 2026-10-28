@@ -30,6 +30,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -138,7 +139,9 @@ namespace pwiz.SkylineTestFunctional
             SetAdditionalSettings(searchDlg, true);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, null);
             RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_FIRST_RUN));
+            var additionalSettings = searchDlg.SearchSettingsControl.AdditionalSettings;
             FinishImport(searchDlg, diaFilePaths, docBlibPath);
+            VerifyAuditLogSettings(additionalSettings, true);
 
             // The second run, on the document the first one made: Osprey searches the library
             // it predicted in the first run, and overwrites the document library.
@@ -169,7 +172,9 @@ namespace pwiz.SkylineTestFunctional
             SetAdditionalSettings(searchDlg, false);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, predictedLibraryPath);
             RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_SECOND_RUN));
+            additionalSettings = searchDlg.SearchSettingsControl.AdditionalSettings;
             FinishImport(searchDlg, diaFilePaths, docBlibPath);
+            VerifyAuditLogSettings(additionalSettings, false);
 
             // The document reads the library Osprey rewrote, not the one it loaded before the
             // overwrite: the second run replaces the document's Library object.
@@ -227,6 +232,29 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsFalse(searchDlg.IsFragmentTolerancePpm);
                 searchDlg.Threads = Environment.ProcessorCount;
             });
+        }
+
+        /// <summary>
+        /// The import's audit log entry (the Import Peptide Search wizard's) records the Osprey
+        /// search's settings: the pages' settings under their names, and the additional settings
+        /// the run changed, each as the setting renders itself. Only the settings in the run's
+        /// scopes are recorded: the flag is a search setting and is there for both runs; the
+        /// collision energy is a library setting, so a search of an existing library
+        /// (<paramref name="predictsLibrary"/> false) leaves it out though its value is kept.
+        /// </summary>
+        private static void VerifyAuditLogSettings(OspreyAdditionalSettings settings, bool predictsLibrary)
+        {
+            var entry = SkylineWindow.Document.AuditLog.AuditLogEntries;
+            AssertEx.AreEqual(MessageType.imported_peptide_search, entry.UndoRedo.Type);
+            string allInfo = TextUtil.LineSeparate(entry.AllInfo.Select(message => message.ToString()));
+            AssertEx.Contains(allInfo, PropertyNames.ImportPeptideSearchSettings_OspreySearchSettings,
+                PropertyNames.OspreySearchSettings_RunFdr, PropertyNames.OspreySearchSettings_NonDefaultAdditionalSettings,
+                settings.Settings[ADDITIONAL_FLAG].AuditLogText);
+            string nceText = settings.Settings[ADDITIONAL_NCE].AuditLogText;
+            if (predictsLibrary)
+                AssertEx.Contains(allInfo, nceText);
+            else
+                AssertEx.DoesNotContain(allInfo, nceText);
         }
 
         /// <summary>
