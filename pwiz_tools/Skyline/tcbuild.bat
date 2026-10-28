@@ -97,6 +97,16 @@ for %%A in (%*) do if /i "%%~A"=="--with-tutorial-perf" set TUTORIAL_ARG=
 REM # TestConnected stays out unconditionally - see the scope note above.
 set CONNECTED_ARG=--skip-connected-tests
 
+REM # Osprey, built from this tree, so the tests that run it (Build Library's Carafe source,
+REM # the Osprey Search wizard) find the sibling build as a developer's tests do, instead of
+REM # downloading the latest master package: a change to Osprey and Skyline together is then
+REM # tested with its own Osprey. Everything the build needs is in the repo - the pretrained
+REM # models are committed and copied beside the executable, the CPU torch runtime comes
+REM # from NuGet. Release, x64: the path OspreyTestUtil.EnsureOsprey looks for.
+echo ##teamcity[progressMessage 'dotnet build Osprey.csproj (Release, x64)']
+dotnet build "%REPO_ROOT%\pwiz_tools\Osprey\Osprey\Osprey.csproj" -c Release -p:Platform=x64 -nologo
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set "ERROR_TEXT=dotnet build Osprey.csproj failed" & goto error)
 echo ##teamcity[progressMessage 'Skyline build.bat %* %TUTORIAL_ARG% %CONNECTED_ARG% %DISTRO_ZIPS%']
 call "%SCRIPT_DIR%\build.bat" %* %TUTORIAL_ARG% %CONNECTED_ARG% %DISTRO_ZIPS%
 set EXIT=%ERRORLEVEL%

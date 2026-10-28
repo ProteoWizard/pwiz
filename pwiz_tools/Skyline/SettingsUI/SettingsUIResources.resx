@@ -1229,11 +1229,32 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
     <value>You must specify a valid path to a Skyline document to learn from.</value>
   </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings" xml:space="preserve">
+    <value>Digesting {0} with the document settings</value>
+  </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA" xml:space="preserve">
+    <value>Digesting FASTA</value>
+  </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__" xml:space="preserve">
+    <value>Failed digesting the FASTA file {0}.</value>
+  </data>
+  <data name="BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_" xml:space="preserve">
+    <value>The FASTA file {0} gave no peptides with the document settings.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_" xml:space="preserve">
+    <value>Choose the protein FASTA file to predict the library for.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_" xml:space="preserve">
+    <value>The FASTA file {0} does not exist.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_" xml:space="preserve">
+    <value>Choose the FASTA file of the entrapment peptides.</value>
+  </data>
   <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
     <value>MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature.</value>
   </data>
-  <data name="BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_" xml:space="preserve">
-    <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
+  <data name="BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_" xml:space="preserve">
+    <value>Add peptide precursors to the document to build a library from Carafe predictions.</value>
   </data>
   <data name="EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_" xml:space="preserve">
     <value>The file {0} does not exist.</value>
@@ -1274,5 +1295,11 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
     <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
 and between result files in the document for peak boundary imputation.</value>
+  </data>
+  <data name="BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library" xml:space="preserve">
+    <value>A reverse-sequence decoy of every peptide, paired with its target in the library.</value>
+  </data>
+  <data name="BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate" xml:space="preserve">
+    <value>Peptides not expected in the sample, flagged as entrapment in the library, to measure the false discovery rate of a search.</value>
   </data>
 </root>

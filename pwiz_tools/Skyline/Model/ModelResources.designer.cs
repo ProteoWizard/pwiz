@@ -265,39 +265,66 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed at {0}..
+        ///   Looks up a localized string similar to The fine-tuned model {0} was not written..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_ {
+        public static string CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to AlphaPeptDeep finished in {0} minutes {1} seconds..
+        ///   Looks up a localized string similar to Fine-tuning a model on the DIA runs and predicting the library.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_ {
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes" +
-                        "__1__seconds_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicted the library in {0} minutes {1} seconds..
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_ {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting the library with the {0} model.
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed at {0}..
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_ {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_", resourceCulture);
+            }
+        }
+
         
         /// <summary>
         ///   Looks up a localized string similar to Importing spectral library.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
+        public static string CarafeLibraryBuilder_Importing_spectral_library {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Importing_spectral_library", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_Importing_spectral_library", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to BlibBuild completed successfully..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
+        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
+                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
                         "y_", resourceCulture);
             }
         }
@@ -305,30 +332,21 @@ namespace pwiz.Skyline.Model {
         /// <summary>
         ///   Looks up a localized string similar to BlibBuild failed to complete..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
+        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to predict the library with AlphaPeptDeep..
+        ///   Looks up a localized string similar to Failed to predict the library..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_ {
+        public static string CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_", resourceCulture);
             }
         }
 
-        /// <summary>
-        ///   Looks up a localized string similar to Running AlphaPeptDeep.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>

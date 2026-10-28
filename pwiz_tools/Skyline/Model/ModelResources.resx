@@ -890,26 +890,32 @@ Please consider using the fine-tuning method provided by Carafe for building thi
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>Preparing training input file</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_" xml:space="preserve">
-    <value>Failed to predict the library with AlphaPeptDeep.</value>
+  <data name="CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_" xml:space="preserve">
+    <value>Failed to predict the library.</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_" xml:space="preserve">
     <value>Osprey, which predicts the library, is not installed at {0}.</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-    <value>Running AlphaPeptDeep</value>
+  <data name="CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library" xml:space="preserve">
+    <value>Fine-tuning a model on the DIA runs and predicting the library</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model" xml:space="preserve">
+    <value>Predicting the library with the {0} model</value>
+  </data>
+  <data name="CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_" xml:space="preserve">
+    <value>The fine-tuned model {0} was not written.</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>Importing spectral library</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
     <value>BlibBuild completed successfully.</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
     <value>BlibBuild failed to complete.</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
-    <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
+  <data name="CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_" xml:space="preserve">
+    <value>Predicted the library in {0} minutes {1} seconds.</value>
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>Detailed Log</value>

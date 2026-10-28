@@ -379,18 +379,19 @@ namespace pwiz.Osprey
                 default:
                 {
                     var library = _outputLibrary;
-                    if (_config.LibraryBuild.PrecursorTablePath != null)
-                    {
-                        // Exactly the table's precursors, as the TSV peptdeep wrote, beside the output;
-                        // no working folder (a saved model unpacks into a temporary folder of its own)
-                        return new PredictPrecursorTableTask(library, _config.LibraryBuild.PrecursorTablePath, PredictedTablePath(_config));
-                    }
-                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
                     if (training != null)
                     {
                         library.ModelDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
                         library.PreferSafetensors = true;
                     }
+                    if (_config.LibraryBuild.PrecursorTablePath != null)
+                    {
+                        // Exactly the table's precursors, as the TSV peptdeep wrote, beside the output;
+                        // no working folder of its own (a saved model unpacks into a temporary folder,
+                        // and after a tuning the models are read from the tuning's model folder)
+                        return new PredictPrecursorTableTask(library, _config.LibraryBuild.PrecursorTablePath, PredictedTablePath(_config));
+                    }
+                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
                     return new PredictLibraryTask(library, DigestSettings(library, _config.LibraryBuild.Entrapment));
                 }
             }

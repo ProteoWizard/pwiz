@@ -953,6 +953,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FASTA files.
+        /// </summary>
+        public static string OspreyFastaControl_BrowseFasta_FASTA_files {
+            get {
+                return ResourceManager.GetString("OspreyFastaControl_BrowseFasta_FASTA_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey did not produce a spectral library..
         /// </summary>
         public static string OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_ {

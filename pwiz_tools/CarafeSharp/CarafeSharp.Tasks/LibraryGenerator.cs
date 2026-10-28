@@ -614,30 +614,7 @@ namespace pwiz.CarafeSharp.Tasks
                 Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
             foreach (string warning in modelDirectory.Warnings)
                 Log(warning);
-            if (_settings.ApplyModelDirectoryMeta)
-            {
-                modelDirectory.ApplyModelDirectoryOverrides(_settings);
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"From {0}: precursor m/z {1}-{2}, fragment m/z {3}-{4}, NCE {5}, rt_max {6}",
-                    CarafeModelDirectory.META_FILE, _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz,
-                    _settings.MaxFragmentMz, _settings.Nce, _settings.RtMax));
-                var rtMaxes = modelDirectory.Runs.Select(r => r.RtMax).Distinct().ToList();
-                if (rtMaxes.Count > 1)
-                {
-                    Log(string.Format(CultureInfo.InvariantCulture,
-                        @"The training runs in {0} have different rt_max ({1}): as Carafe does, the library takes the last, {2}, " +
-                        @"but training normalized RT by the largest, {3}, so library RTs scale by {2}/{3}.",
-                        CarafeModelDirectory.META_FILE, string.Join(@", ", rtMaxes.Select(v => v.ToString(CultureInfo.InvariantCulture))),
-                        _settings.RtMax, rtMaxes.Max()));
-                }
-            }
-            else if (_settings.ApplyTrainingRunMeta)
-            {
-                modelDirectory.ApplyTrainingRunOverrides(_settings);
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
-                    _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.Nce, _settings.Instrument, _settings.RtMax));
-            }
+            LibraryModels.ApplyModelDirectoryMeta(_settings, modelDirectory, Log);
             return modelDirectory;
         }
 

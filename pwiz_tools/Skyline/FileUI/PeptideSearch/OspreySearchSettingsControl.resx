@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="lblResolution.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblResolution.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 3</value>
+  </data>
+  <data name="lblResolution.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 13</value>
+  </data>
+  <data name="lblResolution.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblResolution.Text" xml:space="preserve">
+    <value>MS/MS &amp;resolution:</value>
+  </data>
+  <data name="&gt;&gt;lblResolution.Name" xml:space="preserve">
+    <value>lblResolution</value>
+  </data>
+  <data name="&gt;&gt;lblResolution.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblResolution.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblResolution.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="comboResolution.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 0</value>
+  </data>
+  <data name="comboResolution.Size" type="System.Drawing.Size, System.Drawing">
+    <value>220, 21</value>
+  </data>
+  <data name="comboResolution.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboResolution.Name" xml:space="preserve">
+    <value>comboResolution</value>
+  </data>
+  <data name="&gt;&gt;comboResolution.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboResolution.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboResolution.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="lblFragmentTolerance.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblFragmentTolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 35</value>
+  </data>
+  <data name="lblFragmentTolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 13</value>
+  </data>
+  <data name="lblFragmentTolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="lblFragmentTolerance.Text" xml:space="preserve">
+    <value>Fragment &amp;tolerance:</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentTolerance.Name" xml:space="preserve">
+    <value>lblFragmentTolerance</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentTolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentTolerance.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentTolerance.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="numFragmentTolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 33</value>
+  </data>
+  <data name="numFragmentTolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="numFragmentTolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;numFragmentTolerance.Name" xml:space="preserve">
+    <value>numFragmentTolerance</value>
+  </data>
+  <data name="&gt;&gt;numFragmentTolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numFragmentTolerance.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;numFragmentTolerance.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="comboFragmentUnit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>270, 32</value>
+  </data>
+  <data name="comboFragmentUnit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 21</value>
+  </data>
+  <data name="comboFragmentUnit.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboFragmentUnit.Name" xml:space="preserve">
+    <value>comboFragmentUnit</value>
+  </data>
+  <data name="&gt;&gt;comboFragmentUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboFragmentUnit.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboFragmentUnit.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="lblRunFdr.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblRunFdr.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 66</value>
+  </data>
+  <data name="lblRunFdr.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 13</value>
+  </data>
+  <data name="lblRunFdr.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="lblRunFdr.Text" xml:space="preserve">
+    <value>Run &amp;FDR:</value>
+  </data>
+  <data name="&gt;&gt;lblRunFdr.Name" xml:space="preserve">
+    <value>lblRunFdr</value>
+  </data>
+  <data name="&gt;&gt;lblRunFdr.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRunFdr.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblRunFdr.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="txtRunFdr.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 63</value>
+  </data>
+  <data name="txtRunFdr.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="txtRunFdr.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;txtRunFdr.Name" xml:space="preserve">
+    <value>txtRunFdr</value>
+  </data>
+  <data name="&gt;&gt;txtRunFdr.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtRunFdr.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;txtRunFdr.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="lblExperimentFdr.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblExperimentFdr.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 96</value>
+  </data>
+  <data name="lblExperimentFdr.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 13</value>
+  </data>
+  <data name="lblExperimentFdr.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="lblExperimentFdr.Text" xml:space="preserve">
+    <value>&amp;Experiment FDR:</value>
+  </data>
+  <data name="&gt;&gt;lblExperimentFdr.Name" xml:space="preserve">
+    <value>lblExperimentFdr</value>
+  </data>
+  <data name="&gt;&gt;lblExperimentFdr.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblExperimentFdr.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblExperimentFdr.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="txtExperimentFdr.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 93</value>
+  </data>
+  <data name="txtExperimentFdr.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="txtExperimentFdr.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;txtExperimentFdr.Name" xml:space="preserve">
+    <value>txtExperimentFdr</value>
+  </data>
+  <data name="&gt;&gt;txtExperimentFdr.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtExperimentFdr.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;txtExperimentFdr.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="lblProteinFdr.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblProteinFdr.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 126</value>
+  </data>
+  <data name="lblProteinFdr.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="lblProteinFdr.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblProteinFdr.Text" xml:space="preserve">
+    <value>&amp;Protein FDR:</value>
+  </data>
+  <data name="&gt;&gt;lblProteinFdr.Name" xml:space="preserve">
+    <value>lblProteinFdr</value>
+  </data>
+  <data name="&gt;&gt;lblProteinFdr.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblProteinFdr.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblProteinFdr.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="txtProteinFdr.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 123</value>
+  </data>
+  <data name="txtProteinFdr.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="txtProteinFdr.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;txtProteinFdr.Name" xml:space="preserve">
+    <value>txtProteinFdr</value>
+  </data>
+  <data name="&gt;&gt;txtProteinFdr.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtProteinFdr.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;txtProteinFdr.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblThreads.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblThreads.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 156</value>
+  </data>
+  <data name="lblThreads.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 13</value>
+  </data>
+  <data name="lblThreads.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="lblThreads.Text" xml:space="preserve">
+    <value>T&amp;hreads:</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.Name" xml:space="preserve">
+    <value>lblThreads</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblThreads.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="numThreads.Location" type="System.Drawing.Point, System.Drawing">
+    <value>180, 154</value>
+  </data>
+  <data name="numThreads.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 20</value>
+  </data>
+  <data name="numThreads.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;numThreads.Name" xml:space="preserve">
+    <value>numThreads</value>
+  </data>
+  <data name="&gt;&gt;numThreads.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numThreads.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;numThreads.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>565, 180</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>OspreySearchSettingsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+</root>

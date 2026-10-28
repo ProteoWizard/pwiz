@@ -21,6 +21,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
@@ -55,6 +56,40 @@ namespace pwiz.CarafeSharp.Tasks
                 settings.MinPrecursorMz, settings.MaxPrecursorMz, settings.MinFragmentMz, settings.MaxFragmentMz, settings.Nce,
                 settings.Instrument, settings.Activation ?? @"(none)", settings.Analyzer ?? @"(none)", settings.RtMax));
             return modelDirectory;
+        }
+
+        /// <summary>
+        /// What a model folder's metadata overrides on the command line, as Carafe's
+        /// <c>-model_dir</c> branch copies meta.json over it, or as a training run's values
+        /// (NCE, instrument, rt_max) apply to the library predicted right after the fine-tune;
+        /// nothing when <paramref name="settings"/> asks for neither.
+        /// </summary>
+        public static void ApplyModelDirectoryMeta(LibrarySettings settings, CarafeModelDirectory modelDirectory, Action<string> log)
+        {
+            if (settings.ApplyModelDirectoryMeta)
+            {
+                modelDirectory.ApplyModelDirectoryOverrides(settings);
+                log(string.Format(CultureInfo.InvariantCulture,
+                    @"From {0}: precursor m/z {1}-{2}, fragment m/z {3}-{4}, NCE {5}, rt_max {6}",
+                    CarafeModelDirectory.META_FILE, settings.MinPrecursorMz, settings.MaxPrecursorMz, settings.MinFragmentMz,
+                    settings.MaxFragmentMz, settings.Nce, settings.RtMax));
+                var rtMaxes = modelDirectory.Runs.Select(r => r.RtMax).Distinct().ToList();
+                if (rtMaxes.Count > 1)
+                {
+                    log(string.Format(CultureInfo.InvariantCulture,
+                        @"The training runs in {0} have different rt_max ({1}): as Carafe does, the library takes the last, {2}, " +
+                        @"but training normalized RT by the largest, {3}, so library RTs scale by {2}/{3}.",
+                        CarafeModelDirectory.META_FILE, string.Join(@", ", rtMaxes.Select(v => v.ToString(CultureInfo.InvariantCulture))),
+                        settings.RtMax, rtMaxes.Max()));
+                }
+            }
+            else if (settings.ApplyTrainingRunMeta)
+            {
+                modelDirectory.ApplyTrainingRunOverrides(settings);
+                log(string.Format(CultureInfo.InvariantCulture,
+                    @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
+                    settings.MinPrecursorMz, settings.MaxPrecursorMz, settings.Nce, settings.Instrument, settings.RtMax));
+            }
         }
 
         /// <summary>

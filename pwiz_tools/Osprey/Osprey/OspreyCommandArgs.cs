@@ -208,7 +208,8 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
             { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
-                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText } };
+                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText,
+                ARG_TRAINING_INPUT.ArgumentText, ARG_FASTA.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
             { Variadic = true, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, ARG_INPUT.ShortArgumentText, ModelExample, ARG_MODEL.ArgumentText } };
@@ -717,17 +718,21 @@ namespace pwiz.Osprey
             // set there from the runtime loaded, so CarafeSharp gets its default here.
             string device = string.Equals(build.Device, OspreyTorchRuntimes.DEVICE_AUTO, StringComparison.OrdinalIgnoreCase) ? null : build.Device;
             LibrarySettings library;
-            if (build.PrecursorTablePath != null)
+            if (build.PrecursorTablePath != null && build.FastaPath == null)
             {
+                // The table alone digests nothing, so the digest options are refused by name
                 build.DigestOptionsWithPrecursors.AddRange(_carafe.HostedDigestOptionsGiven());
                 library = _carafe.InterpretHostedPrecursorTable(build.ModelPath, device, config.CommandLine);
             }
             else
             {
+                // With a FASTA and a table both, the FASTA is the training library the tuning runs
+                // are searched against (Program refuses the two without the tuning runs), and the
+                // tuned models then predict the table.
                 library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, device, config.CommandLine);
             }
-            // A precursor table tunes nothing: Program refuses --training-input with it, after the parse
-            if (!build.Tuning || build.PrecursorTablePath != null)
+            // A precursor table without a FASTA tunes nothing: Program refuses --training-input with it, after the parse
+            if (!build.Tuning || build.FastaPath == null)
             {
                 build.OptionsWithoutTrainingInput.AddRange(_tuningOptionsSeen.Distinct());
                 return new LibraryBuildSettings(library, null);
