@@ -55,7 +55,7 @@ namespace pwiz.Osprey.Test
         // middle subset run alone with the predicted library): enough for a fine-tune that beats
         // the pretrained models.
         private const int MIN_EXPORTED_PRECURSORS = 300;
-        // Inside the subset's one isolation window: every tuning run's meta.json entry must hold it.
+        // Inside the subset's first isolation window: every tuning run's meta.json entry must hold it.
         private const double SUBSET_WINDOW_TARGET = 594.5201;
 
         // The library-build phases of a tuned run, in order, before the output's search.

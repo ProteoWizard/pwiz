@@ -382,7 +382,8 @@ namespace pwiz.SkylineTestFunctional
             var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Single(lib => lib != null && lib.Name == SAVED_LIBRARY_NAME);
             foreach (var peptide in PEPTIDES)
             {
-                var spectrum = library.GetSpectra(new LibKey(peptide.Sequence, 2), null, LibraryRedundancy.best).Single();
+                var spectrum = library.GetSpectra(new LibKey(peptide.Sequence, 2), null, LibraryRedundancy.best).SingleOrDefault();
+                Assert.IsNotNull(spectrum, peptide.Sequence + @" is not in the library");
                 Assert.IsNotNull(spectrum.RetentionTime, peptide.Sequence);
                 double predicted = spectrum.RetentionTime.Value;
                 AssertEx.IsTrue(Math.Abs(predicted - peptide.RetentionTime) <= RT_TOLERANCE,

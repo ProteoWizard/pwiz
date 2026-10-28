@@ -27,7 +27,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestFunctional;
 using pwiz.SkylineTestUtil;
@@ -113,8 +112,7 @@ namespace TestPerf
             // The three runs searched, and the model tuned on the middle run, chosen from the searched
             // files: the lab's way
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest.sky"));
-            string tunedModelPath = TuneOnSearchedRun(diaFilePaths, middleRun, fastaFilepath);
-            AssertEx.FileExists(tunedModelPath);
+            TuneOnSearchedRun(diaFilePaths, middleRun, fastaFilepath);
         }
 
         /// <summary>A file of the persistent data folder, extracted in place beside the zip.</summary>
@@ -126,9 +124,9 @@ namespace TestPerf
         /// <summary>
         /// Page by page, pausing on each on-screen: the three runs on the data files page, the FASTA,
         /// and on the Library Model page "Choose from the searched files" listing the runs unchecked,
-        /// then the middle run checked as the one tuning run. Returns the document's fine-tuned model.
+        /// then the middle run checked as the one tuning run; the search saves the fine-tuned model.
         /// </summary>
-        private string TuneOnSearchedRun(string[] diaFilePaths, string tuningRun, string fastaFilepath)
+        private void TuneOnSearchedRun(string[] diaFilePaths, string tuningRun, string fastaFilepath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
             var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
@@ -174,8 +172,8 @@ namespace TestPerf
             VerifyDevice(searchDlg);
             string modelPath = OspreySearchTuningTest.RunTuningSearch(searchDlg,
                 TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), SEARCH_TIMEOUT_MILLIS);
+            AssertEx.FileExists(modelPath);
             FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
-            return modelPath;
         }
 
         /// <summary>The folder <see cref="ENV_TORCH_RUNTIMES"/> names, or null for the test's own Tools folder and the CPU.</summary>

@@ -43,8 +43,8 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Runs the whole Osprey pipeline in-process on a small rectangle of real Stellar DIA data
-    /// (<c>TestData\StellarSubset.zip</c>: one isolation window, 7 min of three runs, and a
-    /// 358-precursor library; see its README.txt), in the manner of the regression's legs, which
+    /// (<c>TestData\StellarSubset.zip</c>: two isolation windows, 12 min of three runs, and a
+    /// 1,270-precursor library; see its README.txt), in the manner of the regression's legs, which
     /// otherwise need the 4.5 GB Stellar download and minutes per leg. Each run takes seconds.
     ///
     /// <para>This is where checks of pipeline BEHAVIOR belong: caching, resume, task boundaries,
