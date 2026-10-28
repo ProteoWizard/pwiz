@@ -51,9 +51,10 @@ namespace pwiz.Osprey.Test
     /// </summary>
     public partial class SubsetPipelineTest
     {
-        // A tuning run's export keeps at least this many precursors at 1% run FDR (about 100 on
-        // each subset run with the predicted library).
-        private const int MIN_EXPORTED_PRECURSORS = 50;
+        // A tuning run's export keeps at least this many precursors at 1% run FDR (345 from the
+        // middle subset run alone with the predicted library): enough for a fine-tune that beats
+        // the pretrained models.
+        private const int MIN_EXPORTED_PRECURSORS = 300;
         // Inside the subset's one isolation window: every tuning run's meta.json entry must hold it.
         private const double SUBSET_WINDOW_TARGET = 594.5201;
 
@@ -68,9 +69,8 @@ namespace pwiz.Osprey.Test
         {
             string fasta = WriteSubsetProteinFasta();
             var inputs = DataInputs().ToArray();
-            // Tuned on all three runs: searched alone, one seven-minute window of one run keeps no
-            // precursor at 1% in the second pass, and its export is empty.
-            var tuningRuns = inputs;
+            // Tuned on the middle run alone, as a user tunes
+            var tuningRuns = new[] { inputs[1] };
             string workDir = CreateDir(@"library-build-tuned");
             var buildArgs = TunedArgs(fasta, workDir, inputs, tuningRuns).ToArray();
             var products = new TunedProducts(workDir);
@@ -132,12 +132,9 @@ namespace pwiz.Osprey.Test
 
                 // The inputs alone are the output's search alone: every library-build phase and the
                 // tuning search are current, and in the output's search the remaining runs' scoring
-                // is too, so only the experiment-wide stages run again. What runs is checked here,
-                // not what passes: two windows of two runs searched with a one-epoch tuning detect
-                // nothing at 1% on some machines (the CPU changes the tuned weights), and a search
-                // that detects nothing fails, so every precursor is reported.
+                // is too, so only the experiment-wide stages run again.
                 string fewer = RunOsprey(TunedArgs(fasta, workDir, inputs.Take(2), tuningRuns)
-                    .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7", OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1" }).ToArray(),
+                    .Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).ToArray(),
                     Verifier(false));
                 string fewerBuild = SplitAtSearch(fewer, out string fewerSearch);
                 AssertTasks(fewerBuild, TUNING_PHASES.Concat(ALL_TASKS), Array.Empty<string>());

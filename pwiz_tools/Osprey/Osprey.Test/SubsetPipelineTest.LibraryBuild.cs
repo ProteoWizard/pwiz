@@ -54,10 +54,10 @@ namespace pwiz.Osprey.Test
     {
         private const string FASTA_FILE = @"subset-proteins.fasta";
         private const string SAVED_MODEL_FILE = @"pretrained.carafemodel";
-        // The subset's isolation window, as the precursor m/z window the library is predicted for:
-        // every peptide of the subset library falls in it, and little else does.
+        // The subset's two isolation windows, as the precursor m/z window the library is predicted
+        // for: every peptide of the subset library falls in it, and little else does.
         private const string WINDOW_MIN_MZ = @"592.5";
-        private const string WINDOW_MAX_MZ = @"596.6";
+        private const string WINDOW_MAX_MZ = @"600.6";
         // Floors well under what the data gives: the digest returns 651 peptides (the subset's 335
         // tryptic ones and the missed-cleavage spans between them), of which 337 have a charge
         // state in the window, each with a decoy: 674 precursors predicted.
