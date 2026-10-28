@@ -68,12 +68,18 @@ namespace pwiz.Skyline
         // such path touches a static member first).
         static CommandArgs()
         {
-            ArgUsage.Provider = new SkylineArgUsageProvider();
-            ArgUsage.IsRemoteUrl = IsRemoteUrl;
-            ArgUsage.IsWrappableListType = ve => WRAPPABLE_LIST_TYPE_VALUES.Contains(ve);
-            // Keep Skyline's usage HTML byte-identical to the committed goldens by using the
-            // same encoder it always has (HttpUtility); PortableUtil defaults to WebUtility.
-            ArgUsage.HtmlEncode = HttpUtility.HtmlEncode;
+            // Skyline's grammar is the default, strict --name=value. CarafeSharp's declarations,
+            // in this process for the options the Osprey Search wizard hands Osprey, run under these
+            // settings; Carafe's own grammar is installed only by CarafeSharp.exe.
+            ArgUsage.Install(new ArgUsageSettings
+            {
+                Provider = new SkylineArgUsageProvider(),
+                IsRemoteUrl = IsRemoteUrl,
+                IsWrappableListType = ve => WRAPPABLE_LIST_TYPE_VALUES.Contains(ve),
+                // Keep Skyline's usage HTML byte-identical to the committed goldens by using the
+                // same encoder it always has (HttpUtility); PortableUtil defaults to WebUtility.
+                HtmlEncode = HttpUtility.HtmlEncode
+            });
         }
 
         // Argument value descriptions

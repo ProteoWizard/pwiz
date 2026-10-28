@@ -174,7 +174,8 @@ namespace pwiz.Common.SystemUtil
                         OutputLinesGenerated++;
                     }
 
-                    string lineLower = line.ToLowerInvariant();
+                    // A command run with --timestamp puts its stamp before the Error: or Warning: prefix
+                    string lineLower = CommandStatusWriter.StripTimeStamp(line).ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
                     {
                         sbError.AppendLine(line);

@@ -164,10 +164,14 @@ Name: "{autodesktop}\{#ProductName}"; Filename: "{app}\{#MyAppExe}"; WorkingDir:
     Tasks: desktopicon
 
 [UninstallDelete]
-; Skyline creates Tools\ next to itself at run time (external tools). Only an
-; empty one is removed - installed tools are the user's - so that the install
-; directory itself can go.
-Type: dirifempty; Name: "{app}\Tools"
+; What Skyline writes beside itself when it owns the folder (see
+; PortableSettingsProvider.GetConfigFolder): the settings, and Tools\ with the
+; external tools, search engines and CUDA runtime it downloads. All of it goes,
+; so that the install directory itself can. An upgrade does not uninstall, so
+; this only happens when the user removes the product.
+Type: filesandordirs; Name: "{app}\Tools"
+Type: files; Name: "{app}\user.config"
+Type: files; Name: "{app}\user.config.tmp"
 
 [Registry]
 ; Where this product is installed, for SkylineRunner / SkylineBatch / the MCP

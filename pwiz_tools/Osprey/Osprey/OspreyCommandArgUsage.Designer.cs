@@ -97,7 +97,7 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: where the library is predicted, {1} (falling back to the CPU with a warning when no CUD [rest of string was truncated]";.
+        ///   Looks up a localized string similar to With {0}: where the library is predicted, {1} (default: the GPU when this computer has an NVIDIA GPU that can use the CUDA runtime and the runtime is installed, see {4}, else the CPU), {2} (the GPU; a run that cannot use it fails before it starts, saying why) or {3}. The log names the device every library phase ran on..
         /// </summary>
         public static string _device {
             get {
@@ -239,7 +239,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_input_list", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download the NVIDIA CUDA runtime from nuget.org (several GB; the size is logged first, and every package is checked against the hashes this build was tested with) into the {0} folder and exit, so that {1} can predict on the GPU. Needs nothing else on the command line..
+        /// </summary>
+        public static string _install_cuda_runtime {
+            get {
+                return ResourceManager.GetString("_install_cuda_runtime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Spectral library ({0}, {1}).
         /// </summary>
@@ -356,7 +365,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_perf_stats", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} and {1}: predict a spectral library for exactly the precursors of this tab-separated table (columns {2}, in alphabase&apos;s notation, as Skyline writes it for its Build Library) and write it beside the output as {3}, the TSV peptdeep writes. The pretrained models or {4} predict; the Library Prediction options apply, the Library Digest options, the entrapment and the tuning do not..
+        /// </summary>
+        public static string _precursors {
+            get {
+                return ResourceManager.GetString("_precursors", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Protein-level FDR threshold (optional).
         /// </summary>
@@ -428,7 +446,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_timestamp", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: Osprey\torch under the user's local application data folder). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder..
+        /// </summary>
+        public static string _torch_runtimes {
+            get {
+                return ResourceManager.GetString("_torch_runtimes", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing..
         /// </summary>

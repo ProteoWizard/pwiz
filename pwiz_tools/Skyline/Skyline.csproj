@@ -165,14 +165,6 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\*.sky" />
   </ItemGroup>
 
-  <!-- NVIDIA install/uninstall .bat templates loaded via
-       GetManifestResourceStream(typeof(PythonInstaller), "...-bat.txt").
-       SDK default globs don't embed .txt. -->
-  <ItemGroup>
-    <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt" />
-    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
-  </ItemGroup>
-
   <!-- log4net runtime config - [DeploymentItem("SkylineLog4Net.config")] in
        AbstractUnitTest.cs assumes this file lands next to the assembly. Legacy
        csproj emitted it via a None entry with CopyToOutputDirectory. SDK glob
@@ -313,6 +305,17 @@
       </Content>
     </ItemGroup>
   </Target>
+
+  <!-- AlphaPeptDeep library prediction runs in Osprey (pwiz_tools\Osprey), downloaded to the Tools
+       folder at first use, whose package carries CarafeSharp's TorchSharp port of the peptdeep models,
+       the pretrained models and the CPU libtorch; Skyline ships none of them and loads no torch
+       runtime. What it keeps in process is CarafeSharp's TorchSharp-free code: the .model.zip reader
+       (Proteome), and the CUDA detection and download behind the Use GPU box (Core), which reads the
+       CUDA package list from the installed Osprey folder. -->
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+  </ItemGroup>
 
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and
        EncyclopeDIA demultiplexing conversions, expecting msconvert.exe next to Skyline in the bin

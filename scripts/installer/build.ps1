@@ -405,9 +405,14 @@ if (-not $iscc) {
     $iscc = $iscc.Source
 }
 
-# 5. Stamp a build-time version: 4.0.YYDOY-gitsha.
+# 5. Stamp a version: 4.0.YYDOY-gitsha.
 #    Mirrors the cpp pwiz tagging convention (major 4 = the .NET-port lineage).
-#       YYDOY  = two-digit year + three-digit day-of-year (e.g. 26140 = 2026-05-20).
+#       YYDOY  = two-digit year + three-digit day-of-year (e.g. 26140 = 2026-05-20)
+#                of HEAD's committer date, as build/PwizVersion.targets computes it
+#                for the assembly versions, so a rebuild of a past commit (e.g. for
+#                the monthly release archive) is stamped with that commit's date.
+#                Like that target, it reads %ci (%cs needs git 2.20) and falls back
+#                to today's UTC date when git gives no date (no git, no history).
 #                Sortable, ~5 chars, unambiguous across years, and zero-padded so
 #                lexical sort matches chronological sort.
 #       gitsha = first 7 chars of HEAD; --short defaults to 7. We strip the leading
@@ -416,14 +421,19 @@ if (-not $iscc) {
 #                Win32 version-info parsers.
 #    Local "dev" builds with no git history fall back to 4.0.0-dev so direct
 #    ISCC invocations still produce a versioned installer.
-$today = Get-Date
-$yyDoy = "{0:00}{1:000}" -f ($today.Year % 100), $today.DayOfYear
 $gitSha = ""
+$commitDate = ""
 try {
     Push-Location $pwizSharp
     $gitSha = (git rev-parse --short=7 HEAD 2>$null).Trim()
+    $commitDate = (git log -1 --format=%ci HEAD 2>$null).Trim()
 } catch { }
 finally { Pop-Location }
+$versionDate = (Get-Date).ToUniversalTime()
+if ($commitDate -match '^\d{4}-\d{2}-\d{2}') {
+    $versionDate = [datetime]::ParseExact($commitDate.Substring(0, 10), 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+}
+$yyDoy = "{0:00}{1:000}" -f ($versionDate.Year % 100), $versionDate.DayOfYear
 if ([string]::IsNullOrWhiteSpace($gitSha)) {
     $appVersion = "4.0.0-dev"
 } else {

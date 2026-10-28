@@ -97,8 +97,14 @@ namespace pwiz.Osprey
         /// <summary>The phase that predicts the library the output is searched with.</summary>
         public const string PREDICT_LIBRARY_TASK = LibraryBuildConfig.PREDICT_LIBRARY;
 
+        /// <summary>The suffix of the TSV a precursor table's prediction writes, after the output's stem.</summary>
+        public const string PREDICTED_TABLE_SUFFIX = PREDICTED_SUFFIX + @".speclib.tsv";
+
         /// <summary>The library as the help spells it, after the output's stem.</summary>
         public const string LIBRARY_EXAMPLE = @"<output>" + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB;
+
+        /// <summary>The precursor table's prediction as the help spells it, after the output's stem.</summary>
+        public const string PREDICTED_TABLE_EXAMPLE = @"<output>" + PREDICTED_TABLE_SUFFIX;
 
         /// <summary>The working folder as the help spells it, after the output's stem.</summary>
         public const string PREDICTED_SUFFIX_EXAMPLE = @"<output>" + PREDICTED_SUFFIX + @"/";
@@ -115,6 +121,7 @@ namespace pwiz.Osprey
         // tuning phase takes it off, since the tuning predicts no library of its own), else the one
         // predicted with the pretrained models or --model.
         private readonly LibrarySettings _outputLibrary;
+        private bool _torchLoaded;
 
         /// <param name="config">The run's configuration, whose <see cref="OspreyConfig.LibraryBuild"/> is on.</param>
         /// <param name="settings">What to predict and tune, as the command line interpreted it.</param>
@@ -135,6 +142,12 @@ namespace pwiz.Osprey
         public static string LibraryPath(OspreyConfig config)
         {
             return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
+        }
+
+        /// <summary>The TSV a precursor table's prediction writes: <c>&lt;out&gt;.predicted.speclib.tsv</c>.</summary>
+        public static string PredictedTablePath(OspreyConfig config)
+        {
+            return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_TABLE_SUFFIX);
         }
 
         /// <summary>The model the tuning writes: <c>&lt;out&gt;.model.zip</c>.</summary>
@@ -171,7 +184,7 @@ namespace pwiz.Osprey
                 case TRAIN_MODEL_TASK:
                     return ModelPath(config);
                 default:
-                    return LibraryPath(config);
+                    return config.LibraryBuild.PrecursorTablePath != null ? PredictedTablePath(config) : LibraryPath(config);
             }
         }
 
@@ -284,6 +297,10 @@ namespace pwiz.Osprey
                     }
                 }
 
+                // A precursor table's prediction is the whole run: the phase alone, no pairing, no search.
+                if (_config.LibraryBuild.PrecursorTablePath != null)
+                    return RunPhase(PhaseTask(PREDICT_LIBRARY_TASK));
+
                 var predict = (PredictLibraryTask)PhaseTask(PREDICT_LIBRARY_TASK);
                 int predictExit = RunPhase(predict);
                 if (predictExit != 0)
@@ -362,12 +379,19 @@ namespace pwiz.Osprey
                 default:
                 {
                     var library = _outputLibrary;
-                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
                     if (training != null)
                     {
                         library.ModelDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
                         library.PreferSafetensors = true;
                     }
+                    if (_config.LibraryBuild.PrecursorTablePath != null)
+                    {
+                        // Exactly the table's precursors, as the TSV peptdeep wrote, beside the output;
+                        // no working folder of its own (a saved model unpacks into a temporary folder,
+                        // and after a tuning the models are read from the tuning's model folder)
+                        return new PredictPrecursorTableTask(library, _config.LibraryBuild.PrecursorTablePath, PredictedTablePath(_config));
+                    }
+                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
                     return new PredictLibraryTask(library, DigestSettings(library, _config.LibraryBuild.Entrapment));
                 }
             }
@@ -534,10 +558,28 @@ namespace pwiz.Osprey
         }
 
         /// <summary>One library phase through the shared driver, with Osprey's <c>[TASK]</c> lines.</summary>
-        private static int RunPhase(PipelineTask task)
+        private int RunPhase(PipelineTask task)
         {
+            LoadTorchRuntime();
             var tasks = new[] { task };
             return new LibraryPhaseDriver().Run(tasks, new CarafeContext(tasks, CommandOutput.Out, CommandOutput.Out));
+        }
+
+        /// <summary>
+        /// Loads the libtorch runtime the library phases predict with, before the first of them, and
+        /// settles the device they run on from the runtime loaded: a process keeps the first libtorch
+        /// it loads, so the choice is made once, here, and logged.
+        /// </summary>
+        private void LoadTorchRuntime()
+        {
+            if (_torchLoaded)
+                return;
+            string device = new OspreyTorchRuntimes(_config.LibraryBuild).Load(_config.LibraryBuild.Device);
+            _settings.Library.Device = device;
+            _outputLibrary.Device = device;
+            if (_settings.Training != null)
+                _settings.Training.Device = device;
+            _torchLoaded = true;
         }
 
         /// <summary>
