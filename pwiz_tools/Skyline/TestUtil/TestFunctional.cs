@@ -2840,6 +2840,7 @@ namespace pwiz.SkylineTestUtil
                 FileStreamManager.Default.StartTrackingHistory,
                 FileStreamManager.Default.EndTrackingHistory);
             using var restoreAnimations = IsRecordingScreenShots ? ScreenshotManager.DisableControlAnimations() : null;
+            using var restoreDisplayPaths = IsRecordingScreenShots ? ShowCheckoutAsScreenshotRoot() : null;
 
             try
             {
@@ -2878,6 +2879,35 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
+        }
+
+        /// <summary>
+        /// The checkout folder a screenshot shows, whichever checkout the test actually runs in.
+        /// </summary>
+        public const string SCREENSHOT_CHECKOUT_ROOT = @"C:\proj\pwiz";
+
+        /// <summary>
+        /// Shows paths in this checkout as under <see cref="SCREENSHOT_CHECKOUT_ROOT"/> wherever the
+        /// code uses <see cref="PathEx.DisplayPath"/>, so screenshots do not depend on the checkout.
+        /// </summary>
+        private static IDisposable ShowCheckoutAsScreenshotRoot()
+        {
+            // The project directory is <checkout>\pwiz_tools\Skyline
+            var projectDir = ExtensionTestContext.GetProjectDirectory();
+            var checkoutRoot = Path.GetDirectoryName(Path.GetDirectoryName(projectDir ?? string.Empty));
+            if (string.IsNullOrEmpty(checkoutRoot) || !File.Exists(Path.Combine(projectDir, @"Skyline.sln")))
+                return null;
+            return new ScopedAction(
+                initAction: () =>
+                {
+                    PathEx.DisplayPathRoot = checkoutRoot;
+                    PathEx.DisplayPathRootShown = SCREENSHOT_CHECKOUT_ROOT;
+                },
+                disposeAction: () =>
+                {
+                    PathEx.DisplayPathRoot = null;
+                    PathEx.DisplayPathRootShown = null;
+                });
         }
 
         /// <summary>
