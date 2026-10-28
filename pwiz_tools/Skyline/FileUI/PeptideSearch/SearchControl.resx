@@ -220,7 +220,7 @@
     <value>NoControl</value>
   </data>
   <data name="showTimestampsCheckbox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>238, 6</value>
+    <value>157, 6</value>
   </data>
   <data name="showTimestampsCheckbox.Size" type="System.Drawing.Size, System.Drawing">
     <value>108, 17</value>
@@ -242,6 +242,39 @@
   </data>
   <data name="&gt;&gt;showTimestampsCheckbox.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="btnOpenLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnOpenLog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnOpenLog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>271, 3</value>
+  </data>
+  <data name="btnOpenLog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOpenLog.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnOpenLog.Text" xml:space="preserve">
+    <value>Open &amp;Log</value>
+  </data>
+  <data name="btnOpenLog.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;btnOpenLog.Name" xml:space="preserve">
+    <value>btnOpenLog</value>
+  </data>
+  <data name="&gt;&gt;btnOpenLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOpenLog.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOpenLog.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="txtSearchProgress.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>

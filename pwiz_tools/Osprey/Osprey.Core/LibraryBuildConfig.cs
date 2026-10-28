@@ -61,8 +61,15 @@ namespace pwiz.Osprey.Core
         /// <summary>The protein FASTA to predict the library from (<c>--fasta</c>), or null for a run that searches a given library.</summary>
         public string FastaPath { get; set; }
 
-        /// <summary>True when the run builds its library.</summary>
-        public bool Enabled => FastaPath != null;
+        /// <summary>
+        /// The precursor table to predict a library for (<c>--precursors</c>): exactly its
+        /// precursors, with no digest, written as the TSV peptdeep wrote, which Skyline's Build
+        /// Library runs as the <see cref="PREDICT_LIBRARY"/> phase alone; or null.
+        /// </summary>
+        public string PrecursorTablePath { get; set; }
+
+        /// <summary>True when the run builds its library, or predicts one for a precursor table.</summary>
+        public bool Enabled => FastaPath != null || PrecursorTablePath != null;
 
         /// <summary>
         /// The runs the models are tuned on before the library is predicted (<c>--training-input</c>);
@@ -77,8 +84,22 @@ namespace pwiz.Osprey.Core
         /// <summary>A saved fine-tuned model to predict with (<c>--model</c>), or null for the pretrained models.</summary>
         public string ModelPath { get; set; }
 
-        /// <summary>Where the library is predicted (<c>--device</c>: gpu or cpu), or null for CarafeSharp's default.</summary>
+        /// <summary>
+        /// Where the library is predicted (<c>--device</c>: auto, gpu or cpu), or null for auto: the GPU
+        /// when this computer has one that can use the NVIDIA CUDA runtime and the runtime is installed,
+        /// else the CPU. The device the phases run on is settled when the runtime is loaded.
+        /// </summary>
         public string Device { get; set; }
+
+        /// <summary>
+        /// The folder of installed libtorch runtimes (<c>--torch-runtimes</c>): where the CUDA runtime
+        /// is downloaded to and looked for. Null for Osprey's own folder under the user's local
+        /// application data; Skyline passes its Tools folder, so one download serves both.
+        /// </summary>
+        public string TorchRuntimesDirectory { get; set; }
+
+        /// <summary>Download and install the NVIDIA CUDA runtime, then exit (<c>--install-cuda-runtime</c>).</summary>
+        public bool InstallCudaRuntime { get; set; }
 
         /// <summary>Add entrapment peptides to the library (<c>--entrapment</c>).</summary>
         public bool Entrapment { get; set; }
@@ -109,5 +130,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>The tuning options given without <c>--training-input</c>, as typed: without the runs they would change nothing.</summary>
         public List<string> OptionsWithoutTrainingInput { get; } = new List<string>();
+
+        /// <summary>The Library Digest options given with <c>--precursors</c>, as typed: a table is predicted as it is, not digested.</summary>
+        public List<string> DigestOptionsWithPrecursors { get; } = new List<string>();
     }
 }

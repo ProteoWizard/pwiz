@@ -190,7 +190,11 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
-        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid: null);
+        => GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid: null);
+
+    /// <inheritdoc/>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
+        => GetSpectrumImpl(index, detailLevel, msLevelsToCentroid: null);
 
     /// <inheritdoc/>
     // cpp SpectrumList_PeakPicker.cpp:139 — "ABI/Analyst peak picking" for the Sciex
@@ -199,9 +203,16 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
 
     /// <inheritdoc/>
     public Spectrum GetCentroidSpectrum(int index, bool getBinaryData, IntegerSet msLevelsToCentroid)
-        => GetSpectrumImpl(index, getBinaryData, msLevelsToCentroid);
+        => GetSpectrumImpl(index, ToDetailLevel(getBinaryData), msLevelsToCentroid);
 
-    private Spectrum GetSpectrumImpl(int index, bool getBinaryData, IntegerSet? msLevelsToCentroid)
+    /// <inheritdoc/>
+    public Spectrum GetCentroidSpectrum(int index, DetailLevel detailLevel, IntegerSet msLevelsToCentroid)
+        => GetSpectrumImpl(index, detailLevel, msLevelsToCentroid);
+
+    private static DetailLevel ToDetailLevel(bool getBinaryData)
+        => getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata;
+
+    private Spectrum GetSpectrumImpl(int index, DetailLevel detailLevel, IntegerSet? msLevelsToCentroid)
     {
         if (index < 0 || index >= _index.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -244,8 +255,15 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
         // match the cpp reference exactly (765 points/spectrum on the swath.api fixture, vs 255
         // with addZeros=false). Fetched here (before scan-window / start-time emission) because
         // the spectrum's StartTimeMinutes is the cpp-equivalent start time and is preferred
-        // over the experiment-cycle RT when the SDK reports it.
+        // over the experiment-cycle RT when the SDK reports it. This is a metadata read: the
+        // peaks, and the centroiding, wait for the first XValues/YValues access, as cpp's
+        // SpectrumImpl waits for getData/getDataSize.
         var ms = exp.GetSpectrum(ie.Cycle, addZeros: !_ignoreZeroIntensityPoints, centroid: centroid);
+        // Above instant metadata the peaks are needed for defaultArrayLength anyway. Reading them
+        // before the precursor lets a wiff2 spectrum take its precursor from that read instead of
+        // making a plain one first (Wiff2Spectrum.MetadataSpectrum).
+        if (detailLevel > DetailLevel.InstantMetadata)
+            _ = ms?.XValues;
 
         // cpp SpectrumList_ABI.cpp:139-141: scan_start_time is `spectrum->getStartTime()` and is
         // emitted only when that is > 0. It is the SPECTRUM's start time, never the experiment's
@@ -369,6 +387,13 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 }
             }
 
+            // cpp SpectrumList_ABI.cpp:231. Everything below needs the peaks (defaultArrayLength)
+            // or a whole-experiment chromatogram (TIC, base peak), and a caller asking for instant
+            // metadata - Skyline's per-spectrum ms level, start time and precursor walk - has
+            // everything it asked for.
+            if (detailLevel == DetailLevel.InstantMetadata)
+                return spec;
+
             // TIC: cpp WiffFile2.ipp:718 reads `spectrum->getSumY()` from a precomputed per-cycle
             // intensities array (`experiment->cycleIntensities()`). Summing the centroided
             // YValues here doesn't match — centroiding redistributes intensity across fewer
@@ -396,7 +421,7 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
                 spec.Params.Set(CVID.MS_base_peak_intensity, bpIntensity, CVID.MS_number_of_detector_counts);
             }
 
-            if (getBinaryData)
+            if (detailLevel == DetailLevel.FullData)
             {
                 spec.DefaultArrayLength = len;
                 // Unconditional, as cpp SpectrumList_ABI.cpp:250 is: it calls

@@ -69,7 +69,7 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>Loads a <c>.safetensors</c> model, or else a PyTorch checkpoint.</summary>
         public static Ms2Model FromFile(string path, Device device)
         {
-            return string.Equals(Path.GetExtension(path), @".safetensors", StringComparison.OrdinalIgnoreCase)
+            return ModelFiles.IsSafetensors(path)
                 ? FromSafetensors(path, device)
                 : FromPthFile(path, device);
         }

@@ -115,17 +115,32 @@ namespace pwiz.CarafeSharp.Proteome
         private const string EXT_FASTA = @".fasta";
         private const string EXT_TSV = @".tsv";
 
-        // Install the grammar and the text the help renderer and the parser's errors need
-        // before any argument text is built.
-        static CarafeCommandLine()
+        /// <summary>
+        /// Carafe's grammar and the text the help renderer and the parser's errors need. Carafe's
+        /// grammar is space-separated (--name value), so the help renders "--name &lt;value&gt;", and
+        /// a token built from an instance (ARG_DB + "x.fasta") is too; the settings read numbers
+        /// as Java does, in the invariant culture.
+        /// </summary>
+        private static readonly ArgUsageSettings ARG_USAGE = new ArgUsageSettings
         {
-            ArgUsage.Grammar = GRAMMAR;
-            ArgUsage.Provider = new CarafeArgUsageProvider();
-            // Carafe's grammar is space-separated (--name value), so the help renders
-            // "--name <value>", and a token built from an instance (ARG_DB + "x.fasta") is too.
-            ArgUsage.ArgumentValueSeparator = @" ";
-            // The settings read numbers as Java does, in the invariant culture.
-            ArgUsage.ValueFormatProvider = CultureInfo.InvariantCulture;
+            Grammar = GRAMMAR,
+            Provider = new CarafeArgUsageProvider(),
+            ArgumentValueSeparator = @" ",
+            ValueFormatProvider = CultureInfo.InvariantCulture,
+        };
+
+        /// <summary>
+        /// Installs <see cref="ARG_USAGE"/> on the process-wide seams, which only CarafeSharp.exe
+        /// (its Main) and CarafeSharp's tests do: the program that owns the process installs the
+        /// grammar its command line parses under. Hosted in Skyline and Osprey, these declarations
+        /// run under the host's settings; Osprey parses the options it hosts under its own grammar.
+        /// Installed once at this type's initialization, as it was, Carafe's grammar decided how
+        /// Skyline parsed its next command line as soon as Skyline had read a model file, and kept
+        /// the first of a repeated argument where Skyline keeps the last.
+        /// </summary>
+        public static void InstallGrammar()
+        {
+            ArgUsage.Install(ARG_USAGE);
         }
 
         // --- Modes and files ---------------------------------------------------------------
@@ -643,6 +658,34 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
+        /// The library a host predicts for a precursor table (Osprey's <c>--precursors</c>, which
+        /// Skyline's Build Library runs): no FASTA and no digest, the saved model and device when the
+        /// host gives them, and the prediction options it recorded read as a CarafeSharp command
+        /// line's are, with the same refusals.
+        /// </summary>
+        public LibrarySettings InterpretHostedPrecursorTable(string modelFile, string device, string commandLine)
+        {
+            if (modelFile != null)
+                Set(ARG_MODEL, modelFile);
+            if (device != null)
+                Set(ARG_DEVICE, device);
+            var digest = InterpretDigest(out var modifications, out double minMz, out double maxMz);
+            Mode = CarafeCommandMode.predict_library;
+            LibrarySettings = InterpretLibrarySettings(null, digest, modifications, minMz, maxMz);
+            LibrarySettings.CommandLine = commandLine;
+            return LibrarySettings;
+        }
+
+        /// <summary>
+        /// The <see cref="HostedDigestArguments"/> the host recorded, as typed: a host predicting a
+        /// precursor table, which digests nothing, refuses them by name rather than ignoring them.
+        /// </summary>
+        public IEnumerable<string> HostedDigestOptionsGiven()
+        {
+            return HostedDigestArguments.Where(Has).Select(arg => arg.ArgumentText);
+        }
+
+        /// <summary>
         /// The fine-tuning a host runs on Osprey's training exports, with the options it recorded
         /// from <see cref="HostedTrainingArguments"/> and the library sections. The rest is derived as
         /// <see cref="InterpretHostedLibrary"/> derives it: <paramref name="database"/>, the saved model
@@ -833,6 +876,15 @@ namespace pwiz.CarafeSharp.Proteome
             string extension = Path.GetExtension(database).ToLowerInvariant();
             if (extension != @".fa" && extension != @".fasta")
                 throw new NotSupportedException(@"CarafeSharp predicts libraries from a FASTA (.fa or .fasta) only: " + database);
+            return InterpretLibrarySettings(database, digest, modifications, minMz, maxMz);
+        }
+
+        /// <summary>
+        /// The library settings over <paramref name="database"/> (null for a host's precursor table,
+        /// which digests nothing) and the prediction options as given.
+        /// </summary>
+        private LibrarySettings InterpretLibrarySettings(string database, DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)
+        {
             if (Has(ARG_USER_VAR_MODS) || Has(ARG_MOD2MASS))
                 throw new NotSupportedException(ARG_USER_VAR_MODS.ArgumentText + @" and " + ARG_MOD2MASS.ArgumentText + @" are not supported by CarafeSharp");
             if (TryGet(ARG_MODE, out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
