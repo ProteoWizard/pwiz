@@ -119,6 +119,27 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestPrecursorsArg()
+        {
+            // --precursors enables the library build without a FASTA; the phase is Program's to set
+            // from --task, and the rules (the phase required, no FASTA beside it) are its too.
+            var config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            Assert.AreEqual(@"input.tsv", config.LibraryBuild.PrecursorTablePath);
+            Assert.IsNull(config.LibraryBuild.FastaPath);
+            Assert.IsTrue(config.LibraryBuild.Enabled);
+            Assert.AreEqual(0, config.LibraryBuild.OptionsWithoutFasta.Count);
+            // A saved model and the device apply to the table's prediction as to a FASTA's
+            config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", OspreyCommandArgs.ARG_MODEL + @"m.model.zip", OspreyCommandArgs.ARG_DEVICE + @"cpu");
+            Assert.AreEqual(@"m.model.zip", config.LibraryBuild.ModelPath);
+            Assert.AreEqual(@"cpu", config.LibraryBuild.Device);
+            Assert.AreEqual(0, config.LibraryBuild.OptionsWithoutFasta.Count);
+            Assert.AreEqual(0, config.LibraryBuild.DigestOptionsWithPrecursors.Count);
+            // A digest option is recorded by name, for Program to refuse: a table is not digested
+            config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", CarafeCommandLine.ARG_MISS_C + @"0", CarafeCommandLine.ARG_NCE + @"28");
+            CollectionAssert.AreEqual(new[] { CarafeCommandLine.ARG_MISS_C.ArgumentText }, config.LibraryBuild.DigestOptionsWithPrecursors);
+        }
+
+        [TestMethod]
         public void TestArgToConfigMapping()
         {
             // General I/O. -i is variadic (no on-disk check at parse); -l/-o just record paths.
@@ -390,8 +411,7 @@ namespace pwiz.Osprey.Test
             var commaDecimal = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
             var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
-            string ospreySeparator = ArgUsage.ArgumentValueSeparator;
-            var ospreyProvider = ArgUsage.ValueFormatProvider;
+            var osprey = ArgUsage.Current;
             var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
             try
             {
@@ -402,17 +422,15 @@ namespace pwiz.Osprey.Test
 
                 // A host that parses in the current culture leaves the provider unset and gets
                 // the value the way its user would type it.
-                ArgUsage.ValueFormatProvider = null;
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ArgumentValueSeparator = osprey.ArgumentValueSeparator });
                 Assert.AreEqual(argTolerance.ArgumentText + @" 0,5", argTolerance + 0.5);
-                ArgUsage.ValueFormatProvider = ospreyProvider;
 
-                ArgUsage.ArgumentValueSeparator = @"=";
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ValueFormatProvider = osprey.ValueFormatProvider });
                 Assert.AreEqual(argThreads.ArgumentText + @"=8", argThreads + 8);
             }
             finally
             {
-                ArgUsage.ArgumentValueSeparator = ospreySeparator;
-                ArgUsage.ValueFormatProvider = ospreyProvider;
+                ArgUsage.Install(osprey);
                 System.Threading.Thread.CurrentThread.CurrentCulture = culture;
             }
 

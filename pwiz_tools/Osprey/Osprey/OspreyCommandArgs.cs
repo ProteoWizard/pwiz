@@ -27,9 +27,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Chromatography;
@@ -83,22 +83,22 @@ namespace pwiz.Osprey
         // hands a flag a value or a fixed-list argument a value it does not list.
         static OspreyCommandArgs()
         {
-            // The grammar and the provider are process-wide, and CarafeSharp's declarations
-            // install theirs when their type initializes. Osprey hosts those declarations, so its
-            // field initializers already touch that type before this body runs; run its type
-            // initializer here explicitly, so Osprey's grammar and provider are installed LAST
-            // whatever order the fields are initialized in.
-            RuntimeHelpers.RunClassConstructor(typeof(CarafeCommandLine).TypeHandle);
-            ArgUsage.Grammar = GRAMMAR;
-            ArgUsage.Provider = new OspreyArgUsageProvider();
-            // Osprey's grammar is space-separated (--name value); --name=value is accepted too, but
-            // the generated help renders "--name <value>", the form every example uses, and a
-            // token built from an instance is "--name value" for the same reason.
-            ArgUsage.ArgumentValueSeparator = @" ";
-            // ParseInt / ParseDouble read numbers in the invariant culture, so a number a
-            // test joins to an argument must render that way too. When Osprey's locale
-            // handling is designed, this moves with the parsers.
-            ArgUsage.ValueFormatProvider = CultureInfo.InvariantCulture;
+            // The settings are process-wide, and Osprey owns its process. The CarafeSharp
+            // declarations Osprey hosts parse under Osprey's grammar; Carafe's own is installed
+            // only by CarafeSharp.exe.
+            ArgUsage.Install(new ArgUsageSettings
+            {
+                Grammar = GRAMMAR,
+                Provider = new OspreyArgUsageProvider(),
+                // Osprey's grammar is space-separated (--name value); --name=value is accepted too,
+                // but the generated help renders "--name <value>", the form every example uses, and
+                // a token built from an instance is "--name value" for the same reason.
+                ArgumentValueSeparator = @" ",
+                // ParseInt / ParseDouble read numbers in the invariant culture, so a number a test
+                // joins to an argument must render that way too. When Osprey's locale handling is
+                // designed, this moves with the parsers.
+                ValueFormatProvider = CultureInfo.InvariantCulture,
+            });
         }
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
@@ -203,6 +203,13 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
+        // Skyline's Build Library: the document's precursors as they are, no digest, the TSV
+        // peptdeep wrote. A phase of its own and nothing else, so the search options never apply.
+        public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
+            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
+            { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
+                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText,
+                ARG_TRAINING_INPUT.ArgumentText, ARG_FASTA.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
             { Variadic = true, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, ARG_INPUT.ShortArgumentText, ModelExample, ARG_MODEL.ArgumentText } };
@@ -213,8 +220,19 @@ namespace pwiz.Osprey
             () => GetPathToFile(CarafeModelFile.EXTENSION), (c, p) => c.SetLibraryBuildOption(p, b => b.ModelPath = p.Value))
             { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, CarafeModelFile.EXTENSION, ARG_TRAINING_INPUT.ArgumentText } };
         public static readonly OspreyArgument ARG_DEVICE = new OspreyArgument(OspreyArgNames.DEVICE,
-            new[] { @"gpu", @"cpu" }, (c, p) => c.SetLibraryBuildOption(p, b => b.Device = p.Value.ToLowerInvariant()))
-            { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, @"gpu", @"cpu" } };
+            new[] { @"auto", @"gpu", @"cpu" }, (c, p) => c.SetLibraryBuildOption(p, b => b.Device = p.Value.ToLowerInvariant()))
+            { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, @"auto", @"gpu", @"cpu", ARG_INSTALL_CUDA_RUNTIME.ArgumentText } };
+        // Where the CUDA runtime lives and how it gets there. Neither needs --fasta: the install is
+        // a command of its own, and the folder is where it installs to as well as where a library
+        // phase looks. The help names neither the default folder (the user's) nor the download's
+        // size (the build's: the Linux package set is a gigabyte larger than Windows'), since the
+        // generated help pages are checked in; both are in the log when they matter.
+        public static readonly OspreyArgument ARG_TORCH_RUNTIMES = new OspreyArgument(OspreyArgNames.TORCH_RUNTIMES,
+            PATH_TO_FOLDER, (c, p) => c._config.LibraryBuild.TorchRuntimesDirectory = p.Value)
+            { DescriptionArgs = () => new object[] { ARG_INSTALL_CUDA_RUNTIME.ArgumentText, ARG_DEVICE.ArgumentText } };
+        public static readonly OspreyArgument ARG_INSTALL_CUDA_RUNTIME = new OspreyArgument(OspreyArgNames.INSTALL_CUDA_RUNTIME,
+            (c, p) => c._config.LibraryBuild.InstallCudaRuntime = true)
+            { DescriptionArgs = () => new object[] { ARG_TORCH_RUNTIMES.ArgumentText, ARG_DEVICE.ArgumentText } };
         public static readonly OspreyArgument ARG_ENTRAPMENT = new OspreyArgument(OspreyArgNames.ENTRAPMENT,
             RATIO_VALUE, (c, p) => c.SetLibraryBuildOption(p, b =>
             {
@@ -230,7 +248,8 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_BUILD =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Build, true,
-                ARG_FASTA, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
+                ARG_FASTA, ARG_PRECURSORS, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
+                ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
 
         // CarafeSharp's declarations, declared again for Osprey's parser: the name, the value and
         // its listed values come from CarafeSharp, and the handler records the value into the
@@ -694,15 +713,33 @@ namespace pwiz.Osprey
                 build.OptionsWithoutFasta.AddRange(_libraryBuildOptionsSeen.Distinct());
                 return null;
             }
-            var library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, build.Device, config.CommandLine);
-            if (!build.Tuning)
+            // The device the phases run on is settled when the libtorch runtime is loaded
+            // (LibraryBuildWorkflow): auto is Osprey's word, not CarafeSharp's, and gpu or cpu is
+            // set there from the runtime loaded, so CarafeSharp gets its default here.
+            string device = string.Equals(build.Device, OspreyTorchRuntimes.DEVICE_AUTO, StringComparison.OrdinalIgnoreCase) ? null : build.Device;
+            LibrarySettings library;
+            if (build.PrecursorTablePath != null && build.FastaPath == null)
+            {
+                // The table alone digests nothing, so the digest options are refused by name
+                build.DigestOptionsWithPrecursors.AddRange(_carafe.HostedDigestOptionsGiven());
+                library = _carafe.InterpretHostedPrecursorTable(build.ModelPath, device, config.CommandLine);
+            }
+            else
+            {
+                // With a FASTA and a table both, the FASTA is the training library the tuning runs
+                // are searched against (Program refuses the two without the tuning runs), and the
+                // tuned models then predict the table.
+                library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, device, config.CommandLine);
+            }
+            // A precursor table without a FASTA tunes nothing: Program refuses --training-input with it, after the parse
+            if (!build.Tuning || build.FastaPath == null)
             {
                 build.OptionsWithoutTrainingInput.AddRange(_tuningOptionsSeen.Distinct());
                 return new LibraryBuildSettings(library, null);
             }
             // The library the tuning runs are searched with is predicted as a mode-1 or mode-3 library
             // is; the one the output is searched with comes from the tuned models.
-            var training = _carafe.InterpretHostedTraining(build.FastaPath, build.ModelPath, build.Device,
+            var training = _carafe.InterpretHostedTraining(build.FastaPath, build.ModelPath, device,
                 config.TrainingExport.EffectiveMaxQ(config.RunFdr), config.CommandLine);
             return new LibraryBuildSettings(library, training);
         }

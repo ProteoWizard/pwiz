@@ -2478,6 +2478,13 @@ namespace pwiz.SkylineTestUtil
             {
                 ForceMzml = false;
             }
+            if (Program.AiConnector)
+            {
+                // The MCP client driving this test captures its forms: pre-approve the one-time
+                // permission in this process (never saved - NoSaveSettings), as McpConnectorTest does.
+                // Program.Main registers the instance when it starts the tool service.
+                Settings.Default.AllowMcpScreenCapture = true;
+            }
 
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);

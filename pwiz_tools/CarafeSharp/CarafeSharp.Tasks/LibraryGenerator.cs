@@ -202,7 +202,7 @@ namespace pwiz.CarafeSharp.Tasks
                 if (_libraryRtMax <= 0 && _settings.RtMax > 0)
                     Log(string.Format(CultureInfo.InvariantCulture, @"Ignored rt_max {0}: the library RT of a Chronologer in the hydrophobic index is iRT", _settings.RtMax));
                 var irt = _libraryRtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
-                // A library in the aligned runs' minutes was logged with the maps it reads (WithAlignment).
+                // A library in the aligned runs' minutes was logged with the maps it reads (RtPredictorLoader).
                 if (_libraryRtMax > 0 && !(rt is AlignedRtPredictor))
                     Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: rt_pred * rt_max ({0})", _libraryRtMax));
                 else if (_libraryRtMax <= 0)
@@ -614,238 +614,32 @@ namespace pwiz.CarafeSharp.Tasks
                 Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
             foreach (string warning in modelDirectory.Warnings)
                 Log(warning);
-            if (_settings.ApplyModelDirectoryMeta)
-            {
-                modelDirectory.ApplyModelDirectoryOverrides(_settings);
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"From {0}: precursor m/z {1}-{2}, fragment m/z {3}-{4}, NCE {5}, rt_max {6}",
-                    CarafeModelDirectory.META_FILE, _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz,
-                    _settings.MaxFragmentMz, _settings.Nce, _settings.RtMax));
-                var rtMaxes = modelDirectory.Runs.Select(r => r.RtMax).Distinct().ToList();
-                if (rtMaxes.Count > 1)
-                {
-                    Log(string.Format(CultureInfo.InvariantCulture,
-                        @"The training runs in {0} have different rt_max ({1}): as Carafe does, the library takes the last, {2}, " +
-                        @"but training normalized RT by the largest, {3}, so library RTs scale by {2}/{3}.",
-                        CarafeModelDirectory.META_FILE, string.Join(@", ", rtMaxes.Select(v => v.ToString(CultureInfo.InvariantCulture))),
-                        _settings.RtMax, rtMaxes.Max()));
-                }
-            }
-            else if (_settings.ApplyTrainingRunMeta)
-            {
-                modelDirectory.ApplyTrainingRunOverrides(_settings);
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
-                    _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.Nce, _settings.Instrument, _settings.RtMax));
-            }
+            LibraryModels.ApplyModelDirectoryMeta(_settings, modelDirectory, Log);
             return modelDirectory;
         }
 
         /// <summary>
         /// A saved model (<c>-model</c>), checked and unpacked into a folder of its own, which
-        /// <see cref="Run"/> deletes. The training run's NCE, instrument and rt_max apply where the
-        /// command line gives none; the m/z ranges stay the command line's.
+        /// <see cref="Run"/> deletes (<see cref="LibraryModels"/>, shared with the precursor-table prediction).
         /// </summary>
         private CarafeModelDirectory OpenModelFile()
         {
-            var modelFile = CarafeModelFile.Open(_settings.ModelFile);
-            _modelFileFolder = Path.Combine(Path.GetTempPath(), @"CarafeSharp_model_" + Guid.NewGuid().ToString(@"N"));
-            var modelDirectory = modelFile.Extract(_modelFileFolder);
-            Log(@"Use the saved model " + _settings.ModelFile + @" for spectral library generation: " + modelFile.Describe());
-            modelFile.ApplyPredictionDefaults(_settings);
-            Log(string.Format(CultureInfo.InvariantCulture,
-                @"Precursor m/z {0}-{1}, fragment m/z {2}-{3} from the command line; NCE {4}, instrument {5}, activation {6}, analyzer {7}, rt_max {8}",
-                _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz, _settings.MaxFragmentMz, _settings.Nce,
-                _settings.Instrument, _settings.Activation ?? @"(none)", _settings.Analyzer ?? @"(none)", _settings.RtMax));
-            return modelDirectory;
+            return LibraryModels.OpenModelFile(_settings, Log, out _modelFileFolder);
         }
 
         private Ms2Model LoadMs2Model(CarafeModelDirectory modelDirectory, Device device)
         {
-            string path = modelDirectory.GetMs2ModelPath(_settings.TrainingType);
-            if (path != null)
-            {
-                Log((Path.GetFileName(path) == ModelFiles.MS2_BASE_SAFETENSORS
-                        ? @"Using the base model's MS2 model, which the fine-tuned one did not beat, "
-                        : @"Using fine-tuned MS2 model ") + path);
-                return CarafeModelDirectory.IsSafetensors(path) ? Ms2Model.FromSafetensors(path, device) : Ms2Model.FromPthFile(path, device);
-            }
-            Log(@"Using the pretrained MS2 model");
-            return Ms2Model.FromPretrained(OpenPretrained(), device);
+            return LibraryModels.LoadMs2Model(_settings, modelDirectory, device, OpenPretrained, Log);
         }
 
-        /// <summary>
-        /// The RT model the library predicts with: <c>-rt_model</c>'s, else the one the folder's fine-tuned RT model is
-        /// (a saved model's <see cref="CarafeModelFile.RtModel"/> came in as <c>-rt_model</c>'s default), else
-        /// <see cref="LibrarySettings.DEFAULT_RT_MODEL"/>. A fine-tuned RT model of another kind is replaced by that
-        /// kind's pretrained model.
-        /// </summary>
         private IRtPredictor LoadRtModel(CarafeModelDirectory modelDirectory, Device device)
         {
-            string path = modelDirectory.GetRtModelPath(_settings.TrainingType);
-            var fineTunedType = path != null ? GetRtModelType(path) : (RtModelType?)null;
-            var type = _settings.RtModelType ?? fineTunedType ?? LibrarySettings.DEFAULT_RT_MODEL;
-            if (fineTunedType != null && fineTunedType != type)
-            {
-                Log(string.Format(@"-rt_model {0}: using the pretrained {0} RT model instead of the fine-tuned {1} RT model {2}",
-                    type, fineTunedType, path));
-                path = null;
-            }
-            if (type == RtModelType.chronologer)
-                return WithAlignment(LoadChronologer(path, device), modelDirectory);
-            if (_settings.RtReference != null)
-                throw new InvalidOperationException(string.Format(@"{0} {1} needs the Chronologer RT model, not {2}.", CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, type));
-            if (path != null)
-            {
-                Log(@"Using fine-tuned RT model " + path);
-                return CarafeModelDirectory.IsSafetensors(path) ? RtModel.FromSafetensors(path, device) : RtModel.FromPthFile(path, device);
-            }
-            Log(@"Using the pretrained RT model");
-            return RtModel.FromPretrained(OpenPretrained(), device);
+            return LibraryModels.LoadRtModel(_settings, modelDirectory, device, OpenPretrained, Log);
         }
 
-        /// <summary>
-        /// A Chronologer and the training runs' maps (<see cref="ModelFiles.RT_MAPS"/>, from <c>-rt_align kde</c>), when
-        /// the model folder holds them and the library has an rt_max:
-        /// <list type="bullet">
-        /// <item>fine-tuned on runs of one gradient, it predicts their aligned minutes, which the library takes as they
-        /// are, or with <c>-rt_reference</c> through the maps to one run's;</item>
-        /// <item>predicting the hydrophobic index (pretrained, or fine-tuned on runs of different gradients), its library
-        /// is in the minutes of the run <c>-rt_reference</c> names, else the runs' median, unless the runs are on
-        /// different gradients (<see cref="RtAlignment.IsWide"/>), whose median is none of them: then iRT.</item>
-        /// </list>
-        /// Without the maps the predictor is as it is. <c>-rt_reference</c> needs them.
-        /// </summary>
-        private IRtPredictor WithAlignment(IRtPredictor rt, CarafeModelDirectory modelDirectory)
-        {
-            string path = Path.Combine(modelDirectory.DirectoryPath, ModelFiles.RT_MAPS);
-            try
-            {
-                if (!File.Exists(path))
-                {
-                    if (_settings.RtReference != null)
-                    {
-                        throw new InvalidOperationException(string.Format(
-                            @"{0} {1} needs a Chronologer trained with {2} kde, whose runs' maps ({3}) its model folder holds.",
-                            CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, CarafeCommandLine.ARG_RT_ALIGN.ArgumentText, ModelFiles.RT_MAPS));
-                    }
-                    return rt;
-                }
-                if (!(_settings.RtMax > 0))
-                {
-                    if (_settings.RtReference != null)
-                    {
-                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
-                            @"{0} {1} needs a library in minutes, which {2} {3} is not.", CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, CarafeCommandLine.ARG_RT_MAX.ArgumentText, _settings.RtMax));
-                    }
-                    return rt;
-                }
-                var alignment = RtAlignment.Read(path);
-                string run = _settings.RtReference != null ? alignment.FindRun(_settings.RtReference) : null;
-                if (rt.PredictsNormalizedRt && alignment.IsWide)
-                {
-                    Log(string.Format(@"WARNING: this model predicts the median minutes of training runs on different gradients ({0}), " +
-                        @"which are none of theirs.", alignment));
-                }
-                if (run != null)
-                {
-                    // A minutes model predicts the median minutes over the training normalizer, whatever this library's rt_max.
-                    double trainingRtMax = double.IsNaN(alignment.RtMax) ? _settings.RtMax : alignment.RtMax;
-                    var medianToRun = rt.PredictsNormalizedRt ? alignment.MedianToRunMinutes(run) : null;
-                    Func<double, double> toMinutes = medianToRun != null ? rtNorm => medianToRun(rtNorm * trainingRtMax) : alignment.ToRunMinutes(run);
-                    LogMapsTakeMinutes();
-                    Log(string.Format(@"Library RT: minutes of training run {0} ({1}, {2}): {3}", run, CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, path, alignment));
-                    return new AlignedRtPredictor(rt, toMinutes, _settings.RtMax);
-                }
-                if (rt.PredictsNormalizedRt)
-                    return rt;
-                if (alignment.IsWide)
-                {
-                    Log(string.Format(CultureInfo.InvariantCulture,
-                        @"WARNING: the training runs are on different gradients ({0}), so their median minutes are none of theirs; " +
-                        @"the library RT is iRT. Name a run with {1} for its minutes: {2}.",
-                        alignment, CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, string.Join(@", ", alignment.Runs.Select(r => r.Run))));
-                    return rt;
-                }
-                LogMapsTakeMinutes();
-                Log(@"Library RT: minutes of the training runs' median map (" + path + @"): " + alignment);
-                return new AlignedRtPredictor(rt, alignment.ToMinutes, _settings.RtMax);
-            }
-            catch
-            {
-                rt.Dispose();
-                throw;
-            }
-        }
-
-        /// <summary>A given <c>-rt_max</c> does not scale minutes the training runs' maps give.</summary>
-        private void LogMapsTakeMinutes()
-        {
-            if (_settings.UserRtMax)
-            {
-                Log(string.Format(CultureInfo.InvariantCulture, @"Ignored {0} {1}: the library's minutes come from the training runs' maps",
-                    CarafeCommandLine.ARG_RT_MAX.ArgumentText, _settings.RtMax));
-            }
-        }
-
-        /// <summary>
-        /// The kind of RT model a fine-tuned RT model file is: a saved Chronologer, else AlphaPeptDeep's (a safetensors,
-        /// or a Carafe checkpoint).
-        /// </summary>
-        internal static RtModelType GetRtModelType(string rtModelPath)
-        {
-            return CarafeModelDirectory.IsSafetensors(rtModelPath) && ChronologerModel.IsChronologerFile(rtModelPath)
-                ? RtModelType.chronologer
-                : RtModelType.alphapeptdeep;
-        }
-
-        /// <summary>
-        /// The fine-tuned Chronologer at <paramref name="path"/>, or the pretrained one when it is null, with AlphaPeptDeep's
-        /// pretrained RT model for the peptides Chronologer cannot encode; the pretrained archive is needed for it.
-        /// </summary>
-        private IRtPredictor LoadChronologer(string path, Device device)
-        {
-            var files = ChronologerFiles.Open();
-            ChronologerModel chronologer = null;
-            RtModel fallback = null;
-            try
-            {
-                if (path != null)
-                {
-                    Log(@"Using the fine-tuned Chronologer RT model " + path);
-                    chronologer = ChronologerModel.FromSafetensors(path, files, device);
-                }
-                else
-                {
-                    Log(@"Using the pretrained Chronologer RT model " + files.WeightsPath);
-                    chronologer = ChronologerModel.FromFiles(files, device);
-                }
-                Log(@"AlphaPeptDeep's pretrained RT model predicts the peptides Chronologer cannot encode");
-                fallback = RtModel.FromPretrained(OpenPretrained(), device);
-                return new ChronologerRtPredictor(chronologer, fallback);
-            }
-            catch
-            {
-                chronologer?.Dispose();
-                fallback?.Dispose();
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// The CCS model for <c>-ccs</c>: the model folder's Carafe <c>ccs_model.pt</c> for
-        /// <c>-tf all</c>, else the pretrained one (a saved CarafeSharp model holds none).
-        /// </summary>
         private CcsModel LoadCcsModel(CarafeModelDirectory modelDirectory, Device device)
         {
-            string path = modelDirectory.GetCcsModelPath(_settings.TrainingType);
-            if (path != null)
-            {
-                Log(@"Using fine-tuned CCS model " + path + @" for the ion mobility (1/K0)");
-                return CcsModel.FromPthFile(path, device);
-            }
-            Log(@"Using the pretrained CCS model for the ion mobility (1/K0)");
-            return CcsModel.FromPretrained(OpenPretrained(), device);
+            return LibraryModels.LoadCcsModel(_settings, modelDirectory, device, OpenPretrained, Log);
         }
 
         /// <summary>The pretrained models, opened (and their SHA-256 checked) once.</summary>

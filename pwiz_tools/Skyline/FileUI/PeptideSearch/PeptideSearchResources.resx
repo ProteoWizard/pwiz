@@ -446,4 +446,70 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_" xml:space="preserve">
     <value>DIA-NN search did not produce a spectral library output.</value>
   </data>
+  <data name="OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_" xml:space="preserve">
+    <value>Osprey did not produce a spectral library.</value>
+  </data>
+  <data name="SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_" xml:space="preserve">
+    <value>The log file {0} has not been written yet.</value>
+  </data>
+  <data name="OspreySearchDlg_AddSearchModificationsToDocument_Added_the_modifications_of_an_Osprey_search" xml:space="preserve">
+    <value>Added the modifications of an Osprey search</value>
+  </data>
+  <data name="OspreySearchDlg_FragmentUnit_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="OspreySearchDlg_FragmentUnit_ppm" xml:space="preserve">
+    <value>ppm</value>
+  </data>
+  <data name="OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__" xml:space="preserve">
+    <value>Osprey did not write the spectral library {0}.</value>
+  </data>
+  <data name="OspreySearchDlg_Resolution_High_resolution__Orbitrap__TOF_" xml:space="preserve">
+    <value>High resolution (Orbitrap, TOF)</value>
+  </data>
+  <data name="OspreySearchDlg_Resolution_Unit_resolution__Stellar_" xml:space="preserve">
+    <value>Unit resolution (Stellar)</value>
+  </data>
+  <data name="OspreySearchDlg_StartSearch_The_document_library__0__already_exists__Overwrite_it_with_the_results_of_this_search_" xml:space="preserve">
+    <value>The document library {0} already exists. Overwrite it with the results of this search?</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_A_FASTA_file_is_required_for_an_Osprey_search_" xml:space="preserve">
+    <value>A FASTA file is required for an Osprey search.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_" xml:space="preserve">
+    <value>Osprey cannot predict a library for the enzyme '{0}'. Choose an enzyme with a standard cleavage rule.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_" xml:space="preserve">
+    <value>Osprey cannot predict a library with these modifications:</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__" xml:space="preserve">
+    <value>Osprey searches {0} and {1} libraries, not {2}.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_" xml:space="preserve">
+    <value>The existing library cannot be the document library {0}, which the search writes.</value>
+  </data>
+  <data name="OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On" xml:space="preserve">
+    <value>Browse for Runs to Fine-Tune On</value>
+  </data>
+  <data name="OspreySearchDlg_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__" xml:space="preserve">
+    <value>Failed copying the fine-tuned model to {0}.</value>
+  </data>
+  <data name="OspreySearchDlg_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__" xml:space="preserve">
+    <value>Osprey did not write the fine-tuned model {0}.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_" xml:space="preserve">
+    <value>The document's fine-tuned model {0} already exists. Continuing will overwrite it with the model this search fine-tunes.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_" xml:space="preserve">
+    <value>Choose at least one run to fine-tune the model on.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_" xml:space="preserve">
+    <value>The runs {0} and {1} have the same file name. Osprey keeps one spectra cache per name, so rename one of them.</value>
+  </data>
+  <data name="OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_" xml:space="preserve">
+    <value>The tuning run {0} does not exist.</value>
+  </data>
+  <data name="OspreyFastaControl_BrowseFasta_FASTA_files" xml:space="preserve">
+    <value>FASTA files</value>
+  </data>
 </root>

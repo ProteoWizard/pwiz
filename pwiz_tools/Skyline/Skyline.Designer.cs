@@ -81,6 +81,7 @@ namespace pwiz.Skyline
             this.runPeptideSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.encyclopeDiaSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.diannSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ospreySearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFeatureDetectionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -488,6 +489,7 @@ namespace pwiz.Skyline
             this.runPeptideSearchToolStripMenuItem,
             this.encyclopeDiaSearchMenuItem,
             this.diannSearchMenuItem,
+            this.ospreySearchMenuItem,
             this.importFeatureDetectionMenuItem});
             this.searchStripMenuItem.Name = "searchStripMenuItem";
             resources.ApplyResources(this.searchStripMenuItem, "searchStripMenuItem");
@@ -512,6 +514,13 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.diannSearchMenuItem, "diannSearchMenuItem");
             this.modeUIHandler.SetUIMode(this.diannSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.diannSearchMenuItem.Click += new System.EventHandler(this.diannSearchMenuItem_Click);
+            //
+            // ospreySearchMenuItem
+            //
+            this.ospreySearchMenuItem.Name = "ospreySearchMenuItem";
+            resources.ApplyResources(this.ospreySearchMenuItem, "ospreySearchMenuItem");
+            this.modeUIHandler.SetUIMode(this.ospreySearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.ospreySearchMenuItem.Click += new System.EventHandler(this.ospreySearchMenuItem_Click);
             //
             // importFeatureDetectionMenuItem
             // 
@@ -1177,6 +1186,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem runPeptideSearchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem diannSearchMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ospreySearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ardiaPublishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem searchToolsMenuItem;
