@@ -448,12 +448,37 @@ namespace pwiz.Osprey.Demux
             readSeconds = clock.Elapsed.TotalSeconds;
             var grid = _options.Joint ? TofGridOf(sweeps) : null;
 
-            // One unit per block of sweeps and group of encoded bins.
+            // One unit per block of sweeps and group of encoded bins, each made on its solve's thread just before its
+            // solve: a unit copies its rows of every sweep it reads, several times the read, so made here a batch's
+            // units were held until its last solve, two batches at a time. The sweeps are never changed once read.
+            // The joint solve reads only the block's own sweeps (DemuxUnit skips the others), so its units copy no pad;
+            // apportioning and the channel solve read the pad too.
+            bool corePeaksOnly = _options.Joint && !_options.JointApportion;
+            Func<ScanningUnit, ScanningUnitResult> solve;
+            if (_options.Joint && _options.JointApportion)
+            {
+                var parameters = _options.JointParameters;
+                var centrix = _options.JointCentroid ? _centrix : null;
+                double countsPerIon = _options.CountsPerIon;
+                bool fitted = _options.JointCentrixFitted;
+                solve = unit => SolveJointApportioned(unit, parameters, grid, centrix, countsPerIon, fitted);
+            }
+            else if (_options.Joint)
+            {
+                var parameters = _options.JointParameters;
+                solve = unit => JointDemultiplexer.DemuxUnit(unit, parameters, grid);
+            }
+            else
+            {
+                var parameters = _options.Parameters;
+                solve = unit => ScanningDemultiplexer.DemuxUnit(unit, parameters);
+            }
             for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
             {
                 int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
-                var cycles = Enumerable.Range(Math.Max(padLo, k0 - _options.CyclePad),
-                    Math.Min(padHi, k1 + _options.CyclePad) - Math.Max(padLo, k0 - _options.CyclePad) + 1).ToArray();
+                int lo = corePeaksOnly ? k0 : Math.Max(padLo, k0 - _options.CyclePad);
+                int hi = corePeaksOnly ? k1 : Math.Min(padHi, k1 + _options.CyclePad);
+                var cycles = Enumerable.Range(lo, hi - lo + 1).ToArray();
                 for (int g0 = _firstOutBin; g0 <= _lastOutBin; g0 += _options.GroupBins)
                 {
                     int g1 = Math.Min(_lastOutBin, g0 + _options.GroupBins - 1);
@@ -467,27 +492,26 @@ namespace pwiz.Osprey.Demux
                             columnBins.Select(b => _centers[b]).ToArray(), _centers[g0 + 1] - _centers[g0]);
                         _transmission[g0] = a;
                     }
-                    var unit = MakeUnit(a, rowBins, columnBins, cycles, g0, g1, k0, k1, sweeps);
+                    // The loop variables change before the solves run, so the block is copied.
+                    var block = (K0: k0, K1: k1, G0: g0, G1: g1);
                     // Source positions evaluate the kernel at exact positions, in the matrix's scale.
-                    unit.RowCenters = rowBins.Select(b => _centers[b]).ToArray();
-                    unit.ColumnCenters = columnBins.Select(b => _centers[b]).ToArray();
-                    unit.Kernel = _kernel;
-                    unit.KernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
-                    // The units hold copies of their peaks, so they solve on the solve threads while the pipeline
-                    // goes on reading, laying out and writing.
-                    if (_options.Joint && _options.JointApportion)
+                    var rowCenters = rowBins.Select(b => _centers[b]).ToArray();
+                    var columnCenters = columnBins.Select(b => _centers[b]).ToArray();
+                    var kernel = _kernel;
+                    double kernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
+                    work.Add(new DemuxWork(() =>
                     {
-                        var parameters = _options.JointParameters;
-                        var centrix = _options.JointCentroid ? _centrix : null;
-                        double countsPerIon = _options.CountsPerIon;
-                        bool fitted = _options.JointCentrixFitted;
-                        work.Add(new DemuxWork(() => SolveJointApportioned(unit, parameters, grid, centrix, countsPerIon, fitted),
-                            unit.Mz.Length));
-                        continue;
-                    }
-                    work.Add(new DemuxWork(() => _options.Joint
-                        ? JointDemultiplexer.DemuxUnit(unit, _options.JointParameters, grid)
-                        : ScanningDemultiplexer.DemuxUnit(unit, _options.Parameters), unit.Mz.Length));
+                        var making = Stopwatch.StartNew();
+                        var unit = MakeUnit(a, rowBins, columnBins, cycles, block.G0, block.G1, block.K0, block.K1, sweeps);
+                        unit.RowCenters = rowCenters;
+                        unit.ColumnCenters = columnCenters;
+                        unit.Kernel = kernel;
+                        unit.KernelScale = kernelScale;
+                        double unitSeconds = making.Elapsed.TotalSeconds;
+                        var result = solve(unit);
+                        result.UnitSeconds = unitSeconds;
+                        return result;
+                    }, PointCount(rowBins, cycles, sweeps)));
                 }
             }
             return work;
@@ -552,13 +576,7 @@ namespace pwiz.Osprey.Demux
             int k0, int k1, Dictionary<int, List<(double[] Mz, double[] Ions)>> sweeps)
         {
             // Sized once: while the solve threads run, growing lists point by point costs more than the copy.
-            int count = 0;
-            for (int ci = 0; ci < cycles.Length; ci++)
-            {
-                var sweep = sweeps[cycles[ci]];
-                for (int ri = 0; ri < rowBins.Length; ri++)
-                    count += sweep[rowBins[ri]].Mz.Length;
-            }
+            int count = PointCount(rowBins, cycles, sweeps);
             var mz = new double[count];
             var ions = new double[count];
             var row = new int[count];
@@ -584,6 +602,19 @@ namespace pwiz.Osprey.Demux
                 Row = row,
                 Cycle = cycle,
             };
+        }
+
+        /// <summary>The points a unit of these rows and sweeps holds, before it is made.</summary>
+        private static int PointCount(int[] rowBins, int[] cycles, Dictionary<int, List<(double[] Mz, double[] Ions)>> sweeps)
+        {
+            int count = 0;
+            for (int ci = 0; ci < cycles.Length; ci++)
+            {
+                var sweep = sweeps[cycles[ci]];
+                for (int ri = 0; ri < rowBins.Length; ri++)
+                    count += sweep[rowBins[ri]].Mz.Length;
+            }
+            return count;
         }
 
         /// <summary>

@@ -469,19 +469,24 @@ namespace pwiz.Osprey.Demux
             for (int j = 0; j < columns; j++)
                 coreColumn[j] = unit.ColumnBins[j] >= unit.FirstCoreBin && unit.ColumnBins[j] <= unit.LastCoreBin;
 
-            var bySweep = new List<(long Sample, int Row, double Ions)>[cycles];
-            for (int c = 0; c < cycles; c++)
-                bySweep[c] = new List<(long, int, double)>();
+            // Each core sweep's points are listed just before its solve, into one list kept from sweep to sweep: listed
+            // all at once, they took about as much memory again as the unit, held until its last sweep was solved.
+            var sweepStart = new int[cycles];
+            var sweepCount = new int[cycles];
+            int mostPoints = 0;
             for (int p = 0; p < unit.Mz.Length; p++)
             {
                 int c = unit.Cycle[p];
                 int cycle = unit.Cycles[c];
                 if (cycle < unit.FirstCoreCycle || cycle > unit.LastCoreCycle)
                     continue;
-                bySweep[c].Add((grid.Index(unit.Mz[p]), unit.Row[p], unit.Ions[p]));
+                if (sweepCount[c]++ == 0)
+                    sweepStart[c] = p;
+                mostPoints = Math.Max(mostPoints, sweepCount[c]);
                 if (coreRow[unit.Row[p]])
                     result.IonsIn += unit.Ions[p];
             }
+            var points = new List<(long Sample, int Row, double Ions)>(mostPoints);
 
             var solver = new ChunkSolver(unit.Transmission, parameters);
             // With the coefficients kept, every column's: a caller apportioning by them needs the context's too.
@@ -497,7 +502,14 @@ namespace pwiz.Osprey.Demux
             int warmCycle = -1;
             for (int c = 0; c < cycles; c++)
             {
-                var points = bySweep[c];
+                // The sweep's points in the unit's order, read from its first on: a unit holds its sweeps one after
+                // another, so this reads only the sweep's own.
+                points.Clear();
+                for (int p = sweepStart[c]; points.Count < sweepCount[c]; p++)
+                {
+                    if (unit.Cycle[p] == c)
+                        points.Add((grid.Index(unit.Mz[p]), unit.Row[p], unit.Ions[p]));
+                }
                 if (points.Count == 0)
                 {
                     warm?.Clear();
