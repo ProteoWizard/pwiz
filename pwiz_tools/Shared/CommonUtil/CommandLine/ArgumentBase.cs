@@ -83,7 +83,7 @@ namespace pwiz.Common.CommandLine
             HasValueChecking = template.HasValueChecking;
             AcceptedValues = template.AcceptedValues;
             AcceptsValue = template.AcceptsValue;
-            _propertyName = template.PropertyName;
+            PropertyName = template.PropertyName;
             PropertyType = template.PropertyType;
             DefaultValue = template.DefaultValue;
             MinValue = template.MinValue;
@@ -92,7 +92,6 @@ namespace pwiz.Common.CommandLine
 
         private readonly string[] _fixedValues;
         private readonly Func<string[]> _dynamicValues;
-        private Func<string> _propertyName;
 
         public string Name { get; private set; }
         // Optional short alias (e.g. "i" for "--input", surfaced as "-i"). Used by hosts whose
@@ -158,11 +157,7 @@ namespace pwiz.Common.CommandLine
         /// validation and <see cref="DefaultValue"/>, <see cref="MinValue"/> and
         /// <see cref="MaxValue"/> its default and range.
         /// </summary>
-        public virtual Func<string> PropertyName
-        {
-            get { return _propertyName; }
-            set { _propertyName = value; }
-        }
+        public Func<string> PropertyName { get; set; }
 
         /// <summary>
         /// The kind of value the property takes, when the declaration does not say: a declaration

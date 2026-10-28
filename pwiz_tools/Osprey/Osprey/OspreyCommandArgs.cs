@@ -1383,6 +1383,8 @@ namespace pwiz.Osprey
     /// </summary>
     internal class OspreyArgument : Argument<OspreyCommandArgs>
     {
+        private OspreyPropertyScope? _scope;
+
         public OspreyArgument(string name, Func<OspreyCommandArgs, NameValuePair, bool> processValue)
             : base(name, processValue)
         {
@@ -1429,22 +1431,20 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The scope in which the argument is a setting of a run, which makes it a property of a
-        /// host's settings page (<see cref="ArgumentBase.PropertyName"/>, labeled through
-        /// <see cref="OspreyCommandArgs.GetPropertyLabel"/>, or by CarafeSharp for a hosted one);
-        /// null for an argument that is none: an input, an output, a command or an internal switch.
+        /// host's settings page (<see cref="ArgumentBase.PropertyName"/>); null for an argument
+        /// that is none: an input, an output, a command or an internal switch. Setting it labels one
+        /// of Osprey's own arguments through <see cref="OspreyCommandArgs.GetPropertyLabel"/>; a
+        /// hosted one keeps CarafeSharp's label, and is a property only when CarafeSharp labels it.
         /// </summary>
-        public OspreyPropertyScope? Scope { get; set; }
-
-        public override Func<string> PropertyName
+        public OspreyPropertyScope? Scope
         {
-            get
+            get { return _scope; }
+            set
             {
-                // A hosted declaration is a property only when CarafeSharp labels it
-                if (base.PropertyName != null || !Scope.HasValue || IsHosted)
-                    return base.PropertyName;
-                return () => OspreyCommandArgs.GetPropertyLabel(Name);
+                _scope = value;
+                if (!IsHosted)
+                    PropertyName = value.HasValue ? () => OspreyCommandArgs.GetPropertyLabel(Name) : (Func<string>) null;
             }
-            set { base.PropertyName = value; }
         }
 
         /// <summary>
