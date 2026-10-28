@@ -55,6 +55,14 @@ namespace TestPerf
         /// </summary>
         public const string ENV_TORCH_RUNTIMES = @"SKYLINE_TEST_OSPREY_TORCH_RUNTIMES";
 
+        /// <summary>
+        /// Names a local zip searched instead of the regression data: the same layout, a single
+        /// top-level folder holding <c>stellar</c> with the three runs and one FASTA, as
+        /// ai/scripts/Osprey/SubsetData cuts a mid-size Stellar subset. Unset, the test downloads
+        /// and searches the full regression data.
+        /// </summary>
+        public const string ENV_DATA_ZIP = @"SKYLINE_TEST_OSPREY_PERF_ZIP";
+
         private const string ZIP_NAME = @"osprey-testfiles-mzML-v2";
         private const string STELLAR_DIR = @"stellar";
         private const string FASTA_NAME = @"hela-filtered.fasta";
@@ -78,6 +86,12 @@ namespace TestPerf
         /// </summary>
         private const int MIN_SPECTRA_THREE_RUNS = 20000;
 
+        /// <summary>
+        /// Eight windows over the whole gradient, with the proteins of the peptides they detect,
+        /// wrote 2,671 to 2,707 library spectra searched tuned or with the saved model.
+        /// </summary>
+        private const int MIN_SPECTRA_THREE_RUNS_SUBSET = 1500;
+
         /// <summary>The name the test gives the document's fine-tuned model when it adds it to the model list.</summary>
         private const string SAVED_MODEL_NAME = @"Stellar, tuned on the middle run";
 
@@ -89,9 +103,9 @@ namespace TestPerf
             // (<Downloads>\Perftests\osprey-testfiles-mzML-v2), as DiannSearchPerfTest does, and
             // everything in it is persistent: 26 GB of data extracted once and reused in place.
             // The documents and Osprey's working folders go to the test's own folder in TestResults.
-            TestFilesZipPaths = new[] { GetPerfTestDataURL(ZIP_NAME + @".zip") };
+            TestFilesZipPaths = new[] { DataZipPath ?? GetPerfTestDataURL(ZIP_NAME + @".zip") };
             TestFilesZipExtractHere = new[] { true };
-            TestFilesPersistent = new[] { ZIP_NAME + @"\" };
+            TestFilesPersistent = new[] { DataFolderName + @"\" };
             RunFunctionalTest();
         }
 
@@ -105,7 +119,10 @@ namespace TestPerf
                 Settings.Default.CarafeModelList.AddDefaults();
             });
 
-            string fastaFilepath = GetDataPath(FASTA_NAME);
+            // A subset carries the proteins of its own peptides, under whatever name it gave them
+            string fastaFilepath = DataZipPath != null
+                ? Directory.GetFiles(GetDataPath(string.Empty), @"*.fasta").Single()
+                : GetDataPath(FASTA_NAME);
             string[] diaFilePaths = RUN_NAMES.Select(GetDataPath).ToArray();
             foreach (var path in diaFilePaths.Append(fastaFilepath))
                 AssertEx.FileExists(path);
@@ -126,7 +143,7 @@ namespace TestPerf
         /// <summary>A file of the persistent data folder, extracted in place beside the zip.</summary>
         private string GetDataPath(string fileName)
         {
-            return TestFilesDir.GetTestPath(Path.Combine(ZIP_NAME, STELLAR_DIR, fileName));
+            return TestFilesDir.GetTestPath(Path.Combine(DataFolderName, STELLAR_DIR, fileName));
         }
 
         /// <summary>
@@ -180,7 +197,7 @@ namespace TestPerf
             VerifyDevice(searchDlg);
             string modelPath = OspreySearchTuningTest.RunTuningSearch(searchDlg,
                 TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), SEARCH_TIMEOUT_MILLIS);
-            FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
+            FinishImport(searchDlg, diaFilePaths, docPath, MinSpectra);
             return modelPath;
         }
 
@@ -216,7 +233,29 @@ namespace TestPerf
             OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir,
                 TestFilesDir.GetTestPath("OspreySearchControlLog-saved.txt"), SEARCH_TIMEOUT_MILLIS);
             AssertEx.IsFalse(File.Exists(OspreyHelpers.GetTunedModelPath(docBlibPath, workDir)), @"a search with a saved model wrote a model");
-            FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
+            FinishImport(searchDlg, diaFilePaths, docPath, MinSpectra);
+        }
+
+        /// <summary>The zip <see cref="ENV_DATA_ZIP"/> names, or null for the regression data.</summary>
+        private static string DataZipPath
+        {
+            get
+            {
+                string path = Environment.GetEnvironmentVariable(ENV_DATA_ZIP);
+                return string.IsNullOrEmpty(path) ? null : path;
+            }
+        }
+
+        /// <summary>The zip's single top-level folder, named for the zip.</summary>
+        private static string DataFolderName
+        {
+            get { return DataZipPath != null ? Path.GetFileNameWithoutExtension(DataZipPath) : ZIP_NAME; }
+        }
+
+        /// <summary>The fewest library spectra three runs of the searched data may report.</summary>
+        private static int MinSpectra
+        {
+            get { return DataZipPath != null ? MIN_SPECTRA_THREE_RUNS_SUBSET : MIN_SPECTRA_THREE_RUNS; }
         }
 
         /// <summary>The folder <see cref="ENV_TORCH_RUNTIMES"/> names, or null for the test's own Tools folder and the CPU.</summary>
