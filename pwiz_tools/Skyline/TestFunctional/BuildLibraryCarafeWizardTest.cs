@@ -206,7 +206,6 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsTrue(grid.Labels.Contains(settings.Properties.Find(@"tf").Label));
                 grid.SetValue(settings.Properties.Find(@"verbose").Label, true.ToString());
             });
-            PauseForDemo("Additional Settings: every setting of a fine-tuned build");
             OkDialog(grid, grid.OkDialog);
 
             // Previous back to the model, Next forward again: every choice is kept
