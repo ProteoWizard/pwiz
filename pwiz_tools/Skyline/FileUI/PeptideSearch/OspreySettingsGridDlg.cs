@@ -90,8 +90,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>The labels of the settings shown, in help order.</summary>
         public IEnumerable<string> Labels => _settingsObject.Descriptors.Select(d => d.DisplayName);
 
-        /// <summary>The categories of the settings shown, each once, in help order.</summary>
-        /// <summary>The section titles shown, as the properties name them (the grid draws a doubled ampersand as one).</summary>
+        /// <summary>The section titles shown, each once, in help order, as the properties name them (the grid draws a doubled ampersand as one).</summary>
         public IEnumerable<string> Categories => _settingsObject.Descriptors.Select(d => d.Category.Replace(@"&&", @"&")).Distinct();
 
         public PropertySort PropertySort

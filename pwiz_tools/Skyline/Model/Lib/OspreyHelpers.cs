@@ -580,11 +580,9 @@ namespace pwiz.Skyline.Model.Lib
         /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
         /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
         /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
-        /// The prediction's <paramref name="additionalSettings"/> (the collision energy, the instrument,
-        /// the fragments kept) follow, the ones that are not Osprey's defaults.
         /// </summary>
         public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
-            bool useGpu, string torchRuntimesDirectory, string cultureName, OspreyAdditionalSettings additionalSettings = null)
+            bool useGpu, string torchRuntimesDirectory, string cultureName)
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(OspreyArgs))
@@ -597,13 +595,6 @@ namespace pwiz.Skyline.Model.Lib
             sb.Append(ARG_DEVICE).Append(' ').Append(useGpu ? DEVICE_GPU : DEVICE_CPU);
             if (!string.IsNullOrEmpty(torchRuntimesDirectory))
                 sb.Append(' ').Append(ARG_TORCH_RUNTIMES).Append(' ').Append(torchRuntimesDirectory.Quote());
-            if (additionalSettings != null)
-            {
-                var settingsText = new StringBuilder();
-                additionalSettings.AppendArguments(settingsText, new[] { OspreyPropertyScope.library });
-                if (settingsText.Length > 0)
-                    sb.Append(' ').Append(settingsText.ToString().TrimEnd());
-            }
             if (!string.IsNullOrEmpty(cultureName))
                 sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
             return sb.ToString();

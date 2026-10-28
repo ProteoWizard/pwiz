@@ -146,12 +146,6 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        /// <summary>The tooltip of a plain grid row: the argument and its <see cref="HelpText"/>.</summary>
-        public string Tooltip
-        {
-            get { return ArgumentText + Environment.NewLine + HelpText; }
-        }
-
         /// <summary>
         /// Checks text typed for this property, throwing an <see cref="ArgumentException"/> that
         /// names the property when it is not a value the argument takes: a number within its
@@ -182,7 +176,7 @@ namespace pwiz.Skyline.Model.Lib
                     CheckRange(d, text);
                     break;
                 case OspreyPropertyType.list:
-                    if (!Values.Contains(text))
+                    if (!Values.Any(v => string.Equals(v, text, StringComparison.OrdinalIgnoreCase)))
                     {
                         throw new ArgumentException(string.Format(
                             Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
@@ -209,6 +203,8 @@ namespace pwiz.Skyline.Model.Lib
                     return TryParseInt(text, out int i) ? i.ToString(CultureInfo.InvariantCulture) : text;
                 case OspreyPropertyType.number:
                     return TryParseDouble(text, out double d) ? d.ToString(CultureInfo.InvariantCulture) : text;
+                case OspreyPropertyType.list:
+                    return Values.FirstOrDefault(v => string.Equals(v, text, StringComparison.OrdinalIgnoreCase)) ?? text;
                 default:
                     return text;
             }

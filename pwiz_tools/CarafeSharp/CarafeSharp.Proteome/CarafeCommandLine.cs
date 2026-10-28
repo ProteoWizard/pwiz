@@ -215,7 +215,8 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_LF_MIN_N_FRAG = Value(@"lf-min-n-frag", @"<n>");
         public static readonly CarafeArgument ARG_LF_FRAG_N_MIN = Value(@"lf-frag-n-min", @"<n>");
         public static readonly CarafeArgument ARG_NCE = Value(@"nce", @"<nce>");
-        public static readonly CarafeArgument ARG_MS_INSTRUMENT = Choice(@"ms-instrument", PeptdeepInstruments.NAMES.ToArray());
+        // The names are offered (a host's settings page lists them), not enforced: any name parses, and predicts as its group
+        public static readonly CarafeArgument ARG_MS_INSTRUMENT = new CarafeArgument(@"ms-instrument", PeptdeepInstruments.NAMES.ToArray(), (c, p) => c.Record(p)) { HasValueChecking = true };
         public static readonly CarafeArgument ARG_ACTIVATION = Choice(@"activation", AcquisitionVocabulary.KNOWN_ACTIVATIONS.ToArray());
         public static readonly CarafeArgument ARG_ANALYZER = Choice(@"analyzer", AcquisitionVocabulary.KNOWN_ANALYZERS.ToArray());
         public static readonly CarafeArgument ARG_RT_MAX = Value(@"rt-max", @"<minutes>");

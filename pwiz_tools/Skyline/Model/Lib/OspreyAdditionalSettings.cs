@@ -98,31 +98,13 @@ namespace pwiz.Skyline.Model.Lib
             return _propertiesBySettingName[setting.Name];
         }
 
-        /// <summary>
-        /// The settings of <paramref name="scopes"/> under their labels, for the grid: the same
-        /// objects as <see cref="Settings"/>, so what the grid sets is what the command line reads.
-        /// A label two properties share (not expected) is told apart by its argument. The dictionary
-        /// enumerates in the properties' (help) order, which the grid relies on to show the settings
-        /// under their group headers: a Dictionary keeps its insertion order while nothing is removed.
-        /// </summary>
-        public IDictionary<string, AbstractDdaSearchEngine.Setting> GetGridValues(ICollection<OspreyPropertyScope> scopes)
-        {
-            var gridValues = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
-            foreach (var property in Properties.Properties.Where(p => scopes.Contains(p.Scope)))
-            {
-                if (!Settings.TryGetValue(property.Name, out var setting))
-                    continue;
-                string label = gridValues.ContainsKey(property.Label) ? property.Label + @" (" + property.ArgumentText + @")" : property.Label;
-                gridValues[label] = setting;
-            }
-            return gridValues;
-        }
-
         /// <summary>The grid's check of text typed for <paramref name="setting"/>: the property's rules, then the setting's own.</summary>
         public void Validate(string text, AbstractDdaSearchEngine.Setting setting)
         {
-            GetProperty(setting).Validate(text);
-            setting.Validate(text);
+            var property = GetProperty(setting);
+            property.Validate(text);
+            // The setting's own check sees the value as the command line will spell it (a listed value in its listed case)
+            setting.Validate(property.ToArgumentValue(text) ?? text);
         }
 
         /// <summary>
@@ -133,26 +115,19 @@ namespace pwiz.Skyline.Model.Lib
         public void SetValue(AbstractDdaSearchEngine.Setting setting, string text)
         {
             var property = GetProperty(setting);
-            if (property.Type == OspreyPropertyType.integer || property.Type == OspreyPropertyType.number)
+            switch (property.Type)
             {
-                string argumentValue = property.ToArgumentValue(text);
-                setting.Value = string.IsNullOrEmpty(argumentValue) ? text : argumentValue;
+                case OspreyPropertyType.integer:
+                case OspreyPropertyType.number:
+                case OspreyPropertyType.list:
+                    // A number as the command line spells it, a listed value in its listed spelling
+                    string argumentValue = property.ToArgumentValue(text);
+                    setting.Value = string.IsNullOrEmpty(argumentValue) ? text : argumentValue;
+                    break;
+                default:
+                    setting.Value = text;
+                    break;
             }
-            else
-            {
-                setting.Value = text;
-            }
-        }
-
-        public string GetTooltip(AbstractDdaSearchEngine.Setting setting)
-        {
-            return GetProperty(setting).Tooltip;
-        }
-
-        /// <summary>The title of the help section of <paramref name="setting"/>: the grid's group header.</summary>
-        public string GetGroup(AbstractDdaSearchEngine.Setting setting)
-        {
-            return GetProperty(setting).Group;
         }
 
         /// <summary>
@@ -240,7 +215,7 @@ namespace pwiz.Skyline.Model.Lib
                 try
                 {
                     GetProperty(setting).Validate(value);
-                    setting.Value = value;
+                    SetValue(setting, value);
                 }
                 catch (Exception)
                 {

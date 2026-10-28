@@ -66,7 +66,6 @@ namespace pwiz.SkylineTest
             var properties = OspreyProperties.Parse(SAMPLE_JSON);
             TestParse(properties);
             TestSettings(properties);
-            TestGridValues(properties);
             TestDescriptors(properties);
             TestValidation(properties);
             TestArguments(properties);
@@ -93,9 +92,10 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(0.0, parallel.Min);
             AssertEx.IsNull(parallel.Max);
             AssertEx.AreEqual(OspreyPropertyScope.tuning, properties.Find(@"seed").Scope);
-            // The tooltip is the argument and its usage text, and how to give an optional value
-            AssertEx.Contains(parallel.Tooltip, parallel.ArgumentText, parallel.Description, OspreyProperty.AUTO_VALUE);
-            AssertEx.IsFalse(fdrLevel.Tooltip.Contains(OspreyProperty.AUTO_VALUE));
+            // The help text is the usage text, and how to give an optional value; never the argument
+            AssertEx.Contains(parallel.HelpText, parallel.Description, OspreyProperty.AUTO_VALUE);
+            AssertEx.IsFalse(parallel.HelpText.Contains(parallel.ArgumentText));
+            AssertEx.IsFalse(fdrLevel.HelpText.Contains(OspreyProperty.AUTO_VALUE));
         }
 
         /// <summary>The form-bound arguments are no settings; the rest are, typed by their properties.</summary>
@@ -117,25 +117,6 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(3, activation.ValidValues.Count());
             AssertEx.IsTrue(settings.Settings.Values.All(s => s.IsDefault));
             AssertEx.IsFalse(settings.ChangedSettings.Any());
-            AssertEx.AreEqual(settings.Properties.Find(@"seed").Tooltip, settings.GetTooltip(settings.Settings[@"seed"]));
-            AssertEx.AreEqual(settings.Properties.Find(@"seed").Group, settings.GetGroup(settings.Settings[@"seed"]));
-        }
-
-        /// <summary>The grid shows the settings of the run's scopes, under their labels, the same objects.</summary>
-        private static void TestGridValues(OspreyProperties properties)
-        {
-            var settings = new OspreyAdditionalSettings(properties);
-            var searchOnly = settings.GetGridValues(new[] { OspreyPropertyScope.search });
-            AssertEx.AreEqual(5, searchOnly.Count);
-            AssertEx.IsTrue(searchOnly.ContainsKey(@"Verbose output"));
-            AssertEx.IsFalse(searchOnly.ContainsKey(@"Instrument"));
-            AssertEx.IsTrue(ReferenceEquals(searchOnly[@"Verbose output"], settings.Settings[@"verbose"]));
-            var all = settings.GetGridValues(OspreyAdditionalSettings.ALL_SCOPES);
-            AssertEx.AreEqual(settings.Settings.Count, all.Count);
-            AssertEx.IsTrue(all.ContainsKey(@"Random seed"));
-            var library = settings.GetGridValues(new[] { OspreyPropertyScope.library });
-            AssertEx.AreEqual(3, library.Count);
-            AssertEx.IsTrue(library.ContainsKey(@"Gradient length (minutes)"));
         }
 
         /// <summary>
@@ -150,7 +131,7 @@ namespace pwiz.SkylineTest
             var settings = new OspreyAdditionalSettings(properties);
             var searchOnly = new OspreySettingsObject(settings, new[] { OspreyPropertyScope.search });
             var descriptors = searchOnly.Descriptors.ToArray();
-            AssertEx.AreEqualDeep(settings.GetGridValues(new[] { OspreyPropertyScope.search }).Keys.ToArray(),
+            AssertEx.AreEqualDeep(properties.Properties.Where(p => p.Scope == OspreyPropertyScope.search && settings.Settings.ContainsKey(p.Name)).Select(p => p.Label).ToArray(),
                 descriptors.Select(d => d.DisplayName).ToArray());
             AssertEx.AreEqual(descriptors.Length, searchOnly.GetProperties().Count);
             AssertEx.IsTrue(ReferenceEquals(searchOnly, searchOnly.GetPropertyOwner(descriptors[0])));
@@ -213,6 +194,11 @@ namespace pwiz.SkylineTest
             ValidateOk(settings, @"reconciliation-compaction-fdr", @"0.05");
             ValidateOk(settings, @"reconciliation-compaction-fdr", @"1");
             ValidateOk(settings, @"fdr-level", @"peptide");
+            ValidateOk(settings, @"fdr-level", @"Peptide");
+            // A listed value in another case is kept in its listed spelling
+            settings.SetValue(settings.Settings[@"fdr-level"], @"PEPTIDE");
+            AssertEx.AreEqual(@"peptide", settings.Settings[@"fdr-level"].Value);
+            settings.SetValue(settings.Settings[@"fdr-level"], @"precursor");
             ValidateOk(settings, @"parallel-files", string.Empty);
             ValidateOk(settings, @"parallel-files", OspreyProperty.AUTO_VALUE);
             ValidateOk(settings, @"parallel-files", @"4");
@@ -306,10 +292,6 @@ namespace pwiz.SkylineTest
             commandLine = OspreyHelpers.BuildCommandLine(config);
             AssertEx.Contains(commandLine, @"--parallel-files 3 --clip-n-m --ms-instrument Lumos --rt-max 120 --culture en");
             AssertEx.IsFalse(commandLine.Contains(@"--seed"));
-            string predictCommandLine = OspreyHelpers.BuildPredictLibraryCommandLine(@"table.tsv", @"out.blib", null, false, null, @"en", settings);
-            AssertEx.Contains(predictCommandLine, @"--ms-instrument Lumos --rt-max 120 --culture en");
-            AssertEx.IsFalse(predictCommandLine.Contains(@"--parallel-files"));
-            AssertEx.IsFalse(predictCommandLine.Contains(@"--clip-n-m"));
         }
 
         private static string Arguments(OspreyAdditionalSettings settings, params OspreyPropertyScope[] scopes)

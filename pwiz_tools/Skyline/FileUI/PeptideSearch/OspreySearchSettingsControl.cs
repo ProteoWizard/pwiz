@@ -45,6 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         private OspreyAdditionalSettings _additionalSettings;
         private IList<string> _refusedLastUsed;
+        private string _additionalSettingsError;
         private readonly SettingsListComboDriver<OspreySettingsPreset> _settingsPresetDriver;
         private bool _suppressPresetApply;
 
@@ -124,6 +125,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>Loads <see cref="AdditionalSettings"/>, reporting an Osprey that cannot be asked for them.</summary>
         public bool TryGetAdditionalSettings(out OspreyAdditionalSettings additionalSettings)
         {
+            // Asked once: each Next or preset would otherwise run Osprey again and report again
+            if (_additionalSettingsError != null)
+            {
+                additionalSettings = null;
+                return false;
+            }
             try
             {
                 additionalSettings = AdditionalSettings;
@@ -138,6 +145,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             catch (Exception x)
             {
+                _additionalSettingsError = x.Message;
                 MessageDlg.ShowWithException(WizardForm, x.Message, x);
                 additionalSettings = null;
                 return false;
@@ -275,9 +283,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             int indexBefore = _settingsPresetDriver.SelectedIndexLast;
             if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
             {
-                // Edit list...: the driver chose the preset chosen before, or the first when none was
+                // Edit list...: the driver chose the preset chosen before, or the first when none was;
+                // the one it chose is applied again, since the list may have changed it
                 if (indexBefore < 0)
                     comboSettingsPreset.SelectedIndex = -1;
+                else if (_settingsPresetDriver.SelectedItem != null)
+                    ApplyPreset(_settingsPresetDriver.SelectedItem);
                 return;
             }
             var preset = _settingsPresetDriver.SelectedItem;
