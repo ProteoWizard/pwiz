@@ -20,6 +20,12 @@
     <EmbeddedResource Remove="OfxLoggingStub\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Let Sciex.Tests read WiffExperiment.SpectrumDataReads: whether a metadata request read
+         any peaks is not visible in the spectrum it returns. -->
+    <InternalsVisibleTo Include="Sciex.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <SciexArchive>$(PwizVendorArchivesPath)/vendor_api_ABI.7z</SciexArchive>
     <SciexAssembliesDir>$(PwizVendorAssembliesPath)/Sciex</SciexAssembliesDir>
