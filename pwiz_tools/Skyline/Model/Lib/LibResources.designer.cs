@@ -566,7 +566,7 @@ namespace pwiz.Skyline.Model.Lib {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Retention times in {0} do not state their units (first seen at line {1}, for &quot;{2}&quot;). They appear to be in MS-DIAL format, so they were read as minutes. Use &quot;RetentionTimeMins:&quot; or &quot;RetentionTimeSecs:&quot; to state the units..
+        ///   Looks up a localized string similar to Retention times in {0} do not state their units (first seen at line {1}, for &quot;{2}&quot;). They appear to be in MS-DIAL format, so they were read as minutes. You may wish to edit the file to use &quot;RetentionTimeMins:&quot; or &quot;RetentionTimeSecs:&quot; to state the units before re-importing it..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_minutes {
             get {
@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model.Lib {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Retention times in {0} do not state their units (first seen at line {1}, for &quot;{2}&quot;), so they were read as seconds. Use &quot;RetentionTimeMins:&quot; or &quot;RetentionTimeSecs:&quot; to state the units..
+        ///   Looks up a localized string similar to Retention times in {0} do not state their units (first seen at line {1}, for &quot;{2}&quot;), so they were read as seconds. You may wish to edit the file to use &quot;RetentionTimeMins:&quot; or &quot;RetentionTimeSecs:&quot; to state the units before re-importing it..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_seconds {
             get {
