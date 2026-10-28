@@ -37,7 +37,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     /// is bold. The grid edits the <see cref="OspreyAdditionalSettings"/>' own Setting objects;
     /// Cancel puts back the values the dialog opened with.
     /// </summary>
-    public partial class OspreySettingsGridDlg : FormEx
+    public sealed partial class OspreySettingsGridDlg : FormEx
     {
         private readonly OspreySettingsObject _settingsObject;
         private readonly IDictionary<AbstractDdaSearchEngine.Setting, object> _openingValues;

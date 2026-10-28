@@ -672,10 +672,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // The search's settings go in the import's audit log entry, as a DDA search engine's do.
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
                 ImportPeptideSearchDlg.Workflow.dia, DataFileResults.FoundResultsFiles,
-                ImportFastaControl.ImportSettings, new[] { blibPath })
-            {
-                OspreySearchSettings = new OspreySearchSettings(SearchControl.SearchConfig)
-            };
+                ImportFastaControl.ImportSettings, new[] { blibPath });
+            importPeptideSearchDlg.OspreySearchSettings = new OspreySearchSettings(SearchControl.SearchConfig);
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;

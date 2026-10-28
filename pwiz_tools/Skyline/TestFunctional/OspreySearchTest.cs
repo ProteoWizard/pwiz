@@ -306,13 +306,13 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
             AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, settings.Settings[ADDITIONAL_NCE].Value);
             // Cancel puts back the values the grid opened with
-            grid = ShowDialog<OspreySettingsGridDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
+            var gridToCancel = ShowDialog<OspreySettingsGridDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
             RunUI(() =>
             {
-                grid.SetValue(flagLabel, false.ToString());
+                gridToCancel.SetValue(flagLabel, false.ToString());
                 AssertEx.AreEqual(false, settings.Settings[ADDITIONAL_FLAG].Value);
             });
-            OkDialog(grid, grid.CancelDialog);
+            OkDialog(gridToCancel, gridToCancel.CancelDialog);
             AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
         }
 
