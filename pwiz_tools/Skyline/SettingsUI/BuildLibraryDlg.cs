@@ -357,10 +357,10 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
 
             // The additional settings, read from Osprey now that it is installed: the prediction's
-            // on the pretrained route, and every scope's with the fine-tune's search settings
-            if (!SearchSettingsControl.TryGetAdditionalSettings(out var additionalSettings))
-                return false;
-            additionalSettings.SaveLastUsed();
+            // on the pretrained route, and every scope's with the fine-tune's search settings. An
+            // Osprey that cannot report them is reported, and the build goes on without them.
+            SearchSettingsControl.TryGetAdditionalSettings(out var additionalSettings);
+            additionalSettings?.SaveLastUsed();
             var builder = new CarafeLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
                 CarafeModelPath = carafeModel.FilePath,

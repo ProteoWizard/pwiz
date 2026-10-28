@@ -227,19 +227,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// Next from the page, which runs: each threshold is a fraction in (0, 1]. A threshold of 0
         /// is a search that reports nothing, so the range excludes it. The additional settings are
         /// read from Osprey here if the grid was not opened, so the values last run with reach the
-        /// command line, and the values this run has are kept as the last used.
+        /// command line, and the values this run has are kept as the last used. An Osprey that
+        /// cannot report its settings (one from before the grid) is reported, and the run goes on
+        /// without them, as it did before the grid.
         /// </summary>
         public bool ValidatePage()
         {
             var helper = new MessageBoxHelper(WizardForm);
             if (!helper.ValidateDecimalTextBox(txtRunFdr, 0, 1, out _, false) ||
                 !helper.ValidateDecimalTextBox(txtExperimentFdr, 0, 1, out _, false) ||
-                !helper.ValidateDecimalTextBox(txtProteinFdr, 0, 1, out _, false) ||
-                !TryGetAdditionalSettings(out var additionalSettings))
+                !helper.ValidateDecimalTextBox(txtProteinFdr, 0, 1, out _, false))
             {
                 return false;
             }
-            additionalSettings.SaveLastUsed();
+            if (TryGetAdditionalSettings(out var additionalSettings))
+                additionalSettings.SaveLastUsed();
             return true;
         }
     }
