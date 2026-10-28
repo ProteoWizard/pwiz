@@ -35,14 +35,14 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf
 {
     /// <summary>
-    /// The Osprey Search wizard's Library Model page at real-data scale, as the lab runs it: the three
-    /// Stellar HeLa sDIA runs (1.5 GB of mzML each) searched against the filtered HeLa FASTA with a
-    /// model fine-tuned on the middle run, chosen from the searched files; then the three runs
-    /// searched again with that model, added to the model list by name. OspreySearchTuningTest covers
-    /// the page's behavior on Osprey's subset in a minute, where a run searched alone keeps nothing
-    /// to tune on; this is the run as a user makes it, with one fine-tune, on the GPU when
-    /// <see cref="ENV_TORCH_RUNTIMES"/> names a CUDA runtime. Run on-screen (-ShowUI), it pauses on
-    /// each page of the first search for a look at the pages; the pauses are no-ops offscreen.
+    /// One Osprey search with a fine-tune at scale, as the lab runs it: three Stellar HeLa sDIA runs
+    /// searched against the proteins of their peptides with a model fine-tuned on the middle run,
+    /// chosen from the searched files, and the results imported. It is the time of that whole job
+    /// that this test is for; the wizard's behavior (both tuning lists, the saved model added by
+    /// name and searched with, the overwrite prompt) is OspreySearchTuningTest's, on Osprey's subset
+    /// in a couple of minutes. On the GPU when <see cref="ENV_TORCH_RUNTIMES"/> names a CUDA runtime.
+    /// Run on-screen (-ShowUI), it pauses on each page for a look at the pages; the pauses are
+    /// no-ops offscreen.
     /// </summary>
     [TestClass]
     public class OspreySearchPerfTest : AbstractFunctionalTestEx
@@ -56,56 +56,41 @@ namespace TestPerf
         public const string ENV_TORCH_RUNTIMES = @"SKYLINE_TEST_OSPREY_TORCH_RUNTIMES";
 
         /// <summary>
-        /// Names a local zip searched instead of the regression data: the same layout, a single
-        /// top-level folder holding <c>stellar</c> with the three runs and one FASTA, as
-        /// ai/scripts/Osprey/SubsetData cuts a mid-size Stellar subset. Unset, the test downloads
-        /// and searches the full regression data.
+        /// Eight of the 125 isolation windows of the regression data's Stellar runs (580.5-612.5 m/z)
+        /// over the whole 24 minute gradient, 71 MB of mzML per run, and the 1,780 HeLa proteins of
+        /// the peptides detected in them: cut by ai/scripts/Osprey/SubsetData/build_subset.py
+        /// (--windows 8 --rt-min 0 --rt-max 24 --undetected-max 0 --real-proteins --perf-zip),
+        /// 87.3 MB, SHA-256 f9fd2d9f6e2b9dc6ee8786de8c47477ee2ff567cf456c66893d425302a267f9f.
         /// </summary>
-        public const string ENV_DATA_ZIP = @"SKYLINE_TEST_OSPREY_PERF_ZIP";
-
-        private const string ZIP_NAME = @"osprey-testfiles-mzML-v2";
+        private const string ZIP_NAME = @"osprey-stellar-subset-v1";
         private const string STELLAR_DIR = @"stellar";
-        private const string FASTA_NAME = @"hela-filtered.fasta";
+        private const string FASTA_NAME = @"stellar-subset-proteins.fasta";
         private const string RUN_STEM = @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_";
         private static readonly string[] RUN_NAMES = { RUN_STEM + @"20.mzML", RUN_STEM + @"21.mzML", RUN_STEM + @"22.mzML" };
 
         /// <summary>
-        /// Osprey searched the three runs untuned in 3 min 42 s on the development machine. A tuning
-        /// search adds a first search of the tuning run and the fine-tune itself, on the CPU when the
-        /// torch runtimes folder has no CUDA runtime, so the wait is generous.
+        /// The tuning search took 3.5 minutes on a 12-thread CPU; the wait is generous for a slower
+        /// agent.
         /// </summary>
-        private const int SEARCH_TIMEOUT_MILLIS = 60 * 60 * 1000;
+        private const int SEARCH_TIMEOUT_MILLIS = 30 * 60 * 1000;
 
-        /// <summary>The runs are 1.5 GB each, so the chromatogram import also gets more than the default three minutes.</summary>
-        private const int IMPORT_TIMEOUT_MILLIS = 60 * 60 * 1000;
+        /// <summary>The chromatogram import gets more than the default three minutes on a slow agent.</summary>
+        private const int IMPORT_TIMEOUT_MILLIS = 15 * 60 * 1000;
 
-        /// <summary>
-        /// The untuned search of the three runs wrote 29,884 library spectra, and the search tuned on
-        /// the middle run 35,473 (regression.ps1's digest) or 32,519 (the wizard's default digest), so
-        /// 20,000 is a clear lower bound for three runs.
-        /// </summary>
-        private const int MIN_SPECTRA_THREE_RUNS = 20000;
-
-        /// <summary>
-        /// Eight windows over the whole gradient, with the proteins of the peptides they detect,
-        /// wrote 2,671 to 2,707 library spectra searched tuned or with the saved model.
-        /// </summary>
-        private const int MIN_SPECTRA_THREE_RUNS_SUBSET = 1500;
-
-        /// <summary>The name the test gives the document's fine-tuned model when it adds it to the model list.</summary>
-        private const string SAVED_MODEL_NAME = @"Stellar, tuned on the middle run";
+        /// <summary>The search tuned on the middle run wrote 2,523 library spectra in the wizard.</summary>
+        private const int MIN_SPECTRA_THREE_RUNS = 1500;
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOspreySearchPerf()
         {
             // The zip holds a single top-level folder, so it is extracted in place beside the zip
-            // (<Downloads>\Perftests\osprey-testfiles-mzML-v2), as DiannSearchPerfTest does, and
-            // everything in it is persistent: 26 GB of data extracted once and reused in place.
-            // The documents and Osprey's working folders go to the test's own folder in TestResults.
-            TestFilesZipPaths = new[] { DataZipPath ?? GetPerfTestDataURL(ZIP_NAME + @".zip") };
+            // (<Downloads>\Perftests\osprey-stellar-subset-v1), as DiannSearchPerfTest does, and
+            // everything in it is persistent: extracted once and reused in place. The documents and
+            // Osprey's working folders go to the test's own folder in TestResults.
+            TestFilesZipPaths = new[] { GetPerfTestDataURL(ZIP_NAME + @".zip") };
             TestFilesZipExtractHere = new[] { true };
-            TestFilesPersistent = new[] { DataFolderName + @"\" };
+            TestFilesPersistent = new[] { ZIP_NAME + @"\" };
             RunFunctionalTest();
         }
 
@@ -119,31 +104,23 @@ namespace TestPerf
                 Settings.Default.CarafeModelList.AddDefaults();
             });
 
-            // A subset carries the proteins of its own peptides, under whatever name it gave them
-            string fastaFilepath = DataZipPath != null
-                ? Directory.GetFiles(GetDataPath(string.Empty), @"*.fasta").Single()
-                : GetDataPath(FASTA_NAME);
+            string fastaFilepath = GetDataPath(FASTA_NAME);
             string[] diaFilePaths = RUN_NAMES.Select(GetDataPath).ToArray();
             foreach (var path in diaFilePaths.Append(fastaFilepath))
                 AssertEx.FileExists(path);
             string middleRun = diaFilePaths[1];
 
             // The three runs searched, and the model tuned on the middle run, chosen from the searched
-            // files: the lab's way. (The subset test covers the other list, browsed runs held out of
-            // the search; a second fine-tune here would double the run.)
+            // files: the lab's way
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest.sky"));
             string tunedModelPath = TuneOnSearchedRun(diaFilePaths, middleRun, fastaFilepath);
-
-            // The three runs searched with that model, added to the model list by name: a model tuned
-            // on one run serving a search of all three, with no training.
-            OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchPerfTest-saved.sky"));
-            SearchWithSavedModel(diaFilePaths, fastaFilepath, tunedModelPath);
+            AssertEx.FileExists(tunedModelPath);
         }
 
         /// <summary>A file of the persistent data folder, extracted in place beside the zip.</summary>
         private string GetDataPath(string fileName)
         {
-            return TestFilesDir.GetTestPath(Path.Combine(DataFolderName, STELLAR_DIR, fileName));
+            return TestFilesDir.GetTestPath(Path.Combine(ZIP_NAME, STELLAR_DIR, fileName));
         }
 
         /// <summary>
@@ -197,65 +174,8 @@ namespace TestPerf
             VerifyDevice(searchDlg);
             string modelPath = OspreySearchTuningTest.RunTuningSearch(searchDlg,
                 TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), SEARCH_TIMEOUT_MILLIS);
-            FinishImport(searchDlg, diaFilePaths, docPath, MinSpectra);
+            FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
             return modelPath;
-        }
-
-        /// <summary>
-        /// The document's model from the tuning search is added to the model list by name through
-        /// the combo's Add..., and predicted with as it is: the command names it and no tuning runs,
-        /// and no model is written.
-        /// </summary>
-        private void SearchWithSavedModel(string[] diaFilePaths, string fastaFilepath, string savedModelPath)
-        {
-            string docPath = SkylineWindow.DocumentFilePath;
-            var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
-            RunDlg<EditCarafeModelDlg>(searchDlg.AddModel, dlg =>
-            {
-                dlg.ModelName = SAVED_MODEL_NAME;
-                dlg.ModelPath = savedModelPath;
-                dlg.OkDialog();
-            });
-            RunUI(() =>
-            {
-                // The pretrained default and the model just added, selected
-                AssertEx.AreEqual(2, Settings.Default.CarafeModelList.Count);
-                AssertEx.AreEqual(SAVED_MODEL_NAME, searchDlg.Model.Name);
-                AssertEx.AreEqual(savedModelPath, searchDlg.Model.FilePath);
-                AssertEx.IsTrue(searchDlg.UseExistingModel);
-            });
-            ChooseDevice(searchDlg);
-            OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg, diaFilePaths, null, savedModelPath);
-            VerifyDevice(searchDlg);
-            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
-            string workDir = OspreyHelpers.GetWorkDirectory(docPath);
-            OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir,
-                TestFilesDir.GetTestPath("OspreySearchControlLog-saved.txt"), SEARCH_TIMEOUT_MILLIS);
-            AssertEx.IsFalse(File.Exists(OspreyHelpers.GetTunedModelPath(docBlibPath, workDir)), @"a search with a saved model wrote a model");
-            FinishImport(searchDlg, diaFilePaths, docPath, MinSpectra);
-        }
-
-        /// <summary>The zip <see cref="ENV_DATA_ZIP"/> names, or null for the regression data.</summary>
-        private static string DataZipPath
-        {
-            get
-            {
-                string path = Environment.GetEnvironmentVariable(ENV_DATA_ZIP);
-                return string.IsNullOrEmpty(path) ? null : path;
-            }
-        }
-
-        /// <summary>The zip's single top-level folder, named for the zip.</summary>
-        private static string DataFolderName
-        {
-            get { return DataZipPath != null ? Path.GetFileNameWithoutExtension(DataZipPath) : ZIP_NAME; }
-        }
-
-        /// <summary>The fewest library spectra three runs of the searched data may report.</summary>
-        private static int MinSpectra
-        {
-            get { return DataZipPath != null ? MIN_SPECTRA_THREE_RUNS_SUBSET : MIN_SPECTRA_THREE_RUNS; }
         }
 
         /// <summary>The folder <see cref="ENV_TORCH_RUNTIMES"/> names, or null for the test's own Tools folder and the CPU.</summary>

@@ -30,10 +30,6 @@ TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates
 #TestMobilIon
 TestOrbiPrmArdia
-# Searches three Stellar runs with Osprey and fine-tunes a model on the CPU: 29-59 min on the PR perf agent,
-# which is one loaded machine shared by every Skyline PR. Skipped here until CI has the capacity; the lab's
-# nightly perf runs still cover it. (Remove this to re-enable.)
-TestOspreySearchPerf
 TestPeakPerf
 TestPerfTicArea
 zzzNativeVsMz5_AbDiaChromatogramPerformanceTest

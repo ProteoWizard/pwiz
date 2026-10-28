@@ -211,7 +211,7 @@ namespace pwiz.Osprey.Test
             string tunedDir = CreateDir(@"precursor-table-tuned");
             string tunedTable = Path.Combine(tunedDir, @"input.tsv");
             File.Copy(table, tunedTable);
-            var tunedArgs = TunedArgs(WriteSubsetProteinFasta(), tunedDir, Array.Empty<string>(), DataInputs())
+            var tunedArgs = TunedArgs(WriteSubsetProteinFasta(), tunedDir, Array.Empty<string>(), new[] { DataInputs().ElementAt(1) })
                 .Concat(new[] { OspreyCommandArgs.ARG_PRECURSORS.ArgumentText, tunedTable }).ToArray();
             string stem = Path.GetFileNameWithoutExtension(BLIB_FILE);
             string tunedOutput = Path.Combine(tunedDir, stem + LibraryBuildWorkflow.PREDICTED_TABLE_SUFFIX);

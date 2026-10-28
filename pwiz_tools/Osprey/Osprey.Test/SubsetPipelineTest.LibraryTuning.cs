@@ -187,8 +187,9 @@ namespace pwiz.Osprey.Test
         public void TestSubsetLibraryBuildTunedHeldOut()
         {
             string fasta = WriteSubsetProteinFasta();
-            var tuningRuns = DataInputs().ToArray();
-            var inputs = tuningRuns.Take(2).ToArray();
+            var runs = DataInputs().ToArray();
+            var tuningRuns = new[] { runs[1] };
+            var inputs = new[] { runs[0], runs[2] };
             string workDir = CreateDir(@"library-build-held-out");
             var products = new TunedProducts(workDir);
             using (ShortFineTune())
@@ -198,7 +199,7 @@ namespace pwiz.Osprey.Test
                 AssertTunedProducts(products, tuningRuns, inputs.Length, MIN_LIBRARY_BUILD_PRECURSORS);
                 // The held-out run is in the tuning search, not the output.
                 Assert.AreEqual(tuningRuns.Length, BlibComparer.CountRows(products.TrainingOutput, @"SpectrumSourceFiles"));
-                string heldOut = Path.GetFileNameWithoutExtension(tuningRuns[2]);
+                string heldOut = Path.GetFileNameWithoutExtension(tuningRuns[0]);
                 Assert.AreEqual(0, BlibComparer.CountWhere(products.Output, @"SpectrumSourceFiles", @"FileName LIKE '%" + heldOut + @"%'"));
 
             }
@@ -233,11 +234,12 @@ namespace pwiz.Osprey.Test
             var inputs = DataInputs().ToArray();
             using (ShortFineTune())
             {
+                var tuningRuns = new[] { inputs[1] };
                 string straightDir = CreateDir(@"library-build-straight");
-                RunOsprey(TunedArgs(fasta, straightDir, inputs, inputs).ToArray(), Verifier(false));
+                RunOsprey(TunedArgs(fasta, straightDir, inputs, tuningRuns).ToArray(), Verifier(false));
 
                 string stepwiseDir = CreateDir(@"library-build-stepwise");
-                var args = TunedArgs(fasta, stepwiseDir, inputs, inputs).ToArray();
+                var args = TunedArgs(fasta, stepwiseDir, inputs, tuningRuns).ToArray();
                 var stopEach = new Dictionary<string, string>(Verifier(false)) { [@"OSPREY_STOP_AFTER_TASKS"] = @"1" };
                 var expected = new[] { LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK }.Concat(ALL_TASKS)
                     .Concat(new[] { LibraryBuildWorkflow.TRAIN_MODEL_TASK, PredictLibraryTask.TASK_NAME }).Concat(ALL_TASKS).ToList();
@@ -281,8 +283,9 @@ namespace pwiz.Osprey.Test
             var inputs = DataInputs().ToArray();
             using (ShortFineTune())
             {
+                var tuningRuns = new[] { inputs[1] };
                 string straightDir = CreateDir(@"library-build-hpc-straight");
-                RunOsprey(TunedArgs(fasta, straightDir, inputs, inputs).ToArray(), Verifier(false));
+                RunOsprey(TunedArgs(fasta, straightDir, inputs, tuningRuns).ToArray(), Verifier(false));
 
                 string chainDir = CreateDir(@"library-build-hpc-chain");
                 var chain = new TunedProducts(chainDir);
@@ -298,28 +301,29 @@ namespace pwiz.Osprey.Test
                     CollectionAssert.AreEqual(new[] { task }, TaskNames(log, state), log);
                     return log;
                 }
-                // A search, one node per run for the per-file stages.
+                // A search, one node per run for the per-file stages: the tuning runs' search, or the inputs'.
                 void Search(bool trainingSearch)
                 {
+                    var searched = trainingSearch ? tuningRuns : inputs;
                     foreach (string task in ALL_TASKS)
                     {
                         bool perFile = task == PerFileScoringTask.TASK_NAME || task == PerFileRescoreTask.TASK_NAME;
-                        foreach (var runs in perFile ? inputs.Select(run => new[] { run }) : new[] { inputs })
-                            Node(task, trainingSearch ? inputs : runs, trainingSearch ? runs : inputs, trainingSearch);
+                        foreach (var runs in perFile ? searched.Select(run => new[] { run }) : new[] { searched })
+                            Node(task, trainingSearch ? inputs : runs, trainingSearch ? runs : tuningRuns, trainingSearch);
                     }
                 }
 
-                string trainingLibraryLog = Node(LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK, inputs, inputs);
+                string trainingLibraryLog = Node(LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK, inputs, tuningRuns);
                 StringAssert.Contains(trainingLibraryLog, string.Format(OspreyResources.Program_Run_Output___0_, chain.TrainingLibrary));
                 Search(true);
                 Assert.IsTrue(File.Exists(chain.TrainingOutput), chain.TrainingOutput);
                 // The final prediction before the tuning has nothing to predict with.
                 string early = RunOspreyExpecting(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.PREDICT_LIBRARY_TASK }
-                    .Concat(TunedArgs(fasta, chainDir, inputs, inputs)).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+                    .Concat(TunedArgs(fasta, chainDir, inputs, tuningRuns)).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
                 StringAssert.Contains(early, string.Format(OspreyResources.LibraryBuildWorkflow_Run__0__predicts_the_library_with_the_tuned_model__1___which_is_not_there__Run__2__first_,
                     OspreyArgNames.TaskText(LibraryBuildWorkflow.PREDICT_LIBRARY_TASK), chain.Model, OspreyArgNames.TaskText(LibraryBuildWorkflow.TRAIN_MODEL_TASK)));
-                Node(LibraryBuildWorkflow.TRAIN_MODEL_TASK, inputs, inputs);
-                Node(LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, inputs, inputs);
+                Node(LibraryBuildWorkflow.TRAIN_MODEL_TASK, inputs, tuningRuns);
+                Node(LibraryBuildWorkflow.PREDICT_LIBRARY_TASK, inputs, tuningRuns);
                 Search(false);
 
                 var straight = new TunedProducts(straightDir);
@@ -330,7 +334,7 @@ namespace pwiz.Osprey.Test
 
                 // Each library phase's node again: its output is current.
                 foreach (string phase in TUNING_PHASES)
-                    Assert.AreEqual(0, TaskNames(Node(phase, inputs, inputs, false, @"skipping"), @"starting").Count);
+                    Assert.AreEqual(0, TaskNames(Node(phase, inputs, tuningRuns, false, @"skipping"), @"starting").Count);
 
             }
 
