@@ -1,0 +1,20 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Binding navigator "add new": a yellow plus with a gold-to-brown outline, lit from the
+       upper left. Traced from the stock WinForms glyph embedded in AlignmentForm/ListDesigner. -->
+  <Path Data="M 12,5 L 20,5 L 20,12 L 27,12 L 27,20 L 20,20 L 20,27 L 12,27 L 12,20 L 5,20 L 5,12 L 12,12 Z" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF4A8" Offset="0"/>
+        <GradientStop Color="#FFE070" Offset="0.5"/>
+        <GradientStop Color="#F2BE32" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+    <Path.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E0A41C" Offset="0"/>
+        <GradientStop Color="#B07A14" Offset="0.5"/>
+        <GradientStop Color="#7A5610" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Stroke>
+  </Path>
+</Canvas>

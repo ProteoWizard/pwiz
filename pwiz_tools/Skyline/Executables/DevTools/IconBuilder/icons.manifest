@@ -124,3 +124,10 @@ Wand                       vector  20,24,32
 WandProhibit               vector  20,24,32
 warning                    vector  20,24,32
 magnifier_zoom_in          raster  20,24,32
+DropDownArrow              vector  20,24,32
+MacroMenuArrow             vector  20,24,32
+NavigatorAddNew            vector  20,24,32
+NavigatorFirst             vector  20,24,32
+NavigatorLast              vector  20,24,32
+NavigatorNext              vector  20,24,32
+NavigatorPrevious          vector  20,24,32

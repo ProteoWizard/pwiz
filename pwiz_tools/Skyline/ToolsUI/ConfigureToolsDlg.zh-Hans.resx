@@ -164,14 +164,6 @@
   <data name="btnInitialDirectoryMacros.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnInitialDirectoryMacros.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABEAAAASCAYAAAC9+TVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAACXSURBVDhPY6AU/Pz58z+UOVjB+/fvKXfiu5Wt/1vPvqPMoDcr4oAGxP1f8ebN/zdADBUmDbxe
-        HgvSCMSx/5e/fv3/NRBDZEgAr+CGALFJ8/8Tr16RbsidOREIQ0DYsIYKhjAYkm7IrdnhCAMMqv7vvnWL
-        dENuzg6DGhL2f/bNm6QbAALXZ4IMARtEPrg6o4IyA0Y8YGAAANZzWB1hZTEoAAAAAElFTkSuQmCC
-</value>
-  </data>
   <data name="btnInitialDirectoryMacros.Location" type="System.Drawing.Point, System.Drawing">
     <value>326, 244</value>
   </data>
@@ -203,14 +195,6 @@
   </data>
   <data name="btnArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
-  </data>
-  <data name="btnArguments.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABEAAAASCAYAAAC9+TVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAACXSURBVDhPY6AU/Pz58z+UOVjB+/fvKXfiu5Wt/1vPvqPMoDcr4oAGxP1f8ebN/zdADBUmDbxe
-        HgvSCMSx/5e/fv3/NRBDZEgAr+CGALFJ8/8Tr16RbsidOREIQ0DYsIYKhjAYkm7IrdnhCAMMqv7vvnWL
-        dENuzg6DGhL2f/bNm6QbAALXZ4IMARtEPrg6o4IyA0Y8YGAAANZzWB1hZTEoAAAAAElFTkSuQmCC
-</value>
   </data>
   <data name="btnArguments.Location" type="System.Drawing.Point, System.Drawing">
     <value>326, 215</value>

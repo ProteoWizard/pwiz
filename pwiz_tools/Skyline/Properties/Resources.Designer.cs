@@ -3533,6 +3533,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap DropDownArrow {
+            get {
+                object obj = ResourceManager.GetObject("DropDownArrow", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap DropImage {
             get {
                 object obj = ResourceManager.GetObject("DropImage", resourceCulture);
@@ -5938,6 +5948,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap MacroMenuArrow {
+            get {
+                object obj = ResourceManager.GetObject("MacroMenuArrow", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap magnifier_zoom_in {
             get {
                 object obj = ResourceManager.GetObject("magnifier_zoom_in", resourceCulture);
@@ -6346,6 +6366,56 @@ namespace pwiz.Skyline.Properties {
         public static string MzMatchException_suggestion {
             get {
                 return ResourceManager.GetString("MzMatchException_suggestion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorAddNew {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorAddNew", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorFirst {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorFirst", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorLast {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorLast", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorNext {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorNext", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorPrevious {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorPrevious", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

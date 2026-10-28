@@ -1,0 +1,10 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Macro menu arrow from the tool configuration dialog's two macro buttons (17x18 in the
+       form resx, fitted to 16 px): an orange bar with a black right-pointing triangle against it,
+       a light blue highlight along the triangle's upper edge and a navy lower edge. -->
+  <Rectangle Canvas.Left="10" Canvas.Top="5" Width="2.5" Height="22" Fill="#EFA462"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="5" Width="0.8" Height="22" Fill="#C87A3C"/>
+  <Path Data="M 12.5,5 L 20.5,16 L 12.5,27 Z" Fill="#000000"/>
+  <Path Data="M 12.5,5.5 L 20.3,16" Stroke="#8AD2F0" StrokeThickness="1.3"/>
+  <Path Data="M 20.3,16 L 12.5,26.5" Stroke="#1C3F92" StrokeThickness="1.3"/>
+</Canvas>

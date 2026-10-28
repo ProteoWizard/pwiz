@@ -3993,4 +3993,25 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="ArdiaIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ArdiaIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="DropDownArrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DropDownArrow.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MacroMenuArrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MacroMenuArrow.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NavigatorAddNew" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NavigatorAddNew.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NavigatorFirst" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NavigatorFirst.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NavigatorLast" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NavigatorLast.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NavigatorNext" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NavigatorNext.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NavigatorPrevious" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NavigatorPrevious.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

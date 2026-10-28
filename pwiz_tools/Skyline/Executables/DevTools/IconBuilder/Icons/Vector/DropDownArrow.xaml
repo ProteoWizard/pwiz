@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Drop-down chevron: the 10x4 black V from the modification combo buttons (EditPepModsDlg),
+       centered in a 16 px square so it goes through the same pipeline; a button centers its
+       image, so the glyph lands where the 10x4 bitmap did. -->
+  <Path Data="M 6,12 L 10,12 L 16,18 L 22,12 L 26,12 L 16,21 Z" Fill="#000000"/>
+</Canvas>
