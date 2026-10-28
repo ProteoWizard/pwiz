@@ -545,6 +545,14 @@ namespace pwiz.Osprey.DemuxTool
                     writeSeconds, stepped.SourceSeconds, stepped.PeaksSeconds,
                     writeSeconds - stepped.SourceSeconds - stepped.PeaksSeconds);
             }
+            if (JointDemuxProfile.Enabled && scanning != null)
+            {
+                // The rest is the layout spectra's headers and the writer's encoding and file.
+                Console.WriteLine(@"writing: {0:F1} s; reading MS1 spectra {1:F1} s, centroiding them {2:F1} s, the layout " +
+                    @"spectra's peaks {3:F1} s (the batches read, their solves waited for and laid out included), the rest {4:F1} s",
+                    writeSeconds, scanning.SurveySeconds, scanning.CentroidSeconds, scanning.PeaksSeconds,
+                    writeSeconds - scanning.SurveySeconds - scanning.CentroidSeconds - scanning.PeaksSeconds);
+            }
             if (JointDemuxProfile.Enabled)
             {
                 Console.WriteLine(@"garbage collection: {0} gen 0, {1} gen 1, {2} gen 2 collections, {3:F1} s paused",

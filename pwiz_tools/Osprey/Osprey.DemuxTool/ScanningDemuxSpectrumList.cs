@@ -19,6 +19,7 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Pwiz.Analysis;
@@ -42,6 +43,8 @@ namespace pwiz.Osprey.DemuxTool
         private readonly object _lock = new object();
         private readonly Dictionary<int, Spectrum> _reading = new Dictionary<int, Spectrum>(); // read, points not yet released
         private readonly Dictionary<int, Spectrum> _headers = new Dictionary<int, Spectrum>(); // by acquired index, peaks dropped
+        // With the solve profile: the MS1 spectra read, their centroiding, and the layout spectra's peaks got.
+        private long _surveyTicks, _centroidTicks, _peaksTicks;
 
         public ScanningDemuxSpectrumList(ISpectrumList inner, ScanningKernel kernel, ScanningDemuxOptions options,
             TextWriter log)
@@ -87,6 +90,27 @@ namespace pwiz.Osprey.DemuxTool
             get { return _pipeline.IonsPassedThrough; }
         }
 
+        /// <summary>With the solve profile: seconds spent reading the MS1 (survey) spectra from the source.</summary>
+        public double SurveySeconds
+        {
+            get { return _surveyTicks / (double)Stopwatch.Frequency; }
+        }
+
+        /// <summary>With the solve profile: seconds spent centroiding the MS1 spectra by the joint solve.</summary>
+        public double CentroidSeconds
+        {
+            get { return _centroidTicks / (double)Stopwatch.Frequency; }
+        }
+
+        /// <summary>
+        /// With the solve profile: seconds spent getting the layout spectra's peaks, the batches read, their solves waited
+        /// for and laid out included.
+        /// </summary>
+        public double PeaksSeconds
+        {
+            get { return _peaksTicks / (double)Stopwatch.Frequency; }
+        }
+
         public override int Count
         {
             get { return _pipeline.OutputCount; }
@@ -109,11 +133,17 @@ namespace pwiz.Osprey.DemuxTool
             int baseIndex = _pipeline.BaseIndex(index);
             if (_pipeline.IsSurvey(index))
             {
+                long t0 = JointDemuxProfile.Enabled ? Stopwatch.GetTimestamp() : 0;
                 var survey = Inner.GetSpectrum(baseIndex, getBinaryData);
                 survey.Index = index;
+                if (JointDemuxProfile.Enabled)
+                    _surveyTicks += Stopwatch.GetTimestamp() - t0;
                 if (getBinaryData && _options.JointMs1)
                 {
+                    long t1 = JointDemuxProfile.Enabled ? Stopwatch.GetTimestamp() : 0;
                     var centroids = _pipeline.CentroidSurvey(survey.GetMZArray()?.Data, survey.GetIntensityArray()?.Data);
+                    if (JointDemuxProfile.Enabled)
+                        _centroidTicks += Stopwatch.GetTimestamp() - t1;
                     if (centroids.HasValue)
                     {
                         survey.SetMZIntensityArrays(centroids.Value.Mz, centroids.Value.Counts, CVID.MS_number_of_detector_counts);
@@ -129,7 +159,10 @@ namespace pwiz.Osprey.DemuxTool
             (double[] Mz, double[] Ions) peaks = default;
             if (getBinaryData)
             {
+                long t0 = JointDemuxProfile.Enabled ? Stopwatch.GetTimestamp() : 0;
                 peaks = _pipeline.Peaks(index);
+                if (JointDemuxProfile.Enabled)
+                    _peaksTicks += Stopwatch.GetTimestamp() - t0;
                 spectrum = TakeHeader(baseIndex);
             }
             spectrum ??= Inner.GetSpectrum(baseIndex);
