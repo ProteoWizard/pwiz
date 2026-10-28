@@ -140,7 +140,45 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public AssociateProteinsSettings AssociateProteinsSettings { get; private set; }
+        public AssociateProteinsSettings AssociateProteinsSettings { get; set; }
+
+        /// <summary>
+        /// The protein association options, when the page shows them: Run Peptide Search associates
+        /// the proteins after the search without the Associate Proteins dialog.
+        /// </summary>
+        public ProteinAssociationOptionsControl ProteinAssociationOptions { get; private set; }
+
+        /// <summary>
+        /// The protein parsimony settings to apply: the page's options when it shows them, otherwise the document's.
+        /// </summary>
+        public ProteinAssociation.ParsimonySettings ParsimonySettings =>
+            ProteinAssociationOptions?.ParsimonySettings ??
+            DocumentContainer.Document.Settings.PeptideSettings.ProteinAssociationSettings ??
+            ProteinAssociation.ParsimonySettings.DEFAULT;
+
+        public void ShowProteinAssociationOptions()
+        {
+            if (ProteinAssociationOptions == null)
+            {
+                ProteinAssociationOptions = new ProteinAssociationOptionsControl
+                {
+                    Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                    Name = @"proteinAssociationOptions",
+                    ParsimonySettings = DocumentContainer.Document.Settings.PeptideSettings.ProteinAssociationSettings
+                };
+                Controls.Add(ProteinAssociationOptions);
+                targetFastaPanel.LocationChanged += (sender, args) => PlaceProteinAssociationOptions();
+                targetFastaPanel.VisibleChanged += (sender, args) => PlaceProteinAssociationOptions();
+            }
+            PlaceProteinAssociationOptions();
+        }
+
+        private void PlaceProteinAssociationOptions()
+        {
+            const int spacing = 6;
+            var above = targetFastaPanel.Visible ? targetFastaPanel.Bottom : tbxFasta.Bottom;
+            ProteinAssociationOptions.Location = new System.Drawing.Point(tbxFasta.Left, above + spacing);
+        }
 
         public ImportFastaSettings ImportSettings
         {
@@ -235,7 +273,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public bool RequirePrecursorTransition { private get; set; }
+        public bool RequirePrecursorTransition { get; set; }
+
+        /// <summary>
+        /// Where imported proteins go in the document: after the node selected in the targets tree.
+        /// </summary>
+        public IdentityPath InsertPath => (_sequenceTree.SelectedNode as SrmTreeNode)?.Path;
 
         public bool IsImportingResults { private get; set; }
 
@@ -413,7 +456,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (!HasPrecursorTransitions(doc))
             {
-                MessageDlg.Show(WizardForm, PeptideSearchResources.ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_);
+                MessageDlg.Show(WizardForm, ModelResources.ImportPeptideSearch_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_);
                 return false;
             }
 
@@ -423,6 +466,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private static bool HasPrecursorTransitions(SrmDocument doc)
         {
             return doc.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
+        }
+
+        /// <summary>
+        /// Checks the number of decoys per target, showing the problem to the user when it is not valid.
+        /// </summary>
+        public bool ValidateDecoySettings()
+        {
+            if (string.IsNullOrEmpty(DecoyGenerationMethod))
+                return true;
+            if (!NumDecoys.HasValue || NumDecoys <= 0)
+            {
+                MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_);
+                txtNumDecoys.Focus();
+                return false;
+            }
+            if (Equals(DecoyGenerationMethod, DecoyGeneration.REVERSE_SEQUENCE) && NumDecoys > 1)
+            {
+                MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_);
+                txtNumDecoys.Focus();
+                return false;
+            }
+            return true;
         }
 
         public void UpdateDigestSettings()
@@ -444,21 +509,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             UpdateDigestSettings();
 
-            if (!string.IsNullOrEmpty(DecoyGenerationMethod))
-            {
-                if (!NumDecoys.HasValue || NumDecoys <= 0)
-                {
-                    MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_);
-                    txtNumDecoys.Focus();
-                    return false;
-                }
-                else if (Equals(DecoyGenerationMethod, DecoyGeneration.REVERSE_SEQUENCE) && NumDecoys > 1)
-                {
-                    MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_);
-                    txtNumDecoys.Focus();
-                    return false;
-                }
-            }
+            if (!ValidateDecoySettings())
+                return false;
 
             if (!QValueFilterControls.TryGetFilter(WizardForm, out var qValueFilter))
                 return false;
@@ -591,7 +643,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 docNew = ImportPeptideSearch.ChangeAutoTrain(docNew, AutoTrain);
                 if (docNew == null)
                 {
-                    MessageDlg.Show(this, PeptideSearchResources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
+                    MessageDlg.Show(this, ModelResources.ImportPeptideSearch_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
                     return false;
                 }
 

@@ -4,39 +4,89 @@ All Info  :
 Peptide Settings -- Modifications > Internal standard types : "Heavy" was removed
 Settings > Peptide Settings -- Modifications > Internal standard types: removed all
 
-Undo Redo : Added spectral library "TestDiaSearchTutorial"
-Summary   : Added spectral library "TestDiaSearchTutorial"
-All Info  :
-Added spectral library "TestDiaSearchTutorial"
-Build Spectral Library > Search files : contains { File = "23aug2017_hela_serum_timecourse_wide_1a-percolator.pepXML", Score type = "q-value", Score threshold = "0,01" }
-Build Spectral Library > iRT standard peptides is None
-Build Spectral Library > Include ambiguous matches is False
-Build Spectral Library > Filter for document peptides is False
-Build Spectral Library > Workflow is "DIA"
-Build Spectral Library > Input File Type is "DIA raw (search and build library)"
-Extra Info: Search files = 
-[
-    {
-        File = "23aug2017_hela_serum_timecourse_wide_1a-percolator.pepXML",
-        Score type = "q-value",
-        Score threshold = "0,01"
-    }
-],
-iRT standard peptides = None,
-Include ambiguous matches = False,
-Filter for document peptides = False,
-Workflow = "DIA",
-Input File Type = "DIA raw (search and build library)"
-
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search
 All Info  :
 Imported a peptide search
+Import Peptide Search > Build Spectral Library > Search files : contains { File = "23aug2017_hela_serum_timecourse_wide_1a-percolator.pepXML", Score type = "q-value", Score threshold = "0,01" }
+Import Peptide Search > Build Spectral Library > iRT standard peptides is None
+Import Peptide Search > Build Spectral Library > Include ambiguous matches is False
+Import Peptide Search > Build Spectral Library > Filter for document peptides is False
+Import Peptide Search > Build Spectral Library > Workflow is "DIA"
+Import Peptide Search > Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Import Peptide Search > Extract Chromatograms > Found results files : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
-Import Peptide Search > Import FASTA > Enzyme is "Trypsin [KR | P]"
+Import Peptide Search > Configure Transition Settings > Precursor charges is "2, 3"
+Import Peptide Search > Configure Transition Settings > Ion charges is "1, 2"
+Import Peptide Search > Configure Transition Settings > Ion types is "y, b, p"
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0,005" m/z
+Import Peptide Search > Configure Transition Settings > Pick min product ions is "3"
+Import Peptide Search > Configure Transition Settings > Pick product ions is "5"
+Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 3"
+Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
+Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "QE wide"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "496,475540161133", End = "508,481048583985" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "508,481048583985", End = "520,486434936523" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "520,486434936523", End = "532,491943359375" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "532,491943359375", End = "544,497344970703" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "544,497344970703", End = "556,502838134765" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "556,502838134766", End = "568,50830078125" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "568,50830078125", End = "580,513763427734" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "580,513763427735", End = "592,519256591797" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "592,519256591797", End = "604,524658203125" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "604,524658203125", End = "616,530151367187" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "616,530151367188", End = "628,535552978516" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "628,535552978516", End = "640,541046142578" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "640,541046142579", End = "652,546508789063" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "652,546508789063", End = "664,551940917969" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "664,551940917969", End = "676,557464599609" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "676,557464599609", End = "688,562835693359" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "688,56283569336", End = "700,568359375" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "700,568359375", End = "712,573760986328" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "712,573760986328", End = "724,57925415039" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "724,579254150391", End = "736,584716796875" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "736,584716796875", End = "748,590148925781" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "748,590148925782", End = "760,595642089844" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "760,595642089844", End = "772,601043701172" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "772,601043701172", End = "784,606536865234" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "784,606536865234", End = "796,611938476562" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "796,611938476563", End = "808,617462158203" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "808,617462158203", End = "820,622894287109" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "820,62289428711", End = "832,628356933594" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "832,628356933594", End = "844,633850097656" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "844,633850097657", End = "856,639251708985" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "856,639251708985", End = "868,644744873047" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "868,644744873047", End = "880,650146484375" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "880,650146484375", End = "892,655639648437" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "892,655639648438", End = "904,661102294922" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "904,661102294922", End = "916,666534423828" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "916,666534423829", End = "928,672058105469" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "928,672058105469", End = "940,677459716797" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "940,677459716797", End = "952,682952880859" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "952,682952880859", End = "964,688354492187" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "964,688354492188", End = "976,69384765625" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "976,69384765625", End = "988,699279785156" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "988,699279785156", End = "1000,699279785156" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "400,437408447266", End = "412,43734741211" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "412,437347412109", End = "424,442855834961" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "424,442855834961", End = "436,448257446289" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "436,448257446289", End = "448,453750610351" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "448,453750610352", End = "460,45915222168" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "460,459152221679", End = "472,464645385743" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "472,464645385743", End = "484,470092773437" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "484,470092773437", End = "496,475540161133" }
+Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "10"
+Import Peptide Search > Configure Full-Scan Settings > Isotope peaks included is "Count"
+Import Peptide Search > Configure Full-Scan Settings > Peaks is "3"
+Import Peptide Search > Configure Full-Scan Settings > Precursor mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "5"
+Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Peptide Search > Import FASTA > Max missed cleavages is "1"
 Import Peptide Search > Import FASTA > FASTA file is "20220721-uniprot-sprot-human.fasta"
 Import Peptide Search > Associate Proteins > Group proteins is False
 Import Peptide Search > Associate Proteins > Find minimal protein list is False
@@ -55,7 +105,23 @@ Import Peptide Search > DDA search settings > Max variable mods per peptide is "
 Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
 Import Peptide Search > DDA search settings > Score type is "Max q-value"
 Import Peptide Search > DDA search settings > Score threshold is "0,01"
-Extra Info: Extract Chromatograms = 
+Extra Info: Build Spectral Library = 
+{
+    Search files = 
+    [
+        {
+            File = "23aug2017_hela_serum_timecourse_wide_1a-percolator.pepXML",
+            Score type = "q-value",
+            Score threshold = "0,01"
+        }
+    ],
+    iRT standard peptides = None,
+    Include ambiguous matches = False,
+    Filter for document peptides = False,
+    Workflow = "DIA",
+    Input File Type = "DIA raw (search and build library)"
+},
+Extract Chromatograms = 
 {
     Found results files = 
     [
@@ -71,9 +137,238 @@ Add Modifications =
         "Oxidation (M) = M[16] (variable)"
     ]
 },
+Configure Transition Settings = 
+{
+    Precursor charges = "2, 3",
+    Ion charges = "1, 2",
+    Ion types = "y, b, p",
+    Ion match tolerance = "0,005" m/z,
+    Pick min product ions = "3",
+    Pick product ions = "5",
+    Product ion selection start = "ion 3",
+    Product ion selection end = "last ion",
+    Max ion m/z = "2000"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "DIA",
+    Isolation scheme = "QE wide": 
+{
+        Prespecified isolation windows = 
+        [
+            {
+                Start = "496,475540161133",
+                End = "508,481048583985"
+            },
+            {
+                Start = "508,481048583985",
+                End = "520,486434936523"
+            },
+            {
+                Start = "520,486434936523",
+                End = "532,491943359375"
+            },
+            {
+                Start = "532,491943359375",
+                End = "544,497344970703"
+            },
+            {
+                Start = "544,497344970703",
+                End = "556,502838134765"
+            },
+            {
+                Start = "556,502838134766",
+                End = "568,50830078125"
+            },
+            {
+                Start = "568,50830078125",
+                End = "580,513763427734"
+            },
+            {
+                Start = "580,513763427735",
+                End = "592,519256591797"
+            },
+            {
+                Start = "592,519256591797",
+                End = "604,524658203125"
+            },
+            {
+                Start = "604,524658203125",
+                End = "616,530151367187"
+            },
+            {
+                Start = "616,530151367188",
+                End = "628,535552978516"
+            },
+            {
+                Start = "628,535552978516",
+                End = "640,541046142578"
+            },
+            {
+                Start = "640,541046142579",
+                End = "652,546508789063"
+            },
+            {
+                Start = "652,546508789063",
+                End = "664,551940917969"
+            },
+            {
+                Start = "664,551940917969",
+                End = "676,557464599609"
+            },
+            {
+                Start = "676,557464599609",
+                End = "688,562835693359"
+            },
+            {
+                Start = "688,56283569336",
+                End = "700,568359375"
+            },
+            {
+                Start = "700,568359375",
+                End = "712,573760986328"
+            },
+            {
+                Start = "712,573760986328",
+                End = "724,57925415039"
+            },
+            {
+                Start = "724,579254150391",
+                End = "736,584716796875"
+            },
+            {
+                Start = "736,584716796875",
+                End = "748,590148925781"
+            },
+            {
+                Start = "748,590148925782",
+                End = "760,595642089844"
+            },
+            {
+                Start = "760,595642089844",
+                End = "772,601043701172"
+            },
+            {
+                Start = "772,601043701172",
+                End = "784,606536865234"
+            },
+            {
+                Start = "784,606536865234",
+                End = "796,611938476562"
+            },
+            {
+                Start = "796,611938476563",
+                End = "808,617462158203"
+            },
+            {
+                Start = "808,617462158203",
+                End = "820,622894287109"
+            },
+            {
+                Start = "820,62289428711",
+                End = "832,628356933594"
+            },
+            {
+                Start = "832,628356933594",
+                End = "844,633850097656"
+            },
+            {
+                Start = "844,633850097657",
+                End = "856,639251708985"
+            },
+            {
+                Start = "856,639251708985",
+                End = "868,644744873047"
+            },
+            {
+                Start = "868,644744873047",
+                End = "880,650146484375"
+            },
+            {
+                Start = "880,650146484375",
+                End = "892,655639648437"
+            },
+            {
+                Start = "892,655639648438",
+                End = "904,661102294922"
+            },
+            {
+                Start = "904,661102294922",
+                End = "916,666534423828"
+            },
+            {
+                Start = "916,666534423829",
+                End = "928,672058105469"
+            },
+            {
+                Start = "928,672058105469",
+                End = "940,677459716797"
+            },
+            {
+                Start = "940,677459716797",
+                End = "952,682952880859"
+            },
+            {
+                Start = "952,682952880859",
+                End = "964,688354492187"
+            },
+            {
+                Start = "964,688354492188",
+                End = "976,69384765625"
+            },
+            {
+                Start = "976,69384765625",
+                End = "988,699279785156"
+            },
+            {
+                Start = "988,699279785156",
+                End = "1000,699279785156"
+            },
+            {
+                Start = "400,437408447266",
+                End = "412,43734741211"
+            },
+            {
+                Start = "412,437347412109",
+                End = "424,442855834961"
+            },
+            {
+                Start = "424,442855834961",
+                End = "436,448257446289"
+            },
+            {
+                Start = "436,448257446289",
+                End = "448,453750610351"
+            },
+            {
+                Start = "448,453750610352",
+                End = "460,45915222168"
+            },
+            {
+                Start = "460,459152221679",
+                End = "472,464645385743"
+            },
+            {
+                Start = "472,464645385743",
+                End = "484,470092773437"
+            },
+            {
+                Start = "484,470092773437",
+                End = "496,475540161133"
+            }
+        ]
+    },
+    Product mass analyzer = "Centroided",
+    Mass accuracy = "10",
+    Isotope peaks included = "Count",
+    Peaks = "3",
+    Precursor mass analyzer = "Centroided",
+    Mass accuracy = "5",
+    Isotope labeling enrichment = "Default"
+},
 Import FASTA = 
 {
-    Enzyme = "Trypsin [KR | P]",
+    Max missed cleavages = "1",
     FASTA file = "20220721-uniprot-sprot-human.fasta"
 },
 Associate Proteins = 

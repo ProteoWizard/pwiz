@@ -1055,11 +1055,47 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding detected features to document.
+        /// </summary>
+        public static string ImportPeptideSearch_Adding_detected_features_to_document {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_Adding_detected_features_to_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model..
+        /// </summary>
+        public static string ImportPeptideSearch_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to build the library {0}..
+        /// </summary>
+        public static string ImportPeptideSearch_Failed_to_build_the_library__0__ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_Failed_to_build_the_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to detected features.
         /// </summary>
         public static string ImportPeptideSearch_GetLibBuilder_detected_features {
             get {
                 return ResourceManager.GetString("ImportPeptideSearch_GetLibBuilder_detected_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must contain at least one precursor transition in order to proceed..
+        /// </summary>
+        public static string ImportPeptideSearch_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_", resourceCulture);
             }
         }
         
