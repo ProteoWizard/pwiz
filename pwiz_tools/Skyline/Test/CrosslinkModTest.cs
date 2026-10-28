@@ -449,6 +449,7 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(nodePep.ExplicitMods.HasCrosslinks);
             var firstMods = nodePep.ExplicitMods.StaticModifications;
             Assert.IsNotNull(firstMods);
+            Assert.AreEqual(2, firstMods.Count);
             Assert.IsTrue(firstMods.Any(mod => mod.IndexAA == 0 && mod.Modification.Equivalent(pyroGlu)),
                 "Missing {0} on {1}", pyroGlu.Name, firstSequence);
             Assert.IsTrue(firstMods.Any(mod => mod.IndexAA == 5 && mod.Modification.Equivalent(carbamidomethyl)),
@@ -456,6 +457,8 @@ namespace pwiz.SkylineTest
             var linkedPeptide = nodePep.ExplicitMods.CrosslinkStructure.LinkedPeptides.Single();
             Assert.AreEqual(secondSequence, linkedPeptide.Sequence);
             var secondMods = nodePep.ExplicitMods.CrosslinkStructure.LinkedExplicitMods.Single().StaticModifications;
+            Assert.IsNotNull(secondMods);
+            Assert.AreEqual(1, secondMods.Count);
             Assert.IsTrue(secondMods.Any(mod => mod.IndexAA == 0 && mod.Modification.Equivalent(carbamidomethyl)),
                 "Missing {0} on {1}", carbamidomethyl.Name, secondSequence);
         }

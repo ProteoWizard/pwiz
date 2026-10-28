@@ -1224,7 +1224,7 @@ namespace pwiz.Skyline.Model
             {
                 newExplicitStaticMods = ExplicitMods.StaticModifications;
             }
-            // Crosslinked peptides never receive implicit modifications, so keep the static mods explicit
+            // Crosslinked peptides do not receive implicit static modifications, so keep them explicit
             if (newExplicitStaticMods == null && !CrosslinkStructure.IsEmpty)
             {
                 newExplicitStaticMods = ExplicitMods.StaticModifications;
