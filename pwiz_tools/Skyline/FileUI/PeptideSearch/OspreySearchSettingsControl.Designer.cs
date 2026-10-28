@@ -42,6 +42,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.txtProteinFdr = new System.Windows.Forms.TextBox();
             this.lblThreads = new System.Windows.Forms.Label();
             this.numThreads = new System.Windows.Forms.NumericUpDown();
+            this.btnAdditionalSettings = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numFragmentTolerance)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             this.SuspendLayout();
@@ -123,10 +124,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.numThreads.Value = new decimal(new int[] { 1, 0, 0, 0 });
             this.numThreads.Name = "numThreads";
             //
+            // btnAdditionalSettings
+            //
+            resources.ApplyResources(this.btnAdditionalSettings, "btnAdditionalSettings");
+            this.btnAdditionalSettings.Name = "btnAdditionalSettings";
+            this.btnAdditionalSettings.UseVisualStyleBackColor = true;
+            this.btnAdditionalSettings.Click += new System.EventHandler(this.btnAdditionalSettings_Click);
+            //
             // OspreySearchSettingsControl
             //
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnAdditionalSettings);
             this.Controls.Add(this.numThreads);
             this.Controls.Add(this.lblThreads);
             this.Controls.Add(this.txtProteinFdr);
@@ -163,5 +172,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox txtProteinFdr;
         private System.Windows.Forms.Label lblThreads;
         private System.Windows.Forms.NumericUpDown numThreads;
+        private System.Windows.Forms.Button btnAdditionalSettings;
     }
 }

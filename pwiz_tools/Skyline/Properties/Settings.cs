@@ -1460,6 +1460,24 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        /// <summary>
+        /// The last Osprey additional settings that were not Osprey's defaults, as the Additional
+        /// settings grid of the Osprey Search wizard and Build Library left them (the XML the DDA
+        /// search presets keep theirs in); null or empty for none.
+        /// </summary>
+        [UserScopedSetting]
+        public string OspreyAdditionalSettings
+        {
+            get
+            {
+                return (string) this[nameof(OspreyAdditionalSettings)];
+            }
+            set
+            {
+                this[nameof(OspreyAdditionalSettings)] = value;
+            }
+        }
+
         public NormalizeOption AreaNormalizeOption
         {
             get

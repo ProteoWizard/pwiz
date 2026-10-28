@@ -1399,6 +1399,42 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value '{0}' is not valid for {1}, which must be a whole number, blank, or '{2}'..
+        /// </summary>
+        public static string OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__ {
+            get {
+                return ResourceManager.GetString("OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter '{0}' to give the argument without a value..
+        /// </summary>
+        public static string OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_ {
+            get {
+                return ResourceManager.GetString("OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey at {0} could not be run..
+        /// </summary>
+        public static string OspreyProperties_Run_Osprey_at__0__could_not_be_run_ {
+            get {
+                return ResourceManager.GetString("OspreyProperties_Run_Osprey_at__0__could_not_be_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey at {0} did not report its settings: {1}.
+        /// </summary>
+        public static string OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_ {
+            get {
+                return ResourceManager.GetString("OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The precursor m/z {0} is not measureable with your current instrument settings..
         /// </summary>
         public static string PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_ {

@@ -22,6 +22,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -76,9 +77,17 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        /// <summary>The settings the test gives in the Additional Settings grid: a flag of every search, and a prediction's collision energy.</summary>
+        private const string ADDITIONAL_FLAG = @"verbose";
+        private const string ADDITIONAL_NCE = @"nce";
+        private const string ADDITIONAL_NCE_VALUE = @"30";
+
         protected override void DoTest()
         {
             string ospreyExe = OspreyTestUtil.EnsureOsprey(TestContext);
+            // The additional settings start at Osprey's defaults, whatever an earlier wizard on this machine left
+            Settings.Default.OspreyAdditionalSettings = null;
+            OspreyProperties.ClearCache();
             VerifyLatestBuildOnTeamCity();
             PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTest.sky"));
 
@@ -126,6 +135,7 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
             });
             AdvanceToSearchSettings(searchDlg);
+            SetAdditionalSettings(searchDlg, true);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, null);
             RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_FIRST_RUN));
             FinishImport(searchDlg, diaFilePaths, docBlibPath);
@@ -156,6 +166,7 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ExistingLibraryPath = predictedLibraryPath;
             });
             AdvanceToSearchSettings(searchDlg);
+            SetAdditionalSettings(searchDlg, false);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, predictedLibraryPath);
             RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_SECOND_RUN));
             FinishImport(searchDlg, diaFilePaths, docBlibPath);
@@ -219,16 +230,79 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
+        /// The Additional Settings grid from the Search Settings page: the settings of the search
+        /// the pages configured, each under its label from the installed Osprey, with a tooltip.
+        /// For a predicted library (<paramref name="predictsLibrary"/>) the prediction's settings
+        /// are among them and the flag and the collision energy are set; for an existing library
+        /// they are not, and the flag is found still set from the first run, the collision energy
+        /// kept but out of scope. A value the argument does not take is refused with its reason.
+        /// </summary>
+        private static void SetAdditionalSettings(OspreySearchDlg searchDlg, bool predictsLibrary)
+        {
+            var settings = searchDlg.SearchSettingsControl.AdditionalSettings;
+            string flagLabel = settings.Properties.Find(ADDITIONAL_FLAG).Label;
+            string nceLabel = settings.Properties.Find(ADDITIONAL_NCE).Label;
+            var grid = ShowDialog<MultiButtonMsgDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
+            RunUI(() =>
+            {
+                var flagControl = FindGridControl(grid, flagLabel);
+                AssertEx.IsTrue(flagControl is CheckBox);
+                AssertEx.AreEqual(!predictsLibrary, ((CheckBox)flagControl).Checked);
+                AssertEx.AreEqual(predictsLibrary, FindGridControl(grid, nceLabel) != null);
+                // The form-bound settings are the pages', not the grid's
+                AssertEx.IsNull(FindGridControl(grid, settings.Properties.Find(@"threads").Label));
+                if (predictsLibrary)
+                {
+                    ((CheckBox)flagControl).Checked = true;
+                    ((TextBox)FindGridControl(grid, nceLabel)).Text = ADDITIONAL_NCE_VALUE;
+                }
+            });
+            OkDialog(grid, grid.BtnYesClick);
+            AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
+            AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, settings.Settings[ADDITIONAL_NCE].Value);
+            // The refusal of a value the argument does not take, as the grid gives it
+            var nce = settings.Settings[ADDITIONAL_NCE];
+            AssertEx.ThrowsException<ArgumentException>(() => settings.Validate(@"hot", nce),
+                x => AssertEx.Contains(x.Message, nceLabel));
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => settings.Validate(@"-1", nce),
+                x => AssertEx.Contains(x.Message, nceLabel));
+        }
+
+        /// <summary>The value control of the grid row labeled <paramref name="label"/>, or null when the grid has no such row.</summary>
+        public static Control FindGridControl(MultiButtonMsgDlg grid, string label)
+        {
+            var layout = FindLayout(grid);
+            Assert.IsNotNull(layout, @"the settings grid has no table");
+            var rowLabel = layout.Controls.OfType<Label>().FirstOrDefault(l => l.Text == label);
+            return rowLabel == null ? null : layout.GetControlFromPosition(1, layout.GetRow(rowLabel));
+        }
+
+        private static TableLayoutPanel FindLayout(Control control)
+        {
+            foreach (Control child in control.Controls)
+            {
+                var layout = child as TableLayoutPanel ?? FindLayout(child);
+                if (layout != null)
+                    return layout;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// The command line the wizard builds, checked before the search runs: the one command
         /// from the FASTA with the document's digest settings, or from
         /// <paramref name="existingLibraryPath"/> with no library-build options at all, and the
-        /// document library as the output either way.
+        /// document library as the output either way; the additional settings after the pages',
+        /// the prediction's only with a predicted library.
         /// </summary>
         private void VerifyCommandLine(OspreySearchDlg searchDlg, string fastaFilepath, string[] diaFilePaths, string existingLibraryPath)
         {
             OspreyConfig config = null;
             RunUI(() => config = searchDlg.GetSearchConfig());
             string commandLine = OspreyHelpers.BuildCommandLine(config);
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_PREFIX + ADDITIONAL_FLAG + @" ");
+            AssertEx.AreEqual(existingLibraryPath == null,
+                commandLine.Contains(OspreyHelpers.ARG_PREFIX + ADDITIONAL_NCE + @" " + ADDITIONAL_NCE_VALUE + @" "));
             if (existingLibraryPath == null)
             {
                 AssertEx.Contains(commandLine, OspreyHelpers.ARG_FASTA + @" " + fastaFilepath.Quote());

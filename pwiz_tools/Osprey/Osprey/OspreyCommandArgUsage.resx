@@ -262,4 +262,97 @@
   <data name="_task_files" xml:space="preserve">
     <value>With {0}: print the files the task reads and writes for this command line, one per line as input or output, the task and the path, and exit without running it: what a node must be given and what it hands on.</value>
   </data>
+  <data name="_cache_dir_property" xml:space="preserve">
+    <value>Spectra cache folder</value>
+  </data>
+  <data name="_decoy_pairing_manifest_property" xml:space="preserve">
+    <value>Decoy pairing manifest</value>
+  </data>
+  <data name="_decoys_in_library_property" xml:space="preserve">
+    <value>Use the library's decoys</value>
+  </data>
+  <data name="_demux_property" xml:space="preserve">
+    <value>Demultiplex staggered windows</value>
+  </data>
+  <data name="_device_property" xml:space="preserve">
+    <value>Prediction device</value>
+  </data>
+  <data name="_diagnostics_property" xml:space="preserve">
+    <value>Write diagnostic dump files</value>
+  </data>
+  <data name="_experiment_fdr_property" xml:space="preserve">
+    <value>Experiment FDR</value>
+  </data>
+  <data name="_fdr_level_property" xml:space="preserve">
+    <value>Experiment FDR level</value>
+  </data>
+  <data name="_fdrbench_property" xml:space="preserve">
+    <value>FDRBench output file</value>
+  </data>
+  <data name="_fdrbench_pass_property" xml:space="preserve">
+    <value>FDRBench pass</value>
+  </data>
+  <data name="_fdrbench_per_run_property" xml:space="preserve">
+    <value>FDRBench row per run</value>
+  </data>
+  <data name="_fragment_tolerance_property" xml:space="preserve">
+    <value>Fragment tolerance</value>
+  </data>
+  <data name="_fragment_unit_property" xml:space="preserve">
+    <value>Fragment tolerance unit</value>
+  </data>
+  <data name="_model_diagnostics_property" xml:space="preserve">
+    <value>Write model diagnostics report</value>
+  </data>
+  <data name="_no_prefilter_property" xml:space="preserve">
+    <value>Score without prefilter</value>
+  </data>
+  <data name="_parallel_files_property" xml:space="preserve">
+    <value>Parallel files</value>
+  </data>
+  <data name="_parallel_files_caching_property" xml:space="preserve">
+    <value>Parallel files (caching)</value>
+  </data>
+  <data name="_parallel_files_rescoring_property" xml:space="preserve">
+    <value>Parallel files (re-scoring)</value>
+  </data>
+  <data name="_parallel_files_scoring_property" xml:space="preserve">
+    <value>Parallel files (scoring)</value>
+  </data>
+  <data name="_perf_stats_property" xml:space="preserve">
+    <value>Write performance statistics</value>
+  </data>
+  <data name="_protein_fdr_property" xml:space="preserve">
+    <value>Protein FDR</value>
+  </data>
+  <data name="_reconciliation_compaction_fdr_property" xml:space="preserve">
+    <value>Reconciliation FDR</value>
+  </data>
+  <data name="_resolution_property" xml:space="preserve">
+    <value>Resolution</value>
+  </data>
+  <data name="_run_fdr_property" xml:space="preserve">
+    <value>Run FDR</value>
+  </data>
+  <data name="_shared_peptides_property" xml:space="preserve">
+    <value>Shared peptides</value>
+  </data>
+  <data name="_threads_property" xml:space="preserve">
+    <value>Threads</value>
+  </data>
+  <data name="_training_export_property" xml:space="preserve">
+    <value>Write training export</value>
+  </data>
+  <data name="_training_export_claimant_q_property" xml:space="preserve">
+    <value>Training export claimant q-value</value>
+  </data>
+  <data name="_training_export_max_q_property" xml:space="preserve">
+    <value>Training export maximum q-value</value>
+  </data>
+  <data name="_training_export_xics_property" xml:space="preserve">
+    <value>Training export XICs</value>
+  </data>
+  <data name="_verbose_property" xml:space="preserve">
+    <value>Verbose output</value>
+  </data>
 </root>

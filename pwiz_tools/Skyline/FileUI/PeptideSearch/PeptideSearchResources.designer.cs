@@ -1141,6 +1141,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
             }
         }
 
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The additional settings {0} are set on the pages of the wizard and were ignored..
+        /// </summary>
+        public static string OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_", resourceCulture);
+            }
+        }
         /// <summary>
         ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
         /// </summary>

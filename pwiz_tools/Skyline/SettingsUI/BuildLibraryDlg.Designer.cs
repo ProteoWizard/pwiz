@@ -65,6 +65,7 @@ namespace pwiz.Skyline.SettingsUI
             this.labelCarafePredictFor = new System.Windows.Forms.Label();
             this.comboCarafePredictFor = new System.Windows.Forms.ComboBox();
             this.cbCarafeFineTune = new System.Windows.Forms.CheckBox();
+            this.btnCarafeAdditionalSettings = new System.Windows.Forms.Button();
             this.tabFilesSource = new System.Windows.Forms.TabPage();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
@@ -344,6 +345,7 @@ namespace pwiz.Skyline.SettingsUI
             //
             // groupAlphaOptions
             //
+            this.groupAlphaOptions.Controls.Add(this.btnCarafeAdditionalSettings);
             this.groupAlphaOptions.Controls.Add(this.labelModWarning);
             this.groupAlphaOptions.Controls.Add(this.cbCarafeFineTune);
             this.groupAlphaOptions.Controls.Add(this.comboCarafePredictFor);
@@ -361,6 +363,13 @@ namespace pwiz.Skyline.SettingsUI
             this.cbCarafeFineTune.Name = "cbCarafeFineTune";
             this.cbCarafeFineTune.UseVisualStyleBackColor = true;
             this.cbCarafeFineTune.CheckedChanged += new System.EventHandler(this.cbCarafeFineTune_CheckedChanged);
+            //
+            // btnCarafeAdditionalSettings
+            //
+            resources.ApplyResources(this.btnCarafeAdditionalSettings, "btnCarafeAdditionalSettings");
+            this.btnCarafeAdditionalSettings.Name = "btnCarafeAdditionalSettings";
+            this.btnCarafeAdditionalSettings.UseVisualStyleBackColor = true;
+            this.btnCarafeAdditionalSettings.Click += new System.EventHandler(this.btnCarafeAdditionalSettings_Click);
             //
             // labelModWarning
             //
@@ -663,6 +672,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label labelCarafePredictFor;
         private System.Windows.Forms.ComboBox comboCarafePredictFor;
         private System.Windows.Forms.CheckBox cbCarafeFineTune;
+        private System.Windows.Forms.Button btnCarafeAdditionalSettings;
         private System.Windows.Forms.TabPage tabKoinaSource;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;

@@ -192,7 +192,7 @@ a { color: #1565c0; }
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>開発者向けの診断ダンプファイルを書き込みます（Rust実装との比較用）</td></tr>
 <tr><td><nobr>--model-diagnostics</nobr></td><td>トレーニング済みスコアリングモデル、FDR校正、単一ピークに対する複数IDの重複割り当てについて、自己完結型のインタラクティブなHTMLレポートを書き込みます</td></tr>
-<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>このヘルプメッセージを表示します（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>このヘルプメッセージを表示します（[ascii|unicode|sections|html|properties|&lt;Section&gt;]）</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>バージョンを表示します</td></tr>
 </table>
 <p>例：</p><p>  Osprey -i *.raw --fasta human.fasta -o results.blib</p><p>  Osprey -i *.raw --fasta human.fasta --training-input-list tuning.txt -o results.blib</p><p>  Osprey -i *.raw -l results.predicted.blib -o results2.blib</p><p>  Osprey -i *.mzML -l library.blib -o results.blib --resolution unit</p><p>  Osprey -i *.d -l library.blib -o results.blib</p><p>  Osprey -i *.mzML -l diann_library.tsv -o results.blib</p><p>HPC分割（1ノード = 1つの--task）：上記の--taskを参照してください。</p><p>受け付けるその他の形式：値はオプションに「=」でつなげて指定することもでき（--output=results.blib）、存在するファイルは-iなしで指定できます。 The library build options are listed in the standard form (--miss-c 1) and, for compatibility with Java Carafe's command lines, also accepted as Carafe spells them, with underscores or in camel case (--miss_c 1, --minLength 7).</p><div class="RowType">分散実行（HPC）</div>

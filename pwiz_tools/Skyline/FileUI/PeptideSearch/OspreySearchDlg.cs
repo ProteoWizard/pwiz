@@ -113,7 +113,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             WizardPages.AddPageControl(ModificationsControl, modificationsPage, 10, 55, 4);
             ModificationsControl.SetModifications(Document.Settings.PeptideSettings.Modifications.StaticModifications);
 
-            SearchSettingsControl = new OspreySearchSettingsControl();
+            SearchSettingsControl = new OspreySearchSettingsControl
+            {
+                // The grid shows the settings of the search the pages before it configured
+                GetScopes = () => OspreyAdditionalSettings.ScopesFor(GetSearchConfig())
+            };
             WizardPages.AddPageControl(SearchSettingsControl, searchSettingsPage, 20, 45, 4);
 
             SearchControl = new OspreySearchControl(this);

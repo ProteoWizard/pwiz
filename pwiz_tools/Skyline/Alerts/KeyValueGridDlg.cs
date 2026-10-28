@@ -34,10 +34,13 @@ namespace pwiz.Skyline.Alerts
         /// The keys are always strings and the values are typed (but must be convertible to and from string obviously).
         /// If the (optional) validateValue action throws an exception, a message box will show the user
         /// the exception message and the invalid textbox value will be returned to its previous value.
+        /// With tooltipForValue, each row's key and value control show the text it returns for the value.
         /// </summary>
         public static void Show<TValue>(IWin32Window parent, string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
-            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null)
+            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null,
+            Func<TValue, string> tooltipForValue = null)
         {
+            using var toolTip = tooltipForValue != null ? new ToolTip { AutoPopDelay = 30000, ShowAlways = true } : null;
             var layout = new TableLayoutPanel
             {
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
@@ -127,6 +130,12 @@ namespace pwiz.Skyline.Alerts
 
                 layout.Controls.Add(lbl, 0, row);
                 layout.Controls.Add(valueControl, 1, row);
+                if (toolTip != null)
+                {
+                    string tooltip = tooltipForValue(kvp.Value);
+                    toolTip.SetToolTip(lbl, tooltip);
+                    toolTip.SetToolTip(valueControl, tooltip);
+                }
                 keyToControl[kvp.Key] = valueControl;
                 controlToSetting[valueControl] = kvp.Value;
                 ctlTextRepresentation.AppendLine($@"{kvp.Key} = {valueToString(kvp.Value)}");

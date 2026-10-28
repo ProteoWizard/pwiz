@@ -343,4 +343,118 @@
   <data name="_y1" xml:space="preserve">
     <value>Not supported by CarafeSharp training.</value>
   </data>
+  <data name="_enzyme_property" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="_miss_c_property" xml:space="preserve">
+    <value>Maximum missed cleavages</value>
+  </data>
+  <data name="_min_length_property" xml:space="preserve">
+    <value>Minimum peptide length</value>
+  </data>
+  <data name="_max_length_property" xml:space="preserve">
+    <value>Maximum peptide length</value>
+  </data>
+  <data name="_clip_n_m_property" xml:space="preserve">
+    <value>Clip N-terminal methionine</value>
+  </data>
+  <data name="_fix_mod_property" xml:space="preserve">
+    <value>Fixed modification ids</value>
+  </data>
+  <data name="_var_mod_property" xml:space="preserve">
+    <value>Variable modification ids</value>
+  </data>
+  <data name="_max_var_property" xml:space="preserve">
+    <value>Maximum variable modifications</value>
+  </data>
+  <data name="_min_pep_mz_property" xml:space="preserve">
+    <value>Minimum precursor m/z</value>
+  </data>
+  <data name="_max_pep_mz_property" xml:space="preserve">
+    <value>Maximum precursor m/z</value>
+  </data>
+  <data name="_min_pep_charge_property" xml:space="preserve">
+    <value>Minimum precursor charge</value>
+  </data>
+  <data name="_max_pep_charge_property" xml:space="preserve">
+    <value>Maximum precursor charge</value>
+  </data>
+  <data name="_i2l_property" xml:space="preserve">
+    <value>Isoleucine as leucine</value>
+  </data>
+  <data name="_lf_frag_mz_min_property" xml:space="preserve">
+    <value>Minimum fragment m/z</value>
+  </data>
+  <data name="_lf_frag_mz_max_property" xml:space="preserve">
+    <value>Maximum fragment m/z</value>
+  </data>
+  <data name="_lf_top_n_frag_property" xml:space="preserve">
+    <value>Fragments per precursor</value>
+  </data>
+  <data name="_lf_min_n_frag_property" xml:space="preserve">
+    <value>Minimum fragments per precursor</value>
+  </data>
+  <data name="_lf_frag_n_min_property" xml:space="preserve">
+    <value>Minimum fragment ordinal</value>
+  </data>
+  <data name="_nce_property" xml:space="preserve">
+    <value>Collision energy (NCE)</value>
+  </data>
+  <data name="_ms_instrument_property" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="_activation_property" xml:space="preserve">
+    <value>Activation</value>
+  </data>
+  <data name="_analyzer_property" xml:space="preserve">
+    <value>MS2 analyzer</value>
+  </data>
+  <data name="_rt_max_property" xml:space="preserve">
+    <value>Gradient length (minutes)</value>
+  </data>
+  <data name="_ccs_property" xml:space="preserve">
+    <value>Predict ion mobility</value>
+  </data>
+  <data name="_rt_model_property" xml:space="preserve">
+    <value>Retention time model</value>
+  </data>
+  <data name="_pretrained_property" xml:space="preserve">
+    <value>Pretrained models zip</value>
+  </data>
+  <data name="_tf_property" xml:space="preserve">
+    <value>Models to train</value>
+  </data>
+  <data name="_cor_property" xml:space="preserve">
+    <value>Minimum fragment correlation</value>
+  </data>
+  <data name="_n_ion_min_property" xml:space="preserve">
+    <value>Minimum b-ion ordinal</value>
+  </data>
+  <data name="_c_ion_min_property" xml:space="preserve">
+    <value>Minimum y-ion ordinal</value>
+  </data>
+  <data name="_nf_property" xml:space="preserve">
+    <value>Minimum matched fragments</value>
+  </data>
+  <data name="_min_n_property" xml:space="preserve">
+    <value>Minimum valid fragments</value>
+  </data>
+  <data name="_valid_property" xml:space="preserve">
+    <value>Require a valid top fragment</value>
+  </data>
+  <data name="_no_masking_property" xml:space="preserve">
+    <value>Train without masking</value>
+  </data>
+  <data name="_seed_property" xml:space="preserve">
+    <value>Random seed</value>
+  </data>
+  <data name="_rt_align_property" xml:space="preserve">
+    <value>Retention time alignment</value>
+  </data>
+  <data name="_rt_select_property" xml:space="preserve">
+    <value>Retention time selection</value>
+  </data>
+  <data name="_rt_reference_property" xml:space="preserve">
+    <value>Retention time reference run</value>
+  </data>
 </root>

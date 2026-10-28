@@ -143,6 +143,13 @@ namespace pwiz.CarafeSharp.Proteome
             ArgUsage.Install(ARG_USAGE);
         }
 
+        // The declarations are fields, so what makes one a property of a host's settings page
+        // (DeclareProperties) is set once they all exist.
+        static CarafeCommandLine()
+        {
+            DeclareProperties();
+        }
+
         // --- Modes and files ---------------------------------------------------------------
         // Carafe's names, one declaration each; the parser records what was given (Record), and
         // Interpret below reads the records as it always has.
@@ -466,6 +473,94 @@ namespace pwiz.CarafeSharp.Proteome
             return CompatibilityArguments.Any(a => a.Name == argName)
                 ? @"Accepted for Carafe compatibility; not used by CarafeSharp."
                 : null;
+        }
+
+        /// <summary>
+        /// The suffix on a usage key under which an argument's name as a property of a settings
+        /// page is held (<c>_nce_property</c>), in <see cref="CarafeCommandArgUsage"/> and in a
+        /// host's usage resources for its own arguments.
+        /// </summary>
+        public const string PROPERTY_SUFFIX = @"_property";
+
+        /// <summary>
+        /// The name of the argument <paramref name="argName"/> as a property of a settings page
+        /// (the label of its grid row), or null for an argument that is none.
+        /// </summary>
+        public static string GetPropertyName(string argName)
+        {
+            return CarafeCommandArgUsage.ResourceManager.GetString(UsageKey(argName) + PROPERTY_SUFFIX);
+        }
+
+        /// <summary>
+        /// The hosted arguments as properties of a host's settings page (Skyline's Additional
+        /// settings grid, through Osprey): what each takes, its default, and its range. The
+        /// defaults are the effective ones (see the class comment), as the help text gives them.
+        /// </summary>
+        private static void DeclareProperties()
+        {
+            // Digest
+            Property(ARG_ENZYME, ArgumentPropertyType.text, EnzymeTable.DEFAULT_ENZYME_INDEX);
+            Property(ARG_MISS_C, ArgumentPropertyType.integer, DigestSettings.DEFAULT_MAX_MISSED_CLEAVAGES, 0);
+            Property(ARG_MIN_LENGTH, ArgumentPropertyType.integer, DigestSettings.DEFAULT_MIN_LENGTH, 1);
+            Property(ARG_MAX_LENGTH, ArgumentPropertyType.integer, DigestSettings.DEFAULT_MAX_LENGTH, 1);
+            Property(ARG_CLIP_N_M);
+            Property(ARG_FIX_MOD, ArgumentPropertyType.text, ModificationSettings.DEFAULT_FIXED_MODIFICATIONS);
+            Property(ARG_VAR_MOD, ArgumentPropertyType.text, ModificationSettings.DEFAULT_VARIABLE_MODIFICATIONS);
+            Property(ARG_MAX_VAR, ArgumentPropertyType.integer, new ModificationSettings().MaxVariableModifications, 0);
+            Property(ARG_MIN_PEP_MZ, ArgumentPropertyType.number, DEFAULT_MIN_PEPTIDE_MZ, 0);
+            Property(ARG_MAX_PEP_MZ, ArgumentPropertyType.number, DEFAULT_MAX_PEPTIDE_MZ, 0);
+            Property(ARG_MIN_PEP_CHARGE, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_MIN_CHARGE, 1);
+            Property(ARG_MAX_PEP_CHARGE, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_MAX_CHARGE, 1);
+            Property(ARG_I2L);
+            // Library prediction
+            Property(ARG_LF_FRAG_MZ_MIN, ArgumentPropertyType.number, LibrarySettings.DEFAULT_MIN_FRAGMENT_MZ, 0);
+            Property(ARG_LF_FRAG_MZ_MAX, ArgumentPropertyType.number, LibrarySettings.DEFAULT_MAX_FRAGMENT_MZ, 0);
+            Property(ARG_LF_TOP_N_FRAG, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_TOP_FRAGMENTS, 1);
+            Property(ARG_LF_MIN_N_FRAG, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_MIN_FRAGMENTS, 1);
+            Property(ARG_LF_FRAG_N_MIN, ArgumentPropertyType.integer, LibrarySettings.DEFAULT_MIN_FRAGMENT_NUMBER, 1);
+            Property(ARG_NCE, ArgumentPropertyType.number, LibrarySettings.DEFAULT_NCE, 0);
+            Property(ARG_MS_INSTRUMENT, ArgumentPropertyType.text, LibrarySettings.DEFAULT_INSTRUMENT);
+            Property(ARG_ACTIVATION);
+            Property(ARG_ANALYZER);
+            Property(ARG_RT_MAX, ArgumentPropertyType.number, null, 0);
+            Property(ARG_CCS);
+            Property(ARG_RT_MODEL);
+            Property(ARG_PRETRAINED, ArgumentPropertyType.path);
+            // Training
+            Property(ARG_TF, null, LibrarySettings.DEFAULT_TRAINING_TYPE);
+            Property(ARG_COR, ArgumentPropertyType.number, TrainingSettings.DEFAULT_CORRELATION, 0, 1);
+            Property(ARG_N_ION_MIN, ArgumentPropertyType.integer, 0, 0);
+            Property(ARG_C_ION_MIN, ArgumentPropertyType.integer, 0, 0);
+            Property(ARG_NF, ArgumentPropertyType.integer, TrainingSettings.DEFAULT_MIN_MATCHED_IONS, 0);
+            Property(ARG_MIN_N, ArgumentPropertyType.integer, TrainingSettings.DEFAULT_MIN_VALID_IONS, 0);
+            Property(ARG_VALID);
+            Property(ARG_NO_MASKING);
+            Property(ARG_SEED, ArgumentPropertyType.integer, TrainingSettings.DEFAULT_SEED, 0);
+            Property(ARG_RT_ALIGN, null, TrainingSettings.DEFAULT_RT_ALIGNMENT);
+            Property(ARG_RT_SELECT, null, new TrainingSettings().RtSelection);
+            Property(ARG_RT_REFERENCE, ArgumentPropertyType.text);
+        }
+
+        /// <summary>
+        /// Makes <paramref name="arg"/> a property, named by <see cref="GetPropertyName"/>, of
+        /// <paramref name="type"/> (null for the type its declaration implies: a flag, a list or
+        /// text) with <paramref name="defaultValue"/> spelled as the command line takes it, within
+        /// <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        private static void Property(CarafeArgument arg, ArgumentPropertyType? type = null, object defaultValue = null,
+            double? min = null, double? max = null)
+        {
+            arg.PropertyName = () => GetPropertyName(arg.Name);
+            arg.PropertyType = type;
+            if (defaultValue != null)
+            {
+                string text = defaultValue is Enum e
+                    ? e.ToString().ToLowerInvariant()
+                    : Convert.ToString(defaultValue, CultureInfo.InvariantCulture);
+                arg.DefaultValue = () => text;
+            }
+            arg.MinValue = min;
+            arg.MaxValue = max;
         }
 
         /// <summary>An empty command line for a host to <see cref="Record"/> into and then interpret.</summary>

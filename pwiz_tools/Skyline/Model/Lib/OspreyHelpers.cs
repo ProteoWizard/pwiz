@@ -198,6 +198,8 @@ namespace pwiz.Skyline.Model.Lib
 
         // Osprey's command-line vocabulary. The library-build options are CarafeSharp's, whose
         // declarations Skyline references directly (CarafeCommandLine.ARG_*); these are Osprey's own.
+        public const string ARG_PREFIX = @"--";
+        public const string ARG_HELP = @"--help";
         public const string ARG_INPUT = @"-i";
         public const string ARG_FASTA = @"--fasta";
         public const string ARG_MODEL = @"--model";
@@ -220,6 +222,29 @@ namespace pwiz.Skyline.Model.Lib
         // The precursor-table prediction Build Library runs: the PredictLibrary phase alone
         public const string ARG_PRECURSORS = @"--precursors";
         public const string ARG_TASK = @"--task";
+
+        /// <summary>
+        /// The arguments the wizards' pages set, which <see cref="BuildCommandLine"/> writes from
+        /// <see cref="OspreyConfig"/>: left out of the Additional settings grid, and refused as a
+        /// persisted additional setting (<see cref="OspreyAdditionalSettings"/>). Read when asked,
+        /// since CarafeSharp's spell themselves with the installed grammar's prefix.
+        /// </summary>
+        public static IEnumerable<string> FormBoundArguments
+        {
+            get
+            {
+                return new[]
+                {
+                    ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_RUN_FDR, ARG_EXPERIMENT_FDR,
+                    ARG_PROTEIN_FDR, ARG_THREADS, ARG_DEVICE, ARG_DECOYS_IN_LIBRARY,
+                    CarafeCommandLine.ARG_ENZYME.ArgumentText, CarafeCommandLine.ARG_MISS_C.ArgumentText,
+                    CarafeCommandLine.ARG_MIN_LENGTH.ArgumentText, CarafeCommandLine.ARG_MAX_LENGTH.ArgumentText,
+                    CarafeCommandLine.ARG_MIN_PEP_CHARGE.ArgumentText, CarafeCommandLine.ARG_MAX_PEP_CHARGE.ArgumentText,
+                    CarafeCommandLine.ARG_FIX_MOD.ArgumentText, CarafeCommandLine.ARG_VAR_MOD.ArgumentText,
+                    CarafeCommandLine.ARG_MAX_VAR.ArgumentText,
+                };
+            }
+        }
 
         /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>
         public const string PREDICTED_TABLE_SUFFIX = @".predicted.speclib.tsv";
@@ -475,6 +500,9 @@ namespace pwiz.Skyline.Model.Lib
                 AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
                 AppendNumber(sb, ARG_THREADS, config.Threads);
             }
+            // The additional settings after the pages' arguments: the grid's values that are not
+            // Osprey's defaults, for the scopes this run has
+            config.AdditionalSettings?.AppendArguments(sb, OspreyAdditionalSettings.ScopesFor(config));
             // A child process starts in the OS culture, not Skyline's UI language, so Osprey is told
             // which to write its messages in; the numbers above are invariant either way.
             if (!string.IsNullOrEmpty(config.CultureName))
@@ -553,9 +581,11 @@ namespace pwiz.Skyline.Model.Lib
         /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
         /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
         /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
+        /// The prediction's <paramref name="additionalSettings"/> (the collision energy, the instrument,
+        /// the fragments kept) follow, the ones that are not Osprey's defaults.
         /// </summary>
         public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
-            bool useGpu, string torchRuntimesDirectory, string cultureName)
+            bool useGpu, string torchRuntimesDirectory, string cultureName, OspreyAdditionalSettings additionalSettings = null)
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(OspreyArgs))
@@ -568,6 +598,13 @@ namespace pwiz.Skyline.Model.Lib
             sb.Append(ARG_DEVICE).Append(' ').Append(useGpu ? DEVICE_GPU : DEVICE_CPU);
             if (!string.IsNullOrEmpty(torchRuntimesDirectory))
                 sb.Append(' ').Append(ARG_TORCH_RUNTIMES).Append(' ').Append(torchRuntimesDirectory.Quote());
+            if (additionalSettings != null)
+            {
+                var settingsText = new StringBuilder();
+                additionalSettings.AppendArguments(settingsText, new[] { OspreyPropertyScope.library });
+                if (settingsText.Length > 0)
+                    sb.Append(' ').Append(settingsText.ToString().TrimEnd());
+            }
             if (!string.IsNullOrEmpty(cultureName))
                 sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
             return sb.ToString();
@@ -724,6 +761,12 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>The culture Osprey writes its messages in: Skyline's UI language, which the child would not inherit.</summary>
         public string CultureName { get; set; }
+
+        /// <summary>
+        /// The settings beyond the pages', from the Additional settings grid, which the command line
+        /// carries where they are not Osprey's defaults and apply to this run; null for none.
+        /// </summary>
+        public OspreyAdditionalSettings AdditionalSettings { get; set; }
 
         /// <summary>A copy to fill in further without changing this one; the lists are shared.</summary>
         public OspreyConfig Clone()
