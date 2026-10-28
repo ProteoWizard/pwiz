@@ -1880,33 +1880,6 @@ library will be created.</value>
   <data name="comboEntrapmentMethod.Items1" xml:space="preserve">
     <value>A FASTA file of entrapment proteins</value>
   </data>
-  <data name="btnCarafeAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnCarafeAdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>189, 58</value>
-  </data>
-  <data name="btnCarafeAdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>125, 23</value>
-  </data>
-  <data name="btnCarafeAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="btnCarafeAdditionalSettings.Text" xml:space="preserve">
-    <value>A&amp;dditional Settings...</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeAdditionalSettings.Name" xml:space="preserve">
-    <value>btnCarafeAdditionalSettings</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeAdditionalSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeAdditionalSettings.Parent" xml:space="preserve">
-    <value>groupAlphaOptions</value>
-  </data>
-  <data name="&gt;&gt;btnCarafeAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>

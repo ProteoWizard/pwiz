@@ -181,13 +181,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// </summary>
         public OspreyConfig TuningConfig { get; set; }
 
-        /// <summary>
-        /// The settings beyond the form's, from Build Library's Additional Settings grid: the
-        /// prediction's for a build with the model as it is; a fine-tune's travel in
-        /// <see cref="TuningConfig"/>.
-        /// </summary>
-        public OspreyAdditionalSettings AdditionalSettings { get; set; }
-
         /// <summary>Whether this build fine-tunes a model first.</summary>
         public bool IsTuning => TuningConfig != null && TuningConfig.TrainingInputs.Count > 0;
 
@@ -350,7 +343,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             else
             {
                 args = OspreyHelpers.BuildPredictLibraryCommandLine(InputFilePath, OspreyOutputPath, CarafeModelPath,
-                    UseGpu, TorchRuntimes.RuntimesDirectory, LocalizationHelper.CurrentUICulture.Name, AdditionalSettings);
+                    UseGpu, TorchRuntimes.RuntimesDirectory, LocalizationHelper.CurrentUICulture.Name);
             }
             try
             {

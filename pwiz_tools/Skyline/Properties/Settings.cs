@@ -1498,6 +1498,24 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        /// <summary>
+        /// True when the Osprey Additional Settings grid lists its settings by name rather than
+        /// under their help sections, as the user last left its toolbar.
+        /// </summary>
+        [UserScopedSetting]
+        [DefaultSettingValue("False")]
+        public bool OspreyAdditionalSettingsSorted
+        {
+            get
+            {
+                return (bool) this[nameof(OspreyAdditionalSettingsSorted)];
+            }
+            set
+            {
+                this[nameof(OspreyAdditionalSettingsSorted)] = value;
+            }
+        }
+
         public NormalizeOption AreaNormalizeOption
         {
             get

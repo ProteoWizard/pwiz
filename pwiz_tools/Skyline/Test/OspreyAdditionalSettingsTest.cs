@@ -67,6 +67,7 @@ namespace pwiz.SkylineTest
             TestParse(properties);
             TestSettings(properties);
             TestGridValues(properties);
+            TestDescriptors(properties);
             TestValidation(properties);
             TestArguments(properties);
             TestCultures(properties);
@@ -135,6 +136,74 @@ namespace pwiz.SkylineTest
             var library = settings.GetGridValues(new[] { OspreyPropertyScope.library });
             AssertEx.AreEqual(3, library.Count);
             AssertEx.IsTrue(library.ContainsKey(@"Gradient length (minutes)"));
+        }
+
+        /// <summary>
+        /// The property grid's view of the settings: one descriptor per setting of the scopes, in
+        /// help order, named by the argument and shown under the label in the help section's
+        /// category with the tooltip as the description; a flag a bool, a list a choice of its
+        /// values; a refused value thrown from SetValue; a value that is not the default bold and
+        /// resettable.
+        /// </summary>
+        private static void TestDescriptors(OspreyProperties properties)
+        {
+            var settings = new OspreyAdditionalSettings(properties);
+            var searchOnly = new OspreySettingsObject(settings, new[] { OspreyPropertyScope.search });
+            var descriptors = searchOnly.Descriptors.ToArray();
+            AssertEx.AreEqualDeep(settings.GetGridValues(new[] { OspreyPropertyScope.search }).Keys.ToArray(),
+                descriptors.Select(d => d.DisplayName).ToArray());
+            AssertEx.AreEqual(descriptors.Length, searchOnly.GetProperties().Count);
+            AssertEx.IsTrue(ReferenceEquals(searchOnly, searchOnly.GetPropertyOwner(descriptors[0])));
+            AssertEx.IsNull(searchOnly.FindByLabel(@"Instrument"));
+            AssertEx.AreEqual(settings.Settings.Count, new OspreySettingsObject(settings, OspreyAdditionalSettings.ALL_SCOPES).Descriptors.Count());
+
+            var verbose = searchOnly.FindByLabel(@"Verbose output");
+            Assert.IsNotNull(verbose);
+            var verboseProperty = properties.Find(@"verbose");
+            AssertEx.AreEqual(verboseProperty.Name, verbose.Name);
+            AssertEx.AreEqual(verboseProperty.Group, verbose.Category);
+            AssertEx.AreEqual(verboseProperty.Tooltip, verbose.Description);
+            AssertEx.AreEqual(typeof(bool), verbose.PropertyType);
+            AssertEx.IsFalse(verbose.IsReadOnly);
+            AssertEx.IsTrue(ReferenceEquals(settings.Settings[@"verbose"], verbose.Setting));
+            AssertEx.AreEqual(false, verbose.GetValue(searchOnly));
+            AssertEx.IsFalse(verbose.ShouldSerializeValue(searchOnly));
+            AssertEx.IsFalse(verbose.CanResetValue(searchOnly));
+            verbose.SetValue(searchOnly, true);
+            AssertEx.AreEqual(true, settings.Settings[@"verbose"].Value);
+            AssertEx.IsTrue(verbose.ShouldSerializeValue(searchOnly));
+            AssertEx.IsTrue(verbose.CanResetValue(searchOnly));
+            verbose.ResetValue(searchOnly);
+            AssertEx.AreEqual(false, settings.Settings[@"verbose"].Value);
+            // A flag set from text, as a test sets it
+            verbose.SetValue(searchOnly, true.ToString());
+            AssertEx.AreEqual(true, settings.Settings[@"verbose"].Value);
+
+            // A list offers its values and nothing else
+            var fdrLevel = searchOnly.FindByLabel(@"Experiment FDR level");
+            Assert.IsNotNull(fdrLevel);
+            AssertEx.AreEqual(typeof(string), fdrLevel.PropertyType);
+            AssertEx.IsTrue(fdrLevel.Converter.GetStandardValuesSupported());
+            AssertEx.IsTrue(fdrLevel.Converter.GetStandardValuesExclusive());
+            AssertEx.AreEqualDeep(properties.Find(@"fdr-level").Values.ToArray(),
+                fdrLevel.Converter.GetStandardValues().Cast<string>().ToArray());
+            fdrLevel.SetValue(searchOnly, @"peptide");
+            AssertEx.AreEqual(@"peptide", fdrLevel.GetValue(searchOnly));
+            AssertEx.ThrowsException<ArgumentException>(() => fdrLevel.SetValue(searchOnly, @"protein"),
+                x => AssertEx.Contains(x.Message, fdrLevel.DisplayName));
+            AssertEx.AreEqual(@"peptide", settings.Settings[@"fdr-level"].Value);
+            AssertEx.IsFalse(searchOnly.FindByLabel(@"Parallel files").Converter.GetStandardValuesSupported());
+
+            // A number is kept in the invariant culture, and refused out of range with the label
+            var compaction = searchOnly.FindByLabel(@"Reconciliation compaction FDR");
+            Assert.IsNotNull(compaction);
+            compaction.SetValue(searchOnly, @"0.05");
+            AssertEx.AreEqual(@"0.05", settings.Settings[@"reconciliation-compaction-fdr"].Value);
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => compaction.SetValue(searchOnly, @"2"),
+                x => AssertEx.Contains(x.Message, compaction.DisplayName));
+            AssertEx.AreEqual(@"0.05", settings.Settings[@"reconciliation-compaction-fdr"].Value);
+            compaction.ResetValue(searchOnly);
+            AssertEx.AreEqual(@"0.01", settings.Settings[@"reconciliation-compaction-fdr"].Value);
         }
 
         private static void TestValidation(OspreyProperties properties)

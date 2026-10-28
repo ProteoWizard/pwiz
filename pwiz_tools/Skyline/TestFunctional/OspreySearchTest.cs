@@ -22,7 +22,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -266,49 +265,55 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// The Additional Settings grid from the Search Settings page: the settings of the search
-        /// the pages configured, each under its label from the installed Osprey, with a tooltip.
-        /// For a predicted library (<paramref name="predictsLibrary"/>) the prediction's settings
-        /// are among them and the flag and the collision energy are set; for an existing library
-        /// they are not, and the flag is found still set from the first run, the collision energy
-        /// kept but out of scope. A value the argument does not take is refused with its reason.
+        /// the pages configured, each under its label from the installed Osprey, in the category
+        /// of its help section. For a predicted library (<paramref name="predictsLibrary"/>) the
+        /// prediction's settings are among them and the flag and the collision energy are set; for
+        /// an existing library they are not, and the flag is found still set from the first run,
+        /// the collision energy kept but out of scope. A value the argument does not take is
+        /// refused with its reason, and Cancel puts back the values the grid opened with.
         /// </summary>
         private static void SetAdditionalSettings(OspreySearchDlg searchDlg, bool predictsLibrary)
         {
             var settings = searchDlg.SearchSettingsControl.AdditionalSettings;
             string flagLabel = settings.Properties.Find(ADDITIONAL_FLAG).Label;
             string nceLabel = settings.Properties.Find(ADDITIONAL_NCE).Label;
-            var grid = ShowDialog<MultiButtonMsgDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
+            var grid = ShowDialog<OspreySettingsGridDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
             RunUI(() =>
             {
-                var flagControl = FindGridControl(grid, flagLabel);
-                AssertEx.IsTrue(flagControl is CheckBox);
-                AssertEx.AreEqual(!predictsLibrary, ((CheckBox)flagControl).Checked);
-                AssertEx.AreEqual(predictsLibrary, FindGridControl(grid, nceLabel) != null);
+                var labels = grid.Labels.ToArray();
+                AssertEx.IsTrue(labels.Contains(flagLabel));
+                AssertEx.AreEqual(!predictsLibrary, grid.GetValue(flagLabel));
+                AssertEx.AreEqual(predictsLibrary, labels.Contains(nceLabel));
                 // The form-bound settings are the pages', not the grid's
-                AssertEx.IsNull(FindGridControl(grid, settings.Properties.Find(@"threads").Label));
-                // The rows are under their help sections' titles, each a bold header spanning the grid
-                var flagHeader = FindGridHeader(grid, settings.Properties.Find(ADDITIONAL_FLAG).Group);
-                Assert.IsNotNull(flagHeader);
-                AssertEx.IsTrue(flagHeader.Font.Bold);
+                AssertEx.IsFalse(labels.Contains(settings.Properties.Find(@"threads").Label));
+                // The rows are grouped under their help sections' titles
+                var categories = grid.Categories.ToArray();
+                AssertEx.IsTrue(categories.Contains(settings.Properties.Find(ADDITIONAL_FLAG).Group));
                 if (predictsLibrary)
                 {
-                    var nceHeader = FindGridHeader(grid, settings.Properties.Find(ADDITIONAL_NCE).Group);
-                    Assert.IsNotNull(nceHeader);
-                    var layout = (TableLayoutPanel)nceHeader.Parent;
-                    AssertEx.IsTrue(layout.GetRow(nceHeader) < layout.GetRow(FindGridControl(grid, nceLabel)));
-                    ((CheckBox)flagControl).Checked = true;
-                    ((TextBox)FindGridControl(grid, nceLabel)).Text = ADDITIONAL_NCE_VALUE;
+                    AssertEx.IsTrue(categories.Contains(settings.Properties.Find(ADDITIONAL_NCE).Group));
+                    grid.SetValue(flagLabel, true.ToString());
+                    grid.SetValue(nceLabel, ADDITIONAL_NCE_VALUE);
+                    // The refusal of a value the argument does not take, as the grid gives it
+                    AssertEx.ThrowsException<ArgumentException>(() => grid.SetValue(nceLabel, @"hot"),
+                        x => AssertEx.Contains(x.Message, nceLabel));
+                    AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => grid.SetValue(nceLabel, @"-1"),
+                        x => AssertEx.Contains(x.Message, nceLabel));
+                    AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, grid.GetValue(nceLabel));
                 }
             });
-            OkDialog(grid, grid.BtnYesClick);
+            OkDialog(grid, grid.OkDialog);
             AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
             AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, settings.Settings[ADDITIONAL_NCE].Value);
-            // The refusal of a value the argument does not take, as the grid gives it
-            var nce = settings.Settings[ADDITIONAL_NCE];
-            AssertEx.ThrowsException<ArgumentException>(() => settings.Validate(@"hot", nce),
-                x => AssertEx.Contains(x.Message, nceLabel));
-            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => settings.Validate(@"-1", nce),
-                x => AssertEx.Contains(x.Message, nceLabel));
+            // Cancel puts back the values the grid opened with
+            grid = ShowDialog<OspreySettingsGridDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
+            RunUI(() =>
+            {
+                grid.SetValue(flagLabel, false.ToString());
+                AssertEx.AreEqual(false, settings.Settings[ADDITIONAL_FLAG].Value);
+            });
+            OkDialog(grid, grid.CancelDialog);
+            AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
         }
 
         /// <summary>
@@ -375,34 +380,6 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
                 AssertEx.AreEqual(true, control.AdditionalSettings.Settings[ADDITIONAL_FLAG].Value);
             });
-        }
-
-        /// <summary>The value control of the grid row labeled <paramref name="label"/>, or null when the grid has no such row.</summary>
-        public static Control FindGridControl(MultiButtonMsgDlg grid, string label)
-        {
-            var layout = FindLayout(grid);
-            Assert.IsNotNull(layout, @"the settings grid has no table");
-            var rowLabel = layout.Controls.OfType<Label>().FirstOrDefault(l => l.Text == label && layout.GetColumnSpan(l) == 1);
-            return rowLabel == null ? null : layout.GetControlFromPosition(1, layout.GetRow(rowLabel));
-        }
-
-        /// <summary>The header label spanning both grid columns with the text <paramref name="group"/>, or null when the grid has no such header.</summary>
-        public static Label FindGridHeader(MultiButtonMsgDlg grid, string group)
-        {
-            var layout = FindLayout(grid);
-            Assert.IsNotNull(layout, @"the settings grid has no table");
-            return layout.Controls.OfType<Label>().FirstOrDefault(l => l.Text == group && layout.GetColumnSpan(l) == 2);
-        }
-
-        private static TableLayoutPanel FindLayout(Control control)
-        {
-            foreach (Control child in control.Controls)
-            {
-                var layout = child as TableLayoutPanel ?? FindLayout(child);
-                if (layout != null)
-                    return layout;
-            }
-            return null;
         }
 
         /// <summary>

@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -201,14 +200,14 @@ namespace pwiz.SkylineTestFunctional
             // Additional Settings from the page: a fine-tuned build's every scope, the tuning's
             // among them; a flag of the search is set, which the one command then carries
             var settings = buildLibraryDlg.SearchSettingsControl.AdditionalSettings;
-            var grid = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.SearchSettingsControl.ShowAdditionalSettings);
+            var grid = ShowDialog<OspreySettingsGridDlg>(buildLibraryDlg.SearchSettingsControl.ShowAdditionalSettings);
             RunUI(() =>
             {
-                Assert.IsNotNull(OspreySearchTest.FindGridControl(grid, settings.Properties.Find(@"seed").Label));
-                ((CheckBox)OspreySearchTest.FindGridControl(grid, settings.Properties.Find(@"verbose").Label)).Checked = true;
+                AssertEx.IsTrue(grid.Labels.Contains(settings.Properties.Find(@"seed").Label));
+                grid.SetValue(settings.Properties.Find(@"verbose").Label, true.ToString());
             });
-            OkDialog(grid, grid.BtnYesClick);
             PauseForDemo("Additional Settings: every setting of a fine-tuned build");
+            OkDialog(grid, grid.OkDialog);
 
             // Previous back to the model, Next forward again: every choice is kept
             RunUI(() =>
@@ -295,27 +294,13 @@ namespace pwiz.SkylineTestFunctional
             });
             PauseForDemo("Build Library: the library's model, saved to the list and used as it is");
 
-            // Additional Settings from the Carafe box, the only way in on this route: the
-            // prediction's settings alone, the flag set for the fine-tune out of its scope
-            var settings = buildLibraryDlg.SearchSettingsControl.AdditionalSettings;
-            var grid = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.ShowCarafeAdditionalSettings);
-            RunUI(() =>
-            {
-                AssertEx.IsNull(OspreySearchTest.FindGridControl(grid, settings.Properties.Find(@"seed").Label));
-                AssertEx.IsNull(OspreySearchTest.FindGridControl(grid, settings.Properties.Find(@"verbose").Label));
-                ((TextBox)OspreySearchTest.FindGridControl(grid, settings.Properties.Find(@"nce").Label)).Text = @"30";
-            });
-            OkDialog(grid, grid.BtnYesClick);
-            PauseForDemo("Additional Settings: a prediction's settings, from the first page");
+            // The route with the model as it is reaches no settings page: the prediction runs with
+            // Osprey's defaults, and the last-used additional settings do not apply to it
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsFalse(builder.IsTuning);
             AssertEx.AreEqual(tunedModelPath, builder.CarafeModelPath);
-            AssertEx.AreEqual(@"30", builder.AdditionalSettings.Settings[@"nce"].Value);
-            string predictCommandLine = OspreyHelpers.BuildPredictLibraryCommandLine(@"t.tsv", @"o.blib", tunedModelPath, false, null, null, builder.AdditionalSettings);
-            AssertEx.Contains(predictCommandLine, OspreyHelpers.ARG_PREFIX + @"nce 30");
-            AssertEx.IsFalse(predictCommandLine.Contains(OspreyHelpers.ARG_PREFIX + @"verbose"));
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(OspreySearchTest.SEARCH_TIMEOUT_MILLIS, () => peptideSettings.AvailableLibraries.Contains(SAVED_LIBRARY_NAME));
             AssertEx.FileExists(libraryPath);

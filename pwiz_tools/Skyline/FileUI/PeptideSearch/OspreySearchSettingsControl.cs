@@ -145,22 +145,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
-        /// Additional Settings...: the grid of the settings the pages do not show, for the run's
-        /// scopes, in help order under their help sections' titles, each under its name with its
-        /// usage text as the tooltip; a value the argument does not take is refused with the reason.
+        /// Additional Settings...: the property grid of the settings the pages do not show, for the
+        /// run's scopes, grouped under their help sections' titles (or sorted by name), each under
+        /// its label with its usage text in the help box; a value the argument does not take is
+        /// refused with the reason.
         /// </summary>
         public void ShowAdditionalSettings()
         {
             if (!TryGetAdditionalSettings(out var settings))
                 return;
-            KeyValueGridDlg.Show(WizardForm, PeptideSearchResources.SearchSettingsControl_Additional_Settings,
-                settings.GetGridValues(GetScopes()),
-                setting => setting.Value.ToString(),
-                (value, setting) => settings.SetValue(setting, value),
-                settings.Validate,
-                setting => setting.ValidValues,
-                settings.GetTooltip,
-                settings.GetGroup);
+            using var dlg = new OspreySettingsGridDlg(settings, GetScopes());
+            dlg.ShowDialog(WizardForm);
         }
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)

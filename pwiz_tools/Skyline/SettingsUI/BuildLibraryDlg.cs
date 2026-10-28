@@ -195,11 +195,7 @@ namespace pwiz.Skyline.SettingsUI
             ModificationsControl = new OspreyModificationsControl();
             ModificationsControl.SetModifications(document.Settings.PeptideSettings.Modifications.StaticModifications);
             WizardPages.AddPageControl(ModificationsControl, tabModifications, 10, 50, 4);
-            SearchSettingsControl = new OspreySearchSettingsControl
-            {
-                // The grid shows a fine-tuned build's every setting, and a prediction's alone otherwise
-                GetScopes = () => IsTuning ? OspreyAdditionalSettings.ALL_SCOPES : new[] { OspreyPropertyScope.library }
-            };
+            SearchSettingsControl = new OspreySearchSettingsControl();
             WizardPages.AddPageControl(SearchSettingsControl, tabSearchSettings, 10, 50, 4);
             UpdatePredictForControls();
         }
@@ -356,11 +352,6 @@ namespace pwiz.Skyline.SettingsUI
             if (doc == null)
                 return false;
 
-            // The additional settings, read from Osprey now that it is installed: the prediction's
-            // on the pretrained route, and every scope's with the fine-tune's search settings. An
-            // Osprey that cannot report them is reported, and the build goes on without them.
-            SearchSettingsControl.TryGetAdditionalSettings(out var additionalSettings);
-            additionalSettings?.SaveLastUsed();
             var builder = new CarafeLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
                 CarafeModelPath = carafeModel.FilePath,
@@ -368,7 +359,6 @@ namespace pwiz.Skyline.SettingsUI
                 TorchRuntimes = TorchRuntimes,
                 UseGpu = UseGpu,
                 TuningConfig = IsTuning ? GetTuningConfig() : null,
-                AdditionalSettings = additionalSettings,
                 DecoyMethod = DecoyMethod,
                 EntrapmentTargets = _entrapmentTargets
             };
@@ -825,24 +815,6 @@ namespace pwiz.Skyline.SettingsUI
         public void EditCarafeModelList()
         {
             _carafeModelCombo.EditList();
-        }
-
-        /// <summary>
-        /// Additional Settings... in the Carafe box: the prediction's settings (the collision energy,
-        /// the instrument, the fragments kept) for the pretrained route, which never reaches the
-        /// Search Settings page, and every setting of a fine-tuned build. Osprey declares them, so it
-        /// is installed first.
-        /// </summary>
-        public void ShowCarafeAdditionalSettings()
-        {
-            if (!OspreyInstaller.EnsureInstalled(this))
-                return;
-            SearchSettingsControl.ShowAdditionalSettings();
-        }
-
-        private void btnCarafeAdditionalSettings_Click(object sender, EventArgs e)
-        {
-            ShowCarafeAdditionalSettings();
         }
 
         #endregion
