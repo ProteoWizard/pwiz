@@ -665,11 +665,11 @@ namespace pwiz.Osprey.Demux
             private int[] _unscreened = Array.Empty<int>();
             private bool _screening;                         // the descent's first check computes the screening
             private bool _screenReady;                         // the descent has a screening
-            // The gradient check, four neighbouring grid points at a time: the weighted residual (rows x samples),
-            // B convolved with it (rows x _groupPoints, grid point fastest), and which groups of four to check.
-            private double[] _wr = Array.Empty<double>();
-            private double[] _zRow = Array.Empty<double>();
-            private double[] _vRow = Array.Empty<double>();  // rows x _groupPoints: v, grid point fastest
+            // Four neighboring grid points at a time: each row's kernel slid over them (rows x WIDTH, grid point
+            // fastest), B over the weighted residual in the gradient check, B^2 over the weights for v; with
+            // BlockPoints > 1, the shifted products for v's cross terms; and which groups of four to check.
+            private readonly double[] _zGroup;
+            private readonly double[] _vShiftGroup;
             private bool[] _groupCheck = Array.Empty<bool>();
             private readonly int[] _rowSlid;                 // per row: the group check that slid its peak last
             private int _slideStamp;
@@ -699,7 +699,6 @@ namespace pwiz.Osprey.Demux
             private readonly int[][] _rowStampAt = new int[MAX_BLOCK_POINTS][];
             private readonly double[][] _bShift = new double[MAX_BLOCK_POINTS][];
             private readonly double[][] _vShift = new double[MAX_BLOCK_POINTS][];
-            private double[] _vShiftRow = Array.Empty<double>();
             private readonly double[] _blockGradient;
             private readonly double[] _blockOld;
             private readonly double[] _blockNew;
@@ -790,6 +789,8 @@ namespace pwiz.Osprey.Demux
                 _rowUsed = new bool[_rows];
                 _rowGradient = new double[_rows];
                 _rowSlid = new int[_rows];
+                _zGroup = new double[_rows * WIDTH];
+                _vShiftGroup = new double[_rows * WIDTH];
                 _rowDelta = new double[_rows];
                 _rowsMoved = new int[_rows];
                 _rowIsMoved = new bool[_rows];
@@ -1033,14 +1034,6 @@ namespace pwiz.Osprey.Demux
                         _vShift[o] = new double[rp];
                 }
                 _groupPoints = (_points + WIDTH - 1) / WIDTH * WIDTH;
-                if (_zRow.Length < _rows * _groupPoints)
-                {
-                    _zRow = new double[_rows * _groupPoints];
-                    _vRow = new double[_rows * _groupPoints];
-                    _vShiftRow = new double[_rows * _groupPoints];
-                }
-                if (_wr.Length < rs + 2 * WIDTH)
-                    _wr = new double[rs + 2 * WIDTH];
                 if (_groupCheck.Length < _groupPoints / WIDTH)
                     _groupCheck = new bool[_groupPoints / WIDTH];
                 if (_sampleData.Length < _samples)
@@ -1132,43 +1125,39 @@ namespace pwiz.Osprey.Demux
                             _weight[o + s] = exposure / Math.Max(_weight[o + s], floor / exposure);
                     }
                 }
-                // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r]: four neighbouring grid
-                // points at a time, as in the gradient check, each lane's sums in a single point's order.
+                // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r]: four neighboring grid
+                // points at a time, as in the gradient check, each lane's sums in a single point's order. A group's
+                // rows are slid into a scratch of their own and its curvatures summed from it, so v is written a
+                // grid point's rows at a time.
                 int groups = _groupPoints / WIDTH;
                 Array.Clear(_groupCheck, 0, groups);
                 for (int i = 0; i < _reachCount; i++)
                     _groupCheck[_reach[i] / WIDTH] = true;
-                for (int r = 0; r < _rows; r++)
-                {
-                    if (!_rowUsed[r])
-                        continue;
-                    int o = r * _samples, oz = r * _groupPoints;
-                    for (int m = 0; m < groups; m++)
-                    {
-                        if (!_groupCheck[m])
-                            continue;
-                        int q0 = m * WIDTH;
-                        Slide(_b2, _weight, o + q0, _vRow, oz + q0);
-                        for (int l = 0; l < WIDTH && q0 + l < _points; l++)
-                            _v[(q0 + l) * _rows + r] = _vRow[oz + q0 + l];
-                        for (int k = 1; k < _parameters.BlockPoints; k++)
-                        {
-                            Slide(_bShift[k], _weight, o + q0, _vShiftRow, oz + q0);
-                            for (int l = 0; l < WIDTH && q0 + l < _points; l++)
-                                _vShift[k][(q0 + l) * _rows + r] = _vShiftRow[oz + q0 + l];
-                        }
-                    }
-                }
                 for (int m = 0; m < groups; m++)
                 {
                     if (!_groupCheck[m])
                         continue;
                     int q0 = m * WIDTH;
+                    for (int r = 0; r < _rows; r++)
+                    {
+                        if (!_rowUsed[r])
+                            continue;
+                        int o = r * _samples, oz = r * WIDTH;
+                        Slide(_b2, _weight, o + q0, _zGroup, oz);
+                        for (int l = 0; l < WIDTH && q0 + l < _points; l++)
+                            _v[(q0 + l) * _rows + r] = _zGroup[oz + l];
+                        for (int k = 1; k < _parameters.BlockPoints; k++)
+                        {
+                            Slide(_bShift[k], _weight, o + q0, _vShiftGroup, oz);
+                            for (int l = 0; l < WIDTH && q0 + l < _points; l++)
+                                _vShift[k][(q0 + l) * _rows + r] = _vShiftGroup[oz + l];
+                        }
+                    }
                     for (int j = 0; j < _columns; j++)
                     {
                         if (!_columnUsed[j])
                             continue;
-                        ColumnSum(_columnA2, _vRow, j, q0);
+                        ColumnSum(_columnA2, _zGroup, WIDTH, 0, j);
                         for (int l = 0; l < WIDTH && q0 + l < _points; l++)
                         {
                             if (_inReach[q0 + l])
@@ -1606,16 +1595,8 @@ namespace pwiz.Osprey.Demux
                     for (int i = 0; i < _reachCount; i++)
                         _unscreened[_reach[i]] = 0;
                 }
-                // The weighted residual of the used rows; B convolved with it, z[q] = sum_d B[d] w r[q + d], only
-                // for the rows a column tested at a group needs, when it first does.
-                for (int r = 0; r < _rows; r++)
-                {
-                    if (!_rowUsed[r])
-                        continue;
-                    int o = r * _samples;
-                    for (int x = o; x < o + _samples; x++)
-                        _wr[x] = _weight[x] * _residual[x];
-                }
+                // B convolved with the weighted residual, z[q] = sum_d B[d] w r[q + d], only for the rows a column
+                // tested at a group needs, when it first does, w r formed as it is slid.
                 int added = 0;
                 for (int m = 0; m < groups; m++)
                 {
@@ -1643,9 +1624,9 @@ namespace pwiz.Osprey.Demux
                             if (_rowSlid[r] == _slideStamp)
                                 continue;
                             _rowSlid[r] = _slideStamp;
-                            Slide(_b, _wr, r * _samples + q0, _zRow, r * _groupPoints + q0);
+                            SlideProduct(_b, _weight, _residual, r * _samples + q0, _zGroup, r * WIDTH);
                         }
-                        ColumnSum(_columnA, _zRow, j, q0);
+                        ColumnSum(_columnA, _zGroup, WIDTH, 0, j);
                         for (int l = 0; l < WIDTH; l++)
                         {
                             if ((lanes & (1 << l)) == 0)
@@ -1714,16 +1695,42 @@ namespace pwiz.Osprey.Demux
             }
 
             /// <summary>
-            /// Column j's sum over its rows at four neighbouring grid points from q0 into _laneGradient:
-            /// sum_k weight[k] rows[row_k, q0 + l], each in the column's row order.
+            /// A kernel slid over the product of two rows' values at four neighboring grid points: into[oz + l] =
+            /// sum_d kernel[d] (a[o + l + d] b[o + l + d]), each in ascending d, each product rounded before it is
+            /// scaled: the same doubles as <see cref="Slide"/> over the products formed first.
             /// </summary>
-            private void ColumnSum(double[] weight, double[] rows, int j, int q0)
+            private void SlideProduct(double[] kernel, double[] a, double[] b, int o, double[] into, int oz)
+            {
+                int span = 2 * _half + 1;
+                if (VECTORS)
+                {
+                    var sum = Vector256<double>.Zero;
+                    for (int d = 0; d < span; d++)
+                        sum += Vector256.Create(kernel[d]) * (Vector256.Create(a, o + d) * Vector256.Create(b, o + d));
+                    sum.CopyTo(into, oz);
+                    return;
+                }
+                for (int l = 0; l < WIDTH; l++)
+                {
+                    double sum = 0;
+                    for (int d = 0; d < span; d++)
+                        sum += kernel[d] * (a[o + l + d] * b[o + l + d]);
+                    into[oz + l] = sum;
+                }
+            }
+
+            /// <summary>
+            /// Column j's sum over its rows at four neighboring grid points into _laneGradient, a row's four at
+            /// rows[row_k * stride + offset]: sum_k weight[k] rows[row_k * stride + offset + l], each in the column's
+            /// row order.
+            /// </summary>
+            private void ColumnSum(double[] weight, double[] rows, int stride, int offset, int j)
             {
                 if (VECTORS)
                 {
                     var sum = Vector256<double>.Zero;
                     for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                        sum += Vector256.Create(weight[k]) * Vector256.Create(rows, _columnRow[k] * _groupPoints + q0);
+                        sum += Vector256.Create(weight[k]) * Vector256.Create(rows, _columnRow[k] * stride + offset);
                     sum.CopyTo(_laneGradient);
                     return;
                 }
@@ -1731,7 +1738,7 @@ namespace pwiz.Osprey.Demux
                 {
                     double sum = 0;
                     for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                        sum += weight[k] * rows[_columnRow[k] * _groupPoints + q0 + l];
+                        sum += weight[k] * rows[_columnRow[k] * stride + offset + l];
                     _laneGradient[l] = sum;
                 }
             }
@@ -1813,7 +1820,11 @@ namespace pwiz.Osprey.Demux
                         for (int u = 0; u < n; u++)
                         {
                             int pair = _blockColumns[u] * _columns;
-                            for (int w = u; w < n; w++)
+                            // The diagonal, sum_r A_rj^2 v[q, r], is the curvature: FillWeights summed the same
+                            // products over the same rows in the same order (ColumnSum of _columnA2 over the rows' v),
+                            // so the same double.
+                            _blockGram[u * n + u] = _curvature[oc + _blockColumns[u]];
+                            for (int w = u + 1; w < n; w++)
                             {
                                 int m1 = _pairStart[pair + _blockColumns[w] + 1];
                                 double h = 0;
