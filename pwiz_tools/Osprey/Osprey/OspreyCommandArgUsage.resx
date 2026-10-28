@@ -355,4 +355,7 @@
   <data name="_verbose_property" xml:space="preserve">
     <value>Verbose output</value>
   </data>
+  <data name="_culture" xml:space="preserve">
+    <value>Write the messages in the named language (en, ja, zh-Hans) instead of the operating system's. Numbers in the arguments are read in the invariant culture (a period as the decimal separator) whatever the language, and the argument can be given anywhere on the command line.</value>
+  </data>
 </root>

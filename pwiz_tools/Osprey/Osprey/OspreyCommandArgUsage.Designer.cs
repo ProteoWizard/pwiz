@@ -79,6 +79,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Write the messages in the named language (en, ja, zh-Hans) instead of the operating system's. Number [rest of string was truncated]";.
+        /// </summary>
+        public static string _culture {
+            get {
+                return ResourceManager.GetString("_culture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to FDRBench 5-column pairing manifest (TSV), used with {0}.
         /// </summary>
         public static string _decoy_pairing_manifest {

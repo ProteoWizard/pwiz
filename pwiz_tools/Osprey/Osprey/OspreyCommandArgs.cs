@@ -633,12 +633,14 @@ namespace pwiz.Osprey
                 Console.WriteLine(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion);
                 Environment.Exit(0);
             }) { ShortName = @"v" };
-        // Skyline's internal --culture: run under a named culture instead of the OS one, for
-        // formatting and for resource lookup. Program applies it before anything is written
-        // (see Program.RunCommand), which also reports a name .NET does not know; the parser
-        // only consumes the value.
+        // Skyline's --culture: run under a named culture instead of the OS one, for resource
+        // lookup. Program applies it before anything is written (see Program.RunCommand), which
+        // also reports a name .NET does not know; the parser only consumes the value. Shown in the
+        // help, as Skyline's is since a user in a translated locale asked how to get English
+        // output; numbers are read in the invariant culture whatever the language, so the argument
+        // changes only the messages, and can go anywhere on the command line.
         public static readonly OspreyArgument ARG_INTERNAL_CULTURE = new OspreyArgument(@"culture",
-            () => @"en|fr|ja|zh-Hans...", (c, p) => true) { InternalUse = true };
+            () => @"en|ja|zh-Hans...", (c, p) => true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
