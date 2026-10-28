@@ -251,8 +251,16 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(predictsLibrary, FindGridControl(grid, nceLabel) != null);
                 // The form-bound settings are the pages', not the grid's
                 AssertEx.IsNull(FindGridControl(grid, settings.Properties.Find(@"threads").Label));
+                // The rows are under their help sections' titles, each a bold header spanning the grid
+                var flagHeader = FindGridHeader(grid, settings.Properties.Find(ADDITIONAL_FLAG).Group);
+                Assert.IsNotNull(flagHeader);
+                AssertEx.IsTrue(flagHeader.Font.Bold);
                 if (predictsLibrary)
                 {
+                    var nceHeader = FindGridHeader(grid, settings.Properties.Find(ADDITIONAL_NCE).Group);
+                    Assert.IsNotNull(nceHeader);
+                    var layout = (TableLayoutPanel)nceHeader.Parent;
+                    AssertEx.IsTrue(layout.GetRow(nceHeader) < layout.GetRow(FindGridControl(grid, nceLabel)));
                     ((CheckBox)flagControl).Checked = true;
                     ((TextBox)FindGridControl(grid, nceLabel)).Text = ADDITIONAL_NCE_VALUE;
                 }
@@ -273,8 +281,16 @@ namespace pwiz.SkylineTestFunctional
         {
             var layout = FindLayout(grid);
             Assert.IsNotNull(layout, @"the settings grid has no table");
-            var rowLabel = layout.Controls.OfType<Label>().FirstOrDefault(l => l.Text == label);
+            var rowLabel = layout.Controls.OfType<Label>().FirstOrDefault(l => l.Text == label && layout.GetColumnSpan(l) == 1);
             return rowLabel == null ? null : layout.GetControlFromPosition(1, layout.GetRow(rowLabel));
+        }
+
+        /// <summary>The header label spanning both grid columns with the text <paramref name="group"/>, or null when the grid has no such header.</summary>
+        public static Label FindGridHeader(MultiButtonMsgDlg grid, string group)
+        {
+            var layout = FindLayout(grid);
+            Assert.IsNotNull(layout, @"the settings grid has no table");
+            return layout.Controls.OfType<Label>().FirstOrDefault(l => l.Text == group && layout.GetColumnSpan(l) == 2);
         }
 
         private static TableLayoutPanel FindLayout(Control control)

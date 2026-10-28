@@ -120,7 +120,10 @@ namespace pwiz.Skyline.Model.Lib
                 case OspreyPropertyType.flag:
                     return new AbstractDdaSearchEngine.Setting(Name, false);
                 case OspreyPropertyType.list:
-                    var values = HasDefault ? Values : new[] { string.Empty }.Concat(Values).ToArray();
+                    // A default the list does not spell (an export from another Osprey) is offered first,
+                    // so the combo always has a selection
+                    var values = !HasDefault ? new[] { string.Empty }.Concat(Values).ToArray()
+                        : Values.Contains(Default) ? Values : new[] { Default }.Concat(Values).ToArray();
                     return new AbstractDdaSearchEngine.Setting(Name, Default ?? string.Empty, values);
                 default:
                     return new AbstractDdaSearchEngine.Setting(Name, Default ?? string.Empty);
@@ -145,7 +148,8 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Checks text typed for this property, throwing an <see cref="ArgumentException"/> that
         /// names the property when it is not a value the argument takes: a number within its
-        /// range, a listed value, or for an argument with no default, blank, which leaves it out.
+        /// range, a listed value, or blank, which leaves the argument out so Osprey uses its own
+        /// default.
         /// </summary>
         public void Validate(string text)
         {
@@ -183,12 +187,12 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// The value as the command line takes it: a number in the invariant culture, whatever
-        /// culture it was typed in; other text as it is. Null when the text leaves the argument
-        /// out, and empty for an optional-value argument given without a value.
+        /// culture it was typed in; other text as it is. Null when the text is blank, which leaves
+        /// the argument out, and empty for an optional-value argument given without a value.
         /// </summary>
         public string ToArgumentValue(string text)
         {
-            if (string.IsNullOrEmpty(text) && !HasDefault)
+            if (string.IsNullOrEmpty(text))
                 return null;
             if (Optional && IsAuto(text))
                 return string.Empty;
@@ -206,9 +210,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>True when <paramref name="text"/> leaves the argument out or, for an optional-value one, gives it without a value.</summary>
         private bool IsAbsent(string text)
         {
-            if (string.IsNullOrEmpty(text))
-                return !HasDefault;
-            return Optional && IsAuto(text);
+            return string.IsNullOrEmpty(text) || (Optional && IsAuto(text));
         }
 
         private static bool IsAuto(string text)
@@ -220,7 +222,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if ((Min.HasValue && value < Min.Value) || (Max.HasValue && value > Max.Value))
             {
-                throw new ArgumentOutOfRangeException(string.Format(
+                throw new ArgumentOutOfRangeException(null, string.Format(
                     Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
                     text, Label, Min.HasValue ? Min.Value.ToString(CultureInfo.CurrentCulture) : string.Empty,
                     Max.HasValue ? Max.Value.ToString(CultureInfo.CurrentCulture) : string.Empty));
@@ -278,7 +280,8 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static OspreyProperties Load(string ospreyExe, CultureInfo culture)
         {
-            string key = ospreyExe + @"|" + culture.Name;
+            // Keyed on the file as well as its path, so an Osprey upgraded in place during the session is read again
+            string key = ospreyExe + @"|" + culture.Name + @"|" + (File.Exists(ospreyExe) ? File.GetLastWriteTimeUtc(ospreyExe).Ticks : 0);
             lock (CACHE)
             {
                 if (CACHE.TryGetValue(key, out var cached))
@@ -349,8 +352,9 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     UseShellExecute = false,
                     CreateNoWindow = true,
+                    // Only stdout is read: reading stderr too, one after the other, deadlocks when
+                    // the child fills the other pipe first, and nothing here needs its text
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
                     StandardOutputEncoding = Encoding.UTF8,
                 };
                 using (var process = Process.Start(psi))
@@ -358,7 +362,6 @@ namespace pwiz.Skyline.Model.Lib
                     if (process == null)
                         throw new IOException(string.Format(ModelResources.OspreyProperties_Run_Osprey_at__0__could_not_be_run_, ospreyExe));
                     output = process.StandardOutput.ReadToEnd();
-                    process.StandardError.ReadToEnd();
                     process.WaitForExit();
                     exitCode = process.ExitCode;
                 }

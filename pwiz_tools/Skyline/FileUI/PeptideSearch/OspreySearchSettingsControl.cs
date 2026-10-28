@@ -41,6 +41,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class OspreySearchSettingsControl : UserControl
     {
         private OspreyAdditionalSettings _additionalSettings;
+        private IList<string> _refusedLastUsed;
 
         // Osprey's own defaults for each resolution: 10 ppm for high-resolution MS/MS, 0.5 m/z for
         // unit resolution.
@@ -93,13 +94,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (_additionalSettings == null)
                 {
                     var settings = new OspreyAdditionalSettings(OspreyProperties.Load(OspreyHelpers.OspreyBinary, LocalizationHelper.CurrentUICulture));
-                    var refused = settings.ApplyLastUsed();
-                    if (refused.Count > 0)
-                    {
-                        MessageDlg.Show(WizardForm, string.Format(
-                            PeptideSearchResources.OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_,
-                            TextUtil.LineSeparate(refused)));
-                    }
+                    // A last-used value this Osprey refuses (a page's argument, a value outside its
+                    // range now) is reported once, from the UI thread (TryGetAdditionalSettings)
+                    _refusedLastUsed = settings.ApplyLastUsed();
                     _additionalSettings = settings;
                 }
                 return _additionalSettings;
@@ -112,6 +109,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 additionalSettings = AdditionalSettings;
+                if (_refusedLastUsed != null && _refusedLastUsed.Count > 0)
+                {
+                    MessageDlg.Show(WizardForm, string.Format(
+                        PeptideSearchResources.OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_,
+                        TextUtil.LineSeparate(_refusedLastUsed)));
+                    _refusedLastUsed = null;
+                }
                 return true;
             }
             catch (Exception x)
@@ -124,8 +128,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         /// <summary>
         /// Additional Settings...: the grid of the settings the pages do not show, for the run's
-        /// scopes, each under its name with its usage text as the tooltip; a value the argument does
-        /// not take is refused with the reason.
+        /// scopes, in help order under their help sections' titles, each under its name with its
+        /// usage text as the tooltip; a value the argument does not take is refused with the reason.
         /// </summary>
         public void ShowAdditionalSettings()
         {
@@ -134,10 +138,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             KeyValueGridDlg.Show(WizardForm, PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 settings.GetGridValues(GetScopes()),
                 setting => setting.Value.ToString(),
-                (value, setting) => setting.Value = value,
+                (value, setting) => settings.SetValue(setting, value),
                 settings.Validate,
                 setting => setting.ValidValues,
-                settings.GetTooltip);
+                settings.GetTooltip,
+                settings.GetGroup);
         }
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)
@@ -204,8 +209,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         /// <summary>
         /// The page's settings, as Osprey's command line takes them: the one mapping both hosts use.
-        /// The additional settings go with them once they have been read (<see cref="ValidatePage"/>),
-        /// and are kept as the last used.
+        /// The additional settings go with them once they have been read (<see cref="ValidatePage"/>).
         /// </summary>
         public void ApplyTo(OspreyConfig config)
         {
@@ -217,21 +221,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             config.ProteinFdr = ProteinFdr;
             config.Threads = Threads;
             config.AdditionalSettings = _additionalSettings;
-            _additionalSettings?.SaveLastUsed();
         }
 
         /// <summary>
-        /// Next from the page: each threshold is a fraction in (0, 1]. A threshold of 0 is a search
-        /// that reports nothing, so the range excludes it. The additional settings are read from
-        /// Osprey here if the grid was not opened, so the values last run with reach the command line.
+        /// Next from the page, which runs: each threshold is a fraction in (0, 1]. A threshold of 0
+        /// is a search that reports nothing, so the range excludes it. The additional settings are
+        /// read from Osprey here if the grid was not opened, so the values last run with reach the
+        /// command line, and the values this run has are kept as the last used.
         /// </summary>
         public bool ValidatePage()
         {
             var helper = new MessageBoxHelper(WizardForm);
-            return helper.ValidateDecimalTextBox(txtRunFdr, 0, 1, out _, false) &&
-                   helper.ValidateDecimalTextBox(txtExperimentFdr, 0, 1, out _, false) &&
-                   helper.ValidateDecimalTextBox(txtProteinFdr, 0, 1, out _, false) &&
-                   TryGetAdditionalSettings(out _);
+            if (!helper.ValidateDecimalTextBox(txtRunFdr, 0, 1, out _, false) ||
+                !helper.ValidateDecimalTextBox(txtExperimentFdr, 0, 1, out _, false) ||
+                !helper.ValidateDecimalTextBox(txtProteinFdr, 0, 1, out _, false) ||
+                !TryGetAdditionalSettings(out var additionalSettings))
+            {
+                return false;
+            }
+            additionalSettings.SaveLastUsed();
+            return true;
         }
     }
 }

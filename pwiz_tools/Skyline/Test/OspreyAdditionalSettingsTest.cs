@@ -117,6 +117,7 @@ namespace pwiz.SkylineTest
             AssertEx.IsTrue(settings.Settings.Values.All(s => s.IsDefault));
             AssertEx.IsFalse(settings.ChangedSettings.Any());
             AssertEx.AreEqual(settings.Properties.Find(@"seed").Tooltip, settings.GetTooltip(settings.Settings[@"seed"]));
+            AssertEx.AreEqual(settings.Properties.Find(@"seed").Group, settings.GetGroup(settings.Settings[@"seed"]));
         }
 
         /// <summary>The grid shows the settings of the run's scopes, under their labels, the same objects.</summary>
@@ -151,7 +152,7 @@ namespace pwiz.SkylineTest
             ValidateOk(settings, @"activation", string.Empty);
             ValidateOk(settings, @"seed", @"7");
             ValidateOk(settings, @"cache-dir", @"D:\cache");
-            // Not a number, out of range, not listed, not whole, negative, blank where a default is named
+            // Not a number, out of range, not listed, not whole, negative
             ValidateFails<ArgumentException>(settings, @"reconciliation-compaction-fdr", @"abc");
             ValidateFails<ArgumentOutOfRangeException>(settings, @"reconciliation-compaction-fdr", @"2");
             ValidateFails<ArgumentOutOfRangeException>(settings, @"reconciliation-compaction-fdr", @"-0.1");
@@ -160,7 +161,8 @@ namespace pwiz.SkylineTest
             ValidateFails<ArgumentException>(settings, @"parallel-files", @"many");
             ValidateFails<ArgumentOutOfRangeException>(settings, @"parallel-files", @"-1");
             ValidateFails<ArgumentException>(settings, @"seed", @"abc");
-            ValidateFails<ArgumentException>(settings, @"seed", string.Empty);
+            ValidateOk(settings, @"seed", string.Empty);
+            ValidateOk(settings, @"ms-instrument", string.Empty);
             ValidateFails<ArgumentOutOfRangeException>(settings, @"rt-max", @"-5");
             // The refusal names the property as the grid shows it
             AssertEx.ThrowsException<ArgumentException>(() => settings.Validate(@"abc", settings.Settings[@"seed"]),
@@ -208,6 +210,13 @@ namespace pwiz.SkylineTest
             settings.Settings[@"verbose"].Value = @"False";
             AssertEx.Contains(Arguments(settings, OspreyPropertyScope.search), @"--parallel-files 3");
             AssertEx.IsFalse(Arguments(settings, OspreyPropertyScope.search).Contains(@"--verbose"));
+            // A setting with a default cleared to blank is left out, not given without a value
+            settings.Settings[@"ms-instrument"].Value = string.Empty;
+            settings.Settings[@"seed"].Value = string.Empty;
+            AssertEx.AreEqual(@"--rt-max 120", Arguments(settings, OspreyPropertyScope.library));
+            AssertEx.AreEqual(string.Empty, Arguments(settings, OspreyPropertyScope.tuning));
+            settings.Settings[@"ms-instrument"].Value = @"Lumos";
+            settings.Settings[@"seed"].Value = @"7";
 
             // Through the two command lines: after the pages' arguments and before the culture,
             // for the scopes the configuration has; the prediction's command line takes the
@@ -251,8 +260,11 @@ namespace pwiz.SkylineTest
                 Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(@"fr-FR");
                 ValidateOk(settings, @"reconciliation-compaction-fdr", @"0,05");
                 ValidateOk(settings, @"reconciliation-compaction-fdr", @"0.05");
-                settings.Settings[@"reconciliation-compaction-fdr"].Value = @"0,05";
+                // Set as the grid sets it: the number is kept in the invariant culture, so it persists for any culture
+                settings.SetValue(settings.Settings[@"reconciliation-compaction-fdr"], @"0,05");
+                AssertEx.AreEqual(@"0.05", settings.Settings[@"reconciliation-compaction-fdr"].Value);
                 AssertEx.AreEqual(@"--reconciliation-compaction-fdr 0.05", Arguments(settings, OspreyPropertyScope.search));
+                AssertEx.Contains(settings.ToXml(), @"value=" + "\"0.05\"");
             }
             finally
             {

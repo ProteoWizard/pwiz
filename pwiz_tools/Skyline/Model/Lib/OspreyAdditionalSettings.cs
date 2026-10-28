@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Lib
     /// <summary>
     /// The settings of an Osprey run beyond the ones the wizard's pages bind: every property the
     /// installed Osprey declares (<see cref="OspreyProperties"/>) except the form-bound ones
-    /// (<see cref="OspreyHelpers.FormBoundArguments"/>), each as a
+    /// (<see cref="OspreyHelpers.FORM_BOUND_ARGUMENTS"/>), each as a
     /// <see cref="AbstractDdaSearchEngine.Setting"/> named by its argument, which the Additional
     /// settings grid edits under its label, the command line carries when it is not the default
     /// and applies to the run (<see cref="AppendArguments"/>), and the user's last values persist
@@ -72,8 +72,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             Properties = properties;
             Settings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
-            var formBound = new HashSet<string>(OspreyHelpers.FormBoundArguments);
-            foreach (var property in properties.Properties.Where(p => !formBound.Contains(p.ArgumentText)))
+            var formBound = new HashSet<string>(OspreyHelpers.FORM_BOUND_ARGUMENTS);
+            foreach (var property in properties.Properties.Where(p => !formBound.Contains(p.Name)))
             {
                 var setting = property.CreateSetting();
                 Settings[setting.Name] = setting;
@@ -101,7 +101,9 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// The settings of <paramref name="scopes"/> under their labels, for the grid: the same
         /// objects as <see cref="Settings"/>, so what the grid sets is what the command line reads.
-        /// A label two properties share (not expected) is told apart by its argument.
+        /// A label two properties share (not expected) is told apart by its argument. The dictionary
+        /// enumerates in the properties' (help) order, which the grid relies on to show the settings
+        /// under their group headers: a Dictionary keeps its insertion order while nothing is removed.
         /// </summary>
         public IDictionary<string, AbstractDdaSearchEngine.Setting> GetGridValues(ICollection<OspreyPropertyScope> scopes)
         {
@@ -123,9 +125,34 @@ namespace pwiz.Skyline.Model.Lib
             setting.Validate(text);
         }
 
+        /// <summary>
+        /// Sets <paramref name="setting"/> from the text the grid holds: a number typed in the UI
+        /// culture (0,05 under fr-FR) is kept in the invariant culture, so it persists and reaches
+        /// the command line the same for any culture; blank, auto and every other type as typed.
+        /// </summary>
+        public void SetValue(AbstractDdaSearchEngine.Setting setting, string text)
+        {
+            var property = GetProperty(setting);
+            if (property.Type == OspreyPropertyType.integer || property.Type == OspreyPropertyType.number)
+            {
+                string argumentValue = property.ToArgumentValue(text);
+                setting.Value = string.IsNullOrEmpty(argumentValue) ? text : argumentValue;
+            }
+            else
+            {
+                setting.Value = text;
+            }
+        }
+
         public string GetTooltip(AbstractDdaSearchEngine.Setting setting)
         {
             return GetProperty(setting).Tooltip;
+        }
+
+        /// <summary>The title of the help section of <paramref name="setting"/>: the grid's group header.</summary>
+        public string GetGroup(AbstractDdaSearchEngine.Setting setting)
+        {
+            return GetProperty(setting).Group;
         }
 
         /// <summary>
@@ -189,14 +216,14 @@ namespace pwiz.Skyline.Model.Lib
             var nodes = doc.SelectNodes(@"//Setting");
             if (nodes == null)
                 return refused;
-            var formBound = new HashSet<string>(OspreyHelpers.FormBoundArguments);
+            var formBound = new HashSet<string>(OspreyHelpers.FORM_BOUND_ARGUMENTS);
             foreach (XmlNode node in nodes)
             {
                 string name = node.Attributes?[@"name"]?.Value;
                 string value = node.Attributes?[@"value"]?.Value;
                 if (name == null || value == null)
                     continue;
-                if (formBound.Contains(OspreyHelpers.ARG_PREFIX + name))
+                if (formBound.Contains(name))
                 {
                     refused.Add(name);
                     continue;

@@ -116,7 +116,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchSettingsControl = new OspreySearchSettingsControl
             {
                 // The grid shows the settings of the search the pages before it configured
-                GetScopes = () => OspreyAdditionalSettings.ScopesFor(GetSearchConfig())
+                GetScopes = () => OspreyAdditionalSettings.ScopesFor(new OspreyConfig
+                {
+                    DataFiles = DataFileResults.FoundResultsFiles.Select(f => f.Path).ToList(),
+                    LibraryPath = UseExistingLibrary ? ExistingLibraryPath : null,
+                    FastaPath = ImportFastaControl.FastaFile,
+                    TrainingInputs = IsTuningSearch ? TuningFiles : new List<string>(),
+                })
             };
             WizardPages.AddPageControl(SearchSettingsControl, searchSettingsPage, 20, 45, 4);
 

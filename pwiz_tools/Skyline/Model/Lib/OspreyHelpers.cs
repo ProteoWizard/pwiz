@@ -224,26 +224,25 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_TASK = @"--task";
 
         /// <summary>
-        /// The arguments the wizards' pages set, which <see cref="BuildCommandLine"/> writes from
-        /// <see cref="OspreyConfig"/>: left out of the Additional settings grid, and refused as a
-        /// persisted additional setting (<see cref="OspreyAdditionalSettings"/>). Read when asked,
-        /// since CarafeSharp's spell themselves with the installed grammar's prefix.
+        /// The names of the arguments the wizards' pages set, which <see cref="BuildCommandLine"/>
+        /// writes from <see cref="OspreyConfig"/>: left out of the Additional settings grid, and
+        /// refused as a persisted additional setting (<see cref="OspreyAdditionalSettings"/>).
+        /// Bare names, as the properties are named, whatever prefix a grammar spells.
         /// </summary>
-        public static IEnumerable<string> FormBoundArguments
+        public static readonly string[] FORM_BOUND_ARGUMENTS =
         {
-            get
-            {
-                return new[]
-                {
-                    ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_RUN_FDR, ARG_EXPERIMENT_FDR,
-                    ARG_PROTEIN_FDR, ARG_THREADS, ARG_DEVICE, ARG_DECOYS_IN_LIBRARY,
-                    CarafeCommandLine.ARG_ENZYME.ArgumentText, CarafeCommandLine.ARG_MISS_C.ArgumentText,
-                    CarafeCommandLine.ARG_MIN_LENGTH.ArgumentText, CarafeCommandLine.ARG_MAX_LENGTH.ArgumentText,
-                    CarafeCommandLine.ARG_MIN_PEP_CHARGE.ArgumentText, CarafeCommandLine.ARG_MAX_PEP_CHARGE.ArgumentText,
-                    CarafeCommandLine.ARG_FIX_MOD.ArgumentText, CarafeCommandLine.ARG_VAR_MOD.ArgumentText,
-                    CarafeCommandLine.ARG_MAX_VAR.ArgumentText,
-                };
-            }
+            ArgName(ARG_RESOLUTION), ArgName(ARG_FRAGMENT_TOLERANCE), ArgName(ARG_FRAGMENT_UNIT), ArgName(ARG_RUN_FDR),
+            ArgName(ARG_EXPERIMENT_FDR), ArgName(ARG_PROTEIN_FDR), ArgName(ARG_THREADS), ArgName(ARG_DEVICE),
+            ArgName(ARG_DECOYS_IN_LIBRARY),
+            CarafeCommandLine.ARG_ENZYME.Name, CarafeCommandLine.ARG_MISS_C.Name, CarafeCommandLine.ARG_MIN_LENGTH.Name,
+            CarafeCommandLine.ARG_MAX_LENGTH.Name, CarafeCommandLine.ARG_MIN_PEP_CHARGE.Name, CarafeCommandLine.ARG_MAX_PEP_CHARGE.Name,
+            CarafeCommandLine.ARG_FIX_MOD.Name, CarafeCommandLine.ARG_VAR_MOD.Name, CarafeCommandLine.ARG_MAX_VAR.Name,
+        };
+
+        /// <summary>The name of one of the <c>--name</c> constants above.</summary>
+        private static string ArgName(string argumentText)
+        {
+            return argumentText.Substring(ARG_PREFIX.Length);
         }
 
         /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>

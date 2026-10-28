@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
 
         
         /// <summary>
-        ///   Looks up a localized string similar to The additional settings {0} are set on the pages of the wizard and were ignored..
+        ///   Looks up a localized string similar to The additional settings last used, {0}, are set on the pages of the wizard or are not valid for the installed Osprey, and were ignored..
         /// </summary>
         public static string OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_ {
             get {

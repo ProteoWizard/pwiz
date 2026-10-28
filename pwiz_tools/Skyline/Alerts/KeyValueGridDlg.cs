@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2020 University of Washington - Seattle, WA
  * 
@@ -35,10 +36,13 @@ namespace pwiz.Skyline.Alerts
         /// If the (optional) validateValue action throws an exception, a message box will show the user
         /// the exception message and the invalid textbox value will be returned to its previous value.
         /// With tooltipForValue, each row's key and value control show the text it returns for the value.
+        /// Without groupForValue the rows are sorted by key; with it they keep the order gridValues
+        /// enumerates, grouped by the text it returns (groups in order of first appearance), each group
+        /// introduced by a bold header row spanning both columns. Rows with no group come first, without a header.
         /// </summary>
         public static void Show<TValue>(IWin32Window parent, string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
             Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null,
-            Func<TValue, string> tooltipForValue = null)
+            Func<TValue, string> tooltipForValue = null, Func<TValue, string> groupForValue = null)
         {
             using var toolTip = tooltipForValue != null ? new ToolTip { AutoPopDelay = 30000, ShowAlways = true } : null;
             var layout = new TableLayoutPanel
@@ -46,7 +50,10 @@ namespace pwiz.Skyline.Alerts
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                 AutoScroll = true
             };
-            layout.RowCount = gridValues.Count + 2; // empty first and last row
+            using var headerFont = groupForValue != null ? new Font(layout.Font, FontStyle.Bold) : null;
+            var rows = OrderRows(gridValues, groupForValue);
+            int headerCount = rows.Select(r => r.group).Where(g => !string.IsNullOrEmpty(g)).Distinct().Count();
+            layout.RowCount = gridValues.Count + headerCount + 2; // empty first and last row
             layout.ColumnCount = 2; // key and value
             layout.ColumnStyles.Add(new ColumnStyle());
             layout.ColumnStyles.Add(new ColumnStyle());
@@ -68,8 +75,26 @@ namespace pwiz.Skyline.Alerts
             var controlToSetting = new Dictionary<object, TValue>();
             int row = 1;
             var ctlTextRepresentation = new StringBuilder();
-            foreach (var kvp in gridValues.OrderBy(kvp => kvp.Key))
+            string currentGroup = null;
+            foreach (var (group, kvp) in rows)
             {
+                if (!string.IsNullOrEmpty(group) && group != currentGroup)
+                {
+                    var header = new Label
+                    {
+                        Text = group,
+                        Font = headerFont,
+                        Dock = DockStyle.Fill,
+                        AutoSize = true,
+                        TextAlign = ContentAlignment.BottomLeft,
+                        Padding = new Padding(0, 8, 0, 0)
+                    };
+                    layout.Controls.Add(header, 0, row);
+                    layout.SetColumnSpan(header, 2);
+                    currentGroup = group;
+                    row++;
+                }
+
                 var lbl = new Label
                 {
                     Text = kvp.Key,
@@ -171,6 +196,23 @@ namespace pwiz.Skyline.Alerts
                         throw new InvalidOperationException();
                 }
             }
+        }
+
+        /// <summary>
+        /// The rows in display order, each with its group text: sorted by key with no groups when
+        /// <paramref name="groupForValue"/> is null; otherwise in the order <paramref name="gridValues"/>
+        /// enumerates, grouped by group text in order of first appearance, the rows without a group first.
+        /// </summary>
+        private static IList<(string group, KeyValuePair<string, TValue> kvp)> OrderRows<TValue>(IDictionary<string, TValue> gridValues,
+            Func<TValue, string> groupForValue)
+        {
+            if (groupForValue == null)
+                return gridValues.OrderBy(kvp => kvp.Key).Select(kvp => ((string)null, kvp)).ToList();
+            return gridValues.Select(kvp => (group: groupForValue(kvp.Value) ?? string.Empty, kvp))
+                .GroupBy(r => r.group)
+                .OrderBy(g => g.Key.Length == 0 ? 0 : 1) // A stable sort: the groups keep their order of first appearance
+                .SelectMany(g => g)
+                .ToList();
         }
     }
 }
