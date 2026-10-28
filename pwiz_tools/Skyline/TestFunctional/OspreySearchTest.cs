@@ -83,11 +83,16 @@ namespace pwiz.SkylineTestFunctional
         private const string ADDITIONAL_NCE = @"nce";
         private const string ADDITIONAL_NCE_VALUE = @"30";
 
+        /// <summary>The settings preset the test saves from the first wizard's page and finds in the second's.</summary>
+        private const string PRESET_NAME = @"Night preset";
+        private const double PRESET_CHANGED_RUN_FDR = 0.05;
+
         protected override void DoTest()
         {
             string ospreyExe = OspreyTestUtil.EnsureOsprey(TestContext);
             // The additional settings start at Osprey's defaults, whatever an earlier wizard on this machine left
             Settings.Default.OspreyAdditionalSettings = null;
+            Settings.Default.OspreySettingsPresets.RemoveKey(PRESET_NAME);
             OspreyProperties.ClearCache();
             VerifyLatestBuildOnTeamCity();
             PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTest.sky"));
@@ -137,6 +142,7 @@ namespace pwiz.SkylineTestFunctional
             });
             AdvanceToSearchSettings(searchDlg);
             SetAdditionalSettings(searchDlg, true);
+            SaveAndReapplyPreset(searchDlg);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, null);
             RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_FIRST_RUN));
             var additionalSettings = searchDlg.SearchSettingsControl.AdditionalSettings;
@@ -169,6 +175,7 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ExistingLibraryPath = predictedLibraryPath;
             });
             AdvanceToSearchSettings(searchDlg);
+            VerifyPresetPersisted(searchDlg);
             SetAdditionalSettings(searchDlg, false);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, predictedLibraryPath);
             RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_SECOND_RUN));
@@ -302,6 +309,72 @@ namespace pwiz.SkylineTestFunctional
                 x => AssertEx.Contains(x.Message, nceLabel));
             AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => settings.Validate(@"-1", nce),
                 x => AssertEx.Contains(x.Message, nceLabel));
+        }
+
+        /// <summary>
+        /// The settings preset: Save... keeps the page's values, the additional settings included,
+        /// under the name the user gives; choosing the preset again after the values change brings
+        /// them back; a second save under the name asks before replacing it.
+        /// </summary>
+        private static void SaveAndReapplyPreset(OspreySearchDlg searchDlg)
+        {
+            var control = searchDlg.SearchSettingsControl;
+            var settings = control.AdditionalSettings;
+            RunUI(() =>
+            {
+                AssertEx.IsNull(control.SettingsPresetName);
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
+            });
+            var nameDlg = ShowDialog<PresetNameDlg>(control.ShowSavePresetDlg);
+            RunUI(() => nameDlg.PresetName = PRESET_NAME);
+            OkDialog(nameDlg, nameDlg.OkDialog);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(PRESET_NAME, control.SettingsPresetName);
+                AssertEx.IsTrue(control.SettingsPresets.TryGetValue(PRESET_NAME, out var preset));
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, preset.RunFdr);
+                AssertEx.IsFalse(preset.IsHighResolution);
+                AssertEx.Contains(preset.AdditionalSettingsXml, ADDITIONAL_FLAG, ADDITIONAL_NCE);
+                // Change the page, then choose the preset again: its values return
+                control.RunFdr = PRESET_CHANGED_RUN_FDR;
+                settings.Settings[ADDITIONAL_FLAG].Value = false;
+                control.SettingsPresetName = PRESET_NAME;
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
+                AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
+                AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, settings.Settings[ADDITIONAL_NCE].Value);
+            });
+            // Saving under the name again asks before replacing the preset
+            nameDlg = ShowDialog<PresetNameDlg>(control.ShowSavePresetDlg);
+            RunUI(() => nameDlg.PresetName = PRESET_NAME);
+            var overwrite = ShowDialog<MessageDlg>(nameDlg.OkDialog);
+            AssertEx.AreEqual(string.Format(
+                PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_,
+                PRESET_NAME), overwrite.Message);
+            OkDialog(overwrite, overwrite.ClickYes);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(PRESET_NAME, control.SettingsPresetName);
+                AssertEx.IsTrue(control.SettingsPresets.ContainsKey(PRESET_NAME));
+            });
+        }
+
+        /// <summary>
+        /// The preset saved in the first wizard is listed in the second, with none chosen until the
+        /// user chooses one, and choosing it brings its values back to the new page.
+        /// </summary>
+        private static void VerifyPresetPersisted(OspreySearchDlg searchDlg)
+        {
+            var control = searchDlg.SearchSettingsControl;
+            RunUI(() =>
+            {
+                AssertEx.IsNull(control.SettingsPresetName);
+                AssertEx.IsTrue(control.SettingsPresets.ContainsKey(PRESET_NAME));
+                control.RunFdr = PRESET_CHANGED_RUN_FDR;
+                control.SettingsPresetName = PRESET_NAME;
+                AssertEx.AreEqual(PRESET_NAME, control.SettingsPresetName);
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
+                AssertEx.AreEqual(true, control.AdditionalSettings.Settings[ADDITIONAL_FLAG].Value);
+            });
         }
 
         /// <summary>The value control of the grid row labeled <paramref name="label"/>, or null when the grid has no such row.</summary>

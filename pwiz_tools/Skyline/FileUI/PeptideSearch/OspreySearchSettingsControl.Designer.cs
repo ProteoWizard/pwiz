@@ -29,6 +29,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OspreySearchSettingsControl));
+            this.lblSettingsPreset = new System.Windows.Forms.Label();
+            this.comboSettingsPreset = new System.Windows.Forms.ComboBox();
+            this.btnSavePreset = new System.Windows.Forms.Button();
             this.lblResolution = new System.Windows.Forms.Label();
             this.comboResolution = new System.Windows.Forms.ComboBox();
             this.lblFragmentTolerance = new System.Windows.Forms.Label();
@@ -46,6 +49,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ((System.ComponentModel.ISupportInitialize)(this.numFragmentTolerance)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             this.SuspendLayout();
+            //
+            // lblSettingsPreset
+            //
+            resources.ApplyResources(this.lblSettingsPreset, "lblSettingsPreset");
+            this.lblSettingsPreset.Name = "lblSettingsPreset";
+            //
+            // comboSettingsPreset
+            //
+            resources.ApplyResources(this.comboSettingsPreset, "comboSettingsPreset");
+            this.comboSettingsPreset.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSettingsPreset.FormattingEnabled = true;
+            this.comboSettingsPreset.Name = "comboSettingsPreset";
+            this.comboSettingsPreset.SelectedIndexChanged += new System.EventHandler(this.comboSettingsPreset_SelectedIndexChanged);
+            //
+            // btnSavePreset
+            //
+            resources.ApplyResources(this.btnSavePreset, "btnSavePreset");
+            this.btnSavePreset.Name = "btnSavePreset";
+            this.btnSavePreset.UseVisualStyleBackColor = true;
+            this.btnSavePreset.Click += new System.EventHandler(this.btnSavePreset_Click);
             //
             // lblResolution
             //
@@ -149,6 +172,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.lblFragmentTolerance);
             this.Controls.Add(this.comboResolution);
             this.Controls.Add(this.lblResolution);
+            this.Controls.Add(this.btnSavePreset);
+            this.Controls.Add(this.comboSettingsPreset);
+            this.Controls.Add(this.lblSettingsPreset);
             this.Name = "OspreySearchSettingsControl";
             ((System.ComponentModel.ISupportInitialize)(this.numFragmentTolerance)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
@@ -159,6 +185,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         #endregion
 
+        private System.Windows.Forms.Label lblSettingsPreset;
+        private System.Windows.Forms.ComboBox comboSettingsPreset;
+        private System.Windows.Forms.Button btnSavePreset;
         private System.Windows.Forms.Label lblResolution;
         private System.Windows.Forms.ComboBox comboResolution;
         private System.Windows.Forms.Label lblFragmentTolerance;

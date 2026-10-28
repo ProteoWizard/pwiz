@@ -1373,6 +1373,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public OspreySettingsPresetList OspreySettingsPresets
+        {
+            get
+            {
+                var list = (OspreySettingsPresetList)this[@"OspreySettingsPresets"];
+                if (list == null)
+                {
+                    list = new OspreySettingsPresetList();
+                    list.AddDefaults();
+                    OspreySettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"OspreySettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 

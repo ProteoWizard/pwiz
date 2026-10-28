@@ -188,6 +188,13 @@ namespace pwiz.Skyline.Model.Lib
             return ChangedSettings.Any() ? SearchSettingsPreset.SerializeAdditionalSettings(Settings) : null;
         }
 
+        /// <summary>Returns every setting to Osprey's default, before a preset's values replace the ones it names.</summary>
+        public void ResetToDefaults()
+        {
+            foreach (var setting in Settings.Values)
+                setting.Value = setting.DefaultValue;
+        }
+
         /// <summary>Sets the values the user last ran with (<see cref="SaveLastUsed"/>), returning the names refused (<see cref="ApplyXml"/>).</summary>
         public IList<string> ApplyLastUsed()
         {
