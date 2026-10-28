@@ -44,6 +44,12 @@ namespace pwiz.Osprey.Scoring
         public const int CAL_TOP_N_FRAGMENTS = 6;
 
         /// <summary>
+        /// How many top fragments the search extracts XICs for: <see cref="CAL_TOP_N_FRAGMENTS"/>, or
+        /// OSPREY_XIC_FRAGMENTS for an experiment (<see cref="OspreyEnvironment.XicFragments"/>).
+        /// </summary>
+        public static readonly int SearchTopNFragments = OspreyEnvironment.XicFragments ?? CAL_TOP_N_FRAGMENTS;
+
+        /// <summary>
         /// Extract XICs for the top N most intense library fragments across the
         /// supplied (pre-filtered) spectra list. Includes an XIC for every selected
         /// fragment, even all-zero ones -- dropping all-zero fragments biases decoys
@@ -105,9 +111,9 @@ namespace pwiz.Osprey.Scoring
             //   3. Always include all selected fragments, even all-zero XICs
             //      (dropping all-zero fragments biases decoys to higher R^2)
             int rangeLen = endScan - startScan + 1;
-            Span<double> mzs = stackalloc double[CAL_TOP_N_FRAGMENTS];
-            Span<double> lowers = stackalloc double[CAL_TOP_N_FRAGMENTS];
-            Span<double> uppers = stackalloc double[CAL_TOP_N_FRAGMENTS];
+            Span<double> mzs = stackalloc double[SearchTopNFragments];
+            Span<double> lowers = stackalloc double[SearchTopNFragments];
+            Span<double> uppers = stackalloc double[SearchTopNFragments];
             var xics = CreateFragmentXics(candidate, windowRts, startScan, endScan,
                 config.FragmentTolerance, mzs, lowers, uppers);
 
@@ -146,7 +152,7 @@ namespace pwiz.Osprey.Scoring
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
                 return new List<XicData>();
 
-            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, CAL_TOP_N_FRAGMENTS);
+            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, SearchTopNFragments);
 
             // Build shared RT array for this range
             int rangeLen = endScan - startScan + 1;

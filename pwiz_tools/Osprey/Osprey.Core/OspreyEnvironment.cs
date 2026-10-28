@@ -114,7 +114,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
-            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN", @"OSPREY_XIC_FRAGMENTS",
             @"OSPREY_VERSION_OVERRIDE"
         };
 
@@ -720,6 +720,27 @@ namespace pwiz.Osprey.Core
         /// <summary>The first-pass SVM C-selection tolerance in effect.</summary>
         public static readonly double SvmCSelectionTolerance =
             ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
+
+        /// <summary>
+        /// OSPREY_XIC_FRAGMENTS (EXPERIMENT, TODO-20261028_osprey_diann_fdr_gap): how many of a
+        /// candidate's most intense library fragments the search extracts XICs for - the input of the
+        /// CWT peak detection and of the coelution, peak-shape and median-polish features. Null when
+        /// unset (the top 6, <c>TopFragmentExtractor.CAL_TOP_N_FRAGMENTS</c>). Calibration and the
+        /// 2-of-top-6 prefilter keep 6 either way. A value that is not a whole number from 2 to 20
+        /// throws, so an arm can never run under the default while named for another count.
+        /// </summary>
+        public static readonly int? XicFragments = ParseXicFragments(
+            Environment.GetEnvironmentVariable(@"OSPREY_XIC_FRAGMENTS"));
+
+        private static int? ParseXicFragments(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+            if (int.TryParse(value.Trim(), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 2 && n <= 20)
+                return n;
+            throw new InvalidOperationException(@"OSPREY_XIC_FRAGMENTS must be a whole number from 2 to 20: " + value);
+        }
 
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --

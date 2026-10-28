@@ -713,7 +713,7 @@ namespace pwiz.Osprey.Scoring
             var blockXics = new List<XicData>[blockSize];
             // One target per (passing candidate, top fragment): its m/z window and XIC array,
             // at slot b * MAX_FRAGS + t for block candidate b and its t-th top fragment.
-            const int MAX_FRAGS = TopFragmentExtractor.CAL_TOP_N_FRAGMENTS;
+            int MAX_FRAGS = TopFragmentExtractor.SearchTopNFragments;
             var targetMzs = new double[blockSize * MAX_FRAGS];
             var targetLowers = new double[blockSize * MAX_FRAGS];
             var targetUppers = new double[blockSize * MAX_FRAGS];
@@ -1292,7 +1292,7 @@ namespace pwiz.Osprey.Scoring
             if (Verdicts[c] != PrefilterVerdict.passed)
                 return 0;
             long rangeLen = EndScans[c] - StartScans[c] + 1;
-            return (TopFragmentExtractor.CAL_TOP_N_FRAGMENTS + 1) * rangeLen * sizeof(double);
+            return (TopFragmentExtractor.SearchTopNFragments + 1) * rangeLen * sizeof(double);
         }
     }
 
