@@ -100,13 +100,13 @@ a { color: #1565c0; }
 <tr><td><nobr>--lf-min-n-frag</nobr>&nbsp;&lt;n&gt;</td><td>Minimum fragments for a precursor to be written (default 2).</td></tr>
 <tr><td><nobr>--lf-frag-n-min</nobr>&nbsp;&lt;n&gt;</td><td>Lowest fragment ordinal kept, b and y alike (default 2).</td></tr>
 <tr><td><nobr>--nce</nobr>&nbsp;&lt;nce&gt;</td><td>The normalized collision energy the MS2 model predicts at (default 27, or the one the <nobr>fine-tuned</nobr> model it predicts with was trained at).</td></tr>
-<tr><td><nobr>--ms-instrument</nobr>&nbsp;&lt;name&gt;</td><td>The instrument the MS2 model predicts for, by AlphaPeptDeep&#39;s name (default Eclipse, or the one the <nobr>fine-tuned</nobr> model it predicts with was trained on).</td></tr>
-<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
-<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--ms-instrument</nobr> &lt;QE | QE+ | QEHF | QEHFX | Exploris | Exploris480 | Lumos | Fusion | Eclipse | Astral | Stellar | Velos | Elite | OrbitrapTribrid | ThermoTribrid | TribridOT | timsTOF | SciexTOF | ThermoTOF&gt;</td><td>The instrument the fragment intensities are predicted for (default Eclipse, or the one a <nobr>fine-tuned</nobr> model was trained on). Each name selects one of the five instrument groups the pretrained model knows: QE (QE, QE+, QEHF, QEHFX, Exploris), Lumos (Lumos, Fusion, Eclipse, Astral, Stellar, Velos, Elite, the Tribrids), timsTOF, SciexTOF and ThermoTOF.</td></tr>
+<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The fragmentation the library is predicted for: <nobr>beam-CID</nobr> (HCD, and Sciex&#39;s and Bruker&#39;s CID) or reCID (resonance CID in an ion trap). Not given, the one a <nobr>fine-tuned</nobr> model was trained on.</td></tr>
+<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 mass analyzer the library is predicted for: Orbitrap, LIT (a linear ion trap, as a Stellar&#39;s) or ToF (an Astral&#39;s, a timsTOF&#39;s, a Sciex TOF&#39;s). Not given, the one a <nobr>fine-tuned</nobr> model was trained on.</td></tr>
 <tr><td><nobr>--rt-max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
 <tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
 <tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the <nobr>fine-tuned</nobr> model&#39;s, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. Not in Java Carafe.</td></tr>
-<tr><td><nobr>--pretrained</nobr>&nbsp;path/to/file.zip</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</td></tr>
+<tr><td><nobr>--pretrained</nobr>&nbsp;path/to/file.zip</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable).</td></tr>
 </table>
 <div class="RowType">Library Tuning</div>
 <p>With --training-input: how the models are tuned on its runs. These are CarafeSharp's options, under their standard names.</p>
@@ -122,7 +122,7 @@ a { color: #1565c0; }
 <tr><td><nobr>--no-masking</nobr></td><td>Train on every ion of the kept spectra, masking none.</td></tr>
 <tr><td><nobr>--seed</nobr>&nbsp;&lt;n&gt;</td><td>The random seed of training (default 2024; not negative).</td></tr>
 <tr><td><nobr>--rt-align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). Not in Java Carafe.</td></tr>
-<tr><td><nobr>--rt-select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median.</td></tr>
 <tr><td><nobr>--rt-reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt-align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">评分与耐受性</div>
@@ -192,8 +192,9 @@ a { color: #1565c0; }
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</td></tr>
 <tr><td><nobr>--model-diagnostics</nobr></td><td>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</td></tr>
-<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>显示此帮助信息（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>显示此帮助信息（[ascii|unicode|sections|html|properties|&lt;Section&gt;]）</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>显示版本</td></tr>
+<tr><td><nobr>--culture</nobr> en|ja|<nobr>zh-Hans</nobr>...</td><td>Write the messages in the named language (en, ja, <nobr>zh-Hans</nobr>) instead of the operating system&#39;s. Numbers in the arguments are read in the invariant culture (a period as the decimal separator) whatever the language, and the argument can be given anywhere on the command line.</td></tr>
 </table>
 <p>示例：</p><p>  Osprey -i *.raw --fasta human.fasta -o results.blib</p><p>  Osprey -i *.raw --fasta human.fasta --training-input-list tuning.txt -o results.blib</p><p>  Osprey -i *.raw -l results.predicted.blib -o results2.blib</p><p>  Osprey -i *.mzML -l library.blib -o results.blib --resolution unit</p><p>  Osprey -i *.d -l library.blib -o results.blib</p><p>  Osprey -i *.mzML -l diann_library.tsv -o results.blib</p><p>HPC 拆分（一个节点 = 一个“--task”）：请参见上方的“--task”。</p><p>也接受的其他形式：值也可以用“=”连在选项后（--output=results.blib）；已存在的文件可以不带 -i 直接给出。 The library build options are listed in the standard form (--miss-c 1) and, for compatibility with Java Carafe's command lines, also accepted as Carafe spells them, with underscores or in camel case (--miss_c 1, --minLength 7).</p><div class="RowType">分布式执行（HPC）</div>
 <p>不指定 <code>--task</code> 时，整个流程在一个进程中运行。对于分布式（HPC／工作流引擎）执行，流程在合并／扇出边界处拆分为四个单任务工作进程，每个节点对应一个 <code>--task</code>：<code>PerFileScoring</code>（拆分，每个文件）&rarr; <code>FirstPassFDR</code>（合并，所有文件）&rarr; <code>PerFileRescoring</code>（拆分，每个文件）&rarr; <code>SecondPassFDR</code>（合并，所有文件）。请向每个任务传入相同的 <code>--library</code> 和搜索选项；parquet 完整性检查会拒绝搜索／库哈希不匹配的输入。</p>
