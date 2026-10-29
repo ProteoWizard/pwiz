@@ -116,6 +116,29 @@ public class MainLogicTest
         AssertEquivalentMzml(cliOut, guiOut);
     }
 
+    /// <summary>The GUI always converts with --continueOnError, and the writers report each
+    /// skipped spectrum on Console.Error. A WinForms app has no console, so those lines must be
+    /// forwarded to the progress window's log or a file with missing spectra reports nothing.</summary>
+    [TestMethod]
+    public void StderrCapture_ForwardsLinesToTheProgressLog()
+    {
+        var original = Console.Error;
+        var captured = new System.Text.StringBuilder();
+        EventHandler<string> handler = (_, text) => captured.Append(text);
+        Program.StderrCaptured += handler;
+        try
+        {
+            Program.CaptureStderr();
+            Console.Error.WriteLine("Skipping spectrum 1 \"scan=2\": unreadable scan");
+            Assert.AreEqual("Skipping spectrum 1 \"scan=2\": unreadable scan" + Environment.NewLine, captured.ToString());
+        }
+        finally
+        {
+            Program.StderrCaptured -= handler;
+            Console.SetError(original);
+        }
+    }
+
     /// <summary>mzML→mzXML through both paths must agree (file-name extension + format flag).</summary>
     [TestMethod]
     public void MzML_To_MzXML_GuiMatchesCli()
