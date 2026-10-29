@@ -57,7 +57,8 @@ namespace pwiz.Common.GUI
 
         /// <summary>
         /// Repaints the border of a captured top-level window (<paramref name="toolWindow"/> false)
-        /// or floating tool window. A border of one color, or an all-white one (a graph), is left alone.
+        /// or floating tool window. An all-white border (a graph) is left alone, as is a border of
+        /// one color where a corner would be rounded: there is nothing behind it to cover.
         /// </summary>
         public static Bitmap CleanupBorder(this Bitmap bmp, bool toolWindow = false)
         {

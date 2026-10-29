@@ -89,16 +89,17 @@ namespace CommonTest
         }
 
         /// <summary>
-        /// Nothing is drawn on a capture whose border is one color (there is no dirt to cover, and a
-        /// curve would be drawn over a square frame) or all white (a graph), and the same object
-        /// comes back.
+        /// A capture whose border is all white (a graph) comes back untouched, and so does one whose
+        /// border is one color where a corner would be rounded: there is nothing behind it to cover,
+        /// and a curve would be drawn over a square frame. Without rounded corners the square border
+        /// is drawn in the standard color, in place.
         /// </summary>
         private static void VerifyUntouched()
         {
             using var oneColor = new Bitmap(WIDTH, HEIGHT);
             Fill(oneColor, INTERIOR, new Rectangle(0, 0, WIDTH, HEIGHT));
             AssertEx.IsTrue(ReferenceEquals(oneColor, oneColor.CleanupBorder()));
-            AssertEx.AreEqual(INTERIOR, oneColor.GetPixel(0, 0));
+            AssertEx.AreEqual(ScreenshotBorder.IsWindows11() ? INTERIOR : BORDER_COLOR, oneColor.GetPixel(0, 0));
 
             using var graph = new Bitmap(WIDTH, HEIGHT);
             Fill(graph, Color.White, new Rectangle(0, 0, WIDTH, HEIGHT));

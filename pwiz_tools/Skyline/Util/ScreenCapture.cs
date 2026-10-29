@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -251,13 +252,25 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        // The boundary repaint the tutorial screenshots get: a floating pane has the smaller tool-window corners.
+        // The boundary repaint the tutorial screenshots get: a top-level form has the rounded corners of a Windows 11
+        // window, a floating pane the smaller tool-window ones, and a docked pane no frame to repaint. A repaint
+        // that fails leaves the capture as it was: the image matters more than its edges.
         private static Bitmap CleanupBorder(Bitmap bmp, Control targetForm)
         {
-            var cleaned = bmp.CleanupBorder(targetForm is DockableForm { DockState: DockState.Floating });
-            if (!ReferenceEquals(cleaned, bmp))
-                bmp.Dispose();
-            return cleaned;
+            if (targetForm is DockableForm { DockState: not DockState.Floating })
+                return bmp;
+            try
+            {
+                var cleaned = bmp.CleanupBorder(targetForm is DockableForm);
+                if (!ReferenceEquals(cleaned, bmp))
+                    bmp.Dispose();
+                return cleaned;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($@"Screenshot border repaint failed: {e.Message}");
+                return bmp;
+            }
         }
 
         /// <summary>
