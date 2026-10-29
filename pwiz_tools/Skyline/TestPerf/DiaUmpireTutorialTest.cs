@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
