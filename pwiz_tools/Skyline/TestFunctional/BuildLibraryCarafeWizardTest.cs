@@ -45,16 +45,10 @@ namespace pwiz.SkylineTestFunctional
     /// predicted with the saved model added to the model list, and a third for a protein FASTA's
     /// precursors rather than the document's. On the subset a single run searched alone keeps no
     /// precursor at 1% in the first pass, so the tuning is on all three runs.
-    /// <para>
-    /// Set <see cref="ENV_DEMO"/> and run with the UI shown to pause on every page.
-    /// </para>
     /// </summary>
     [TestClass]
     public class BuildLibraryCarafeWizardTest : AbstractFunctionalTestEx
     {
-        /// <summary>Names an environment variable that, when set, pauses the test on each page of the wizard for a look.</summary>
-        public const string ENV_DEMO = @"SKYLINE_BUILD_LIBRARY_DEMO";
-
         private const string TUNED_LIBRARY_NAME = @"Stellar subset tuned";
         private const string SAVED_LIBRARY_NAME = @"Stellar subset saved model";
         private const string FASTA_LIBRARY_NAME = @"Stellar subset FASTA";
@@ -69,11 +63,12 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private static bool IsDemo => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(ENV_DEMO));
-
         protected override void DoTest()
         {
             OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
+            // The additional settings start at Osprey's defaults, whatever an earlier wizard on this machine left
+            Settings.Default.OspreyAdditionalSettings = null;
+            OspreyProperties.ClearCache();
             RunUI(() =>
             {
                 // The model list starts with the pretrained models alone
@@ -148,7 +143,6 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.UseExistingModel = false;
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_btnPrevious_Click__Next__, buildLibraryDlg.NextButtonText);
             });
-            PauseForDemo("Build Library: the AlphaPeptDeep source, fine-tuning a new model");
 
             // The tuning runs: the page refuses none, then the three runs, browsed in
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.library_model);
@@ -159,7 +153,6 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.AddTuningFiles(diaFilePaths);
                 AssertEx.AreEqualDeep(diaFilePaths, buildLibraryDlg.TuningFiles);
             });
-            PauseForDemo("Tuning runs: the three runs the new model is fine-tuned on");
 
             // Training FASTA: required; the document's enzyme and missed cleavages to start
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.fasta);
@@ -172,7 +165,6 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(peptideSettingsDoc.DigestSettings.MaxMissedCleavages, buildLibraryDlg.FastaControl.MaxMissedCleavages);
                 buildLibraryDlg.FastaControl.FastaFile = fastaPath;
             });
-            PauseForDemo("Training FASTA: the FASTA the runs are searched against");
 
             // Modifications: the document's (Carbamidomethyl C fixed)
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.modifications);
@@ -181,7 +173,6 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(1, buildLibraryDlg.ModificationsControl.FixedMods.Count());
                 AssertEx.AreEqual(0, buildLibraryDlg.ModificationsControl.VariableMods.Count());
             });
-            PauseForDemo("Modifications: the document's");
 
             // Search Settings: the Stellar subset is unit resolution
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.search_settings);
@@ -192,7 +183,17 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsFalse(buildLibraryDlg.SearchSettingsControl.IsFragmentTolerancePpm);
                 buildLibraryDlg.SearchSettingsControl.Threads = Environment.ProcessorCount;
             });
-            PauseForDemo("Search Settings: unit resolution for Stellar");
+
+            // Additional Settings from the page: a fine-tuned build's every scope, the tuning's
+            // among them; a flag of the search is set, which the one command then carries
+            var settings = buildLibraryDlg.SearchSettingsControl.AdditionalSettings;
+            var grid = ShowDialog<OspreySettingsGridDlg>(buildLibraryDlg.SearchSettingsControl.ShowAdditionalSettings);
+            RunUI(() =>
+            {
+                AssertEx.IsTrue(grid.Labels.Contains(settings.Properties.Find(@"tf").Label));
+                grid.SetValue(settings.Properties.Find(@"verbose").Label, true.ToString());
+            });
+            OkDialog(grid, grid.OkDialog);
 
             // Previous back to the model, Next forward again: every choice is kept
             RunUI(() =>
@@ -228,6 +229,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqualDeep(diaFilePaths, builder.TuningConfig.TrainingInputs);
             AssertEx.AreEqual(OspreyHelpers.RESOLUTION_UNIT, builder.TuningConfig.Resolution);
             AssertEx.AreEqual(OspreyHelpers.GetLibraryModelPath(libraryPath), builder.TunedModelPath);
+            AssertEx.Contains(OspreyHelpers.BuildCommandLine(builder.TuningConfig), OspreyHelpers.ARG_PREFIX + @"verbose");
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(OspreySearchTest.SEARCH_TIMEOUT_MILLIS, () => peptideSettings.AvailableLibraries.Contains(TUNED_LIBRARY_NAME));
             AssertEx.FileExists(libraryPath);
@@ -276,7 +278,9 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.IsTrue(buildLibraryDlg.UseExistingModel);
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
             });
-            PauseForDemo("Build Library: the library's model, saved to the list and used as it is");
+
+            // The route with the model as it is reaches no settings page: the prediction runs with
+            // Osprey's defaults, and the last-used additional settings do not apply to it
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
@@ -321,7 +325,6 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.PredictForDocument = false;
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_btnPrevious_Click__Next__, buildLibraryDlg.NextButtonText);
             });
-            PauseForDemo("Build Library: the pretrained models, for a protein FASTA's precursors");
             NextPage(buildLibraryDlg, BuildLibraryDlg.Pages.predict_for);
             // The FASTA box starts empty and must name a file that exists
             RunUI(() => AssertEx.IsTrue(string.IsNullOrEmpty(buildLibraryDlg.PredictForFastaPath)));
@@ -347,7 +350,6 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.EntrapmentFromFasta = false;
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
             });
-            PauseForDemo("Predict For: a protein FASTA's precursors, with decoys and shuffled entrapment peptides");
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
             var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
@@ -408,13 +410,6 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(message, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
             RunUI(() => AssertEx.AreEqual(page, buildLibraryDlg.CurrentPage));
-        }
-
-        /// <summary>Pauses on a page for a look, when the demo variable is set and the UI is shown.</summary>
-        private void PauseForDemo(string description)
-        {
-            if (IsDemo)
-                PauseForManualTutorialStep(description);
         }
     }
 }
