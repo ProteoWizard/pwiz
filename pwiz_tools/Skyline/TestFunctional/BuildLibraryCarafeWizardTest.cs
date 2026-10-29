@@ -23,6 +23,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -53,6 +56,30 @@ namespace pwiz.SkylineTestFunctional
         private const string SAVED_LIBRARY_NAME = @"Stellar subset saved model";
         private const string FASTA_LIBRARY_NAME = @"Stellar subset FASTA";
         private const string SAVED_MODEL_NAME = @"Stellar subset, tuned in Build Library";
+        private const string COPY_MODEL_NAME = @"Stellar subset, a copy";
+
+        /// <summary>
+        /// Peptides Osprey detected at 1% in the middle subset run, one from about each 0.8 minutes
+        /// of its 7 to 13 minute slice, with the retention times it measured there.
+        /// </summary>
+        private static readonly (string Sequence, double RetentionTime)[] PEPTIDES =
+        {
+            (@"GGAVVDEGPTGVK", 7.315),
+            (@"IQETQAELPR", 8.112),
+            (@"IAEPNLDTADK", 8.877),
+            (@"ANAEELANNLK", 9.702),
+            (@"ATPEQYQILK", 10.435),
+            (@"VTLGTQPTVLR", 11.229),
+            (@"LDLTENLTGSK", 12.266),
+            (@"ANYAVDAYFR", 12.755),
+        };
+
+        /// <summary>
+        /// How far a predicted retention time may be from the measured one, in minutes. The fine-tuned
+        /// RT model's median error on held-out peptides is under 0.1 minutes; iRT values would be tens
+        /// of units away.
+        /// </summary>
+        private const double RT_TOLERANCE = 1.0;
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -112,11 +139,11 @@ namespace pwiz.SkylineTestFunctional
         /// document's precursors, with Finish there until the fine-tune box is checked), the runs
         /// (after the page's refusal of none), the FASTA (after its refusal of none), the
         /// modifications, the search settings, Previous back to the first page and Next forward
-        /// with every choice kept, and Finish. The build tunes on the three runs and predicts
+        /// with every choice kept, and Finish. The build tunes on the given runs and predicts
         /// the document's precursors with the tuned model; the model lands beside the library and
         /// records the runs. Returns the library's model.
         /// </summary>
-        private string BuildTunedLibrary(string[] diaFilePaths, string fastaPath)
+        private string BuildTunedLibrary(string[] tuningRuns, string fastaPath)
         {
             string libraryPath = TestFilesDir.GetTestPath("StellarSubsetTuned.blib");
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
@@ -150,8 +177,8 @@ namespace pwiz.SkylineTestFunctional
                 BuildLibraryDlg.Pages.library_model);
             RunUI(() =>
             {
-                buildLibraryDlg.AddTuningFiles(diaFilePaths);
-                AssertEx.AreEqualDeep(diaFilePaths, buildLibraryDlg.TuningFiles);
+                buildLibraryDlg.AddTuningFiles(tuningRuns);
+                AssertEx.AreEqualDeep(tuningRuns, buildLibraryDlg.TuningFiles);
             });
 
             // Training FASTA: required; the document's enzyme and missed cleavages to start
@@ -204,7 +231,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.fasta, buildLibraryDlg.CurrentPage);
                 buildLibraryDlg.PreviousPage();
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.library_model, buildLibraryDlg.CurrentPage);
-                AssertEx.AreEqualDeep(diaFilePaths, buildLibraryDlg.TuningFiles);
+                AssertEx.AreEqualDeep(tuningRuns, buildLibraryDlg.TuningFiles);
                 buildLibraryDlg.PreviousPage();
                 AssertEx.AreEqual(BuildLibraryDlg.Pages.properties, buildLibraryDlg.CurrentPage);
                 AssertEx.IsFalse(buildLibraryDlg.UseExistingModel);
@@ -226,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(builder.IsTuning);
             AssertEx.IsNull(builder.CarafeModelPath);
             AssertEx.AreEqual(fastaPath, builder.TuningConfig.FastaPath);
-            AssertEx.AreEqualDeep(diaFilePaths, builder.TuningConfig.TrainingInputs);
+            AssertEx.AreEqualDeep(tuningRuns, builder.TuningConfig.TrainingInputs);
             AssertEx.AreEqual(OspreyHelpers.RESOLUTION_UNIT, builder.TuningConfig.Resolution);
             AssertEx.AreEqual(OspreyHelpers.GetLibraryModelPath(libraryPath), builder.TunedModelPath);
             AssertEx.Contains(OspreyHelpers.BuildCommandLine(builder.TuningConfig), OspreyHelpers.ARG_PREFIX + @"verbose");
@@ -237,7 +264,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.FileExists(builder.TunedModelPath, @"the fine-tuned model was not saved beside the library");
             var choice = CarafeModelChoice.Read(builder.TunedModelPath);
             Assert.IsNotNull(choice, @"the fine-tuned model cannot be read");
-            AssertEx.AreEqual(diaFilePaths.Length, choice.TrainingRunCount);
+            AssertEx.AreEqual(tuningRuns.Length, choice.TrainingRunCount);
             // Nothing joins the model list
             RunUI(() => AssertEx.AreEqual(1, Settings.Default.CarafeModelList.Count));
 
@@ -249,8 +276,10 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// The library's model joins the model list through the combo's Add..., and a second
-        /// library is predicted with it as it is: no fine-tune, the model named to the builder.
+        /// The library's model joins the model list through Edit list..., which shows what it was
+        /// trained on and refuses its name twice; a copy added through the combo's Add... is removed
+        /// again; and a second library is predicted with the listed model as it is: no fine-tune, the
+        /// model named to the builder, retention times in the tuning runs' minutes.
         /// </summary>
         private void BuildWithSavedModel(string tunedModelPath)
         {
@@ -264,15 +293,73 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.Carafe = true;
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
             });
+            // What the model was trained on: the three tuning runs, their instrument, NCE and gradient,
+            // and a fine-tuned Chronologer RT model that fits them
+            var choice = CarafeModelChoice.Read(tunedModelPath);
+            Assert.IsNotNull(choice, @"the fine-tuned model cannot be read");
+            AssertEx.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(tunedModelPath).RtModel);
+            AssertEx.AreEqual(3, choice.TrainingRunCount);
+            AssertEx.AreEqual(30, choice.Nce);
+            AssertEx.IsTrue(choice.GradientMinutes > PEPTIDES.Max(p => p.RetentionTime));
+            AssertEx.IsTrue(choice.RtR2 > 0.99);
+
+            // Edit list... shows no models added; its Add... takes a name and a file, shows what the
+            // file was trained on, and refuses a name already in the list
+            var listDlg = ShowDialog<CarafeModelListDlg>(buildLibraryDlg.EditCarafeModelList);
+            RunUI(() => AssertEx.AreEqual(0, listDlg.Models.Count));
+            var editDlg = ShowDialog<EditCarafeModelDlg>(listDlg.AddItem);
+            RunUI(() =>
+            {
+                editDlg.ModelName = SAVED_MODEL_NAME;
+                editDlg.ModelPath = tunedModelPath;
+                AssertEx.Contains(editDlg.Details, choice.Instrument);
+            });
+            OkDialog(editDlg, editDlg.OkDialog);
+            var editAgainDlg = ShowDialog<EditCarafeModelDlg>(listDlg.AddItem);
+            RunUI(() =>
+            {
+                editAgainDlg.ModelName = SAVED_MODEL_NAME;
+                editAgainDlg.ModelPath = tunedModelPath;
+            });
+            RunDlg<MessageDlg>(editAgainDlg.OkDialog, dlg =>
+            {
+                AssertEx.AreComparableStrings(SettingsUIResources.EditCarafeModelDlg_OkDialog_The_model__0__already_exists_, dlg.Message);
+                dlg.OkDialog();
+            });
+            OkDialog(editAgainDlg, editAgainDlg.CancelDialog);
+            OkDialog(listDlg, listDlg.OkDialog);
+
+            // The combo's own Add... adds a copy and selects it; Edit list... removes it, and the
+            // choice falls back to the pretrained models
             RunDlg<EditCarafeModelDlg>(buildLibraryDlg.AddCarafeModel, dlg =>
             {
-                dlg.ModelName = SAVED_MODEL_NAME;
+                dlg.ModelName = COPY_MODEL_NAME;
                 dlg.ModelPath = tunedModelPath;
                 dlg.OkDialog();
             });
             RunUI(() =>
             {
-                AssertEx.AreEqual(2, Settings.Default.CarafeModelList.Count);
+                AssertEx.AreEqual(COPY_MODEL_NAME, buildLibraryDlg.CarafeModel.Name);
+                AssertEx.AreEqual(3, Settings.Default.CarafeModelList.Count);
+            });
+            RunDlg<CarafeModelListDlg>(buildLibraryDlg.EditCarafeModelList, dlg =>
+            {
+                AssertEx.AreEqual(2, dlg.Models.Count);
+                dlg.SelectItem(COPY_MODEL_NAME);
+                dlg.RemoveItem();
+                AssertEx.AreEqual(SAVED_MODEL_NAME, dlg.Models.Single().Name);
+                dlg.OkDialog();
+            });
+            RunUI(() =>
+            {
+                var models = Settings.Default.CarafeModelList;
+                AssertEx.AreEqual(2, models.Count);
+                AssertEx.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
+                // The list's model is offered by name, with what it was trained on
+                AssertEx.Contains(models.GetDisplayName(models[1]), SAVED_MODEL_NAME, choice.Instrument,
+                    string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
+                        choice.GradientMinutes.Value.ToString(@"0.#", LocalizationHelper.CurrentCulture)));
+                buildLibraryDlg.CarafeModel = models[1];
                 AssertEx.AreEqual(SAVED_MODEL_NAME, buildLibraryDlg.CarafeModel.Name);
                 AssertEx.AreEqual(tunedModelPath, buildLibraryDlg.CarafeModelPath);
                 AssertEx.IsTrue(buildLibraryDlg.UseExistingModel);
@@ -294,6 +381,19 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettings, peptideSettings.OkDialog);
             WaitForDocumentLoaded();
             AssertLibrarySpectra(SAVED_LIBRARY_NAME);
+
+            // A fine-tuned RT model predicts on its training runs' gradient: minutes, near what the
+            // middle run measured, not iRT
+            var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Single(lib => lib != null && lib.Name == SAVED_LIBRARY_NAME);
+            foreach (var peptide in PEPTIDES)
+            {
+                var spectrum = library.GetSpectra(new LibKey(peptide.Sequence, 2), null, LibraryRedundancy.best).SingleOrDefault();
+                Assert.IsNotNull(spectrum, peptide.Sequence + @" is not in the library");
+                Assert.IsNotNull(spectrum.RetentionTime, peptide.Sequence);
+                double predicted = spectrum.RetentionTime.Value;
+                AssertEx.IsTrue(Math.Abs(predicted - peptide.RetentionTime) <= RT_TOLERANCE,
+                    string.Format(@"{0}: predicted {1:F2} min, measured {2:F2} min", peptide.Sequence, predicted, peptide.RetentionTime));
+            }
         }
 
         /// <summary>
@@ -371,10 +471,8 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(OspreyHelpers.LibraryHasDecoyPairs(libraryPath), @"the library has no DecoyPairs table");
             LibraryDecoyPairs.Count(libraryPath, out int decoyRows, out int entrapmentRows);
             AssertEx.IsTrue(decoyRows > 0, @"no decoy rows in DecoyPairs");
-            // One row per entrapment precursor (charges 2 and 3)
             var entrapmentSet = new HashSet<Target>(builder.EntrapmentTargets);
             int entrapmentPrecursors = builder.Document.Peptides.Where(p => !p.IsDecoy && entrapmentSet.Contains(p.Target)).Sum(p => p.TransitionGroupCount);
-            AssertEx.AreEqual(entrapmentPrecursors, entrapmentRows);
             // The counts go to the test output as the record of what the library holds
             Console.WriteLine(@"DecoyPairs of {0}: {1} decoy rows, {2} entrapment rows for {3} entrapment peptides ({4} precursors); first entrapment peptides: {5}",
                 Path.GetFileName(libraryPath), decoyRows, entrapmentRows, entrapmentCount, entrapmentPrecursors,
@@ -383,6 +481,17 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettings, peptideSettings.OkDialog);
             WaitForDocumentLoaded();
             AssertLibrarySpectra(FASTA_LIBRARY_NAME);
+            // A row per paired entrapment precursor (charges 2 and 3) the library holds. Nearly every
+            // one is paired: CarafeSharp leaves out a pair whose target or decoy predicts too few
+            // fragments, and writes a precursor unpaired when its partner side has no precursor of
+            // its charge and modifications to predict (2 of 5,334 on a larger Stellar subset).
+            var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Single(lib => lib != null && lib.Name == FASTA_LIBRARY_NAME);
+            int heldEntrapmentPrecursors = builder.Document.Peptides.Where(p => !p.IsDecoy && entrapmentSet.Contains(p.Target))
+                .Sum(p => p.TransitionGroups.Count(tg => library.Contains(tg.GetLibKey(builder.Document.Settings, p))));
+            string entrapmentCounts = string.Format(@"{0} entrapment rows, {1} entrapment precursors in the library, {2} in the document",
+                entrapmentRows, heldEntrapmentPrecursors, entrapmentPrecursors);
+            AssertEx.IsTrue(entrapmentRows <= heldEntrapmentPrecursors && heldEntrapmentPrecursors <= entrapmentPrecursors, entrapmentCounts);
+            AssertEx.IsTrue(entrapmentRows > entrapmentPrecursors * 0.99, entrapmentCounts);
         }
 
         /// <summary>The document's library of that name is loaded and holds spectra.</summary>

@@ -1443,7 +1443,7 @@ namespace pwiz.Osprey
             {
                 _scope = value;
                 if (!IsHosted)
-                    PropertyName = value.HasValue ? () => OspreyCommandArgs.GetPropertyLabel(Name) : (Func<string>) null;
+                    PropertyName = value.HasValue ? () => OspreyCommandArgs.GetPropertyLabel(Name) : null;
             }
         }
 
