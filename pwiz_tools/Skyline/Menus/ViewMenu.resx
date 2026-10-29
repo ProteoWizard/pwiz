@@ -456,6 +456,15 @@
   <data name="toolStripSeparator9.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 6</value>
   </data>
+  <data name="replicatesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>219, 22</value>
+  </data>
+  <data name="replicatesMenuItem.Text" xml:space="preserve">
+    <value>&amp;Replicates</value>
+  </data>
+  <data name="replicatesMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="showChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 22</value>
   </data>
@@ -491,6 +500,18 @@
   </data>
   <data name="firstTabsMenuItem.Text" xml:space="preserve">
     <value>&amp;First Tabs</value>
+  </data>
+  <data name="previousTabsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+PageUp</value>
+  </data>
+  <data name="previousTabsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>219, 22</value>
+  </data>
+  <data name="previousTabsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Previous Tabs</value>
+  </data>
+  <data name="nextTabsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+PageDown</value>
   </data>
   <data name="nextTabsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 22</value>

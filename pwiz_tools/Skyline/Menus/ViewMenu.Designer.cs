@@ -80,12 +80,14 @@ namespace pwiz.Skyline.Menus
             this.groupedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.chromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.replicatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorReplicates = new System.Windows.Forms.ToolStripSeparator();
             this.previousReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nextReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorTabs = new System.Windows.Forms.ToolStripSeparator();
             this.firstTabsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.previousTabsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nextTabsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator44 = new System.Windows.Forms.ToolStripSeparator();
             this.closeChromatogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -533,12 +535,14 @@ namespace pwiz.Skyline.Menus
             // chromatogramsMenuItem
             // 
             this.chromatogramsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.replicatesMenuItem,
             this.showChromMenuItem,
             this.toolStripSeparatorReplicates,
             this.previousReplicateMenuItem,
             this.nextReplicateMenuItem,
             this.toolStripSeparatorTabs,
             this.firstTabsMenuItem,
+            this.previousTabsMenuItem,
             this.nextTabsMenuItem,
             this.toolStripSeparator44,
             this.closeChromatogramMenuItem,
@@ -547,8 +551,13 @@ namespace pwiz.Skyline.Menus
             this.chromatogramsMenuItem.Name = "chromatogramsMenuItem";
             this.chromatogramsMenuItem.DropDownOpening += new System.EventHandler(this.chromatogramsMenuItem_DropDownOpening);
             // 
+            // replicatesMenuItem
+            //
+            this.replicatesMenuItem.Name = "replicatesMenuItem";
+            resources.ApplyResources(this.replicatesMenuItem, "replicatesMenuItem");
+            //
             // showChromMenuItem
-            // 
+            //
             this.showChromMenuItem.Name = "showChromMenuItem";
             resources.ApplyResources(this.showChromMenuItem, "showChromMenuItem");
             // 
@@ -579,6 +588,12 @@ namespace pwiz.Skyline.Menus
             this.firstTabsMenuItem.Name = "firstTabsMenuItem";
             resources.ApplyResources(this.firstTabsMenuItem, "firstTabsMenuItem");
             this.firstTabsMenuItem.Click += new System.EventHandler(this.firstTabsMenuItem_Click);
+            //
+            // previousTabsMenuItem
+            //
+            this.previousTabsMenuItem.Name = "previousTabsMenuItem";
+            resources.ApplyResources(this.previousTabsMenuItem, "previousTabsMenuItem");
+            this.previousTabsMenuItem.Click += new System.EventHandler(this.previousTabsMenuItem_Click);
             //
             // nextTabsMenuItem
             //
@@ -1013,12 +1028,14 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem ranksMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
         private System.Windows.Forms.ToolStripMenuItem chromatogramsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem replicatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showChromMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorReplicates;
         private System.Windows.Forms.ToolStripMenuItem previousReplicateMenuItem;
         private System.Windows.Forms.ToolStripMenuItem nextReplicateMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorTabs;
         private System.Windows.Forms.ToolStripMenuItem firstTabsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem previousTabsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem nextTabsMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator44;
         private System.Windows.Forms.ToolStripMenuItem closeChromatogramMenuItem;

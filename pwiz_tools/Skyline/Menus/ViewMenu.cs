@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Menus
 {
     public partial class ViewMenu : SkylineControl, IMenuControlImplementer
     {
+        private const int MAX_REPLICATE_MENU_ITEMS = 20;
+
         private bool ProteomicsEnabled => DocumentUI.IsEmptyOrHasPeptides;
         private bool SmallMoleculesEnabled => DocumentUI.HasSmallMolecules;
 
@@ -440,34 +442,26 @@ namespace pwiz.Skyline.Menus
             // If MeasuredResults is null, then this menuitem is incorrectly enabled
             var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms;
 
-            int i = 0;
+            // The replicate items follow replicatesMenuItem
+            int iFirstReplicate = menu.DropDownItems.IndexOf(replicatesMenuItem) + 1;
             menu.DropDown.SuspendLayout();
             try
             {
-                foreach (var chrom in chromatograms)
+                if (chromatograms.Count > MAX_REPLICATE_MENU_ITEMS)
                 {
-                    string name = chrom.Name;
-                    ToolStripMenuItem item = null;
-                    if (i < menu.DropDownItems.Count)
-                        item = menu.DropDownItems[i] as ToolStripMenuItem;
-                    if (item == null || name != item.Name)
-                    {
-                        // Remove the rest of the existing items
-                        while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                            menu.DropDownItems.RemoveAt(i);
-
-                        ShowChromHandler handler = new ShowChromHandler(SkylineWindow, chrom.Name);
-                        item = new ToolStripMenuItem(chrom.Name, null,
-                            handler.menuItem_Click);
-                        menu.DropDownItems.Insert(i, item);
-                    }
-
-                    i++;
+                    // Too many replicates to list in this menu, so they go in a submenu
+                    UpdateShowChromMenuItems(menu.DropDownItems, iFirstReplicate, toolStripSeparatorReplicates,
+                        Array.Empty<ChromatogramSet>());
+                    UpdateShowChromMenuItems(replicatesMenuItem.DropDownItems, 0, null, chromatograms);
+                    replicatesMenuItem.Available = true;
                 }
-
-                // Remove the rest of the existing items
-                while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                    menu.DropDownItems.RemoveAt(i);
+                else
+                {
+                    replicatesMenuItem.Available = false;
+                    replicatesMenuItem.DropDownItems.Clear();
+                    UpdateShowChromMenuItems(menu.DropDownItems, iFirstReplicate, toolStripSeparatorReplicates,
+                        chromatograms);
+                }
             }
             finally
             {
@@ -475,6 +469,35 @@ namespace pwiz.Skyline.Menus
             }
 
             closeChromatogramMenuItem.Enabled = !string.IsNullOrEmpty(SkylineWindow.SelectedGraphChromName);
+        }
+
+        /// <summary>
+        /// Makes the items from <paramref name="iStart"/> up to <paramref name="endItem"/>, or to the
+        /// end of <paramref name="items"/> when it is null, one item per chromatogram that shows it,
+        /// keeping the items already in place for the same names.
+        /// </summary>
+        private void UpdateShowChromMenuItems(ToolStripItemCollection items, int iStart, ToolStripItem endItem,
+            IEnumerable<ChromatogramSet> chromatograms)
+        {
+            int i = iStart;
+            foreach (var chrom in chromatograms)
+            {
+                var item = i < items.Count ? items[i] as ToolStripMenuItem : null;
+                if (item == null || chrom.Name != item.Name)
+                {
+                    RemoveMenuItems(items, i, endItem);
+                    var handler = new ShowChromHandler(SkylineWindow, chrom.Name);
+                    items.Insert(i, new ToolStripMenuItem(chrom.Name, null, handler.menuItem_Click) { Name = chrom.Name });
+                }
+                i++;
+            }
+            RemoveMenuItems(items, i, endItem);
+        }
+
+        private static void RemoveMenuItems(ToolStripItemCollection items, int iStart, ToolStripItem endItem)
+        {
+            while (iStart < items.Count && !ReferenceEquals(items[iStart], endItem))
+                items.RemoveAt(iStart);
         }
         private class ShowChromHandler
         {
@@ -501,6 +524,11 @@ namespace pwiz.Skyline.Menus
         private void firstTabsMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SelectFirstTabs();
+        }
+
+        private void previousTabsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.SelectPreviousTabs();
         }
 
         private void nextTabsMenuItem_Click(object sender, EventArgs e)

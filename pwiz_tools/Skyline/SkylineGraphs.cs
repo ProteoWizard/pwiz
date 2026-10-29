@@ -4099,6 +4099,27 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
+        /// Selects the tab before the selected one in only the document panes whose selected tab
+        /// is furthest along, leaving the other panes alone. Panes with fewer tabs stop at their
+        /// last tab going forward, so this returns every pane to where it was before the matching
+        /// <see cref="SelectNextTabs"/>.
+        /// </summary>
+        public void SelectPreviousTabs()
+        {
+            var panes = GetDocumentPanes().ToList();
+            int iMax = panes.Select(GetSelectedTabIndex).DefaultIfEmpty(-1).Max();
+            if (iMax <= 0)
+                return;
+            foreach (var pane in panes.Where(pane => GetSelectedTabIndex(pane) == iMax))
+                pane.ActiveContent = pane.DisplayingContents[iMax - 1];
+        }
+
+        private static int GetSelectedTabIndex(DockPane pane)
+        {
+            return pane.DisplayingContents.IndexOf(pane.ActiveContent);
+        }
+
+        /// <summary>
         /// Moves a form into a new pane beside its current one when that pane also holds forms
         /// outside the set being arranged, so that the arrangement starts from a pane of its own.
         /// </summary>
