@@ -28,6 +28,7 @@ using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.Controls;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
@@ -202,15 +203,23 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Returns an image of a Skyline form. The image may be incomplete if parts of the form could not be drawn,
-        /// but if no image of the form could be made at all, this throws. Must be called on the form's thread.
+        /// but if no image of the form could be made at all, this throws. The window boundary is repainted as the
+        /// tutorial screenshots' is: a screen copy carries whatever lay behind the corners Windows 11 rounds and
+        /// the frame it blends, and an off-screen render has a plain square frame. Must be called on the form's
+        /// thread.
         /// </summary>
         public static Bitmap GetFormImage(Control targetForm)
         {
-            // Copy the screen when it shows the whole form, still redacting any other application's window in the
-            // edge band IsShownOnScreen ignores. Otherwise render the form off-screen: there is no desktop to copy
-            // from (e.g. a disconnected Remote Desktop session), the form is not on the monitors (e.g. the
-            // offscreen test mode), or a window of another application covers it. If rendering fails and the
-            // desktop is available, fall back to a screen copy with the covering windows redacted.
+            return CleanupBorder(CaptureFormImage(targetForm), targetForm);
+        }
+
+        // Copy the screen when it shows the whole form, still redacting any other application's window in the
+        // edge band IsShownOnScreen ignores. Otherwise render the form off-screen: there is no desktop to copy
+        // from (e.g. a disconnected Remote Desktop session), the form is not on the monitors (e.g. the
+        // offscreen test mode), or a window of another application covers it. If rendering fails and the
+        // desktop is available, fall back to a screen copy with the covering windows redacted.
+        private static Bitmap CaptureFormImage(Control targetForm)
+        {
             if (!IsDesktopAvailable())
             {
                 return RenderControl(GetRenderedControl(targetForm)) ??
@@ -240,6 +249,15 @@ namespace pwiz.Skyline.Util
                 throw new AggregateException(TextUtil.LineSeparate(renderException.Message, e.Message),
                     renderException, e);
             }
+        }
+
+        // The boundary repaint the tutorial screenshots get: a floating pane has the smaller tool-window corners.
+        private static Bitmap CleanupBorder(Bitmap bmp, Control targetForm)
+        {
+            var cleaned = bmp.CleanupBorder(targetForm is DockableForm { DockState: DockState.Floating });
+            if (!ReferenceEquals(cleaned, bmp))
+                bmp.Dispose();
+            return cleaned;
         }
 
         /// <summary>
