@@ -87,16 +87,10 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            bool? searchSucceeded = null;
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
-            });
-
             try
             {
-                WaitForConditionUI(30 * 60000, () => searchSucceeded.HasValue);
-                RunUI(() => Assert.IsTrue(searchSucceeded.Value,
+                WaitForConditionUI(30 * 60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.RunSucceeded.Value,
                     importPeptideSearchDlg.SearchControl.LogText));
             }
             finally

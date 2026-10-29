@@ -168,6 +168,16 @@ namespace pwiz.Skyline.Model.Proteome
             return ChangeProp(ImClone(this), im => im.DocumentFinal = value);
         }
 
+        /// <summary>
+        /// The proteins left out of <see cref="DocumentFinal"/> because all their peptides are iRT standard peptides.
+        /// </summary>
+        public int IrtStandardProteinsRemoved { get; private set; }
+
+        public AssociateProteinsResults ChangeIrtStandardProteinsRemoved(int value)
+        {
+            return ChangeProp(ImClone(this), im => im.IrtStandardProteinsRemoved = value);
+        }
+
 
         private class ResultsProducer : Producer<Parameters, AssociateProteinsResults>
         {
@@ -176,77 +186,137 @@ namespace pwiz.Skyline.Model.Proteome
                 IDictionary<WorkOrder, object> inputs)
             {
                 var preliminaryResults = inputs.Values.OfType<ParsimonyIndependentResults>().First();
-                return ProduceResults(productionMonitor, parameter, preliminaryResults);
-            }
-
-            public AssociateProteinsResults ProduceResults(ProductionMonitor productionMonitor, Parameters parameter, ParsimonyIndependentResults parsimonyIndependentResults) 
-            {
-                var results = new AssociateProteinsResults(parameter).ChangeError(parsimonyIndependentResults.ErrorMessage, parsimonyIndependentResults.ErrorException);
-                if (results.IsErrorResult)
-                {
-                    return results;
-                }
-                var proteinAssociation = parsimonyIndependentResults.GetProteinAssociation();
-                if (proteinAssociation?.AssociatedProteins == null)
-                {
-                    return results;
-                }
-
-                var parsimony = parameter.ParsimonySettings;
-                proteinAssociation.ApplyParsimonyOptions(parsimony.GroupProteins, parsimony.GeneLevelParsimony,
-                    parsimony.FindMinimalProteinList, parsimony.RemoveSubsetProteins, parsimony.SharedPeptides,
-                    parsimony.MinPeptidesPerProtein, new ProgressImpl(productionMonitor, 30, 60));
-                var documentFinal =
-                    proteinAssociation.CreateDocTree(parameter.Document, new ProgressImpl(productionMonitor, 60, 100));
-                if (documentFinal != null && parameter.DecoysPerTarget != 0)
-                {
-                    var numDecoys = (int)Math.Round(parameter.DecoysPerTarget *
-                                                    documentFinal.PeptideGroups.Sum(pepGroup =>
-                                                        pepGroup.PeptideCount));
-                    if (numDecoys > 0)
-                    {
-                        documentFinal = new RefinementSettings
-                                { DecoysMethod = parameter.DecoyGenerationMethod, NumberOfDecoys = numDecoys }
-                            .GenerateDecoys(documentFinal);
-                    }
-                }
-
-                if (documentFinal != null && null != parameter.IrtStandard)
-                {
-                    documentFinal =
-                        ImportPeptideSearch.AddStandardsToDocument(documentFinal, parameter.IrtStandard);
-                }
-
-                return results.ChangeProteinAssociation(proteinAssociation).ChangeDocumentFinal(documentFinal);
+                return ProduceResults(new Progress(productionMonitor), parameter, preliminaryResults);
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
-                yield return PRELIMINARY_RESULTS_PRODUCER.MakeWorkOrder(new ParsimonyIndependentParameters(parameter.Document,
-                    parameter.FastaFilePath, parameter.BackgroundProteome));
+                yield return PRELIMINARY_RESULTS_PRODUCER.MakeWorkOrder(MakeParsimonyIndependentParameters(parameter));
             }
         }
 
-        private static readonly Producer<ParsimonyIndependentParameters, ParsimonyIndependentResults> PRELIMINARY_RESULTS_PRODUCER =
-            Producer.FromFunction<ParsimonyIndependentParameters, ParsimonyIndependentResults>(ProduceParsimonyIndependentResults);
+        /// <summary>
+        /// The targets in <paramref name="documentFinal"/>, and the peptides left out of proteins:
+        /// unmapped, or removed by the parsimony filters.
+        /// </summary>
+        public static void GetFinalTargetCounts(SrmDocument documentFinal, ProteinAssociation proteinAssociation,
+            out int proteins, out int peptides, out int precursors, out int transitions, out int unmappedOrRemoved)
+        {
+            var unmappedPeptideGroup = documentFinal.PeptideGroups.FirstOrDefault(pg => pg.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides);
+            unmappedOrRemoved = proteinAssociation.PeptidesRemovedByFiltersCount + (unmappedPeptideGroup?.PeptideCount ?? 0);
+            proteins = documentFinal.PeptideGroupCount;
+            peptides = documentFinal.PeptideCount;
+            precursors = documentFinal.PeptideTransitionGroupCount;
+            transitions = documentFinal.PeptideTransitionCount;
+        }
 
+        /// <summary>
+        /// Calculates the results on the calling thread, for a caller that runs the protein
+        /// association as one step of a longer operation rather than showing it live.
+        /// </summary>
+        public static AssociateProteinsResults Calculate(Parameters parameters, CancellationToken cancellationToken,
+            Action<int> setPercentComplete)
+        {
+            var progress = new Progress(cancellationToken, setPercentComplete);
+            var preliminaryResults = ProduceParsimonyIndependentResults(progress, MakeParsimonyIndependentParameters(parameters));
+            return ProduceResults(progress, parameters, preliminaryResults);
+        }
+
+        private static ParsimonyIndependentParameters MakeParsimonyIndependentParameters(Parameters parameter)
+        {
+            return new ParsimonyIndependentParameters(parameter.Document, parameter.FastaFilePath, parameter.BackgroundProteome);
+        }
+
+        private static AssociateProteinsResults ProduceResults(Progress progress, Parameters parameter, ParsimonyIndependentResults parsimonyIndependentResults)
+        {
+            var results = new AssociateProteinsResults(parameter).ChangeError(parsimonyIndependentResults.ErrorMessage, parsimonyIndependentResults.ErrorException);
+            if (results.IsErrorResult)
+            {
+                return results;
+            }
+            var proteinAssociation = parsimonyIndependentResults.GetProteinAssociation();
+            if (proteinAssociation?.AssociatedProteins == null)
+            {
+                return results;
+            }
+
+            var parsimony = parameter.ParsimonySettings;
+            proteinAssociation.ApplyParsimonyOptions(parsimony.GroupProteins, parsimony.GeneLevelParsimony,
+                parsimony.FindMinimalProteinList, parsimony.RemoveSubsetProteins, parsimony.SharedPeptides,
+                parsimony.MinPeptidesPerProtein, progress.Range(30, 60));
+            var documentFinal =
+                proteinAssociation.CreateDocTree(parameter.Document, progress.Range(60, 100));
+            if (documentFinal != null && parameter.DecoysPerTarget != 0)
+            {
+                var numDecoys = (int)Math.Round(parameter.DecoysPerTarget *
+                                                documentFinal.PeptideGroups.Sum(pepGroup =>
+                                                    pepGroup.PeptideCount));
+                if (numDecoys > 0)
+                {
+                    documentFinal = new RefinementSettings
+                            { DecoysMethod = parameter.DecoyGenerationMethod, NumberOfDecoys = numDecoys }
+                        .GenerateDecoys(documentFinal);
+                }
+            }
+
+            int irtStandardProteinsRemoved = 0;
+            if (documentFinal != null && null != parameter.IrtStandard)
+            {
+                documentFinal =
+                    ImportPeptideSearch.AddStandardsToDocument(documentFinal, parameter.IrtStandard, out irtStandardProteinsRemoved);
+            }
+
+            return results.ChangeProteinAssociation(proteinAssociation).ChangeDocumentFinal(documentFinal)
+                .ChangeIrtStandardProteinsRemoved(irtStandardProteinsRemoved);
+        }
+
+        private static readonly Producer<ParsimonyIndependentParameters, ParsimonyIndependentResults> PRELIMINARY_RESULTS_PRODUCER =
+            Producer.FromFunction<ParsimonyIndependentParameters, ParsimonyIndependentResults>((productionMonitor, parameter) =>
+                ProduceParsimonyIndependentResults(new Progress(productionMonitor), parameter));
+
+
+        /// <summary>
+        /// Where a calculation reports its progress: the producer's monitor, or a caller that runs
+        /// it directly with <see cref="Calculate"/>.
+        /// </summary>
+        private class Progress
+        {
+            public Progress(CancellationToken cancellationToken, Action<int> setPercentComplete)
+            {
+                CancellationToken = cancellationToken;
+                SetPercentComplete = setPercentComplete;
+            }
+
+            public Progress(ProductionMonitor productionMonitor)
+                : this(productionMonitor.CancellationToken, productionMonitor.SetProgress)
+            {
+            }
+
+            public CancellationToken CancellationToken { get; }
+            public Action<int> SetPercentComplete { get; }
+
+            public ProgressImpl Range(int min, int max)
+            {
+                return new ProgressImpl(this, min, max);
+            }
+        }
 
         private class ProgressImpl : ILongWaitBroker, IProgressMonitor
         {
-            private ProductionMonitor _productionMonitor;
+            private Progress _progress;
             private int _minProgress;
             private int _maxProgress;
 
-            public ProgressImpl(ProductionMonitor productionMonitor, int min, int max)
+            public ProgressImpl(Progress progress, int min, int max)
             {
-                _productionMonitor = productionMonitor;
+                _progress = progress;
                 _minProgress = min;
                 _maxProgress = max;
             }
 
             public bool IsCanceled
             {
-                get { return _productionMonitor.CancellationToken.IsCancellationRequested; }
+                get { return _progress.CancellationToken.IsCancellationRequested; }
             }
 
             public int ProgressValue
@@ -254,7 +324,7 @@ namespace pwiz.Skyline.Model.Proteome
                 get { return -1; }
                 set
                 {
-                    _productionMonitor.SetProgress(GetPercentComplete(value));
+                    _progress.SetPercentComplete(GetPercentComplete(value));
                 }
             }
 
@@ -272,13 +342,13 @@ namespace pwiz.Skyline.Model.Proteome
 
             public CancellationToken CancellationToken
             {
-                get { return _productionMonitor.CancellationToken; }
+                get { return _progress.CancellationToken; }
             }
 
             public UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
-                _productionMonitor.SetProgress(GetPercentComplete(status.PercentComplete));
-                return _productionMonitor.CancellationToken.IsCancellationRequested
+                _progress.SetPercentComplete(GetPercentComplete(status.PercentComplete));
+                return _progress.CancellationToken.IsCancellationRequested
                     ? UpdateProgressResponse.cancel
                     : UpdateProgressResponse.normal;
             }
@@ -363,7 +433,7 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        private static ParsimonyIndependentResults ProduceParsimonyIndependentResults(ProductionMonitor productionMonitor, ParsimonyIndependentParameters parameter)
+        private static ParsimonyIndependentResults ProduceParsimonyIndependentResults(Progress progress, ParsimonyIndependentParameters parameter)
         {
             var document = parameter.Document;
             var stringSearch = new StringSearch(document.Peptides.Select(peptide => peptide.Target.Sequence));
@@ -380,7 +450,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 try
                 {
-                    proteinAssociation.UseFastaFile(parameter.FastaFilePath, new ProgressImpl(productionMonitor, 0, 30));
+                    proteinAssociation.UseFastaFile(parameter.FastaFilePath, progress.Range(0, 30));
                 }
                 catch (Exception ex)
                 {
@@ -394,7 +464,7 @@ namespace pwiz.Skyline.Model.Proteome
             else if (parameter.BackgroundProteome != null)
             {
                 proteinAssociation.UseBackgroundProteome(
-                    parameter.BackgroundProteome, new ProgressImpl(productionMonitor, 0, 30));
+                    parameter.BackgroundProteome, progress.Range(0, 30));
             }
             else
             {

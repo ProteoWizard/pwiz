@@ -29,6 +29,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -139,6 +140,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (status.IsError)
             {
+                _errorShown = true;
                 MessageDlg.ShowWithException(Program.MainWindow, status.ErrorException.Message, status.ErrorException);
                 return;
             }
@@ -222,8 +224,65 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public int PercentComplete => progressBar.Value;
 
         protected CancellationTokenSource _cancelToken;
+        private bool _errorShown;
 
         public abstract void RunSearch();
+
+        /// <summary>
+        /// Runs <paramref name="work"/> on a background thread after the search, reporting into this
+        /// control's log and progress bar, with the Cancel button canceling it. Calls
+        /// <paramref name="finished"/> on the UI thread with true when the work completed.
+        /// </summary>
+        public void RunAfterSearch(Action<IProgressMonitor, CancellationToken> work, Action<bool> finished)
+        {
+            var cancelToken = _cancelToken = new CancellationTokenSource();
+            _errorShown = false;
+            btnCancel.Enabled = progressBar.Visible = true;
+            ActionUtil.RunAsync(() =>
+            {
+                bool success;
+                try
+                {
+                    work(this, cancelToken.Token);
+                    success = !cancelToken.IsCancellationRequested;
+                }
+                catch (Exception x) when (x is OperationCanceledException || cancelToken.IsCancellationRequested)
+                {
+                    // Steps that wrap a cancel in their own error are still a cancel
+                    success = false;
+                }
+                catch (Exception x)
+                {
+                    success = false;
+                    Invoke(new MethodInvoker(() =>
+                    {
+                        UpdateSearchEngineProgress(new ProgressStatus(x.Message));
+                        // A step may already have shown its error (e.g. the library build) before failing
+                        if (!_errorShown)
+                            UpdateSearchEngineProgress(new ProgressStatus().ChangeErrorException(x));
+                    }));
+                }
+
+                Invoke(new MethodInvoker(() =>
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        UpdateSearchEngineProgress(new ProgressStatus(Resources.DDASearchControl_SearchProgress_Search_canceled));
+                    UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
+                    btnCancel.Enabled = false;
+                    progressBar.Visible = success;
+                    finished(success);
+                    OnSearchFinished(success);
+                }));
+            }, @"Peptide search follow-up thread");
+        }
+
+        /// <summary>
+        /// Adds a line to the log, for a summary written when the work is done.
+        /// </summary>
+        public void AddLogLine(string message)
+        {
+            UpdateSearchEngineProgress(new ProgressStatus(message));
+        }
 
         protected IProgressStatus UpdateSearchEngineProgressMilestone(IProgressStatus status,
             bool success, int segmentsComplete, string cancelledMessage, string failedMessage, string succeededMessage)

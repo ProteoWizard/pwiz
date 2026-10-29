@@ -23,16 +23,15 @@ using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -398,6 +397,7 @@ namespace pwiz.SkylineTestFunctional
             const int DEFAULT_MAX_VARIABLE_MODS = 2;
             const double DEFAULT_CUTOFF = 0.01;
             const int DEFAULT_MISSED_CLEAVAGES = 0;
+            const string MSFRAGGER_DIA_PRESET = "MSFragger high-high DIA (Q-Exactive, Q-Tof)";
 
             // Preset 1: MSAmanda DDA with specific tolerances and FASTA settings
             const string PRESET_1_NAME = "MSAmanda - Test Config";
@@ -447,11 +447,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.SettingsPresetVisible, "Preset should be visible on mods page");
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck Carbamidomethyl (C)
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
-                // Full scan settings page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 // Import FASTA page
@@ -526,13 +521,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(enzyme2.Name, importPeptideSearchDlg.ImportFastaControl.Enzyme.Name,
                     "Enzyme combo box should reflect the selected enzyme");
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = PRESET_2_MISSED_CLEAVAGES;
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods - re-check Carbamidomethyl for preset 2
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, true); // check Carbamidomethyl (C)
 
                 // The preset that is still selected must not undo that change when the user leaves the page and comes back
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.MatchModificationsControl.CheckedModificationNames.Contains(@"Carbamidomethyl (C)"));
@@ -568,7 +562,6 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 9;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
@@ -609,7 +602,6 @@ namespace pwiz.SkylineTestFunctional
             // Navigate back to spectra page, apply preset 2 from there
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
@@ -621,7 +613,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual(PRESET_2_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
@@ -797,7 +788,6 @@ namespace pwiz.SkylineTestFunctional
             // Preset 1 has Carbamidomethyl unchecked; preset 2 has it checked
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods page
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
 
@@ -856,7 +846,6 @@ namespace pwiz.SkylineTestFunctional
                     "Default preset should reset IRT standard to None on spectra page");
 
                 // Switch to MSFragger DIA preset - should set DIA workflow
-                const string MSFRAGGER_DIA_PRESET = "MSFragger high-high DIA (Q-Exactive, Q-Tof)";
                 importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
                 Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dia, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
                     "MSFragger DIA preset should set DIA workflow");
@@ -873,11 +862,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-                importPeptideSearchDlg.SelectedPresetName = "PRM Preset";
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods, not the PRM transition settings page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
+                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings, not the DIA conversion page
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
             });
@@ -1141,6 +1132,9 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.prm; // will go back and switch to DDA
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtRunOptionsVisible);
+                importPeptideSearchDlg.BuildPepSearchLibControl.RecalibrateIrtStandard = true;
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // With only 1 source, no add/remove prefix/suffix dialog
 
@@ -1232,26 +1226,18 @@ namespace pwiz.SkylineTestFunctional
                 });
             }
 
-            // We're on the MS1 full scan settings page.
+            // We're on the "Import FASTA" page: everything the search needs comes before the extraction settings.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
-            // We're on the "Import FASTA" page.
-            RunUI(() =>
-            {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                Assert.IsNotNull(importPeptideSearchDlg.ImportFastaControl.ProteinAssociationOptions);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(TestSettings.FastaFilename));
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             // We're on the "Adjust Search Settings" page
-            bool? searchSucceeded = null;
             TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
@@ -1277,67 +1263,23 @@ namespace pwiz.SkylineTestFunctional
             const string SEARCH_PRESET_NAME = "DDA Search Preset";
             RunUI(() => importPeptideSearchDlg.SaveSettingsPreset(SEARCH_PRESET_NAME));
 
-            RunUI(() =>
-            {
-                // Run the search
-                //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
-
+            // Leaving the search settings page makes sure the search tools are installed
             SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
-
             if (RedownloadTools || TestSettings.HasMissingDependencies)
-            {
-                if (TestSettings.SearchEngine == SearchEngine.MSFragger)
-                {
-                    var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
-                    if (msfraggerDownloaderDlg != null)
-                    {
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@gmail.com", "UW"));
-                        //PauseTest(); // uncomment to test bad email handling (e.g. non-institutional email)
-                        RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
+                AcceptSearchToolDownloads();
 
-                        if (RedownloadTools)
-                        {
-                            // Expect MsFraggerDownloadDlg to stay open when HttpClient is canceled or fails
-                            TestHttpClientCancellation(msfraggerDownloaderDlg.ClickAccept);
-                            TestHttpClientWithNoNetwork(msfraggerDownloaderDlg.ClickAccept);
-                        }
-
-                        OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
-                    }
-                }
-
-                // Every engine reaching this point may still need the generic download-
-                // confirmation dialog handled. MSFragger's binary is downloaded by
-                // MsFraggerDownloadDlg above, but its Java and Crux dependencies still come
-                // through here; MSAmanda and the other engines download their tool here too
-                // (all on-demand on net8). Excluding any engine leaves its dialog unhandled.
-                {
-                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                    if (downloaderDlg != null)
-                    {
-                        if (RedownloadTools)
-                        {
-                            // Expect download form to stay open when HttpClient is canceled or fails
-                            TestHttpClientCancellation(downloaderDlg.ClickYes);
-                            downloaderDlg = WaitForOpenForm<MultiButtonMsgDlg>(2000);   // New form will be shown
-                            TestHttpClientWithNoNetwork(downloaderDlg.ClickYes);
-                            downloaderDlg = WaitForOpenForm<MultiButtonMsgDlg>(2000);   // New form will be shown
-                        }
-
-                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                        WaitForClosedForm(waitDlg);
-                    }
-                }
-            }
-
-            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));   // Stop to show this form during form testing
+            // We're on the MS1 full scan settings page, the last page before the run.
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             RunUI(() =>
             {
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
+                // This first run only searches: the test cancels it, or runs it again, so it must not
+                // go on to apply a document if the search finishes first
+                importPeptideSearchDlg.AcceptSearchResults = () => false;
             });
+
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton()); // Run
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));   // Stop to show this form during form testing
 
             if (TestSettings.TestDependencyErrors)
             {
@@ -1348,16 +1290,26 @@ namespace pwiz.SkylineTestFunctional
             if (errorExpected)
             {
                 TestSettings.ExpectedErrorAction?.Invoke();
-                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
                 OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
                 return;
             }
 
-            // Let the first search complete successfully
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-            searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value, null);
-            Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
-            searchSucceeded = null;
+            // Test cannot-close-during-search, then cancel the run
+            SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
+            var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
+            Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
+                cannotCloseDuringSearchDlg.Message);
+            OkDialog(cannotCloseDuringSearchDlg, cannotCloseDuringSearchDlg.ClickNo);
+
+            // Cancel the run (but don't close wizard)
+            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
+            WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
+            RunUI(() =>
+            {
+                Assert.IsFalse(importPeptideSearchDlg.RunSucceeded.Value);
+                Assert.IsFalse(importPeptideSearchDlg.IsRunCompleted);
+            });
 
             // The diagnosis for a search Percolator scored nothing in, now that percolator is installed.
             // It runs percolator, which writes its help to stderr, and this used to deadlock. A hang is
@@ -1371,49 +1323,15 @@ namespace pwiz.SkylineTestFunctional
                     $@"Percolator diagnosis took {diagnosisTime.Elapsed.TotalSeconds:F1} seconds");
             }
 
-            // Verify original data source filenames are preserved when going back after a successful search
-            var expectedDataSources = SearchFiles.Take(1).Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
-            RunUI(() =>
-            {
-                // Go back to search settings page (triggers filename restoration)
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
-
-                // Verify the filenames by checking the data sources
-                var actualSources = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources;
-                Assert.AreEqual(expectedDataSources.Length, actualSources.Length,
-                    "Data source count should be preserved after going back from successful search");
-                for (int i = 0; i < expectedDataSources.Length; i++)
-                    Assert.AreEqual(expectedDataSources[i].ToString(), actualSources[i].ToString(),
-                        $"Data source {i} should be the original raw file, not a search result file");
-            });
-
-            // Start a second search, test cannot-close-during-search, then cancel
-            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
-            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));
-            RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
-
-            SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
-            var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
-            Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
-                cannotCloseDuringSearchDlg.Message);
-            OkDialog(cannotCloseDuringSearchDlg, cannotCloseDuringSearchDlg.ClickNo);
-
-            // Cancel search (but don't close wizard)
-            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
-
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-            Assert.IsFalse(searchSucceeded.Value);
-            searchSucceeded = null;
-
             // Go back and test 2 input files with the same name
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Search settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
             });
@@ -1450,24 +1368,22 @@ namespace pwiz.SkylineTestFunctional
                 for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
                     importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count() - 1, false); // uncheck combined mod
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = true;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
             });
 
             try
             {
-                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-                searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value,
-                    TestSettings.ExpectedScoredHits);
+                RunUntilSearchAccepted(importPeptideSearchDlg, TestSettings.ExpectedScoredHits);
 
                 RunUI(() =>
                 {
-                    Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
+                    Assert.IsTrue(importPeptideSearchDlg.RunSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
 
                     // If this message is seen, the default config needs to be updated.
                     if (TestSettings.SearchEngine == SearchEngine.MSFragger)
@@ -1486,20 +1402,13 @@ namespace pwiz.SkylineTestFunctional
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
 
-            var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
-                Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_), recalibrateMessage.Message));
-            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(recalibrateMessage.OkDialog);
-            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
-
             var requiredFiles = SearchSettingsControl.GetSearchEngineRequiredFiles(TestSettings.SearchEngine);
             foreach(var requiredFile in requiredFiles)
                 Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType));
-            
+
             if (TestSettings.SearchEngine == SearchEngine.MSFragger)
                 StringAssert.Matches(Settings.Default.SearchToolList[SearchToolType.Java].ExtraCommandlineArgs, new Regex(@"-Xmx\d+M"));
-            
+
             if (TestSettings.SearchEngine == SearchEngine.Comet)
             {
                 Assert.IsTrue(Settings.Default.SearchToolList.ContainsKey(SearchToolType.CruxComet));
@@ -1508,25 +1417,26 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(()=>
             {
-                int proteinCount, peptideCount, precursorCount, transitionCount, unmappedOrRemoved;
-                /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                if (Environment.Is64BitProcess)
-                {
-                    // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    if (IsRecordMode)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine($@"{proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}");
-                    }
-                    else
-                    {
-                        Assert.AreEqual(TestSettings.ExpectedResults.proteinCount, proteinCount);
-                        Assert.AreEqual(TestSettings.ExpectedResults.peptideCount, peptideCount);
-                        Assert.AreEqual(TestSettings.ExpectedResults.precursorCount, precursorCount);
-                        Assert.AreEqual(TestSettings.ExpectedResults.transitionCount, transitionCount);
-                    }
-                }*/
-                emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount, out unmappedOrRemoved);
+                // The run applied the document and started importing results: nothing to go back to
+                Assert.IsTrue(importPeptideSearchDlg.IsRunCompleted);
+                Assert.IsFalse(importPeptideSearchDlg.IsBackButtonEnabled);
+
+                var proteinAssociation = importPeptideSearchDlg.LastRunResult.ProteinAssociation;
+
+                // The FASTA import's message for each protein it adds stays out of the run log
+                var logText = importPeptideSearchDlg.SearchControl.LogText;
+                foreach (var proteinName in proteinAssociation.DocumentFinal.PeptideGroups.Select(group => group.Name))
+                    AssertEx.DoesNotContain(logText, string.Format(ModelResources.FastaImporter_Import_Adding_protein__0__, proteinName));
+                // Nor does the placeholder name of a standard made from library peptides
+                AssertEx.DoesNotContain(logText, XmlNamedElement.NAME_INTERNAL);
+                // Some proteins have only standard peptides, so the summary explains the lower protein count
+                Assert.IsTrue(proteinAssociation.IrtStandardProteinsRemoved > 0);
+                var documentFinal = proteinAssociation.DocumentFinal;
+                AssertEx.Contains(logText, string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_After_dropping_proteins_in_the_iRT_standard__the_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_,
+                    documentFinal.MoleculeGroupCount, documentFinal.MoleculeCount, documentFinal.MoleculeTransitionGroupCount, documentFinal.MoleculeTransitionCount));
+
+                AssociateProteinsResults.GetFinalTargetCounts(proteinAssociation.DocumentFinal, proteinAssociation.ProteinAssociation,
+                    out var proteinCount, out var peptideCount, out var precursorCount, out var transitionCount, out var unmappedOrRemoved);
                 if (Environment.Is64BitProcess)
                 {
                     if (IsRecordMode)
@@ -1543,7 +1453,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             });
-            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
+            OkDialog(importPeptideSearchDlg, () => importPeptideSearchDlg.ClickNextButton()); // Finish
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
 
@@ -1552,53 +1462,107 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Repeats a search, from the search settings page, while it fails or the search engine reports
-        /// scoring other than <paramref name="expectedScoredHits"/>. Applies only to tests that set
-        /// <see cref="DdaTestSettings.ExpectedScoredHits"/>. A search too short of hits can fail outright,
-        /// when Percolator has too few to score. After the last attempt the test goes on, so a search that
-        /// keeps failing or coming up short still fails.
+        /// Answers the search tool download prompts that leaving the search settings page shows when
+        /// a tool is missing.
         /// </summary>
-        /// <param name="importPeptideSearchDlg">The wizard, showing the search that just finished</param>
-        /// <param name="succeeded">Whether that search succeeded</param>
-        /// <param name="expectedScoredHits">Scored hits per file, or null to repeat only a failed search</param>
-        /// <returns>Whether the last search attempted succeeded</returns>
-        private bool RetrySearchWhileScoredHitsDiffer(RunPeptideSearchDlg importPeptideSearchDlg, bool succeeded,
-            int[] expectedScoredHits)
+        private void AcceptSearchToolDownloads()
         {
-            if (TestSettings.ExpectedScoredHits == null)
-                return succeeded;
-
-            for (int attempt = 1; attempt < MAX_SEARCH_ATTEMPTS; attempt++)
+            if (TestSettings.SearchEngine == SearchEngine.MSFragger)
             {
-                string searchLog = null;
-                RunUI(() => searchLog = importPeptideSearchDlg.SearchControl.LogText);
-                var scoredHits = GetScoredHits(searchLog);
-                if (IsRecordMode && expectedScoredHits != null)
+                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                if (msfraggerDownloaderDlg != null)
                 {
-                    Console.WriteLine($@"ExpectedScoredHits = new[] {{ {string.Join(@", ", scoredHits)} }}");
-                    return succeeded;
-                }
-                if (succeeded && (expectedScoredHits == null || scoredHits.SequenceEqual(expectedScoredHits)))
-                    return true;
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@gmail.com", "UW"));
+                    //PauseTest(); // uncomment to test bad email handling (e.g. non-institutional email)
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
 
-                // Report the repeat, and the log of a failed attempt, so neither is lost to the retry.
-                if (!succeeded)
-                    Console.WriteLine(searchLog);
-                Console.WriteLine($@"Search succeeded={succeeded}, scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", expectedScoredHits ?? Array.Empty<int>())} - repeating search");
-                bool? searchSucceeded = null;
-                void OnSearchFinished(bool success) => searchSucceeded = success;
+                    if (RedownloadTools)
+                    {
+                        // Expect MsFraggerDownloadDlg to stay open when HttpClient is canceled or fails
+                        TestHttpClientCancellation(msfraggerDownloaderDlg.ClickAccept);
+                        TestHttpClientWithNoNetwork(msfraggerDownloaderDlg.ClickAccept);
+                    }
+
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                }
+            }
+
+            // Every engine reaching this point may still need the generic download-
+            // confirmation dialog handled. MSFragger's binary is downloaded by
+            // MsFraggerDownloadDlg above, but its Java and Crux dependencies still come
+            // through here; MSAmanda and the other engines download their tool here too
+            // (all on-demand on net8). Excluding any engine leaves its dialog unhandled.
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                if (RedownloadTools)
+                {
+                    // Expect download form to stay open when HttpClient is canceled or fails
+                    TestHttpClientCancellation(downloaderDlg.ClickYes);
+                    downloaderDlg = WaitForOpenForm<MultiButtonMsgDlg>(2000);   // New form will be shown
+                    TestHttpClientWithNoNetwork(downloaderDlg.ClickYes);
+                    downloaderDlg = WaitForOpenForm<MultiButtonMsgDlg>(2000);   // New form will be shown
+                }
+
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
+        }
+
+        /// <summary>
+        /// Runs from the last page before the run and waits for the run to finish. Tests that set
+        /// <see cref="DdaTestSettings.ExpectedScoredHits"/> repeat a search that fails or that the search
+        /// engine reports scoring other than <paramref name="expectedScoredHits"/>: the search results are
+        /// rejected before the library is built, and the test goes back and runs again. After the last
+        /// attempt the results are accepted, so a search that keeps coming up short still fails.
+        /// </summary>
+        /// <param name="importPeptideSearchDlg">The wizard, on the last page before the run</param>
+        /// <param name="expectedScoredHits">Scored hits per file, or null to repeat only a failed search</param>
+        private void RunUntilSearchAccepted(RunPeptideSearchDlg importPeptideSearchDlg, int[] expectedScoredHits)
+        {
+            for (int attempt = 1; ; attempt++)
+            {
+                bool lastAttempt = attempt >= MAX_SEARCH_ATTEMPTS || TestSettings.ExpectedScoredHits == null;
+                var acceptSearchResults = MakeAcceptSearchResults(importPeptideSearchDlg, lastAttempt ? null : expectedScoredHits);
+                RunUI(() => importPeptideSearchDlg.AcceptSearchResults = acceptSearchResults);
+                SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton()); // Run
+                WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue,
+                    () => importPeptideSearchDlg.SearchControl.LogText);
+                if (lastAttempt || GetUIValue(() => importPeptideSearchDlg.RunSucceeded.Value))
+                    return;
+
+                // Report the log of a failed attempt, so it is not lost to the retry.
+                Console.WriteLine(GetUIValue(() => importPeptideSearchDlg.SearchControl.LogText));
                 RunUI(() =>
                 {
-                    importPeptideSearchDlg.SearchControl.SearchFinished += OnSearchFinished;
                     AssertEx.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 });
-                SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
-                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-                RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished -= OnSearchFinished);
-                succeeded = searchSucceeded.Value;
             }
-            return succeeded;
+        }
+
+        /// <summary>
+        /// Accepts the search results when the search scored <paramref name="expectedScoredHits"/>, or
+        /// always when that is null.
+        /// </summary>
+        private Func<bool> MakeAcceptSearchResults(RunPeptideSearchDlg importPeptideSearchDlg, int[] expectedScoredHits)
+        {
+            return () =>
+            {
+                if (expectedScoredHits == null)
+                    return true;
+                var scoredHits = GetScoredHits(importPeptideSearchDlg.SearchControl.LogText);
+                if (IsRecordMode)
+                {
+                    Console.WriteLine($@"ExpectedScoredHits = new[] {{ {string.Join(@", ", scoredHits)} }}");
+                    return true;
+                }
+                if (scoredHits.SequenceEqual(expectedScoredHits))
+                    return true;
+                Console.WriteLine($@"Search scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", expectedScoredHits)} - repeating search");
+                return false;
+            };
         }
 
         private static List<int> GetScoredHits(string searchLog)
@@ -1653,7 +1617,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // Mods
-                Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // FASTA
                 Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
 
@@ -1691,6 +1654,10 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.SearchSettingsPresets.Clear();
         }
 
+        /// <summary>
+        /// Starts on the run page with a run that stops after its search (AcceptSearchResults is false), so
+        /// the test can go back to the search settings page, whose leaving checks the search tools, and run again.
+        /// </summary>
         private void TestDependencyErrors(RunPeptideSearchDlg importPeptideSearchDlg)
         {
             bool? searchSucceeded = null;
@@ -1702,9 +1669,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.SearchControl.CanCancel);  // Avoid a long wait on a cancel that does nothing
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
 
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));
+            GoBackToSearchSettings(importPeptideSearchDlg);
 
             // Delete one of the auto-installed dependencies; Skyline will automatically try to redownload it
             var requiredFile = SearchSettingsControl.GetSearchEngineRequiredFiles(TestSettings.SearchEngine).First();
@@ -1721,11 +1688,10 @@ namespace pwiz.SkylineTestFunctional
                 var waitDlg = WaitForOpenForm<LongWaitDlg>();
                 WaitForClosedForm(waitDlg);
             }
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            RunToSearchEnd(importPeptideSearchDlg, () => searchSucceeded);
             Assert.IsTrue(searchSucceeded.Value);
 
-                
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));
+            GoBackToSearchSettings(importPeptideSearchDlg);
 
             // Set Path and AutoInstalled to make it look like a user picked the installed location;
             // in this case Skyline will pop up the edit control for that tool to fix the location
@@ -1751,12 +1717,37 @@ namespace pwiz.SkylineTestFunctional
             searchSucceeded = null;
             editToolDlg = ShowDialog<EditSearchToolDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => editToolDlg.ToolPath = editToolDlg.ToolPath.Replace(".42.exe", ""));
-            RunUI(editToolDlg.OkDialog); // Purposely using RunUI instead of OkDialog here (we don't need to wait for window closure, wait for searchSucceeded instead)
+            RunUI(editToolDlg.OkDialog); // Purposely using RunUI instead of OkDialog here (we don't need to wait for window closure, wait for the page instead)
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            RunToSearchEnd(importPeptideSearchDlg, () => searchSucceeded);
             Assert.IsTrue(searchSucceeded.Value);
 
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
+        }
+
+        /// <summary>
+        /// From the run page, after a run stopped, goes back to the search settings page.
+        /// </summary>
+        private void GoBackToSearchSettings(RunPeptideSearchDlg importPeptideSearchDlg)
+        {
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Search settings
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+            });
+        }
+
+        /// <summary>
+        /// After leaving the search settings page, waits for the full-scan page, runs, and waits for the
+        /// search to finish and the run (which stops after the search) to end.
+        /// </summary>
+        private void RunToSearchEnd(RunPeptideSearchDlg importPeptideSearchDlg, Func<bool?> searchSucceeded)
+        {
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton()); // Run
+            WaitForConditionUI(60000, () => searchSucceeded().HasValue);
+            WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
         }
 
         private void PrepareDocument(string documentFile)

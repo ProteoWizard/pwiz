@@ -1,43 +1,24 @@
-Undo Redo : Added spectral library "Pass0 detected features"
-Summary   : Added spectral library "Pass0 detected features"
-All Info  :
-Added spectral library "Pass0 detected features"
-Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
-Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
-Build Spectral Library > iRT standard peptides is None
-Build Spectral Library > Include ambiguous matches is True
-Build Spectral Library > Filter for document peptides is False
-Build Spectral Library > Workflow is "Feature Detection"
-Build Spectral Library > Input File Type is "DDA raw (search and build library)"
-Extra Info: Search files = 
-[
-    {
-        File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
-        Score type = "Hardklor idotp",
-        Score threshold = "0,9"
-    },
-    {
-        File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
-        Score type = "Hardklor idotp",
-        Score threshold = "0,9"
-    }
-],
-iRT standard peptides = None,
-Include ambiguous matches = True,
-Filter for document peptides = False,
-Workflow = "Feature Detection",
-Input File Type = "DDA raw (search and build library)"
-
 Undo Redo : Imported a molecule search
 Summary   : Imported a molecule search
 All Info  :
 Imported a molecule search
+Import Molecule Search > Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
+Import Molecule Search > Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
+Import Molecule Search > Build Spectral Library > iRT standard molecules is None
+Import Molecule Search > Build Spectral Library > Include ambiguous matches is True
+Import Molecule Search > Build Spectral Library > Filter for document molecules is False
+Import Molecule Search > Build Spectral Library > Workflow is "Feature Detection"
+Import Molecule Search > Build Spectral Library > Input File Type is "DDA raw (search and build library)"
 Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_pHis3_01.RAW"
 Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_SMC1_01.RAW"
 Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Molecule Search > Extract Chromatograms > Removed prefix is "Orbi3_SA_IP_"
 Import Molecule Search > Extract Chromatograms > Removed suffix is "_01"
+Import Molecule Search > Configure Full-Scan Settings > Precursor mass analyzer is "Centroided"
+Import Molecule Search > Configure Full-Scan Settings > Mass accuracy is "20"
+Import Molecule Search > Configure Full-Scan Settings > Resolving power m/z is Missing
 Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Molecule Search > Configure Full-Scan Settings > Retention time filter length is "5"
 Import Molecule Search > Hardklor Search Settings > Min idotp is "0,9"
 Import Molecule Search > Hardklor Search Settings > Signal to noise is "3,01"
 Import Molecule Search > Hardklor Search Settings > Instrument is "TOF"
@@ -45,7 +26,28 @@ Import Molecule Search > Hardklor Search Settings > Resolution is "10000"
 Import Molecule Search > Hardklor Search Settings > Charges : contains "2"
 Import Molecule Search > Hardklor Search Settings > Charges : contains "3"
 Import Molecule Search > Hardklor Search Settings > Min intensity PPM is "5"
-Extra Info: Extract Chromatograms = 
+Extra Info: Build Spectral Library = 
+{
+    Search files = 
+    [
+        {
+            File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
+            Score type = "Hardklor idotp",
+            Score threshold = "0,9"
+        },
+        {
+            File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
+            Score type = "Hardklor idotp",
+            Score threshold = "0,9"
+        }
+    ],
+    iRT standard molecules = None,
+    Include ambiguous matches = True,
+    Filter for document molecules = False,
+    Workflow = "Feature Detection",
+    Input File Type = "DDA raw (search and build library)"
+},
+Extract Chromatograms = 
 {
     Found results files = 
     [
@@ -58,7 +60,11 @@ Extra Info: Extract Chromatograms =
 },
 Configure Full-Scan Settings = 
 {
-    Isotope labeling enrichment = "Default"
+    Precursor mass analyzer = "Centroided",
+    Mass accuracy = "20",
+    Resolving power m/z = Missing,
+    Isotope labeling enrichment = "Default",
+    Retention time filter length = "5"
 },
 Hardklor Search Settings = 
 {
@@ -74,46 +80,32 @@ Hardklor Search Settings =
     Min intensity PPM = "5"
 }
 
-Undo Redo : Added spectral library "Pass1 detected features"
-Summary   : Added spectral library "Pass1 detected features"
-All Info  :
-Added spectral library "Pass1 detected features"
-Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
-Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
-Build Spectral Library > iRT standard molecules is None
-Build Spectral Library > Include ambiguous matches is True
-Build Spectral Library > Filter for document molecules is False
-Build Spectral Library > Workflow is "Feature Detection"
-Build Spectral Library > Input File Type is "DDA raw (search and build library)"
-Extra Info: Search files = 
-[
-    {
-        File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
-        Score type = "Hardklor idotp",
-        Score threshold = "0,9"
-    },
-    {
-        File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
-        Score type = "Hardklor idotp",
-        Score threshold = "0,9"
-    }
-],
-iRT standard molecules = None,
-Include ambiguous matches = True,
-Filter for document molecules = False,
-Workflow = "Feature Detection",
-Input File Type = "DDA raw (search and build library)"
-
 Undo Redo : Imported a molecule search
 Summary   : Imported a molecule search
 All Info  :
 Imported a molecule search
+Import Molecule Search > Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
+Import Molecule Search > Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0,9" }
+Import Molecule Search > Build Spectral Library > iRT standard molecules is None
+Import Molecule Search > Build Spectral Library > Include ambiguous matches is True
+Import Molecule Search > Build Spectral Library > Filter for document molecules is False
+Import Molecule Search > Build Spectral Library > Workflow is "Feature Detection"
+Import Molecule Search > Build Spectral Library > Input File Type is "DDA raw (search and build library)"
 Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_pHis3_01.RAW"
 Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_SMC1_01.RAW"
 Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Molecule Search > Extract Chromatograms > Removed prefix is "Orbi3_SA_IP_"
 Import Molecule Search > Extract Chromatograms > Removed suffix is "_01"
+Import Molecule Search > Configure Full-Scan Settings > Isotope peaks included is "Count"
+Import Molecule Search > Configure Full-Scan Settings > Peaks is "3"
+Import Molecule Search > Configure Full-Scan Settings > Precursor mass analyzer is "Centroided"
+Import Molecule Search > Configure Full-Scan Settings > Mass accuracy is "20"
 Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment > Stable isotope labeling atoms : contains { Atom = "H'", Enrichment percentage = "0,98", Symbol = "H" }
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment > Stable isotope labeling atoms : contains { Atom = "C'", Enrichment percentage = "0,995", Symbol = "C" }
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment > Stable isotope labeling atoms : contains { Atom = "N'", Enrichment percentage = "0,995", Symbol = "N" }
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment > Stable isotope labeling atoms : contains { Atom = "O"", Enrichment percentage = "0,99", Symbol = "O" }
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment > Stable isotope labeling atoms : contains { Atom = "O'", Enrichment percentage = "0,99", Symbol = "O" }
 Import Molecule Search > Hardklor Search Settings > Min idotp is "0,9"
 Import Molecule Search > Hardklor Search Settings > Signal to noise is "3,01"
 Import Molecule Search > Hardklor Search Settings > Instrument is "TOF"
@@ -121,7 +113,28 @@ Import Molecule Search > Hardklor Search Settings > Resolution is "10000"
 Import Molecule Search > Hardklor Search Settings > Charges : contains "2"
 Import Molecule Search > Hardklor Search Settings > Charges : contains "3"
 Import Molecule Search > Hardklor Search Settings > Min intensity PPM is "5"
-Extra Info: Extract Chromatograms = 
+Extra Info: Build Spectral Library = 
+{
+    Search files = 
+    [
+        {
+            File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
+            Score type = "Hardklor idotp",
+            Score threshold = "0,9"
+        },
+        {
+            File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
+            Score type = "Hardklor idotp",
+            Score threshold = "0,9"
+        }
+    ],
+    iRT standard molecules = None,
+    Include ambiguous matches = True,
+    Filter for document molecules = False,
+    Workflow = "Feature Detection",
+    Input File Type = "DDA raw (search and build library)"
+},
+Extract Chromatograms = 
 {
     Found results files = 
     [
@@ -134,7 +147,41 @@ Extra Info: Extract Chromatograms =
 },
 Configure Full-Scan Settings = 
 {
-    Isotope labeling enrichment = "Default"
+    Isotope peaks included = "Count",
+    Peaks = "3",
+    Precursor mass analyzer = "Centroided",
+    Mass accuracy = "20",
+    Isotope labeling enrichment = "Default": 
+{
+        Stable isotope labeling atoms = 
+        [
+            {
+                Atom = "H'",
+                Enrichment percentage = "0,98",
+                Symbol = "H"
+            },
+            {
+                Atom = "C'",
+                Enrichment percentage = "0,995",
+                Symbol = "C"
+            },
+            {
+                Atom = "N'",
+                Enrichment percentage = "0,995",
+                Symbol = "N"
+            },
+            {
+                Atom = "O"",
+                Enrichment percentage = "0,99",
+                Symbol = "O"
+            },
+            {
+                Atom = "O'",
+                Enrichment percentage = "0,99",
+                Symbol = "O"
+            }
+        ]
+    }
 },
 Hardklor Search Settings = 
 {

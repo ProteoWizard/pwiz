@@ -169,6 +169,18 @@
   <data name="BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_" xml:space="preserve">
     <value>This library contains iRT values. Do you want to create a retention time predictor with these values?</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_peptides_tooltip" xml:space="preserve">
+    <value>When the library contains enough CiRT peptides, this many of them become the iRT standard.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_standard_peptides_" xml:space="preserve">
+    <value>CiRT standard peptides:</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_iRT_standard_values" xml:space="preserve">
+    <value>Recalibrate iRT standard values</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_tooltip" xml:space="preserve">
+    <value>Recalibrate the iRT standard values relative to the library peptides, when the library has enough of them. This can improve retention time alignment under stable chromatographic conditions.</value>
+  </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library" xml:space="preserve">
     <value>Add document spectral library</value>
   </data>
@@ -177,9 +189,6 @@
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library" xml:space="preserve">
     <value>Building Peptide Search Library</value>
-  </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__" xml:space="preserve">
-    <value>Failed to build the library {0}.</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
     <value>&amp;Files to search:</value>
@@ -192,6 +201,9 @@
   </data>
   <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
     <value>&amp;Result files:</value>
+  </data>
+  <data name="ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation" xml:space="preserve">
+    <value>&amp;Gas phase fractionation</value>
   </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>Fragment ions must be selected</value>
@@ -238,9 +250,6 @@
   <data name="ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__" xml:space="preserve">
     <value>Failed reading the file {0}.</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
-    <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
-  </data>
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>Insert FASTA</value>
   </data>
@@ -255,9 +264,6 @@
   </data>
   <data name="ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__" xml:space="preserve">
     <value>Error adding FASTA file {0}.</value>
-  </data>
-  <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
-    <value>The document must contain at least one precursor transition in order to proceed.</value>
   </data>
   <data name="ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction" xml:space="preserve">
     <value>Configure Full-Scan Chromatogram Extraction</value>
@@ -355,6 +361,39 @@
   <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
     <value>{0} must contain a comma separated list of adducts or integers describing charge states with absolute values from {1} to {2}.</value>
   </data>
+  <data name="RunPeptideSearchDlg_AddSummary_After_dropping_proteins_in_the_iRT_standard__the_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_" xml:space="preserve">
+    <value>After dropping proteins in the iRT standard, the document has {0} proteins, {1} peptides, {2} precursors and {3} transitions.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Built_the_spectral_library__0__" xml:space="preserve">
+    <value>Built the spectral library {0}.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to__1__standard_peptides_chosen_from_the_library_" xml:space="preserve">
+    <value>Calibrated {0} library peptides to {1} standard peptides chosen from the library.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to_the_iRT_standard__1__" xml:space="preserve">
+    <value>Calibrated {0} library peptides to the iRT standard {1}.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Extracting_chromatograms_from__0__files__Click_Finish_to_close_this_wizard_" xml:space="preserve">
+    <value>Extracting chromatograms from {0} files. Click Finish to close this wizard.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Peptides___0__mapped___1__unmapped___2__in_the_document_" xml:space="preserve">
+    <value>Peptides: {0} mapped, {1} unmapped, {2} in the document.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Proteins___0__mapped___1__unmapped___2__in_the_document_" xml:space="preserve">
+    <value>Proteins: {0} mapped, {1} unmapped, {2} in the document.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_Several_known_iRT_standards_matched_the_library__used__0___which_has_the_most_peptides_" xml:space="preserve">
+    <value>Several known iRT standards matched the library; used {0}, which has the most peptides.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_" xml:space="preserve">
+    <value>The document has {0} proteins, {1} peptides, {2} precursors and {3} transitions.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_" xml:space="preserve">
+    <value>The search settings and files have not changed since the last search; using its results.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_UpdateButtons_Run" xml:space="preserve">
+    <value>&amp;Run</value>
+  </data>
   <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
     <value>Additional Settings</value>
   </data>
@@ -391,9 +430,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
     <value>Building detected features library</value>
-  </data>
-  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
-    <value>Adding detected features to document</value>
   </data>
   <data name="SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_" xml:space="preserve">
     <value>Cannot close wizard while the search is running. Do you want to cancel the search?</value>

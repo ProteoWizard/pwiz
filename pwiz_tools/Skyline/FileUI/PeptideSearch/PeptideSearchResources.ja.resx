@@ -178,9 +178,6 @@
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library" xml:space="preserve">
     <value>ペプチド検索ライブラリの構築中</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__" xml:space="preserve">
-    <value>ライブラリ{0}の構築に失敗しました。</value>
-  </data>
   <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
     <value>検索するファイル(&amp;F)：</value>
   </data>
@@ -238,9 +235,6 @@
   <data name="ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__" xml:space="preserve">
     <value>ファイル{0}の読み取りに失敗しました。</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
-    <value>デコイなしではmProphetモデルを自動的にトレーニングすることはできませんが、デコイオプションではデコイは生成されませんでした。ターゲット毎のデコイ数を増やすか、mProphetモデルの自動トレーニングを無効にしてください。</value>
-  </data>
   <data name="ImportFastaControl_ImportFasta_Insert_FASTA" xml:space="preserve">
     <value>FASTAを挿入</value>
   </data>
@@ -255,9 +249,6 @@
   </data>
   <data name="ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__" xml:space="preserve">
     <value>FASTAファイル{0}の追加エラー。</value>
-  </data>
-  <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
-    <value>続行するにはドキュメントに1つ以上のプリカーサートランジションを含めなければなりません。</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
     <value>次へ(&amp;N) &gt;</value>
@@ -358,9 +349,6 @@
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
     <value>検出したフィーチャーライブラリを構築中</value>
-  </data>
-  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
-    <value>検出したフィーチャーをドキュメントに追加中</value>
   </data>
   <data name="SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_" xml:space="preserve">
     <value>検索を実行中にウィザードを閉じることはできません。検索をキャンセルしますか？</value>

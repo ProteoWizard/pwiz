@@ -282,12 +282,7 @@ namespace TestPerf
             {
                 PauseForScreenShot(" Search settings page");
             }
-            bool? searchSucceeded = null;
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-            });
+            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true);
 
             if (testingForCancelability)
             {
@@ -313,9 +308,8 @@ namespace TestPerf
                     // Cancel search
                     importPeptideSearchDlg.SearchControl.Cancel();
                 });
-                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-                Assert.IsFalse(searchSucceeded.Value);
-                searchSucceeded = null;
+                WaitForConditionUI(60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
+                RunUI(() => Assert.IsFalse(importPeptideSearchDlg.RunSucceeded.Value));
                 PauseForScreenShot("search cancelled, now go back and  test 2 input files with the same name in different directories");
 
                 // Go back and test 2 input files with the same name in different directories
@@ -408,8 +402,8 @@ namespace TestPerf
 
             try
             {
-                WaitForConditionUI(15 * 60000, () => searchSucceeded.HasValue);
-                RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+                WaitForConditionUI(15 * 60000, () => importPeptideSearchDlg.RunSucceeded.HasValue);
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.RunSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             }
             finally
             {
