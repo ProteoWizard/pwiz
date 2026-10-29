@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
@@ -299,7 +298,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 throw new IOException(string.Format(ModelResources.CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_,
                     OspreyHelpers.OspreyBinary));
             }
-            var timer = Stopwatch.StartNew();
             string args;
             var monitor = progress;
             if (IsTuning)
@@ -340,9 +338,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 // unless it is the saved model this build predicted with, which stays in the list
                 FileEx.SafeDelete(TunedModelPath);
             }
-            timer.Stop();
-            Messages.WriteAsyncUserMessage(string.Format(ModelResources.CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_,
-                timer.Elapsed.Minutes, timer.Elapsed.Seconds));
         }
 
         /// <summary>
