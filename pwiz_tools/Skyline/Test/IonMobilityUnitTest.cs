@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -311,5 +312,45 @@ namespace pwiz.SkylineTest
                 });
         }
 
+        /// <summary>
+        /// Verify the FAIMS-CV gate that suppresses observed-IM tracking during chromatogram
+        /// extraction. SpectrumFilterPair.HasIonMobilityFAIMS() returns true only when the
+        /// filter carries a CV value in compensation_V units; for any drift-time or 1/K0
+        /// filter (or an empty filter) it returns false. SpectrumFilterPair.FilterSpectrumList
+        /// combines this with MinIonMobilityValue.HasValue to gate IntensityAccumulator
+        /// histogram tracking, so this gate is what causes ObservedIonMobility / ObservedCcs
+        /// to stay null on FAIMS data. The downstream "no observed IM when not tracking"
+        /// half of the contract is covered by IntensityAccumulatorTest.TestNotTracking.
+        /// </summary>
+        [TestMethod]
+        public void TestFaimsGateSuppressesObservedIonMobilityTracking()
+        {
+            AssertFaimsGate(true, -50.0, eIonMobilityUnits.compensation_V);
+            AssertFaimsGate(false, 1.05, eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
+            AssertFaimsGate(false, 12.5, eIonMobilityUnits.drift_time_msec);
+            AssertEmptyFilterDoesNotTripFaimsGate();
+        }
+
+        private static void AssertFaimsGate(bool expected, double imValue, eIonMobilityUnits units)
+        {
+            var filter = IonMobilityFilter.GetIonMobilityFilter(imValue, units, 0.5, null);
+            var pair = MakeFilterPair(filter);
+            AssertEx.AreEqual(expected, pair.HasIonMobilityFAIMS(),
+                "Unexpected FAIMS gate result for units=" + units);
+        }
+
+        private static void AssertEmptyFilterDoesNotTripFaimsGate()
+        {
+            // EMPTY filter has no IM value at all - second clause of HasIonMobilityFAIMS
+            // (HasIonMobilityValue) must keep the gate closed regardless of units.
+            AssertEx.IsFalse(MakeFilterPair(IonMobilityFilter.EMPTY).HasIonMobilityFAIMS());
+        }
+
+        private static SpectrumFilterPair MakeFilterPair(IonMobilityFilter filter)
+        {
+            var precursorTextId = new PrecursorTextId(new SignedMz(500.0), null, null,
+                filter, null, ChromExtractor.summed);
+            return new SpectrumFilterPair(precursorTextId, Color.Black, 0, null, null, false, false);
+        }
     }
 }

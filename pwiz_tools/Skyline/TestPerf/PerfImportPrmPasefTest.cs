@@ -20,11 +20,14 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -97,6 +100,39 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Does CCS show up in reports?
             TestReports();
 
+            // Rescore picks peaks again from the cached chromatograms, which carry the observed CCS
+            // the vendor calibration gave each point at import, so it needs no raw file
+            AssertObservedIonMobilitySurvivesRescore();
+        }
+
+        private void AssertObservedIonMobilitySurvivesRescore()
+        {
+            var expected = GetObservedIonMobilityValues(SkylineWindow.Document);
+            AssertEx.IsTrue(expected.Any(value => value.Item2.HasValue), @"Expected observed CCS from the vendor calibration");
+            var rawPath = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath.GetFilePath();
+            var hiddenPath = rawPath + @".hidden";
+            Directory.Move(rawPath, hiddenPath);
+            try
+            {
+                RescoreResults();
+            }
+            finally
+            {
+                Directory.Move(hiddenPath, rawPath);
+            }
+            // Observed IM and CCS may move by the cache's storage rounding, since peaks picked at
+            // import read unrounded values while rescored peaks read the stored ones
+            var actual = GetObservedIonMobilityValues(SkylineWindow.Document);
+            AssertEx.AreEqual(expected.Count, actual.Count);
+            double imTolerance = 0.5 / RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
+            const double ccsTolerance = 0.005;
+            for (int i = 0; i < expected.Count; i++)
+            {
+                AssertEx.AreEqual(expected[i].Item1, actual[i].Item1, imTolerance);
+                AssertEx.AreEqual(expected[i].Item2.HasValue, actual[i].Item2.HasValue);
+                if (expected[i].Item2.HasValue)
+                    AssertEx.AreEqual(expected[i].Item2.Value, actual[i].Item2.Value, ccsTolerance);
+            }
         }
 
         private void TestReports(string msg = null)

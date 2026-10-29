@@ -282,6 +282,8 @@ namespace pwiz.Skyline.Model.Results
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
 
+        public override IIonMobilityFunctionsProvider IonMobilityFunctionsProvider => _filter.IonMobilityFunctionsProvider;
+
         private void ExtractionComplete()
         {
             if (_collectors != null)
@@ -1697,6 +1699,7 @@ namespace pwiz.Skyline.Model.Results
     public class DataFileInstrumentInfo : IFilterInstrumentInfo
     {
         private readonly MsDataFileImpl _dataFile;
+        private bool _reportedCcsConversionFailure;
 
         public DataFileInstrumentInfo(MsDataFileImpl dataFile)
         {
@@ -1730,9 +1733,23 @@ namespace pwiz.Skyline.Model.Results
         }
         public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
         {
-            var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
-            if (double.IsNaN(ccs))
+            double ccs;
+            try
             {
+                ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            }
+            catch (Exception)
+            {
+                // CCS is supplementary, and the conversion is a vendor black box that can fail for values
+                // at the fringe of its calibration (e.g. a MassLynx status error surfaces as an
+                // InvalidOperationException) while converting most others, so a failure is no conversion
+                // for this value rather than a failed import.
+                ccs = double.NaN;
+            }
+            // Observed CCS converts every extracted point, so report only the first failure in a file
+            if (double.IsNaN(ccs) && !_reportedCcsConversionFailure)
+            {
+                _reportedCcsConversionFailure = true;
                 Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
             }
             return ccs;
@@ -1843,7 +1860,8 @@ namespace pwiz.Skyline.Model.Results
                 ChromCollector chromCollector;
                 if (!collector.ProductIntensityMap.TryGetValue(productFilter, out chromCollector))
                 {
-                    chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
+                    chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null,
+                        spectrum.ObservedIonMobilities != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
                     // (No-op when this collector owns its own times — see ChromCollector.FillZeroes.)
@@ -1866,7 +1884,8 @@ namespace pwiz.Skyline.Model.Results
                 chromCollector.AddPoint(chromIndex,
                     intensity,
                     spectrum.MassErrors != null ? spectrum.MassErrors[j] : null,
-                    _blockWriter);
+                    _blockWriter,
+                    spectrum.ObservedIonMobilities != null ? spectrum.ObservedIonMobilities[j] : null);
             }
 
             // Add data for chromatogram graph.
