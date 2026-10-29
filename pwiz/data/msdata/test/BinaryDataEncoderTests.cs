@@ -124,6 +124,37 @@ public class BinaryDataEncoderTests
     }
 
     [TestMethod]
+    public void Numpress_Linear_AbsoluteMassAccuracy()
+    {
+        var random = new Random(7);
+        double[] mz = new double[500];
+        mz[0] = 400;
+        for (int i = 1; i < mz.Length; i++)
+            mz[i] = mz[i - 1] + random.NextDouble() * 2;
+
+        // A coarser absolute accuracy gives a smaller encoding that still meets it.
+        var maximal = new BinaryDataEncoder(new BinaryEncoderConfig { Numpress = BinaryNumpress.Linear, NumpressLinearErrorTolerance = 0 });
+        var coarse = new BinaryDataEncoder(new BinaryEncoderConfig
+        {
+            Numpress = BinaryNumpress.Linear,
+            NumpressLinearErrorTolerance = 0,
+            NumpressLinearAbsMassAcc = 1e-4,
+        });
+        byte[] maximalBytes = maximal.EncodeToBytes(mz, out _);
+        byte[] coarseBytes = coarse.EncodeToBytes(mz, out var coarseNumpress);
+        Assert.AreEqual(BinaryNumpress.Linear, coarseNumpress);
+        Assert.IsTrue(coarseBytes.Length < maximalBytes.Length, $"{coarseBytes.Length} >= {maximalBytes.Length}");
+        double[] decoded = MsNumpress.DecodeLinear(coarseBytes);
+        for (int i = 0; i < mz.Length; i++)
+            Assert.AreEqual(mz[i], decoded[i], 1e-4, $"mz[{i}]");
+
+        // An accuracy the fixed point cannot reach leaves the array uncompressed.
+        var unreachable = new BinaryDataEncoder(new BinaryEncoderConfig { Numpress = BinaryNumpress.Linear, NumpressLinearAbsMassAcc = 1e-15 });
+        unreachable.EncodeToBytes(mz, out var unreachableNumpress);
+        Assert.AreEqual(BinaryNumpress.None, unreachableNumpress);
+    }
+
+    [TestMethod]
     public void Numpress_PicAndSlof_RoundTripsAtAppropriatePrecision()
     {
         // Pic rounds to nearest int on encode, so exact equality holds for integer inputs.
