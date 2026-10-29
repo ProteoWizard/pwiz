@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="e510f10c-d224-480f-b3a2-506a433d511e" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>GitHub Skyline release PR trigger</name>
+  <settings>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubSkylineReleaseOnlyNoPrSpec" />
+    </vcs-settings>
+    <build-extensions>
+      <extension id="BUILD_EXT_20" type="pullRequests">
+        <parameters>
+          <param name="authenticationType" value="token" />
+          <param name="filterAuthorRole" value="MEMBER_OR_COLLABORATOR" />
+          <param name="filterTargetBranch" value="+:refs/heads/Skyline/skyline_*" />
+          <param name="providerType" value="github" />
+          <param name="secure:accessToken" value="credentialsJSON:68dc8891-7a87-42e1-984d-b04598196aa7" />
+          <param name="vcsRootId" value="ProteoWizard_PwizGithubSkylineReleaseOnlyNoPrSpec" />
+        </parameters>
+      </extension>
+    </build-extensions>
+  </settings>
+</template>
+

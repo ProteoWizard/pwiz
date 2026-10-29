@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -164,29 +163,32 @@ namespace pwiz.Osprey.Scoring
         /// candidate fragments and one spectrum. This is the sg_weighted_cosine
         /// per-scan kernel -- a DIFFERENT function from SpectralScorer.LibCosine
         /// (used for the unrelated libCosine path); do not conflate them.
-        /// Relocated verbatim from AbstractScoringTask.cs.
+        /// Originally relocated from AbstractScoringTask.cs; the peak lookup now goes
+        /// through the spectrum's m/z bucket index and the sums accumulate as each
+        /// fragment is matched, with the arithmetic in the same order.
         ///
-        /// TIE-BREAK: strict <c>diff &lt; bestDiff</c> keeps the first/closest peak
-        /// scanning ascending m/z. bestIntensity seeds 0.0 so an in-range fragment
-        /// with NO peak inside [lower, upper] still pushes Sqrt(relIntensity) to
-        /// libPre and Sqrt(0)=0 to obsPre (asymmetric vector entry that drives the
-        /// cosine down). Norm guard is the literal 1e-12 on the post-Sqrt norm.
-        /// Sqrt is taken per term before the dot/norm accumulation, in insertion
-        /// order of in-range fragments.
+        /// TIE-BREAK: the closest peak in [lower, upper], the first on ties
+        /// (<see cref="TopFragmentExtractor.FindClosestPeakInWindow(Spectrum, double, double, double)"/>).
+        /// An in-range fragment with NO peak in the window still adds
+        /// Sqrt(relIntensity) to the library vector and Sqrt(0)=0 to the observed one
+        /// (an asymmetric entry that drives the cosine down). Norm guard is the
+        /// literal 1e-12 on the post-Sqrt norm. Sqrt is taken per term before the
+        /// dot/norm accumulation, in the order of the in-range fragments.
         /// </summary>
         private static double ComputeCosineAtScan(
             LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
         {
+            var mzs = spectrum.Mzs;
             if (candidate.Fragments == null || candidate.Fragments.Count == 0 ||
-                spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                mzs == null || mzs.Length == 0)
                 return 0.0;
 
-            double specMzMin = spectrum.Mzs[0];
-            double specMzMax = spectrum.Mzs[spectrum.Mzs.Length - 1];
+            double specMzMin = mzs[0];
+            double specMzMax = mzs[mzs.Length - 1];
+            var intensities = spectrum.Intensities;
 
-            var libPre = new List<double>();
-            var obsPre = new List<double>();
-
+            int nTerms = 0;
+            double libNorm = 0, obsNorm = 0, dot = 0;
             foreach (var frag in candidate.Fragments)
             {
                 // Skip fragments outside the spectrum's mass range
@@ -197,35 +199,21 @@ namespace pwiz.Osprey.Scoring
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
-                double bestIntensity = 0.0;
-                double bestDiff = double.MaxValue;
+                int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum, frag.Mz, lower, upper);
+                double bestIntensity = best >= 0 ? intensities[best] : 0.0;
 
-                for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                {
-                    double diff = Math.Abs(spectrum.Mzs[k] - frag.Mz);
-                    if (diff < bestDiff)
-                    {
-                        bestDiff = diff;
-                        bestIntensity = spectrum.Intensities[k];
-                    }
-                }
-
-                libPre.Add(Math.Sqrt(frag.RelativeIntensity));
-                obsPre.Add(Math.Sqrt(bestIntensity));
+                double libTerm = Math.Sqrt(frag.RelativeIntensity);
+                double obsTerm = Math.Sqrt(bestIntensity);
+                libNorm += libTerm * libTerm;
+                obsNorm += obsTerm * obsTerm;
+                dot += libTerm * obsTerm;
+                nTerms++;
             }
 
-            if (libPre.Count == 0)
+            if (nTerms == 0)
                 return 0.0;
 
             // L2 normalize and dot product
-            double libNorm = 0, obsNorm = 0, dot = 0;
-            for (int i = 0; i < libPre.Count; i++)
-            {
-                libNorm += libPre[i] * libPre[i];
-                obsNorm += obsPre[i] * obsPre[i];
-                dot += libPre[i] * obsPre[i];
-            }
             libNorm = Math.Sqrt(libNorm);
             obsNorm = Math.Sqrt(obsNorm);
             if (libNorm < 1e-12 || obsNorm < 1e-12)

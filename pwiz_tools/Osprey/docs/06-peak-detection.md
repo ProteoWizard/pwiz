@@ -389,7 +389,7 @@ unit-resolution runs no MS1 data is produced and both features evaluate to 0.0
 |---|---|---|
 | `--no-prefilter` (`OspreyConfig.PrefilterEnabled`) | `true` (prefilter on) | When on, the 2-of-top-6-in-3-of-4-scans signal pre-filter (`PeakDataExtractor.cs:117`) drops noise-only candidates before XIC extraction. `--no-prefilter` scores every candidate. |
 | `--fragment-tolerance` / `--fragment-unit` | `ppm`; unit-resolution forces `mz 0.5` | Fragment match tolerance for XIC extraction and the pre-filter. |
-| `--resolution {unit\|hram\|auto}` | `auto` | Selects the resolution strategy; HRAM enables the MS1 chromatogram/isotope features produced here, unit resolution disables them. |
+| `--resolution {hram\|unit}` | `hram` | Selects the resolution strategy; HRAM enables the MS1 chromatogram/isotope features produced here, unit resolution disables them. |
 | `MinRtTolerance` / `MaxRtTolerance` (`RTCalibrationConfig`) | `0.5` / `3.0` min | Clamp on the scan-window `rtTolerance = 3*MAD*1.4826` (`RTCalibration.SearchWindowHalfWidth`). The XIC extraction half-width is `rtTolerance + max(rtTolerance, 0.1)`; the apex-acceptance filter uses `rtTolerance`. The RT-penalty sigma (`5*MAD*1.4826`, floor 0.1) is deliberately **not** clamped. |
 | `FallbackRtTolerance` (`RTCalibrationConfig`) | used when no RT calibration | Sets both `rtTolerance` and `rtSigma` when calibration is absent (`ScoringPipeline.cs:185-186`). |
 | `ReconciliationConfig.TopNPeaks` | `5` | Number of CWT candidates captured per entry for reconciliation (`CoelutionScorer.cs:322`). `0` captures none. |

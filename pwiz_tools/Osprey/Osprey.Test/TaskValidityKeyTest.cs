@@ -73,11 +73,11 @@ namespace pwiz.Osprey.Test
         /// <list type="bullet">
         /// <item>every blib is read differently since the reader started typing its peaks from
         /// m/z (and reading modification text residue- and precision-aware), so every task of a
-        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the
-        /// <c>.libcache</c> composition carries the reader version with the fragment tolerance
-        /// the cached types were computed within;</item>
+        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the derived
+        /// library's composition carries the reader version with the fragment tolerance the
+        /// typed peaks were computed within;</item>
         /// <item>a DIA-NN TSV search keys exactly as before - its columns are still the typing -
-        /// while its <c>.libcache</c> is re-read once through the validating reader;</item>
+        /// while its derived library is rebuilt once through the validating reader;</item>
         /// <item>the output blib's rows changed for every library, so SecondPassFDR keys on
         /// <c>;blibout</c> for both.</item>
         /// </list>
@@ -95,12 +95,11 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig), tsvKeys[PerFileScoringTask.TASK_NAME],
-                    @"a TSV search keys as before the reader change");
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
+                    @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
-                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION),
-                    LibraryLoader.LibraryReaderTerms(tsvConfig));
+                Assert.AreEqual(DiannTsvLoader.CacheTerm(tsvConfig.FragmentTolerance), LibraryLoader.LibraryReaderTerms(tsvConfig));
 
                 var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
@@ -164,9 +163,8 @@ namespace pwiz.Osprey.Test
         /// - while another run's export, the task key and the task's other outputs do not move.
         /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it - its
         /// stamp and its decoys file. One SecondPassFDR writes after the export (a run with no
-        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, even
-        /// once the driver has stamped it under PerFileRescoring's name, or the export flips to
-        /// it on a later invocation of the same command.
+        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, or the
+        /// export flips to it on a later invocation of the same command.
         /// </summary>
         private static void AssertTrainingExportKeyFollowsEachRunsInputs()
         {
@@ -188,7 +186,7 @@ namespace pwiz.Osprey.Test
                 var ctx = TaskConfigs.ContextFor(config);
                 var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
                 string key = task.ValidityKey(ctx);
-                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportParquet.PathFor(input));
+                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportWriter.PathFor(input));
 
                 string otherRun = RunKey(runB);
                 string current = RunKey(runA);
@@ -205,21 +203,57 @@ namespace pwiz.Osprey.Test
                 }
 
                 string pass2 = FdrScoresSidecar.Pass2Path(runA);
-                File.WriteAllText(pass2, @"SecondPassFDR's");
+                WritePass2Sidecar(pass2, SecondPassFdrTask.TASK_NAME, 1);
                 Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar PerFileRescoring did not write is not read, so it must not key the export");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out var pass));
                 Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
-                // The driver stamps every declared output that exists after a PerFileRescoring
-                // run, so SecondPassFDR's sidecar can carry a PerFileRescoring stamp it did not
-                // earn. The worker's decoys file is what the driver cannot supply.
-                File.WriteAllText(TaskValiditySidecar.PathFor(pass2, PerFileRescoreTask.TASK_NAME), @"stamp");
-                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring stamp without the worker's decoys must not flip the export to the second pass");
+                // The worker's stamp alone is not enough: the worker also writes the decoys file,
+                // and a sidecar without it is not the worker's complete answer.
+                WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 1);
+                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring sidecar without the worker's decoys must not flip the export to the second pass");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
-                File.WriteAllText(Pass2CompetitionDecoys.PathFor(runA), @"decoys");
-                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
+                // The worker's answer is the pair carrying the stamp of the reconciled parquet
+                // beside it. A pair from a run under another key is not this run's answer.
+                var workerStamp = OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"key");
+                // One row: an empty entry list writes no parquet at all. Written as Stage 6
+                // writes it - its producer over a Stage 4 parquet - because a reconciled parquet
+                // without the survivor shape reads as unstamped, whatever its footer says.
+                string stage4 = Path.Combine(dir, @"a_stage4" + ParquetScoreCache.EXT_SCORES);
+                ParquetScoreCache.WriteScoresParquet(stage4,
+                    new List<CoelutionScoredEntry>
+                    {
+                        new CoelutionScoredEntry
+                        {
+                            EntryId = 1, Sequence = @"PEPTIDE", ModifiedSequence = @"PEPTIDE", Charge = 2,
+                            FileName = @"a.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
+                        },
+                    },
+                    null);
+                ParquetScoreCache.StreamReconciledScoresParquet(stage4, ParquetScoreCache.GetReconciledScoresPath(runA),
+                    null, null, ParquetScoreCache.WithStamp(
+                        ReconciledParquetWriter.BuildReconciliationMetadata(new OspreyConfig(), null), workerStamp),
+                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null);
+                current = RunKey(runA);
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
+                    new Dictionary<uint, (double score, uint entryId)>(),
+                    OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"another-key"));
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"decoys stamped by a run under another key are not this run's worker answer");
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
+                    new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
+                // The run's plan is part of the same answer: the worker writes it, under the same
+                // stamp, just before the rescore it describes.
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"a worker answer without the run's reconciliation plan is not complete");
+                ReconciliationFile.Save(ReconciliationFile.PathForInput(runA),
+                    new ReconciliationFile { FormatVersion = ReconciliationFile.CurrentFormatVersion }, workerStamp);
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp, decoys and plan make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
-                current = AssertRewritesInvalidate(pass2, RunKey(runA), () => RunKey(runA));
+                current = RunKey(runA);
+                WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 2);
+                Assert.AreNotEqual(current, RunKey(runA), @"the worker's sidecar rewritten must invalidate the run's export");
+                current = RunKey(runA);
                 File.WriteAllText(FdrScoresSidecar.Pass1Path(runA), @"no longer read");
                 Assert.AreEqual(current, RunKey(runA), @"the first-pass sidecar is not read once the second pass is");
                 Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
@@ -235,6 +269,18 @@ namespace pwiz.Osprey.Test
                 ArtifactPaths.CacheDir = savedCache;
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// A real second-pass sidecar of <paramref name="records"/> records whose embedded stamp
+        /// names <paramref name="producerTask"/> as the task that wrote it.
+        /// </summary>
+        private static void WritePass2Sidecar(string path, string producerTask, int records)
+        {
+            FdrScoresSidecar.BeginRun();
+            FdrScoresSidecar.Write(path,
+                Enumerable.Range(1, records).Select(i => new FdrScoreRecord((uint)i, 0.5, 0.01, 0.01, 10.0)).ToList(),
+                FdrScoresSidecar.Pass.SecondPass, OspreyVersion.Stamp(producerTask, @"key"));
         }
 
         /// <summary>
@@ -268,7 +314,7 @@ namespace pwiz.Osprey.Test
             off.OutputBlib = @"out.blib";
             var offCtx = TaskConfigs.ContextFor(off);
             var offTask = off.Pipeline.OfType<PerFileRescoreTask>().Single();
-            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            string export = TrainingExportWriter.PathFor(@"a.mzML");
             Assert.IsFalse(offTask.Outputs(offCtx).Contains(export), @"no export is declared with the flag off");
 
             string straight = ExportKey(TaskConfigs.StraightThrough(), c => { }, out string taskKeyOn, out bool declared);
@@ -300,7 +346,7 @@ namespace pwiz.Osprey.Test
             mutate(config);
             var ctx = TaskConfigs.ContextFor(config);
             var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
-            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            string export = TrainingExportWriter.PathFor(@"a.mzML");
             taskKey = task.ValidityKey(ctx);
             declared = task.Outputs(ctx).Contains(export);
             return task.OutputValidityKey(ctx, taskKey, export);
@@ -633,8 +679,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyEnvironment.PickValidityKeySuffix(),
                     OspreyEnvironment.Pass2QValueValidityKeySuffix(),
-                    OspreyEnvironment.ExperimentAggValidityKeySuffix(),
-                    OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
+                    OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 })
                 {
                     Assert.AreNotEqual(libfrag, other,

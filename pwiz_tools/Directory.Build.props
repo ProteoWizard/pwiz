@@ -15,8 +15,19 @@
       usual one - Windows Desktop projects (UseWindowsForms/UseWPF) get it from the framework,
       so only plain net10.0 projects with preserialized resources need the package. -->
  <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
- <!-- .NET 9+ defaults this to "all" (transitive), which fails restore. Restore the
-      net8 default; transitive advisories are tracked separately. -->
+ <!-- Keep the build warning-free; demote with NoWarn above, with a comment saying why. A
+      developer build promotes warnings to errors; TeamCity and the SkylineNightly build do not,
+      and Skyline/tcinspect.ps1 fails its GitHub status on any warning instead. MSBuild task
+      warnings are promoted by code, not wholesale: SkylineVersion.targets and SkylineTester.csproj
+      rely on ContinueOnError and <Warning> staying soft when git is unavailable. The NuGet
+      advisories are never errors. The full reasoning is in the root Directory.Build.props, which
+      this file does not import. -->
+ <PwizWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == '' and '$(TEAMCITY_VERSION)' == ''">true</PwizWarningsAsErrors>
+ <TreatWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">true</TreatWarningsAsErrors>
+ <MSBuildWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
+ <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+ <!-- .NET 9+ defaults this to "all" (transitive). Restore the net8 default; transitive
+      advisories are tracked separately. -->
  <NuGetAuditMode>direct</NuGetAuditMode>
  <!-- MSB3825 (demoted above): WinForms ImageList .ImageStream resources serialize via
       BinaryFormatter (disabled by default on net8, removed in net9). The build-time

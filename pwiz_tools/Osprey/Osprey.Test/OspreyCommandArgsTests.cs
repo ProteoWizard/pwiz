@@ -28,7 +28,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -98,6 +100,11 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML", @"a.mzML", @"b.mzML" },
                     Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath, OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
+                // --training-input-list is the same list for the tuning runs, after any --training-input.
+                CollectionAssert.AreEqual(new[] { @"t.mzML", @"a.mzML", @"b.mzML" },
+                    Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_TRAINING_INPUT + @"t.mzML",
+                        OspreyCommandArgs.ARG_TRAINING_INPUT_LIST + listPath).LibraryBuild.TrainingInputs.ToArray());
+
                 // A list that names nothing is fatal, not an empty cohort.
                 File.WriteAllLines(listPath, new[] { @"# nothing but a comment", string.Empty });
                 Assert.ThrowsException<InvalidDataException>(() => Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath));
@@ -113,6 +120,27 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestPrecursorsArg()
+        {
+            // --precursors enables the library build without a FASTA; the phase is Program's to set
+            // from --task, and the rules (the phase required, no FASTA beside it) are its too.
+            var config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            Assert.AreEqual(@"input.tsv", config.LibraryBuild.PrecursorTablePath);
+            Assert.IsNull(config.LibraryBuild.FastaPath);
+            Assert.IsTrue(config.LibraryBuild.Enabled);
+            Assert.AreEqual(0, config.LibraryBuild.OptionsWithoutFasta.Count);
+            // A saved model and the device apply to the table's prediction as to a FASTA's
+            config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", OspreyCommandArgs.ARG_MODEL + @"m.model.zip", OspreyCommandArgs.ARG_DEVICE + @"cpu");
+            Assert.AreEqual(@"m.model.zip", config.LibraryBuild.ModelPath);
+            Assert.AreEqual(@"cpu", config.LibraryBuild.Device);
+            Assert.AreEqual(0, config.LibraryBuild.OptionsWithoutFasta.Count);
+            Assert.AreEqual(0, config.LibraryBuild.DigestOptionsWithPrecursors.Count);
+            // A digest option is recorded by name, for Program to refuse: a table is not digested
+            config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", CarafeCommandLine.ARG_MISS_C + @"0", CarafeCommandLine.ARG_NCE + @"28");
+            CollectionAssert.AreEqual(new[] { CarafeCommandLine.ARG_MISS_C.ArgumentText }, config.LibraryBuild.DigestOptionsWithPrecursors);
+        }
+
+        [TestMethod]
         public void TestArgToConfigMapping()
         {
             // General I/O. -i is variadic (no on-disk check at parse); -l/-o just record paths.
@@ -121,7 +149,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"ref.blib", io.LibrarySource.Path);
             Assert.AreEqual(@"out.blib", io.OutputBlib);
 
-            Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
+            // The command line is kept as one line of text for the library's LibMetadata, with
+            // an argument quoted only when a shell would need it.
+            Assert.AreEqual(string.Join(@" ", @"Osprey", OspreyCommandArgs.ARG_INPUT.ArgumentText, @"a.mzML", @"b.mzML",
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, @"ref.blib", OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"out.blib"), io.CommandLine);
+            var spaced = OspreyCommandArgs.ParseArgs(new[] { OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"out dir\x.blib" });
+            Assert.AreEqual(@"Osprey " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText + @" ""out dir\x.blib""", spaced.CommandLine);
+            Assert.AreEqual(@"""say \""hi\""""", CommandLineText.Quote(@"say ""hi"""));
+            Assert.AreEqual(@"""""", CommandLineText.Quote(string.Empty));
+            // Backslashes before the closing quote or an embedded quote are doubled, so the text parses back.
+            Assert.AreEqual(@"""C:\out dir\\""", CommandLineText.Quote(@"C:\out dir\"));
+            Assert.AreEqual(@"""a\\\""b c""", CommandLineText.Quote(@"a\""b c"));
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.
             var work = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w");
@@ -187,7 +225,6 @@ namespace pwiz.Osprey.Test
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
-            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
 
             // Training export: off by default, and each setting lands where the task reads it.
             var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
@@ -212,11 +249,52 @@ namespace pwiz.Osprey.Test
             var explicitN = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 4).FileParallelism;
             Assert.AreEqual(FileParallelismMode.Explicit, explicitN.Mode);
             Assert.AreEqual(4, explicitN.Count);
-            // 0 is the natural "off" -> sequential (consumed as a value, no stray warning).
-            Assert.AreEqual(FileParallelismMode.Sequential, Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 0).FileParallelism.Mode);
+            // 0 is the natural "off": one file at a time, explicitly (consumed as a value, no stray
+            // warning), so the OSPREY_MAX_PARALLEL_FILES cap cannot override it as it does the default.
+            var zeroN = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 0).FileParallelism;
+            Assert.AreEqual(FileParallelismMode.Explicit, zeroN.Mode);
+            Assert.AreEqual(1, zeroN.Count);
             var autoThenInput = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES, OspreyCommandArgs.ARG_INPUT + @"a.mzML");
             Assert.AreEqual(FileParallelismMode.Auto, autoThenInput.FileParallelism.Mode);
             CollectionAssert.AreEqual(new[] { @"a.mzML" }, autoThenInput.InputFiles.ToArray());
+
+            // Per-stage overrides take the same three forms. Precedence per stage: its own flag,
+            // else --parallel-files, else the sequential default - and the request names the
+            // argument that decided it, for the stage's log line.
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML"),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES));
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 4),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES));
+            // Every stage flag takes the optional-value form: bare, each is auto rather than
+            // demanding a value, even when the next token is another of them.
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING, OspreyCommandArgs.ARG_PARALLEL_FILES_SCORING,
+                    OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES_CACHING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES_SCORING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES_RESCORING));
+            // A stage flag alone leaves the others on the default.
+            var stageOnly = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES_SCORING + 3,
+                OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING, OspreyCommandArgs.ARG_INPUT + @"a.mzML");
+            AssertStageRequests(stageOnly,
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 3, OspreyArgNames.PARALLEL_FILES_SCORING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES_RESCORING));
+            CollectionAssert.AreEqual(new[] { @"a.mzML" }, stageOnly.InputFiles.ToArray());
+            // Stage flags override the shared one in either order, and 0 is one file at a time for
+            // a stage too - an override, not a fall-through to the shared count.
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING + 16, OspreyCommandArgs.ARG_PARALLEL_FILES + 4,
+                    OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING + 0),
+                (FileParallelismMode.Explicit, 16, OspreyArgNames.PARALLEL_FILES_CACHING),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 1, OspreyArgNames.PARALLEL_FILES_RESCORING));
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING + 8),
+                (FileParallelismMode.Explicit, 8, OspreyArgNames.PARALLEL_FILES_CACHING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES));
 
             // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
             // but must accept both --task forms without throwing.
@@ -267,11 +345,11 @@ namespace pwiz.Osprey.Test
             // exception type, same message but for the name, whatever value follows.
             const string removedArg = @"--fdr-method";
             const string neverArg = @"--no-such-argument";
-            string neverMessage = Assert.ThrowsException<ArgumentException>(
+            string neverMessage = Assert.ThrowsException<UnknownArgumentException>(
                 () => OspreyCommandArgs.ParseArgs(new[] { neverArg })).Message;
             foreach (var removedValue in new[] { @"gbdt", @"percolator", @"simple" })
             {
-                var removed = Assert.ThrowsException<ArgumentException>(
+                var removed = Assert.ThrowsException<UnknownArgumentException>(
                     () => OspreyCommandArgs.ParseArgs(new[] { removedArg, removedValue }), removedValue);
                 Assert.AreEqual(neverMessage.Replace(neverArg, removedArg), removed.Message);
             }
@@ -297,7 +375,7 @@ namespace pwiz.Osprey.Test
 
             // The good values still parse, including the two --parallel-files spellings.
             Assert.AreEqual(8, Parse(argThreads + 8).NThreads);
-            Assert.AreEqual(FileParallelismMode.Sequential, Parse(argParallelFiles + 0).FileParallelism.Mode);
+            Assert.AreEqual(1, Parse(argParallelFiles + 0).FileParallelism.Count);
             Assert.AreEqual(FileParallelismMode.Auto, Parse(argParallelFiles).FileParallelism.Mode);
             Assert.AreEqual(4, Parse(argParallelFiles + 4).FileParallelism.Count);
         }
@@ -334,8 +412,7 @@ namespace pwiz.Osprey.Test
             var commaDecimal = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
             var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
-            string ospreySeparator = ArgUsage.ArgumentValueSeparator;
-            var ospreyProvider = ArgUsage.ValueFormatProvider;
+            var osprey = ArgUsage.Current;
             var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
             try
             {
@@ -346,17 +423,15 @@ namespace pwiz.Osprey.Test
 
                 // A host that parses in the current culture leaves the provider unset and gets
                 // the value the way its user would type it.
-                ArgUsage.ValueFormatProvider = null;
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ArgumentValueSeparator = osprey.ArgumentValueSeparator });
                 Assert.AreEqual(argTolerance.ArgumentText + @" 0,5", argTolerance + 0.5);
-                ArgUsage.ValueFormatProvider = ospreyProvider;
 
-                ArgUsage.ArgumentValueSeparator = @"=";
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ValueFormatProvider = osprey.ValueFormatProvider });
                 Assert.AreEqual(argThreads.ArgumentText + @"=8", argThreads + 8);
             }
             finally
             {
-                ArgUsage.ArgumentValueSeparator = ospreySeparator;
-                ArgUsage.ValueFormatProvider = ospreyProvider;
+                ArgUsage.Install(osprey);
                 System.Threading.Thread.CurrentThread.CurrentCulture = culture;
             }
 
@@ -381,7 +456,7 @@ namespace pwiz.Osprey.Test
                 ParseInline(OspreyCommandArgs.ARG_FDR_LEVEL, @"peptide").FdrLevel);
             var argParallelFiles = OspreyCommandArgs.ARG_PARALLEL_FILES;
             Assert.AreEqual(4, ParseInline(argParallelFiles, 4).FileParallelism.Count);
-            Assert.AreEqual(FileParallelismMode.Sequential, ParseInline(argParallelFiles, 0).FileParallelism.Mode);
+            Assert.AreEqual(1, ParseInline(argParallelFiles, 0).FileParallelism.Count);
             // An inline value is explicit, so it is that argument's value or an error - never
             // auto mode with the value left over as a positional token, which is what the
             // optional-value lookahead does with a spaced "--parallel-files bad".
@@ -397,10 +472,10 @@ namespace pwiz.Osprey.Test
 
             // An empty value is a missing value, reported as it is for the spaced form.
             var argOutput = OspreyCommandArgs.ARG_OUTPUT;
-            var missing = Assert.ThrowsException<ArgumentException>(() => ParseInline(argOutput, string.Empty));
+            var missing = Assert.ThrowsException<ValueMissingException>(() => ParseInline(argOutput, string.Empty));
             Assert.AreEqual(ArgUsage.Provider.ValueMissingMessage(argOutput.ArgumentText), missing.Message);
             // A flag takes no value in either form.
-            Assert.ThrowsException<ArgumentException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
+            Assert.ThrowsException<ValueUnexpectedException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
 
             // --task: the tokenizer consumes both forms, and FindValue reads both the same way.
             var argTask = OspreyCommandArgs.ARG_TASK;
@@ -412,11 +487,11 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(OspreyCommandArgs.FindValue(ArgTokens.Split(argThreads + 8), argTask));
             string noTaskName = string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
                 argTask.ArgumentText, string.Join(@", ", argTask.Values));
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => OspreyCommandArgs.FindValue(new[] { InlineToken(argTask, string.Empty) }, argTask)).Message);
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => OspreyCommandArgs.FindValue(new[] { argTask.ArgumentText }, argTask)).Message);
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => Parse(argTask)).Message);
         }
 
@@ -480,8 +555,24 @@ namespace pwiz.Osprey.Test
                 .Where(f => typeof(OspreyArgument).IsAssignableFrom(f.FieldType))
                 .Select(f => (OspreyArgument) f.GetValue(null))
                 .ToList();
-            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(), declared.Count,
+            // The hosted CarafeSharp declarations are listed, not declared one by one: they are
+            // counted against CarafeSharp's lists, and described by CarafeSharp's text.
+            var hosted = OspreyCommandArgs.HostedArguments.ToList();
+            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(a => !a.IsHosted), declared.Count,
                 @"Every declared argument must be in a help group");
+            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count +
+                            CarafeCommandLine.HostedTrainingArguments.Count, hosted.Count);
+            Assert.AreEqual(hosted.Count, OspreyCommandArgs.AllArguments.Count(a => a.IsHosted));
+            foreach (var arg in hosted)
+            {
+                seen.TryGetValue(arg.Name, out int groupCount);
+                Assert.AreEqual(1, groupCount, string.Format(@"Hosted argument {0} must be in exactly one group", arg.Name));
+                Assert.IsNull(OspreyCommandArgUsage.ResourceManager.GetString(OspreyCommandArgs.UsageKey(arg.Name)),
+                    string.Format(@"Hosted argument {0} is described by CarafeSharp, not OspreyCommandArgUsage.resx", arg.Name));
+                Assert.AreEqual(CarafeCommandLine.GetUsageText(arg.Name), ArgUsage.Provider.GetDescription(arg.Name), arg.Name);
+                Assert.IsFalse(string.IsNullOrEmpty(ArgUsage.Provider.GetDescription(arg.Name)), arg.Name);
+                Assert.IsFalse(declared.Any(d => d.Name == arg.Name), string.Format(@"{0} is both Osprey's and CarafeSharp's", arg.Name));
+            }
 
             var usageKeys = new HashSet<string>();
             foreach (var arg in declared)
@@ -505,13 +596,122 @@ namespace pwiz.Osprey.Test
             // declarations use; the prefix is the one thing that could still differ.
             Assert.AreEqual(OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyArgNames.Text(OspreyArgNames.TASK));
 
-            // And no orphans: every usage string belongs to a declared, non-internal argument.
+            // A property's label is under its usage key with the property suffix, for every one
+            // of Osprey's own arguments that is a property (a hosted one is labeled by CarafeSharp).
+            var propertyKeys = new HashSet<string>();
+            foreach (var arg in declared.Where(a => a.PropertyName != null))
+            {
+                string key = OspreyCommandArgs.UsageKey(arg.Name) + CarafeCommandLine.PROPERTY_SUFFIX;
+                propertyKeys.Add(key);
+                Assert.IsFalse(string.IsNullOrEmpty(OspreyCommandArgUsage.ResourceManager.GetString(key)),
+                    string.Format(@"Property {0} has no label {1} in OspreyCommandArgUsage.resx", arg.Name, key));
+                Assert.AreEqual(OspreyCommandArgUsage.ResourceManager.GetString(key), arg.PropertyName());
+            }
+
+            // And no orphans: every usage string belongs to a declared, non-internal argument, and
+            // every label to a property.
             var resourceSet = OspreyCommandArgUsage.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(resourceSet);
             foreach (DictionaryEntry entry in resourceSet)
             {
-                Assert.IsTrue(usageKeys.Contains((string) entry.Key),
-                    string.Format(@"OspreyCommandArgUsage.resx key {0} matches no argument", entry.Key));
+                string key = (string) entry.Key;
+                bool isLabel = key.EndsWith(CarafeCommandLine.PROPERTY_SUFFIX);
+                Assert.IsTrue(isLabel ? propertyKeys.Contains(key) : usageKeys.Contains(key),
+                    string.Format(@"OspreyCommandArgUsage.resx key {0} matches no argument", key));
+            }
+        }
+
+        /// <summary>
+        /// The properties a host builds its settings page from (<c>--help properties</c>): every
+        /// argument that is a setting of a run is one, with a label, a description, a scope and a
+        /// type, a default that is one of a list's values or a number within its range, and the
+        /// arguments that are not settings - inputs, outputs, commands, internal switches - are
+        /// exactly the ones listed here, so a new argument must be declared one or the other.
+        /// </summary>
+        [TestMethod]
+        public void TestPropertiesExport()
+        {
+            var notProperties = new[]
+            {
+                OspreyArgNames.INPUT, @"input-list", OspreyArgNames.LIBRARY, OspreyArgNames.OUTPUT, @"work-dir",
+                OspreyArgNames.OUTPUT_DIR, @"export-library", OspreyArgNames.FASTA, OspreyArgNames.PRECURSORS,
+                OspreyArgNames.TRAINING_INPUT, OspreyArgNames.TRAINING_INPUT_LIST, OspreyArgNames.MODEL,
+                OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
+                OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
+                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"version", @"culture",
+                // Developer options and outputs a user of a host's settings page has no use for
+                OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
+                @"training-export-xics", @"diagnostics", @"perf-stats",
+                // CarafeSharp's, hosted: the training seed
+                CarafeCommandLine.ARG_SEED.Name,
+            };
+            var all = OspreyCommandArgs.AllArguments.ToList();
+            CollectionAssert.AreEquivalent(notProperties, all.Where(a => a.PropertyName == null).Select(a => a.Name).ToList(),
+                @"An argument is a setting (Scope) or is listed here as none");
+            var properties = all.Where(a => a.PropertyName != null).ToList();
+            Assert.IsTrue(properties.All(a => a.Scope.HasValue));
+            // A hosted argument that is a setting is labeled by CarafeSharp, and one that is not has no label there
+            foreach (var arg in all.Where(a => a.IsHosted))
+                Assert.AreEqual(CarafeCommandLine.GetPropertyName(arg.Name), arg.PropertyName?.Invoke(), arg.Name);
+
+            string json;
+            using (var writer = new StringWriter())
+            {
+                OspreyCommandArgs.PrintUsage(OspreyProperties.HELP_FORMAT, writer);
+                json = writer.ToString();
+            }
+            Assert.AreEqual(OspreyProperties.Generate(), json);
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            Assert.AreEqual(@"Osprey", root.GetProperty(OspreyProperties.FIELD_TOOL).GetString());
+            Assert.AreEqual(OspreyVersion.DisplayVersion, root.GetProperty(OspreyProperties.FIELD_VERSION).GetString());
+            var exported = root.GetProperty(OspreyProperties.FIELD_PROPERTIES).EnumerateArray().ToList();
+            Assert.AreEqual(properties.Count, exported.Count);
+            var types = Enum.GetNames(typeof(ArgumentPropertyType));
+            var scopes = Enum.GetNames(typeof(OspreyPropertyScope));
+            foreach (var element in exported)
+            {
+                string name = element.GetProperty(OspreyProperties.FIELD_NAME).GetString();
+                var arg = properties.First(a => a.Name == name);
+                Assert.IsFalse(string.IsNullOrEmpty(element.GetProperty(OspreyProperties.FIELD_LABEL).GetString()), name);
+                Assert.IsFalse(string.IsNullOrEmpty(element.GetProperty(OspreyProperties.FIELD_DESCRIPTION).GetString()), name);
+                Assert.IsFalse(string.IsNullOrEmpty(element.GetProperty(OspreyProperties.FIELD_GROUP).GetString()), name);
+                CollectionAssert.Contains(scopes, element.GetProperty(OspreyProperties.FIELD_SCOPE).GetString(), name);
+                string type = element.GetProperty(OspreyProperties.FIELD_TYPE).GetString();
+                CollectionAssert.Contains(types, type, name);
+                Assert.AreEqual(arg.EffectivePropertyType.ToString(), type, name);
+                bool hasDefault = element.TryGetProperty(OspreyProperties.FIELD_DEFAULT, out var defaultElement);
+                string defaultValue = hasDefault ? defaultElement.GetString() : null;
+                bool hasValues = element.TryGetProperty(OspreyProperties.FIELD_VALUES, out var valuesElement);
+                Assert.AreEqual(type == ArgumentPropertyType.list.ToString(), hasValues, name);
+                if (hasValues)
+                {
+                    var values = valuesElement.EnumerateArray().Select(v => v.GetString()).ToList();
+                    CollectionAssert.AreEqual(arg.Values, values, name);
+                    if (hasDefault)
+                        CollectionAssert.Contains(values, defaultValue, name);
+                }
+                bool hasMin = element.TryGetProperty(OspreyProperties.FIELD_MIN, out var minElement);
+                bool hasMax = element.TryGetProperty(OspreyProperties.FIELD_MAX, out var maxElement);
+                bool isNumber = type == ArgumentPropertyType.number.ToString() || type == ArgumentPropertyType.integer.ToString();
+                Assert.IsTrue(isNumber || !(hasMin || hasMax), name + @": a range needs a number");
+                if (isNumber && hasDefault)
+                {
+                    Assert.IsTrue(double.TryParse(defaultValue, NumberStyles.Float, CultureInfo.InvariantCulture, out double d), name);
+                    Assert.IsTrue(!hasMin || d >= minElement.GetDouble(), name);
+                    Assert.IsTrue(!hasMax || d <= maxElement.GetDouble(), name);
+                }
+                if (type == ArgumentPropertyType.flag.ToString())
+                    Assert.IsFalse(hasDefault, name + @": a flag has no default to name");
+                Assert.AreEqual(arg.OptionalValue, element.TryGetProperty(OspreyProperties.FIELD_OPTIONAL, out _), name);
+            }
+            // The export follows the UI culture: a translated language keeps every label (English
+            // until translated, since the resources fall back), and the culture is recorded.
+            using (new CultureScope(CultureInfo.GetCultureInfo(@"ja")))
+            {
+                using var jaDocument = JsonDocument.Parse(OspreyProperties.Generate());
+                Assert.AreEqual(@"ja", jaDocument.RootElement.GetProperty(OspreyProperties.FIELD_CULTURE).GetString());
+                Assert.AreEqual(exported.Count, jaDocument.RootElement.GetProperty(OspreyProperties.FIELD_PROPERTIES).GetArrayLength());
             }
         }
 
@@ -553,8 +753,12 @@ namespace pwiz.Osprey.Test
 
             // section filter: only the matching group.
             string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
-            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText);
+            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
+            // The enzyme and modification tables come with the digest section that refers to them.
+            string digest = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Library_Digest);
+            StringAssert.Contains(digest, EnzymeTable.All.Last().Name);
+            StringAssert.Contains(digest, CarafeModification.TopModifications.Last().Name);
 
             // unknown section: a helpful message, no crash.
             Assert.AreEqual(string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,
@@ -666,6 +870,25 @@ namespace pwiz.Osprey.Test
             }
             throw new InvalidOperationException(
                 @"Could not locate Osprey source root from test assembly location.");
+        }
+
+        /// <summary>
+        /// Checks the request each per-file stage resolves from, in stage order (caching,
+        /// scoring, re-scoring): its mode, explicit count, and the argument that decided it.
+        /// </summary>
+        private static void AssertStageRequests(OspreyConfig config,
+            params (FileParallelismMode Mode, int Count, string ArgName)[] expectedByStage)
+        {
+            var stages = new[] { FileStage.Caching, FileStage.Scoring, FileStage.Rescoring };
+            Assert.AreEqual(stages.Length, expectedByStage.Length);
+            for (int i = 0; i < stages.Length; i++)
+            {
+                var request = config.GetFileParallelism(stages[i], out string argName);
+                string stageText = stages[i].ToString();
+                Assert.AreEqual(expectedByStage[i].Mode, request.Mode, stageText);
+                Assert.AreEqual(expectedByStage[i].Count, request.Count, stageText);
+                Assert.AreEqual(expectedByStage[i].ArgName, argName, stageText);
+            }
         }
     }
 }

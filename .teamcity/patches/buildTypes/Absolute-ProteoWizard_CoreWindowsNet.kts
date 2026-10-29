@@ -17,16 +17,17 @@ create(DslContext.projectId, BuildType({
     templates(AbsoluteId("ProteoWizard_WindowsBase"), AbsoluteId("ProteoWizard_WindowsCoreRelease"), AbsoluteId("ProteoWizard_GitHubReportingConfig"), AbsoluteId("ProteoWizard_RemoteAccountTestParameters"))
     id = AbsoluteId("ProteoWizard_CoreWindowsNet")
     name = "Core Windows .NET"
+    paused = true
 
     artifactRules = """
-        pwiz-sharp/installer/build/ProteoWizard-*.exe
+        scripts/installer/build/ProteoWizard-*.exe
         **/*.blib.observed
     """.trimIndent()
 
     steps {
         exec {
             id = "RUNNER_simpleRunner_139"
-            path = "pwiz-sharp/tcbuild.bat"
+            path = "tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
         }
         script {

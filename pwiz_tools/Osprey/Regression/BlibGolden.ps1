@@ -68,11 +68,11 @@ $script:BlibTables = @(
         Sql = @'
 SELECT peptideModSeq, precursorCharge, peptideSeq, prevAA, nextAA, copies,
        numPeaks, ionMobility, retentionTime, startTime, endTime,
-       precursorMZ, score, scoreType
+       precursorMZ, score, scoreType, PrecursorQValue, PrecursorPep, PeptideQValue
 FROM RefSpectra
 '@
         Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility')
+        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility', 'PrecursorQValue', 'PrecursorPep', 'PeptideQValue')
         Exact = @('peptideSeq', 'prevAA', 'nextAA', 'copies', 'numPeaks', 'scoreType')
     },
     @{
@@ -87,54 +87,6 @@ JOIN SpectrumSourceFiles sf ON rt.SpectrumSourceID = sf.id
         Key = @('peptideModSeq', 'precursorCharge', 'fileName')
         Numeric = @('retentionTime', 'startTime', 'endTime', 'score')
         Exact = @('bestSpectrum')
-    },
-    @{
-        Name = 'OspreyRunScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.RunQValue, s.DiscriminantScore, s.PosteriorErrorProb
-FROM OspreyRunScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('RunQValue', 'DiscriminantScore', 'PosteriorErrorProb')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyExperimentScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge,
-       s.ExperimentQValue, s.NRunsDetected, s.NRunsSearched
-FROM OspreyExperimentScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('ExperimentQValue')
-        Exact = @('NRunsDetected', 'NRunsSearched')
-    },
-    @{
-        Name = 'OspreyPeakBoundaries'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.StartRT, s.EndRT, s.ApexRT, s.ApexIntensity, s.IntegratedArea
-FROM OspreyPeakBoundaries s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('StartRT', 'EndRT', 'ApexRT', 'ApexIntensity', 'IntegratedArea')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyCoefficients'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName, s.ScanNumber,
-       s.RT, s.Coefficient
-FROM OspreyCoefficients s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName', 'ScanNumber')
-        Numeric = @('RT', 'Coefficient')
-        Exact = @()
     },
     @{
         Name = 'RefSpectraProteins'; Scope = 'Subset'
@@ -161,9 +113,9 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
     },
     @{
         Name = 'Proteins'; Scope = 'Full'
-        Sql = 'SELECT accession FROM Proteins'
+        Sql = 'SELECT accession, QValue FROM Proteins'
         Key = @('accession')
-        Numeric = @()
+        Numeric = @('QValue')
         Exact = @()
     },
     @{
@@ -174,11 +126,14 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
         Exact = @('idFileName', 'workflowType')
     },
     @{
-        Name = 'OspreyMetadata'; Scope = 'Full'
-        Sql = 'SELECT Key, Value FROM OspreyMetadata'
-        Key = @('Key')
+        Name = 'LibMetadata'; Scope = 'Full'
+        # Without the validity stamp (osprey.validity) and the command line (osprey.command):
+        # they name the build, key and invocation that wrote the library, which is provenance,
+        # not a search result to hold against a golden.
+        Sql = "SELECT key, value FROM LibMetadata WHERE key NOT IN ('osprey.validity', 'osprey.command')"
+        Key = @('key')
         Numeric = @()
-        Exact = @('Value')
+        Exact = @('value')
     }
 )
 
@@ -626,7 +581,11 @@ function Compare-BlibGolden {
         [string]$ProteinFdrTsv,
         [int]$Modulus = $script:DefaultModulus,
         [double]$Tolerance = 1e-9,
-        [double]$SummaryRelTolerance = 1e-6
+        [double]$SummaryRelTolerance = 1e-6,
+        # The run searched the library as a .blib exported from the golden's .tsv (regression.ps1
+        # -LibraryAsBlib): the library file name Osprey records in SpectrumSourceFiles.idFileName
+        # differs by extension and nothing else, so that one column is left out of the comparison.
+        [switch]$LibraryAsBlib
     )
     $tablesDir = Join-Path $GoldenDir 'tables'
     $issues = [System.Collections.Generic.List[string]]::new()
@@ -636,9 +595,13 @@ function Compare-BlibGolden {
         if (-not (Test-Path $goldenPath)) { $issues.Add("missing golden table: $($t.Name)"); continue }
         $golden = Read-Tsv -Path $goldenPath
         $fresh = Get-TableProjection -Blib $Blib -Table $t -SubsetFilter:$true -Modulus $Modulus
+        $exactCols = $t.Exact
+        if ($LibraryAsBlib -and $t.Name -eq 'SpectrumSourceFiles') {
+            $exactCols = @($t.Exact | Where-Object { $_ -ne 'idFileName' })
+        }
         $cmp = Compare-RowSets -Label $t.Name -Header $golden.Header `
             -RowsA $golden.Rows -RowsB $fresh.Rows `
-            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $t.Exact -Tolerance $Tolerance
+            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $exactCols -Tolerance $Tolerance
         foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
     }
 

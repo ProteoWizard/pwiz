@@ -61,25 +61,14 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}.
+        ///   Looks up a localized string similar to The library {0} has a DecoyPairs table Osprey cannot read: {1}.
         /// </summary>
-        public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_ {
+        public static string BlibDecoyPairs_Read_The_library__0__has_a_DecoyPairs_table_Osprey_cannot_read___1_ {
             get {
-                return ResourceManager.GetString("BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__" +
-                        "bytes__got__2_", resourceCulture);
+                return ResourceManager.GetString("BlibDecoyPairs_Read_The_library__0__has_a_DecoyPairs_table_Osprey_cannot_read___1_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid peak m/z blob size: {0} bytes (not a multiple of 8).
-        /// </summary>
-        public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_ {
-            get {
-                return ResourceManager.GetString("BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_" +
-                        "of_8_", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid BiblioSpec library: the {0} table was not found..
         /// </summary>
@@ -98,7 +87,16 @@ namespace pwiz.Osprey.IO {
                         "_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0:N0} library spectra.
+        /// </summary>
+        public static string BlibLoader_LoadSpectra_Reading__0_N0__library_spectra {
+            get {
+                return ResourceManager.GetString("BlibLoader_LoadSpectra_Reading__0_N0__library_spectra", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to ... and {0:N0} more modifications.
         /// </summary>
@@ -143,25 +141,6 @@ namespace pwiz.Osprey.IO {
         public static string ColumnIndices_RequireColumn_Missing_required_column___0_ {
             get {
                 return ResourceManager.GetString("ColumnIndices_RequireColumn_Missing_required_column___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The decoy pairing manifest is empty..
-        /// </summary>
-        public static string DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_ {
-            get {
-                return ResourceManager.GetString("DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The decoy pairing manifest is missing required columns (it needs {1}, {2} and {3}). Found: {0}.
-        /// </summary>
-        public static string DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_ {
-            get {
-                return ResourceManager.GetString("DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_colum" +
-                        "ns__it_needs_sequence__peptide_type_", resourceCulture);
             }
         }
         
@@ -268,34 +247,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading library cache ({0:N0} precursors).
-        /// </summary>
-        public static string LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_ {
-            get {
-                return ResourceManager.GetString("LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Writing library cache.
-        /// </summary>
-        public static string LibraryCacheStatus_SaveCache_Writing_library_cache {
-            get {
-                return ResourceManager.GetString("LibraryCacheStatus_SaveCache_Writing_library_cache", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The library cache is damaged (unknown neutral loss tag {0})..
-        /// </summary>
-        public static string LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_ {
-            get {
-                return ResourceManager.GetString("LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag_" +
-                        "_0____Delete_it_to_rebuild_it_from_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Merging duplicate library precursors.
         /// </summary>
         public static string LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors {
@@ -334,6 +285,25 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library {0} claims the Osprey library contract but violates it:
+        ///{1}.
+        /// </summary>
+        public static string LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The library claims the Osprey library contract; checking it before any repair..
+        /// </summary>
+        public static string LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library&apos;s decoys, or remove them from the library..
         /// </summary>
         public static string LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys {
@@ -344,31 +314,40 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to load the library cache: {0}. Reading the library file instead..
+        ///   Looks up a localized string similar to Failed to remove the library cache &apos;{0}&apos;: {1}.
         /// </summary>
-        public static string LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_ {
+        public static string LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_fil" +
-                        "e_instead_", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Failed to save library cache: {0}.
+        ///   Looks up a localized string similar to Removed the library cache &apos;{0}&apos;: the derived library replaces it..
         /// </summary>
-        public static string LibraryLoader_Load_Failed_to_save_library_cache___0_ {
+        public static string LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_save_library_cache___0_", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_lib" +
+                        "rary_replaces_it_", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Library cache &apos;{0}&apos; was built from a different version of the source library; ignoring the stale cache and rebuilding from source..
+        ///   Looks up a localized string similar to Failed to read the derived library &apos;{0}&apos;: {1} Reading the library file instead..
         /// </summary>
-        public static string LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_ {
+        public static string LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_" +
-                        "source_library__ignoring_", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_libra" +
+                        "ry_file_instead_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to save the derived library: {0}.
+        /// </summary>
+        public static string LibraryLoader_Load_Failed_to_save_the_derived_library___0_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_save_the_derived_library___0_", resourceCulture);
             }
         }
         
@@ -380,13 +359,13 @@ namespace pwiz.Osprey.IO {
                 return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Loaded {0:N0} library precursors from cache &apos;{1}&apos;.
+        ///   Looks up a localized string similar to Loaded {0:N0} library precursors from the derived library &apos;{1}&apos;.
         /// </summary>
-        public static string LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__ {
+        public static string LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__", resourceCulture);
             }
         }
         
@@ -400,30 +379,61 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved library cache ({0:N0} precursors) to &apos;{1}&apos;.
+        ///   Looks up a localized string similar to Saved the derived library ({0:N0} precursors) to &apos;{1}&apos;.
         /// </summary>
-        public static string LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__ {
+        public static string LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The derived library &apos;{0}&apos; was built from a different version or configuration; rebuilding it from the source library..
+        /// </summary>
+        public static string LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_" +
+                        "or_configuration__rebuilding_it_from_the_source_library_", resourceCulture);
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The library {0} has entrapment peptides (protein accessions marked _p_target) but nothing pairs them with their targets. Give the pairing manifest with {1}, or search a BiblioSpec library that carries a DecoyPairs table..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them" +
+                        "_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_ca" +
+                        "rries_a_DecoyPairs_table_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The library {0} supplies decoys but has no DecoyPairs table pairing each decoy with its target. A BiblioSpec library searched with its own decoys must carry the table, as CarafeSharp writes it; otherwise leave out {1} so Osprey generates its own decoys..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pa" +
+                        "iring_each_decoy_with_its_target_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The library&apos;s DecoyPairs table carries its pairing design; the pairing manifest {0} is not read..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the" +
+                        "_pairing_manifest__0__is_not_read_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Unsupported library format: {0}.
         /// </summary>
         public static string LibraryLoader_Load_Unsupported_library_format___0_ {
             get {
                 return ResourceManager.GetString("LibraryLoader_Load_Unsupported_library_format___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the library cache). {3:N0} decoys and {4:N0} targets have no partner..
-        /// </summary>
-        public static string LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their" +
-                        "_targets___2____from_the_library_cache____3__", resourceCulture);
             }
         }
         
@@ -437,6 +447,16 @@ namespace pwiz.Osprey.IO {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%) from the library&apos;s DecoyPairs table. {3:N0} decoys and {4:N0} targets have no partner..
+        /// </summary>
+        public static string LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_s_DecoyPairs_table___3__ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targe" +
+                        "ts___2____from_the_library_s_DecoyPairs_table___3__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
         /// </summary>
@@ -507,6 +527,26 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only {0:F1}% of the library&apos;s decoys are paired with a target in its DecoyPairs table (at least {1:F0}% is needed), so FDR estimates would be unreliable. The library must pair each decoy with its target at one charge, or leave out {2} so Osprey generates its own decoys..
+        /// </summary>
+        public static string LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_s_decoys_are_paired_with_a_target_in_its_DecoyPairs_table__at_least__1___is_needed___ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_s_decoys_are_paire" +
+                        "d_with_a_target_in_its_DecoyPairs_table__at_least__1___is_needed___", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pairing library decoys to targets from the library&apos;s DecoyPairs table..
+        /// </summary>
+        public static string LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_" +
+                        "library_s_DecoyPairs_table_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Replaced the protein accessions of {0:N0} library precursors with the source-protein accessions in the pairing manifest.
         /// </summary>
         public static string LibraryLoader_TryFinishSuppliedDecoys_Replaced_the_protein_accessions_of__0__library_precursors_with_the_source_protein_ {
@@ -537,12 +577,38 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
+        ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics..
         /// </summary>
-        public static string ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
+        public static string PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_ {
             get {
-                return ResourceManager.GetString("ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes" +
-                        "_long__which_is_not_a_multiple_of__1__", resourceCulture);
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_", resourceCulture);
             }
         }
         
@@ -783,27 +849,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis&apos;s {3} files and run the first pass again..
-        /// </summary>
-        public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_ {
-            get {
-                return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_n" +
-                        "ot_carry_the_first_pass_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis&apos;s {4} files and run the first pass again..
-        /// </summary>
-        public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_ {
-            get {
-                return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_n" +
-                        "ot_list_the_input_files_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the first pass again..
+        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the analysis again..
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_ {
             get {
@@ -917,6 +963,15 @@ namespace pwiz.Osprey.IO {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to the cache was demultiplexed with different settings, or its demultiplexing state does not match the demultiplexing option, so it must be rebuilt.
+        /// </summary>
+        public static string SpectraCacheException_Describe_the_cache_was_demultiplexed_with_different_settings__or_its_demultiplexing_state_does_not_match {
+            get {
+                return ResourceManager.GetString("SpectraCacheException_Describe_the_cache_was_demultiplexed_with_different_settings__or_its_demultiplexing_state_does_not_match", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to the cache was refused for an unrecorded reason.
         /// </summary>

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO

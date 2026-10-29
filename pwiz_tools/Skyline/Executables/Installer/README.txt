@@ -36,8 +36,8 @@ Build:
      produced (Skyline-daily.exe by default; MSBuildAssemblyName=Skyline for the
      release channel) and the version from its FileVersion.
   2. pwsh -File pwiz_tools\Skyline\Executables\Installer\build.ps1
-     Inno Setup 6 is fetched by pwiz-sharp\installer\Ensure-InnoSetup.ps1 if the
-     machine lacks it; the runtime EXE is cached under pwiz-sharp\installer\cache.
+     Inno Setup 6 is fetched by scripts\installer\Ensure-InnoSetup.ps1 if the
+     machine lacks it; the runtime EXE is cached under scripts\installer\cache.
      Pass -SignToolCommand '<signtool command with $f>' for a signed build.
   3. Installers land in pwiz_tools\Skyline\bin\installer\, with the update
      manifest <product>.json beside them. Skyline's startup check reads the
@@ -61,7 +61,7 @@ Build:
      an elevated shell for the per-machine path).
 
 The shared pieces (.NET runtime prerequisite, ISCC bootstrap) live under
-pwiz-sharp\installer\; see pwiz-sharp\installer\NOTES.md.
+scripts\installer\; see scripts\installer\NOTES.md.
 
 .NET Framework build (Jam): WiX, Product-template.wxs
 -----------------------------------------------------

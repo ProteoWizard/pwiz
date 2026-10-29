@@ -1,0 +1,74 @@
+<Project>
+
+  <!--
+    Shared MSBuild target for harness-test projects: extracts the per-vendor
+    Reader_<Vendor>_Test.data.tar.bz2 archive into its containing directory so the
+    .d/.raw/.wiff fixtures are available to VendorReaderTestHarness.
+
+    Importing test projects must set either:
+      - VendorTestArchive  : absolute path to the .tar.bz2
+      - VendorTestDataParent : directory into which to extract (the tarball's internal
+        paths are rooted at Reader_<Vendor>_Test.data/, so this should be the folder
+        *containing* Reader_<Vendor>_Test.data).
+    or, for a project whose tests read more than one vendor's raw data (Skyline's TestData
+    reads Agilent, Bruker and Thermo in a single assembly, which the property pair cannot
+    express), the VendorTestArchives item group, each item being the .tar.bz2 path with
+    Parent metadata naming its destination. The single-property form is folded into that
+    item group below so there is one code path.
+
+    Uses the bsdtar binary checked in at libraries/bsdtar.exe rather than %WinDir%\System32\
+    tar.exe. The system32 build of bsdtar isn't always present (Windows 10 1803+ shipped it,
+    but pre-1803 / Server SKUs / restricted images don't), and the Git-for-Windows GNU tar
+    that may shadow it on PATH is wrong for our purposes anyway — GNU tar's -k errors when
+    files exist instead of skipping them.
+
+    -k is essential, not just an optimization: the reference mzMLs tracked in git are
+    newer than the copies baked into the tarball, so overwriting them with the tar
+    contents would regress test oracles. We only want to fill in fixtures that aren't
+    on disk yet (the big vendor .d/.raw directories that aren't committed to git).
+
+    The libraries/bsdtar.exe binary is libarchive 2.7 — older than the system32 one. With
+    -k it does the right thing (skips existing files without overwriting), but it reports
+    each skip as a warning and then exits with status 1 ("Error exit delayed from previous
+    errors"). Set IgnoreExitCode="true" to swallow that — an actual extraction failure
+    would also produce missing files, which the tests would surface immediately.
+
+    The extraction itself is in ExtractTestDataArchive.proj, run once per archive per build
+    and stamped once per archive; see that file for why. This target only asks for it.
+    -->
+
+  <ItemGroup>
+    <VendorTestArchives Include="$(VendorTestArchive)" Condition="'$(VendorTestArchive)' != ''">
+      <Parent>$(VendorTestDataParent)</Parent>
+    </VendorTestArchives>
+  </ItemGroup>
+
+  <Target Name="ExtractVendorTestData"
+          BeforeTargets="BeforeBuild"
+          Condition="'@(VendorTestArchives)' != ''">
+    <!-- Callers spell the same archive differently (TestData\..\..\..\pwiz\... and
+         $(PwizRoot)\data\...), and global properties are compared as text, so normalize both
+         paths to full paths or the requests would not be recognized as the same one. No
+         trailing separator on Parent either: it would escape the closing quote of tar's -C
+         argument. -->
+    <ItemGroup>
+      <_VendorTestArchiveRequest Include="@(VendorTestArchives->'%(FullPath)')" />
+      <!-- No Parent means the archive's own folder, which is where every archive extracts. -->
+      <_VendorTestArchiveRequest Condition="'%(Parent)' == ''">
+        <Parent>%(RootDir)%(Directory)</Parent>
+      </_VendorTestArchiveRequest>
+      <_VendorTestArchiveRequest>
+        <ExtractProperties>Archive=%(FullPath);Parent=$([System.IO.Path]::GetFullPath('%(Parent)').TrimEnd('\').TrimEnd('/'))</ExtractProperties>
+      </_VendorTestArchiveRequest>
+    </ItemGroup>
+    <!-- RemoveProperties drops the caller's own global properties, which the MSBuild task
+         would otherwise pass along: a test project built for another TargetFramework,
+         Configuration or Platform would make a second, concurrent instance of the same
+         archive's extraction. The extraction depends on none of them. -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)ExtractTestDataArchive.proj"
+             Targets="Extract"
+             Properties="%(_VendorTestArchiveRequest.ExtractProperties)"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained;Configuration;Platform;ShouldUnsetParentConfigurationAndPlatform;IAgreeToVendorLicenses;AutomatedBuild" />
+  </Target>
+
+</Project>

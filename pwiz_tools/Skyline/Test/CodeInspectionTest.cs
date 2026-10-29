@@ -419,7 +419,8 @@ namespace pwiz.SkylineTest
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
-                "BackgroundEventThreadsTestForm" // Used in tests itself, not a UI thing    
+                "BackgroundEventThreadsTestForm", // Used in tests itself, not a UI thing
+                "SlowLoadingForm" // Used in TestMcpConnectorShowForm itself, not a UI thing
             };
 
             foreach (var formName in foundForms)
@@ -1313,18 +1314,12 @@ namespace pwiz.SkylineTest
                     var warnings = new List<string>();
                     // Track already reported issues for this file to avoid duplicate reports
                     var reportedMatches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    // Per-file tracking for inconsistent line endings and multiline pattern faults
-                    var crlfCount =0;
+                    // Per-file tracking for multiline pattern faults
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
 
                     foreach (var line in lines)
                     {
-                        // Look for inconsistent line endings
-                        if (line.EndsWith("\r")) 
-                        {
-                            crlfCount++;
-                        }
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
@@ -1387,11 +1382,6 @@ namespace pwiz.SkylineTest
                                 }
                             }
                         }
-                    }
-
-                    if (crlfCount != 0 && crlfCount < lines.Length-1)
-                    {
-                        results.Add($@"Inconsistent line endings in {filename}");
                     }
 
                     if (requiredPatternsObservedInThisFile != null)

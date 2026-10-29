@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- CarafeSharp keeps its own Directory.Build.targets, as Osprey does, so the Skyline-tree
+       pwiz_tools/Directory.Build.targets (vendor native-payload verification, WinForms
+       logger copies) does not apply. What it does need from there is below. -->
+
+  <!-- Test-only: the TeamCity vstest logger, so per-test service messages reach the
+       TeamCity UI when tests run under a plain Command Line step. Gated on IsTestProject,
+       set explicitly in the test csproj so it is in scope at restore time. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
+  </ItemGroup>
+
+  <!-- The libtorch native runtime and the pretrained models for projects that opt in with
+       UseLibTorch=true (the executable and the test project), shared with the Osprey tree. -->
+  <Import Project="$(MSBuildThisFileDirectory)LibTorch.targets" />
+
+  <!-- pwiz's patched Parquet.Net for projects that set ReferenceParquetNet=true; that file
+       documents the fork. Imported here, as in pwiz_tools/Osprey/Directory.Build.targets,
+       because this is the nearest Directory.Build.targets and the only one imported for the
+       CarafeSharp tree. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
+
+</Project>

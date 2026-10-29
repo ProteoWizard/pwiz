@@ -29,10 +29,13 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using ZedGraph;
-using pwiz.CLI.cv;
-using pwiz.CLI.msdata;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class DataPointTableForm : DockableForm, IDataView
     {
@@ -71,16 +74,19 @@ namespace seems
             else if (e.ColumnIndex == 1)
                 e.Value = pointList[e.RowIndex].Y;
             else
-                e.Value = mobilityArray[e.RowIndex];
+                e.Value = mobilityArray?[e.RowIndex];
         }
 
         private void RefreshData()
         {
             if (item.Id.StartsWith("merged="))
             {
+                // both from the processed spectrum, so each mobility stays with its point
                 pointList = spectrum.GetPointList(false);
-                var s = item.Source.Source.MSDataFile.run.spectrumList.spectrum(spectrum.Index, true);
+                var s = spectrum.SpectrumList.GetSpectrum(spectrum.Index, getBinaryData: true);
                 mobilityArray = s.GetIonMobilityArray();
+                if (mobilityArray != null && mobilityArray.Length != pointList.Count)
+                    mobilityArray = null; // processing that does not carry the array along
             }
             else
             {

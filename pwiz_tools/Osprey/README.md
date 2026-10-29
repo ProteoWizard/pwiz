@@ -120,10 +120,12 @@ reads is a property of the task — `FirstPassFDR` and `PerFileRescoring` read `
 directory. The data file itself need not still exist: a node whose `.spectra.bin` or scores
 parquet is staged is accepted without it.
 
-The driver also writes a `<output>.<TaskName>.osprey.task` validity
-sidecar next to each output; re-running a task whose outputs already exist
-with a matching validity key (search-parameter + library hashes, plus the
-reconciliation hash for `PerFileRescoring` and `SecondPassFDR`) skips the recompute.
+Every output carries a validity stamp inside itself (the task that wrote it, the Osprey
+version and the task's validity key); re-running a task whose outputs already exist with a
+matching stamp (search-parameter + library hashes, plus the reconciliation hash for
+`PerFileRescoring` and `SecondPassFDR`) skips the recompute. A different Osprey version
+always recomputes; `OSPREY_VERSION_OVERRIDE` pins the version for a developer who knows the
+formats are compatible.
 
 ### Worked example (Stellar 3-file: `s1.mzML s2.mzML s3.mzML`, library `hela.tsv`)
 
@@ -239,12 +241,12 @@ Osprey-Setup-<version>.exe        Inno Setup installer: per-user or per-machine,
 
 The version is the Skyline scheme `YEAR.ORDINAL.BRANCH.DOY` shared with the
 build via `version.ps1`. The Setup.exe is built with Inno Setup 6 (see
-`Installer/Setup.iss`; `pwiz-sharp/installer/Ensure-InnoSetup.ps1` fetches the
+`Installer/Setup.iss`; `scripts/installer/Ensure-InnoSetup.ps1` fetches the
 compiler when a machine lacks it). Like the ProteoWizard-Sharp installer it asks
 for a per-user or per-machine install and offers a "version-specific" install
 that keeps its own folder and Start Menu shortcuts beside other versions instead
 of being replaced by the next one. Authenticode signing is available behind `-Sign`
-(off by default -- see the script header for the `OSPREY_SIGN*` env vars). CI
+(off by default -- see the script header for the `OSPREYDEV_SIGN*` env vars). CI
 runs this via `tcpackage.bat`. This is the official artifact downstream tools
 (e.g. Carafe) should consume rather than building their own Osprey publish.
 

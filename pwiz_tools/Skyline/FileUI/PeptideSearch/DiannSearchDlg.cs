@@ -75,6 +75,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
 
             Icon = SkylineWindow.Icon;
+            UpdateTitle();
 
             DataFileResults = new ImportResultsDIAControl(this);
             AddPageControl(DataFileResults, dataFilesPage, 2, 60);
@@ -604,19 +605,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return;
                 if (choice == DialogResult.Yes)
                 {
-                    // Close the doc's open read-streams and evict the cached Library
-                    // object from the LibraryManager so SafeDelete can actually unlink
-                    // the .blib. (LibraryManager.ReleaseLibraries now closes streams
-                    // as part of eviction.) Without both, BlibBuild silently falls
-                    // back to Append mode and the previous run's spectrum sources
-                    // stick around as "missing" on the chromatograms page.
-                    ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.Document);
-                    var docLibSpecs = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
-                        .Where(s => s != null && s.IsDocumentLibrary).ToArray();
-                    if (docLibSpecs.Length > 0)
-                        _libraryManager.ReleaseLibraries(docLibSpecs);
-                    FileEx.SafeDelete(docBlibPath, true);
-                    FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+                    // Close the doc's open read-streams and evict the cached Library object from
+                    // the LibraryManager so the .blib can actually be unlinked. Without both,
+                    // BlibBuild silently falls back to Append mode and the previous run's spectrum
+                    // sources stick around as "missing" on the chromatograms page.
+                    ImportPeptideSearch.DeleteDocumentLibrary(SkylineWindow.Document, _libraryManager, docBlibPath);
                 }
             }
 
@@ -715,6 +708,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             PreviousPage();
         }
 
+        private void wizardPages_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateTitle();
+        }
+
+        /// <summary>
+        /// The title above the pages is the current page's name, as the Import Peptide Search wizard
+        /// names its pages, since the pages' own tabs are hidden.
+        /// </summary>
+        private void UpdateTitle()
+        {
+            lblTitle.Text = wizardPages.SelectedTab?.Text;
+        }
+
         private static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header)
             where TControl : UserControl
         {
@@ -779,6 +786,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = progressBar.Visible = true;
+            // The Open Log button opens DIA-NN's console output, teed beside the document as it runs
+            string documentDir = Path.GetDirectoryName(HostDialog.SkylineWindow.DocumentFilePath);
+            SetLogFilePath(string.IsNullOrEmpty(documentDir) ? null : Path.Combine(documentDir, DiannHelpers.STDOUT_LOG_NAME));
 
             _cancelToken = new CancellationTokenSource();
 

@@ -24,16 +24,17 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// Owns Percolator-based run-level FDR orchestration: build the flat
-    /// <see cref="PercolatorEntry"/> input from <see cref="FdrEntry"/> stubs,
-    /// dispatch to the direct or streaming SVM path, and write the resulting
-    /// scores / q-values back onto the stubs. Moved out of the Tasks layer
+    /// Owns Percolator-based run-level FDR orchestration over the
+    /// <see cref="FdrProjectionSet"/> buffer (or the flat streamed first pass):
+    /// train on the best-per-precursor subsample, score the full population, and
+    /// hand the scores / q-values to the pass's output sink. Moved out of the Tasks layer
     /// (the former <c>FirstPassFdrTask.RunPercolatorFdr</c>) so FDR orchestration
     /// physically lives in the FDR project; the Tasks layer calls this through
     /// a thin facade, passing <c>ctx.LogInfo</c> as the log sink and the PIN
@@ -59,165 +60,22 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Run Percolator-based FDR control. Builds PercolatorEntry objects from
-        /// FdrEntry stubs and runs Percolator, then maps results back onto the
-        /// stubs. Static so the second-pass run after Stage 6 reconciliation
-        /// (driven from the Tasks layer for the HPC distribution case where
-        /// workers wrote reconciled .scores.parquet but no
-        /// .2nd-pass.fdr_scores.bin sidecars; mirrors Rust
-        /// pipeline.rs:4394-4468) can call it as well as the first-pass run. The
-        /// <paramref name="diagnostics"/> Stage 5 dump gates are <c>null</c>
-        /// (diagnostics off) on every production run.
+        /// Run Percolator FDR over the thin <see cref="FdrProjectionSet"/> peak buffer
+        /// (issue #4355 step (b) increment ii) instead of the full <see cref="FdrEntry"/>
+        /// stub buffer. The projection is scored through the parity-locked
+        /// <see cref="PercolatorEntry"/> SVM core (strings materialized from the interned
+        /// peptide table) and the results go to <paramref name="sink"/> by position. The
+        /// <see cref="FdrEntry"/>-buffer overload that served as its byte-identity oracle was
+        /// removed with OSPREY_FDR_PROJECTION (2026-10-10). Returns <c>true</c> when a
+        /// diagnostic-only (<c>*Only</c>) dump fired and the run should stop early - the
+        /// Tasks-layer caller owns the process exit.
+        ///
+        /// <para>A TEST ORACLE, internal so nothing outside this assembly and its tests can reach
+        /// it. It holds every run's projection rows at once, which no production route does any
+        /// more: the first pass streams each row from its parquet, and the tests hold that
+        /// streaming pass to this resident one.</para>
         /// </summary>
-        /// <returns><c>true</c> when a diagnostic-only (<c>*Only</c>) dump fired and
-        /// the run should stop early -- the Tasks-layer caller owns the process exit;
-        /// <c>false</c> on a normal completion (the FdrEntry stubs are scored and
-        /// q-valued).</returns>
-        public static bool RunPercolatorFdr(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            OspreyFeatureInfo[] featureInfos,
-            IOspreyLog log,
-            out FeatureContributions contributions,
-            PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = FIRST_PASS_LABEL,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            Action<PercolatorResults> captureModel = null,
-            PercolatorResults frozenModel = null)
-        {
-            contributions = null;
-            int numFeatures = featureInfos.Length;
-
-            // Sort each file's entries by EntryId so the SVM working-set
-            // selection sees a canonical order regardless of upstream operation
-            // history. The 1st-pass input is already entry_id-sorted via
-            // DeduplicatePairs (AbstractScoringTask.cs), but the post-rescore
-            // pool that feeds 2nd-pass Percolator can have gap-fill entries
-            // appended after the sorted pre-existing rows. Re-sorting here
-            // guarantees identical iteration order across Rust and Osprey;
-            // without it, gap-fill ordering diverges and the cross-impl 2nd-pass
-            // scores drift on multi-file datasets even when feature columns are
-            // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
-            foreach (var kvp in perFileEntries)
-            {
-                kvp.Value.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per row here (reconciled-write numbering), so the comparison never ties
-            }
-
-            // Build the flat PercolatorEntry list (one per observation), preferring
-            // each entry's stored 21-feature vector and falling back to a basic
-            // vector for stubs. Extracted to PercolatorEntryBuilder.
-            // When a per-file feature loader is supplied (issue #4355 Phase 4) the
-            // stubs are built without resident feature vectors -- the score pass
-            // reloads them per file from parquet. Without a loader the entries must
-            // already carry their features (the 2nd-pass reload / resident path).
-            var percEntries = PercolatorEntryBuilder.Build(
-                perFileEntries, numFeatures, streamFeatures: loadFileFeatures != null,
-                out int nWithFeatures, out int nWithoutFeatures,
-                out int nInputTargets, out int nInputDecoys);
-
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
-                passLabel, percEntries.Count, nInputTargets, nInputDecoys, numFeatures);
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator features computed: {1} peaks with PIN features, {2} fallback",
-                passLabel, nWithFeatures, nWithoutFeatures);
-
-            var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
-            PercolatorResults results = DispatchSvm(
-                percEntries, percConfig, log, passLabel, loadFileFeatures, frozenModel);
-
-            // Surface the trained model's feature contributions to the caller
-            // (the --model-diagnostics report reads them). Computed already; this
-            // is a pure hand-off, no behavior change on any production path.
-            contributions = results.FeatureContributions;
-
-            // A diagnostic-only (*Only) dump fired inside the engine; it left the
-            // run as a pure no-op and signalled here. Stop without scoring the
-            // stubs and let the Tasks-layer caller perform the process exit.
-            //
-            // CHECKED BEFORE captureModel, not after. On an abort DispatchSvm returns
-            // `new PercolatorResults { DiagnosticAbort = true }` with FoldWeights,
-            // FoldBiases and Standardizer all NULL - nothing was trained. Handing that
-            // to the frozen-model hook passes an untrained model off as a trained one,
-            // and the 2nd pass would then re-score against nulls. The sibling path in
-            // this same file (RunStreamingFirstPass) already orders it this way.
-            if (results.DiagnosticAbort)
-                return true;
-
-            // Frozen-model capture hook (OSPREY_PASS2_QVALUE=transfer): the caller
-            // can grab the trained model (FoldWeights / FoldBiases / Standardizer)
-            // here so a later 2nd-pass step re-scores reconciled features with this
-            // FROZEN 1st-pass model instead of retraining. No-op (null) on every
-            // default percolator run, so scoring stays byte-identical.
-            captureModel?.Invoke(results);
-
-            // Zip the SVM results back onto the FdrEntry stubs by position
-            // (replaces the former psm_id-keyed resultMap re-join).
-            ApplyPercolatorResults(perFileEntries, results);
-
-            // Log FDR results
-            int nTargetPassing = 0;
-            int nDecoyPassing = 0;
-            foreach (var kvp in perFileEntries)
-            {
-                int fileTargets = 0;
-                int fileDecoys = 0;
-                foreach (var entry in kvp.Value)
-                {
-                    if (entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
-                    {
-                        if (entry.IsDecoy)
-                            fileDecoys++;
-                        else
-                            fileTargets++;
-                    }
-                }
-                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:0%} FDR",
-                    passLabel, kvp.Key, fileTargets, fileDecoys, config.RunFdr);
-                nTargetPassing += fileTargets;
-                nDecoyPassing += fileDecoys;
-            }
-
-            log.LogInfo(string.Format(
-                OspreyFDRResources.PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR,
-                PassDisplayName(passLabel), nTargetPassing, nDecoyPassing, config.RunFdr));
-            log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
-                passLabel, nTargetPassing);
-
-            // Compute unique precursors across files (best q-value per modseq+charge)
-            var bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
-            {
-                foreach (var entry in kvp.Value)
-                {
-                    if (entry.IsDecoy)
-                        continue;
-                    if (entry.EffectiveRunQvalue(config.FdrLevel) > config.RunFdr)
-                        continue;
-                    string pkey = entry.ModifiedSequence + @"|" + entry.Charge;
-                    double q = entry.EffectiveRunQvalue(config.FdrLevel);
-                    double existing;
-                    if (!bestQByPrecursor.TryGetValue(pkey, out existing) || q < existing)
-                        bestQByPrecursor[pkey] = q;
-                }
-            }
-            log.LogInfo(LogTag.COUNT, @"{0} unique precursors (best q across files): {1}",
-                passLabel, bestQByPrecursor.Count);
-            return false;
-        }
-
-        /// <summary>
-        /// Projection-buffer counterpart of <c>RunPercolatorFdr</c> (issue
-        /// #4355 step (b) increment ii): run first-pass Percolator FDR over the thin
-        /// <see cref="FdrProjectionSet"/> peak buffer instead of the full
-        /// <see cref="FdrEntry"/> stub buffer. The SVM path is UNCHANGED -- the
-        /// projection is scored through the identical <see cref="PercolatorEntry"/>
-        /// SVM core (strings materialized from the interned peptide table), the same
-        /// streaming dispatch runs, and the results are written back onto the
-        /// projection rows by position. Only the buffer that stays resident across
-        /// the peak differs, so the trained model + every q-value are byte-identical
-        /// to the legacy path (the flag-off oracle). Returns <c>true</c> on a
-        /// diagnostic-only abort (same contract as the legacy overload).
-        /// </summary>
-        public static bool RunPercolatorFdr(
+        internal static bool RunPercolatorFdr(
             FdrProjectionSet projections,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
@@ -239,14 +97,12 @@ namespace pwiz.Osprey.FDR
             int numFeatures = featureInfos.Length;
             var peptideById = projections.PeptideById;
 
-            // Same canonical sort as the legacy path, minus ScanNumber: on the
-            // first pass each file's parquet is already written in
+            // Canonical sort: on the first pass each file's parquet is already written in
             // (entry_id, charge, scan_number) order, so ParquetIndex increases with
             // scan_number within a (entry_id, charge) group. Sorting by
             // (EntryId, Charge, ParquetIndex) is therefore a total order that yields
-            // the identical sequence the legacy (EntryId, Charge, ScanNumber,
-            // ParquetIndex) sort produces (risk #3) -- and a stable no-op on the
-            // already-sorted first-pass buffer.
+            // the identical sequence an (EntryId, Charge, ScanNumber, ParquetIndex) sort
+            // produces (risk #3) - and a stable no-op on the already-sorted first-pass buffer.
             foreach (var kvp in projections.PerFile)
             {
                 kvp.Value.Sort((a, b) => // Array.Sort OK: terminal key ParquetIndex is unique per distinct (entry_id,charge,scan) observation (1st pass: original-parquet row; 2nd pass: reconciled row); the only possible tie is two rows collapsed to one reconciled row, which are IDENTICAL (same features, Score, entry_id, sidecar record), so their order is irrelevant to the output.
@@ -262,13 +118,13 @@ namespace pwiz.Osprey.FDR
             // The projection path always STREAMS its features per file (for both the
             // 1st and 2nd pass), so a per-file feature loader is mandatory -- the
             // 1st-pass caller (FirstPassFdrTask) and the 2nd-pass caller (Pass2FdrSidecar)
-            // both supply one. A null loader reaching here is a bug, not a cue to fall
-            // back to a resident build (that is the flag-off FdrEntry oracle's job).
+            // both supply one. A null loader reaching here is a bug; there is no resident
+            // build to fall back to.
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
                     @"The projection RunPercolatorFdr overload always streams features " +
                     @"per file; a per-file feature loader is required. A null loader here " +
-                    @"is a bug -- the resident build is the flag-off FdrEntry path.");
+                    @"is a bug.");
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             long n = projections.TotalRows;
@@ -304,6 +160,21 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The feature report <see cref="RunFirstPassStreaming"/> hands its
+        /// <c>captureContributions</c>, rebuilt by a later process from the first-pass
+        /// <paramref name="model"/> and every run's <see cref="FeatureSums"/> share in run order
+        /// (each run's first-pass sidecar carries one). Null when there is no run or a run has
+        /// no share.
+        /// </summary>
+        public static FeatureContributions FirstPassContributionsFromShares(PercolatorResults model,
+            IEnumerable<FeatureSums> shares, OspreyFeatureInfo[] featureInfos)
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+            return PercolatorScorer.ContributionsFromShares(model, shares, featureInfos);
+        }
+
+        /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
         /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],IOspreyLog,IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
@@ -323,7 +194,7 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             IOspreyLog log,
-            IFdrOutputSink sink,
+            IFdrFirstPassSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
@@ -331,7 +202,8 @@ namespace pwiz.Osprey.FDR
             CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
             FileRunScopeSink flushFileRunScope = null,
-            int fileLanes = 1)
+            int fileLanes = 1,
+            Func<string, FeatureSums> tryLoadFeatureSums = null)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -343,7 +215,7 @@ namespace pwiz.Osprey.FDR
             return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, log, passLabel, sink,
                 captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
-                flushFileRunScope, fileLanes);
+                flushFileRunScope, fileLanes, tryLoadFeatureSums);
         }
 
         /// <summary>
@@ -398,8 +270,8 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Build the first-pass <see cref="PercolatorConfig"/> shared by the legacy
-        /// <see cref="FdrEntry"/> path and the projection path. Centralized (issue
+        /// Build the first-pass <see cref="PercolatorConfig"/> shared by the projection and
+        /// flat streamed first-pass paths. Centralized (issue
         /// #4355 step (b) increment iii) so every SVM knob is IDENTICAL whether the
         /// SVM runs off a <see cref="PercolatorEntry"/> list or the projection row
         /// count -- the two buffer shapes cannot select a different SVM path for the
@@ -445,9 +317,9 @@ namespace pwiz.Osprey.FDR
                 CSelectionTolerance = OspreyEnvironment.SvmCSelectionTolerance,
                 // Honors --threads; drives only the tree score pass (see NThreads).
                 NThreads = config.NThreads,
-                // Collect per-feature target/decoy score histograms only for the
-                // model-diagnostics report (#4377); off the production path otherwise,
-                // so byte-neutral when --model-diagnostics is not requested.
+                // The training-time feature report's histograms, for --model-diagnostics
+                // (#4377). The score passes collect theirs on every run: each run's share is
+                // persisted in its first-pass sidecar (FeatureSums).
                 CollectFeatureHistograms = config.ModelDiagnostics,
                 Diagnostics = diagnostics
             };
@@ -483,244 +355,6 @@ namespace pwiz.Osprey.FDR
             if (OspreyEnvironment.GbtColSample.HasValue)
                 gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
             return gbtParams;
-        }
-
-        /// <summary>
-        /// Shared SVM entry point for the legacy and projection first-pass paths: log the
-        /// "Running..." header and run the streaming SVM path. Pure code motion out of
-        /// <c>RunPercolatorFdr</c> so both buffer shapes drive the identical,
-        /// parity-locked SVM core -- the projection path cannot silently diverge in
-        /// dispatch, standardizer, or subsample. The <see cref="PercolatorConfig"/> is
-        /// built by <see cref="BuildProjectionPercolatorConfig"/> and passed in.
-        /// </summary>
-        private static PercolatorResults DispatchSvm(
-            List<PercolatorEntry> percEntries,
-            PercolatorConfig percConfig,
-            IOspreyLog log,
-            string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            PercolatorResults frozenModel = null)
-        {
-            // Section header (full input population). The cross-validation fold count and the
-            // actual training-subset size are reported by RunPercolator once the subsample is
-            // built, just above the per-iteration percent lines.
-            log.LogInfo(string.Format(OspreyFDRResources.PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___,
-                PassDisplayName(passLabel), percEntries.Count));
-
-            // Streaming-only (cross-impl parity with the Rust streaming-only change):
-            // ALWAYS take the streaming SVM path -- best-per-precursor dedup +
-            // peptide-grouped subsample, with the Stage 5 standardizer fit on that
-            // subset. The former sub-threshold direct path trained on ALL entries with a
-            // different standardizer-fit population; removed so C# and Rust train
-            // identically at every scale (mirrors Rust run_percolator_fdr, now stream-only).
-            return RunPercolatorStreaming(
-                percEntries, percConfig, log, passLabel, loadFileFeatures, frozenModel);
-        }
-
-        /// <summary>
-        /// Zip Percolator results back onto the <see cref="FdrEntry"/> stubs by
-        /// position. <see cref="PercolatorEntryBuilder.Build"/> emits exactly one
-        /// <see cref="PercolatorEntry"/> per stub in nested (file, entry) order,
-        /// and both SVM paths return <see cref="PercolatorResults.Entries"/>
-        /// index-aligned to that input (the direct and streaming result assembly
-        /// in <see cref="PercolatorScorer"/>). Walking <paramref name="perFileEntries"/>
-        /// in that same nested order therefore pairs each stub with its own result,
-        /// which is why the former psm_id string + resultMap re-join was pure
-        /// redundancy (issue #4355 step (b)): it re-joined by a key that position
-        /// already determines. Row order is a single source of truth -- the buffer
-        /// is built once, sorted once (in <c>RunPercolatorFdr</c>), and not
-        /// mutated between the build and this write-back. Mirrors the Rust direct
-        /// path, which likewise zips by index.
-        /// </summary>
-        internal static void ApplyPercolatorResults(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            PercolatorResults results)
-        {
-            var resultEntries = results.Entries;
-
-            // Guard the index-alignment invariant the zip depends on BEFORE indexing:
-            // the builder emitted exactly one result per stub. Checking first means an
-            // undersized result list fails with this clear message instead of an
-            // IndexOutOfRangeException thrown mid-zip; a count mismatch would otherwise
-            // silently misbind scores to the wrong entries. Fail loudly -- this is
-            // byte-identity-critical first-pass FDR output.
-            int stubCount = 0;
-            foreach (var kvp in perFileEntries)
-                stubCount += kvp.Value.Count;
-            if (stubCount != resultEntries.Count)
-            {
-                throw new InvalidOperationException(string.Format(
-                    @"Percolator result count ({0}) does not match FdrEntry stub count ({1}); " +
-                    @"the index-zip write-back requires them to be equal.",
-                    resultEntries.Count, stubCount));
-            }
-
-            int resultIndex = 0;
-            foreach (var kvp in perFileEntries)
-            {
-                foreach (var fdrEntry in kvp.Value)
-                {
-                    var result = resultEntries[resultIndex++];
-                    fdrEntry.Score = result.Score;
-                    fdrEntry.RunPrecursorQvalue = result.RunPrecursorQvalue;
-                    fdrEntry.RunPeptideQvalue = result.RunPeptideQvalue;
-                    fdrEntry.ExperimentPrecursorQvalue = result.ExperimentPrecursorQvalue;
-                    fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
-                    fdrEntry.Pep = result.Pep;
-                    fdrEntry.ExperimentAggregateScore = result.ExperimentAggregateScore;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Streaming Percolator path for all first-pass inputs (streaming-only:
-        /// the former sub-threshold direct branch is removed). Mirrors
-        /// Rust's <c>run_percolator_fdr</c> streaming branch
-        /// (osprey/src/pipeline.rs:4232-4580):
-        /// <list type="number">
-        /// <item>Best-per-precursor dedup across all per-file entries (one
-        /// target + one decoy per base_id, by Features[0] = coelution_sum).
-        /// </item>
-        /// <item>Peptide-grouped subsample to <c>MaxTrainSize</c> using the
-        /// same XOR-shift RNG and peptide-key sort order as Rust.</item>
-        /// <item>Train fold models + standardizer on that subset
-        /// (<c>TrainOnly = true</c>) -- the standardizer is fit on the
-        /// subset, matching Rust's run_percolator-on-subset behaviour
-        /// instead of fitting on the full 1M+ observation pool.</item>
-        /// <item>Apply the averaged model to ALL entries for scoring, then
-        /// compute PEP and per-run / experiment q-values on that flat
-        /// score array.</item>
-        /// </list>
-        /// The selection uses <see cref="PercolatorSampling.SelectBestPerPrecursor"/>
-        /// and <see cref="PercolatorSampling.SubsampleByPeptideGroup"/> to build the
-        /// best-per-precursor training subsample -- the same helpers (and the same
-        /// 300K cap) Rust's streaming path uses, so the subsets match given
-        /// identical input.
-        ///
-        /// Internal (not private) so <c>FdrTest</c> can drive it head-to-head against
-        /// <see cref="RunStreamingIntoProjection"/> on a multi-observation fixture,
-        /// proving the two buffer shapes yield identical
-        /// Score + q-values (issue #4355 step (b) increment iii, gate 1).
-        /// </summary>
-        internal static PercolatorResults RunPercolatorStreaming(
-            List<PercolatorEntry> percEntries,
-            PercolatorConfig percConfig,
-            IOspreyLog log,
-            string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            PercolatorResults frozenModel = null)
-        {
-            int n = percEntries.Count;
-            int maxTrain = percConfig.MaxTrainSize;
-
-            // OSPREY_PASS2_QVALUE=transfer-compete: do NOT retrain. Score the full
-            // population (all reconciled targets + decoys) with the FROZEN 1st-pass
-            // model, then recompute q + PEP by the standard global target-decoy
-            // competition over that non-depleted population. This is the frozen-weights
-            // path but with a real competition null instead of a co-monotone score->q
-            // table -- the fix for the anti-conservative retrain AND the stepped table.
-            if (frozenModel != null)
-            {
-                log.LogInfo(string.Format(
-                    OspreyFDRResources.PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_, PassDisplayName(passLabel), n));
-                return PercolatorScorer.ScorePopulationAndComputeFdr(
-                    percEntries, frozenModel, percConfig, loadFileFeatures,
-                    applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
-            }
-
-            // Pull labels / entry IDs / peptides into flat arrays for the
-            // subset helpers. On the streaming build the stubs carry no feature
-            // vector, so best-per-precursor cannot read Features[0]; feed it the
-            // resident CoelutionSum scalar instead (byte-identical to Features[0]
-            // on the first pass -- CoelutionScorer assigns CoelutionSum from
-            // features[0]). Without a loader the entries carry features, so leave
-            // bestScores null and let the selection read Features[0] as before.
-            double[] bestScores = loadFileFeatures != null ? new double[n] : null;
-            var labels = new bool[n];
-            var entryIds = new uint[n];
-            var peptides = new string[n];
-            for (int i = 0; i < n; i++)
-            {
-                labels[i] = percEntries[i].IsDecoy;
-                entryIds[i] = percEntries[i].EntryId;
-                peptides[i] = percEntries[i].Peptide;
-                if (bestScores != null)
-                    bestScores[i] = percEntries[i].CoelutionSum;
-            }
-
-            // 1. Best-per-precursor dedup, then 2. peptide-grouped subsample when
-            //    the dedup count still exceeds MaxTrainSize. Both steps are owned
-            //    by PercolatorSampling.BuildTrainingSubset so every caller (this projection
-            //    streaming path and the FdrEntry path) selects identical subsets for
-            //    identical input.
-            int[] bestIdx;
-            int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
-                labels, entryIds, peptides, percEntries, maxTrain, percConfig.Seed,
-                out bestIdx, bestScores);
-            int dedupTargets = 0, dedupDecoys = 0;
-            for (int i = 0; i < bestIdx.Length; i++)
-            {
-                if (labels[bestIdx[i]]) dedupDecoys++;
-                else dedupTargets++;
-            }
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} precursors ({2} targets, {3} decoys) from {4} peaks",
-                passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n);
-
-            int subTargets = 0, subDecoys = 0;
-            for (int i = 0; i < trainSubsetGlobalIdx.Length; i++)
-            {
-                if (labels[trainSubsetGlobalIdx[i]]) subDecoys++;
-                else subTargets++;
-            }
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
-                passLabel, trainSubsetGlobalIdx.Length, subTargets, subDecoys);
-
-            // 3. Build subset entry list + train.
-            var subsetEntries = new List<PercolatorEntry>(trainSubsetGlobalIdx.Length);
-            foreach (int i in trainSubsetGlobalIdx)
-                subsetEntries.Add(percEntries[i]);
-
-            // On the streaming build, load ONLY the subset's feature vectors
-            // (issue #4355 Phase 4) -- one file at a time, cloning each row so the
-            // subset entry owns it and the file's row list can be released -- so
-            // RunPercolator trains on real features without the full population's
-            // O(N) vectors ever being resident. subsetEntries are references into
-            // percEntries, so this also makes the vectors visible to the subset's
-            // held-out CV scoring inside RunPercolator.
-            if (loadFileFeatures != null)
-            {
-                var subsetByFile = PercolatorScorer.GroupIndicesByFileName(subsetEntries);
-                foreach (var kvp in subsetByFile)
-                {
-                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                    foreach (int k in kvp.Value)
-                    {
-                        var entry = subsetEntries[k];
-                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
-                            rows, entry.ParquetIndex, entry.CoelutionSum,
-                            percConfig.FeatureInfos.Length).Clone();
-                    }
-                }
-            }
-
-            var trainConfig = percConfig.CloneForTrainOnly();
-            PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
-
-            // A diagnostic-only (*Only) dump can fire during the train-only pass
-            // (standardizer / subsample / SVM-weights dumps all run there);
-            // forward the abort sentinel so RunPercolatorFdr stops before scoring.
-            if (trainResults.DiagnosticAbort)
-                return trainResults;
-
-            // 4. Apply averaged model to ALL entries and compute q-values. The
-            //    score pass reloads features one file at a time via loadFileFeatures
-            //    (issue #4355 Phase 4), keeping only the scalar scores resident.
-            //    applyExperimentAgg mirrors RunStreamingIntoProjection's gate exactly -
-            //    the resident and projection passes are each other's byte-identity
-            //    oracle, so OSPREY_EXPERIMENT_AGG must engage on the same pass in both.
-            return PercolatorScorer.ScorePopulationAndComputeFdr(
-                percEntries, trainResults, percConfig, loadFileFeatures,
-                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
         }
 
         /// <summary>
@@ -769,8 +403,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Projection-native streaming first-pass Percolator (issue #4355 step (b)
-        /// increment iii): the memory-collapsing counterpart of
-        /// <see cref="RunPercolatorStreaming"/>. It runs the SAME four-phase streaming
+        /// increment iii). It runs the four-phase streaming
         /// flow (best-per-precursor dedup -> peptide-grouped subsample -> train fold
         /// models + standardizer on the subset -> apply the averaged model to the full
         /// population and compute q-values) but WITHOUT ever materializing a
@@ -788,9 +421,7 @@ namespace pwiz.Osprey.FDR
         /// </list>
         /// Every parity-locked primitive (<see cref="PercolatorSampling.BuildTrainingSubset"/>,
         /// <see cref="PercolatorTrainer.RunPercolator"/> on the subset, and the shared
-        /// competition/q-value math) is called UNCHANGED, so the trained model and the
-        /// resulting q-values are byte-identical to the <see cref="PercolatorEntry"/>
-        /// streaming path on the same input order. Returns <c>true</c> on a
+        /// competition/q-value math) is called UNCHANGED. Returns <c>true</c> on a
         /// diagnostic-only train abort (same contract as the <c>RunPercolatorFdr</c>
         /// projection overload).
         /// </summary>
@@ -895,7 +526,7 @@ namespace pwiz.Osprey.FDR
             // 3. Build the subset PercolatorEntry list from the projection rows at the
             //    (ascending) subset indices, then load ONLY the subset's feature
             //    vectors one file at a time -- bounded by MaxTrainSize, so the full
-            //    population's vectors are never resident. Mirrors RunPercolatorStreaming.
+            //    population's vectors are never resident.
             var subsetEntries = new List<PercolatorEntry>(trainSubsetGlobalIdx.Length);
             int fcur = 0;
             foreach (int si in trainSubsetGlobalIdx)
@@ -981,7 +612,14 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Clamp each entry's experiment-level q-value up to its own best (min) run-level
+        /// Fold ONE file's entries into the experiment-q floors - the min run q per entry_id and
+        /// per (peptide, isDecoy). Both maps are O(distinct), so a caller can walk the run one
+        /// file at a time and drop each as it goes; nothing here needs a whole-run view.
+        ///
+        /// <para>The floors, applied by <see cref="ApplyExperimentQFloors"/>, are the
+        /// experiment-q clamp.</para>
+        ///
+        /// They raise each entry's experiment-level q-value up to its own best (min) run-level
         /// q-value, enforcing that a best-of-runs aggregate can never be more confident than
         /// its best single run. Experiment-level FDR competes each precursor's single best
         /// observation against a de-duplicated (thinner) decoy null, so the raw experiment q
@@ -992,7 +630,7 @@ namespace pwiz.Osprey.FDR
         ///
         /// The run floor is the entry's best (min) <em>combined</em> run q-value
         /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
-        /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
+        /// and <c>RetentionTimes.score</c> (both <c>EffectiveRunQvalue(Both)</c>): so
         /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
         /// which is the exact invariant a Skyline ID line represents. Both floors key on the
         /// target/decoy-specific identity (never the shared base_id / bare sequence -- a target
@@ -1009,28 +647,10 @@ namespace pwiz.Osprey.FDR
         /// because no run cleared run-<em>peptide</em> FDR, even under precursor-level control
         /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
         ///
-        /// NOTE (issue #4378): the IN-PASS clamp (first/second-pass Percolator) now runs in the
-        /// memory-bounded FLAT form -- <see cref="PercolatorQValues.ClampExperimentQToBestRunFlat"/>
-        /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
-        /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
-        /// re-clamp (<c>SecondPassFdrTask</c>), which runs on the already-compacted survivor buffer.
-        /// Both produce identical floors (same min/max over the same values).
-        /// </summary>
-        public static void ClampExperimentQToBestRun(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            var minRunBothByEntryId = new Dictionary<uint, double>();
-            var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
-            foreach (var kvp in perFileEntries)
-                AccumulateExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
-            foreach (var kvp in perFileEntries)
-                ApplyExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
-        }
-
-        /// <summary>
-        /// Fold ONE file's entries into the experiment-q floors - the min run q per entry_id and
-        /// per (peptide, isDecoy). Both maps are O(distinct), so a caller can walk the run one
-        /// file at a time and drop each as it goes; nothing here needs a whole-run view.
+        /// <para>The in-pass clamp (first/second-pass Percolator) runs in the memory-bounded
+        /// FLAT form, <see cref="PercolatorQValues.ClampExperimentQToBestRunFlat"/>, over the
+        /// score-pass scalar arrays; this per-file pair serves the post-Stage-6 pre-blib
+        /// re-clamp. Both produce identical floors (same min/max over the same values).</para>
         /// </summary>
         public static void AccumulateExperimentQFloors(
             IReadOnlyList<FdrEntry> entries,

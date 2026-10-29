@@ -30,24 +30,21 @@ namespace pwiz.Skyline.Util
     /// Finds the settings left behind by a ClickOnce installed Skyline, so that a newly
     /// installed one can inherit them.
     ///
-    /// Through version 26.1 user scoped settings lived in the per user, per version folder that
-    /// LocalFileSettingsProvider makes up a name for:
-    ///
-    ///     %LOCALAPPDATA%\University_of_Washington\Skyline-daily.exe_Url_(hash)\(version)\user.config
-    ///
-    /// The hash covers the evidence the program was launched with, so every folder Skyline has
-    /// ever run from has one of its own. A developer machine accumulates hundreds, and the
-    /// newest is usually a developer build rather than an installation, so neither the highest
-    /// version nor the most recently written file picks one out.
-    ///
-    /// The search is driven from the ClickOnce store instead:
+    /// The search is driven from the ClickOnce store, where every installation folder holds the
+    /// executable and, beside it, the Tools folder its external tools are in:
     ///
     ///     %LOCALAPPDATA%\Apps\2.0\(random)\(random)\(installation folder)\Skyline-daily.exe
     ///
-    /// Everything there is a real installation, which is the filter, and it also answers the
-    /// question the settings folders cannot: where the executable was installed, and so where
-    /// its Tools folder is. The executable's own file version then names the settings folder
-    /// that goes with it.
+    /// A Skyline started through ClickOnce keeps its user scoped settings in the ClickOnce data
+    /// store, in a folder of the same name, one subfolder per version:
+    ///
+    ///     %LOCALAPPDATA%\Apps\2.0\Data\(random)\(random)\(installation folder)\Data\(version)\user.config
+    ///
+    /// Settings are only ever found through an installation folder, so every one offered comes
+    /// with the executable and Tools folder it belongs to. The per version folders
+    /// LocalFileSettingsProvider makes under %LOCALAPPDATA%\(company)\Skyline-daily.exe_Url_(hash)
+    /// are not searched: they belong to Skyline run from a build or a copied folder, and nothing
+    /// ties one to an installation but a version number that a developer build can share.
     ///
     /// Programs and Features is read only to note which installation is the current one. It is
     /// not the search: it lists a single version, so it misses installations that are still on
@@ -63,6 +60,8 @@ namespace pwiz.Skyline.Util
         // apart from an ordinary installer's.
         private const string CLICK_ONCE_UNINSTALL_HANDLER = @"dfshim.dll";
         private const string CLICK_ONCE_STORE_FOLDER = @"Apps\2.0";
+        private const string CLICK_ONCE_DATA_STORE_FOLDER = @"Apps\2.0\Data";
+        private const string CLICK_ONCE_DATA_FOLDER = @"Data";
 
         /// <param name="assemblyName">See <see cref="AssemblyName"/>.</param>
         public ClickOnceInstallations(string assemblyName)
@@ -72,10 +71,8 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Name of the assembly to look for, for example "Skyline-daily". Both things this
-        /// searches are named after it: the ClickOnce deployment, as
-        /// "&lt;AssemblyName&gt;.application", and the old settings folder, as
-        /// "&lt;AssemblyName&gt;.exe_(hash)".
+        /// Name of the assembly to look for, for example "Skyline-daily": the executable in an
+        /// installation folder, and the ClickOnce deployment, "&lt;AssemblyName&gt;.application".
         /// </summary>
         public string AssemblyName { get; set; }
 
@@ -114,7 +111,7 @@ namespace pwiz.Skyline.Util
                 var version = ReadExecutableVersion(executableFolder);
                 if (string.IsNullOrEmpty(version))
                     continue;
-                var userConfigFile = FindUserConfigFile(version);
+                var userConfigFile = FindUserConfigFile(executableFolder, version);
                 if (userConfigFile == null)
                     continue;
                 installedVersions.TryGetValue(version, out var uninstallCommand);
@@ -176,15 +173,24 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// The user.config a given version of this assembly wrote, or null when it never wrote one.
+        /// The user.config the installation in the folder wrote, in the data store folder of the
+        /// same name, or null when it never wrote one.
         /// </summary>
-        private string FindUserConfigFile(string version)
+        private string FindUserConfigFile(string executableFolder, string version)
         {
-            foreach (var settingsFolder in EnumerateSettingsFolders())
+            var installationFolderName = Path.GetFileName(executableFolder);
+            var dataStoreFolder = Path.Combine(LocalApplicationDataFolder, CLICK_ONCE_DATA_STORE_FOLDER);
+            if (string.IsNullOrEmpty(installationFolderName) || !Directory.Exists(dataStoreFolder))
+                return null;
+            foreach (var firstLevel in SafeEnumerateDirectories(dataStoreFolder))
             {
-                var configFile = Path.Combine(settingsFolder, version, PortableSettingsProvider.CONFIG_FILE_NAME);
-                if (File.Exists(configFile))
-                    return configFile;
+                foreach (var secondLevel in SafeEnumerateDirectories(firstLevel))
+                {
+                    var configFile = Path.Combine(secondLevel, installationFolderName, CLICK_ONCE_DATA_FOLDER,
+                        version, PortableSettingsProvider.CONFIG_FILE_NAME);
+                    if (File.Exists(configFile))
+                        return configFile;
+                }
             }
             return null;
         }
@@ -269,31 +275,6 @@ namespace pwiz.Skyline.Util
             catch (Exception)
             {
                 return Array.Empty<string>();   // Unreadable folder; keep looking
-            }
-        }
-
-        /// <summary>
-        /// The settings folders belonging to this application, across every company folder. The
-        /// company folder name is the old assembly's company attribute with its spaces replaced,
-        /// which is not worth reproducing, so every folder under %LOCALAPPDATA% gets a look and
-        /// only those named for this application can match.
-        /// </summary>
-        private IEnumerable<string> EnumerateSettingsFolders()
-        {
-            var pattern = AssemblyName + @".exe_*";
-            foreach (var companyFolder in Directory.EnumerateDirectories(LocalApplicationDataFolder))
-            {
-                string[] settingsFolders;
-                try
-                {
-                    settingsFolders = Directory.GetDirectories(companyFolder, pattern);
-                }
-                catch (Exception)
-                {
-                    continue;   // Unreadable folder under %LOCALAPPDATA%; keep looking
-                }
-                foreach (var settingsFolder in settingsFolders)
-                    yield return settingsFolder;
             }
         }
     }

@@ -26,7 +26,7 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Runs the whole test assembly under the culture named by <c>OSPREY_TEST_CULTURE</c>
+    /// Runs the whole test assembly under the culture named by <c>OSPREYDEV_TEST_CULTURE</c>
     /// (e.g. <c>ja-JP</c>, <c>fr-FR</c>), the way Skyline's TestRunner runs its tests under
     /// <c>/locale</c>. ja-JP proves an assertion reads its expected text from the resources and
     /// not from an English literal; fr-FR proves every number a program reads is written in the
@@ -37,7 +37,7 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public static class TestCulture
     {
-        public const string ENV_VAR = @"OSPREY_TEST_CULTURE";
+        public const string ENV_VAR = @"OSPREYDEV_TEST_CULTURE";
 
         private static CultureScope _scope;
 

@@ -31,7 +31,7 @@ using System.Reflection;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     public partial class AboutForm : Form
     {
@@ -79,7 +79,7 @@ namespace seems
 
         public static DateTime GetAssemblyLastModified( AssemblyName assembly )
         {
-            return File.GetLastWriteTime( Assembly.ReflectionOnlyLoad( assembly.FullName ).Location );
+            return File.GetLastWriteTime( Assembly.Load( assembly ).Location );
         }
     }
 }

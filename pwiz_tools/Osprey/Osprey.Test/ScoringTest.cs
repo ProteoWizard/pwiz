@@ -631,6 +631,61 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The linear-time median selection median polish uses returns exactly the median a full
+        /// sort gives - the same double, bit for bit - for odd and even counts, heavy ties,
+        /// already-sorted and reversed input, and both signs of value. SelectInPlace leaves its
+        /// element in sorted position with the values partitioned around it.
+        /// </summary>
+        [TestMethod]
+        public void TestMedianSelectionMatchesSort()
+        {
+            var random = new Random(4242);
+            for (int n = 1; n <= 64; n++)
+            {
+                for (int trial = 0; trial < 20; trial++)
+                {
+                    var values = new double[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        // Alternate between continuous values and a few distinct levels (ties).
+                        values[i] = trial % 2 == 0
+                            ? (random.NextDouble() - 0.5) * 1000
+                            : random.Next(-3, 4) * 1.25;
+                    }
+                    if (trial == 2)
+                        Array.Sort(values);
+                    else if (trial == 4)
+                        Array.Sort(values, (a, b) => b.CompareTo(a));
+                    AssertMedianMatchesSort(values);
+
+                    int k = random.Next(n);
+                    var partitioned = (double[])values.Clone();
+                    var sorted = (double[])values.Clone();
+                    Array.Sort(sorted);
+                    Assert.AreEqual(sorted[k], MedianMath.SelectInPlace(partitioned, k));
+                    Assert.AreEqual(sorted[k], partitioned[k]);
+                    for (int i = 0; i < n; i++)
+                    {
+                        Assert.IsTrue(i < k ? partitioned[i] <= partitioned[k] : partitioned[i] >= partitioned[k],
+                            string.Format("Value {0} of {1} is on the wrong side of element {2}", i, n, k));
+                    }
+                }
+            }
+            Assert.IsTrue(double.IsNaN(MedianMath.MedianInPlace(new double[0])));
+        }
+
+        private static void AssertMedianMatchesSort(double[] values)
+        {
+            var sorted = (double[])values.Clone();
+            Array.Sort(sorted);
+            int mid = sorted.Length / 2;
+            double expected = sorted.Length % 2 == 0 ? 0.5 * (sorted[mid - 1] + sorted[mid]) : sorted[mid];
+            double actual = MedianMath.MedianInPlace((double[])values.Clone());
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual),
+                string.Format("Median of {0} values: expected {1:R}, got {2:R}", values.Length, expected, actual));
+        }
+
+        /// <summary>
         /// Session 5-8 fix: Apex selection ties must resolve to LAST index
         /// (>=, not >) to match Rust's Iterator::max_by which returns the
         /// last element among equal maxima.

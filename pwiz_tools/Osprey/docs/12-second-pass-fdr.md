@@ -12,9 +12,19 @@ gate the `.blib` output. This is the "second pass." The FDR *framework* is the
 same one documented in [07-fdr-control.md](07-fdr-control.md); what differs is
 **how the null is built** for the second pass, selected by `OSPREY_PASS2_QVALUE`.
 
-The driver is `Pass2FdrSidecar.ComputeAndPersist`: it reloads the reconciled PIN
-features, runs one of the modes below, writes a `<stem>.2nd-pass.fdr_scores.bin`
-sidecar per file, and reloads the fresh q-values onto the post-compaction stubs.
+It runs in two halves. The **per-run** half runs in `PerFileRescoring`, one run at a time, in
+`Pass2PerFileWorker`: it scores the run's reconciled peaks with the frozen 1st-pass model,
+runs the per-run part of one of the modes below, and writes the run's
+`<stem>.2nd-pass.fdr_scores.bin` - for every run, in every mode, whether or not Stage 6 had
+work for it (#4486, #4665). The **experiment-wide** half is the join,
+`Pass2FdrSidecar.ComputeAndPersist` in `SecondPassFDR`: it folds those per-run answers into the
+analysis-wide `<blib-stem>.2nd-pass.fdr_experiment.bin` and puts the fresh q-values onto the
+post-compaction stubs. It writes no per-run file and recomputes none; a run without a current
+answer stops it.
+
+A cohort in which Stage 6 re-scored nothing anywhere takes the same path - every run is
+answered from its own unchanged peaks. Rust skips its second pass entirely there
+(`total_rescored > 0`, pipeline.rs:5209); see DIVERGENCES.md.
 
 ## Why a second-pass null is a problem
 
@@ -78,16 +88,19 @@ compatible mode. See
 
 No retrain. Pass-1 q-values are carried through unchanged, and **only the per-run
 q-value of reconciliation-moved peaks** is re-mapped through each file's own
-score→run-q table (`TransferPerRunQ` → `BuildScoreToQTable`, equal-count quantile
-bins + PAVA isotonic; `LookupQForScore`). The experiment q is frozen by the
-best-peak anchor. Each survivor is classified Unchanged / Moved / GapFill, with
-bit-exact score equality as the "Moved" discriminator.
+score→run-q table (`TransferOneFile` → `BuildScoreToQTable`, equal-count quantile
+bins + PAVA isotonic; `LookupQForScore`), in the rescore worker. The experiment q is frozen by
+the best-peak anchor: the join carries each precursor's pass-1 experiment values
+(`ComputePass2TransferFold`) and raises them to the best-of-runs floors like every mode. Each
+survivor is classified Unchanged / Moved / GapFill, with bit-exact score equality as the
+"Moved" discriminator.
 
 ### `protein-compact` (frozen model)
 
 Scores the reconciled **targets and decoys** with the **frozen 1st-pass model** (no
-retrain), then recomputes q-values and PEP by a fresh target-decoy competition
-(`ComputePass2TransferCompeteFull`, one file resident at a time). Both sides are scored on
+retrain), then recomputes q-values and PEP by a fresh target-decoy competition - each run's
+half in the rescore worker, the experiment-wide fold in `ComputePass2TransferCompeteFull`,
+one file resident at a time. Both sides are scored on
 the same frozen scale, which is what removes the RETRAIN pathology - but note this does not
 make the null unbiased: the stratum gate is target-conditioned, so the in-stratum decoy null
 is selected against (#4581). The competition is
@@ -127,15 +140,14 @@ disk. Three experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
-| `<stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model sidecar in #4633, because first-pass protein FDR computes it and training does not |
+| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
+| `<blib-stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model file in #4633, because first-pass protein FDR computes it and training does not |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 
 **They must relay together.** A node holding one without the others cannot proceed:
 the model without the stratum cannot constrain a `protein-compact` competition, and
-the stratum without the model has nothing to score with. The model sidecar is written
-beside **every** run's other Stage-5 artifacts, identical each time, so any one copy
-serves.
+the stratum without the model has nothing to score with. Each is written once, under the
+analysis name; they were once copied beside every run, which doc 00 (P1) now forbids.
 
 See [00-pipeline-architecture.md](00-pipeline-architecture.md) for the full contract
 and the per-boundary relay checklist.
@@ -158,13 +170,14 @@ plus the first-pass detected peptides), so both the model and the stratum are
 reloaded from disk.
 
 They are **two files, not one**, because two different phases produce them:
-`<stem>.1st-pass.model.json` is written the moment first-pass training returns a
-model, and `<stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
+`<blib-stem>.1st-pass.model.json` is written the moment first-pass training returns a
+model, and `<blib-stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
 446-file cohort those two moments are hours apart, and bundling them meant the
 model - a few hundred KB for the linear SVM, about 3.4 MB for a tree model under
 `OSPREY_FDR_MODEL=gbdt`, fully computed at minute ~21 - existed only in RAM
-until the end of the task, so any interruption threw it away. `LoadFromAny`
-merges the two on read, so a consumer still sees one sidecar. **Both must ride
+until the end of the task, so any interruption threw it away.
+`FirstPassModelIO.LoadForAnalysis` merges the two on read, pairing them by their
+stamps, so a consumer still sees one sidecar. **Both must ride
 the HPC relay**: an orchestrator that copies the model between phase directories
 and not the stratum reaches this fail-fast under the default mode.
 
@@ -182,7 +195,6 @@ would be harder to reason about than an explicit variable.
 |---|---|---|
 | `OSPREY_PASS2_QVALUE` | `protein-compact` | Selects the second-pass q-value mode: `transfer` \| `protein-compact`. Unrecognized → startup error. |
 | `OSPREY_FDR_MODEL` | unset (linear SVM) | **Experimental** when `gbdt`. Selects the classifier the first pass trains, which is also the frozen model pass 2 scores with; `svm` names the default. Unrecognized -> startup error. See [07](07-fdr-control.md). |
-| `OSPREY_FDR_PROJECTION` | on | Streams the FDR peak via the thin `FdrProjection` slice; the frozen modes stream one file at a time so routing them does not hold all features resident. |
 
 ## Divergences from the Rust documentation
 

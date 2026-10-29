@@ -16,11 +16,11 @@
 #
 # Agent prerequisites are bootstrapped here rather than assumed, because the Linux agents
 # carry neither:
-#   * .NET SDK - via pwiz-sharp/scripts/ensure-dotnet.sh, the same helper Core Linux .NET
-#     uses from pwiz-sharp/tcbuild.sh. It resolves an existing dotnet and installs one
+#   * .NET SDK - via scripts/ensure-dotnet.sh, the same helper Core Linux x86_64
+#     uses from the root tcbuild.sh. It resolves an existing dotnet and installs one
 #     satisfying the repo-root global.json if none does. Reusing it rather than repeating
 #     it keeps one bootstrap for both Linux configs; build.ps1 already reaches across to
-#     pwiz-sharp/scripts for Ensure-DotCover.ps1 the same way.
+#     scripts/ for Ensure-DotCover.ps1 the same way.
 #   * pwsh - as a dotnet global tool, so it needs no package manager and no root, the same
 #     way tcbuild.bat self-provisions wix.
 #
@@ -38,8 +38,8 @@ fail() {
     exit "${2:-1}"
 }
 
-# shellcheck source=../../pwiz-sharp/scripts/ensure-dotnet.sh
-. "$SCRIPT_DIR/../../pwiz-sharp/scripts/ensure-dotnet.sh"
+# shellcheck source=../../scripts/ensure-dotnet.sh
+. "$SCRIPT_DIR/../../scripts/ensure-dotnet.sh"
 resolve_dotnet || fail "dotnet not found on PATH or at the usual locations"
 # Walks up from here to the repo-root global.json, so the SDK pin is the same one every
 # other build in this repo resolves.
@@ -68,6 +68,12 @@ fi
 echo "##teamcity[progressMessage 'Osprey build.ps1']"
 pwsh -NoProfile -File "$SCRIPT_DIR/build.ps1" -TeamCity -Coverage -Configuration Release \
     || fail "build.ps1 failed" $?
+
+# CarafeSharp has no config of its own; see tcbuild.bat. Its build.sh would repeat the
+# bootstrap above, so its build.ps1 is called directly.
+echo "##teamcity[progressMessage 'CarafeSharp build.ps1']"
+pwsh -NoProfile -File "$SCRIPT_DIR/../CarafeSharp/build.ps1" -TeamCity \
+    || fail "CarafeSharp build.ps1 failed" $?
 
 echo "##teamcity[progressMessage 'Osprey package.ps1 (linux-x64)']"
 pwsh -NoProfile -File "$SCRIPT_DIR/package.ps1" -TeamCity -Rid linux-x64 \

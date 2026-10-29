@@ -94,6 +94,45 @@ namespace SkylineNightly
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
         private const string SKYLINETESTER_FILES_DIR = "SkylineTester Files";
 
+        /// <summary>
+        /// Written by <see cref="Finish"/>. A nightly log without it belongs to a run that ended some
+        /// other way: a restart, a crash, or a process still stuck when the next run started.
+        /// </summary>
+        private const string NIGHTLY_DONE = "Done.  Exit message: ";
+        private const string NIGHTLY_LOG_PREFIX = "SkylineNightly-";
+
+        /// <summary>
+        /// Commands whose logs (see <see cref="ForCommand"/>) are not runs, and must not hide an
+        /// interrupted run that came before them.
+        /// </summary>
+        private static readonly string[] COMMAND_LOG_NAMES = { "parse", "post", "help" };
+
+        /// <summary>The nightly log of the run in progress, for <see cref="LogUnhandledException"/>.</summary>
+        private static string _currentLogFileName;
+
+        /// <summary>The main thread, the log monitor and the machine monitor all append to one log.</summary>
+        private static readonly object _logLock = new object();
+
+        /// <summary>
+        /// Records an exception that is about to terminate SkylineNightly in the nightly log, which
+        /// otherwise ends mid-run with no hint of why.
+        /// </summary>
+        public static void LogUnhandledException(object exception)
+        {
+            var logFileName = _currentLogFileName;
+            if (string.IsNullOrEmpty(logFileName))
+                return;
+            try
+            {
+                Log(logFileName, "Unhandled exception, SkylineNightly is terminating: " + exception);
+                Log(logFileName, "Installed .NET runtimes now: " + MachineState.DescribeInstalledRuntimes());
+            }
+            catch (Exception)
+            {
+                // Nothing more can be done for a process that is already going down
+            }
+        }
+
         private DateTime _startTime;
         public string LogFileName { get; private set; }
         private readonly Xml _nightly;
@@ -180,7 +219,7 @@ namespace SkylineNightly
         public void Finish(string message, string errMessage)
         {
             // Leave a note for the user, in a way that won't interfere with our next run
-            Log("Done.  Exit message: ");
+            Log(NIGHTLY_DONE);
             Log(!string.IsNullOrEmpty(message) ? message : "none");
             if (!string.IsNullOrEmpty(errMessage))
                 Log(errMessage);
@@ -259,6 +298,11 @@ namespace SkylineNightly
             var skylineNightlySkytr = Path.Combine(nightlyDir, "SkylineNightly.skytr");
             var skylineTesterZipName = _skylineTesterDir + ".zip";
 
+            // Before anything stops the previous run or starts a new log: did that run end on its own?
+            // Not exact: any other SkylineNightly counts, including an open settings window.
+            var unfinishedLog = FindUnfinishedNightlyLog();
+            var earlierNightlyRunning = GetOtherNightlyProcesses().Any();
+
             KillProcesses();
 
             // Create place to put run logs
@@ -266,6 +310,10 @@ namespace SkylineNightly
                 Directory.CreateDirectory(_logDir);
             // Start the nightly log file
             StartLog();
+            Log(RunInterruption.RUNTIMES_PREFIX + MachineState.DescribeInstalledRuntimes());
+            if (unfinishedLog != null)
+                ReportInterruptedRun(unfinishedLog, earlierNightlyRunning);
+            using var machineMonitor = new MachineStateMonitor(message => Log(message));
 
             // Clean-up and create a place to run the tests
             Delete(skylineNightlySkytr);
@@ -324,14 +372,88 @@ namespace SkylineNightly
             return true;
         }
 
+        /// <summary>
+        /// The most recent nightly log when it lacks the line <see cref="Finish"/> writes, meaning
+        /// the run that wrote it ended without finishing. Null when it finished or there is none.
+        /// </summary>
+        private string FindUnfinishedNightlyLog()
+        {
+            try
+            {
+                if (!Directory.Exists(_logDir))
+                    return null;
+                var latest = new DirectoryInfo(_logDir).GetFiles(NIGHTLY_LOG_PREFIX + "*.log")
+                    .Where(f => !COMMAND_LOG_NAMES.Any(c => f.Name.StartsWith(NIGHTLY_LOG_PREFIX + c + "-")))
+                    .OrderByDescending(f => f.LastWriteTimeUtc)
+                    .FirstOrDefault();
+                if (latest == null || ReadSharedText(latest.FullName).Contains(NIGHTLY_DONE))
+                    return null;
+                return latest.FullName;
+            }
+            catch (Exception)
+            {
+                return null;    // Never keep a run from starting over a diagnosis
+            }
+        }
+
+        /// <summary>
+        /// Explains, in both nightly logs and in an alert, why the previous run never finished. Without
+        /// this a run lost to a Windows Update restart reads as a missing result and a random crash.
+        /// </summary>
+        private void ReportInterruptedRun(string unfinishedLog, bool earlierNightlyRunning)
+        {
+            try
+            {
+                var logInfo = new FileInfo(unfinishedLog);
+                // UTC throughout: an overnight run can span the fall-back hour
+                var lastWriteUtc = logInfo.LastWriteTimeUtc;
+                var interruption = RunInterruption.Diagnose(MachineState.ReadEvents(logInfo.CreationTimeUtc), lastWriteUtc,
+                    earlierNightlyRunning, RunInterruption.ParseRuntimes(ReadSharedText(unfinishedLog)),
+                    MachineState.DescribeInstalledRuntimes());
+                var report = string.Format("Previous run did not finish: {0} (last written {1:g})", logInfo.Name,
+                                 lastWriteUtc.ToLocalTime()) + Environment.NewLine + interruption;
+                Log(report);
+                Log(unfinishedLog, "Run did not finish. Diagnosed by the next run:" + Environment.NewLine + interruption);
+                // Keep the old log older than the new one, so it is not mistaken for the latest run
+                File.SetLastWriteTimeUtc(unfinishedLog, lastWriteUtc);
+
+                // In the background: with skyline.ms unreachable, the retries would hold up the run for minutes
+                var subject = string.Format("[{0}] !!! TestResults alert (previous run interrupted: {1})",
+                    Environment.MachineName, interruption.ShortDescription);
+                var message = Environment.MachineName + Environment.NewLine + report;
+                new Thread(() =>
+                {
+                    if (SendEmailNotification(null, subject, message) == null)
+                        Log("Failed to send the interrupted run alert");
+                }) { IsBackground = true }.Start();
+            }
+            catch (Exception e)
+            {
+                Log("Failed to diagnose the unfinished previous run " + unfinishedLog + ": " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Reads a log another process may still be appending to, which File.ReadAllText refuses.
+        /// </summary>
+        private static string ReadSharedText(string path)
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+
+        private static IEnumerable<Process> GetOtherNightlyProcesses()
+        {
+            var currentId = Process.GetCurrentProcess().Id;
+            return Process.GetProcessesByName("skylinenightly").Where(p => p.Id != currentId);
+        }
+
         private void KillProcesses()
         {
             // Kill any other instance of SkylineNightly
-            foreach (var process in Process.GetProcessesByName("skylinenightly"))
-            {
-                if (process.Id != Process.GetCurrentProcess().Id)
-                    process.Kill();
-            }
+            foreach (var process in GetOtherNightlyProcesses())
+                process.Kill();
 
             // Kill processes started within the proposed working directory - most likely SkylineTester and/or TestRunner.
             // This keeps stuck tests around for 24 hours, which should be sufficient, but allows us to replace directory
@@ -360,6 +482,7 @@ namespace SkylineNightly
             // Create log file.
             LogFileName = Path.Combine(_logDir, string.Format("SkylineNightly-{0}-{1}.log", _logName,
                 _startTime.ToString("yyyy-MM-dd-HH-mm", CultureInfo.InvariantCulture)));
+            _currentLogFileName = LogFileName;
             Log(_startTime.ToShortDateString());
         }
 
@@ -649,7 +772,8 @@ namespace SkylineNightly
         /// </summary>
         private static string FindLocalSkylineTesterZip()
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            // AppContext.BaseDirectory, not Assembly.Location, which is empty in a single-file build.
+            var dir = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
             for (; !string.IsNullOrEmpty(dir); dir = Path.GetDirectoryName(dir))
             {
                 var skylineDir = Path.Combine(dir, "pwiz_tools", "Skyline");
@@ -1238,21 +1362,27 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// Post the latest results to the server.
+        /// Post the latest results to the server, or the given run's XML, with that run's log.
         /// </summary>
         public string Post(RunSpec runSpec, string xmlFile = null)
         {
+            string logFile;
             if (xmlFile == null)
             {
-                xmlFile = GetLatestLog();    // Change extension to .xml below
-                if (xmlFile == null)
+                logFile = GetLatestLog();
+                if (logFile == null)
                     return string.Empty;
-                xmlFile = Path.ChangeExtension(xmlFile, ".xml"); // In case it's actually the log file name
+                xmlFile = Path.ChangeExtension(logFile, ".xml");
             }
-            
+            else
+            {
+                // The log of the run being posted, not the newest log: posting an earlier run's XML must not carry
+                // the latest run's log, from which the server reads the last test and would report a hang in it.
+                logFile = Path.ChangeExtension(xmlFile, ".log");
+            }
+
             var xml = File.ReadAllText(xmlFile);
-            var logFile = GetLatestLog();
-            if (logFile != null)
+            if (File.Exists(logFile))
             {
                 var log = File.ReadAllText(logFile);
                 XDocument doc = XDocument.Parse(xml);
@@ -1268,6 +1398,10 @@ namespace SkylineNightly
                         Xml.ShowXmlExceptionDetailsAndDie(e, log);
                     }
                 }
+            }
+            else
+            {
+                Log(string.Format("No log {0} to post with the results", logFile));
             }
 
             if (string.IsNullOrEmpty(xml) || !xml.Contains("<test id"))
@@ -1502,7 +1636,12 @@ namespace SkylineNightly
                 time.Second.ToString("D2"),
                 message);
             if (!string.IsNullOrEmpty(logFileName))
-                File.AppendAllText(logFileName, timestampedMessage + Environment.NewLine);
+            {
+                lock (_logLock)
+                {
+                    File.AppendAllText(logFileName, timestampedMessage + Environment.NewLine);
+                }
+            }
             return timestampedMessage;
         }
 

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="lblModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 3</value>
+  </data>
+  <data name="lblModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 13</value>
+  </data>
+  <data name="lblModel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblModel.Text" xml:space="preserve">
+    <value>&amp;Model:</value>
+  </data>
+  <data name="&gt;&gt;lblModel.Name" xml:space="preserve">
+    <value>lblModel</value>
+  </data>
+  <data name="&gt;&gt;lblModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblModel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblModel.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="comboModel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="comboModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 20</value>
+  </data>
+  <data name="comboModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>400, 21</value>
+  </data>
+  <data name="comboModel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Name" xml:space="preserve">
+    <value>comboModel</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboModel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="cbUseGpu.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="cbUseGpu.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseGpu.Location" type="System.Drawing.Point, System.Drawing">
+    <value>410, 22</value>
+  </data>
+  <data name="cbUseGpu.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 17</value>
+  </data>
+  <data name="cbUseGpu.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="cbUseGpu.Text" xml:space="preserve">
+    <value>Use &amp;GPU</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Name" xml:space="preserve">
+    <value>cbUseGpu</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbUseGpu.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="radioUseExistingModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioUseExistingModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 52</value>
+  </data>
+  <data name="radioUseExistingModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>142, 17</value>
+  </data>
+  <data name="radioUseExistingModel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="radioUseExistingModel.Text" xml:space="preserve">
+    <value>&amp;Use this model as it is</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.Name" xml:space="preserve">
+    <value>radioUseExistingModel</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioUseExistingModel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="radioTuneModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioTuneModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 75</value>
+  </data>
+  <data name="radioTuneModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 17</value>
+  </data>
+  <data name="radioTuneModel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="radioTuneModel.Text" xml:space="preserve">
+    <value>&amp;Fine-tune a new model on these runs:</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.Name" xml:space="preserve">
+    <value>radioTuneModel</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioTuneModel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="listTuningFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listTuningFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 98</value>
+  </data>
+  <data name="listTuningFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>462, 129</value>
+  </data>
+  <data name="listTuningFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.Name" xml:space="preserve">
+    <value>listTuningFiles</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;listTuningFiles.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>490, 98</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseTuningFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="btnBrowseTuningFiles.Text" xml:space="preserve">
+    <value>B&amp;rowse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.Name" xml:space="preserve">
+    <value>btnBrowseTuningFiles</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTuningFiles.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 233</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 17</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="cbChooseFromSearchedFiles.Text" xml:space="preserve">
+    <value>&amp;Choose from the searched files</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.Name" xml:space="preserve">
+    <value>cbChooseFromSearchedFiles</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbChooseFromSearchedFiles.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>565, 250</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>OspreyLibraryModelControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+</root>

@@ -45,9 +45,6 @@ namespace pwiz.Osprey.Core
         /// <summary>Primary output: blib for Skyline.</summary>
         public string OutputBlib { get; set; }
 
-        /// <summary>Optional: TSV report output path.</summary>
-        public string OutputReport { get; set; }
-
         /// <summary>
         /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
         /// annotations, and exit without searching. No input files are needed.
@@ -114,8 +111,11 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string CacheDir { get; set; }
 
-        /// <summary>Resolution mode for binning.</summary>
-        public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.Auto;
+        /// <summary>
+        /// Resolution mode for binning. HRAM unless the command line says unit: there is no
+        /// detection from the data yet, so the default is the instruments most searches use.
+        /// </summary>
+        public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.HRAM;
 
         /// <summary>Fragment tolerance for LibCosine scoring.</summary>
         public FragmentToleranceConfig FragmentTolerance { get; set; } = FragmentToleranceConfig.Default();
@@ -234,8 +234,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 
-        /// <summary>Write PIN files for external tools.</summary>
-        public bool WritePin { get; set; }
 
         /// <summary>
         /// -d / --diagnostics: master switch that turns on the cross-impl
@@ -275,12 +273,25 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
+        /// The command line this run was given, as one line of text, recorded in the library it
+        /// writes (<c>LibMetadata</c>, key <c>osprey.command</c>) so the library carries how it
+        /// was made. Null (a config built in code) records nothing. Runtime-only.
+        /// </summary>
+        public string CommandLine { get; set; }
+
+        /// <summary>
         /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
         /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
         /// tools and regression.ps1 read. Off by default so the human log stays clean.
         /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
+
+        /// <summary>
+        /// --task-files: print the files the selected task reads and writes for this command line,
+        /// as the task declares them, and exit without running it. Runtime-only.
+        /// </summary>
+        public bool PrintTaskFiles { get; set; }
 
         /// <summary>
         /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
@@ -298,8 +309,23 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
 
+        /// <summary>
+        /// The one-command library build (<c>--fasta</c>): the library is predicted before the
+        /// search and <see cref="LibrarySource"/> is set to it when it has been. Off by default,
+        /// and in no identity hash of the search: the search keys on the library file it reads,
+        /// whichever way the file came to exist.
+        /// </summary>
+        public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
+
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Demultiplex overlapping-window DIA into its narrow bins before searching
+        /// (<c>--demux</c>). Enters the search hash only when enabled, so existing
+        /// caches and goldens are unaffected while it is off.
+        /// </summary>
+        public DemuxMode DemuxMode { get; set; } = DemuxMode.off;
 
         /// <summary>
         /// Protein-level FDR threshold. Optional on the command line
@@ -353,6 +379,52 @@ namespace pwiz.Osprey.Core
         /// not part of any identity / cache hash (a per-run scheduling decision).
         /// </summary>
         public FileParallelism FileParallelism { get; set; } = FileParallelism.Sequential;
+
+        /// <summary>
+        /// One stage's own across-files request, set by <c>--parallel-files-caching</c>,
+        /// <c>--parallel-files-scoring</c> or <c>--parallel-files-rescoring</c>; null when that
+        /// flag is absent and the stage shares <see cref="FileParallelism"/>. Like it, never part
+        /// of any identity / cache hash.
+        /// </summary>
+        public FileParallelism? CachingFileParallelism { get; set; }
+
+        /// <inheritdoc cref="CachingFileParallelism"/>
+        public FileParallelism? ScoringFileParallelism { get; set; }
+
+        /// <inheritdoc cref="CachingFileParallelism"/>
+        public FileParallelism? RescoringFileParallelism { get; set; }
+
+        /// <summary>
+        /// The across-files request one stage runs under: its own flag when given, otherwise
+        /// the shared <c>--parallel-files</c> (which is the sequential default when absent).
+        /// <paramref name="argName"/> names the argument that decided, for the log line that
+        /// reports the stage's count.
+        /// </summary>
+        public FileParallelism GetFileParallelism(FileStage stage, out string argName)
+        {
+            FileParallelism? stageRequest;
+            switch (stage)
+            {
+                case FileStage.Caching:
+                    stageRequest = CachingFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_CACHING;
+                    break;
+                case FileStage.Scoring:
+                    stageRequest = ScoringFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_SCORING;
+                    break;
+                case FileStage.Rescoring:
+                    stageRequest = RescoringFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_RESCORING;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
+            }
+            if (stageRequest.HasValue)
+                return stageRequest.Value;
+            argName = OspreyArgNames.PARALLEL_FILES;
+            return FileParallelism;
+        }
 
         /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
@@ -585,7 +657,6 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public enum ResolutionMode
     {
-        Auto,
         UnitResolution,
         HRAM
     }
@@ -603,7 +674,6 @@ namespace pwiz.Osprey.Core
             {
                 return new[]
                 {
-                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
                     OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
                     OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
                 };
@@ -625,5 +695,21 @@ namespace pwiz.Osprey.Core
         All,
         Razor,
         Unique
+    }
+
+    /// <summary>
+    /// Whether overlapping-window (staggered) DIA is demultiplexed before searching.
+    /// Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum DemuxMode
+    {
+        /// <summary>Search spectra as acquired. The default while demux is validated.</summary>
+        off,
+
+        /// <summary>
+        /// Detect the isolation scheme and demultiplex it when it overlaps; a
+        /// non-overlapping run is searched as acquired.
+        /// </summary>
+        auto,
     }
 }

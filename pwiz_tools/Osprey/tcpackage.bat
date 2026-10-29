@@ -13,7 +13,7 @@ REM Pre-requisites on the build agent (in addition to tcbuild.bat's):
 REM   * .NET 8 runtime packs (restored automatically by `dotnet publish`;
 REM     needs outbound NuGet on first run)
 REM   * Inno Setup 6 for the Setup.exe; package.ps1 fetches it through
-REM     pwiz-sharp/installer/Ensure-InnoSetup.ps1 when the agent lacks it.
+REM     scripts/installer/Ensure-InnoSetup.ps1 when the agent lacks it.
 REM
 REM Artifacts (published via service messages from package.ps1):
 REM   * pwiz_tools/Osprey/dist/Osprey-<version>-win-x64.zip

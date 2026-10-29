@@ -1,0 +1,2 @@
+# The golden library samples are gzip'd; never let line-ending conversion touch them.
+*.gz binary

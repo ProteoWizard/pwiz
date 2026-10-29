@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="1c26fb58-e361-436b-a21f-37001635713c" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>UploadArtifactMetadataTesting</name>
+  <description>Build configuration created from meta-runner ProteoWizard_UploadArtifactMetadataToSourceForge</description>
+  <settings>
+    <options>
+      <option name="artifactRules" value="build-linux-x86_64/BiblioSpec/*-src-*.tar.bz2&#xA;build-linux-x86_64/BiblioSpec/VERSION&#xA;*.xml" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="ProteoWizard_UploadArtifactMetadataToSourceForge_2" />
+    </disabled-settings>
+    <parameters>
+      <param name="GitHubAuthToken" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" spec="password label='GitHubAuthToken' display='normal'" />
+      <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" spec="text orderNumber='2.0'" />
+      <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" spec="text orderNumber='3.0'" />
+      <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" spec="text orderNumber='4.0'" />
+      <param name="env.PYTHON_HOME" value="C:\Python38" spec="text orderNumber='5.0'" />
+      <param name="system.artifact.paths" value="" spec="text orderNumber='6.0'" />
+      <param name="teamcity.activeBuildBranch.age.hours" value="0" spec="text orderNumber='6.0'" />
+      <param name="teamcity.activeVcsBranch.age.days" value="3" spec="text orderNumber='7.0'" />
+    </parameters>
+    <build-runners>
+      <runner id="simpleRunner" name="New build step" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.sh" />
+          <param name="command.parameters" value="pwiz_tools/BiblioSpec//bibliospec-src.tar.bz2 pwiz_tools/BiblioSpec//bibliospec-src-without-t.tar.bz2 -j%env.NUMBER_OF_CORES% toolset=gcc-5 address-model=64" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="ProteoWizard_UploadArtifactMetadataToSourceForge_0" name="Publish artifacts to TeamCity immediately" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content" value="echo &quot;##teamcity[publishArtifacts '%system.artifact.paths%']&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="ProteoWizard_UploadArtifactMetadataToSourceForge_1" name="Download artifacts metadata for current build" type="python-runner">
+        <conditions>
+          <does-not-equal name="env.BUILD_IS_PERSONAL" value="true" />
+        </conditions>
+        <parameters>
+          <param name="command" value="script" />
+          <param name="coverageArgs" value="--omit=*lib*" />
+          <param name="envTool" value="none" />
+          <param name="installToolPackage" value="true" />
+          <param name="isCoverageEnabled" value="false" />
+          <param name="isTestReportingEnabled" value="true" />
+          <param name="poetryExecutable" value="poetry" />
+          <param name="pythonVersion" value="python3" />
+          <param name="scriptContent"><![CDATA[import os, sys, re
+import urllib.request
+from time import sleep
+from glob import glob
+from os.path import isfile, join
+
+configFilename = '%system.teamcity.buildType.id%.xml'
+artifactPathmasks = r'''%system.artifact.paths%'''
+metadataFile = open(configFilename, "w")
+metadataFile.write("<artifacts>")
+        
+for pathmask in artifactPathmasks.split('\n'):
+  print(pathmask)
+  for f in glob(pathmask):
+    if isfile(f):
+      metadataFile.write("<artifact>/guestAuth/app/rest/builds/id:%teamcity.build.id%/artifacts/content/" + f + "</artifact>")
+metadataFile.write("</artifacts>")
+metadataFile.close()]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="virtualenvEnvName" value=".venv" />
+          <param name="virtualenvFile" value="requirements.txt" />
+        </parameters>
+      </runner>
+      <runner id="ProteoWizard_UploadArtifactMetadataToSourceForge_2" name="Upload artifact metadata to SourceForge" type="ssh-deploy-runner">
+        <conditions>
+          <equals name="teamcity.build.branch.is_default" value="true" />
+          <does-not-equal name="env.BUILD_IS_PERSONAL" value="true" />
+        </conditions>
+        <parameters>
+          <param name="jetbrains.buildServer.deployer.sourcePath" value="*.xml" />
+          <param name="jetbrains.buildServer.deployer.ssh.transport" value="jetbrains.buildServer.deployer.ssh.transport.sftp" />
+          <param name="jetbrains.buildServer.deployer.targetUrl" value="web.sf.net:/home/project-web/proteowizard/htdocs/releases" />
+          <param name="jetbrains.buildServer.deployer.username" value="chambm" />
+          <param name="jetbrains.buildServer.sshexec.authMethod" value="UPLOADED_KEY" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="teamcitySshKey" value="chambm@sourceforge.net-ed25519" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_Github" />
+    </vcs-settings>
+  </settings>
+</build-type>
+

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="a2b6d0d9-7d07-4c2e-bec7-38005b6496f2" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Linux x86 debug</name>
+  <description />
+  <settings>
+    <options>
+      <option name="artifactRules" value="build-linux-x86_64/*.tar.bz2&#xA;build-linux-x86_64/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=32" />
+      <param name="env.architecture_property" value="architecture=x86" />
+      <param name="env.link_property" value="" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_146" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="scripts/misc/tcbuild.sh pwiz-bin.tar.bz2 pwiz pwiz_aux pwiz_tools -j%env.NUMBER_OF_CORES% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizardAtSourceForge" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1670" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <equals id="RQ_1671" name="teamcity.agent.jvm.os.arch" value="i386" />
+      <exists id="RQ_1672" name="env.MSPARSER_HOME" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="-1" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+        </parameters>
+      </build-trigger>
+      <build-trigger id="TRIGGER_83" type="schedulingTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt22">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+
