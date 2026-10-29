@@ -50,8 +50,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         // Osprey's working folder for a fine-tune, beside the APD folders and kept between builds
         private const string OSPREY_WORKDIR = @"osprey";
 
-        // The precursor table Osprey predicts
+        // The precursor table Osprey predicts, and the fixed name a fine-tune's products are keyed on
         private const string INPUT_FILE_NAME = @"input.tsv";
+        private const string OSPREY_OUTPUT_FILE_NAME = @"predict.blib";
 
         // Column names for AlphaPeptDeep
         private const string SEQUENCE = @"sequence";
@@ -211,12 +212,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public override string TrainingFilePath => null;
 
         /// <summary>
-        /// The library Osprey writes: the library itself, or for a fine-tune a copy of the same name
-        /// in Osprey's working folder, where the tuning's products (the model, the training library)
-        /// are named after it and stay for the next build.
+        /// The library Osprey writes: the library itself, or for a fine-tune a fixed name in Osprey's
+        /// working folder, which the tuning's products (the model, the training library) are keyed
+        /// on, so they stay current for the next build whatever the library is called.
         /// </summary>
         private string OspreyOutputPath => IsTuning
-            ? Path.Combine(OspreyWorkDirectory, Path.GetFileName(LibrarySpec.FilePath))
+            ? Path.Combine(OspreyWorkDirectory, OSPREY_OUTPUT_FILE_NAME)
             : LibrarySpec.FilePath;
 
         /// <summary>

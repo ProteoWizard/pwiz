@@ -320,25 +320,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to BlibBuild completed successfully..
-        /// </summary>
-        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
-            get {
-                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
-                        "y_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to BlibBuild failed to complete..
-        /// </summary>
-        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
-            get {
-                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to predict the library..
         /// </summary>
         public static string CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_ {
