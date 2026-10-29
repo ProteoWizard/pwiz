@@ -392,15 +392,21 @@ namespace pwiz.Skyline.Controls.Graphs
             lock (_missedProgressStatusList)
             {
                 // If a freeze percent is set, freeze once file at index 0 reaches threshold
+                bool wasFrozen = _isProgressFrozen;
                 var frozen = IsProgressFrozen(status);
                 if (frozen)
                 {
-                    // Play this back later when progress is unfrozen
-                    _missedProgressStatusList.Add(status);
                     lblDuration.Text = _elapsedTimeAtFreeze;
-                    return;
+                    if (wasFrozen)
+                    {
+                        // Play this back later when progress is unfrozen
+                        _missedProgressStatusList.Add(status);
+                        return;
+                    }
+                    // Show the status that reached the threshold. A small file can go from 0% to 100%
+                    // between two updates, and without this its graph would never replace its file name.
                 }
-                if (_missedProgressStatusList.Count > 0)
+                else if (_missedProgressStatusList.Count > 0)
                 {
                     // Play the missed progress before the current status
                     foreach (var multiProgressStatus in _missedProgressStatusList)
