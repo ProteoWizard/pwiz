@@ -574,11 +574,13 @@ public sealed class MzmlWriter
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
+        int count = list.Count;
         int skipped = 0;
-        for (int i = 0; i < list.Count; i++)
+        for (int i = 0; i < count; i++)
         {
-            // Same per-item-fetch guard, exclusion and renumbering as the spectrum loop.
-            // Matches cpp IO.cpp:3132-3160 chromatogram-write loop.
+            // Same progress, cancel check, per-item-fetch guard, exclusion and renumbering as
+            // the spectrum loop. Matches cpp IO.cpp:3132-3160 chromatogram-write loop.
+            IterationListenerRegistry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing chromatograms"));
             if (_excluded.Chromatograms.Contains(i))
             {
                 skipped++;

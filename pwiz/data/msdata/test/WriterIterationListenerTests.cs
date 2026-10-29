@@ -329,6 +329,25 @@ public class WriterIterationListenerTests
         }
     }
 
+    [TestMethod]
+    public void Mzml_ListenerCancel_StopsAChromatogramOnlyWrite()
+    {
+        // An SRM file can have no spectra at all, so the chromatogram loop has to honor a cancel too.
+        var msd = new MSData();
+        msd.CVs.AddRange(MSData.DefaultCVList);
+        var chroms = new ChromatogramListSimple();
+        for (int i = 0; i < 3; i++)
+            chroms.Chromatograms.Add(new Chromatogram { Index = i, Id = $"chrom-{i}" });
+        msd.Run.ChromatogramList = chroms;
+
+        var reg = new IterationListenerRegistry();
+        var canceler = new CancelingListener(cancelAt: 1);
+        reg.AddListener(canceler, iterationPeriod: 1);
+        Assert.ThrowsException<OperationCanceledException>(
+            () => WriteThroughMSDataFile(msd, WriteFormat.Mzml, continueOnError: true, reg));
+        CollectionAssert.AreEqual(new[] { 0, 1 }, canceler.Seen, "nothing written past the cancel");
+    }
+
     /// <summary>Returns <see cref="IterationStatus.Cancel"/> from the given iteration on.</summary>
     private sealed class CancelingListener : IIterationListener
     {
