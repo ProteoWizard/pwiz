@@ -29,6 +29,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -54,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
         /// Names a local Osprey.exe to test against, for a developer's loop; without it the test
         /// looks for an Osprey build beside the Skyline source and then downloads the pinned package.
         /// </summary>
-        public const string ENV_OSPREY_EXE = @"SKYLINE_TEST_OSPREY_EXE";
+        public const string ENV_OSPREY_EXE = OspreyTestUtil.ENV_OSPREY_EXE;
 
         /// <summary>
         /// Osprey names the library it predicts from the FASTA after the output, in the working
@@ -65,6 +66,9 @@ namespace pwiz.SkylineTestFunctional
         private const string WIZARD_LOG_FIRST_RUN = @"OspreySearchControlLog.txt";
         private const string WIZARD_LOG_SECOND_RUN = @"OspreySearchControlLog-rerun.txt";
 
+        /// <summary>How long <see cref="RunSearch"/> waits for Osprey on the subset; a perf test on full runs passes its own.</summary>
+        public const int SEARCH_TIMEOUT_MILLIS = 15 * 60 * 1000;
+
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOspreySearch()
@@ -73,22 +77,53 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        /// <summary>The settings the test gives in the Additional Settings grid: a flag of every search, and a prediction's collision energy.</summary>
+        private const string ADDITIONAL_FLAG = @"verbose";
+        private const string ADDITIONAL_NCE = @"nce";
+        private const string ADDITIONAL_NCE_VALUE = @"30";
+
+        /// <summary>The settings preset the test saves from the first wizard's page and finds in the second's.</summary>
+        private const string PRESET_NAME = @"Night preset";
+        private const double PRESET_CHANGED_RUN_FDR = 0.05;
+
         protected override void DoTest()
         {
-            string ospreyExe = EnsureOsprey();
+            string ospreyExe = OspreyTestUtil.EnsureOsprey(TestContext);
+            // The additional settings start at Osprey's defaults, whatever an earlier wizard on this machine left
+            Settings.Default.OspreyAdditionalSettings = null;
+            Settings.Default.OspreySettingsPresets.RemoveKey(PRESET_NAME);
+            OspreyProperties.ClearCache();
             VerifyLatestBuildOnTeamCity();
-            PrepareDocument("OspreySearchTest.sky");
+            PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTest.sky"));
 
             // The install gate: with Osprey registered at a path that does not exist, the menu item
-            // offers the download and canceling it opens no wizard.
+            // offers the download and canceling it opens no wizard. A developer build, as the tests
+            // run, offers the latest successful master build; a release the pinned one. On TeamCity
+            // that package is the one EnsureOsprey just installed in the Tools folder, which the gate
+            // would register again instead of offering, so it is moved aside for the check.
             const string bogusPath = @"C:\__osprey_not_installed__\Osprey.exe";
-            RegisterOsprey(bogusPath);
-            var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
-            AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.OSPREY_VERSION);
-            OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
-            AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
+            OspreyTestUtil.RegisterOsprey(bogusPath);
+            AssertEx.IsFalse(OspreyHelpers.UsesPinnedPackage);
+            var package = OspreyHelpers.GetPackageDownloadInfo();
+            string packageDir = Path.GetDirectoryName(package.ToolPath);
+            string asideDir = packageDir + @"-aside";
+            bool packageInstalled = Directory.Exists(packageDir);
+            if (packageInstalled)
+                Directory.Move(packageDir, asideDir);
+            try
+            {
+                var downloadPrompt = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowOspreySearchDlg);
+                AssertEx.Contains(downloadPrompt.Message, OspreyHelpers.GetPackageVersion(package));
+                OkDialog(downloadPrompt, downloadPrompt.BtnCancelClick);
+                AssertEx.IsNull(FindOpenForm<OspreySearchDlg>());
+            }
+            finally
+            {
+                if (packageInstalled)
+                    Directory.Move(asideDir, packageDir);
+            }
 
-            RegisterOsprey(ospreyExe);
+            OspreyTestUtil.RegisterOsprey(ospreyExe);
 
             string fastaFilepath = TestFilesDir.GetTestPath("stellar-subset-proteins.fasta");
             string[] diaFilePaths = Directory.GetFiles(TestFilesDir.FullPath, "*.mzML").OrderBy(p => p).ToArray();
@@ -105,9 +140,13 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
             });
             AdvanceToSearchSettings(searchDlg);
+            SetAdditionalSettings(searchDlg, true);
+            SaveAndReapplyPreset(searchDlg);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, null);
-            RunSearch(searchDlg, docBlibPath, workDir, WIZARD_LOG_FIRST_RUN);
+            RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_FIRST_RUN));
+            var additionalSettings = searchDlg.SearchSettingsControl.AdditionalSettings;
             FinishImport(searchDlg, diaFilePaths, docBlibPath);
+            VerifyAuditLogSettings(additionalSettings, true);
 
             // The second run, on the document the first one made: Osprey searches the library
             // it predicted in the first run, and overwrites the document library.
@@ -135,9 +174,13 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ExistingLibraryPath = predictedLibraryPath;
             });
             AdvanceToSearchSettings(searchDlg);
+            VerifyPresetPersisted(searchDlg);
+            SetAdditionalSettings(searchDlg, false);
             VerifyCommandLine(searchDlg, fastaFilepath, diaFilePaths, predictedLibraryPath);
-            RunSearch(searchDlg, docBlibPath, workDir, WIZARD_LOG_SECOND_RUN);
+            RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath(WIZARD_LOG_SECOND_RUN));
+            additionalSettings = searchDlg.SearchSettingsControl.AdditionalSettings;
             FinishImport(searchDlg, diaFilePaths, docBlibPath);
+            VerifyAuditLogSettings(additionalSettings, false);
 
             // The document reads the library Osprey rewrote, not the one it loaded before the
             // overwrite: the second run replaces the document's Library object.
@@ -149,7 +192,7 @@ namespace pwiz.SkylineTestFunctional
         /// Opens the wizard, fills the data files page with <paramref name="diaFilePaths"/> and
         /// moves to the FASTA page.
         /// </summary>
-        private OspreySearchDlg OpenWizardOnFastaPage(string[] diaFilePaths)
+        public static OspreySearchDlg OpenWizardOnFastaPage(string[] diaFilePaths)
         {
             var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
             RunUI(() =>
@@ -164,14 +207,27 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// From the FASTA page through the modifications page (the document's: Carbamidomethyl C
-        /// fixed) to the search settings page, set for the Stellar subset's unit resolution.
+        /// From the FASTA page (or the library model page, which a predicted library gets after it
+        /// and whose defaults predict with the pretrained models) through the modifications page
+        /// (the document's: Carbamidomethyl C fixed) to the search settings page, set for the
+        /// Stellar subset's unit resolution.
         /// </summary>
-        private static void AdvanceToSearchSettings(OspreySearchDlg searchDlg)
+        public static void AdvanceToSearchSettings(OspreySearchDlg searchDlg)
         {
             RunUI(() =>
             {
-                searchDlg.NextPage();
+                if (searchDlg.CurrentPage == OspreySearchDlg.Pages.fasta_page)
+                {
+                    searchDlg.NextPage();
+                    if (!searchDlg.UseExistingLibrary)
+                    {
+                        AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
+                        AssertEx.IsTrue(searchDlg.UseExistingModel);
+                        AssertEx.IsTrue(searchDlg.Model.IsDefault);
+                    }
+                }
+                if (searchDlg.CurrentPage == OspreySearchDlg.Pages.library_model_page)
+                    searchDlg.NextPage();
                 AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage);
                 AssertEx.AreEqual(1, searchDlg.FixedMods.Count());
                 AssertEx.AreEqual(0, searchDlg.VariableMods.Count());
@@ -185,25 +241,173 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
+        /// The import's audit log entry (the Import Peptide Search wizard's) records the Osprey
+        /// search's settings: the pages' settings under their names, and the additional settings
+        /// the run changed, each as the setting renders itself. Only the settings in the run's
+        /// scopes are recorded: the flag is a search setting and is there for both runs; the
+        /// collision energy is a library setting, so a search of an existing library
+        /// (<paramref name="predictsLibrary"/> false) leaves it out though its value is kept.
+        /// </summary>
+        private static void VerifyAuditLogSettings(OspreyAdditionalSettings settings, bool predictsLibrary)
+        {
+            var entry = SkylineWindow.Document.AuditLog.AuditLogEntries;
+            AssertEx.AreEqual(MessageType.imported_peptide_search, entry.UndoRedo.Type);
+            string allInfo = TextUtil.LineSeparate(entry.AllInfo.Select(message => message.ToString()));
+            AssertEx.Contains(allInfo, PropertyNames.ImportPeptideSearchSettings_OspreySearchSettings,
+                PropertyNames.OspreySearchSettings_RunFdr, PropertyNames.OspreySearchSettings_NonDefaultAdditionalSettings,
+                settings.Settings[ADDITIONAL_FLAG].AuditLogText);
+            string nceText = settings.Settings[ADDITIONAL_NCE].AuditLogText;
+            if (predictsLibrary)
+                AssertEx.Contains(allInfo, nceText);
+            else
+                AssertEx.DoesNotContain(allInfo, nceText);
+        }
+
+        /// <summary>
+        /// The Additional Settings grid from the Search Settings page: the settings of the search
+        /// the pages configured, each under its label from the installed Osprey, in the category
+        /// of its help section. For a predicted library (<paramref name="predictsLibrary"/>) the
+        /// prediction's settings are among them and the flag and the collision energy are set; for
+        /// an existing library they are not, and the flag is found still set from the first run,
+        /// the collision energy kept but out of scope. A value the argument does not take is
+        /// refused with its reason, and Cancel puts back the values the grid opened with.
+        /// </summary>
+        private static void SetAdditionalSettings(OspreySearchDlg searchDlg, bool predictsLibrary)
+        {
+            var settings = searchDlg.SearchSettingsControl.AdditionalSettings;
+            string flagLabel = settings.Properties.Find(ADDITIONAL_FLAG).Label;
+            string nceLabel = settings.Properties.Find(ADDITIONAL_NCE).Label;
+            var grid = ShowDialog<OspreySettingsGridDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
+            RunUI(() =>
+            {
+                var labels = grid.Labels.ToArray();
+                AssertEx.IsTrue(labels.Contains(flagLabel));
+                AssertEx.AreEqual(!predictsLibrary, grid.GetValue(flagLabel));
+                AssertEx.AreEqual(predictsLibrary, labels.Contains(nceLabel));
+                // The form-bound settings are the pages', not the grid's
+                AssertEx.IsFalse(labels.Contains(settings.Properties.Find(@"threads").Label));
+                // The rows are grouped under their help sections' titles
+                var categories = grid.Categories.ToArray();
+                AssertEx.IsTrue(categories.Contains(settings.Properties.Find(ADDITIONAL_FLAG).Group));
+                if (predictsLibrary)
+                {
+                    AssertEx.IsTrue(categories.Contains(settings.Properties.Find(ADDITIONAL_NCE).Group));
+                    grid.SetValue(flagLabel, true.ToString());
+                    grid.SetValue(nceLabel, ADDITIONAL_NCE_VALUE);
+                    // The refusal of a value the argument does not take, as the grid gives it
+                    AssertEx.ThrowsException<ArgumentException>(() => grid.SetValue(nceLabel, @"hot"),
+                        x => AssertEx.Contains(x.Message, nceLabel));
+                    AssertEx.ThrowsException<ArgumentOutOfRangeException>(() => grid.SetValue(nceLabel, @"-1"),
+                        x => AssertEx.Contains(x.Message, nceLabel));
+                    AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, grid.GetValue(nceLabel));
+                }
+            });
+            OkDialog(grid, grid.OkDialog);
+            AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
+            AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, settings.Settings[ADDITIONAL_NCE].Value);
+            // Cancel puts back the values the grid opened with
+            var gridToCancel = ShowDialog<OspreySettingsGridDlg>(searchDlg.SearchSettingsControl.ShowAdditionalSettings);
+            RunUI(() =>
+            {
+                gridToCancel.SetValue(flagLabel, false.ToString());
+                AssertEx.AreEqual(false, settings.Settings[ADDITIONAL_FLAG].Value);
+            });
+            OkDialog(gridToCancel, gridToCancel.CancelDialog);
+            AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
+        }
+
+        /// <summary>
+        /// The settings preset: Save... keeps the page's values, the additional settings included,
+        /// under the name the user gives; choosing the preset again after the values change brings
+        /// them back; a second save under the name asks before replacing it.
+        /// </summary>
+        private static void SaveAndReapplyPreset(OspreySearchDlg searchDlg)
+        {
+            var control = searchDlg.SearchSettingsControl;
+            var settings = control.AdditionalSettings;
+            RunUI(() =>
+            {
+                AssertEx.IsNull(control.SettingsPresetName);
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
+            });
+            var nameDlg = ShowDialog<PresetNameDlg>(control.ShowSavePresetDlg);
+            RunUI(() => nameDlg.PresetName = PRESET_NAME);
+            OkDialog(nameDlg, nameDlg.OkDialog);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(PRESET_NAME, control.SettingsPresetName);
+                AssertEx.IsTrue(control.SettingsPresets.TryGetValue(PRESET_NAME, out var preset));
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, preset.RunFdr);
+                AssertEx.IsFalse(preset.IsHighResolution);
+                AssertEx.Contains(preset.AdditionalSettingsXml, ADDITIONAL_FLAG, ADDITIONAL_NCE);
+                // Change the page, then choose the preset again: its values return
+                control.RunFdr = PRESET_CHANGED_RUN_FDR;
+                settings.Settings[ADDITIONAL_FLAG].Value = false;
+                control.SettingsPresetName = PRESET_NAME;
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
+                AssertEx.AreEqual(true, settings.Settings[ADDITIONAL_FLAG].Value);
+                AssertEx.AreEqual(ADDITIONAL_NCE_VALUE, settings.Settings[ADDITIONAL_NCE].Value);
+            });
+            // Saving under the name again asks before replacing the preset
+            nameDlg = ShowDialog<PresetNameDlg>(control.ShowSavePresetDlg);
+            RunUI(() => nameDlg.PresetName = PRESET_NAME);
+            var overwrite = ShowDialog<MessageDlg>(nameDlg.OkDialog);
+            AssertEx.AreEqual(string.Format(
+                PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_,
+                PRESET_NAME), overwrite.Message);
+            OkDialog(overwrite, overwrite.ClickYes);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(PRESET_NAME, control.SettingsPresetName);
+                AssertEx.IsTrue(control.SettingsPresets.ContainsKey(PRESET_NAME));
+            });
+        }
+
+        /// <summary>
+        /// The preset saved in the first wizard is listed in the second, with none chosen until the
+        /// user chooses one, and choosing it brings its values back to the new page.
+        /// </summary>
+        private static void VerifyPresetPersisted(OspreySearchDlg searchDlg)
+        {
+            var control = searchDlg.SearchSettingsControl;
+            RunUI(() =>
+            {
+                AssertEx.IsNull(control.SettingsPresetName);
+                AssertEx.IsTrue(control.SettingsPresets.ContainsKey(PRESET_NAME));
+                control.RunFdr = PRESET_CHANGED_RUN_FDR;
+                control.SettingsPresetName = PRESET_NAME;
+                AssertEx.AreEqual(PRESET_NAME, control.SettingsPresetName);
+                AssertEx.AreEqual(OspreySearchSettingsControl.DEFAULT_FDR, control.RunFdr);
+                AssertEx.AreEqual(true, control.AdditionalSettings.Settings[ADDITIONAL_FLAG].Value);
+            });
+        }
+
+        /// <summary>
         /// The command line the wizard builds, checked before the search runs: the one command
         /// from the FASTA with the document's digest settings, or from
         /// <paramref name="existingLibraryPath"/> with no library-build options at all, and the
-        /// document library as the output either way.
+        /// document library as the output either way; the additional settings after the pages',
+        /// the prediction's only with a predicted library.
         /// </summary>
         private void VerifyCommandLine(OspreySearchDlg searchDlg, string fastaFilepath, string[] diaFilePaths, string existingLibraryPath)
         {
             OspreyConfig config = null;
             RunUI(() => config = searchDlg.GetSearchConfig());
             string commandLine = OspreyHelpers.BuildCommandLine(config);
+            AssertEx.Contains(commandLine, OspreyHelpers.ARG_PREFIX + ADDITIONAL_FLAG + @" ");
+            AssertEx.AreEqual(existingLibraryPath == null,
+                commandLine.Contains(OspreyHelpers.ARG_PREFIX + ADDITIONAL_NCE + @" " + ADDITIONAL_NCE_VALUE + @" "));
             if (existingLibraryPath == null)
             {
                 AssertEx.Contains(commandLine, OspreyHelpers.ARG_FASTA + @" " + fastaFilepath.Quote());
-                AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_AUTO);
+                // A test's Tools folder has no CUDA runtime, so Use GPU starts unchecked
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + OspreyHelpers.DEVICE_CPU);
                 AssertEx.Contains(commandLine, @"--fix-mod 1 ");  // Carafe's Carbamidomethyl of C
                 AssertEx.Contains(commandLine, @"--var-mod 0 ");  // Carafe's spelling of none
                 AssertEx.Contains(commandLine, @"--enzyme 1 ");   // Carafe's Trypsin, matched on behavior
                 AssertEx.Contains(commandLine, @"--min-pep-charge 2 ", @"--max-pep-charge 3 "); // The DIA defaults for a default document
             AssertEx.Contains(commandLine, OspreyHelpers.ARG_CULTURE + @" " + CultureInfo.CurrentUICulture.Name); // Osprey writes in Skyline's language
+                AssertEx.Contains(commandLine, OspreyHelpers.ARG_TIMESTAMP); // The log on disk is stamped; the run page strips the stamps
                 AssertEx.IsFalse(commandLine.Contains(OspreyHelpers.ARG_LIBRARY + @" "));
             }
             else
@@ -227,13 +431,17 @@ namespace pwiz.SkylineTestFunctional
         /// Run from the search settings page and wait for Osprey. When the document library exists
         /// already (a re-run), Run asks before overwriting it. The progress bar must have moved,
         /// which is the "NN%" lines of Osprey's progress reporter parsing through ProcessRunner.
-        /// The wizard's log is saved as <paramref name="logName"/> whether the search succeeds or not.
+        /// The wizard's log is saved to <paramref name="logPath"/> whether the search succeeds or not.
         /// </summary>
-        private void RunSearch(OspreySearchDlg searchDlg, string docBlibPath, string workDir, string logName)
+        public static void RunSearch(OspreySearchDlg searchDlg, string docBlibPath, string workDir, string logPath,
+            int searchTimeoutMillis = SEARCH_TIMEOUT_MILLIS)
         {
             // Subscribe before Run, so an Osprey that fails at once cannot finish before the subscription.
             bool? searchSucceeded = null;
             searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
+            // An earlier search's console log rolls aside under its own last write before this one starts
+            string stdoutLogPath = Path.Combine(workDir, OspreyHelpers.STDOUT_LOG_NAME);
+            DateTime? previousLogWritten = File.Exists(stdoutLogPath) ? File.GetLastWriteTime(stdoutLogPath) : null;
             if (File.Exists(docBlibPath))
             {
                 var overwritePrompt = ShowDialog<MultiButtonMsgDlg>(searchDlg.NextPage);
@@ -249,7 +457,7 @@ namespace pwiz.SkylineTestFunctional
             int maxPercent = 0;
             try
             {
-                WaitForConditionUI(15 * 60 * 1000, () =>
+                WaitForConditionUI(searchTimeoutMillis, () =>
                 {
                     maxPercent = Math.Max(maxPercent, searchDlg.SearchControl.PercentComplete);
                     return searchSucceeded.HasValue;
@@ -258,22 +466,32 @@ namespace pwiz.SkylineTestFunctional
             }
             finally
             {
-                File.WriteAllText(TestFilesDir.GetTestPath(logName), searchDlg.SearchControl.LogText);
+                File.WriteAllText(logPath, searchDlg.SearchControl.LogText);
             }
             AssertEx.IsTrue(maxPercent > 0, @"Osprey's progress lines did not advance the progress bar");
 
             AssertEx.AreEqual(docBlibPath, searchDlg.SearchControl.OutputLibraryPath);
             AssertEx.FileExists(docBlibPath);
-            AssertEx.FileExists(Path.Combine(workDir, OspreyHelpers.STDOUT_LOG_NAME));
+            // The run page's Open Log button opens the console output teed to the working folder
+            AssertEx.FileExists(stdoutLogPath);
+            RunUI(() =>
+            {
+                AssertEx.IsTrue(searchDlg.SearchControl.CanOpenLog);
+                AssertEx.AreEqual(stdoutLogPath, searchDlg.SearchControl.LogFilePath);
+            });
+            if (previousLogWritten.HasValue)
+                AssertEx.FileExists(FileTimeEx.GetTimeStampedPath(stdoutLogPath, previousLogWritten.Value));
         }
 
         /// <summary>
         /// Finish: the Import Peptide Search wizard opens on its existing-library route, past the
         /// library page, with the searched runs on the chromatograms page, and its DIA pages add
         /// the library's peptides and import the runs. Ends with the document saved and the
-        /// wizard closed, so another run can start from it.
+        /// wizard closed, so another run can start from it. The chromatogram import gets
+        /// <paramref name="importTimeoutMillis"/>, which a perf test on full-size runs raises.
         /// </summary>
-        private void FinishImport(OspreySearchDlg searchDlg, string[] diaFilePaths, string docBlibPath)
+        public static void FinishImport(OspreySearchDlg searchDlg, string[] diaFilePaths, string docBlibPath,
+            int importTimeoutMillis = WAIT_TIME)
         {
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
@@ -310,13 +528,13 @@ namespace pwiz.SkylineTestFunctional
 
             var associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             WaitForConditionUI(() => associateProteinsDlg.DocumentFinalCalculated);
-            using (new WaitDocumentChange(null, true))
+            using (new WaitDocumentChange(null, true, importTimeoutMillis))
             {
                 OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
             }
             WaitForClosedForm(importPeptideSearchDlg);
             WaitForClosedForm(searchDlg);
-            WaitForDocumentLoaded();
+            WaitForDocumentLoaded(importTimeoutMillis);
 
             var doc = SkylineWindow.Document;
             AssertEx.IsTrue(doc.PeptideCount > 0, @"no peptides matched the Osprey library");
@@ -330,7 +548,7 @@ namespace pwiz.SkylineTestFunctional
         /// The document has exactly one document library, at <paramref name="docBlibPath"/>, and
         /// the Library object it holds is the one the library manager loaded from that file.
         /// </summary>
-        private void VerifyDocumentLibrary(string docBlibPath)
+        private static void VerifyDocumentLibrary(string docBlibPath)
         {
             var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             var docLibSpecs = libraries.LibrarySpecs.Where(s => s.IsDocumentLibrary).ToArray();
@@ -342,13 +560,14 @@ namespace pwiz.SkylineTestFunctional
                 @"the document's library object is not the one the library manager holds for its file");
         }
 
-        private Library GetDocumentLibrary()
+        public static Library GetDocumentLibrary()
         {
             var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             return libraries.TryGetDocumentLibrary(out var docLib) ? docLib : null;
         }
 
-        private void PrepareDocument(string documentFile)
+        /// <summary>A new document with the default settings, saved at <paramref name="documentPath"/>.</summary>
+        public static void PrepareDocument(string documentPath)
         {
             RunUI(SkylineWindow.NewDocument);
             // The default settings, charge 2 only: the wizard predicts the library for charges 2 and
@@ -357,61 +576,7 @@ namespace pwiz.SkylineTestFunctional
             // in its isolation window to pass the FDR.
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                 doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(documentFile)));
-        }
-
-        private static void RegisterOsprey(string ospreyExe)
-        {
-            RunUI(() =>
-            {
-                if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
-                    Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
-                Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.Osprey,
-                    ospreyExe, string.Empty, Path.GetDirectoryName(ospreyExe), false));
-            });
-        }
-
-        /// <summary>
-        /// The Osprey.exe to test: the one SKYLINE_TEST_OSPREY_EXE names, else a build in the Osprey
-        /// project beside the Skyline source (the developer's loop), else the pinned package from
-        /// the tool mirror (TeamCity).
-        /// </summary>
-        private string EnsureOsprey()
-        {
-            string fromEnvironment = Environment.GetEnvironmentVariable(ENV_OSPREY_EXE);
-            if (!string.IsNullOrEmpty(fromEnvironment))
-            {
-                AssertEx.FileExists(fromEnvironment, ENV_OSPREY_EXE + @" names a file that does not exist");
-                return fromEnvironment;
-            }
-            foreach (var configuration in new[] { @"Debug", @"Release" })
-            {
-                string sibling = Path.GetFullPath(TestContext.GetProjectDirectory(
-                    Path.Combine(@"..", @"Osprey", @"Osprey", @"bin", @"x64", configuration, @"net10.0", OspreyHelpers.OSPREY_EXE)));
-                if (File.Exists(sibling))
-                    return sibling;
-            }
-            // Neither: the latest successful Osprey build on TeamCity, as SkylineNightly fetches
-            // SkylineTester. Its URL is used as given, since the tool mirror holds no Osprey package.
-            RunUI(() =>
-            {
-                if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
-                    Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
-            });
-            var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
-            bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
-            try
-            {
-                Skyline.Program.UseOriginalURLs = true;
-                AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(new[] { downloadInfo }, new SilentProgressMonitor()),
-                    @"failed to download Osprey from " + downloadInfo.DownloadUrl);
-            }
-            finally
-            {
-                Skyline.Program.UseOriginalURLs = savedUseOriginalUrls;
-            }
-            AssertEx.FileExists(downloadInfo.ToolPath);
-            return downloadInfo.ToolPath;
+            RunUI(() => SkylineWindow.SaveDocument(documentPath));
         }
 
         /// <summary>
@@ -424,6 +589,9 @@ namespace pwiz.SkylineTestFunctional
             var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
             AssertEx.IsTrue(downloadInfo.Filename.StartsWith(@"Osprey-") && downloadInfo.Filename.EndsWith(@"-win-x64"),
                 @"unexpected Osprey package name " + downloadInfo.Filename);
+            // The version the prompt names is the folder name's middle: the pinned package's is the pinned version
+            AssertEx.AreEqual(OspreyHelpers.OSPREY_VERSION, OspreyHelpers.GetPackageVersion(OspreyHelpers.OspreyDownloadInfo));
+            AssertEx.AreEqual(@"Osprey-" + OspreyHelpers.GetPackageVersion(downloadInfo) + @"-win-x64", downloadInfo.Filename);
             AssertEx.AreEqual(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), downloadInfo.Filename, OspreyHelpers.OSPREY_EXE),
                 downloadInfo.ToolPath);
             using var client = new HttpClientWithProgress();

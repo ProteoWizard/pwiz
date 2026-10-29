@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Proteome;
@@ -58,11 +59,12 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>The compressed size of the Osprey package, stated before the download starts.</summary>
         public const int OSPREY_DOWNLOAD_SIZE_MB = 150;
 
-        // Osprey's TeamCity build. Tests download from it as SkylineNightly downloads SkylineTester:
-        // the latest successful build on a designated branch, found through the REST API, which the
-        // Osprey project opens to guest access. Until Osprey has a release process, the pinned
-        // package is the TeamCity build that produced OSPREY_VERSION, addressed by build id, which
-        // stays valid only while that build is kept (pinned) on the server.
+        // Osprey's TeamCity build. Tests, developer builds and master dailies download from it as
+        // SkylineNightly downloads SkylineTester: the latest successful build on a designated branch,
+        // found through the REST API, which the Osprey project opens to guest access. A release and
+        // its FEATURE COMPLETE dailies install the pinned package, the TeamCity build that produced
+        // OSPREY_VERSION, addressed by build id; the release process sets the pin and keeps (pins)
+        // that build on the server, since an unpinned build is cleaned up (release-guide.md).
         public const string TEAMCITY_SERVER = @"https://teamcity.labkey.org";
         public const string TEAMCITY_BUILD_TYPE = @"ProteoWizard_OspreyWindowsNet";
         public const string TEAMCITY_BRANCH = @"master";
@@ -89,6 +91,48 @@ namespace pwiz.Skyline.Model.Lib
         public static FileDownloadInfo OspreyDownloadInfo => CreateDownloadInfo(OSPREY_FILENAME, OSPREY_DOWNLOAD_URL);
 
         public static FileDownloadInfo[] FilesToDownload => new[] { OspreyDownloadInfo };
+
+        /// <summary>
+        /// Whether this build installs the pinned package: a release (build 0) and the FEATURE COMPLETE
+        /// dailies of a release branch (build 9), whose pin is set when the branch is cut
+        /// (release-guide.md). A master daily and a developer build take the last successful master
+        /// build instead, found when Osprey is first needed, so the development line never updates
+        /// the pin by hand and a daily built after an Osprey change gets the Osprey it was built with.
+        /// </summary>
+        public static bool UsesPinnedPackage => !Install.IsDeveloperInstall && (Install.Build == 0 || Install.Build == 9);
+
+        /// <summary>
+        /// The package this build installs: the pinned one, or the latest successful master build,
+        /// which asks TeamCity (<see cref="GetLatestBuildDownloadInfo"/>) and throws when it cannot.
+        /// </summary>
+        public static FileDownloadInfo GetPackageDownloadInfo()
+        {
+            return UsesPinnedPackage ? OspreyDownloadInfo : GetLatestBuildDownloadInfo();
+        }
+
+        /// <summary>The version in a package's folder name, Osprey-&lt;version&gt;-win-x64, for the user.</summary>
+        public static string GetPackageVersion(FileDownloadInfo package)
+        {
+            const string prefix = @"Osprey-";
+            string suffix = OSPREY_ZIP_SUFFIX.Substring(0, OSPREY_ZIP_SUFFIX.Length - 4);
+            string name = package.Filename;
+            if (name.StartsWith(prefix) && name.EndsWith(suffix) && name.Length > prefix.Length + suffix.Length)
+                return name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length);
+            return name;
+        }
+
+        /// <summary>
+        /// Registers an installed package as the Osprey Skyline runs, as its download would have, in
+        /// place of any earlier registration: for a package found in the Tools folder after its
+        /// registration was lost.
+        /// </summary>
+        public static void RegisterPackage(FileDownloadInfo package)
+        {
+            var tools = Settings.Default.SearchToolList;
+            if (tools.ContainsKey(SearchToolType.Osprey))
+                tools.Remove(tools[SearchToolType.Osprey]);
+            tools.Add(new SearchTool(package.ToolType, package.ToolPath, package.ToolExtraArgs, package.InstallPath, true));
+        }
 
         /// <summary>
         /// The download of the latest successful Osprey build on <see cref="TEAMCITY_BRANCH"/>, which
@@ -154,8 +198,12 @@ namespace pwiz.Skyline.Model.Lib
 
         // Osprey's command-line vocabulary. The library-build options are CarafeSharp's, whose
         // declarations Skyline references directly (CarafeCommandLine.ARG_*); these are Osprey's own.
+        public const string ARG_PREFIX = @"--";
+        public const string ARG_HELP = @"--help";
         public const string ARG_INPUT = @"-i";
         public const string ARG_FASTA = @"--fasta";
+        public const string ARG_MODEL = @"--model";
+        public const string ARG_TRAINING_INPUT = @"--training-input";
         public const string ARG_LIBRARY = @"-l";
         public const string ARG_DECOYS_IN_LIBRARY = @"--decoys-in-library";
         public const string ARG_OUTPUT = @"-o";
@@ -170,8 +218,41 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_PROTEIN_FDR = @"--protein-fdr";
         public const string ARG_THREADS = @"--threads";
         public const string ARG_CULTURE = @"--culture";
+        public const string ARG_TIMESTAMP = @"--timestamp";
+        // The precursor-table prediction Build Library runs: the PredictLibrary phase alone
+        public const string ARG_PRECURSORS = @"--precursors";
+        public const string ARG_TASK = @"--task";
 
+        /// <summary>
+        /// The names of the arguments the wizards' pages set, which <see cref="BuildCommandLine"/>
+        /// writes from <see cref="OspreyConfig"/>: left out of the Additional settings grid, and
+        /// refused as a persisted additional setting (<see cref="OspreyAdditionalSettings"/>).
+        /// Bare names, as the properties are named, whatever prefix a grammar spells.
+        /// </summary>
+        public static readonly string[] FORM_BOUND_ARGUMENTS =
+        {
+            ArgName(ARG_RESOLUTION), ArgName(ARG_FRAGMENT_TOLERANCE), ArgName(ARG_FRAGMENT_UNIT), ArgName(ARG_RUN_FDR),
+            ArgName(ARG_EXPERIMENT_FDR), ArgName(ARG_PROTEIN_FDR), ArgName(ARG_THREADS), ArgName(ARG_DEVICE),
+            ArgName(ARG_DECOYS_IN_LIBRARY),
+            CarafeCommandLine.ARG_ENZYME.Name, CarafeCommandLine.ARG_MISS_C.Name, CarafeCommandLine.ARG_MIN_LENGTH.Name,
+            CarafeCommandLine.ARG_MAX_LENGTH.Name, CarafeCommandLine.ARG_MIN_PEP_CHARGE.Name, CarafeCommandLine.ARG_MAX_PEP_CHARGE.Name,
+            CarafeCommandLine.ARG_FIX_MOD.Name, CarafeCommandLine.ARG_VAR_MOD.Name, CarafeCommandLine.ARG_MAX_VAR.Name,
+        };
+
+        /// <summary>The name of one of the <c>--name</c> constants above.</summary>
+        private static string ArgName(string argumentText)
+        {
+            return argumentText.Substring(ARG_PREFIX.Length);
+        }
+
+        /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>
+        public const string PREDICTED_TABLE_SUFFIX = @".predicted.speclib.tsv";
+
+        // Osprey's --device: gpu and cpu are requirements (a run that cannot predict on the GPU
+        // fails); auto takes the GPU when the CUDA runtime is installed, else the CPU.
         public const string DEVICE_AUTO = @"auto";
+        public const string DEVICE_GPU = @"gpu";
+        public const string DEVICE_CPU = @"cpu";
         public const string RESOLUTION_HRAM = @"hram";
         public const string RESOLUTION_UNIT = @"unit";
         public const string FRAGMENT_UNIT_PPM = @"ppm";
@@ -201,6 +282,38 @@ namespace pwiz.Skyline.Model.Lib
         {
             string dir = Path.GetDirectoryName(documentPath) ?? string.Empty;
             return Path.Combine(dir, Path.GetFileNameWithoutExtension(documentPath) + WORK_DIR_SUFFIX);
+        }
+
+        /// <summary>
+        /// The model a tuning search writes: Osprey saves it beside the library it predicts, in the
+        /// working folder, as the output's stem with CarafeSharp's model extension (&lt;doc&gt;.model.zip).
+        /// </summary>
+        public static string GetTunedModelPath(string outputLibraryPath, string workDirectory)
+        {
+            return Path.Combine(workDirectory, Path.GetFileNameWithoutExtension(outputLibraryPath) + CarafeModelFile.EXTENSION);
+        }
+
+        /// <summary>
+        /// The document's fine-tuned model: a copy of the model a tuning search wrote, beside the
+        /// document and named after it (&lt;doc&gt;.model.zip), as the document library is. A support
+        /// file of the document, like the library, rather than an entry in the model list; a user
+        /// who wants it elsewhere adds it to the list by name through the list's Add... The copy
+        /// lives outside the working folder, whose spectra caches a user may delete to reclaim space.
+        /// </summary>
+        public static string GetDocumentModelPath(string documentPath)
+        {
+            string dir = Path.GetDirectoryName(documentPath) ?? string.Empty;
+            return Path.Combine(dir, Path.GetFileNameWithoutExtension(documentPath) + CarafeModelFile.EXTENSION);
+        }
+
+        /// <summary>
+        /// A library's fine-tuned model: the model Build Library tuned before predicting the library,
+        /// beside the library and named after it (&lt;library&gt;.model.zip), a support file of the
+        /// library as the document's model is of the document, and added to the model list the same way.
+        /// </summary>
+        public static string GetLibraryModelPath(string libraryPath)
+        {
+            return GetDocumentModelPath(libraryPath);
         }
 
         /// <summary>
@@ -319,10 +432,13 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// The command line for one search: the runs, the FASTA to predict the library from (or an
-        /// existing library in its place), the output, the working folder, the libtorch runtimes
-        /// folder shared with Skyline's own prediction, and the digest, modification, scoring and FDR
-        /// settings. Paths are quoted; numbers are written in the invariant culture, which Osprey
-        /// reads them in.
+        /// existing library in its place) with the saved model to predict with and the runs to tune
+        /// on, the output, the working folder, the libtorch runtimes folder shared with Skyline's own
+        /// prediction, and the digest, modification, scoring and FDR settings. Paths are quoted;
+        /// numbers are written in the invariant culture, which Osprey reads them in. For Build
+        /// Library's fine-tune the runs are the precursor table (<see cref="OspreyConfig.PrecursorTablePath"/>):
+        /// the tuning runs are searched against the FASTA's library, and the tuned models predict
+        /// the table, with no search of the result.
         /// </summary>
         public static string BuildCommandLine(OspreyConfig config)
         {
@@ -330,10 +446,19 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(OspreyArgs))
                 sb.Append(OspreyArgs).Append(' ');
 
-            sb.Append(ARG_INPUT);
-            foreach (var file in config.DataFiles)
-                sb.Append(' ').Append(file.Quote());
-            sb.Append(' ');
+            if (config.PrecursorTablePath != null)
+            {
+                sb.Append(ARG_PRECURSORS).Append(' ').Append(config.PrecursorTablePath.Quote()).Append(' ');
+                if (!string.IsNullOrEmpty(config.Task))
+                    sb.Append(ARG_TASK).Append(' ').Append(config.Task).Append(' ');
+            }
+            else
+            {
+                sb.Append(ARG_INPUT);
+                foreach (var file in config.DataFiles)
+                    sb.Append(' ').Append(file.Quote());
+                sb.Append(' ');
+            }
 
             if (!string.IsNullOrEmpty(config.LibraryPath))
             {
@@ -343,38 +468,64 @@ namespace pwiz.Skyline.Model.Lib
             }
             else
             {
-                sb.Append(ARG_FASTA).Append(' ').Append(config.FastaPath.Quote()).Append(' ');
+                if (!string.IsNullOrEmpty(config.FastaPath))
+                    sb.Append(ARG_FASTA).Append(' ').Append(config.FastaPath.Quote()).Append(' ');
+                // A saved model is predicted with as it is, or, with tuning runs, is the model the
+                // tuning starts from; with neither Osprey predicts with the pretrained models.
+                if (!string.IsNullOrEmpty(config.ModelPath))
+                    sb.Append(ARG_MODEL).Append(' ').Append(config.ModelPath.Quote()).Append(' ');
+                if (config.TrainingInputs.Count > 0)
+                {
+                    sb.Append(ARG_TRAINING_INPUT);
+                    foreach (var run in config.TrainingInputs)
+                        sb.Append(' ').Append(run.Quote());
+                    sb.Append(' ');
+                }
                 AppendLibraryBuildArgs(sb, config);
             }
 
             sb.Append(ARG_OUTPUT).Append(' ').Append(config.OutputPath.Quote()).Append(' ');
-            sb.Append(ARG_WORK_DIR).Append(' ').Append(config.WorkDirectory.Quote()).Append(' ');
+            if (!string.IsNullOrEmpty(config.WorkDirectory))
+                sb.Append(ARG_WORK_DIR).Append(' ').Append(config.WorkDirectory.Quote()).Append(' ');
 
-            sb.Append(ARG_RESOLUTION).Append(' ').Append(config.Resolution).Append(' ');
-            AppendNumber(sb, ARG_FRAGMENT_TOLERANCE, config.FragmentTolerance);
-            sb.Append(ARG_FRAGMENT_UNIT).Append(' ').Append(config.FragmentUnit).Append(' ');
-            AppendNumber(sb, ARG_RUN_FDR, config.RunFdr);
-            AppendNumber(sb, ARG_EXPERIMENT_FDR, config.ExperimentFdr);
-            AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
-            AppendNumber(sb, ARG_THREADS, config.Threads);
+            // The search settings, for a run that searches: the data files, or the tuning runs
+            if (config.DataFiles.Count > 0 || config.TrainingInputs.Count > 0)
+            {
+                sb.Append(ARG_RESOLUTION).Append(' ').Append(config.Resolution).Append(' ');
+                AppendNumber(sb, ARG_FRAGMENT_TOLERANCE, config.FragmentTolerance);
+                sb.Append(ARG_FRAGMENT_UNIT).Append(' ').Append(config.FragmentUnit).Append(' ');
+                AppendNumber(sb, ARG_RUN_FDR, config.RunFdr);
+                AppendNumber(sb, ARG_EXPERIMENT_FDR, config.ExperimentFdr);
+                AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
+                AppendNumber(sb, ARG_THREADS, config.Threads);
+            }
+            // The additional settings after the pages' arguments: the grid's values that are not
+            // Osprey's defaults, for the scopes this run has
+            config.AdditionalSettings?.AppendArguments(sb, OspreyAdditionalSettings.ScopesFor(config));
             // A child process starts in the OS culture, not Skyline's UI language, so Osprey is told
             // which to write its messages in; the numbers above are invariant either way.
             if (!string.IsNullOrEmpty(config.CultureName))
                 sb.Append(ARG_CULTURE).Append(' ').Append(config.CultureName).Append(' ');
+            // Every line stamped with its time, for the log teed to the working folder; the wizard's
+            // run page strips the stamp and shows the lines under its own Show timestamps box.
+            if (config.Timestamp)
+                sb.Append(ARG_TIMESTAMP);
 
             return sb.ToString().TrimEnd();
         }
 
         /// <summary>
         /// The library-build options: the device and the runtimes folder Osprey finds the CUDA
-        /// runtime in when Skyline has installed one, and CarafeSharp's digest options in Osprey's
-        /// hyphenated spelling.
+        /// runtime in when Skyline has installed one, and, with a FASTA to digest, CarafeSharp's
+        /// digest options in Osprey's hyphenated spelling.
         /// </summary>
         private static void AppendLibraryBuildArgs(StringBuilder sb, OspreyConfig config)
         {
             sb.Append(ARG_DEVICE).Append(' ').Append(config.Device).Append(' ');
             if (!string.IsNullOrEmpty(config.TorchRuntimesDirectory))
                 sb.Append(ARG_TORCH_RUNTIMES).Append(' ').Append(config.TorchRuntimesDirectory.Quote()).Append(' ');
+            if (string.IsNullOrEmpty(config.FastaPath))
+                return;
             if (config.EnzymeIndex.HasValue)
                 AppendNumber(sb, CarafeCommandLine.ARG_ENZYME.ArgumentText, config.EnzymeIndex.Value);
             AppendNumber(sb, CarafeCommandLine.ARG_MISS_C.ArgumentText, config.MaxMissedCleavages);
@@ -406,16 +557,68 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// Run the search, reporting Osprey's output through <paramref name="progressMonitor"/>: each
-        /// line is the status message and each "NN%" line Osprey's progress reporter writes is the
-        /// percent complete, with no wrapper, since Osprey writes through the same status writer
-        /// Skyline's command line uses. The verdict is the exit code, which Osprey reconciles with
-        /// its own Error: lines. Returns the output library path when Osprey wrote it, or null.
+        /// line is the status message, and <see cref="OspreyProgressMonitor"/> between the runner and
+        /// the monitor turns Osprey's [TASK], file N/M and NN% lines into the bar's segments and
+        /// position. The verdict is the exit code, which Osprey reconciles with its own Error: lines.
+        /// Returns the output library path when Osprey wrote it, or null.
         /// </summary>
         public static string RunSearch(OspreyConfig config, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             Directory.CreateDirectory(config.WorkDirectory);
-            string args = BuildCommandLine(config);
+            // The progress bar is driven by Osprey's [TASK] lines through OspreyProgressMonitor, so
+            // ProcessRunner's own percent parsing is off: its bar restarted at every phase that
+            // printed 100% and froze through the phases that print no percentage (the fine-tune).
+            var taskMonitor = new OspreyProgressMonitor(progressMonitor, config);
+            RunOsprey(BuildCommandLine(config), config.WorkDirectory, taskMonitor, ref status, false);
+            return File.Exists(config.OutputPath) ? config.OutputPath : null;
+        }
 
+        /// <summary>
+        /// The command line of the precursor-table prediction Build Library runs: Osprey's
+        /// PredictLibrary phase alone over <paramref name="tablePath"/>, with the pretrained models or
+        /// the saved <paramref name="modelPath"/>, on the GPU (a requirement, with the CUDA runtime in
+        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
+        /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
+        /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
+        /// </summary>
+        public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
+            bool useGpu, string torchRuntimesDirectory, string cultureName)
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(OspreyArgs))
+                sb.Append(OspreyArgs).Append(' ');
+            sb.Append(ARG_PRECURSORS).Append(' ').Append(tablePath.Quote()).Append(' ');
+            sb.Append(ARG_TASK).Append(' ').Append(OspreyProgressMonitor.TASK_PREDICT_LIBRARY).Append(' ');
+            sb.Append(ARG_OUTPUT).Append(' ').Append(outputBlib.Quote()).Append(' ');
+            if (!string.IsNullOrEmpty(modelPath))
+                sb.Append(ARG_MODEL).Append(' ').Append(modelPath.Quote()).Append(' ');
+            sb.Append(ARG_DEVICE).Append(' ').Append(useGpu ? DEVICE_GPU : DEVICE_CPU);
+            if (!string.IsNullOrEmpty(torchRuntimesDirectory))
+                sb.Append(' ').Append(ARG_TORCH_RUNTIMES).Append(' ').Append(torchRuntimesDirectory.Quote());
+            if (!string.IsNullOrEmpty(cultureName))
+                sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
+            return sb.ToString();
+        }
+
+        /// <summary>The TSV a precursor-table prediction with the output <paramref name="outputBlib"/> writes.</summary>
+        public static string GetPredictedTablePath(string outputBlib)
+        {
+            return Path.Combine(Path.GetDirectoryName(outputBlib) ?? string.Empty,
+                Path.GetFileNameWithoutExtension(outputBlib) + PREDICTED_TABLE_SUFFIX);
+        }
+
+        /// <summary>
+        /// Runs Osprey with <paramref name="args"/>, every line of its output reported to
+        /// <paramref name="progressMonitor"/> as the status message and teed to
+        /// <see cref="STDOUT_LOG_NAME"/> in <paramref name="logDirectory"/>, an earlier log rolled aside.
+        /// With <paramref name="updateProgressPercentage"/> the runner reads Osprey's NN% lines into the
+        /// status, for a run of one task; the wizard passes false and an <see cref="OspreyProgressMonitor"/>
+        /// instead. The verdict is the exit code, which Osprey reconciles with its own Error: lines;
+        /// a failure throws with Osprey's last lines.
+        /// </summary>
+        public static void RunOsprey(string args, string logDirectory, IProgressMonitor progressMonitor, ref IProgressStatus status,
+            bool updateProgressPercentage)
+        {
             var pr = new ProcessRunner();
             // The 8.3 short form of the install path and a non-Unicode TMP, the precautions the
             // DIA-NN path takes under TestRunner's Unicode tool folder; harmless everywhere else.
@@ -433,15 +636,13 @@ namespace pwiz.Skyline.Model.Lib
             progressMonitor.UpdateProgress(status);
 
             // Tee Osprey's output to a flushed file in the working folder so a user (or a developer)
-            // can follow a long search from outside Skyline. Osprey's own --log-file is not used:
-            // it redirects every line away from the console, which would leave the wizard blind.
-            using (var liveLog = TryOpenLiveLogWriter(config.WorkDirectory))
+            // can follow a long run from outside Skyline. Osprey's own --log-file is not used:
+            // it redirects every line away from the console, which would leave the caller blind.
+            using (var liveLog = TryOpenLiveLogWriter(logDirectory))
             {
                 pr.Run(psi, null, progressMonitor, ref status, liveLog,
-                    ProcessPriorityClass.BelowNormal, true, IsGoodOspreyOutput);
+                    ProcessPriorityClass.BelowNormal, true, IsGoodOspreyOutput, updateProgressPercentage);
             }
-
-            return File.Exists(config.OutputPath) ? config.OutputPath : null;
         }
 
         private static bool IsGoodOspreyOutput(string stdErr, int exitCode)
@@ -453,8 +654,11 @@ namespace pwiz.Skyline.Model.Lib
         {
             try
             {
-                var stream = new FileStream(Path.Combine(workDirectory, STDOUT_LOG_NAME),
-                    FileMode.Append, FileAccess.Write, FileShare.Read);
+                // An earlier search's log rolls aside under its own end time, so the fixed name the
+                // run page's Open Log button opens is this search's alone and the earlier record is kept.
+                string logPath = Path.Combine(workDirectory, STDOUT_LOG_NAME);
+                FileTimeEx.RollWithTimeStamp(logPath);
+                var stream = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.Read);
                 return new StreamWriter(stream) { AutoFlush = true };
             }
             catch
@@ -472,11 +676,41 @@ namespace pwiz.Skyline.Model.Lib
     {
         public IList<string> DataFiles { get; set; } = new List<string>();
 
+        /// <summary>
+        /// A precursor table to predict in place of data files to search (Build Library): alone,
+        /// the PredictLibrary phase over the table; with <see cref="TrainingInputs"/> and a
+        /// <see cref="FastaPath"/>, the tuning runs' search against the FASTA's library, the
+        /// fine-tune, and the tuned models' prediction of the table.
+        /// </summary>
+        public string PrecursorTablePath { get; set; }
+
+        /// <summary>The one phase to run (<c>--task</c>), or null for the whole run.</summary>
+        public string Task { get; set; }
+
+        /// <summary>
+        /// Whether every line Osprey prints is stamped with its time (<c>--timestamp</c>), for the
+        /// log teed to disk; <see cref="OspreyProgressMonitor"/> strips the stamp for the display.
+        /// </summary>
+        public bool Timestamp { get; set; } = true;
+
         /// <summary>The FASTA the library is predicted from, and the proteins the results are matched to.</summary>
         public string FastaPath { get; set; }
 
         /// <summary>An existing library to search in place of predicting one; null predicts from <see cref="FastaPath"/>.</summary>
         public string LibraryPath { get; set; }
+
+        /// <summary>
+        /// A saved fine-tuned model (.model.zip) to predict the library with, or to tune further when
+        /// there are <see cref="TrainingInputs"/>; null for the pretrained models.
+        /// </summary>
+        public string ModelPath { get; set; }
+
+        /// <summary>
+        /// The runs the models are fine-tuned on before the library is predicted: a subset of
+        /// <see cref="DataFiles"/>, other runs, or both. A run not among the data files is searched
+        /// for the tuning only and is absent from the output. Empty predicts without tuning.
+        /// </summary>
+        public IList<string> TrainingInputs { get; set; } = new List<string>();
 
         /// <summary>
         /// Whether <see cref="LibraryPath"/> supplies its own paired decoys (its DecoyPairs table), so
@@ -487,10 +721,13 @@ namespace pwiz.Skyline.Model.Lib
         public string OutputPath { get; set; }
         public string WorkDirectory { get; set; }
 
-        /// <summary>Skyline's Tools folder, where its own CUDA runtime install lives, if any.</summary>
+        /// <summary>The folder Osprey finds the CUDA runtime in: Skyline's Tools folder, where its own install lives, if any.</summary>
         public string TorchRuntimesDirectory { get; set; }
 
-        /// <summary>auto lets Osprey use the GPU when a CUDA runtime is installed in <see cref="TorchRuntimesDirectory"/>.</summary>
+        /// <summary>
+        /// gpu predicts on the GPU with the CUDA runtime in <see cref="TorchRuntimesDirectory"/> and
+        /// fails without it; cpu predicts on the CPU; auto takes the GPU when the runtime is installed.
+        /// </summary>
         public string Device { get; set; } = OspreyHelpers.DEVICE_AUTO;
 
         public string Resolution { get; set; } = OspreyHelpers.RESOLUTION_HRAM;
@@ -514,5 +751,219 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>The culture Osprey writes its messages in: Skyline's UI language, which the child would not inherit.</summary>
         public string CultureName { get; set; }
+
+        /// <summary>
+        /// The settings beyond the pages', from the Additional settings grid, which the command line
+        /// carries where they are not Osprey's defaults and apply to this run; null for none.
+        /// </summary>
+        public OspreyAdditionalSettings AdditionalSettings { get; set; }
+
+        /// <summary>A copy to fill in further without changing this one; the lists are shared.</summary>
+        public OspreyConfig Clone()
+        {
+            return (OspreyConfig)MemberwiseClone();
+        }
+    }
+
+    /// <summary>
+    /// Drives the wizard's progress bar from Osprey's console lines. Each <c>[TASK] name:starting</c>
+    /// line opens a segment of the bar, one per task of the run: four to search an existing library,
+    /// five when the library is predicted first, eleven when a model is fine-tuned (the training
+    /// library and its search, the tuning, then the library and its search). Within a per-file task
+    /// the <c>file N/M:</c> lines advance the segment; within the others Osprey's own <c>NN%</c> lines
+    /// do. A segment never moves backwards, since Osprey's percentages restart at every step of a
+    /// task. Wraps the wizard's monitor as the one ProcessRunner reports to, with the runner's own
+    /// percent parsing off, so every line arrives here as a message and the bar is decided here.
+    /// </summary>
+    public sealed class OspreyProgressMonitor : IProgressMonitor
+    {
+        // Osprey's task names as its [TASK] lines print them (OspreyTaskNames and LibraryBuildConfig in Osprey.Core)
+        public const string TASK_PREDICT_TRAINING_LIBRARY = @"PredictTrainingLibrary";
+        public const string TASK_PER_FILE_SCORING = @"PerFileScoring";
+        public const string TASK_FIRST_PASS_FDR = @"FirstPassFDR";
+        public const string TASK_PER_FILE_RESCORING = @"PerFileRescoring";
+        public const string TASK_SECOND_PASS_FDR = @"SecondPassFDR";
+        public const string TASK_TRAIN_MODEL = @"TrainModel";
+        public const string TASK_PREDICT_LIBRARY = @"PredictLibrary";
+
+        /// <summary>The four tasks of a search: PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.</summary>
+        private const int SEARCH_TASK_COUNT = 4;
+
+        private static readonly Regex TASK_LINE = new Regex(@"\[TASK\] (\S+?):(starting|done|skipping)\b", RegexOptions.Compiled);
+        // "Scoring file 2/3: <path>" and its translations, which keep the N/M; no \b, which Japanese
+        // text has none of around a digit. Indented lines are a task's sub-steps (fold 1/3, epoch 12/40).
+        private static readonly Regex FILE_LINE = new Regex(@"^\S.*?(?<!\d)(\d+)/(\d+)(?!\d)", RegexOptions.Compiled);
+
+        /// <summary>
+        /// The tasks a run of <paramref name="config"/> prints: the search's four after a predicted
+        /// library, and with tuning runs the training library's own search and the tuning before them.
+        /// </summary>
+        public static int ExpectedTaskCount(OspreyConfig config)
+        {
+            if (!string.IsNullOrEmpty(config.LibraryPath))
+                return SEARCH_TASK_COUNT;
+            // A precursor table is predicted, never searched: alone, or after the tuning runs' search
+            // and the fine-tune
+            if (config.PrecursorTablePath != null)
+                return config.TrainingInputs.Count > 0 ? 1 + SEARCH_TASK_COUNT + 1 + 1 : 1;
+            if (config.TrainingInputs.Count > 0)
+                return 1 + SEARCH_TASK_COUNT + 1 + 1 + SEARCH_TASK_COUNT;
+            return 1 + SEARCH_TASK_COUNT;
+        }
+
+        private readonly IProgressMonitor _inner;
+        private readonly int _expectedTaskCount;
+        private int _tasksStarted;
+        private string _taskName;
+        private bool _perFileTask;
+        private int _taskPercent;
+        private int _fileIndex;
+        private int _fileCount;
+
+        public OspreyProgressMonitor(IProgressMonitor inner, OspreyConfig config)
+            : this(inner, ExpectedTaskCount(config))
+        {
+        }
+
+        public OspreyProgressMonitor(IProgressMonitor inner, int expectedTaskCount)
+        {
+            _inner = inner;
+            _expectedTaskCount = expectedTaskCount;
+        }
+
+        public bool IsCanceled => _inner.IsCanceled;
+        public bool HasUI => _inner.HasUI;
+
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            // A cancel or an error passes through as it is: ChangePercentComplete would put the
+            // state back to running, which is how ProcessRunner reports the cancel
+            if (status.IsCanceled || status.IsError)
+                return _inner.UpdateProgress(status);
+
+            // Osprey runs with --timestamp for the log on disk; the wizard shows the text alone
+            string line = CommandStatusWriter.StripTimeStamp(status.Message);
+            ReadLine(line);
+            if (_tasksStarted > 0)
+            {
+                // Rebuilt on every line, because ProcessRunner keeps its own status and never sees
+                // the segments set here. A run with more tasks than expected widens the bar.
+                int segmentCount = Math.Max(_expectedTaskCount, _tasksStarted);
+                status = status.ChangeSegments(_tasksStarted - 1, segmentCount)
+                    .ChangePercentComplete(_taskPercent)
+                    .ChangeSegmentName(GetBarText())
+                    .ChangeMessage(line); // The log keeps every line as Osprey printed it, less the stamp
+            }
+            else if (!ReferenceEquals(line, status.Message))
+            {
+                status = status.ChangeMessage(line);
+            }
+            return _inner.UpdateProgress(status);
+        }
+
+        /// <summary>Reads one line of Osprey's output into the task state.</summary>
+        private void ReadLine(string line)
+        {
+            if (string.IsNullOrEmpty(line))
+                return;
+
+            var taskMatch = TASK_LINE.Match(line);
+            if (taskMatch.Success)
+            {
+                string taskName = taskMatch.Groups[1].Value;
+                switch (taskMatch.Groups[2].Value)
+                {
+                    case @"starting":
+                        StartTask(taskName);
+                        break;
+                    case @"skipping":
+                        StartTask(taskName);
+                        _taskPercent = 100;
+                        break;
+                    default: // done
+                        _taskPercent = 100;
+                        break;
+                }
+                return;
+            }
+
+            if (_tasksStarted == 0)
+                return;
+
+            if (_perFileTask)
+            {
+                // The task's file count is the first line's. A line with another count, or an
+                // earlier index (the training exports written after the last file is re-scored),
+                // neither moves the bar back nor changes the file it names.
+                var fileMatch = FILE_LINE.Match(line);
+                if (fileMatch.Success && int.TryParse(fileMatch.Groups[1].Value, out int fileIndex) &&
+                    int.TryParse(fileMatch.Groups[2].Value, out int fileCount) &&
+                    fileIndex >= 1 && fileIndex <= fileCount &&
+                    (_fileCount == 0 || (fileCount == _fileCount && fileIndex >= _fileIndex)))
+                {
+                    _fileIndex = fileIndex;
+                    _fileCount = fileCount;
+                    AdvanceTask((fileIndex - 1) * 100 / fileCount);
+                }
+            }
+            else
+            {
+                string trimmed = line.Trim();
+                if (trimmed.EndsWith(@"%") &&
+                    double.TryParse(trimmed.Substring(0, trimmed.Length - 1), NumberStyles.Float, CultureInfo.InvariantCulture, out double percent))
+                {
+                    AdvanceTask((int)percent);
+                }
+            }
+        }
+
+        private void StartTask(string taskName)
+        {
+            _tasksStarted++;
+            _taskName = taskName;
+            _perFileTask = taskName == TASK_PER_FILE_SCORING || taskName == TASK_PER_FILE_RESCORING;
+            _taskPercent = 0;
+            _fileIndex = _fileCount = 0;
+        }
+
+        /// <summary>Moves the task forward to <paramref name="percent"/>, never back.</summary>
+        private void AdvanceTask(int percent)
+        {
+            _taskPercent = Math.Max(_taskPercent, Math.Min(100, percent));
+        }
+
+        /// <summary>The text on the bar: the task's name, with the file it is on or its own percentage.</summary>
+        private string GetBarText()
+        {
+            string name = GetTaskName(_taskName);
+            if (_perFileTask)
+                return _fileCount > 0 ? string.Format(@"{0} {1}/{2}", name, _fileIndex, _fileCount) : name;
+            if (_taskPercent > 0 && _taskPercent < 100)
+                return string.Format(@"{0} {1}%", name, _taskPercent);
+            return name;
+        }
+
+        private static string GetTaskName(string taskName)
+        {
+            switch (taskName)
+            {
+                case TASK_PREDICT_TRAINING_LIBRARY:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_Predicting_the_training_library;
+                case TASK_PER_FILE_SCORING:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_Scoring_files;
+                case TASK_FIRST_PASS_FDR:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_First_pass_FDR;
+                case TASK_PER_FILE_RESCORING:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_Re_scoring_files;
+                case TASK_SECOND_PASS_FDR:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_Second_pass_FDR;
+                case TASK_TRAIN_MODEL:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_Fine_tuning_the_model;
+                case TASK_PREDICT_LIBRARY:
+                    return LibResources.OspreyProgressMonitor_GetTaskName_Predicting_the_library;
+                default:
+                    return taskName;
+            }
+        }
     }
 }

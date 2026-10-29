@@ -72,7 +72,14 @@
          Windows PE binary, so non-Windows builds use the Linux 7zz that ships alongside it in
          libraries/ (tracked with its executable bit). Defined centrally so a project only has
          to reference $(SevenZaExe); a project that hardcodes 7za.exe cannot build off-Windows.
-         Forward slashes throughout: Windows 7-Zip accepts them, Linux requires them. -->
+         Forward slashes throughout: Windows 7-Zip accepts them, Linux requires them.
+
+         7-Zip gives extracted files the dates stored in the archive, which predate a fresh
+         checkout of it, so an extract target whose Outputs were those files would never be up
+         to date. Each one's Outputs is instead a stamp it touches last, named per target OS
+         where the project extracts different files for each. The extracted files the build
+         needs are listed in Inputs too: MSBuild runs a target when an input is missing, so a
+         file that was deleted or never arrived is extracted again. -->
     <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)/7za.exe</SevenZaExe>
     <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/7zz</SevenZaExe>
 

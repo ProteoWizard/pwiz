@@ -37,13 +37,13 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// Basic unit tests for <see cref="AlphapeptdeepLibraryBuilder"/> and its methods that
+    /// Basic unit tests for <see cref="CarafeLibraryBuilder"/> and its methods that
     /// perform the work before and after running the AlphaPeptDeep python script.
     /// The testing of installing Python and running the AlphaPeptDeep script can be found
     /// in TestPerf\AlphapeptdeepBuildLibraryTest.cs
     /// </summary>
     [TestClass]
-    public class AlphapeptdeepLibraryBuilderTest : AbstractUnitTest
+    public class CarafeLibraryBuilderTest : AbstractUnitTest
     {
         /// <summary>
         /// When true the test writes the answer files that get included as Assembly resources
@@ -60,7 +60,7 @@ namespace pwiz.SkylineTest
         private const string TEST_LIB_NAME = "Test|Lib";    // Use a name that fail if included in a path
 
         [TestMethod]
-        public void AlphapeptdeepLibraryBuilderUnitTest()
+        public void CarafeLibraryBuilderUnitTest()
         {
             TestContext.EnsureTestResultsDir();
 
@@ -104,13 +104,13 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test of <see cref="AlphapeptdeepLibraryBuilder.GetPrecursorTable"/>
+        /// Test of <see cref="CarafeLibraryBuilder.GetPrecursorTable"/>
         /// </summary>
         /// <param name="document">Input <see cref="SrmDocument"/> from which to build the table.</param>
         /// <param name="expectedLines">Expected lines of output.</param>
         public void TestGetPrecursorTable(SrmDocument document, IEnumerable<string> expectedLines)
         {
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var precursorTable = builder.GetPrecursorTable(false);
 
             var generatedResult = precursorTable as string[] ?? precursorTable.ToArray();
@@ -127,7 +127,7 @@ namespace pwiz.SkylineTest
             CheckBuilderFiles(builder, false);
         }
 
-        private void CheckBuilderFiles(AlphapeptdeepLibraryBuilder builder, bool libraryBuilt)
+        private void CheckBuilderFiles(CarafeLibraryBuilder builder, bool libraryBuilt)
         {
             Assert.IsTrue(Directory.Exists(builder.WorkDir));
             Directory.Delete(builder.WorkDir, true);
@@ -141,7 +141,7 @@ namespace pwiz.SkylineTest
         /// <param name="expectedWarningMods">List of modifications for which warnings should be generated.</param>
         public void TestGetWarningMods(SrmDocument document, IList<string> expectedWarningMods)
         {
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             var warningModSupports = builder.GetWarningMods();
 
             CollectionAssert.AreEquivalent(expectedWarningMods.OrderBy(n => n).ToList(),
@@ -215,7 +215,7 @@ namespace pwiz.SkylineTest
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
             var document = CreateTestDocumentInternal(peptides);
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
             for (int i = 0; i < peptides.Length; i++)
             {
                 var modifiedSeq = ModifiedSequence.GetModifiedSequence(document.Settings, peptides[i], IsotopeLabelType.light);
@@ -337,7 +337,7 @@ namespace pwiz.SkylineTest
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
             var document = CreateTestDocumentInternal(peptides);
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
 
 
             var answer_messages = new[]
@@ -350,7 +350,7 @@ namespace pwiz.SkylineTest
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[1], IsotopeLabelType.light)
                             .ExplicitMods[0].Name,
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[1], IsotopeLabelType.light)
-                            .ExplicitMods[0].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+                            .ExplicitMods[0].UnimodIdWithName, CarafeLibraryBuilder.ALPHAPEPTDEEP)
                 },
                 new[]
                 {
@@ -359,18 +359,18 @@ namespace pwiz.SkylineTest
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light)
                             .ExplicitMods[0].Name,
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[2], IsotopeLabelType.light)
-                            .ExplicitMods[0].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+                            .ExplicitMods[0].UnimodIdWithName, CarafeLibraryBuilder.ALPHAPEPTDEEP)
                 },
                 new[] 
                 {
                     string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification,
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light),
-                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light).ExplicitMods[0].Name, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP),
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light).ExplicitMods[0].Name, CarafeLibraryBuilder.ALPHAPEPTDEEP),
                     
                     string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light),
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light).ExplicitMods[1].Name,
-                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light).ExplicitMods[1].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[3], IsotopeLabelType.light).ExplicitMods[1].UnimodIdWithName, CarafeLibraryBuilder.ALPHAPEPTDEEP)
 
                 },
                 new[]
@@ -378,7 +378,7 @@ namespace pwiz.SkylineTest
                     string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[4], IsotopeLabelType.light),
                         ModifiedSequence.GetModifiedSequence(document.Settings, peptides[4], IsotopeLabelType.light).ExplicitMods[0].Name,
-                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[4], IsotopeLabelType.light).ExplicitMods[0].UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP)
+                        ModifiedSequence.GetModifiedSequence(document.Settings, peptides[4], IsotopeLabelType.light).ExplicitMods[0].UnimodIdWithName, CarafeLibraryBuilder.ALPHAPEPTDEEP)
 
                 }
             };
@@ -461,7 +461,7 @@ namespace pwiz.SkylineTest
 
             var peptides = CreatePeptideDocNodes(peptideList, explicitMods).ToArray();
             var document = CreateTestDocumentInternal(peptides);
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, NeverBuiltBlib, document, IrtStandard.BIOGNOSYS_11);
 
             using (var capture = new UserMessageCapture())
             {
@@ -484,12 +484,12 @@ namespace pwiz.SkylineTest
                     if (unsupportedMod.UnimodId.HasValue)
                     {
                         expectedMsg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_limited_Modification,
-                            modifiedSeq, unsupportedMod.Name, unsupportedMod.UnimodIdWithName, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+                            modifiedSeq, unsupportedMod.Name, unsupportedMod.UnimodIdWithName, CarafeLibraryBuilder.ALPHAPEPTDEEP);
                     }
                     else
                     {
                         expectedMsg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification,
-                            modifiedSeq, unsupportedMod.Name, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+                            modifiedSeq, unsupportedMod.Name, CarafeLibraryBuilder.ALPHAPEPTDEEP);
                     }
                     Assert.AreEqual(expectedMsg, capture.CapturedMessages[0]);
                     capture.CapturedMessages.Clear();
@@ -510,7 +510,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test of <see cref="AlphapeptdeepLibraryBuilder.TransformPeptdeepOutput"/> the function that
+        /// Test of <see cref="CarafeLibraryBuilder.TransformPeptdeepOutput"/> the function that
         /// transforms between native AlphaPeptDeep output and BlibBuild input formats.
         /// </summary>
         public void TestTransformPeptDeepOutput()
@@ -518,7 +518,7 @@ namespace pwiz.SkylineTest
             var document = CreateTestEmptyDocument();
             const string blibName = "predict.speclib.blib";
             var blibPath = TestContext.GetTestResultsPath(blibName);
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, blibPath, document, IrtStandard.BIOGNOSYS_11);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, blibPath, document, IrtStandard.BIOGNOSYS_11);
 
             // Mimic AlphaPeptDeep succeeding and writing a .speclib.tsv
             ResourceToTestFile("predict.speclib.tsv", builder.OutputSpectraLibFilepath);
@@ -541,7 +541,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test of <see cref="AlphapeptdeepLibraryBuilder.ImportSpectralLibrary"/> to see if it generates
+        /// Test of <see cref="CarafeLibraryBuilder.ImportSpectralLibrary"/> to see if it generates
         /// a .blib file with the expected number of spectrum entries.
         /// </summary>
         public void TestImportSpectralLibrary()
@@ -549,10 +549,10 @@ namespace pwiz.SkylineTest
             var document = CreateTestEmptyDocument();
             const string blibName = "predict.speclib.blib";
             // Test that a programming error that went unnoticed now throws an argument exception
-            AssertEx.ThrowsException<ArgumentException>(() => new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, blibName, document, null));
+            AssertEx.ThrowsException<ArgumentException>(() => new CarafeLibraryBuilder(TEST_LIB_NAME, blibName, document, null));
 
             var output = TestContext.GetTestResultsPath(blibName);
-            var builder = new AlphapeptdeepLibraryBuilder(TEST_LIB_NAME, output, document, null);
+            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, output, document, null);
 
             // Mimic Transformation succeeding prior to running the library build
             ResourceToTestFile("predict_transformed.speclib.tsv", builder.TransformedOutputSpectraLibFilepath);
@@ -713,11 +713,11 @@ namespace pwiz.SkylineTest
                 peptideSettings.Modifications.ChangeStaticModifications(new[] { tmt, metOx }))));
 
             // Pretrained: TMT is unknown; MetOx is Oxidation (M) by its definition
-            var pretrained = AlphapeptdeepLibraryBuilder.MODEL_MODIFICATION_SUPPORT;
+            var pretrained = CarafeLibraryBuilder.MODEL_MODIFICATION_SUPPORT;
             var warningMods = AbstractDeepLibraryBuilder.GetWarningMods(document, pretrained);
             CollectionAssert.AreEquivalent(new[] { tmt.Name }, warningMods.Keys.ToList());
             Assert.AreEqual(PredictionSupport.none, warningMods[tmt.Name]);
-            Assert.AreEqual(1, AbstractDeepLibraryBuilder.GetWarningMods(document, AlphapeptdeepLibraryBuilder.GetModificationSupport(null)).Count);
+            Assert.AreEqual(1, AbstractDeepLibraryBuilder.GetWarningMods(document, CarafeLibraryBuilder.GetModificationSupport(null)).Count);
 
             // Fine-tuned on TMT (and on a name nothing knows, which adds nothing): no warning
             var fineTuned = pretrained.WithTrainingModifications(new[] { "TMT6plex@K", "Oxidation@M", "GlyGly@K", "Unknown@A" });

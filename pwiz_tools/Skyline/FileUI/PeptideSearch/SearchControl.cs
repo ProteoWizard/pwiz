@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -296,6 +297,46 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void showTimestampsCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             RefreshProgressTextbox();
+        }
+
+        private void btnOpenLog_Click(object sender, EventArgs e)
+        {
+            OpenLog();
+        }
+
+        /// <summary>
+        /// The file the search engine's console output is written to as it runs, for an engine that
+        /// keeps one beside its output; null when there is none, which hides the Open Log button.
+        /// </summary>
+        public string LogFilePath { get; private set; }
+
+        public bool CanOpenLog => btnOpenLog.Visible;
+
+        protected void SetLogFilePath(string logFilePath)
+        {
+            LogFilePath = logFilePath;
+            btnOpenLog.Visible = !string.IsNullOrEmpty(logFilePath);
+        }
+
+        /// <summary>
+        /// Opens <see cref="LogFilePath"/> in the application registered for it, the way a user
+        /// follows a long search outside Skyline; the file is appended to as the engine runs.
+        /// </summary>
+        public void OpenLog()
+        {
+            if (!File.Exists(LogFilePath))
+            {
+                MessageDlg.Show(this, string.Format(PeptideSearchResources.SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_, LogFilePath));
+                return;
+            }
+            try
+            {
+                ProcessEx.OpenInShell(LogFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, x.Message, x);
+            }
         }
 
         private void RefreshProgressTextbox()

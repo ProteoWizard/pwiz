@@ -53,8 +53,8 @@
   <Target Name="ExtractShimadzuAssemblies"
           Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(ShimadzuArchive)"
-          Outputs="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll">
+          Inputs="$(ShimadzuArchive);$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll"
+          Outputs="$(ShimadzuAssembliesDir)/.ExtractShimadzuAssemblies.stamp">
     <MakeDir Directories="$(ShimadzuAssembliesDir)" />
     <!-- Pull the top-level managed assemblies (no x86/ x64/ subfolder prefix) and the x64
          native helpers used by the file-format readers (CompressedTLMRawDataReader, CRHAKEI2,
@@ -68,6 +68,8 @@
     </ItemGroup>
     <Copy SourceFiles="@(_ShimadzuExtractedTop)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_ShimadzuExtractedX64)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(ShimadzuAssembliesDir)/.ExtractShimadzuAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are

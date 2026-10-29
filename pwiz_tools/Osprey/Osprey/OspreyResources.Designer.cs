@@ -951,6 +951,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} and {1} both name what to predict; give one or the other..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} predicts a library and searches nothing, so {1} cannot be given with it..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to {0} builds the library and {1} names one; give one or the other..
         /// </summary>
         public static string Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_ {
@@ -1021,7 +1039,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_LibraryBuildError_Model_file_not_found___0_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor table not found: {0}.
+        /// </summary>
+        public static string Program_LibraryBuildError_Precursor_table_not_found___0_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError_Precursor_table_not_found___0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Training input file not found: {0}.
         /// </summary>

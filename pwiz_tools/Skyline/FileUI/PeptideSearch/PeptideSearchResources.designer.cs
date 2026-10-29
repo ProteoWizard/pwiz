@@ -953,6 +953,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FASTA files.
+        /// </summary>
+        public static string OspreyFastaControl_BrowseFasta_FASTA_files {
+            get {
+                return ResourceManager.GetString("OspreyFastaControl_BrowseFasta_FASTA_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey did not produce a spectral library..
         /// </summary>
         public static string OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_ {
@@ -971,6 +980,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Browse for Runs to Fine-Tune On.
+        /// </summary>
+        public static string OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string OspreySearchDlg_FragmentUnit_m_z {
@@ -985,6 +1003,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string OspreySearchDlg_FragmentUnit_ppm {
             get {
                 return ResourceManager.GetString("OspreySearchDlg_FragmentUnit_ppm", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed copying the fine-tuned model to {0}..
+        /// </summary>
+        public static string OspreySearchDlg_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey did not write the fine-tuned model {0}..
+        /// </summary>
+        public static string OspreySearchDlg_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__", resourceCulture);
             }
         }
 
@@ -1034,6 +1070,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Choose at least one run to fine-tune the model on..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey cannot predict a library for the enzyme &apos;{0}&apos;. Choose an enzyme with a standard cleavage rule..
         /// </summary>
         public static string OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_ {
@@ -1048,6 +1093,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_ {
             get {
                 return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The runs {0} and {1} have the same file name. Osprey keeps one spectra cache per name, so rename one of them..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The tuning run {0} does not exist..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_", resourceCulture);
             }
         }
 
@@ -1070,6 +1133,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The document&apos;s fine-tuned model {0} already exists. Continuing will overwrite it with the model this search fine-tunes..
+        /// </summary>
+        public static string OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_ {
+            get {
+                return ResourceManager.GetString("OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_", resourceCulture);
+            }
+        }
+
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The additional settings last used, {0}, are set on the pages of the wizard or are not valid for the installed Osprey, and were ignored..
+        /// </summary>
+        public static string OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
         /// </summary>
         public static string SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_ {
@@ -1077,7 +1158,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
                 return ResourceManager.GetString("SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The log file {0} has not been written yet..
+        /// </summary>
+        public static string SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_ {
+            get {
+                return ResourceManager.GetString("SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
