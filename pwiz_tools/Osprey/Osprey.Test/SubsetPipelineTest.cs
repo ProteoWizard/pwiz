@@ -43,8 +43,8 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Runs the whole Osprey pipeline in-process on a small rectangle of real Stellar DIA data
-    /// (<c>TestData\StellarSubset.zip</c>: two isolation windows, 12 min of three runs, and a
-    /// 1,270-precursor library; see its README.txt), in the manner of the regression's legs, which
+    /// (<c>TestData\StellarSubset.zip</c>: one isolation window, 7 min of three runs, and a
+    /// 358-precursor library; see its README.txt), in the manner of the regression's legs, which
     /// otherwise need the 4.5 GB Stellar download and minutes per leg. Each run takes seconds.
     ///
     /// <para>This is where checks of pipeline BEHAVIOR belong: caching, resume, task boundaries,
@@ -146,6 +146,7 @@ namespace pwiz.Osprey.Test
             string straightLog = RunAnalysis(straightDir, DataInputs(), Verifier(true));
             string log = straightLog;
             ValidateStraightThrough(straightDir, log);
+            AssertNoZeroApexUnderArea(straightDir);
             // The DIA-NN-shaped reports are written only under OSPREY_DIANN_REPORTS.
             Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS))));
             Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_STATS))));
@@ -1162,6 +1163,32 @@ namespace pwiz.Osprey.Test
         {
             var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE, @"SpectrumSourceFiles");
             Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences.Take(20)));
+        }
+
+        /// <summary>
+        /// No re-scored peak has a zero apex under a peak with area. A first-pass apex is the
+        /// reference XIC's maximum within the peak, so a zero apex there means a zero area; a
+        /// re-scored peak whose apex stayed at the consensus scan could read 0 at that scan while
+        /// the rest of the peak had signal - a row the model never trains on, which a model that
+        /// weights peak_apex scores far out of range (before the fix, run _20 of the subset re-scored
+        /// YQFSLSSTEK and a decoy that way).
+        /// </summary>
+        private void AssertNoZeroApexUnderArea(string workDir)
+        {
+            int apex = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_apex");
+            int area = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_area");
+            foreach (string input in DataInputs())
+            {
+                string reconciledName = Path.GetFileName(ParquetScoreCache.GetReconciledScoresPath(input));
+                Assert.IsNotNull(reconciledName);
+                string reconciled = Path.Combine(workDir, reconciledName);
+                Assert.IsTrue(File.Exists(reconciled), reconciled);
+                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled);
+                var zeroApex = rows.Where(e => e.Features[apex] == 0 && e.Features[area] > 0)
+                    .Select(e => string.Format(@"{0}{1} (entry {2})", e.ModifiedSequence, e.IsDecoy ? @" decoy" : string.Empty, e.EntryId))
+                    .ToList();
+                Assert.AreEqual(0, zeroApex.Count, Path.GetFileName(reconciled) + @": " + string.Join(@", ", zeroApex));
+            }
         }
 
         private void ValidateStraightThrough(string workDir, string log)

@@ -41,9 +41,10 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// The Osprey Search wizard's Library Model page on Osprey's Stellar subset: a model fine-tuned
     /// on the searched runs (chosen from the searched files), a model fine-tuned on browsed runs
-    /// held out of the search, and a search that predicts with the saved model. Both tuning searches
-    /// tune on the middle run alone, as a user does, and two trainings on the same run produce the
-    /// same model tensors, which is how the held-out tuning is shown to be the same tuning.
+    /// with one held out of the search, and a search that predicts with the saved model. On the
+    /// subset a single run searched alone keeps no precursor at 1% in the first pass, so both
+    /// tuning searches tune on all three runs, and two trainings on the same runs produce the same
+    /// model tensors, which is how the held-out tuning is shown to be the same tuning.
     /// </summary>
     [TestClass]
     public class OspreySearchTuningTest : AbstractFunctionalTestEx
@@ -77,18 +78,17 @@ namespace pwiz.SkylineTestFunctional
             string[] diaFilePaths = Directory.GetFiles(TestFilesDir.FullPath, "*.mzML").OrderBy(p => p).ToArray();
             AssertEx.AreEqual(3, diaFilePaths.Length);
             string[] outerRuns = { diaFilePaths[0], diaFilePaths[2] };
-            string[] middleRun = { diaFilePaths[1] };
 
-            // Scenario 1: the three runs searched, and the model tuned on the middle one, chosen from
+            // Scenario 1: the three runs searched, and the model tuned on all of them, chosen from
             // the searched files. The model is the document's, beside it.
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTuningTest.sky"));
-            string tunedModelPath = TuneOnSearchedRuns(diaFilePaths, middleRun, fastaFilepath);
+            string tunedModelPath = TuneOnSearchedRuns(diaFilePaths, fastaFilepath);
 
-            // Scenario 2: the outer runs searched, and the model tuned on the middle run, browsed in,
-            // so the run tuned on is held out of the search. Scenario 1's model joins the model list
+            // Scenario 2: the outer runs searched, and the model tuned on all three, browsed in, so
+            // the middle run is held out of the search. Scenario 1's model joins the model list
             // through Add..., and a model already beside the document is overwritten only with consent.
             OspreySearchTest.PrepareDocument(TestFilesDir.GetTestPath("OspreySearchTuningTest-heldout.sky"));
-            string heldOutModelPath = TuneOnBrowsedRuns(outerRuns, middleRun, fastaFilepath, tunedModelPath);
+            string heldOutModelPath = TuneOnBrowsedRuns(outerRuns, diaFilePaths, fastaFilepath, tunedModelPath);
             AssertSameModelTensors(tunedModelPath, heldOutModelPath);
 
             // Scenario 3: the three runs searched with the listed model from scenario 1.
@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
         /// run shares. Browsed runs go to the top, checked; an unwanted one is unchecked, not
         /// removed. Returns the document's fine-tuned model.
         /// </summary>
-        private string TuneOnSearchedRuns(string[] diaFilePaths, string[] tuningRuns, string fastaFilepath)
+        private string TuneOnSearchedRuns(string[] diaFilePaths, string fastaFilepath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
             var searchDlg = OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
@@ -125,9 +125,9 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.ChooseFromSearchedFiles = true;
                 AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFileItems);
                 AssertEx.AreEqual(0, searchDlg.TuningFiles.Count);
-                foreach (var path in tuningRuns)
+                foreach (var path in diaFilePaths)
                     searchDlg.SetTuningFileChecked(path, true);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
             });
 
             // A browsed run that does not exist
@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(missingRun, searchDlg.TuningFileItems[0]);
                 AssertEx.IsTrue(searchDlg.TuningFiles.Contains(missingRun));
                 searchDlg.SetTuningFileChecked(missingRun, false);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
             });
 
             // A copy of a searched run in another folder: Osprey keeps one spectra cache per file name
@@ -156,11 +156,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 searchDlg.SetTuningFileChecked(copiedRun, false);
                 AssertEx.AreEqual(diaFilePaths.Length + 2, searchDlg.TuningFileItems.Count);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
             });
 
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            VerifyCommandLine(searchDlg, diaFilePaths, tuningRuns, null);
+            VerifyCommandLine(searchDlg, diaFilePaths, diaFilePaths, null);
             string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"));
             // The model is the document's, like its library: nothing joins the model list
             RunUI(() => AssertEx.AreEqual(1, Settings.Default.CarafeModelList.Count));
@@ -203,18 +203,13 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(savedModel, searchDlg.Model);
                 searchDlg.UseExistingModel = false;
                 AssertEx.IsTrue(searchDlg.Model.IsDefault);
-                // A searched run browsed in with the tuning runs, and unchecked as unwanted
-                var browsedRuns = tuningRuns.Append(searchedRuns[0]).ToArray();
-                searchDlg.AddTuningFiles(browsedRuns);
-                AssertEx.AreEqualDeep(browsedRuns, searchDlg.TuningFileItems);
-                searchDlg.SetTuningFileChecked(searchedRuns[0], false);
+                searchDlg.AddTuningFiles(tuningRuns);
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFileItems);
                 AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
-                // The searched runs join below the browsed ones, the one already browsed not twice
                 searchDlg.ChooseFromSearchedFiles = true;
-                AssertEx.AreEqualDeep(browsedRuns.Concat(searchedRuns.Except(browsedRuns)).ToArray(), searchDlg.TuningFileItems);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFileItems);
                 searchDlg.ChooseFromSearchedFiles = false;
-                AssertEx.AreEqualDeep(browsedRuns, searchDlg.TuningFileItems);
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFileItems);
                 AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
             });
 

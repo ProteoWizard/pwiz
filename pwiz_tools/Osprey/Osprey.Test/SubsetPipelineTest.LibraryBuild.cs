@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Test
     /// writes, then searched by the four stages, in one command line. The FASTA is synthetic - each
     /// of the subset library's synthetic proteins becomes one record whose sequence is its tryptic
     /// peptides joined end to end, so trypsin returns them - and the precursor m/z window is set to
-    /// the subset's two isolation windows, so the predicted library is small and the prediction
+    /// the subset's one isolation window, so the predicted library is small and the prediction
     /// takes seconds. The checks are the behavior of the workflow: the products and where they
     /// land, the task lines, the resume (a warm re-run predicts nothing and searches nothing, a
     /// changed digest predicts again), the refusals, entrapment, and a saved model in place of the
@@ -54,16 +54,16 @@ namespace pwiz.Osprey.Test
     {
         private const string FASTA_FILE = @"subset-proteins.fasta";
         private const string SAVED_MODEL_FILE = @"pretrained.carafemodel";
-        // The subset's two isolation windows, as the precursor m/z window the library is predicted
-        // for: every peptide of the subset library falls in it, and little else does.
+        // The subset's isolation window, as the precursor m/z window the library is predicted for:
+        // every peptide of the subset library falls in it, and little else does.
         private const string WINDOW_MIN_MZ = @"592.5";
-        private const string WINDOW_MAX_MZ = @"600.6";
-        // Floors well under what the data gives: the digest returns 2,343 peptides (the subset's
-        // tryptic ones and the missed-cleavage spans between them), of which 1,195 have a charge
-        // state in the window, each with a decoy: 2,390 precursors predicted.
+        private const string WINDOW_MAX_MZ = @"596.6";
+        // Floors well under what the data gives: the digest returns 651 peptides (the subset's 335
+        // tryptic ones and the missed-cleavage spans between them), of which 337 have a charge
+        // state in the window, each with a decoy: 674 precursors predicted.
         private const int MIN_PREDICTED_PRECURSORS = 400;
-        // The search of the predicted library reports about 538 precursors at 1% FDR, against
-        // about 574 from the curated subset library (predicted spectra, pretrained RT).
+        // The search of the predicted library reports about 136 precursors at 1% FDR, against
+        // about 177 from the curated subset library (predicted spectra, pretrained RT).
         private const int MIN_LIBRARY_BUILD_PRECURSORS = 80;
 
         [TestMethod, DoNotParallelize]
@@ -211,7 +211,7 @@ namespace pwiz.Osprey.Test
             string tunedDir = CreateDir(@"precursor-table-tuned");
             string tunedTable = Path.Combine(tunedDir, @"input.tsv");
             File.Copy(table, tunedTable);
-            var tunedArgs = TunedArgs(WriteSubsetProteinFasta(), tunedDir, Array.Empty<string>(), new[] { DataInputs().ElementAt(1) })
+            var tunedArgs = TunedArgs(WriteSubsetProteinFasta(), tunedDir, Array.Empty<string>(), DataInputs())
                 .Concat(new[] { OspreyCommandArgs.ARG_PRECURSORS.ArgumentText, tunedTable }).ToArray();
             string stem = Path.GetFileNameWithoutExtension(BLIB_FILE);
             string tunedOutput = Path.Combine(tunedDir, stem + LibraryBuildWorkflow.PREDICTED_TABLE_SUFFIX);
@@ -379,7 +379,7 @@ namespace pwiz.Osprey.Test
         /// the RT model CarafeSharp fine-tunes by default - written as CarafeSharp's training
         /// writes a fine-tuned one: the safetensors and the metrics in a model folder, packed by
         /// <see cref="CarafeModelFile.Write"/>. So it predicts what mode 1 predicts. (The generic
-        /// AlphaPeptDeep RT model reports a fraction of the precursors on this twelve-minute slice,
+        /// AlphaPeptDeep RT model reports a fraction of the precursors on this seven-minute window,
         /// which is why Chronologer is the default and the fixture holds it.)
         /// </summary>
         private static string WriteSavedModelFromPretrained(string path)

@@ -46,7 +46,8 @@ namespace pwiz.SkylineTestFunctional
     /// searched against the subset FASTA, the library predicted for the document's precursors
     /// with the tuned model, and that model saved beside the library. Then a second library,
     /// predicted with the saved model added to the model list, and a third for a protein FASTA's
-    /// precursors rather than the document's. The tuning is on the middle run alone, as a user tunes.
+    /// precursors rather than the document's. On the subset a single run searched alone keeps no
+    /// precursor at 1% in the first pass, so the tuning is on all three runs.
     /// <para>
     /// Set <see cref="ENV_DEMO"/> and run with the UI shown to pause on every page.
     /// </para>
@@ -64,19 +65,19 @@ namespace pwiz.SkylineTestFunctional
         private const string COPY_MODEL_NAME = @"Stellar subset, a copy";
 
         /// <summary>
-        /// Peptides Osprey detected at 1% in the tuning run (the middle subset run), one from each
-        /// 1.5 minutes of its 6 to 18 minute slice, with the retention times it measured there.
+        /// Peptides Osprey detected at 1% in the middle subset run, one from about each 0.8 minutes
+        /// of its 7 to 13 minute slice, with the retention times it measured there.
         /// </summary>
         private static readonly (string Sequence, double RetentionTime)[] PEPTIDES =
         {
-            (@"LVSDGNINSDR", 6.488),
-            (@"ELGVSTNANYK", 7.959),
-            (@"IAVSIEDEANK", 9.519),
-            (@"ETQALVLAPTR", 10.985),
-            (@"ETGYTYILPK", 12.510),
-            (@"TLLEEEYFR", 14.008),
-            (@"DAGTIAGLNVLR", 15.478),
-            (@"DLLLDPAWEK", 16.983),
+            (@"GGAVVDEGPTGVK", 7.315),
+            (@"IQETQAELPR", 8.112),
+            (@"IAEPNLDTADK", 8.877),
+            (@"ANAEELANNLK", 9.702),
+            (@"ATPEQYQILK", 10.435),
+            (@"VTLGTQPTVLR", 11.229),
+            (@"LDLTENLTGSK", 12.266),
+            (@"ANYAVDAYFR", 12.755),
         };
 
         /// <summary>
@@ -133,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             AssertEx.IsTrue(SkylineWindow.Document.PeptideCount > 0, @"the FASTA added no peptides");
 
-            string tunedModelPath = BuildTunedLibrary(new[] { diaFilePaths[1] }, fastaPath);
+            string tunedModelPath = BuildTunedLibrary(diaFilePaths, fastaPath);
             BuildWithSavedModel(tunedModelPath);
             BuildForFasta(fastaPath);
         }
@@ -276,7 +277,7 @@ namespace pwiz.SkylineTestFunctional
         /// The library's model joins the model list through Edit list..., which shows what it was
         /// trained on and refuses its name twice; a copy added through the combo's Add... is removed
         /// again; and a second library is predicted with the listed model as it is: no fine-tune, the
-        /// model named to the builder, retention times in the tuning run's minutes.
+        /// model named to the builder, retention times in the tuning runs' minutes.
         /// </summary>
         private void BuildWithSavedModel(string tunedModelPath)
         {
@@ -290,12 +291,12 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.Carafe = true;
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
             });
-            // What the model was trained on: the one tuning run, its instrument, NCE and gradient, and
-            // a fine-tuned Chronologer RT model that fits the run
+            // What the model was trained on: the three tuning runs, their instrument, NCE and gradient,
+            // and a fine-tuned Chronologer RT model that fits them
             var choice = CarafeModelChoice.Read(tunedModelPath);
             Assert.IsNotNull(choice, @"the fine-tuned model cannot be read");
             AssertEx.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(tunedModelPath).RtModel);
-            AssertEx.AreEqual(1, choice.TrainingRunCount);
+            AssertEx.AreEqual(3, choice.TrainingRunCount);
             AssertEx.AreEqual(30, choice.Nce);
             AssertEx.IsTrue(choice.GradientMinutes > PEPTIDES.Max(p => p.RetentionTime));
             AssertEx.IsTrue(choice.RtR2 > 0.99);
@@ -377,8 +378,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             AssertLibrarySpectra(SAVED_LIBRARY_NAME);
 
-            // A fine-tuned RT model predicts on its training run's gradient: minutes, near what the
-            // tuning run measured, not iRT
+            // A fine-tuned RT model predicts on its training runs' gradient: minutes, near what the
+            // middle run measured, not iRT
             var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Single(lib => lib != null && lib.Name == SAVED_LIBRARY_NAME);
             foreach (var peptide in PEPTIDES)
             {
@@ -481,7 +482,7 @@ namespace pwiz.SkylineTestFunctional
             // A row per paired entrapment precursor (charges 2 and 3) the library holds. Nearly every
             // one is paired: CarafeSharp leaves out a pair whose target or decoy predicts too few
             // fragments, and writes a precursor unpaired when its partner side has no precursor of
-            // its charge and modifications to predict (on the subset, 2 of 5,334).
+            // its charge and modifications to predict (2 of 5,334 on a larger Stellar subset).
             var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Single(lib => lib != null && lib.Name == FASTA_LIBRARY_NAME);
             int heldEntrapmentPrecursors = builder.Document.Peptides.Where(p => !p.IsDecoy && entrapmentSet.Contains(p.Target))
                 .Sum(p => p.TransitionGroups.Count(tg => library.Contains(tg.GetLibKey(builder.Document.Settings, p))));
