@@ -29,6 +29,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Chromatography;
@@ -175,6 +176,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_CACHE_DIR = new OspreyArgument(OspreyArgNames.CACHE_DIR,
             PATH_TO_FOLDER, (c, p) => c._cacheDir = p.Value)
             {
+                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.path,
                 DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText, TextUtil.EXT_TSV,
                     ARG_TASK.ArgumentText, ARG_OUTPUT_DIR.ArgumentText, LibrarySource.EXT_BLIB }
             };
@@ -202,6 +204,13 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
+        // Skyline's Build Library: the document's precursors as they are, no digest, the TSV
+        // peptdeep wrote. A phase of its own and nothing else, so the search options never apply.
+        public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
+            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
+            { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
+                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText,
+                ARG_TRAINING_INPUT.ArgumentText, ARG_FASTA.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
             { Variadic = true, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, ARG_INPUT.ShortArgumentText, ModelExample, ARG_MODEL.ArgumentText } };
@@ -213,7 +222,10 @@ namespace pwiz.Osprey
             { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, CarafeModelFile.EXTENSION, ARG_TRAINING_INPUT.ArgumentText } };
         public static readonly OspreyArgument ARG_DEVICE = new OspreyArgument(OspreyArgNames.DEVICE,
             new[] { @"auto", @"gpu", @"cpu" }, (c, p) => c.SetLibraryBuildOption(p, b => b.Device = p.Value.ToLowerInvariant()))
-            { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, @"auto", @"gpu", @"cpu", ARG_INSTALL_CUDA_RUNTIME.ArgumentText } };
+            {
+                Scope = OspreyPropertyScope.library, DefaultValue = Default(() => OspreyTorchRuntimes.DEVICE_AUTO),
+                DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, @"auto", @"gpu", @"cpu", ARG_INSTALL_CUDA_RUNTIME.ArgumentText }
+            };
         // Where the CUDA runtime lives and how it gets there. Neither needs --fasta: the install is
         // a command of its own, and the folder is where it installs to as well as where a library
         // phase looks. The help names neither the default folder (the user's) nor the download's
@@ -240,16 +252,16 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_BUILD =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Build, true,
-                ARG_FASTA, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
+                ARG_FASTA, ARG_PRECURSORS, ARG_TRAINING_INPUT, ARG_TRAINING_INPUT_LIST, ARG_MODEL, ARG_DEVICE, ARG_TORCH_RUNTIMES,
                 ARG_INSTALL_CUDA_RUNTIME, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
 
         // CarafeSharp's declarations, declared again for Osprey's parser: the name, the value and
         // its listed values come from CarafeSharp, and the handler records the value into the
         // CarafeSharp command line this parser owns. The sections are three, so the help reads as
         // Osprey's does, and their text comes from CarafeSharp's usage resources.
-        private static readonly OspreyArgument[] HOSTED_DIGEST_ARGUMENTS = Host(CarafeCommandLine.HostedDigestArguments, false);
-        private static readonly OspreyArgument[] HOSTED_PREDICTION_ARGUMENTS = Host(CarafeCommandLine.HostedPredictionArguments, false);
-        private static readonly OspreyArgument[] HOSTED_TRAINING_ARGUMENTS = Host(CarafeCommandLine.HostedTrainingArguments, true);
+        private static readonly OspreyArgument[] HOSTED_DIGEST_ARGUMENTS = Host(CarafeCommandLine.HostedDigestArguments, OspreyPropertyScope.digest);
+        private static readonly OspreyArgument[] HOSTED_PREDICTION_ARGUMENTS = Host(CarafeCommandLine.HostedPredictionArguments, OspreyPropertyScope.library);
+        private static readonly OspreyArgument[] HOSTED_TRAINING_ARGUMENTS = Host(CarafeCommandLine.HostedTrainingArguments, OspreyPropertyScope.tuning);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_DIGEST =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Digest, true, HOSTED_DIGEST_ARGUMENTS)
@@ -303,16 +315,20 @@ namespace pwiz.Osprey
             get { return HOSTED_DIGEST_ARGUMENTS.Concat(HOSTED_PREDICTION_ARGUMENTS).Concat(HOSTED_TRAINING_ARGUMENTS); }
         }
 
-        /// <summary>The <paramref name="declarations"/> as Osprey's arguments; <paramref name="tuning"/> for those that need <see cref="ARG_TRAINING_INPUT"/>.</summary>
-        private static OspreyArgument[] Host(IEnumerable<ArgumentBase> declarations, bool tuning)
+        /// <summary>
+        /// The <paramref name="declarations"/> as Osprey's arguments, properties of <paramref name="scope"/>:
+        /// the tuning ones need <see cref="ARG_TRAINING_INPUT"/>, the rest <see cref="ARG_FASTA"/>.
+        /// </summary>
+        private static OspreyArgument[] Host(IEnumerable<ArgumentBase> declarations, OspreyPropertyScope scope)
         {
+            bool tuning = scope == OspreyPropertyScope.tuning;
             return declarations.Select(d => new OspreyArgument(d, (c, p) =>
             {
                 c._carafe.Record(p);
                 c._libraryBuildOptionsSeen.Add(p.Match.ArgumentText);
                 if (tuning)
                     c._tuningOptionsSeen.Add(p.Match.ArgumentText);
-            })).ToArray();
+            }) { Scope = scope }).ToArray();
         }
 
         /// <summary>
@@ -329,18 +345,20 @@ namespace pwiz.Osprey
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(OspreyArgNames.RESOLUTION,
-            new[] { @"hram", @"unit" }, (c, p) => c._resolution = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"hram", @"unit" } };
+            new[] { @"hram", @"unit" }, (c, p) => c._resolution = p.Value.ToLowerInvariant())
+            { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => @"hram"), DescriptionArgs = () => new object[] { @"hram", @"unit" } };
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(OspreyArgNames.FRAGMENT_TOLERANCE,
             NUM_VALUE, (c, p) => c._fragmentTolerance = ParseDouble(p))
-            { DescriptionArgs = () => new object[] { ARG_FRAGMENT_UNIT.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, MinValue = 0, DescriptionArgs = () => new object[] { ARG_FRAGMENT_UNIT.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant())
-            { DescriptionArgs = () => new object[] { ARG_FRAGMENT_TOLERANCE.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
+            { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { ARG_FRAGMENT_TOLERANCE.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
-            (c, p) => c._config.PrefilterEnabled = false);
+            (c, p) => c._config.PrefilterEnabled = false) { Scope = OspreyPropertyScope.search };
         public static readonly OspreyArgument ARG_DEMUX = new OspreyArgument(OspreyArgNames.DEMUX,
             new[] { @"off", @"auto" }, (c, p) => c._config.DemuxMode =
-                p.Value.ToLowerInvariant() == @"auto" ? DemuxMode.auto : DemuxMode.off) { DescriptionArgs = () => new object[] { @"off" } };
+                p.Value.ToLowerInvariant() == @"auto" ? DemuxMode.auto : DemuxMode.off)
+            { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().DemuxMode), DescriptionArgs = () => new object[] { @"off" } };
         public static readonly OspreyArgument ARG_CENTROID = new OspreyArgument(OspreyArgNames.CENTROID,
             new[] { @"vendor", @"centrix" }, (c, p) => c._config.CentroidMode =
                 p.Value.ToLowerInvariant() == @"centrix" ? CentroidMode.centrix : CentroidMode.vendor) { DescriptionArgs = () => new object[] { @"vendor" } };
@@ -359,14 +377,23 @@ namespace pwiz.Osprey
 
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",
-            THRESHOLD_VALUE, (c, p) => c._config.RunFdr = ParseDouble(p));
+            THRESHOLD_VALUE, (c, p) => c._config.RunFdr = ParseDouble(p))
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, DefaultValue = Default(() => new OspreyConfig().RunFdr), MinValue = 0, MaxValue = 1 };
         public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(OspreyArgNames.EXPERIMENT_FDR,
             THRESHOLD_VALUE, (c, p) => c._config.ExperimentFdr = ParseDouble(p))
-            { DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText } };
+            {
+                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, DefaultValue = Default(() => new OspreyConfig().ExperimentFdr), MinValue = 0, MaxValue = 1,
+                DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText }
+            };
         public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(OspreyArgNames.RECONCILIATION_COMPACTION_FDR,
-            THRESHOLD_VALUE, (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_RUN_FDR.ArgumentText } };
+            THRESHOLD_VALUE, (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p))
+            {
+                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, DefaultValue = Default(() => new OspreyConfig().ReconciliationCompactionFdr), MinValue = 0, MaxValue = 1,
+                DescriptionArgs = () => new object[] { ARG_RUN_FDR.ArgumentText }
+            };
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(OspreyArgNames.PROTEIN_FDR,
-            THRESHOLD_VALUE, (c, p) => c._config.ProteinFdr = ParseDouble(p));
+            THRESHOLD_VALUE, (c, p) => c._config.ProteinFdr = ParseDouble(p))
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, DefaultValue = Default(() => OspreyConfig.DefaultProteinFdr), MinValue = 0, MaxValue = 1 };
         // --fdr-method is GONE (#4543), with no alias: it is rejected as an unknown argument.
         // Its percolator and gbdt values chose the classifier inside the one Percolator
         // framework, a developer lever that belongs in an environment variable, so the choice
@@ -390,7 +417,7 @@ namespace pwiz.Osprey
                             OspreyResources.OspreyCommandArgs_Unknown_FDR_level___0____defaulting_to__1_, p.Value, @"precursor"));
                         break;
                 }
-            }) { DescriptionArgs = () => new object[] { @"precursor", ARG_EXPERIMENT_FDR.ArgumentText } };
+            }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().FdrLevel), DescriptionArgs = () => new object[] { @"precursor", ARG_EXPERIMENT_FDR.ArgumentText } };
         public static readonly OspreyArgument ARG_SHARED_PEPTIDES = new OspreyArgument(@"shared-peptides",
             new[] { @"all", @"razor", @"unique" }, (c, p) =>
             {
@@ -410,15 +437,23 @@ namespace pwiz.Osprey
                             OspreyResources.OspreyCommandArgs_Unknown_shared_peptides_mode___0____defaulting_to__1_, p.Value, @"all"));
                         break;
                 }
-            }) { DescriptionArgs = () => new object[] { @"all" } };
+            }) { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().SharedPeptides), DescriptionArgs = () => new object[] { @"all" } };
 
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
-            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.OutputFdrBench = p.Value) { DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText, FdrBenchInputWriter.COLUMN_SCORE, @"peptide", @"precursor", @"both" } };
+            () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.OutputFdrBench = p.Value)
+            {
+                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.path,
+                DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText, FdrBenchInputWriter.COLUMN_SCORE, @"peptide", @"precursor", @"both" }
+            };
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
-            (c, p) => c._config.FdrBenchPerRun = true) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText, FdrBenchInputWriter.COLUMN_RUN } };
+            (c, p) => c._config.FdrBenchPerRun = true) { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText, FdrBenchInputWriter.COLUMN_RUN } };
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
-            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p)) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText,
-                FdrBenchInputWriter.PassSuffix(OspreyConfig.FDRBENCH_PASS_1), FdrBenchInputWriter.PassSuffix(OspreyConfig.FDRBENCH_PASS_2), @"both" } };
+            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p))
+            {
+                Scope = OspreyPropertyScope.search, DefaultValue = Default(() => new OspreyConfig().FdrBenchPass),
+                DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText,
+                    FdrBenchInputWriter.PassSuffix(OspreyConfig.FDRBENCH_PASS_1), FdrBenchInputWriter.PassSuffix(OspreyConfig.FDRBENCH_PASS_2), @"both" }
+            };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
@@ -428,7 +463,7 @@ namespace pwiz.Osprey
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,
             (c, p) => c._config.DecoysInLibrary = true)
-            { DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
+            { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
@@ -443,11 +478,17 @@ namespace pwiz.Osprey
         // one <stem>.training.parquet per run, and adding it to a finished directory writes
         // only the exports and re-scores nothing.
         public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(OspreyArgNames.TRAINING_EXPORT,
-            (c, p) => c._config.TrainingExport.Enabled = true) { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
+            (c, p) => c._config.TrainingExport.Enabled = true)
+            { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_MAX_Q = new OspreyArgument(@"training-export-max-q",
-            () => @"<q>", (c, p) => c._config.TrainingExport.MaxQ = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, ARG_RUN_FDR.ArgumentText } };
+            () => @"<q>", (c, p) => c._config.TrainingExport.MaxQ = ParseDouble(p))
+            {
+                Scope = OspreyPropertyScope.tuning, PropertyType = ArgumentPropertyType.number, MinValue = 0, MaxValue = 1,
+                DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, ARG_RUN_FDR.ArgumentText }
+            };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_CLAIMANT_Q = new OspreyArgument(@"training-export-claimant-q",
-            () => @"<q>", (c, p) => c._config.TrainingExport.ClaimantQ = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, TrainingExportConfig.DEFAULT_CLAIMANT_Q } };
+            () => @"<q>", (c, p) => c._config.TrainingExport.ClaimantQ = ParseDouble(p))
+            { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, TrainingExportConfig.DEFAULT_CLAIMANT_Q } };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_XICS = new OspreyArgument(@"training-export-xics",
             (c, p) => c._config.TrainingExport.WriteXics = true) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText } };
 
@@ -524,22 +565,26 @@ namespace pwiz.Osprey
         // sitting under Distributed / HPC.
         public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(OspreyArgNames.PARALLEL_FILES,
             () => @"<N>", (c, p) => c._config.FileParallelism = ParseFileParallelism(p))
-            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.integer, MinValue = 0, OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
         // Per-stage overrides of --parallel-files, in the same three forms. The per-file stages
         // do not scale alike (caching is bound by a single-threaded vendor decode, scoring by
         // CPU and a large per-file working set), so one count cannot suit all of them. Each
         // applies to its stage only and falls back to --parallel-files when absent.
         public static readonly OspreyArgument ARG_PARALLEL_FILES_CACHING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_CACHING,
             () => @"<N>", (c, p) => c._config.CachingFileParallelism = ParseFileParallelism(p))
-            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME) } };
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.integer, MinValue = 0, OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME) } };
         public static readonly OspreyArgument ARG_PARALLEL_FILES_SCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_SCORING,
             () => @"<N>", (c, p) => c._config.ScoringFileParallelism = ParseFileParallelism(p))
-            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileScoringTask.TASK_NAME } };
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.integer, MinValue = 0, OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileScoringTask.TASK_NAME } };
         public static readonly OspreyArgument ARG_PARALLEL_FILES_RESCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_RESCORING,
             () => @"<N>", (c, p) => c._config.RescoringFileParallelism = ParseFileParallelism(p))
-            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileRescoreTask.TASK_NAME } };
+            { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.integer, MinValue = 0, OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileRescoreTask.TASK_NAME } };
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
-            INT_VALUE, (c, p) => c._config.NThreads = ParseInt(p)) { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText } };
+            INT_VALUE, (c, p) => c._config.NThreads = ParseInt(p))
+            {
+                Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.integer, DefaultValue = Default(() => new OspreyConfig().NThreads), MinValue = 1,
+                DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText }
+            };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Performance, true,
@@ -560,7 +605,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
             (c, p) => c._config.PerfStats = true) { DescriptionArgs = () => new object[] { @"[COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]" } }; // Log tag OK: help text naming the tags
         public static readonly OspreyArgument ARG_VERBOSE = new OspreyArgument(OspreyArgNames.VERBOSE,
-            (c, p) => c._config.Verbose = true);
+            (c, p) => c._config.Verbose = true) { Scope = OspreyPropertyScope.search };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LOGGING =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Logging, true,
@@ -580,25 +625,27 @@ namespace pwiz.Osprey
         // panel nobody sees, which defeats a diagnostic whose whole purpose is surfacing an effect
         // users do not know to look for.
         public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(OspreyArgNames.MODEL_DIAGNOSTICS,
-            (c, p) => c._config.ModelDiagnostics = true);
+            (c, p) => c._config.ModelDiagnostics = true) { Scope = OspreyPropertyScope.search };
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
             () => @"<format|Section>", (c, p) =>
             {
                 PrintUsage(p.Value);
                 Environment.Exit(0);
-            }) { ShortName = @"h", OptionalValue = true, DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|<Section>]" } };
+            }) { ShortName = @"h", OptionalValue = true, DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|properties|<Section>]" } };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
             (c, p) =>
             {
                 Console.WriteLine(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion);
                 Environment.Exit(0);
             }) { ShortName = @"v" };
-        // Skyline's internal --culture: run under a named culture instead of the OS one, for
-        // formatting and for resource lookup. Program applies it before anything is written
-        // (see Program.RunCommand), which also reports a name .NET does not know; the parser
-        // only consumes the value.
+        // Skyline's --culture: run under a named culture instead of the OS one, for resource
+        // lookup. Program applies it before anything is written (see Program.RunCommand), which
+        // also reports a name .NET does not know; the parser only consumes the value. Shown in the
+        // help, as Skyline's is since a user in a translated locale asked how to get English
+        // output; numbers are read in the invariant culture whatever the language, so the argument
+        // changes only the messages, and can go anywhere on the command line.
         public static readonly OspreyArgument ARG_INTERNAL_CULTURE = new OspreyArgument(@"culture",
-            () => @"en|fr|ja|zh-Hans...", (c, p) => true) { InternalUse = true };
+            () => @"en|ja|zh-Hans...", (c, p) => true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
@@ -720,8 +767,22 @@ namespace pwiz.Osprey
             // (LibraryBuildWorkflow): auto is Osprey's word, not CarafeSharp's, and gpu or cpu is
             // set there from the runtime loaded, so CarafeSharp gets its default here.
             string device = string.Equals(build.Device, OspreyTorchRuntimes.DEVICE_AUTO, StringComparison.OrdinalIgnoreCase) ? null : build.Device;
-            var library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, device, config.CommandLine);
-            if (!build.Tuning)
+            LibrarySettings library;
+            if (build.PrecursorTablePath != null && build.FastaPath == null)
+            {
+                // The table alone digests nothing, so the digest options are refused by name
+                build.DigestOptionsWithPrecursors.AddRange(_carafe.HostedDigestOptionsGiven());
+                library = _carafe.InterpretHostedPrecursorTable(build.ModelPath, device, config.CommandLine);
+            }
+            else
+            {
+                // With a FASTA and a table both, the FASTA is the training library the tuning runs
+                // are searched against (Program refuses the two without the tuning runs), and the
+                // tuned models then predict the table.
+                library = _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, device, config.CommandLine);
+            }
+            // A precursor table without a FASTA tunes nothing: Program refuses --training-input with it, after the parse
+            if (!build.Tuning || build.FastaPath == null)
             {
                 build.OptionsWithoutTrainingInput.AddRange(_tuningOptionsSeen.Distinct());
                 return new LibraryBuildSettings(library, null);
@@ -1025,6 +1086,23 @@ namespace pwiz.Osprey
             return ArgUsage.Provider.ValueInvalidMessage(p.Match.ArgumentText, p.Value, expectedValues);
         }
 
+        /// <summary>
+        /// A property's default as the command line spells it (<see cref="ArgumentBase.DefaultValue"/>):
+        /// a number in the invariant culture, an enum member in lower case as the listed values are
+        /// spelled, read when asked so a default that depends on the computer (the thread count)
+        /// is current; null for a setting that is off until given (a protein FDR).
+        /// </summary>
+        private static Func<string> Default(Func<object> value)
+        {
+            return () =>
+            {
+                object v = value();
+                if (v == null)
+                    return null;
+                return v is Enum e ? e.ToString().ToLowerInvariant() : Convert.ToString(v, CultureInfo.InvariantCulture);
+            };
+        }
+
         private static int ParseFdrBenchPass(NameValuePair p)
         {
             if (string.Equals(p.Value, @"1", StringComparison.Ordinal))
@@ -1049,17 +1127,31 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
+        /// The label of one of Osprey's own arguments as a property of a settings page: the
+        /// <see cref="OspreyCommandArgUsage"/> text under its usage key with CarafeSharp's property
+        /// suffix (<c>_run_fdr_property</c>), read at call time so it follows the UI culture. A
+        /// hosted argument is labeled by CarafeSharp's text instead.
+        /// </summary>
+        internal static string GetPropertyLabel(string argName)
+        {
+            return OspreyCommandArgUsage.ResourceManager.GetString(UsageKey(argName) + CarafeCommandLine.PROPERTY_SUFFIX);
+        }
+
+        /// <summary>
         /// Writes generated usage help to <paramref name="writer"/> (default stdout, so an explicit
         /// `--help [html]` can be captured with a plain `>` redirect; Main passes stderr for the
         /// no-args usage-error path). <paramref name="formatType"/>: null/"unicode" = unicode tables
         /// (default, like Skyline), "ascii" = lower-128 ascii tables, "sections" = section names,
-        /// "html" = HTML, anything else = a section filter.
+        /// "html" = HTML, "properties" = the arguments that are settings, as JSON for a host
+        /// (<see cref="OspreyProperties"/>), anything else = a section filter.
         /// </summary>
         internal static void PrintUsage(string formatType, TextWriter writer = null)
         {
             writer = writer ?? Console.Out;
             if (string.Equals(formatType, @"html", StringComparison.OrdinalIgnoreCase))
                 writer.Write(GenerateUsageHtml());
+            else if (string.Equals(formatType, OspreyProperties.HELP_FORMAT, StringComparison.OrdinalIgnoreCase))
+                writer.Write(OspreyProperties.Generate());
             else
                 writer.Write(BuildUsage(formatType));
         }
@@ -1283,11 +1375,27 @@ namespace pwiz.Osprey
     }
 
     /// <summary>
+    /// When an argument that is a setting applies, so a host shows it only for a run it applies
+    /// to: every run, a run that predicts its library (<c>--fasta</c> or <c>--precursors</c>), one
+    /// that digests a FASTA, or one that tunes the models on <c>--training-input</c> runs.
+    /// </summary>
+    internal enum OspreyPropertyScope
+    {
+        search,
+        library,
+        digest,
+        tuning,
+    }
+
+    /// <summary>
     /// Osprey-local <see cref="Argument{TContext}"/> extension carrying the values its usage
-    /// text is formatted with (<see cref="DescriptionArgs"/>).
+    /// text is formatted with (<see cref="DescriptionArgs"/>) and the scope that makes it a
+    /// property of a host's settings page (<see cref="Scope"/>).
     /// </summary>
     internal class OspreyArgument : Argument<OspreyCommandArgs>
     {
+        private OspreyPropertyScope? _scope;
+
         public OspreyArgument(string name, Func<OspreyCommandArgs, NameValuePair, bool> processValue)
             : base(name, processValue)
         {
@@ -1331,6 +1439,24 @@ namespace pwiz.Osprey
 
         /// <summary>True for a declaration hosted from CarafeSharp, whose usage text is CarafeSharp's.</summary>
         public bool IsHosted { get; }
+
+        /// <summary>
+        /// The scope in which the argument is a setting of a run, which makes it a property of a
+        /// host's settings page (<see cref="ArgumentBase.PropertyName"/>); null for an argument
+        /// that is none: an input, an output, a command or an internal switch. Setting it labels one
+        /// of Osprey's own arguments through <see cref="OspreyCommandArgs.GetPropertyLabel"/>; a
+        /// hosted one keeps CarafeSharp's label, and is a property only when CarafeSharp labels it.
+        /// </summary>
+        public OspreyPropertyScope? Scope
+        {
+            get { return _scope; }
+            set
+            {
+                _scope = value;
+                if (!IsHosted)
+                    PropertyName = value.HasValue ? () => OspreyCommandArgs.GetPropertyLabel(Name) : (Func<string>) null;
+            }
+        }
 
         /// <summary>
         /// Values for the <c>{N}</c> placeholders in this argument's usage text in

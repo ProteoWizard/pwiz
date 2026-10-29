@@ -58,6 +58,7 @@ namespace pwiz.Osprey.Core
         public const string CENTRIX_SIGMA_MS2 = @"centrix-sigma-ms2";
         public const string CENTRIX_SOLVER = @"centrix-solver";
         public const string FASTA = @"fasta";
+        public const string PRECURSORS = @"precursors";
         public const string TRAINING_INPUT = @"training-input";
         public const string TRAINING_INPUT_LIST = @"training-input-list";
         public const string TRAINING_SEARCH = @"training-search";

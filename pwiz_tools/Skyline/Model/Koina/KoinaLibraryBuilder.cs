@@ -170,9 +170,21 @@ namespace pwiz.Skyline.Model.Koina
                 if (docLibraryNew == null)
                     return false;
             }
+            if (DecoyMethod != null || (EntrapmentTargets != null && EntrapmentTargets.Count > 0))
+                LibraryDecoyPairs.Write(LibrarySpec.FilePath, _document, EntrapmentTargets, DecoyMethod);
 
             return true;
         }
+
+        /// <summary>
+        /// How the document's decoys were made, when the library is to carry them paired with their
+        /// targets in a DecoyPairs table (<see cref="LibraryDecoyPairs"/>); null writes no table
+        /// unless there are <see cref="EntrapmentTargets"/>.
+        /// </summary>
+        public string DecoyMethod { get; set; }
+
+        /// <summary>The entrapment peptides among the document's, flagged as such in the DecoyPairs table; null for none.</summary>
+        public ICollection<Target> EntrapmentTargets { get; set; }
 
         public static List<KoinaIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {

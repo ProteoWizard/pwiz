@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Management;
@@ -1038,6 +1039,8 @@ namespace pwiz.Skyline.Util
 
     public static class FileTimeEx
     {
+        private const string TIME_STAMP_FORMAT = @"yyyy-MM-dd_HH-mm-ss";
+
         /// <summary>
         /// Appends a time stamp value to the given Skyline file name.
         /// </summary>
@@ -1049,11 +1052,39 @@ namespace pwiz.Skyline.Util
             {
                 path = Path.Combine(Path.GetDirectoryName(fileName) ?? String.Empty,
                     Path.GetFileNameWithoutExtension(fileName) + @"_" +
-                    DateTime.Now.ToString(@"yyyy-MM-dd_HH-mm-ss") +
+                    DateTime.Now.ToString(TIME_STAMP_FORMAT) +
                     SrmDocumentSharing.EXT_SKY_ZIP);
             }
             while (File.Exists(path));
             return path;
+        }
+
+        /// <summary>
+        /// The path a file rolls to: its name with <paramref name="time"/> before the extension
+        /// (<c>name_yyyy-MM-dd_HH-mm-ss.ext</c>).
+        /// </summary>
+        public static string GetTimeStampedPath(string path, DateTime time)
+        {
+            return Path.Combine(Path.GetDirectoryName(path) ?? String.Empty,
+                Path.GetFileNameWithoutExtension(path) + @"_" + time.ToString(TIME_STAMP_FORMAT) + Path.GetExtension(path));
+        }
+
+        /// <summary>
+        /// Moves an existing file aside to <see cref="GetTimeStampedPath"/> stamped with its last
+        /// write rather than with now, so a rolled log is named for when its run ended, not for when
+        /// the next run started. A same-second collision takes a numeric suffix rather than
+        /// overwriting. Returns the path the file moved to, or null when there was no file.
+        /// </summary>
+        public static string RollWithTimeStamp(string path)
+        {
+            if (!File.Exists(path))
+                return null;
+            string rolled = GetTimeStampedPath(path, File.GetLastWriteTime(path));
+            string rolledStem = Path.Combine(Path.GetDirectoryName(rolled) ?? String.Empty, Path.GetFileNameWithoutExtension(rolled));
+            for (int n = 1; File.Exists(rolled); n++)
+                rolled = rolledStem + @"-" + n.ToString(CultureInfo.InvariantCulture) + Path.GetExtension(path);
+            File.Move(path, rolled);
+            return rolled;
         }
     }
 

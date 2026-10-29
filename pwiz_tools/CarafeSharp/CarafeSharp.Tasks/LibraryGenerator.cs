@@ -614,101 +614,32 @@ namespace pwiz.CarafeSharp.Tasks
                 Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
             foreach (string warning in modelDirectory.Warnings)
                 Log(warning);
-            if (_settings.ApplyModelDirectoryMeta)
-            {
-                modelDirectory.ApplyModelDirectoryOverrides(_settings);
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"From {0}: precursor m/z {1}-{2}, fragment m/z {3}-{4}, NCE {5}, rt_max {6}",
-                    CarafeModelDirectory.META_FILE, _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz,
-                    _settings.MaxFragmentMz, _settings.Nce, _settings.RtMax));
-                var rtMaxes = modelDirectory.Runs.Select(r => r.RtMax).Distinct().ToList();
-                if (rtMaxes.Count > 1)
-                {
-                    Log(string.Format(CultureInfo.InvariantCulture,
-                        @"The training runs in {0} have different rt_max ({1}): as Carafe does, the library takes the last, {2}, " +
-                        @"but training normalized RT by the largest, {3}, so library RTs scale by {2}/{3}.",
-                        CarafeModelDirectory.META_FILE, string.Join(@", ", rtMaxes.Select(v => v.ToString(CultureInfo.InvariantCulture))),
-                        _settings.RtMax, rtMaxes.Max()));
-                }
-            }
-            else if (_settings.ApplyTrainingRunMeta)
-            {
-                modelDirectory.ApplyTrainingRunOverrides(_settings);
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
-                    _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.Nce, _settings.Instrument, _settings.RtMax));
-            }
+            LibraryModels.ApplyModelDirectoryMeta(_settings, modelDirectory, Log);
             return modelDirectory;
         }
 
         /// <summary>
         /// A saved model (<c>-model</c>), checked and unpacked into a folder of its own, which
-        /// <see cref="Run"/> deletes. The training run's NCE, instrument and rt_max apply where the
-        /// command line gives none; the m/z ranges stay the command line's.
+        /// <see cref="Run"/> deletes (<see cref="LibraryModels"/>, shared with the precursor-table prediction).
         /// </summary>
         private CarafeModelDirectory OpenModelFile()
         {
-            var modelFile = CarafeModelFile.Open(_settings.ModelFile);
-            _modelFileFolder = Path.Combine(Path.GetTempPath(), @"CarafeSharp_model_" + Guid.NewGuid().ToString(@"N"));
-            var modelDirectory = modelFile.Extract(_modelFileFolder);
-            Log(@"Use the saved model " + _settings.ModelFile + @" for spectral library generation: " + modelFile.Describe());
-            modelFile.ApplyPredictionDefaults(_settings);
-            Log(string.Format(CultureInfo.InvariantCulture,
-                @"Precursor m/z {0}-{1}, fragment m/z {2}-{3} from the command line; NCE {4}, instrument {5}, activation {6}, analyzer {7}, rt_max {8}",
-                _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz, _settings.MaxFragmentMz, _settings.Nce,
-                _settings.Instrument, _settings.Activation ?? @"(none)", _settings.Analyzer ?? @"(none)", _settings.RtMax));
-            return modelDirectory;
+            return LibraryModels.OpenModelFile(_settings, Log, out _modelFileFolder);
         }
 
         private Ms2Model LoadMs2Model(CarafeModelDirectory modelDirectory, Device device)
         {
-            string path = modelDirectory.GetMs2ModelPath(_settings.TrainingType);
-            if (path != null)
-            {
-                Log((Path.GetFileName(path) == ModelFiles.MS2_BASE_SAFETENSORS
-                        ? @"Using the base model's MS2 model, which the fine-tuned one did not beat, "
-                        : @"Using fine-tuned MS2 model ") + path);
-                return Ms2Model.FromFile(path, device);
-            }
-            Log(@"Using the pretrained MS2 model");
-            return Ms2Model.FromPretrained(OpenPretrained(), device);
+            return LibraryModels.LoadMs2Model(_settings, modelDirectory, device, OpenPretrained, Log);
         }
 
-        /// <summary>
-        /// The RT model the library predicts with: <c>-rt_model</c>'s, else the one the folder's fine-tuned RT model is
-        /// (a saved model's <see cref="CarafeModelFile.RtModel"/> came in as <c>-rt_model</c>'s default), else
-        /// <see cref="LibrarySettings.DEFAULT_RT_MODEL"/>. A fine-tuned RT model of another kind is replaced by that
-        /// kind's pretrained model.
-        /// </summary>
         private IRtPredictor LoadRtModel(CarafeModelDirectory modelDirectory, Device device)
         {
-            return new RtPredictorLoader(OpenPretrained, device)
-            {
-                FineTunedPath = modelDirectory.GetRtModelPath(_settings.TrainingType),
-                RtModelType = _settings.RtModelType,
-                DefaultRtModelType = LibrarySettings.DEFAULT_RT_MODEL,
-                ModelDirectory = modelDirectory.DirectoryPath,
-                RtMax = _settings.RtMax,
-                UserRtMax = _settings.UserRtMax,
-                RtReference = _settings.RtReference,
-                Log = Log,
-            }.Load();
+            return LibraryModels.LoadRtModel(_settings, modelDirectory, device, OpenPretrained, Log);
         }
 
-        /// <summary>
-        /// The CCS model for <c>-ccs</c>: the model folder's Carafe <c>ccs_model.pt</c> for
-        /// <c>-tf all</c>, else the pretrained one (a saved CarafeSharp model holds none).
-        /// </summary>
         private CcsModel LoadCcsModel(CarafeModelDirectory modelDirectory, Device device)
         {
-            string path = modelDirectory.GetCcsModelPath(_settings.TrainingType);
-            if (path != null)
-            {
-                Log(@"Using fine-tuned CCS model " + path + @" for the ion mobility (1/K0)");
-                return CcsModel.FromPthFile(path, device);
-            }
-            Log(@"Using the pretrained CCS model for the ion mobility (1/K0)");
-            return CcsModel.FromPretrained(OpenPretrained(), device);
+            return LibraryModels.LoadCcsModel(_settings, modelDirectory, device, OpenPretrained, Log);
         }
 
         /// <summary>The pretrained models, opened (and their SHA-256 checked) once.</summary>

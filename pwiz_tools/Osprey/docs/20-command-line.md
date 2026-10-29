@@ -125,9 +125,15 @@ the library. A tuning run may be one of the `-i` runs (the lab's "search the mid
 `SpectrumSourceFiles` and recorded in its `LibMetadata` as `osprey.training_input`. `--model`
 with `--training-input` tunes the saved model further.
 
+A fourth entry point predicts and does not search: `--precursors` with `--task PredictLibrary`
+predicts a library for exactly the precursors of a table, with no digest, and writes the TSV
+peptdeep writes. Skyline's Build Library runs it (its AlphaPeptDeep source) with the document's
+precursors, so the one download of Osprey serves both the wizard and the dialog.
+
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--fasta` | `path/to/file.fasta` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library` and `--decoy-pairing-manifest`. On a cluster each phase is a `--task` of its own (see "The library build on a cluster" below). |
+| `--precursors` | `path/to/file.tsv` | With `--task PredictLibrary` and `-o`: predict a library for exactly the precursors of this tab-separated table (columns `sequence`, `mods`, `mod_sites`, `charge`, in alphabase's notation, as Skyline writes it) and write it beside the output as `<out>.predicted.speclib.tsv`, the TSV peptdeep writes, with its fragment rules (b and y of charge 1 and 2, m/z 200-2000, the 12 most intense). No digest and no search: the pretrained models or `--model` predict, the **Library Prediction** options apply, and `--fasta`, the tuning and the entrapment options are refused. Never current: every run predicts. |
 | `--training-input` | `path/to/file ...` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.model.zip`. The options of the **Library Tuning** section apply. |
 | `--training-input-list` | `path/to/file.txt` | A file of `--training-input` runs, one path per line (`#` comments ignored), as `--input-list` is for `-i`: a long run list can pass the Windows command-line limit and hides the other arguments. |
 | `--model` | `path/to/file.model.zip` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |

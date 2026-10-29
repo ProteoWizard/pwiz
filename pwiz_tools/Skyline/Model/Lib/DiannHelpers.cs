@@ -44,6 +44,9 @@ namespace pwiz.Skyline.Model.Lib
         // (last fully-open-source release) via DiannDownloadDlg.
         public const string DIANN_VERSION = @"2.5.0";
         public static readonly string DIANN_FILENAME = $@"DIANN-{DIANN_VERSION}";
+
+        /// <summary>DIA-NN's console output, teed to disk as it runs, beside the --out file (the document).</summary>
+        public const string STDOUT_LOG_NAME = @"diann-skyline-stdout.log";
         public static string DiannDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), DIANN_FILENAME);
         public static string DiannBinary =>
             Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.DIANN, Path.Combine(DiannDirectory, @"diann.exe"));
@@ -537,6 +540,23 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
+        /// Rolls an earlier search's <see cref="STDOUT_LOG_NAME"/> aside under its own end time, once per
+        /// search rather than per process: the predictor and the search both append to the one file,
+        /// which the run page's Open Log button opens. Best-effort, like the tee itself.
+        /// </summary>
+        private static void RollStdoutLog(string outputDir)
+        {
+            try
+            {
+                FileTimeEx.RollWithTimeStamp(Path.Combine(outputDir, STDOUT_LOG_NAME));
+            }
+            catch
+            {
+                // A log that cannot be moved aside is appended to, as before
+            }
+        }
+
+        /// <summary>
         /// Create an append-mode, auto-flushed log file at <c>{--out dir}/diann-skyline-stdout.log</c>
         /// so each DIA-NN stdout line lands on disk immediately. Returns null when no
         /// <c>--out</c> argument is present (e.g. the predictor invocation uses <c>--out-lib</c>
@@ -554,7 +574,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (string.IsNullOrEmpty(dir))
                     return null;
                 Directory.CreateDirectory(dir);
-                var stream = new FileStream(Path.Combine(dir, @"diann-skyline-stdout.log"),
+                var stream = new FileStream(Path.Combine(dir, STDOUT_LOG_NAME),
                     FileMode.Append, FileAccess.Write, FileShare.Read);
                 return new StreamWriter(stream) { AutoFlush = true };
             }
@@ -747,6 +767,7 @@ namespace pwiz.Skyline.Model.Lib
             Enzyme enzyme = null)
         {
             status = status.ChangeSegments(0, 2);
+            RollStdoutLog(outputDir);
 
             var fixedModsList = fixedMods?.ToList();
             var variableModsList = variableMods?.ToList();

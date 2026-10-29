@@ -61,11 +61,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Where Osprey keeps the files it builds once and reuses in later searches: each run&apos;s {0} (its spectra, faster to read than the data file) and, for a {2} library, the {5} it is converted to (e.g. hela{2}{5}). By default each goes beside the file it comes from, or under {4} or {1} when that folder is read-only. Give it to put them elsewhere, for example when the data and the library are on a read-only share, or to let several analyses share one cache. An HPC run ({3}) that writes to an {4} away from the data  [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Directory for the {0} cache (overrides {1}).
         /// </summary>
         public static string _cache_dir {
             get {
                 return ResourceManager.GetString("_cache_dir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectra cache folder.
+        /// </summary>
+        public static string _cache_dir_property {
+            get {
+                return ResourceManager.GetString("_cache_dir_property", resourceCulture);
             }
         }
         
@@ -106,7 +115,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0} and a {1} library: the FDRBench pairing manifest (a 5-column TSV) that pairs each decoy, and each entrapment peptide, with its target. A {2} library carries its pairing in its own table and needs none..
+        ///   Looks up a localized string similar to Write the messages in the named language (en, ja, zh-Hans) instead of the operating system's. Number [rest of string was truncated]";.
+        /// </summary>
+        public static string _culture {
+            get {
+                return ResourceManager.GetString("_culture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FDRBench 5-column pairing manifest (TSV), used with {0}.
         /// </summary>
         public static string _decoy_pairing_manifest {
             get {
@@ -115,11 +133,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Search with the decoys the library holds instead of generating a reversed decoy for every target. A decoy is recognized by the library&apos;s own decoy table (in a {2}), by its Decoy column (in a {0}), or by a protein accession starting with one of {1}; the search stops with an error when none is recognized..
+        ///   Looks up a localized string similar to Trust decoys already in the spectral library instead of generating reverse decoys. Stops with an error if none are recognized..
         /// </summary>
         public static string _decoys_in_library {
             get {
                 return ResourceManager.GetString("_decoys_in_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the library's decoys.
+        /// </summary>
+        public static string _decoys_in_library_property {
+            get {
+                return ResourceManager.GetString("_decoys_in_library_property", resourceCulture);
             }
         }
         
@@ -133,11 +160,28 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Demultiplex staggered windows.
+        /// </summary>
+        public static string _demux_property {
+            get {
+                return ResourceManager.GetString("_demux_property", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to With {0}: where the library is predicted, {1} (default: the GPU when this computer has an NVIDIA GPU that can use the CUDA runtime and the runtime is installed, see {4}, else the CPU), {2} (the GPU; a run that cannot use it fails before it starts, saying why) or {3}. The log names the device every library phase ran on..
         /// </summary>
         public static string _device {
             get {
                 return ResourceManager.GetString("_device", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prediction device.
+        /// </summary>
+        public static string _device_property {
+            get {
+                return ResourceManager.GetString("_device_property", resourceCulture);
             }
         }
         
@@ -151,7 +195,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1), shuffled from the target or, with {2}, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as {3}..
+        ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1 [rest of string was truncated]";.
         /// </summary>
         public static string _entrapment {
             get {
@@ -160,7 +204,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: draw the entrapment peptides, matched in mass, from this foreign-species protein FASTA instead of shuffling the targets..
+        ///   Looks up a localized string similar to With {0}: draw the entrapment peptides, matched in mass, from this foreign-species protein FASTA  [rest of string was truncated]";.
         /// </summary>
         public static string _entrapment_fasta {
             get {
@@ -169,7 +213,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The experiment-level FDR threshold (default: 0.01): a precursor is reported when its q-value across all the runs is at most this. {0} says which q-value..
+        ///   Looks up a localized string similar to Experiment-level FDR threshold (default: 0.01).
         /// </summary>
         public static string _experiment_fdr {
             get {
@@ -178,7 +222,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write the library given by {0} to this path as a {1} and exit without searching. It is the file a search keeps in its cache for a {4} library (e.g. hela{4}{1}): the library as a search loads it, with its decoys and their pairing in its own table (with {2}, and {3} for a {4}), so it needs no manifest, searches back exactly as the original did, and Skyline can import it..
+        ///   Looks up a localized string similar to Experiment FDR.
+        /// </summary>
+        public static string _experiment_fdr_property {
+            get {
+                return ResourceManager.GetString("_experiment_fdr_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write the spectral library given by {0} to this path as a {1} file that Skyline and Osprey can read, and exit without searching.
         /// </summary>
         public static string _export_library {
             get {
@@ -187,7 +240,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Predict the spectral library from this protein FASTA with CarafeSharp&apos;s models and search it, in place of {0}. The library is written beside the output as {1} and can be given to {0} next time; its working files go in {2}. The options of the Library Digest and Library Prediction sections apply, and with {3} those of Library Tuning..
+        ///   Looks up a localized string similar to Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in  [rest of string was truncated]";.
         /// </summary>
         public static string _fasta {
             get {
@@ -196,11 +249,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Which experiment-level q-value {1} applies to: {0} (the default; each precursor&apos;s own), peptide (its peptide&apos;s, over all its charge states), or both (the larger of the two)..
+        ///   Looks up a localized string similar to FDR level (default: {0}).
         /// </summary>
         public static string _fdr_level {
             get {
                 return ResourceManager.GetString("_fdr_level", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment FDR level.
+        /// </summary>
+        public static string _fdr_level_property {
+            get {
+                return ResourceManager.GetString("_fdr_level_property", resourceCulture);
             }
         }
         
@@ -223,6 +285,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FDRBench pass.
+        /// </summary>
+        public static string _fdrbench_pass_property {
+            get {
+                return ResourceManager.GetString("_fdrbench_pass_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to With {0}: emit one row per (precursor, run) using run-level q-values (adds a &apos;{1}&apos; column). Default is one row per precursor using experiment-level q-values..
         /// </summary>
         public static string _fdrbench_per_run {
@@ -232,7 +303,25 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The fragment m/z tolerance, in the unit {0} names (default: 10 ppm, or 0.5 m/z with {1} {2})..
+        ///   Looks up a localized string similar to FDRBench row per run.
+        /// </summary>
+        public static string _fdrbench_per_run_property {
+            get {
+                return ResourceManager.GetString("_fdrbench_per_run_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FDRBench output file.
+        /// </summary>
+        public static string _fdrbench_property {
+            get {
+                return ResourceManager.GetString("_fdrbench_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment m/z tolerance (default: 10).
         /// </summary>
         public static string _fragment_tolerance {
             get {
@@ -241,11 +330,29 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The unit of {0}: ppm or mz (default: ppm, or mz with {1} {2})..
+        ///   Looks up a localized string similar to Fragment tolerance.
+        /// </summary>
+        public static string _fragment_tolerance_property {
+            get {
+                return ResourceManager.GetString("_fragment_tolerance_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance unit (default: {0}).
         /// </summary>
         public static string _fragment_unit {
             get {
                 return ResourceManager.GetString("_fragment_unit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance unit.
+        /// </summary>
+        public static string _fragment_unit_property {
+            get {
+                return ResourceManager.GetString("_fragment_unit_property", resourceCulture);
             }
         }
         
@@ -259,7 +366,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mass spectrometry data files to search: mzML, or any format ProteoWizard reads, including vendor files (.raw, .d, .wiff, .lcd) where the vendor readers are installed.
+        ///   Looks up a localized string similar to Input mzML files.
         /// </summary>
         public static string _input {
             get {
@@ -275,7 +382,7 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_input_list", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Download the NVIDIA CUDA runtime from nuget.org (several GB; the size is logged first, and every package is checked against the hashes this build was tested with) into the {0} folder and exit, so that {1} can predict on the GPU. Needs nothing else on the command line..
         /// </summary>
@@ -284,9 +391,9 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_install_cuda_runtime", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or, for comparing with DIA-NN, a library in the {1} format DIA-NN imports, such as Java Carafe writes for it. Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library&apos;s own decoys are used: a {0} pairs them from its own table, and a {1} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pai [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Spectral library ({0}, {1}).
         /// </summary>
         public static string _library {
             get {
@@ -295,7 +402,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write all output to this file instead of the console.
+        ///   Looks up a localized string similar to Write all output to this file instead of stderr.
         /// </summary>
         public static string _log_file {
             get {
@@ -313,7 +420,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp&apos;s training) instead of the pretrained models. With {2}, the tuning starts from it..
+        ///   Looks up a localized string similar to With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) [rest of string was truncated]";.
         /// </summary>
         public static string _model {
             get {
@@ -331,7 +438,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Score every library precursor in each isolation window, not only those whose fragments first show a coelution signal. About 30% slower; for checking that the pre-filter loses no detections..
+        ///   Looks up a localized string similar to Write model diagnostics report.
+        /// </summary>
+        public static string _model_diagnostics_property {
+            get {
+                return ResourceManager.GetString("_model_diagnostics_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disable coelution signal pre-filter.
         /// </summary>
         public static string _no_prefilter {
             get {
@@ -340,7 +456,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The search result, for Skyline: a {0} that holds, for every precursor that passes FDR, the library spectrum it was searched with (the predicted one, with {1}), the retention time and peak boundaries of its best run, its experiment-wide precursor q-value and PEP and its peptide q-value, and, for every run it was detected in, that run&apos;s retention time, peak boundaries and q-value. The protein groups its peptides belong to are in it too, with their q-values..
+        ///   Looks up a localized string similar to Score without prefilter.
+        /// </summary>
+        public static string _no_prefilter_property {
+            get {
+                return ResourceManager.GetString("_no_prefilter_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output blib file.
         /// </summary>
         public static string _output {
             get {
@@ -349,7 +474,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write the intermediate files here - each run&apos;s scores and calibration and the analysis-wide FDR files - overriding {0}. The output and its reports stay where {1} names..
+        ///   Looks up a localized string similar to Directory for intermediate files (overrides {0}).
         /// </summary>
         public static string _output_dir {
             get {
@@ -358,14 +483,14 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}. Worth setting only for high-resolution data on a server with more cores than one file&apos;s search can keep busy (a multi-socket, NUMA machine); on a workstation leave it unset and let {0} use the cores..
+        ///   Looks up a localized string similar to Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}..
         /// </summary>
         public static string _parallel_files {
             get {
                 return ResourceManager.GetString("_parallel_files", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Files {1} caches concurrently, overriding {0} for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time..
         /// </summary>
@@ -376,6 +501,23 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Parallel files (caching).
+        /// </summary>
+        public static string _parallel_files_caching_property {
+            get {
+                return ResourceManager.GetString("_parallel_files_caching_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parallel files.
+        /// </summary>
+        public static string _parallel_files_property {
+            get {
+                return ResourceManager.GetString("_parallel_files_property", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to Files re-scored concurrently ({1}, and the second-pass per-file phases), overriding {0} for that stage only, in the same forms..
         /// </summary>
         public static string _parallel_files_rescoring {
@@ -384,6 +526,14 @@ namespace pwiz.Osprey {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Parallel files (re-scoring).
+        /// </summary>
+        public static string _parallel_files_rescoring_property {
+            get {
+                return ResourceManager.GetString("_parallel_files_rescoring_property", resourceCulture);
+            }
+        }
         /// <summary>
         ///   Looks up a localized string similar to Files scored concurrently ({1}), overriding {0} for that stage only, in the same forms..
         /// </summary>
@@ -394,6 +544,14 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Parallel files (scoring).
+        /// </summary>
+        public static string _parallel_files_scoring_property {
+            get {
+                return ResourceManager.GetString("_parallel_files_scoring_property", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to Emit the machine-parseable {0} lines that scripts and performance tools read (off by default).
         /// </summary>
         public static string _perf_stats {
@@ -403,11 +561,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein-level FDR threshold (default: 0.01).
+        ///   Looks up a localized string similar to Protein-level FDR threshold (optional).
         /// </summary>
         public static string _protein_fdr {
             get {
                 return ResourceManager.GetString("_protein_fdr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein FDR.
+        /// </summary>
+        public static string _protein_fdr_property {
+            get {
+                return ResourceManager.GetString("_protein_fdr_property", resourceCulture);
             }
         }
         
@@ -421,7 +588,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to How spectra are scored: {0} (the default; Orbitrap, Astral and TOF instruments) bins them finely, uses the MS1 precursor features, and matches fragments and precursors within 10 ppm; {1} (ion traps such as Stellar) bins them coarsely, without MS1 features, and matches fragments within 0.5 m/z and precursors within 1.0 m/z. The resolution is not detected from the data: a search of unit-resolution data must give {1}..
+        ///   Looks up a localized string similar to Reconciliation FDR.
+        /// </summary>
+        public static string _reconciliation_compaction_fdr_property {
+            get {
+                return ResourceManager.GetString("_reconciliation_compaction_fdr_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolution mode (default: {0}).
         /// </summary>
         public static string _resolution {
             get {
@@ -430,7 +606,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The run-level FDR threshold (default: 0.01). A reported precursor gets an identification in Skyline in each run where its q-value in that run is at most this, or in its best run when it is in none; the scoring model is also trained and tested at it..
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string _resolution_property {
+            get {
+                return ResourceManager.GetString("_resolution_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run-level FDR threshold (default: 0.01).
         /// </summary>
         public static string _run_fdr {
             get {
@@ -439,7 +624,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to How a peptide shared by several protein groups counts in protein inference: {0} (the default; toward every group it maps to), razor (toward only the group with the most unique peptides), or unique (toward none)..
+        ///   Looks up a localized string similar to Run FDR.
+        /// </summary>
+        public static string _run_fdr_property {
+            get {
+                return ResourceManager.GetString("_run_fdr_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shared peptide handling (default: {0}).
         /// </summary>
         public static string _shared_peptides {
             get {
@@ -448,20 +642,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to HPC: run exactly one task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output. With {6}, {7}, {8} and {9} run the library build one phase at a time, and the four search stages search the library it predicts, or with {10} the tuning runs..
+        ///   Looks up a localized string similar to Shared peptides.
         /// </summary>
-        public static string _task {
+        public static string _shared_peptides_property {
             get {
-                return ResourceManager.GetString("_task", resourceCulture);
+                return ResourceManager.GetString("_shared_peptides_property", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: print the files the task reads and writes for this command line, one per line as input or output, the task and the path, and exit without running it: what a node must be given and what it hands on..
+        ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
         /// </summary>
-        public static string _task_files {
+        public static string _task {
             get {
-                return ResourceManager.GetString("_task_files", resourceCulture);
+                return ResourceManager.GetString("_task", resourceCulture);
             }
         }
         
@@ -475,6 +669,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Threads.
+        /// </summary>
+        public static string _threads_property {
+            get {
+                return ResourceManager.GetString("_threads_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefix each output line with {0}.
         /// </summary>
         public static string _timestamp {
@@ -482,16 +685,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_timestamp", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: Osprey\torch under the user&apos;s local application data folder). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder..
+        ///   Looks up a localized string similar to The folder of installed libtorch runtimes, where {0} installs the NVIDIA CUDA runtime and {1} looks for it, each runtime in a folder of its own (default: Osprey\torch under the user's local application data folder). Skyline passes its Tools folder, so one download serves its AlphaPeptDeep and Osprey; a cluster job names a shared folder..
         /// </summary>
         public static string _torch_runtimes {
             get {
                 return ResourceManager.GetString("_torch_runtimes", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing..
         /// </summary>
@@ -520,6 +723,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Training export maximum q-value.
+        /// </summary>
+        public static string _training_export_max_q_property {
+            get {
+                return ResourceManager.GetString("_training_export_max_q_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to With {0}: also write each precursor&apos;s per-ion XIC matrix over its final peak boundaries.
         /// </summary>
         public static string _training_export_xics {
@@ -529,7 +741,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of {1}: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as {2}, which {3} takes next time. The options of the Library Tuning section ap [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to With {0}: tune the models on these runs before the library is predicted. The runs are searched with  [rest of string was truncated]";.
         /// </summary>
         public static string _training_input {
             get {
@@ -538,7 +750,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long list of runs on the command line can pass the Windows command-line limit and hides the other arguments..
+        ///   Looks up a localized string similar to With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long  [rest of string was truncated]";.
         /// </summary>
         public static string _training_input_list {
             get {
@@ -547,7 +759,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0} and {1}: the stage {2} selects is a stage of the tuning runs&apos; search, not the output&apos;s: it searches the {1} runs with the library {3} predicts, writes into {4}, and writes the training exports {5} reads. Give it to every node of that search and the same command line without it to the others. The same four tasks for any number of tuning runs, one included..
+        ///   Looks up a localized string similar to With {0} and {1}: the stage {2} selects is a stage of the tuning runs&apos; search, not the output&apos;s: i [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _training_search {
             get {
@@ -565,6 +777,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Verbose output.
+        /// </summary>
+        public static string _verbose_property {
+            get {
+                return ResourceManager.GetString("_verbose_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show version.
         /// </summary>
         public static string _version {
@@ -574,11 +795,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write the intermediate files and the caches here instead of beside each input, so the data folder can be read-only. {0} and {1} send one of the two elsewhere..
+        ///   Looks up a localized string similar to Write intermediate files AND the spectra cache here (so input data can be read-only); default: beside input.
         /// </summary>
         public static string _work_dir {
             get {
                 return ResourceManager.GetString("_work_dir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: print the files the task reads and writes for this command line, one per line as input or  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _task_files {
+            get {
+                return ResourceManager.GetString("_task_files", resourceCulture);
             }
         }
     }

@@ -75,6 +75,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            // Osprey predicts the library: a local build, or the latest TeamCity build downloaded
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             RunUI(() => SkylineWindow.Paste(TextUtil.LineSeparate(PEPTIDES.Select(p => p.Sequence))));
 
             const string libraryName = "CarafeModelLibrary";
@@ -91,7 +93,7 @@ namespace TestPerf
                 buildLibraryDlg.LibraryPath = libraryPath;
                 // Predict on the CPU, whatever GPU this computer has
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
-                buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.Carafe = true;
                 // The list starts with the pretrained models alone
                 Assert.IsTrue(buildLibraryDlg.CarafeModel.IsDefault);
             });
@@ -147,7 +149,7 @@ namespace TestPerf
 
             RunUI(buildLibraryDlg.OkWizardPage);
             WaitForCondition(() => buildLibraryDlg.Builder != null);
-            Assert.AreEqual(modelPath, ((AlphapeptdeepLibraryBuilder)buildLibraryDlg.Builder).CarafeModelPath);
+            Assert.AreEqual(modelPath, ((CarafeLibraryBuilder)buildLibraryDlg.Builder).CarafeModelPath);
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(() => peptideSettings.AvailableLibraries.Contains(libraryName));
             RunUI(() => peptideSettings.PickedLibraries = new[] { libraryName });
@@ -171,7 +173,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
-                buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.Carafe = true;
                 var models = Settings.Default.CarafeModelList;
                 Assert.AreEqual(modelName, models[1].Name);
                 AssertEx.Contains(models.GetDisplayName(models[1]), modelName, @"Thermo Orbitrap Astral",

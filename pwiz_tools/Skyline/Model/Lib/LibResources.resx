@@ -370,4 +370,25 @@ This usually means the search returned no identifications, or the cutoff is set 
   <data name="DiannHelpers_RunSearch_Searching_DIA_files_against_predicted_library___" xml:space="preserve">
     <value>Searching DIA files against predicted library...</value>
   </data>
+  <data name="OspreyProgressMonitor_GetTaskName_Fine_tuning_the_model" xml:space="preserve">
+    <value>Fine-tuning the model</value>
+  </data>
+  <data name="OspreyProgressMonitor_GetTaskName_First_pass_FDR" xml:space="preserve">
+    <value>First-pass FDR</value>
+  </data>
+  <data name="OspreyProgressMonitor_GetTaskName_Predicting_the_library" xml:space="preserve">
+    <value>Predicting the library</value>
+  </data>
+  <data name="OspreyProgressMonitor_GetTaskName_Predicting_the_training_library" xml:space="preserve">
+    <value>Predicting the training library</value>
+  </data>
+  <data name="OspreyProgressMonitor_GetTaskName_Re_scoring_files" xml:space="preserve">
+    <value>Re-scoring files</value>
+  </data>
+  <data name="OspreyProgressMonitor_GetTaskName_Scoring_files" xml:space="preserve">
+    <value>Scoring files</value>
+  </data>
+  <data name="OspreyProgressMonitor_GetTaskName_Second_pass_FDR" xml:space="preserve">
+    <value>Second-pass FDR</value>
+  </data>
 </root>

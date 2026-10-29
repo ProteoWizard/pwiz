@@ -306,35 +306,15 @@
     </ItemGroup>
   </Target>
 
-  <!-- AlphaPeptDeep library prediction runs in process through CarafeSharp's TorchSharp port of the
-       peptdeep MS2 and RT models (pwiz_tools\CarafeSharp). Skyline ships the CPU libtorch in torch\cpu
-       and downloads the CUDA libtorch the first time it predicts on a computer with a GPU that can use
-       it; the layout, shared with Osprey, is CarafeSharp's LibTorchRuntimeLayout.targets, and
-       AlphapeptdeepLibraryBuilder loads the runtime it chooses (TorchRuntimes). The libtorch version
-       is the one CarafeSharp's LibTorch.props pairs with its TorchSharp version. -->
-  <Import Project="..\CarafeSharp\LibTorchRuntimeLayout.targets" />
+  <!-- AlphaPeptDeep library prediction runs in Osprey (pwiz_tools\Osprey), downloaded to the Tools
+       folder at first use, whose package carries CarafeSharp's TorchSharp port of the peptdeep models,
+       the pretrained models and the CPU libtorch; Skyline ships none of them and loads no torch
+       runtime. What it keeps in process is CarafeSharp's TorchSharp-free code: the .model.zip reader
+       (Proteome), and the CUDA detection and download behind the Use GPU box (Core), which reads the
+       CUDA package list from the installed Osprey folder. -->
   <ItemGroup>
-    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Models\CarafeSharp.Models.csproj" />
-    <!-- Reads the fine-tuned models CarafeSharp saves as .model.zip files -->
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Core\CarafeSharp.Core.csproj" />
     <ProjectReference Include="..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
-    <!-- The pinned AlphaPeptDeep v1 pretrained models, beside the executable where
-         AlphapeptdeepLibraryBuilder looks for them. -->
-    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\pretrained_models.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>models\alphapeptdeep-v1\pretrained_models.zip</Link>
-      <Visible>false</Visible>
-    </Content>
-    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\LICENSE.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>models\alphapeptdeep-v1\LICENSE.txt</Link>
-      <Visible>false</Visible>
-    </Content>
-    <!-- The pinned Chronologer RT model, which a fine-tuned model file's RT model can be. -->
-    <Content Include="..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.pt;..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json;..\CarafeSharp\models\chronologer-20220601193755\LICENSE.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>models\chronologer-20220601193755\%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
   </ItemGroup>
 
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and
