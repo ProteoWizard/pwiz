@@ -285,7 +285,12 @@ namespace pwiz.Osprey.Scoring
                     ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
 
-            // Build full 21-element PIN feature vector
+            // The candidate peaks the pick chose among, for the runner-up features. None on the
+            // boundary-override path, where the calculators report a lone candidate.
+            if (ext.CapturedPeaks != null)
+                ospreyContext.AddInfo(new PeakCandidatesByproduct(ext.CapturedPeaks, bestPeak));
+
+            // Build the full PIN feature vector
             double[] features = new double[OspreyFeatureCalculators.FeatureCount];
             features[0] = OspreyFeatureCalculators.Get(0).Calculate(ospreyContext, ospreyPeakData);
             features[1] = OspreyFeatureCalculators.Get(1).Calculate(ospreyContext, ospreyPeakData);
@@ -308,6 +313,15 @@ namespace pwiz.Osprey.Scoring
             features[18] = OspreyFeatureCalculators.Get(18).Calculate(ospreyContext, ospreyPeakData);
             features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
             features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
+            for (int f = 21; f < features.Length; f++)
+                features[f] = OspreyFeatureCalculators.Get(f).Calculate(ospreyContext, ospreyPeakData);
+
+            // Masked features are written as 0: constant, so the classifier cannot use them.
+            for (int f = 0; f < features.Length; f++)
+            {
+                if (OspreyFeatureCalculators.IsMasked(f))
+                    features[f] = 0.0;
+            }
 
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the

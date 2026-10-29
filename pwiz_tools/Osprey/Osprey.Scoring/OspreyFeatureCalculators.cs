@@ -30,21 +30,36 @@ namespace pwiz.Osprey.Scoring
     /// The ordered set of Osprey scoring feature calculators, mirroring
     /// Skyline's <c>PeakFeatureCalculator.CALCULATORS</c>. The array index IS the
     /// parity-critical PIN feature index -- the position written into the
-    /// <c>double[21]</c> feature vector and the feature column order in
+    /// <c>double[FeatureCount]</c> feature vector and the feature column order in
     /// <c>.scores.parquet</c>. This is the single place that order lives as
     /// data.
     ///
-    /// All 21 PIN features are now extracted, so every slot is populated and
-    /// <see cref="Get"/> never returns null; this array is the canonical ordered
-    /// calculator set. (Scores the Rust engine computes but excludes from the 21 PIN
-    /// features are intentionally NOT here -- see the non-PIN-scores backlog.)
+    /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
+    /// never returns null. Slots 21-26 are C#-only: the runner-up and context families,
+    /// masked by default (<see cref="DEFAULT_MASKED_FEATURES"/>, OSPREY_FEATURE_MASK) while
+    /// they are evaluated. (Scores the Rust engine computes but excludes from its PIN features
+    /// are intentionally NOT here - see the non-PIN-scores backlog.)
     /// </summary>
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 21;
+        public const int FeatureCount = 27;
+
+        /// <summary>
+        /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up and context
+        /// families, still under evaluation. A masked feature is written as 0, so the
+        /// standardizer gives it scale 1 and value 0 and the classifier cannot use it -
+        /// which keeps the default search's results what they were before these features.
+        /// </summary>
+        public static readonly string[] DEFAULT_MASKED_FEATURES =
+        {
+            @"peak_coelution_margin", @"peak_rank_margin", @"peak_candidate_count",
+            @"context_peptide_length", @"context_precursor_charge", @"context_precursor_mz",
+        };
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
+
+        private static readonly bool[] _masked = CreateMask(OspreyEnvironment.FeatureMask ?? DEFAULT_MASKED_FEATURES);
 
         private static IOspreyFeatureCalculator[] CreateCalculators()
         {
@@ -88,11 +103,37 @@ namespace pwiz.Osprey.Scoring
             calculators[19] = new MedianPolishMinFragmentR2Calc();
             calculators[20] = new MedianPolishResidualCorrelationCalc();
 
+            // Runner-up family: the chosen peak against the other candidates in its window.
+            calculators[21] = new PeakCoelutionMarginCalc();
+            calculators[22] = new PeakRankMarginCalc();
+            calculators[23] = new PeakCandidateCountCalc();
+
+            // Context family: what is being matched, shared by a target and its decoy.
+            calculators[24] = new PeptideLengthCalc();
+            calculators[25] = new PrecursorChargeCalc();
+            calculators[26] = new PrecursorMzCalc();
+
             return calculators;
         }
 
+        private static bool[] CreateMask(string[] maskedNames)
+        {
+            var masked = new bool[FeatureCount];
+            foreach (string name in maskedNames)
+            {
+                int index = System.Array.FindIndex(_calculators, c => c.Name == name);
+                if (index < 0)
+                {
+                    throw new System.InvalidOperationException(
+                        string.Format(@"OSPREY_FEATURE_MASK names an unknown feature: {0}", name));
+                }
+                masked[index] = true;
+            }
+            return masked;
+        }
+
         /// <summary>
-        /// The calculator for the given PIN feature index (0..20). All 21 are
+        /// The calculator for the given PIN feature index (0 to FeatureCount - 1). All are
         /// populated, so this never returns null.
         /// </summary>
         public static IOspreyFeatureCalculator Get(int featureIndex)
@@ -101,7 +142,16 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Projects the 21 calculators into a single <see cref="OspreyFeatureInfo"/>
+        /// True when the feature at <paramref name="featureIndex"/> is masked (written as 0):
+        /// named in OSPREY_FEATURE_MASK, or in <see cref="DEFAULT_MASKED_FEATURES"/> when it is unset.
+        /// </summary>
+        public static bool IsMasked(int featureIndex)
+        {
+            return _masked[featureIndex];
+        }
+
+        /// <summary>
+        /// Projects the calculators into a single <see cref="OspreyFeatureInfo"/>
         /// vector in parity-critical PIN-index order, pairing each supplied machine
         /// <paramref name="featureNames"/> entry with that calculator's
         /// <see cref="IOspreyFeatureCalculator.DisplayName"/> label and

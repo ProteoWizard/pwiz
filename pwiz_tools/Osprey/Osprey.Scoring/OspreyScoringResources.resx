@@ -205,8 +205,26 @@
   <data name="PeakAreaCalc_DisplayName_Peak_area__log10_" xml:space="preserve">
     <value>Peak area (log10)</value>
   </data>
+  <data name="PeakCandidateCountCalc_DisplayName_Candidate_peaks_in_window" xml:space="preserve">
+    <value>Candidate peaks in window</value>
+  </data>
+  <data name="PeakCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak" xml:space="preserve">
+    <value>Coelution margin over runner-up peak</value>
+  </data>
+  <data name="PeakRankMarginCalc_DisplayName_Pick_score_margin_over_runner_up_peak" xml:space="preserve">
+    <value>Pick score margin over runner-up peak</value>
+  </data>
   <data name="PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_" xml:space="preserve">
     <value>Peak sharpness (log10)</value>
+  </data>
+  <data name="PeptideLengthCalc_DisplayName_Peptide_length" xml:space="preserve">
+    <value>Peptide length</value>
+  </data>
+  <data name="PrecursorChargeCalc_DisplayName_Precursor_charge" xml:space="preserve">
+    <value>Precursor charge</value>
+  </data>
+  <data name="PrecursorMzCalc_DisplayName_Precursor_m_z" xml:space="preserve">
+    <value>Precursor m/z</value>
   </data>
   <data name="RtDeviationCalc_DisplayName_Retention_time_difference__signed_" xml:space="preserve">
     <value>Retention time difference (signed)</value>

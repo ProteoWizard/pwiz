@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
@@ -114,8 +114,8 @@ namespace pwiz.Osprey.Core
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
-            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN", @"OSPREY_XIC_FRAGMENTS",
-            @"OSPREY_VERSION_OVERRIDE"
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_VERSION_OVERRIDE", @"OSPREY_XIC_FRAGMENTS"
         };
 
         /// <summary>
@@ -722,7 +722,7 @@ namespace pwiz.Osprey.Core
             ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
 
         /// <summary>
-        /// OSPREY_XIC_FRAGMENTS (EXPERIMENT, TODO-20261028_osprey_diann_fdr_gap): how many of a
+        /// OSPREY_XIC_FRAGMENTS (experiment): how many of a
         /// candidate's most intense library fragments the search extracts XICs for - the input of the
         /// CWT peak detection and of the coelution, peak-shape and median-polish features. Null when
         /// unset (the top 6, <c>TopFragmentExtractor.CAL_TOP_N_FRAGMENTS</c>). Calibration and the
@@ -731,6 +731,24 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly int? XicFragments = ParseXicFragments(
             Environment.GetEnvironmentVariable(@"OSPREY_XIC_FRAGMENTS"));
+
+        /// <summary>
+        /// OSPREY_FEATURE_MASK: the scoring features to mask (write as 0, so the classifier cannot
+        /// use them), as comma-separated feature names, or <c>none</c> to mask nothing. Null when
+        /// unset: the scoring layer then masks its default set, the features still under
+        /// evaluation. An unknown name stops the search at startup.
+        /// </summary>
+        public static readonly string[] FeatureMask = ParseFeatureMask(
+            Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
+
+        private static string[] ParseFeatureMask(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            if (string.Equals(value.Trim(), @"none", StringComparison.OrdinalIgnoreCase))
+                return Array.Empty<string>();
+            return value.Split(',').Select(name => name.Trim()).Where(name => name.Length > 0).ToArray();
+        }
 
         private static int? ParseXicFragments(string value)
         {

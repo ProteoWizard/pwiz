@@ -52,7 +52,8 @@ namespace pwiz.Osprey.IO
         #region PIN Feature Names
 
         /// <summary>
-        /// The 21 PIN feature column names, matching the Rust get_pin_feature_names().
+        /// The PIN feature column names: the 21 of the Rust get_pin_feature_names(), then the
+        /// C#-only runner-up and context features (masked by default).
         /// </summary>
         public static readonly string[] PIN_FEATURE_NAMES =
         {
@@ -85,9 +86,17 @@ namespace pwiz.Osprey.IO
             @"sg_weighted_cosine",
             @"median_polish_min_fragment_r2",
             @"median_polish_residual_correlation",
+            // Runner-up: the chosen peak against the other candidates in its window (3)
+            @"peak_coelution_margin",
+            @"peak_rank_margin",
+            @"peak_candidate_count",
+            // Context, shared by a target and its decoy (3)
+            @"context_peptide_length",
+            @"context_precursor_charge",
+            @"context_precursor_mz",
         };
 
-        public const int NUM_PIN_FEATURES = 21;
+        public const int NUM_PIN_FEATURES = 27;
 
         #endregion
 
