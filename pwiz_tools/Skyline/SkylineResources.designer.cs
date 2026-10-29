@@ -1704,6 +1704,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Looking for the latest Osprey build.
+        /// </summary>
+        public static string OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build {
+            get {
+                return ResourceManager.GetString("OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
         /// </summary>

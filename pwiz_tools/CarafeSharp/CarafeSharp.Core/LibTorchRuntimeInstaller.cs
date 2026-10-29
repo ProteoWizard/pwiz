@@ -24,10 +24,10 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace pwiz.CarafeSharp.Models
+namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
-    /// Installs a <see cref="LibTorchRuntime"/> from the NuGet packages of a <see cref="LibTorchPackageSet"/>,
+    /// Installs a libtorch runtime from the NuGet packages of a <see cref="LibTorchPackageSet"/>,
     /// into a folder of its own named for the package set. The caller downloads each package, so it
     /// can report progress and allow cancellation its own way, and hands it to <see cref="AddPackage"/>:
     /// <code>
@@ -69,8 +69,6 @@ namespace pwiz.CarafeSharp.Models
         public string RuntimeDirectory => Path.Combine(RuntimesDirectory, PackageSet.Name);
 
         public bool IsInstalled => File.Exists(Path.Combine(RuntimeDirectory, INSTALLED_FILE_NAME));
-
-        public LibTorchRuntime Runtime => new LibTorchRuntime(RuntimeDirectory);
 
         private string StagingDirectory => RuntimeDirectory + STAGING_SUFFIX;
 

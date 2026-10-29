@@ -113,16 +113,23 @@
          SkylineNightlyShim.exe that updates itself and SkylineNightly.exe from this zip by
          extracting a fixed list of file NAMES. A plain .NET build's .exe is only a launcher
          for a .dll that list never extracts, so the update left both programs unable to
-         start. A single-file .exe needs nothing beside it. -->
+         start. A single-file .exe needs nothing beside it.
+         SelfContained: SkylineNightly runs for about 24 hours, long enough for Microsoft
+         Update to service the shared .NET runtime underneath it. Servicing removes the old
+         version's files, and the first framework assembly loaded after that fails - which
+         terminated SkylineNightly on a finalizer thread on BSPRATT-UW2 (#4919). Carrying its
+         own runtime takes it out of reach. The shim runs for seconds, so it stays small. -->
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightly\SkylineNightly.csproj">
       <Zip>SkylineNightly.zip</Zip>
       <Tfm>net10.0-windows</Tfm>
       <SingleFile>true</SingleFile>
+      <SelfContained>true</SelfContained>
     </DistroZipPrereq>
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightlyShim\SkylineNightlyShim.csproj">
       <Zip>SkylineNightly.zip</Zip>
       <Tfm>net10.0</Tfm>
       <SingleFile>true</SingleFile>
+      <SelfContained>false</SelfContained>
     </DistroZipPrereq>
     <!-- BlibBuild and BlibFilter already reach the staging dir through Skyline's own
          ProjectReference graph; BlibToMs2 does not, because nothing in Skyline uses it.
@@ -225,11 +232,17 @@
              Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm)" />
     <!-- The single-file copy goes to its own folder: the staging dir already holds the
          ordinary launcher .exe of the same name, which Skyline and SkylineTester use.
-         Framework-dependent: the nightly machines have the .NET 10 Desktop Runtime. The
-         projects list win-x64 in RuntimeIdentifiers, so the restore above covers it. -->
+         SelfContained comes from the item (see above). A self-contained publish needs the
+         win-x64 runtime packs, so restore again with the publish's RID and SelfContained,
+         as dotnet publish -r does; the restore above alone does not promise them on a clean
+         agent. The extra property gives the restore its own evaluation, so the Publish
+         below re-evaluates and sees what it restored. -->
+    <MSBuild Condition="'$(_Wanted)' == 'true' AND '%(DistroZipPrereq.SingleFile)' == 'true'"
+             Projects="%(DistroZipPrereq.Identity)" Targets="Restore"
+             Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm);RuntimeIdentifier=win-x64;SelfContained=%(DistroZipPrereq.SelfContained);_SingleFileRestore=true" />
     <MSBuild Condition="'$(_Wanted)' == 'true' AND '%(DistroZipPrereq.SingleFile)' == 'true'"
              Projects="%(DistroZipPrereq.Identity)" Targets="Publish"
-             Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm);RuntimeIdentifier=win-x64;SelfContained=false;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;PublishDir=$(SkylineStageDir)\$(SingleFileNightlyDir)\" />
+             Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm);RuntimeIdentifier=win-x64;SelfContained=%(DistroZipPrereq.SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;PublishDir=$(SkylineStageDir)\$(SingleFileNightlyDir)\" />
 
     <!-- Same merge-into-one-bin that Stage-Tests.ps1 does. robocopy returns
          0-7 for success, so the exit code is ignored and the real check is the

@@ -881,20 +881,14 @@
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>トレーニング入力ファイルを準備中</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-    <value>AlphaPeptDeepを実行中</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>スペクトルライブラリをインポート中</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
     <value>BlibBuildが完了しました。</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
+  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
     <value>BlibBuildを完了できませんでした。</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
-    <value>AlphaPeptDeepは{0}分{1}秒で終了しました。</value>
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>詳細ログ</value>

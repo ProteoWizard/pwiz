@@ -24,7 +24,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
-using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            OspreySearchTest.RegisterOsprey(OspreySearchTest.EnsureOsprey(TestContext));
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             RunUI(() =>
             {
                 // The model list starts with the pretrained models alone

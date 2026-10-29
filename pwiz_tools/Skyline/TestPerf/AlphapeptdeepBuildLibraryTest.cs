@@ -62,6 +62,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            // Osprey predicts the library: a local build, or the latest TeamCity build downloaded
+            OspreyTestUtil.RegisterOsprey(OspreyTestUtil.EnsureOsprey(TestContext));
             TestEmptyDocumentMessage();
 
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
@@ -121,13 +123,13 @@ namespace TestPerf
                 // page must not take the focus from it
                 var radioAlpha = buildLibraryDlg.Controls.Find(@"radioAlphaSource", true).Single();
                 radioAlpha.Focus();
-                Assert.IsTrue(buildLibraryDlg.AlphaPeptDeep);
+                Assert.IsTrue(buildLibraryDlg.Carafe);
                 Assert.AreSame(radioAlpha, buildLibraryDlg.ActiveControl);
             });
 
             RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
             {
-                Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_,
+                Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_,
                     dlg.Message);
                 dlg.OkDialog();
             });
@@ -154,7 +156,7 @@ namespace TestPerf
                 buildLibraryDlg.LibraryPath = libraryPath;
                 // Predict on the CPU, whatever GPU this computer has, so the library compares with the baselines
                 buildLibraryDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null };
-                buildLibraryDlg.AlphaPeptDeep = true;
+                buildLibraryDlg.Carafe = true;
                 if (iRTtype != null)
                     buildLibraryDlg.IrtStandard = iRTtype;
             });
@@ -171,7 +173,7 @@ namespace TestPerf
 
             WaitForCondition(() => buildLibraryDlg.Builder != null);
 
-            var alphaPeptDeepBuilder = (AlphapeptdeepLibraryBuilder) buildLibraryDlg.Builder;
+            var alphaPeptDeepBuilder = (CarafeLibraryBuilder) buildLibraryDlg.Builder;
             Assert.IsNotNull(alphaPeptDeepBuilder);
             string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
             if (iRTtype != null)

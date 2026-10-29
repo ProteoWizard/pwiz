@@ -24,7 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace pwiz.CarafeSharp.Models
+namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
     /// The NuGet packages that together hold one libtorch runtime, such as libtorch-cuda-12.8-win-x64,

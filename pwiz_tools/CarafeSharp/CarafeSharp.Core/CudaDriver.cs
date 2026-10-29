@@ -22,7 +22,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace pwiz.CarafeSharp.Models
+namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
     /// The NVIDIA driver and the first CUDA device, the one TorchSharp's CUDA device means, asked of the
