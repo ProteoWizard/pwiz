@@ -245,9 +245,6 @@ namespace pwiz.Skyline.Model.Lib
             return argumentText.Substring(ARG_PREFIX.Length);
         }
 
-        /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>
-        public const string PREDICTED_TABLE_SUFFIX = @".predicted.speclib.tsv";
-
         // Osprey's --device: gpu and cpu are requirements (a run that cannot predict on the GPU
         // fails); auto takes the GPU when the CUDA runtime is installed, else the CPU.
         public const string DEVICE_AUTO = @"auto";
@@ -577,8 +574,8 @@ namespace pwiz.Skyline.Model.Lib
         /// The command line of the precursor-table prediction Build Library runs: Osprey's
         /// PredictLibrary phase alone over <paramref name="tablePath"/>, with the pretrained models or
         /// the saved <paramref name="modelPath"/>, on the GPU (a requirement, with the CUDA runtime in
-        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
-        /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
+        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the library to
+        /// <paramref name="outputBlib"/>, every precursor with its CCS, and writes its messages in
         /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
         /// </summary>
         public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
@@ -598,13 +595,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(cultureName))
                 sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
             return sb.ToString();
-        }
-
-        /// <summary>The TSV a precursor-table prediction with the output <paramref name="outputBlib"/> writes.</summary>
-        public static string GetPredictedTablePath(string outputBlib)
-        {
-            return Path.Combine(Path.GetDirectoryName(outputBlib) ?? string.Empty,
-                Path.GetFileNameWithoutExtension(outputBlib) + PREDICTED_TABLE_SUFFIX);
         }
 
         /// <summary>

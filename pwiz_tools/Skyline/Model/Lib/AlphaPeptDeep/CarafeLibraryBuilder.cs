@@ -21,10 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using pwiz.BiblioSpec;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -35,14 +32,14 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
     /// <summary>
-    /// Builds a library of Carafe's MS2 and RT predictions (the pretrained AlphaPeptDeep models, or a fine-tuned model) for the document's precursors. The
-    /// precursors go to Osprey as the table Skyline once wrote for peptdeep, and Osprey's PredictLibrary
-    /// phase (CarafeSharp's TorchSharp port of peptdeep, in Osprey's own process) predicts them, on an
-    /// NVIDIA GPU when the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on
-    /// the CPU. The predictions come back as the predict.speclib.tsv that peptdeep 1.5.0's
-    /// "cmd-flow --task_workflow library" wrote when Skyline ran it in Python, using that workflow's
-    /// defaults, and are then imported through BlibBuild as before. The library keeps the predicted
-    /// CCS, which Skyline converts to ion mobility with each data file's calibration.
+    /// Builds a library of Carafe's MS2, RT and CCS predictions (the pretrained AlphaPeptDeep models,
+    /// or a fine-tuned model) for the document's precursors. The precursors go to Osprey as a table
+    /// (the one Skyline once wrote for peptdeep), and Osprey's PredictLibrary phase (CarafeSharp's
+    /// TorchSharp port of peptdeep, in Osprey's own process) predicts them, on an NVIDIA GPU when the
+    /// CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on the CPU, and
+    /// writes the library itself, as it writes the libraries of its own searches: the .blib asked
+    /// for, each precursor with its CCS, which Skyline converts to ion mobility with each data
+    /// file's calibration.
     /// </summary>
     public class CarafeLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
@@ -50,15 +47,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         // Processing folders
         private const string PREFIX_WORKDIR = "APD";
-        private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
         // Osprey's working folder for a fine-tune, beside the APD folders and kept between builds
         private const string OSPREY_WORKDIR = @"osprey";
 
-        // Processing intermediate file names. Osprey takes an output .blib path and writes the TSV
-        // beside it as <stem>.predicted.speclib.tsv (OspreyHelpers.GetPredictedTablePath).
+        // The precursor table Osprey predicts
         private const string INPUT_FILE_NAME = @"input.tsv";
-        private const string OSPREY_OUTPUT_FILE_NAME = @"predict.blib";
-        private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_sky.speclib.tsv";
 
         // Column names for AlphaPeptDeep
         private const string SEQUENCE = @"sequence";
@@ -67,12 +60,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string CHARGE = @"charge";
 
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
-
-        // Column names for BlibBuild
-        private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
-        private const string NORMALIZED_RT = "RT";
-        private const string CCS = "CCS";
-        private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
 
         protected override string ToolName => ALPHAPEPTDEEP;
 
@@ -223,28 +210,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public override string InputFilePath => Path.Combine(WorkDir, INPUT_FILE_NAME);
         public override string TrainingFilePath => null;
 
-        private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
-
         /// <summary>
-        /// The output Osprey is given, whose stem names the TSV it writes: in this build's output
-        /// folder, or for a fine-tune in Osprey's working folder, where the tuning's products
-        /// (the model, the training library) stay for the next build.
+        /// The library Osprey writes: the library itself, or for a fine-tune a copy of the same name
+        /// in Osprey's working folder, where the tuning's products (the model, the training library)
+        /// are named after it and stay for the next build.
         /// </summary>
-        private string OspreyOutputPath => Path.Combine(IsTuning ? OspreyWorkDirectory : OutputSpectralLibsDir, OSPREY_OUTPUT_FILE_NAME);
-
-        public string OutputSpectraLibFilepath => OspreyHelpers.GetPredictedTablePath(OspreyOutputPath);
-        public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
-
-        private Dictionary<string, string> OpenSwathAssayLikeColName =>
-            new Dictionary<string, string>()
-            {
-                { @"RT", @"NormalizedRetentionTimeAPD" },
-                { @"ModifiedPeptide", @"ModifiedPeptideSequence" },
-                { @"FragmentMz", @"ProductMz" },
-                { @"RelativeIntensity", @"LibraryIntensity" },
-                { @"FragmentNumber", @"FragmentSeriesNumber" },
-                { CCS, COLLISIONAL_CROSS_SECTION}
-            };
+        private string OspreyOutputPath => IsTuning
+            ? Path.Combine(OspreyWorkDirectory, Path.GetFileName(LibrarySpec.FilePath))
+            : LibrarySpec.FilePath;
 
         /// <summary>
         /// Constructor for the Carafe library builder.
@@ -289,7 +262,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             // Note: Segments are distributed to balance the expected work of each task
             // One end per step, including the last: NextSegment() never advances past the final end
-            var segmentEndPercentages = new[] { 5, 85, 90, 100 };
+            var segmentEndPercentages = new[] { 5, 95, 100 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
@@ -298,8 +271,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             // and reported the cancel, if any, as the status
             if (progressStatus.IsCanceled)
                 return;
-            TransformPeptdeepOutput(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
             if (WritesDecoyPairs)
                 LibraryDecoyPairs.Write(LibrarySpec.FilePath, Document, EntrapmentTargets, DecoyMethod);
@@ -308,8 +279,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <summary>
         /// Predicts fragment intensities and retention times (iRT, or minutes with a fine-tuned RT model)
         /// for every precursor in the input file by running Osprey's PredictLibrary phase over it
-        /// (<see cref="OspreyHelpers.BuildPredictLibraryCommandLine"/>), which writes them to
-        /// <see cref="OutputSpectraLibFilepath"/>. With <see cref="TuningConfig"/> the one command runs
+        /// (<see cref="OspreyHelpers.BuildPredictLibraryCommandLine"/>), which writes the library to
+        /// <see cref="OspreyOutputPath"/>. With <see cref="TuningConfig"/> the one command runs
         /// first: the training library from the FASTA, the tuning runs' search, the fine-tune, and then
         /// the table's prediction with the tuned models, whose task lines drive the bar through
         /// <see cref="OspreyProgressMonitor"/>. Osprey chooses the libtorch runtime in its own process,
@@ -330,8 +301,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var timer = Stopwatch.StartNew();
             string args;
             var monitor = progress;
-            // The transformed table goes here either way; a fine-tune's own output is in Osprey's folder
-            Directory.CreateDirectory(OutputSpectralLibsDir);
             if (IsTuning)
             {
                 Directory.CreateDirectory(OspreyWorkDirectory);
@@ -355,8 +324,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
             if (progressStatus.IsCanceled)
                 return;
-            if (!File.Exists(OutputSpectraLibFilepath))
-                throw new FileNotFoundException(ModelResources.CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_, OutputSpectraLibFilepath);
+            if (!File.Exists(OspreyOutputPath))
+                throw new FileNotFoundException(ModelResources.CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_, OspreyOutputPath);
             if (IsTuning)
             {
                 // ProcessRunner advanced the segment itself only when it read the NN% lines
@@ -408,118 +377,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             File.Copy(modelPath, TunedModelPath, true);
         }
 
-        public void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        /// <summary>
+        /// The library of a prediction alone was written to its path directly; a fine-tune's,
+        /// predicted into Osprey's working folder beside the tuning's products, is copied there.
+        /// </summary>
+        private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.CarafeLibraryBuilder_Importing_spectral_library));
-
-            var result = new List<string>();
-
-            using var reader = new DsvFileReader(OutputSpectraLibFilepath, TextUtil.SEPARATOR_TSV);
-
-            // Transform table header
-            var colNames = reader.FieldNames;
-            var header = string.Join(TextUtil.SEPARATOR_TSV_STR,
-                colNames.Select(colName => OpenSwathAssayLikeColName.TryGetValue(colName, out var newColName) ? newColName : colName));
-            result.Add(header);
-
-            // Transform table body line by line
-            while (null != reader.ReadLine())
-            {
-                var line = new List<string>();
-                string peptideWithMods = string.Empty;
-                bool modifiedPeptide = false;
-                foreach (var colName in colNames)
-                {
-                    var cell = reader.GetFieldByName(colName);
-                    if (colName == MODIFIED_PEPTIDE)
-                    {
-                        var transformedCell = cell.Replace(TextUtil.UNDERSCORE, string.Empty)
-                            .Replace(TextUtil.LEFT_SQUARE_BRACKET, TextUtil.LEFT_PARENTHESIS)
-                            .Replace(TextUtil.RIGHT_SQUARE_BRACKET, TextUtil.RIGHT_PARENTHESIS);
-                        line.Add(transformedCell);
-                        if (transformedCell.Contains('('))
-                        {
-                            modifiedPeptide = true;
-                        }
-                        peptideWithMods = cell;
-                    }
-                    else if (colName == CCS)
-                    {
-                        AddDoubleCell(line, cell,
-                            !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyCcsSupportedMod(peptideWithMods));
-                    }
-                    else if (colName == NORMALIZED_RT)
-                    {
-                        AddDoubleCell(line, cell,
-                            !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyRtSupportedMod(peptideWithMods));
-                    }
-                    else
-                    {
-                        line.Add(cell);
-                    }
-                }
-                // Only add a row, if there are no modifications or all modifications at least support spectrum prediction
-                if (!modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyMs2SupportedMod(peptideWithMods))
-                    result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
-            }
-
-            // Write to new file
-            File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
-        }
-
-        private void AddDoubleCell(List<string> line, string cell, bool allowedValue)
-        {
-            double valueToAdd;
-            if (!allowedValue || !double.TryParse(cell.ToString(CultureInfo.InvariantCulture), NumberStyles.Float,
-                    CultureInfo.InvariantCulture, out valueToAdd))
-            {
-                valueToAdd = 0; // CONSIDER: Zero is a valid value for a normalized-RT
-            }
-            // Pin to G15 so net8's shortest-round-trip double formatting matches
-            // net472's implicit G15 default (keeps the transformed .tsv byte-identical).
-            line.Add(valueToAdd.ToString(@"G15", CultureInfo.InvariantCulture));
-        }
-
-        public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
-        {
-            string[] inputFile = { TransformedOutputSpectraLibFilepath.ToLongPath() };
-            string output = LibrarySpec.FilePath.ToLongPath();
-            string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(output).ToLongPath();
-            var build = new BlibBuild(incompleteBlibPath, inputFile);
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.CarafeLibraryBuilder_Importing_spectral_library));
-
-            string[] ambiguous;
-            bool completed = build.BuildLibrary(LibraryBuildAction.Create, progress, ref progressStatus, out ambiguous);
-
-            if (ambiguous.Length > 0)
-            {
-                foreach (string msg in ambiguous)
-                {
-                    Messages.WriteAsyncUserMessage(msg);
-                }
-            }
-
-            try
-            {
-                var blibFilter = new BlibFilter();
-                // Build the final filtered library
-                completed = completed && blibFilter.Filter(incompleteBlibPath, output, progress, ref progressStatus);
-            }
-            finally
-            {
-                File.Delete(incompleteBlibPath);
-            }
-
-            // Throw rather than return, so the caller does not add a library that was never written
-            if (progress.IsCanceled)
-                throw new OperationCanceledException();
-            if (!completed)
-                throw new IOException(ModelResources.CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
-
-            Messages.WriteAsyncUserMessage(ModelResources.CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
+            if (IsTuning)
+                File.Copy(OspreyOutputPath, LibrarySpec.FilePath, true);
         }
     }
 }
