@@ -2323,7 +2323,10 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             if (runPepRows != null)
+            {
                 WriteRunPepRows(fileName, runPepRows);
+                WriteRunPepCurve(fileName, runPep, precScoresDesc);
+            }
             // Counted only HERE, where the whole-run loop counted it: the unreadable-sidecar
             // path above returns first, so a run whose sidecar could not be read was never one
             // this pass finished.
@@ -2381,6 +2384,31 @@ namespace pwiz.Osprey.Tasks
                     @"modified_sequence", @"charge", @"is_decoy", @"class", @"score", @"run_q", @"run_pep"));
                 foreach (string row in rows)
                     writer.WriteLine(row);
+            }
+        }
+
+        /// <summary>
+        /// The run's whole score-to-PEP curve, on a grid of 2,000 scores across the run's first-pass score
+        /// range, so the PEP of every first-pass peak (not only the compaction survivors) can be read off it.
+        /// </summary>
+        private static void WriteRunPepCurve(string fileName, PepEstimator runPep, double[] scoresDesc)
+        {
+            if (scoresDesc.Length == 0)
+                return;
+            double max = scoresDesc[0];
+            double min = scoresDesc[scoresDesc.Length - 1];
+            const int points = 2000;
+            string path = Path.Combine(OspreyEnvironment.RunPepDumpDir,
+                Path.GetFileNameWithoutExtension(fileName) + @".run_pep_curve.tsv");
+            using (var writer = new StreamWriter(path))
+            {
+                writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV, @"score", @"run_pep"));
+                for (int i = 0; i < points; i++)
+                {
+                    double score = min + (max - min) * i / (points - 1);
+                    writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV, score.ToString(@"R", CultureInfo.InvariantCulture),
+                        runPep.PosteriorError(score).ToString(@"R", CultureInfo.InvariantCulture)));
+                }
             }
         }
 

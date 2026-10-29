@@ -108,7 +108,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
             @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
             @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
@@ -780,6 +780,24 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP"))
             ? null
             : Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP").Trim();
+
+        /// <summary>
+        /// OSPREY_PEP_FORMULA=ratio (experiment): <c>PepEstimator</c> estimates PEP as
+        /// (D/T) fD(s) / fT(s) - with paired competition the expected false target winners at a score
+        /// equal the decoy winners there - instead of pi0 fD / (pi0 fD + (1 - pi0) fT), which treats the
+        /// density of ALL target winners (false and true) as the true-match density and so overstates PEP
+        /// by about 1 / (1 - pi0). Unset keeps the current formula; any other value throws.
+        /// </summary>
+        public static readonly bool PepRatioForm = ParsePepFormula(Environment.GetEnvironmentVariable(@"OSPREY_PEP_FORMULA"));
+
+        private static bool ParsePepFormula(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            if (string.Equals(value.Trim(), @"ratio", StringComparison.OrdinalIgnoreCase))
+                return true;
+            throw new InvalidOperationException(@"OSPREY_PEP_FORMULA must be ratio: " + value);
+        }
 
         private static string[] ParseFeatureMask(string value)
         {
