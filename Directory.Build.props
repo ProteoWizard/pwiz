@@ -27,6 +27,15 @@
        root. Every other path is derived from that, so adding a new
        csproj at any depth needs only `$(PwizRepoRoot)<thing>`.
        ============================================================ -->
+  <!-- x64 is the platform every Windows build of pwiz-sharp uses: Pwiz.sln's x64 configurations,
+       build.bat, the installer, Skyline and Osprey all pass it, so they share one bin\x64\<Config>
+       tree, and every vendor SDK is x64-only anyway. AnyCPU stays listed for builds that pass no
+       platform (build.sh on Linux, a bare `dotnet build`). Declared here so Visual Studio accepts
+       Pwiz.sln mapping these projects to x64; a project that sets its own Platforms keeps them. -->
+  <PropertyGroup>
+    <Platforms Condition="'$(Platforms)' == ''">AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- Repo root with a trailing separator: use it as a bare prefix, `$(PwizRepoRoot)pwiz`.
          $(PwizRepoDir) is the same directory without the separator, for command lines where a
@@ -63,7 +72,14 @@
          Windows PE binary, so non-Windows builds use the Linux 7zz that ships alongside it in
          libraries/ (tracked with its executable bit). Defined centrally so a project only has
          to reference $(SevenZaExe); a project that hardcodes 7za.exe cannot build off-Windows.
-         Forward slashes throughout: Windows 7-Zip accepts them, Linux requires them. -->
+         Forward slashes throughout: Windows 7-Zip accepts them, Linux requires them.
+
+         7-Zip gives extracted files the dates stored in the archive, which predate a fresh
+         checkout of it, so an extract target whose Outputs were those files would never be up
+         to date. Each one's Outputs is instead a stamp it touches last, named per target OS
+         where the project extracts different files for each. The extracted files the build
+         needs are listed in Inputs too: MSBuild runs a target when an input is missing, so a
+         file that was deleted or never arrived is extracted again. -->
     <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)/7za.exe</SevenZaExe>
     <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/7zz</SevenZaExe>
 
@@ -108,15 +124,26 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- TreatWarningsAsErrors covers compiler and analyzer diagnostics only. MSBuild task
+    <!-- Keep the build warning-free. Demote a warning with NoWarn, with a comment saying why.
+         A developer build promotes warnings to errors, so a new one fails where it was written.
+         TeamCity and the SkylineNightly build (build.bat no-warnings-as-errors) do not: a
+         promoted warning stops the build before any test runs, and not every warning comes from
+         the commit being built. There tcinspect.ps1 (pwiz_tools/Skyline/tcinspect.ps1 for
+         Skyline) logs every restore and build warning and fails its own GitHub status instead,
+         leaving the build green. Pass -p:PwizWarningsAsErrors=false to build like CI.
+         TreatWarningsAsErrors covers compiler, analyzer and NuGet diagnostics. MSBuild task
          warnings are promoted by code, not wholesale: the git version-stamping Execs rely on
          ContinueOnError, which logs a failed git as a warning that must stay soft.
          MSB3568: duplicate .resx resource name. MSB3277: conflicting versions of a referenced
-         assembly. MSB3245: a reference that could not be resolved. -->
-    <MSBuildWarningsAsErrors>$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
-    <!-- .NET 9+ defaults NuGetAuditMode to "all" (transitive). Under
-         TreatWarningsAsErrors that fails RESTORE, not build. "direct" restores the
+         assembly. MSB3245: a reference that could not be resolved.
+         The NuGet advisories (NU1901-NU1904) are never errors, even here: they are published
+         overnight against a package nobody changed, and would fail every developer's restore
+         the next morning. -->
+    <PwizWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == '' and '$(TEAMCITY_VERSION)' == ''">true</PwizWarningsAsErrors>
+    <TreatWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">true</TreatWarningsAsErrors>
+    <MSBuildWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <!-- .NET 9+ defaults NuGetAuditMode to "all" (transitive). "direct" restores the
          net8 default. This does NOT make the transitive advisories go away - they
          are real and tracked separately; see the net10 TODO. -->
     <NuGetAuditMode>direct</NuGetAuditMode>

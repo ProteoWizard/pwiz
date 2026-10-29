@@ -51,9 +51,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.tbxFastaTargets = new System.Windows.Forms.TextBox();
             this.browseFastaTargetsBtn = new System.Windows.Forms.Button();
             this.targetFastaPanel = new System.Windows.Forms.Panel();
+            this.groupBoxQValueFilter = new System.Windows.Forms.GroupBox();
+            this.comboQValueLevel = new System.Windows.Forms.ComboBox();
+            this.textQValueCutoff = new System.Windows.Forms.TextBox();
             this.panelError.SuspendLayout();
             this.panelDecoys.SuspendLayout();
             this.targetFastaPanel.SuspendLayout();
+            this.groupBoxQValueFilter.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbxFasta
@@ -205,12 +209,34 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.targetFastaPanel.Controls.Add(this.tbxFastaTargets);
             this.targetFastaPanel.Controls.Add(this.browseFastaTargetsBtn);
             this.targetFastaPanel.Name = "targetFastaPanel";
-            // 
+            //
+            // groupBoxQValueFilter
+            //
+            resources.ApplyResources(this.groupBoxQValueFilter, "groupBoxQValueFilter");
+            this.groupBoxQValueFilter.Controls.Add(this.comboQValueLevel);
+            this.groupBoxQValueFilter.Controls.Add(this.textQValueCutoff);
+            this.groupBoxQValueFilter.Name = "groupBoxQValueFilter";
+            //
+            // comboQValueLevel
+            //
+            this.comboQValueLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboQValueLevel.FormattingEnabled = true;
+            resources.ApplyResources(this.comboQValueLevel, "comboQValueLevel");
+            this.comboQValueLevel.Name = "comboQValueLevel";
+            this.helpTipFasta.SetToolTip(this.comboQValueLevel, resources.GetString("comboQValueLevel.ToolTip"));
+            //
+            // textQValueCutoff
+            //
+            resources.ApplyResources(this.textQValueCutoff, "textQValueCutoff");
+            this.textQValueCutoff.Name = "textQValueCutoff";
+            this.helpTipFasta.SetToolTip(this.textQValueCutoff, resources.GetString("textQValueCutoff.ToolTip"));
+            //
             // ImportFastaControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.groupBoxQValueFilter);
             this.Controls.Add(this.targetFastaPanel);
             this.Controls.Add(this.tbxFasta);
             this.Controls.Add(this.panelDecoys);
@@ -229,6 +255,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelDecoys.PerformLayout();
             this.targetFastaPanel.ResumeLayout(false);
             this.targetFastaPanel.PerformLayout();
+            this.groupBoxQValueFilter.ResumeLayout(false);
+            this.groupBoxQValueFilter.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -257,5 +285,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox tbxFastaTargets;
         private System.Windows.Forms.Button browseFastaTargetsBtn;
         private System.Windows.Forms.Panel targetFastaPanel;
+        private System.Windows.Forms.GroupBox groupBoxQValueFilter;
+        private System.Windows.Forms.ComboBox comboQValueLevel;
+        private System.Windows.Forms.TextBox textQValueCutoff;
     }
 }

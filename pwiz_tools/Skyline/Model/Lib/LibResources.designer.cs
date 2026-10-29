@@ -256,6 +256,15 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library {0} has no {1} table..
+        /// </summary>
+        public static string BiblioSpecLiteLibrary_ReadFromDatabase_The_library__0__has_no__1__table {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteLibrary_ReadFromDatabase_The_library__0__has_no__1__table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The redundant library {0} does not exist..
         /// </summary>
         public static string BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist {
@@ -654,7 +663,70 @@ namespace pwiz.Skyline.Model.Lib {
                 return ResourceManager.GetString("NistLibraryBase_ThrowIOException__0__line__1__2__", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuning the model.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_Fine_tuning_the_model {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_Fine_tuning_the_model", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to First-pass FDR.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_First_pass_FDR {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_First_pass_FDR", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting the library.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_Predicting_the_library {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_Predicting_the_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting the training library.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_Predicting_the_training_library {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_Predicting_the_training_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-scoring files.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_Re_scoring_files {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_Re_scoring_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scoring files.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_Scoring_files {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_Scoring_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Second-pass FDR.
+        /// </summary>
+        public static string OspreyProgressMonitor_GetTaskName_Second_pass_FDR {
+            get {
+                return ResourceManager.GetString("OspreyProgressMonitor_GetTaskName_Second_pass_FDR", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to TFRatio.
         /// </summary>

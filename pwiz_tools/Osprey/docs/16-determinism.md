@@ -318,7 +318,7 @@ changes the output, only scheduling or which order-sensitive algorithm runs.
 | Percolator `Seed` | `42` | Fixed PRNG seed for SVM shuffle + peptide-group subsample (`PercolatorConfig.cs:48,:132`). Not exposed as a CLI flag; the constant matches Rust's `seed=42`. |
 | `--shared-peptides {all\|razor\|unique}` | `all` | Selects the shared-peptide reassignment. `all` and `unique` are order-independent; `razor` runs the order-sensitive greedy in Step 9 (see divergence). |
 | `OSPREY_FDR_MODEL` | unset (linear SVM) | Unset / `svm` uses the seeded SVM (Steps 4-6). **Experimental** `gbdt` trains seeded gradient-boosted trees (`XorShift64`, the `GbtParams` seed) whose histogram sums are order-fixed as described above, so it is deterministic too. Replaced the removed `--fdr-method`, whose `simple` value (no PRNG) was deleted. |
-| `OSPREY_VERSION_OVERRIDE` | unset | Pins the `osprey_version` blib metadata cell so the golden compare stays byte-stable; set to `26.1.1.0` by the regression gate (`regression.ps1:133`). |
+| `OSPREY_VERSION_OVERRIDE` | unset | Pins the `osprey.version` blib metadata cell so the golden compare stays byte-stable; set to `26.1.1.0` by the regression gate (`regression.ps1:133`). |
 | `-Tolerance` (regression.ps1) | `1e-9` | The determinism/parity tolerance the oracle enforces across all three modes (`regression.ps1:114`). |
 
 ## Divergences from the Rust documentation

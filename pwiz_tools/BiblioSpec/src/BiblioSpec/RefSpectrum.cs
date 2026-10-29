@@ -159,6 +159,12 @@ public class RefSpectrum : Spectrum
         set => _libSpecId = value;
     }
 
+    /// <summary>
+    /// The <c>SpectrumSourceFiles</c> id of the library the spectrum was read from
+    /// (<c>RefSpectra.fileID</c>), for BlibFilter to name the source of each observation.
+    /// </summary>
+    public long FileId { get; set; }
+
     /// <summary>Number of source spectra this entry was selected from in a filtered library.</summary>
     public int Copies
     {

@@ -33,6 +33,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -218,7 +219,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         internal sealed class ExperimentQClampFloors
         {
-            private const int SHARD_COUNT = 64;   // a power of two, for the mask below
+            internal const int SHARD_COUNT = 64;   // a power of two, for the mask below
 
             private readonly Shards<uint> _byEntryId = new Shards<uint>();
             private readonly Shards<(string, bool)> _byPeptide = new Shards<(string, bool)>();
@@ -283,19 +284,22 @@ namespace pwiz.Osprey.FDR
                 {
                     return _shards[ShardIndex(key)].TryGetValue(key, out value);
                 }
+            }
 
-                private static int ShardIndex(TKey key)
+            /// <summary>The shard of <paramref name="key"/> in a <see cref="SHARD_COUNT"/>-way
+            /// split. Shared with the streaming first pass's entry facts, which shard the same way
+            /// for the same reason.</summary>
+            internal static int ShardIndex<TKey>(TKey key)
+            {
+                // Mixed before masking: a uint's hash is the value itself, and entry ids are
+                // allocated in runs, so the low bits alone would crowd a few shards.
+                unchecked
                 {
-                    // Mixed before masking: a uint's hash is the value itself, and entry ids are
-                    // allocated in runs, so the low bits alone would crowd a few shards.
-                    unchecked
-                    {
-                        uint h = (uint)EqualityComparer<TKey>.Default.GetHashCode(key);
-                        h ^= h >> 16;
-                        h *= 0x45d9f3bu;
-                        h ^= h >> 16;
-                        return (int)(h & (SHARD_COUNT - 1));
-                    }
+                    uint h = (uint)EqualityComparer<TKey>.Default.GetHashCode(key);
+                    h ^= h >> 16;
+                    h *= 0x45d9f3bu;
+                    h ^= h >> 16;
+                    return (int)(h & (SHARD_COUNT - 1));
                 }
             }
         }

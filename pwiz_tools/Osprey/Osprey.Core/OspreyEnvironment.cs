@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -88,13 +89,13 @@ namespace pwiz.Osprey.Core
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
             @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
-            @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
+            @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
             @"OSPREY_DUMP_COASSIGN_ROWS", @"OSPREY_DUMP_CONSENSUS", @"OSPREY_DUMP_CWT_PATH",
             @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
-            @"OSPREY_DUMP_LOESS_FIT", @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
+            @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
             @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
-            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_REFIT", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
             @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
@@ -102,17 +103,17 @@ namespace pwiz.Osprey.Core
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
-            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST", @"OSPREY_LOESS_FIT_ONLY",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
             @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_REFIT_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
-            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
+            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
             @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
             @"OSPREY_VERSION_OVERRIDE"
         };
@@ -209,14 +210,14 @@ namespace pwiz.Osprey.Core
         public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") ?? 1;
 
         /// <summary>
-        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
-        /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="SimpleFileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>SimpleFileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
         /// <c>Commit()</c> - the real path then holds the previous content or nothing,
-        /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
+        /// never a partial write (see <c>SimpleFileSaver</c>'s own doc comment). Set this to
         /// inspect what a write got through before it was abandoned: on an uncommitted
         /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
-        /// its normal <c>~OS</c>-prefixed name) instead of deleted. It never touches the
+        /// its normal <c>~SK</c>-prefixed name) instead of deleted. It never touches the
         /// real path, so presence-proves-completeness still holds for every consumer;
         /// only a developer who knows to look for the temp sees the partial content.
         /// </summary>
@@ -364,6 +365,16 @@ namespace pwiz.Osprey.Core
         /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
         /// </summary>
         public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
+
+        /// <summary>
+        /// DEVELOPER. <c>OSPREY_STOP_AFTER_TASKS=N</c> ends the run cleanly once N tasks have RUN in
+        /// it - a task skipped because its outputs are current does not count - with exit code 0
+        /// and a <c>[TASK] stop:</c> line. Run again and again, a run then advances exactly one task
+        /// at a time, which is how a resume test shows that a re-run skips every task already done
+        /// and recomputes none of it. Read on every access, so a command-line test can vary it;
+        /// unset or 0 for no stop.
+        /// </summary>
+        public static int StopAfterTasks => ParseIntOrNull(@"OSPREY_STOP_AFTER_TASKS") ?? 0;
 
         /// <summary>
         /// DIAGNOSTIC. Calibration and the Stage 6 re-score read a run's spectra cache one isolation
@@ -908,6 +919,17 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
+
+        /// <summary>
+        /// OSPREY_DIANN_REPORTS: also write <c>&lt;output&gt;.protein_groups.tsv</c> and
+        /// <c>&lt;output&gt;.stats.tsv</c>, the search's results in the shape of DIA-NN's
+        /// <c>pg_matrix</c> and <c>stats.tsv</c>, for comparing the two tools. Off by default:
+        /// they hold nothing the output .blib does not, and nothing in Osprey reads them.
+        /// Re-read on every access, so a test can switch it per command line with
+        /// <see cref="OverrideVariables"/>.
+        /// </summary>
+        public static bool DiannReports =>
+            IsSetAndNotZero(@"OSPREY_DIANN_REPORTS");
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default

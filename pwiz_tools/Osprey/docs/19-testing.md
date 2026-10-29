@@ -75,8 +75,8 @@ Additional C# test files with no direct Rust analog cover port-specific
 infrastructure: `ProgramTests.cs` (CLI `--task` argument validation — see
 15-hpc-scoring-split.md),
 `ByproductContextTest.cs`, `DiagnosticsTest.cs`, `ModelDiagnosticsDataTest.cs`
-(the `--model-diagnostics` HTML report), `FileSaverTest.cs` (the safe
-copy-and-verify NAS-write pattern), `DecoyPairingManifestTest.cs` and
+(the `--model-diagnostics` HTML report), `SimpleFileSaverTest.cs` in `Skyline/CommonTest` (the shared
+sibling-temp atomic write), `DecoyPairingManifestTest.cs` and
 `EntrapmentPairingTest.cs` (decoy/entrapment pairing — see 01-decoy-generation.md).
 
 ## 3. Parity-locked tests and the "translation-proof" register
@@ -191,9 +191,8 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   (`Regression/README.md:56`) — machine-independent. Refresh only on an
   intentional reviewed change with `-CreateGolden` (`regression.ps1:48-50,483-488`).
   Golden tables under `osprey-regression.data/*/tables/` include RefSpectra,
-  RetentionTimes, Peak­Boundaries, Osprey{Run,Experiment}Scores,
-  OspreyCoefficients, Proteins, PeakDigest (per-spectrum SHA-256), and
-  OspreyMetadata.
+  RetentionTimes, RefSpectraProteins, Modifications, Proteins,
+  SpectrumSourceFiles, PeakDigest (per-spectrum SHA-256), and LibMetadata.
 - **mode 3 — HPC 4-task worker-chain self-consistency**
   (`regression.ps1:502-522`, `Invoke-HpcChain` at `regression.ps1:338`). Runs the
   distributed `--task` pipeline `PerFileScoring → FirstPassFDR → PerFileRescoring
@@ -212,7 +211,7 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   that resume depends on.
 
 Version pinning: the daily build stamps a changing `YEAR.ORDINAL.BRANCH.DOY`
-version, but the golden compares the `osprey_version` metadata cell exactly, so
+version, but the golden compares the `osprey.version` metadata cell exactly, so
 the harness pins `OSPREY_VERSION_OVERRIDE = '26.1.1.0'` (`regression.ps1:133`,
 honored at `Osprey.Core/OspreyVersion.cs:93`) to keep the stamp deterministic.
 Any mismatch emits a TeamCity `buildProblem` and a non-zero exit
@@ -231,7 +230,7 @@ Run output is cleaned **before** a run, never after. A local run retains its fin
 products under `TestResults/regression-<stamp>` (`<dataset>/straight`, the phase 3/4
 outputs, `chain/logs` — a passing run's files have readers: a later A/B, a memory profile,
 the streamed diagnostics HTML), but the staged input **copies** (the phase-1 mzML copies,
-the per-worker `spectra.bin` / library / `.libcache` copies) are always deleted as they are
+the per-worker `spectra.bin` / library / derived-library copies) are always deleted as they are
 consumed. The next run's startup prune, before it creates its own root, keeps the most
 recent `-KeepRunDirs` completed sets (default 1), so the disk holds KeepRunDirs+1 sets
 between runs — two by default; `-KeepRunDirs 0` keeps only the current run's output. The
@@ -318,7 +317,7 @@ Environment variables that affect testing:
 
 | Env var | Where | Effect |
 |---|---|---|
-| `OSPREY_VERSION_OVERRIDE` | `OspreyVersion.cs:93`; set by `regression.ps1:133` | Pins the logical version string so the golden's `osprey_version` cell stays deterministic |
+| `OSPREY_VERSION_OVERRIDE` | `OspreyVersion.cs:93`; set by `regression.ps1:133` | Pins the logical version string so the golden's `osprey.version` cell stays deterministic |
 | `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` | `OspreyEnvironment.cs:104`; used `IOTest.cs:2082` | When set, the sidecar round-trip test copies its output there for a byte-compare against the Rust sibling test |
 | `OSPREY_CROSS_IMPL_RECONCILIATION_OUT` | `OspreyEnvironment.cs:112` | Same, for the reconciliation sidecar |
 | `OSPREY_DUMP_STAGE7_PROTEIN_FDR` | set by `regression.ps1:244` | Emits the Stage 7 protein-FDR dump that mode 1 diffs against the golden |

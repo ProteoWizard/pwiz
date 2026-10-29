@@ -180,8 +180,9 @@ namespace pwiz.Common.SystemUtil
             // Allow -1 as a way of allowing a looping progress indicator
             if (percent != -1)
                 percent = Math.Min(100, Math.Max(0, percent));
-            // If this percent complete value has already been set, then do nothing.
-            if (IsPercentComplete(percent))
+            // If this percent complete value has already been set, then do nothing. Both are compared, since
+            // within a zoomed range several percents of the range can round to one percent of the total.
+            if (percent == PercentComplete && zoomedPercentComplete == ZoomedPercentComplete)
                 return this;
 
             return ChangeProp(ImClone(this), s =>
@@ -217,6 +218,9 @@ namespace pwiz.Common.SystemUtil
                         s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
                         s.PercentZoomEnd = (segment + 1)*100/segmentCount;
                     }
+                    // A new segment starts at 0% of itself. Otherwise IsPercentComplete(100) would report the
+                    // 100% left over from the previous segment as this one's.
+                    s.ZoomedPercentComplete = 0;
                     s.SegmentCount = segmentCount;
                     s.Segment = segment;
                 });
@@ -258,6 +262,8 @@ namespace pwiz.Common.SystemUtil
                     s.PercentZoomEnd = segmentPercentageEnds[segment];
                 }
 
+                // See ChangeSegments(int, int)
+                s.ZoomedPercentComplete = 0;
                 s.SegmentPercentEnds = ImmutableList<int>.ValueOf(segmentPercentageEnds);
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;

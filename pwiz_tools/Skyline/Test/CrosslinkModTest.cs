@@ -388,6 +388,81 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, peptideDocNode.ExplicitMods.CrosslinkStructure.LinkedPeptides.Count);
         }
 
+        /// <summary>
+        /// Moving a crosslinked peptide into a document whose implicit modifications match the
+        /// first peptide's modifications must not drop them, because a crosslinked peptide
+        /// never receives implicit modifications.
+        /// </summary>
+        [TestMethod]
+        public void TestCrosslinkEnsureModsKeepsFirstPeptideMods()
+        {
+            var carbamidomethyl = UniMod.GetModification("Carbamidomethyl (C)", true);
+            var pyroGlu = new StaticMod("Glu->pyro-Glu (N-term E)", "E", ModTerminus.N, "-H2O");
+            var crosslinker = new StaticMod("DSBU(XL)", "K, S, T, Y", null, "C9O3N2H12")
+                .ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
+            var docSettings = SrmSettingsList.GetDefault();
+            docSettings = docSettings.ChangePeptideSettings(docSettings.PeptideSettings.ChangeModifications(
+                docSettings.PeptideSettings.Modifications.ChangeStaticModifications(
+                    new[] { carbamidomethyl, pyroGlu, crosslinker })));
+            var docMods = docSettings.PeptideSettings.Modifications;
+            var listDefStatMods = new MappedList<string, StaticMod>();
+            listDefStatMods.AddRange(docMods.StaticModifications);
+            var listDefHeavyMods = new MappedList<string, StaticMod>();
+
+            const string firstSequence = "EGILTCKR";
+            const string secondSequence = "CIPLKVLVK";
+            var libKey = new LibKey(CrosslinkSequenceParser.ParseCrosslinkLibraryKey(
+                "E[-18.010565]GILTC[+57.021464]KR-C[+57.021464]IPLKVLVK-[+196.084792@7,5]", 4));
+
+            // Library Explorer: match the library key, then convert to the document modifications
+            var matcher = new LibKeyModificationMatcher();
+            matcher.CreateMatches(docSettings, new[] { libKey }, listDefStatMods, listDefHeavyMods, null);
+            var nodePepLibrary = matcher.GetModifiedNode(libKey, docSettings, null);
+            Assert.IsNotNull(nodePepLibrary);
+            nodePepLibrary = nodePepLibrary.EnsureMods(matcher.MatcherPepMods, docMods, listDefStatMods, listDefHeavyMods);
+            VerifyCrosslinkMods(nodePepLibrary, carbamidomethyl, pyroGlu, firstSequence, secondSequence);
+
+            // Paste or document import: the source document has no implicit modifications
+            var firstPeptide = new Peptide(firstSequence);
+            var secondPeptide = new Peptide(secondSequence);
+            var explicitMods = new ExplicitMods(firstPeptide,
+                    new[] { new ExplicitMod(0, pyroGlu), new ExplicitMod(5, carbamidomethyl) },
+                    Array.Empty<TypedExplicitModifications>())
+                .ChangeCrosslinkStructure(new CrosslinkStructure(new[] { secondPeptide }, new[]
+                {
+                    new ExplicitMods(secondPeptide, new[] { new ExplicitMod(0, carbamidomethyl) },
+                        Array.Empty<TypedExplicitModifications>())
+                }, new[]
+                {
+                    new Crosslink(crosslinker, new[] { new CrosslinkSite(0, 6), new CrosslinkSite(1, 4) })
+                }));
+            var nodePepPasted = new PeptideDocNode(firstPeptide, explicitMods)
+                .EnsureMods(docMods.ChangeStaticModifications(new[] { crosslinker }), docMods,
+                    listDefStatMods, listDefHeavyMods);
+            VerifyCrosslinkMods(nodePepPasted, carbamidomethyl, pyroGlu, firstSequence, secondSequence);
+        }
+
+        private static void VerifyCrosslinkMods(PeptideDocNode nodePep, StaticMod carbamidomethyl, StaticMod pyroGlu,
+            string firstSequence, string secondSequence)
+        {
+            Assert.AreEqual(firstSequence, nodePep.Peptide.Sequence);
+            Assert.IsTrue(nodePep.ExplicitMods.HasCrosslinks);
+            var firstMods = nodePep.ExplicitMods.StaticModifications;
+            Assert.IsNotNull(firstMods);
+            Assert.AreEqual(2, firstMods.Count);
+            Assert.IsTrue(firstMods.Any(mod => mod.IndexAA == 0 && mod.Modification.Equivalent(pyroGlu)),
+                "Missing {0} on {1}", pyroGlu.Name, firstSequence);
+            Assert.IsTrue(firstMods.Any(mod => mod.IndexAA == 5 && mod.Modification.Equivalent(carbamidomethyl)),
+                "Missing {0} on {1}", carbamidomethyl.Name, firstSequence);
+            var linkedPeptide = nodePep.ExplicitMods.CrosslinkStructure.LinkedPeptides.Single();
+            Assert.AreEqual(secondSequence, linkedPeptide.Sequence);
+            var secondMods = nodePep.ExplicitMods.CrosslinkStructure.LinkedExplicitMods.Single().StaticModifications;
+            Assert.IsNotNull(secondMods);
+            Assert.AreEqual(1, secondMods.Count);
+            Assert.IsTrue(secondMods.Any(mod => mod.IndexAA == 0 && mod.Modification.Equivalent(carbamidomethyl)),
+                "Missing {0} on {1}", carbamidomethyl.Name, secondSequence);
+        }
+
         public static void VerifyLegacyFormatSupported(SrmDocument document)
         {
             foreach (var peptide in document.Peptides)

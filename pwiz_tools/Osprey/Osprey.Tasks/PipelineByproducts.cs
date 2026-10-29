@@ -23,11 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
-using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -210,20 +210,6 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// Stage 6 multi-charge consensus rescore targets per file (post-compaction
-    /// apex/start/end by stub index), produced by FirstPassFDR's planning step.
-    /// </summary>
-    internal sealed class PerFileConsensusTargets
-    {
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> Value { get; }
-        public PerFileConsensusTargets(
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> value)
-        {
-            Value = value;
-        }
-    }
-
-    /// <summary>
     /// Whether FirstPassFDR's Stage 6 planning block actually ran (<c>true</c>) vs
     /// was skipped (single-file / reconciliation off) or rehydrated from disk
     /// (<c>false</c>). This is the gate PerFileRescore's self-gate checks to tell
@@ -237,27 +223,6 @@ namespace pwiz.Osprey.Tasks
     {
         public bool Value { get; }
         public PlanningPerformed(bool value) { Value = value; }
-    }
-
-    /// <summary>Stage 6 reconciliation actions keyed by (file, post-compaction index).</summary>
-    internal sealed class ReconciliationActions
-    {
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> Value { get; }
-        public ReconciliationActions(IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> value) { Value = value; }
-    }
-
-    /// <summary>Per-file refined RT calibrations from the Stage 6 calibration refit.</summary>
-    internal sealed class RefinedCalibrations
-    {
-        public IReadOnlyDictionary<string, RTCalibration> Value { get; }
-        public RefinedCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
-    }
-
-    /// <summary>Per-file gap-fill targets for the Stage 6 rescore.</summary>
-    internal sealed class PerFileGapFillForRescore
-    {
-        public IReadOnlyDictionary<string, List<GapFillTarget>> Value { get; }
-        public PerFileGapFillForRescore(IReadOnlyDictionary<string, List<GapFillTarget>> value) { Value = value; }
     }
 
     /// <summary>

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
@@ -290,16 +291,16 @@ namespace SkylineBatchTest
         }
 
         /// <summary>
-        /// Creates a FileSaver for a temporary copy of a .bcfg file with all R version references
+        /// Creates a SimpleFileSaver for a temporary copy of a .bcfg file with all R version references
         /// replaced with the most recent installed R version.
-        /// The caller should dispose the FileSaver when done (auto-cleanup on dispose).
+        /// The caller should dispose the SimpleFileSaver when done (auto-cleanup on dispose).
         /// </summary>
-        public static FileSaver CreateBcfgWithCurrentRVersion(string originalBcfgPath)
+        public static SimpleFileSaver CreateBcfgWithCurrentRVersion(string originalBcfgPath)
         {
             // Create temp file in the same folder as the original
-            // In theory, this FileSaver would overwrite the original if it were ever committed,
+            // In theory, this SimpleFileSaver would overwrite the original if it were ever committed,
             // but it will never be committed.
-            var fileSaver = new FileSaver(originalBcfgPath);
+            var fileSaver = new SimpleFileSaver(originalBcfgPath);
             
             // Apply R version replacement using the general-purpose transform function
             CopyFileWithLineTransformAbsolute(originalBcfgPath, ReplaceRVersionWithCurrent, fileSaver.SafeName);

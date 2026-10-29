@@ -40,6 +40,9 @@ namespace pwiz.Osprey.Core
         public const string DECOYS_IN_LIBRARY = @"decoys-in-library";
         public const string RESOLUTION = @"resolution";
         public const string FRAGMENT_TOLERANCE = @"fragment-tolerance";
+        public const string EXPERIMENT_FDR = @"experiment-fdr";
+        public const string RECONCILIATION_COMPACTION_FDR = @"reconciliation-compaction-fdr";
+        public const string PROTEIN_FDR = @"protein-fdr";
         public const string DECOY_PAIRING_MANIFEST = @"decoy-pairing-manifest";
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";
@@ -50,6 +53,18 @@ namespace pwiz.Osprey.Core
         public const string VERBOSE = @"verbose";
         public const string TRAINING_EXPORT = @"training-export";
         public const string DEMUX = @"demux";
+        public const string FASTA = @"fasta";
+        public const string PRECURSORS = @"precursors";
+        public const string TRAINING_INPUT = @"training-input";
+        public const string TRAINING_INPUT_LIST = @"training-input-list";
+        public const string TRAINING_SEARCH = @"training-search";
+        public const string TASK_FILES = @"task-files";
+        public const string MODEL = @"model";
+        public const string DEVICE = @"device";
+        public const string TORCH_RUNTIMES = @"torch-runtimes";
+        public const string INSTALL_CUDA_RUNTIME = @"install-cuda-runtime";
+        public const string ENTRAPMENT = @"entrapment";
+        public const string ENTRAPMENT_FASTA = @"entrapment-fasta";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)

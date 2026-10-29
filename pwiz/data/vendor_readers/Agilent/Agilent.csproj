@@ -67,8 +67,8 @@
   <Target Name="ExtractAgilentAssemblies"
           Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(AgilentArchive)"
-          Outputs="$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll">
+          Inputs="$(AgilentArchive);$(AgilentAssembliesDir)\MassSpecDataReader.dll;$(AgilentAssembliesDir)\BaseDataAccess.dll;$(AgilentAssembliesDir)\MIDAC.dll"
+          Outputs="$(AgilentAssembliesDir)/.ExtractAgilentAssemblies.stamp">
     <MakeDir Directories="$(AgilentAssembliesDir)" />
     <!-- Forward slashes in the archive member patterns: 7zz on non-Windows does not treat
          '\' as a separator, so a backslash pattern matches nothing and 7-Zip still exits 0. -->
@@ -79,6 +79,8 @@
       <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.config" />
     </ItemGroup>
     <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(AgilentAssembliesDir)/.ExtractAgilentAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are

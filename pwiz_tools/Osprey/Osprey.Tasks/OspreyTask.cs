@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -30,32 +31,29 @@ namespace pwiz.Osprey.Tasks
 {
     /// <summary>
     /// One step in the Osprey analysis pipeline. Each task owns a
-    /// concrete piece of work — load spectra, calibrate, score,
-    /// reconcile, rescore, write blib — run in a pipeline.
+    /// concrete piece of work - load spectra, calibrate, score,
+    /// reconcile, rescore, write blib - run in a pipeline.
     ///
     /// Task boundaries are aligned with the HPC fan-out / join
     /// transitions documented in
     /// <c>pwiz_tools/Osprey/Osprey-workflow.html</c>:
     /// <list type="bullet">
-    ///   <item>per-file scoring (Stages 1-4) → FirstPassFDR</item>
+    ///   <item>per-file scoring (Stages 1-4) -> FirstPassFDR</item>
     ///   <item>first-pass FDR + reconciliation planning (Stage 5)</item>
-    ///   <item>per-file rescore + gap-fill (Stage 6) → SecondPassFDR</item>
+    ///   <item>per-file rescore + gap-fill (Stage 6) -> SecondPassFDR</item>
     ///   <item>SecondPassFDR second-pass FDR + protein FDR + blib (Stage 7)</item>
     /// </list>
     ///
-    /// Phase B adds <see cref="Inputs"/> / <see cref="Outputs"/> /
-    /// <see cref="ValidityKey"/> for the resume-on-restart capability:
-    /// the pipeline driver checks the validity stamp embedded in each
-    /// task output and skips Run when every output carries a current one. The
-    /// same skip-if-valid check applies to every CLI mode — cross-impl
-    /// / worker-mode invocations (<c>--input-scores</c> /
-    /// <c>--task &lt;Name&gt;</c>) flow through the same driver, so
-    /// validity-key match drives the decision rather than any CLI
-    /// flag gate. (Cross-impl correctness on <c>--input-scores</c>
-    /// parquets is enforced separately by the parquet
-    /// <c>osprey.search_hash</c> footer metadata check.)
+    /// The pipeline contract - name, declared inputs and outputs, validity key, in-file stamp,
+    /// Run / Rehydrate, published byproducts, and the driver's skip-when-current rule - is the
+    /// shared <see cref="PipelineTask"/> in CommonUtil, which CarafeSharp's stages carry too.
+    /// This class binds it to Osprey's typed <see cref="PipelineContext"/>: each contract method
+    /// is sealed here and forwarded to an overload taking the Osprey context, which is what
+    /// every Osprey task overrides. What is Osprey's alone - the <c>--task</c> selection
+    /// contract (<see cref="ISelectableTask"/>) and the default validity key over the search
+    /// identity - is declared here.
     /// </summary>
-    public abstract class OspreyTask : ISelectableTask
+    public abstract class OspreyTask : PipelineTask, ISelectableTask
     {
         /// <summary>
         /// The base-key term of every search of a blib library. Since the reader started typing
@@ -63,19 +61,19 @@ namespace pwiz.Osprey.Tasks
         /// blib's entries carry ion types and masses they did not before - which reach the
         /// scores, the generated decoys and every stage after them - so a directory scored
         /// before the change must not be adopted after. A TSV library keys exactly as before.
-        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
-        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the library composition term
+        /// (the derived .blib's validity hash) does, so a change to the reader moves both. The typing tolerance needs no term:
         /// it is the search's fragment tolerance, already in
         /// <see cref="SearchIdentity.SearchParameterHash"/>.
         /// </summary>
         public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
 
         /// <summary>
-        /// Short identifier used in pipeline log lines, the <c>--task</c> selector and each
-        /// output's validity stamp. Each task returns its own <c>TASK_NAME</c> constant, the one
-        /// spelling the CLI value list and the tests reference too.
+        /// The TSV counterpart of <see cref="BLIB_READER_TERM"/>: what the reader makes of a .tsv
+        /// (peaks merged, typed, the modified sequence's text) changes with its version too, so
+        /// outputs scored under an earlier reader are not adopted by a search under this one.
         /// </summary>
-        public abstract string Name { get; }
+        public const string TSV_READER_TERM = @";tsvreader=4";
 
         // ---- The selection contract (ISelectableTask) ------------------------------------
         // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
@@ -108,7 +106,22 @@ namespace pwiz.Osprey.Tasks
 
         public virtual string DescribeOutput(OspreyConfig config) => null;
 
-        // ---- The pipeline contract ------------------------------------------------------
+        // ---- The pipeline contract, bound to the Osprey context --------------------------
+        // Sealed against the shared context and forwarded to the typed overload, so a task
+        // reads ctx.Config without a cast and the shared driver and context see one contract.
+
+        public sealed override bool Run(TaskContext ctx) => Run((PipelineContext)ctx);
+
+        public sealed override bool Rehydrate(TaskContext ctx) => Rehydrate((PipelineContext)ctx);
+
+        public sealed override IEnumerable<string> Inputs(TaskContext ctx) => Inputs((PipelineContext)ctx);
+
+        public sealed override IEnumerable<string> Outputs(TaskContext ctx) => Outputs((PipelineContext)ctx);
+
+        public sealed override string ValidityKey(TaskContext ctx) => ValidityKey((PipelineContext)ctx);
+
+        public sealed override string OutputValidityKey(TaskContext ctx, string taskKey, string output) =>
+            OutputValidityKey((PipelineContext)ctx, taskKey, output);
 
         /// <summary>
         /// Execute this task against the shared pipeline context. May
@@ -121,7 +134,7 @@ namespace pwiz.Osprey.Tasks
         /// driver. A task returning <c>false</c> is responsible for
         /// having already logged the reason; if the failure should
         /// produce a non-zero process exit code, the task must set
-        /// <see cref="PipelineContext.ExitCode"/> before returning.
+        /// <see cref="TaskContext.ExitCode"/> before returning.
         /// Mirrors the boolean-return early-exit pattern in
         /// <c>pwiz_tools/Skyline/CommandLine.cs</c>.
         /// </summary>
@@ -129,53 +142,39 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Lazily bring this task's outputs into memory from its on-disk
-        /// artifacts, without recomputing them — the disk-load counterpart to
-        /// the compute-only <see cref="Run"/>. Invoked at most once per run by
-        /// <see cref="PipelineContext.Demand{T}"/> when a consumer first
+        /// artifacts, without recomputing them - the disk-load counterpart to
+        /// the compute-only <see cref="Run(PipelineContext)"/>. Invoked at most once per run by
+        /// <see cref="TaskContext.Demand{T}"/> when a consumer first
         /// reaches for this producer's state and the producer's own
-        /// <see cref="Run"/> was never called (e.g. a worker-mode invocation
-        /// that starts mid-pipeline). A producer whose <see cref="Run"/> did
+        /// Run was never called (e.g. a worker-mode invocation
+        /// that starts mid-pipeline). A producer whose Run did
         /// already execute returns early via its own one-shot guard, so this is
         /// a no-op there. Returns the same <c>bool</c> contract as
-        /// <see cref="Run"/>. A purely-aggregating terminal task that nothing
+        /// Run. A purely-aggregating terminal task that nothing
         /// consumes implements this as a no-op returning <c>true</c>.
         /// </summary>
         public abstract bool Rehydrate(PipelineContext ctx);
 
         /// <summary>
-        /// The byproduct purpose types this task publishes for downstream tasks
-        /// to consume by type through <see cref="PipelineContext.Get{TInfo}"/>.
-        /// The pipeline context inverts these at construction into the
-        /// byproduct -> producer registry, so a consumer's cache miss can
-        /// lazily materialize this task. Each declared type must be published
-        /// (via <see cref="PipelineContext.Publish{TInfo}"/>) on every path this
-        /// task can run -- both <see cref="Run"/> and <see cref="Rehydrate"/> --
-        /// so a consumer sees the same value regardless of how the producer was
-        /// materialized. Default empty: a task that produces no by-type
-        /// consumable state (a terminal aggregator, or one whose only shared
-        /// output is an in-place-mutated buffer demanded directly) overrides
-        /// nothing.
-        /// </summary>
-        public virtual IEnumerable<Type> Publishes => Array.Empty<Type>();
-
-        /// <summary>
-        /// File paths this task reads as inputs. Documentation only: it
-        /// states what the task consumes, and nothing reads it at run time.
-        /// Default empty; tasks override to list their input files
-        /// (mzML, library, upstream sidecars, etc.).
+        /// File paths this task reads as inputs. Nothing reads it at run time, but it
+        /// is the task's file contract: <c>--task-files</c> prints it, and the test
+        /// harnesses stage an HPC node with exactly these files, so a file the task
+        /// reads and does not declare fails there. Declare every file read, under the
+        /// conditions it is read. Default empty; tasks override to list their input
+        /// files (mzML, library, upstream sidecars, etc.).
         /// </summary>
         public virtual IEnumerable<string> Inputs(PipelineContext ctx) => Array.Empty<string>();
 
         /// <summary>
         /// File paths this task produces as outputs. Before running, the
         /// driver checks the validity stamp embedded in each one; if every
-        /// output carries a current stamp, the task's <see cref="Run"/> is
+        /// output carries a current stamp, the task's Run is
         /// skipped. Each writer embeds that stamp in the same commit as the
         /// content, and the driver writes nothing after Run. The stamp names
         /// its task, so a file another task wrote is never taken as current.
         ///
         /// A task that returns no Outputs cannot be skipped; the driver
-        /// always invokes <see cref="Run"/> for it. Use that posture
+        /// always invokes Run for it. Use that posture
         /// for tasks whose work isn't durably represented on disk
         /// (purely-in-memory transformations).
         /// </summary>
@@ -189,7 +188,7 @@ namespace pwiz.Osprey.Tasks
         /// before deciding whether to skip Run.
         ///
         /// Default includes <see cref="SearchIdentity.SearchParameterHash"/>
-        /// and <see cref="SearchIdentity.LibraryIdentityHash"/> — the
+        /// and <see cref="SearchIdentity.LibraryIdentityHash"/> - the
         /// two hashes that already participate in the parquet-metadata
         /// integrity check downstream. Tasks with extra per-task state
         /// that affects their output (e.g. <see cref="SearchIdentity.ReconciliationParameterHash"/>
@@ -213,36 +212,31 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
-            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty,
+            ReaderTerm(ctx.Config.LibrarySource?.Format),
             DemuxCache.ValidityKeySuffix(ctx.Config));
+
+        /// <summary>The reader-version term of the validity key for a library of <paramref name="format"/>.</summary>
+        private static string ReaderTerm(LibraryFormat? format)
+        {
+            switch (format)
+            {
+                case LibraryFormat.Blib:
+                    return BLIB_READER_TERM;
+                case LibraryFormat.DiannTsv:
+                    return TSV_READER_TERM;
+                default:
+                    return string.Empty;
+            }
+        }
 
         /// <summary>
         /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>
-        /// (this task's <see cref="ValidityKey"/>, computed once by the caller) for every task
+        /// (this task's <see cref="ValidityKey(PipelineContext)"/>, computed once by the caller) for every task
         /// whose outputs all depend on the same inputs. A fan-out task whose output for one run
         /// also depends on that run's own artifacts appends their identities here, so a
         /// rewritten input invalidates that run's output alone.
         /// </summary>
         public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
-
-        /// <summary>
-        /// The <see cref="ArtifactStamp"/> this task embeds in an output it writes now: this
-        /// task's name, this build's version and its <see cref="ValidityKey"/>. A writer passes
-        /// it into the same atomic commit as the content, so the two cannot disagree.
-        /// </summary>
-        public ArtifactStamp OutputStamp(PipelineContext ctx)
-        {
-            return ArtifactStamp.ForCurrentBuild(Name, ValidityKey(ctx));
-        }
-
-        /// <summary>
-        /// The stamp for one declared output whose key is its own
-        /// (<see cref="OutputValidityKey"/>) rather than the task's.
-        /// </summary>
-        public ArtifactStamp OutputStamp(PipelineContext ctx, string output)
-        {
-            return ArtifactStamp.ForCurrentBuild(Name, OutputValidityKey(ctx, ValidityKey(ctx), output));
-        }
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,

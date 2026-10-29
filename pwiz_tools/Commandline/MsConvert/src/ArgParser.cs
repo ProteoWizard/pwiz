@@ -50,6 +50,7 @@ internal static class ArgParser
 
         if (config.InputFiles.Count == 0)
             throw new ArgumentException("No input files specified. Use --help for usage.");
+        ApplyZstd(config);
         return config;
     }
 
@@ -223,11 +224,13 @@ internal static class ArgParser
     }
 
     /// <summary>An output format the C++ msconvert wrote and this one cannot: accepted only to say so.</summary>
-    private static Option Unsupported(string names, string format)
+    private static Option Unsupported(string names)
     {
         var (s, l) = SplitNames(names);
+        string reason = UnsupportedWriteFormats.TryGetReason(l, out string? r)
+            ? r : throw new InvalidOperationException($"{l} is not an unsupported write format.");
         return new Option(s, l, OptionValue.None, string.Empty,
-            (_, _) => throw new ArgumentException($"{l}: writing {format} is not supported by this msconvert.")) { Hidden = true };
+            (_, _) => throw new ArgumentException($"{l}: {reason}")) { Hidden = true };
     }
 
     private static Option HelpOption(string names, HelpFlag flag, string description, bool takesValue = false)
@@ -265,7 +268,7 @@ internal static class ArgParser
             c => c.WriteConfig.Format = WriteFormat.Mzml) with { Aliases = new[] { "--mzml" } },
         Flag("mzXML", "write mzXML format",
             c => c.WriteConfig.Format = WriteFormat.MzXml),
-        Unsupported("mz5", "mz5"),
+        Unsupported("mz5"),
         Flag("mzMLb", "write mzMLb format",
             c => c.WriteConfig.Format = WriteFormat.MzMLb),
         Arg("mzMLbChunkSize", "mzMLb dataset chunk size in bytes",
@@ -276,7 +279,7 @@ internal static class ArgParser
             defaultValue: Invariant(s_defaults.WriteConfig.MzMLbCompressionLevel)),
         Flag("mgf", "write Mascot generic format",
             c => c.WriteConfig.Format = WriteFormat.Mgf) with { Aliases = new[] { "--MGF" } },
-        Unsupported("text", "the ProteoWizard internal text format"),
+        Unsupported("text"),
         Flag("ms1", "write MS1 format",
             c => c.WriteConfig.Format = WriteFormat.Ms1),
         Flag("bms1", "write BMS1 format",
@@ -360,6 +363,14 @@ internal static class ArgParser
             (c, v) => c.ContactInfo = v),
         OptionalBool("zlib,z", "use zlib compression for binary data [default] (add =off to disable compression)",
             (c, on) => c.WriteConfig.EncoderConfig.Compression = on ? BinaryCompression.Zlib : BinaryCompression.None),
+        // Applied after parsing by ApplyZstd, so they win over --zlib wherever they appear on
+        // the command line, as in cpp.
+        Flag("zstd", "use Zstandard compression for binary data. This applies to all data arrays, instead of zlib, even if zlib=off is specified",
+            c => c.Zstd = true),
+        Flag("mzShuffleZstd", "use byte-shuffling Zstandard compression for m/z and time values",
+            c => c.MzShuffleZstd = true),
+        Flag("dictZstd", "use dictionary encoding followed by Zstandard compression for m/z and ion mobility values. This overrides --mzShuffleZstd",
+            c => c.DictZstd = true),
         // pwiz C++ numpress flags set per-array overrides; --numpressAll combines Linear+Slof.
         OptionalNumber("numpressLinear", Invariant(s_defaults.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance),
             "use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)", (c, v) =>
@@ -457,6 +468,60 @@ internal static class ArgParser
     /// <summary>All the option names the parser accepts, including aliases.</summary>
     internal static IEnumerable<string> OptionNames => s_optionsByName.Keys;
 
+
+    /// <summary>
+    /// Turns the zstd switches into encoder settings, as cpp msconvert.cpp does after parsing.
+    /// </summary>
+    private static void ApplyZstd(MsConvertConfig config)
+    {
+        var encoder = config.WriteConfig.EncoderConfig;
+        // Numpress arrays take the global compression, so under --zstd they get the
+        // "followed by zstd" encodings.
+        if (config.Zstd)
+            encoder.Compression = BinaryCompression.Zstd;
+
+        if (config.DictZstd)
+        {
+            encoder.CompressionOverrides[CVID.MS_m_z_array] = BinaryCompression.DictZstd;
+            encoder.CompressionOverrides[CVID.MS_time_array] = BinaryCompression.ByteShuffleZstd;
+            foreach (var type in s_ionMobilityArrays)
+                encoder.CompressionOverrides[type] = BinaryCompression.DictZstd;
+        }
+        else if (config.MzShuffleZstd)
+        {
+            encoder.CompressionOverrides[CVID.MS_m_z_array] = BinaryCompression.ByteShuffleZstd;
+            encoder.CompressionOverrides[CVID.MS_time_array] = BinaryCompression.ByteShuffleZstd;
+        }
+
+        if (!config.DictZstd && !config.MzShuffleZstd)
+            return;
+
+        // cpp accepts both conflicts below at parse time and then fails, writing the first
+        // spectrum (numpress) or reading the file back (mzMLb); report them here instead.
+        if (config.WriteConfig.Format == WriteFormat.MzMLb)
+            throw new ArgumentException("--mzShuffleZstd and --dictZstd are not supported for mzMLb output.");
+        foreach (var (type, compression) in encoder.CompressionOverrides)
+        {
+            if (!compression.IsValueWise())
+                continue;
+            var numpress = encoder.NumpressOverrides.GetValueOrDefault(type, encoder.Numpress);
+            if (numpress != BinaryNumpress.None)
+            {
+                throw new ArgumentException(
+                    $"--mzShuffleZstd and --dictZstd cannot be combined with numpress on the same array ({CvLookup.CvTermInfo(type).Name} has {numpress}).");
+            }
+        }
+    }
+
+    /// <summary>The arrays cpp msconvert's --dictZstd dictionary-encodes besides m/z.</summary>
+    private static readonly CVID[] s_ionMobilityArrays =
+    {
+        CVID.MS_ion_mobility_array,
+        CVID.MS_raw_ion_mobility_drift_time_array,
+        CVID.MS_mean_inverse_reduced_ion_mobility_array,
+        CVID.MS_mean_ion_mobility_drift_time_array,
+        CVID.MS_deconvoluted_ion_mobility_drift_time_array,
+    };
 
     private static void SetNumpress(MsConvertConfig config, BinaryNumpress kind, params CVID[] arrayTypes)
     {

@@ -19,7 +19,10 @@
         straight-through, at full size).
       * A check that reads output a leg here already produces (a log line, a
         cache hit) is fine. A new leg that exists to exercise pipeline behavior
-        is not: write it as a subset test.
+        is not: write it as a subset test. The tuned one command (--fasta
+        --training-input) is tested that way: the subset tunes on one run, and
+        SubsetPipelineTest's TunedStepwise and TunedHpcChain stop it after every task
+        and run it node by node.
 
     Acquires real DIA test data the way Skyline perf tests do (download a
     panorama zip into the shared <Downloads>\Perftests folder, extract,
@@ -176,6 +179,15 @@
     Override the downloads folder (default: Windows Downloads, honoring
     SKYLINE_DOWNLOAD_PATH and a relocated Downloads).
 
+.PARAMETER LibraryAsBlib
+    Search every dataset through a .blib instead of its .tsv: before the legs, the built Osprey
+    exports the staged library (decoys stripped, or marked and paired from the manifest, as the
+    dataset says) with --export-library, and every leg then takes the .blib (the manifest stays:
+    the .blib pairs its decoys from its own DecoyPairs table, but the diagnostics' entrapment
+    pairing still comes from the manifest). The goldens stay the .tsv search's,
+    so mode 1 asks whether a search through the shared BiblioSpec.IO reader is byte-identical to
+    one through the TSV parser; the only gate on the .blib read path, since every dataset's
+    library is a .tsv. Opt-in; TeamCity does not pass it. Refused with -CreateGolden.
 .PARAMETER Threads
     --threads for each run (default 16).
 
@@ -204,7 +216,7 @@
 
 .PARAMETER KeepOutput
     Retain EVERYTHING this run writes, including the staged input copies the HPC chain
-    makes (per-worker spectra.bin / library / .libcache / parquet copies, the consumed
+    makes (per-worker spectra.bin / library / derived .blib / parquet copies, the consumed
     phase dirs). A local run already retains its PRODUCTS - <dataset>\straight, the
     chain's phase 3/4 outputs and logs, every comparison input a red leg needs - and
     drops the copies as they are consumed, because they are byte-identical to what
@@ -292,10 +304,16 @@ param(
     # is written in the invariant culture, so the SAME golden must match: a fr-FR run that
     # passes proves no number in a file or a tagged line follows the UI culture. The log's
     # prose is in fr-FR form (1 234 567, 12,5 %) and is never compared.
-    [string]$Culture
+    [string]$Culture,
+    # Every leg searches an exported .blib of the dataset's library instead of the .tsv; see
+    # the parameter help.
+    [switch]$LibraryAsBlib
 )
 
 $ErrorActionPreference = 'Stop'
+if ($LibraryAsBlib -and $CreateGolden) {
+    throw "-LibraryAsBlib and -CreateGolden do not mix: the goldens are the .tsv search's, and a .blib run is compared against them."
+}
 
 # Clean BEFORE a run, not after. Stated ONCE here; every other comment on cleanup points
 # back to this block rather than restating it (copies drift - this PR replaced eight).
@@ -307,7 +325,7 @@ $ErrorActionPreference = 'Stop'
 #                    only to regenerate files a passing run had produced and then deleted.
 #                    False under -TeamCity or -CleanOutput; -KeepOutput forces it.
 #   $retainStaging - the staged input COPIES survive too: per-worker spectra.bin / library /
-#                    .libcache / parquet copies and the consumed phase dirs (Remove-Staging
+#                    derived .blib / parquet copies and the consumed phase dirs (Remove-Staging
 #                    honors it). Only -KeepOutput: the copies are byte-identical to what the
 #                    straight leg already holds and were 69% of a retained Stellar run dir,
 #                    ~67 GB of an Astral one.
@@ -327,11 +345,11 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
 # (YEAR.ORDINAL.BRANCH.DOY) that changes every day, but the committed blib golden
-# compares the osprey_version metadata cell exactly. Pin OspreyVersion.Current to
+# compares the osprey.version metadata cell exactly. Pin OspreyVersion.Current to
 # a canonical constant for every Osprey invocation in this run (the env var
 # is inherited by the child processes), so the stamp is deterministic and the
 # golden stays green without the comparator skipping the field. Must match the
-# osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
+# osprey.version value committed in osprey-regression.data/*/tables/LibMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
 # Turn ON the per-file second-pass verifier for this gate (issue #4486). Stage 7 recomputes each
@@ -491,6 +509,11 @@ $datasets = [ordered]@{
         NestedZip        = 'libdecoy-entrapment.zip'
         LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
+        # The manifest pairs each entrapment peptide with its original target for the paired
+        # FDP and the FDRBench output; an entrapment library without it is refused at load.
+        # Until 2026-10-17 this dataset ran without one and its paired FDP was the no-pairing
+        # value.
+        Manifest         = 'osprey_library_db_pairing.tsv'
         StripDecoys      = $true
         Resolution       = 'unit'
         ModelDiagnostics = $true
@@ -1062,6 +1085,40 @@ function Resolve-DatasetInputs {
     if ($Spec.Manifest) {
         $manifest = Join-Path $libDir $Spec.Manifest
         if (-not (Test-Path $manifest)) { throw "Pairing manifest not found: $manifest" }
+    }
+
+    # -LibraryAsBlib: the legs search an exported .blib of the library staged above. Derived
+    # EVERY run, never cached: the export is the loader's own reading of the .tsv (its typing,
+    # its decoy marking and pairing from the manifest), so a .blib from an earlier build would
+    # mask exactly the change a run is meant to catch. Into the same scratch as StripDecoys,
+    # through a temp name moved into place, for the same reason as there.
+    if ($LibraryAsBlib) {
+        $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
+        New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
+        $blib = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.blib')
+        $blibTmp = $blib + '.tmp'
+        $exportDir = Join-Path $derivedDir 'export'
+        $exportLog = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.export.log')
+        Remove-Item $blib, $blibTmp -Force -ErrorAction SilentlyContinue
+        $exportArgs = @('-l', $library, '--export-library', $blibTmp, '--resolution', $Spec.Resolution,
+                        '--threads', $Threads.ToString(), '--work-dir', $exportDir)
+        if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
+        if ($manifest) { $exportArgs += @('--decoy-pairing-manifest', $manifest) }
+        Write-Host "  exporting the library as a .blib for the legs to search..."
+        & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $blibTmp)) {
+            throw "Exporting $library as a .blib failed (exit $LASTEXITCODE); see $exportLog"
+        }
+        Move-Item $blibTmp $blib -Force
+        $saved = Select-String -Path $exportLog -Pattern 'Saved [\d,]+ library precursors? to' | Select-Object -Last 1
+        Write-Host ("  {0}" -f ($(if ($saved) { $saved.Line -replace '^\[[^\]]*\]\s*', '' } else { "exported " + (Split-Path -Leaf $blib) })))
+        $library = $blib
+        # The legs search the .blib ALONE: its DecoyPairs table carries the whole pairing design
+        # (each decoy's target, and the manifest's pairing id that pairs an entrapment peptide
+        # with its original target), so the manifest is not on their command line. The .blib
+        # must reproduce every golden the .tsv plus manifest produced, the model diagnostics'
+        # paired entrapment FDP (mode 1b) included.
+        $manifest = $null
     }
     return @{ Dir = $dir; LibDir = $libDir; Mzmls = $mzmls; Library = $library; Manifest = $manifest }
 }
@@ -1713,15 +1770,134 @@ function Assert-ExitAgreesWithLog {
     }
 }
 
-# Stage the library (+ its .libcache when present) into a phase dir.
-function Copy-LibraryInto {
-    param([string]$Library, [string]$Dir, [string]$Manifest)
-    Copy-Item $Library (Join-Path $Dir (Split-Path -Leaf $Library))
-    $libCache = $Library + '.libcache'
-    if (Test-Path $libCache) { Copy-Item $libCache (Join-Path $Dir (Split-Path -Leaf $libCache)) }
-    # The pairing manifest is an input like the library: each phase runs with its
-    # own dir as CWD and references it by leaf name, so it must be staged too.
-    if ($Manifest) { Copy-Item $Manifest (Join-Path $Dir (Split-Path -Leaf $Manifest)) }
+# Stage the library's DERIVED file into a phase dir: its <lib>.blib, when present. No task
+# declares it - the derived blib is a cache of the library, validated by its own
+# osprey.library_hash row, and a node without it rebuilds it - so the declared-input staging
+# below does not ship it. This relay saves each phase the rebuild, as an HPC orchestrator
+# would. Returns the paths it staged.
+function Copy-LibraryDerivedInto {
+    param([string]$Library, [string]$Dir)
+    $staged = @()
+    $derived = $Library + '.blib'
+    if (Test-Path -LiteralPath $derived) {
+        $dest = Join-Path $Dir (Split-Path -Leaf $derived)
+        Copy-Item -LiteralPath $derived $dest
+        $staged += $dest
+    }
+    return $staged
+}
+
+# The files a --task node declares, as Osprey prints them: the node's own command line plus
+# --task-files (Program.PrintTaskFiles), run with CWD = the node dir, as Invoke-OspreyTaskRun
+# runs it, so every path resolves where the node will look. Nothing runs: the declarations
+# read the configuration only. One object per line, Kind 'input' or 'output'.
+function Get-DeclaredTaskFiles {
+    param([string]$WorkDir, [string[]]$CliArgs)
+    New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    Push-Location $WorkDir
+    try {
+        $lines = @(& $ospreyExe @CliArgs '--task-files' 2>&1 | ForEach-Object { "$_" })
+        $exit = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    if ($exit -ne 0) {
+        throw ("Osprey --task-files exited {0} in {1}: {2}" -f $exit, $WorkDir, ($lines -join ' | '))
+    }
+    # The last three tab-separated fields: --timestamp / --memstamp prepend columns of their own.
+    return @(foreach ($line in $lines) {
+        $f = $line.Split("`t")
+        if ($f.Count -ge 3 -and ($f[-3] -eq 'input' -or $f[-3] -eq 'output')) {
+            [pscustomobject]@{ Kind = $f[-3]; Task = $f[-2]; Path = $f[-1].Trim() }
+        }
+    })
+}
+
+# Stage a --task node with EXACTLY the inputs its task declares (OspreyTask.Inputs), each copied
+# from the first of $SourceDirs - the earlier phases' dirs - that holds it, else from $External
+# (leaf -> path, for the inputs from outside the chain), mtime preserved: the library's identity
+# and the training export's key are name + size + mtime. A declared input found nowhere FAILS
+# staging and names the file.
+#
+# This is what makes the declarations a contract rather than documentation. The chain used to
+# stage from hand-maintained lists, generous enough that a task could read a file its
+# declaration never promised and the gate stayed green - the #4486 relocation was believed done
+# for days while Stage 7 still read every 1st-pass sidecar. Now an undeclared dependency fails
+# the node that reads it, and a declared input nothing produced fails here
+# (TODO-task_file_contract_from_declarations.md).
+#
+# One substitution, the data-file rule of doc 00's relay checklist: a declared data file (an -i
+# of this node) is satisfied by its <stem>.spectra.bin, and the data file is never staged.
+# Returns the staged paths and the declared outputs.
+function Copy-DeclaredInputs {
+    param([string]$WorkDir, [string[]]$CliArgs, [string[]]$SourceDirs, [hashtable]$External,
+          [string]$Library)
+    $declared = Get-DeclaredTaskFiles -WorkDir $WorkDir -CliArgs $CliArgs
+    $dataLeaves = @{}
+    for ($i = 0; $i -lt $CliArgs.Count - 1; $i++) {
+        if ($CliArgs[$i] -eq '-i') { $dataLeaves[(Split-Path -Leaf $CliArgs[$i + 1])] = $true }
+    }
+    $workFull = [IO.Path]::GetFullPath($WorkDir).TrimEnd('\')
+    $staged = [System.Collections.Generic.List[string]]::new()
+    foreach ($in in @($declared | Where-Object { $_.Kind -eq 'input' })) {
+        if ([IO.Path]::GetDirectoryName($in.Path).TrimEnd('\') -ne $workFull) {
+            throw "staging: $($in.Task) declares input '$($in.Path)' outside its node directory $WorkDir"
+        }
+        $leaf = Split-Path -Leaf $in.Path
+        if ($dataLeaves.ContainsKey($leaf)) { $leaf = [IO.Path]::GetFileNameWithoutExtension($leaf) + '.spectra.bin' }
+        $dest = Join-Path $WorkDir $leaf
+        if (Test-Path -LiteralPath $dest) { continue }
+        $src = $null
+        foreach ($d in $SourceDirs) {
+            $candidate = Join-Path $d $leaf
+            if (Test-Path -LiteralPath $candidate) { $src = $candidate; break }
+        }
+        if (-not $src -and $External.ContainsKey($leaf) -and (Test-Path -LiteralPath $External[$leaf])) {
+            $src = $External[$leaf]
+        }
+        if (-not $src) {
+            throw ("staging: {0} declares input '{1}', and no earlier phase produced it (searched {2}, " +
+                   "then the library, manifest and straight-through spectra caches). Either its producer " +
+                   "did not write it or the declaration names a file nothing writes.") -f
+                  $in.Task, $leaf, ($SourceDirs -join ', ')
+        }
+        Copy-Item -LiteralPath $src $dest
+        (Get-Item -LiteralPath $dest).LastWriteTimeUtc = (Get-Item -LiteralPath $src).LastWriteTimeUtc
+        $staged.Add($dest)
+    }
+    $libLeaf = Split-Path -Leaf $Library
+    if (@($staged | Where-Object { (Split-Path -Leaf $_) -eq $libLeaf }).Count -gt 0) {
+        foreach ($p in @(Copy-LibraryDerivedInto -Library $Library -Dir $WorkDir)) { $staged.Add($p) }
+    }
+    return @{
+        Staged  = $staged.ToArray()
+        Outputs = @($declared | Where-Object { $_.Kind -eq 'output' } | ForEach-Object { $_.Path })
+    }
+}
+
+# One HPC node: stage its declared inputs, run it, keep its log, check it wrote every output it
+# declares, and free the staged copies (unless -KeepStaged: phase 4's are compared afterwards).
+# The free is per file: a phase dir is left holding only what its task wrote, which is what the
+# later phases search.
+function Invoke-HpcNode {
+    param([string]$WorkDir, [string[]]$CliArgs, [string]$LogName, [string]$KeptLog,
+          [string[]]$SourceDirs, [hashtable]$External, [string]$Library, [switch]$KeepStaged,
+          # Dirs that are fully consumed once this node is staged, freed before it runs.
+          [string[]]$FreeBeforeRun)
+    $stage = Copy-DeclaredInputs -WorkDir $WorkDir -CliArgs $CliArgs -SourceDirs $SourceDirs `
+        -External $External -Library $Library
+    foreach ($d in @($FreeBeforeRun)) { Remove-Staging $d }
+    Invoke-OspreyTaskRun -WorkDir $WorkDir -CliArgs $CliArgs -LogName $LogName
+    $logPath = Join-Path $WorkDir $LogName
+    Copy-Item $logPath $KeptLog -Force
+    $missing = @($stage.Outputs | Where-Object { -not (Test-Path -LiteralPath $_) })
+    if ($missing.Count -gt 0) {
+        throw ("Osprey --task exited 0 without writing {0} of its declared outputs: [{1}]. Log: {2}" -f
+               $missing.Count, ($missing -join ', '), $logPath)
+    }
+    if (-not $KeepStaged) {
+        foreach ($p in $stage.Staged) { Remove-Staging $p }
+    }
 }
 
 # Run the distributed --task pipeline end to end against copied inputs under
@@ -1759,269 +1935,111 @@ function Invoke-HpcChain {
     # Stable, file-order stem list (NOT hashtable key order) so the -i
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
-    $mzmlByStem = @{}
-    foreach ($m in $Mzmls) { $mzmlByStem[[IO.Path]::GetFileNameWithoutExtension($m)] = $m }
+    $commonArgs = @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+                    '--protein-fdr', '0.01', '--threads', $Threads.ToString()) + $extraArgs + $memStampArgs
+
+    # EVERY PHASE IS STAGED FROM ITS TASK'S DECLARATIONS (Invoke-HpcNode): what the node is given
+    # is what `--task-files` says it reads, found in the earlier phases' dirs. Nothing here lists
+    # a file by hand, so what follows is only which phases may supply which.
+    #
+    # The inputs from outside the chain, by leaf: the library and pairing manifest, and each
+    # run's spectra cache from the straight-through leg. Consulted only AFTER the phase dirs and
+    # only for these leaves, so a phase that failed to write an artifact can never be covered by
+    # the straight-through leg's copy of it.
+    #
+    # The caches are what phase 1 is seeded from, not the mzML. Phase 1 is the only HPC phase
+    # that reads spectra from scratch, so this costs nothing, stops copying multi-GB inputs, and
+    # makes the phase the gate on PerFileScoring reading a .spectra.bin with no source. Mode 2
+    # cannot cover that - it requires PerFileScoring to be SKIPPED, and a skipped task opens no
+    # cache. Also the only leg covering the UNREDIRECTED lookup: no phase passes --work-dir, so
+    # ResolveCacheDir returns the input directory, which is what an operator gets by default.
+    $external = @{ $libName = $Library }
+    if ($Manifest) { $external[$manifestName] = $Manifest }
+    foreach ($stem in $stemList) {
+        $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
+        if (-not (Test-Path -LiteralPath $srcCache)) {
+            throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
+        }
+        $external["$stem.spectra.bin"] = $srcCache
+    }
 
     # Phase logs are copied here as each phase finishes, because the phase DIRS are
-    # freed mid-chain to bound peak disk (phases 1, 2 and every phase-3 worker go
-    # before the SecondPassFDR node even starts). A leg-level assertion therefore cannot read
+    # freed mid-chain to bound peak disk. A leg-level assertion therefore cannot read
     # them where they were written -- mode 6 found exactly that, seeing only phase 4.
     # A few KB of text survives; the multi-GB inputs still do not.
     $chainLogDir = Join-Path $ChainRoot 'logs'
     New-Item -ItemType Directory -Path $chainLogDir -Force | Out-Null
 
-    # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
-    # <stem>.calibration.json per file.
-    # ONE PROCESS PER FILE, in its own directory, because that is what PerFileScoring is.
-    # Running all three mzMLs through a single process proved the task works on a node that can
-    # see every file - the one condition an HPC worker never has. A worker that reached for a
-    # sibling's data would have passed here and failed in production.
+    # Phase 1: per-file raw workers (Stage 1-4), writing <stem>.scores.parquet +
+    # <stem>.calibration.json. ONE PROCESS PER FILE, in its own directory, because that is what
+    # PerFileScoring is: running all three through one process proved the task works on a node
+    # that can see every file - the one condition an HPC worker never has. Each node is given
+    # its own spectra cache for the data file it declares, and NO mzML: Osprey tolerates a
+    # missing data file once the .spectra.bin exists, and a 0-byte stub would make a rejected
+    # cache silently parse an empty file.
     $ph1Root = Join-Path $ChainRoot 'phase1_scoring'
-    New-Item -ItemType Directory -Path $ph1Root -Force | Out-Null
     $ph1Dirs = @{}
     foreach ($stem in $stemList) {
         $ph1Dirs[$stem] = Join-Path $ph1Root $stem
-        New-Item -ItemType Directory -Path $ph1Dirs[$stem] -Force | Out-Null
-    }
-    # Seeded with the straight-through leg's CACHES, not the mzML. Phase 1 is the only HPC
-    # phase that reads spectra and it deletes the copied mzML right after running anyway, so
-    # this costs nothing, stops copying multi-GB inputs, and makes the phase the gate on
-    # PerFileScoring reading a .spectra.bin with no source. Mode 2 cannot cover that - it
-    # requires PerFileScoring to be SKIPPED, and a skipped task opens no cache. Mode 3's
-    # chain==straight comparison is what proves the results identical.
-    #
-    # Also the only leg covering the UNREDIRECTED lookup: phase 1 passes no --work-dir, so
-    # ResolveCacheDir returns the input directory, which is what an operator gets by default.
-    foreach ($stem in $stemList) {
-        $d1 = $ph1Dirs[$stem]
-        $srcCache = Join-Path $CacheSource "$stem.spectra.bin"
-        if (-not (Test-Path -LiteralPath $srcCache)) {
-            throw "regression: HPC phase 1 needs the straight-through spectra cache '$srcCache'; the cache-only PerFileScoring gate cannot run without it."
-        }
-        # THIS worker's data and nothing else: its own spectra cache and the library. No
-        # sibling's cache or parquet is present, and NO mzML - Osprey tolerates a missing
-        # data file once the .spectra.bin exists, so the chain stages what an orchestrator
-        # would and no longer fakes an input file to satisfy path derivation.
-        Copy-Item -LiteralPath $srcCache (Join-Path $d1 "$stem.spectra.bin")
-        Copy-LibraryInto -Library $Library -Dir $d1 -Manifest $Manifest
-        $a1 = @('-i', "$stem.mzML",
-                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-                '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
-        $a1 += $extraArgs
-        $a1 += $memStampArgs
-        Invoke-OspreyTaskRun -WorkDir $d1 -CliArgs $a1 -LogName 'phase1.log'
-        Copy-Item (Join-Path $d1 'phase1.log') (Join-Path $chainLogDir "phase1_$stem.log") -Force
+        $a1 = @('-i', "$stem.mzML") + $commonArgs + @('--task', 'PerFileScoring')
+        Invoke-HpcNode -WorkDir $ph1Dirs[$stem] -CliArgs $a1 -LogName 'phase1.log' `
+            -KeptLog (Join-Path $chainLogDir "phase1_$stem.log") -SourceDirs @() -External $external `
+            -Library $Library
     }
 
-    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
-    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. No
-    # input file is staged; the task derives sidecar paths from the -i names alone.
+    # Phase 2: FirstPassFDR (Stage 5), from every run's phase-1 output. Writes each run's
+    # <stem>.1st-pass.fdr_scores.bin and the analysis-wide output.1st-pass.* files. -i names the
+    # DATA files, exactly as phase 1 was given them, though this node holds none: Osprey accepts
+    # an absent input whose scores parquet is on disk, which is the state a staged join is in.
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
-    New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
-    foreach ($s in $stemList) {
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
-    }
-    Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
-    # -i names the DATA files, exactly as phase 1 was given them, even though this
-    # directory holds no data file at all: Osprey accepts an absent input whose scores
-    # parquet is on disk, which is precisely the state a staged join node is in. That
-    # tolerance is what --input-scores used to express by naming a different input KIND.
     $a2 = @('--task', 'FirstPassFDR')
     foreach ($s in $stemList) { $a2 += @('-i', "$s.mzML") }
-    $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
-    $a2 += $extraArgs
-    $a2 += $memStampArgs
-    Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
-    Copy-Item (Join-Path $ph2 'phase2.log') (Join-Path $chainLogDir 'phase2.log') -Force
+    $a2 += $commonArgs
+    Invoke-HpcNode -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log' `
+        -KeptLog (Join-Path $chainLogDir 'phase2.log') `
+        -SourceDirs @($stemList | ForEach-Object { $ph1Dirs[$_] }) -External $external -Library $Library
 
-    # Phase 3: per-file rescore workers (Stage 6), one independent worker per
-    # file. Stage 6 STREAMS its MS2 from the .spectra.bin cache phase 1 wrote (there is
-    # no mzML fallback), so each worker gets phase 1's <stem>.spectra.bin and no input
-    # file at all (Osprey tolerates a missing data file once the cache exists -- the real
-    # 6 GB mzML is never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
-    # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
-    # --task PerFileRescoring runs alone (the membership rule includes only the selected stage), so
-    # phase 4 is the only node that writes one.
+    # Phase 3: per-file rescore workers (Stage 6), one independent worker per file, from its own
+    # phase-1 output and phase 2's. Stage 6 STREAMS its MS2 from the spectra cache (there is no
+    # mzML fallback), which PerFileRescoring declares, so each worker gets its run's cache and no
+    # data file. It writes the reconciled parquet, the run's plan and the per-run 2nd-pass
+    # sidecars. NOT given the pass-1 diagnostics product: PerFileRescoring does not read it, so
+    # phase 4 takes it from phase 2 directly instead of through a relay hop here.
+    #
+    # Freeing each worker's staged copies as it finishes keeps at most one worker's 6 GB
+    # spectra.bin + library copy on disk at a time (the out-of-disk failure was several of them
+    # coexisting with the straight-through leg's spectra caches).
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
-        $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
-        $ph3Dirs[$s] = $ph3
-        New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.spectra.bin")     (Join-Path $ph3 "$s.spectra.bin")
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")  (Join-Path $ph3 "$s.scores.parquet")
-        Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph3 "$s.calibration.json")
-        Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
-        Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
-        # The 1st-pass model sidecar (frozen 2nd-pass modes) must ride the same
-        # phase2 -> phase3 -> phase4 relay as the other Stage-5 sidecars: $ph2 is
-        # deleted below (before SecondPassFDR), so SecondPassFDR can only reach it
-        # via a phase-3 hop. Present only for the SVM/percolator framework; absent for
-        # the GBDT golden, so guard with Test-Path.
-        $ph2model = Join-Path $ph2 "$s.1st-pass.model.json"
-        if (Test-Path $ph2model) { Copy-Item $ph2model (Join-Path $ph3 "$s.1st-pass.model.json") }
-        # The protein-compact stratum is a SECOND artifact, not a field of the model sidecar:
-        # first-pass protein FDR computes it and training does not, so it is written when that
-        # later phase ends. It therefore needs its own hop on the same relay. Present only
-        # under OSPREY_PASS2_QVALUE=protein-compact, so guard with Test-Path.
-        $ph2stratum = Join-Path $ph2 "$s.1st-pass.stratum.json"
-        if (Test-Path $ph2stratum) { Copy-Item $ph2stratum (Join-Path $ph3 "$s.1st-pass.stratum.json") }
-        # The analysis-wide EXPERIMENT-scope sidecar (format v5, issue #4486) rides the same
-        # relay. It is a RUN-level file, not per-stem - one record per distinct entry_id for the
-        # whole analysis - but it is copied inside this per-stem loop because each stem gets its
-        # own phase-3 directory and a PerFileRescoring worker reads it from its own working
-        # directory. Stage 6's compaction reads the protein-rescue q out of this file, so a
-        # worker that cannot see it computes a different survivor set than straight-through.
-        $ph2exp = Join-Path $ph2 'output.1st-pass.fdr_experiment.bin'
-        if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
-        # The analysis-wide RETAINED BASE_ID summary rides the same relay, for the same reason
-        # and one step further: it is what lets this worker compact its single run without
-        # reading every other run's reconciliation.json. FirstPassFDR writes it when planning
-        # ends. Unlike the files above this one is NOT guarded with Test-Path - a worker that
-        # cannot see it fails rather than silently compacting to a per-run subset, so a missing
-        # copy here must surface as that failure and not as a skipped hop.
-        $ph2ret = Join-Path $ph2 'output.1st-pass.retained_base_ids.bin'
-        Copy-Item $ph2ret (Join-Path $ph3 'output.1st-pass.retained_base_ids.bin')
-        # The pass-1 diagnostics product rides the same relay. FirstPassFDR is the only task
-        # that can produce it - the pass-1 pool and trained model are gone by SecondPassFDR - so
-        # a node that cannot see it renders a page with no first-pass half at all.
-        #
-        # This hop did not exist for its predecessor either, which doc 00 names as a standing
-        # gap: "a relay obligation mode 3 does not stage is an obligation nothing is checking".
-        # It stayed invisible because mode 3 compares the blib and the FDR sidecars and never
-        # opens the report, so the chain's SecondPassFDR silently logged "pass-1 data sidecar
-        # not found; pass-2 enrichment skipped" and the leg passed anyway. Guarded with
-        # Test-Path: present only under --model-diagnostics.
-        $ph2diag = Join-Path $ph2 'output.1st-pass.model-diagnostics.json'
-        if (Test-Path $ph2diag) { Copy-Item $ph2diag (Join-Path $ph3 'output.1st-pass.model-diagnostics.json') }
-        Copy-LibraryInto -Library $Library -Dir $ph3 -Manifest $Manifest
-        $a3 = @('--task', 'PerFileRescoring', '-i', "$s.mzML",
-                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-                '--protein-fdr', '0.01', '--threads', $Threads.ToString())
-        $a3 += $extraArgs
-        $a3 += $memStampArgs
-        Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
-        Copy-Item (Join-Path $ph3 'phase3.log') (Join-Path $chainLogDir "phase3_$s.log") -Force
-        # This worker has written its reconciled parquet; phase 4
-        # consumes it plus the calibration / reconciliation / 1st-pass
-        # sidecars copied above -- never this worker's spectra cache, input
-        # scores.parquet, or library. Drop those big inputs now so at most one
-        # worker's 6 GB spectra.bin + library copy is on disk at a time (the
-        # out-of-disk failure was several of them coexisting with the
-        # straight-through leg's spectra caches).
-        Remove-Staging (Join-Path $ph3 "$s.spectra.bin")
-        Remove-Staging (Join-Path $ph3 "$s.scores.parquet")
-        Remove-Staging (Join-Path $ph3 $libName)
-        Remove-Staging (Join-Path $ph3 ($libName + '.libcache'))
+        $ph3Dirs[$s] = Join-Path $ChainRoot "phase3_rescore_$s"
+        $a3 = @('--task', 'PerFileRescoring', '-i', "$s.mzML") + $commonArgs
+        Invoke-HpcNode -WorkDir $ph3Dirs[$s] -CliArgs $a3 -LogName 'phase3.log' `
+            -KeptLog (Join-Path $chainLogDir "phase3_$s.log") -SourceDirs @($ph1Dirs[$s], $ph2) `
+            -External $external -Library $Library
     }
-
-    # Phases 1 and 2 are fully consumed once every rescore worker has copied its
-    # inputs (phase 4 reads only phase-3 outputs, and their logs are already in
-    # chain\logs). Free them before SecondPassFDR.
+    # Phase 1 is fully consumed: phase 4 reads nothing Stage 1-4 wrote.
     Remove-Staging $ph1Root
-    Remove-Staging $ph2
 
-    # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
-    # reconciled parquet + sidecars (never the original Stage 4 parquet, and no
-    # input file at all) and writes the blib.
+    # Phase 4: SecondPassFDR (Stage 7 + blib), from the phase-3 workers' outputs and phase 2's
+    # analysis-wide files.
+    #
+    # THE PER-FILE 1st-PASS SIDECARS ARE WITHHELD, because SecondPassFDR declares them only
+    # under OSPREY_PASS2_VERIFY_WORKER, which this chain turns off. That is the gate for issue
+    # #4486's goal, and an ENFORCEMENT rather than an assertion: if Stage 7 reaches for one, it
+    # fails on a missing file rather than passing quietly. The straight leg has them sitting in
+    # its own directory, so only this leg can show the default path is independent of them. The
+    # same holds for the per-run .calibration.json, which SecondPassFDR no longer declares, and
+    # for the model and stratum outside protein-compact.
+    #
+    # The 1st-pass sidecars are still preserved for mode 3's pass-1 comparison: they are chain
+    # outputs (phase 2 wrote them), simply not phase 4's input, and phase 2's dir is freed once
+    # phase 4 is staged, with every phase-3 worker's.
     $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
-    New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
-    # Where the phase-3 workers' own outputs are kept for comparison after their dirs are cleaned.
     $ph3Out = Join-Path $ChainRoot 'phase3_outputs'
     New-Item -ItemType Directory -Path $ph3Out -Force | Out-Null
     foreach ($s in $stemList) {
-        $ph3 = $ph3Dirs[$s]
-        Copy-Item (Join-Path $ph3 "$s.scores-reconciled.parquet") (Join-Path $ph4 "$s.scores-reconciled.parquet")
-        # THE PER-FILE 1st-PASS SIDECARS ARE DELIBERATELY WITHHELD when the verifier is off.
-        #
-        # This is the gate for issue #4486's actual goal, and it is an ENFORCEMENT rather than an
-        # assertion: phase 4 is given exactly what an HPC orchestrator would give a SecondPassFDR
-        # node - the reconciled parquets, the per-run 2nd-pass artifacts, and the analysis-wide
-        # experiment sidecar - and nothing per-file from the first pass. If Stage 7 reaches for
-        # one, it fails on a missing file rather than passing quietly, and no log line or count
-        # has to be trusted to notice.
-        #
-        # A green mode 3 therefore MEANS the default path is independent of these files. That is
-        # not something a passing run could otherwise demonstrate: the straight leg has them
-        # sitting in its own directory, so it would read them without anyone knowing.
-        #
-        # Under OSPREY_PASS2_VERIFY_WORKER they ARE relayed, because the recomputation legitimately
-        # needs them - the flag changes what this node is being asked to do.
-        # Preserved for the mode-3 comparison regardless: these ARE chain outputs (phase 3 wrote
-        # them), they are simply not phase 4's input. The worker dirs are scrubbed a few lines
-        # below, so without this the files the comparison needs would be gone.
-        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
-
-        # WITHHELD ONLY WHEN THE WORKER ANSWERED. Every pass-2 mode's worker leaves a 2nd-pass
-        # sidecar here (#4665), and phase 4 folds it without opening anything from the first
-        # pass - that is the contract issue #4486 establishes, and withholding is how it is
-        # proven. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
-        # run whose worker did not answer still has what it would need to be diagnosed.
-        if (-not (Test-Path (Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"))) {
-            Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
-        }
-        Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
-        Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
-        # Ship the persisted 1st-pass model so SecondPassFDR can run the frozen 2nd-pass
-        # modes (transfer / protein-compact) without re-training. Written
-        # by the FirstPassFDR join node (phase 2) and relayed into $ph3 above ($ph2 is already
-        # deleted by now). Present for the SVM/percolator framework, so guard with Test-Path.
-        # protein-compact's stratum is its own artifact (protein FDR computes it, training does
-        # not), so it takes the same second hop rather than riding inside the model sidecar.
-        $modelSide = Join-Path $ph3 "$s.1st-pass.model.json"
-        if (Test-Path $modelSide) { Copy-Item $modelSide (Join-Path $ph4 "$s.1st-pass.model.json") }
-        $stratumSide = Join-Path $ph3 "$s.1st-pass.stratum.json"
-        if (Test-Path $stratumSide) { Copy-Item $stratumSide (Join-Path $ph4 "$s.1st-pass.stratum.json") }
-        # The per-run 2nd-pass sidecar is now an INPUT to phase 4, not its output (#4486): the
-        # per-file half of the second pass runs in PerFileRescoring, so phase 3 produces this
-        # file and phase 4 folds it. Its VALIDITY STAMP travels with it, because that stamp is
-        # how SecondPassFDR knows the worker owns the file - the filename records the producer,
-        # so presence answers "who wrote this" without opening it.
-        #
-        # Copying the binary but not the stamp would be worse than copying neither: phase 4
-        # would fold a file it believed it had produced itself. Guarded with Test-Path because
-        # the retrain modes have no per-file half and phase 3 writes nothing here.
-        #
-        # The DECOY SIDE of the same competition travels with it, and is not optional once the
-        # sidecar is here: the pool image cannot carry the winning decoy of a base_id (a
-        # non-survivor holds no pool row), so phase 4 THROWS rather than folding an experiment
-        # q against a decoy-depleted null. Relaying one without the other is the exact defect
-        # this relay produced once before - a per-file artifact that silently did not arrive,
-        # leaving phase 4 to recompute and answer differently from the straight route.
-        $pass2Side = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
-        if (Test-Path $pass2Side) {
-            $pass2Decoys = Join-Path $ph3 "$s.2nd-pass.fdr_decoys.bin"
-            if (-not (Test-Path $pass2Decoys)) {
-                throw "PerFileRescoring wrote $s.2nd-pass.fdr_scores.bin but no matching .2nd-pass.fdr_decoys.bin in $ph3"
-            }
-            Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
-            Copy-Item $pass2Decoys (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin")
-        }
-        # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
-        # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
-        $ph3exp = Join-Path $ph3 'output.1st-pass.fdr_experiment.bin'
-        if (Test-Path $ph3exp) { Copy-Item $ph3exp (Join-Path $ph4 'output.1st-pass.fdr_experiment.bin') -Force }
-        # And the retained base_id summary, for the same reason: SecondPassFDR's reconciled-input
-        # load streams each run against it, so $ph2 being gone makes phase 3 its only route here.
-        $ph3ret = Join-Path $ph3 'output.1st-pass.retained_base_ids.bin'
-        Copy-Item $ph3ret (Join-Path $ph4 'output.1st-pass.retained_base_ids.bin') -Force
-        # The pass-1 diagnostics product takes its second hop for the same reason as the model
-        # sidecar: SecondPassFDR renders the page and $ph2 is gone by now, so phase 3 is its
-        # only route here. Without it the chain's report has no first-pass half.
-        $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
-        if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
-        # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
-        # it could never fire: --task PerFileRescoring runs alone (the membership rule includes only
-        # the selected stage), so SecondPassFdrTask never runs on a phase-3 worker and no such file exists to copy. Worse than dead - had
-        # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
-        # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
-        # Phase 4 is the only node that writes these.
+        Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
     }
-    # SecondPassFDR now has every worker's reconciled output copied in (and kept under
-    # phase3_outputs for comparison); the phase-3 worker dirs are done.
-    foreach ($d in $ph3Dirs.Values) { Remove-Staging $d }
-    Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
     # -i again, and the RECONCILED parquet is what each run resolves to - because the TASK
     # says so (ScoringTaskShared.ReadsReconciledScores), not because it is the only file
     # here. That this directory also holds only the reconciled sibling is the enforcement
@@ -2029,12 +2047,12 @@ function Invoke-HpcChain {
     # a disk probe, the staging would hide it.
     $a4 = @('--task', 'SecondPassFDR')
     foreach ($s in $stemList) { $a4 += @('-i', "$s.mzML") }
-    $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
-    $a4 += $extraArgs
-    $a4 += $memStampArgs
-    Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
-    Copy-Item (Join-Path $ph4 'phase4.log') (Join-Path $chainLogDir 'phase4.log') -Force
+    $a4 += $commonArgs
+    # Staged copies kept: mode 3 compares the per-run 2nd-pass sidecars in this directory.
+    Invoke-HpcNode -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log' `
+        -KeptLog (Join-Path $chainLogDir 'phase4.log') `
+        -SourceDirs (@($stemList | ForEach-Object { $ph3Dirs[$_] }) + $ph2) -External $external `
+        -Library $Library -KeepStaged -FreeBeforeRun (@($ph3Dirs.Values) + $ph2)
 
     return (Join-Path $ph4 'output.blib')
     } finally {
@@ -2168,7 +2186,7 @@ foreach ($name in $selected) {
 
     # ---- mode 1: straight-through vs committed golden ----
     Write-Progress-Tc "${name}: comparing vs golden (mode 1)"
-    $m1 = Compare-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump -Tolerance $Tolerance
+    $m1 = Compare-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump -Tolerance $Tolerance -LibraryAsBlib:$LibraryAsBlib
     if ($m1.Pass) {
         $summaryLines.Add("$name mode1 (vs golden): PASS")
     } else {
@@ -2513,9 +2531,10 @@ foreach ($name in $selected) {
         # obligation mode 3 does not stage is an obligation nothing is checking."
         #
         # Nothing else here can see this. Every other mode-3 assertion compares the blib and
-        # the FDR sidecars, and none opens the report, so removing the phase2 -> phase3 -> phase4
-        # hop would silently turn the chain's page back into a pass-1-only one with every leg
-        # still green. That was the state before the hop existed.
+        # the FDR sidecars, and none opens the report, so dropping the pass-1 product from
+        # SecondPassFDR's declared inputs - which is all that stages it on phase 4 now - would
+        # silently turn the chain's page back into a pass-1-only one with every leg still
+        # green. That was the state before the relay existed.
         #
         # completeness.pass2Present is the right signal precisely because it is not a copy
         # check: it is true only when pass-2 content was ATTACHED at render time, which on the

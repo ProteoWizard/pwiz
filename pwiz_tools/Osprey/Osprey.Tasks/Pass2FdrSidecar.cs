@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -40,7 +42,7 @@ namespace pwiz.Osprey.Tasks
     /// those sidecars onto the post-compaction stubs so run-wide protein FDR
     /// sees the 2nd-pass q-values rather than the stale 1st-pass values.
     ///
-    /// Extracted verbatim from <see cref="SecondPassFdrTask.Run"/> as pure code
+    /// Extracted verbatim from <see cref="SecondPassFdrTask.Run(PipelineContext)"/> as pure code
     /// motion so that method reads as a sequencer; behavior (and therefore the
     /// 2nd-pass sidecars and downstream protein-FDR / blib output) is unchanged.
     /// The parity-locked 2nd-pass scoring core (<c>FirstPassFdrTask.RunPercolatorFdr</c>)
@@ -104,7 +106,7 @@ namespace pwiz.Osprey.Tasks
             }
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.Pass2QValue));
 
-            EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
+            EnsureFrozenFirstPassPublished(ctx);
 
             if (perFileParquetPaths.Count == 0 || config.InputFiles == null)
                 return;
@@ -174,7 +176,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Publish the trained 1st-pass model - and, under protein-compact, the stratum that
-        /// rides in the same sidecar - from disk when this process did not train it.
+        /// pairs with it - from the analysis's files when this process did not train it.
         ///
         /// <para>Needed by every entry point that reads frozen 1st-pass state without having
         /// run the first pass: a distributed <c>--task SecondPassFDR</c> node, any resume that
@@ -189,12 +191,11 @@ namespace pwiz.Osprey.Tasks
         /// carried is published - an empty one would silently constrain the competition to
         /// nothing, which is worse than the honest absence.</para>
         /// </summary>
-        internal static void EnsureFrozenFirstPassPublished(
-            PipelineContext ctx, IReadOnlyDictionary<string, string> perFileParquetPaths)
+        internal static void EnsureFrozenFirstPassPublished(PipelineContext ctx)
         {
             if (ctx.TryGet<FirstPassPercolatorModel>(out _))
                 return;
-            var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+            var reloaded = FirstPassModelIO.LoadForAnalysis(ctx.Config);
             if (reloaded == null)
                 return;
             // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
@@ -474,6 +475,11 @@ namespace pwiz.Osprey.Tasks
         /// <para>The decoys exist only where a competition produced them. The transfer competes
         /// nothing and writes none, so requiring them there would leave every transfer run
         /// permanently unanswered.</para>
+        ///
+        /// <para>The run's <c>.reconciliation.json</c> is one of the set: PerFileRescoring plans
+        /// the run and writes that plan just before rescoring it, under the same stamp, and
+        /// SecondPassFDR reads the run's gap-fill entry ids from it. A plan left by an earlier
+        /// run, or a kill between the plan and the parquet, leaves a run that is not done.</para>
         /// </summary>
         internal static bool HasWorkerStamp(string inputFile)
         {
@@ -485,6 +491,8 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
             if (!IsSameStamp(FdrScoresSidecar.ReadStamp(FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass), reconciled))
+                return false;
+            if (!IsSameStamp(ArtifactStamp.TryReadJsonHead(ReconciliationFile.PathForInput(inputFile)), reconciled))
                 return false;
             return !OspreyEnvironment.Pass2ProteinCompact ||
                    IsSameStamp(Pass2CompetitionDecoys.ReadStamp(Pass2CompetitionDecoys.PathFor(inputFile)), reconciled);
@@ -642,10 +650,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// This file's GAP-FILL entry ids, from the <c>gap_fill_targets</c> the join node already
-        /// persists in its <c>.reconciliation.json</c>. Empty when the envelope is absent or
-        /// unreadable, which is the correct degrade: a file with no envelope had no gap-fill
-        /// planned for it.
+        /// This file's GAP-FILL entry ids, from the <c>gap_fill_targets</c> in the run's
+        /// <c>.reconciliation.json</c>, which PerFileRescoring wrote when it planned the run.
+        /// Throws when the plan cannot be read. It used to fold every record instead, which was
+        /// a safe default only while another task always wrote the plan; the plan is now one of
+        /// the run's own outputs (<see cref="HasWorkerStamp"/>), so a missing one is a run that is
+        /// not finished.
         ///
         /// <para><b>Why the sidecar cannot answer this itself.</b> A gap-filled peak is a POOL
         /// member that never COMPETED - the per-file competition takes its population from the
@@ -658,29 +668,16 @@ namespace pwiz.Osprey.Tasks
         /// <para>It is read from the envelope rather than from the reconciled parquet's
         /// <c>score_index</c> + <c>osprey.scores_row_count</c> footer - the other discriminator
         /// Phase 1 left for exactly this question - because this list is ~200 entries against a
-        /// 311K-row column read, and because the envelope is already the artifact whose join-wide
-        /// hash this stage validates against.</para>
+        /// 311K-row column read.</para>
         /// </summary>
         private static HashSet<uint> LoadGapFillEntryIds(string inputFile)
         {
             var ids = new HashSet<uint>();
-            try
+            var plan = ReconciliationFile.Load(ReconciliationFile.PathForInput(inputFile));
+            if (plan.GapFillTargets != null)
             {
-                string reconPath = ReconciliationFile.PathForInput(inputFile);
-                if (!File.Exists(reconPath))
-                    return ids;
-                var envelope = ReconciliationFile.Load(reconPath);
-                if (envelope?.GapFillTargets == null)
-                    return ids;
-                foreach (var g in envelope.GapFillTargets)
+                foreach (var g in plan.GapFillTargets)
                     ids.Add(g.TargetEntryId);
-            }
-            catch (Exception)
-            {
-                // An unreadable envelope leaves the set empty, which reproduces the pre-#4486
-                // behaviour of folding every record. The competition assert downstream is what
-                // turns that into a visible failure rather than a silent one.
-                return ids;
             }
             return ids;
         }
@@ -1119,8 +1116,10 @@ namespace pwiz.Osprey.Tasks
                 ctx.TryGet<FirstPassPercolatorModel>(out var frozen) && frozen?.Results != null;
             if (haveInputs && OspreyEnvironment.Pass2ProteinCompact)
             {
+                // An empty stratum is an input (no protein had 2 or more detected peptides);
+                // only a missing one is not. If nothing passes, the .blib write says so.
                 haveInputs = ctx.TryGet<ProteinCompactStratum>(out var pcStratum) &&
-                             pcStratum?.BaseIds != null && pcStratum.BaseIds.Count > 0;
+                             pcStratum?.BaseIds != null;
                 if (haveInputs)
                     stratum = pcStratum.BaseIds;
             }
@@ -1885,8 +1884,8 @@ namespace pwiz.Osprey.Tasks
         /// <para>Explicitly parameterized rather than reading enclosing state, because this is
         /// per-FILE work that belongs to the rescore worker: the run-level competition is
         /// computable from one file alone, and every input here is either that file's own
-        /// sidecar / parquet or a whole-run constant that already rides the per-file
-        /// <c>.1st-pass.model.json</c> relay (the frozen model and the protein stratum). Stage 7
+        /// sidecar / parquet or a whole-run constant that already rides the analysis-wide
+        /// <c>.1st-pass.model.json</c> / <c>.1st-pass.stratum.json</c> relay. Stage 7
         /// calls it today; moving the call to <c>PerFileRescoreTask</c> is then a call-site
         /// change rather than a rewrite, which is what stops Stage 7 having to open a 1st-pass
         /// sidecar at all (issue #4486).</para>
@@ -1916,8 +1915,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para><b>The invariant this protects.</b> The per-run 2nd-pass sidecar is the only
         /// thing a separate experiment-wide node receives about a run. Its population is not the
-        /// writer's to choose: the join node fixes it, distributing each file's
-        /// <c>.reconciliation.json</c> from the traversal of the whole population, and
+        /// writer's to choose: the join node fixes it, writing the cross-run consensus from the
+        /// traversal of the whole population that each run's plan is made from, and
         /// <c>ReconciledParquetWriter</c> stamps the parquet Stage 6 derives from it with the
         /// join-wide reconciliation hash. Every node emitting the same rows is what makes an
         /// HPC split equal a single-machine run. Nothing checked it.</para>
@@ -2577,7 +2576,7 @@ namespace pwiz.Osprey.Tasks
 
             public Pass2SidecarWriter(OspreyConfig config, string taskName, string taskValidityKey)
             {
-                _stamp = ArtifactStamp.ForCurrentBuild(taskName, taskValidityKey);
+                _stamp = OspreyVersion.Stamp(taskName, taskValidityKey);
                 if (config.InputFiles == null)
                     return;
                 foreach (string inputFile in config.InputFiles)

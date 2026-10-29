@@ -8,8 +8,9 @@ caller-supplied RT boundaries — the mechanism Rust exposes as the
 through a `ScoringContext.BoundaryOverrides` map into the same
 `ScoringPipeline.RunCoelutionScoring` path the first-pass search uses, so
 re-scored entries get features on exactly the same scale as first-pass entries.
-Stage 6 is driven by `PerFileRescoreTask` (`--task PerFileRescoring`), planned by
-`Stage6Planner`, and consumes the plan produced by cross-run reconciliation
+Stage 6 is driven by `PerFileRescoreTask` (`--task PerFileRescoring`). It plans each
+run itself (`RunReconciliationPlanner`) from the cross-run consensus `Stage6Planner`
+built in FirstPassFDR, and consumes the plan produced by cross-run reconciliation
 (see 10-cross-run-reconciliation.md) and multi-charge consensus (see
 09-multi-charge-consensus.md).
 
@@ -37,25 +38,30 @@ differs.
 
 ## Where the override triples come from
 
-Stage 6 planning (`Stage6Planner.Plan`, `Osprey.Tasks/Stage6Planner.cs:80`) runs
-four phases in Rust order (multi-charge consensus, cross-run consensus RTs,
-per-file calibration refit, reconciliation planning). Three of those feed
-override boundaries into the rescore:
+Stage 6 planning keeps Rust's phase order (multi-charge consensus, cross-run
+consensus RTs, per-file calibration refit, reconciliation planning), split across
+two tasks. FirstPassFDR builds the cross-run consensus RTs once
+(`Stage6Planner.Plan`, `Osprey.Tasks/Stage6Planner.cs`) and writes them to
+`<blib-stem>.1st-pass.consensus.json`. PerFileRescoring then refits and plans each
+run just before rescoring it (`RunReconciliationPlanner.PlanRun`,
+`Osprey.Tasks/RunReconciliationPlanner.cs`) and saves the plan to the run's
+`<stem>.reconciliation.json`. Three sources feed override boundaries into the
+rescore:
 
 ### 1. Multi-charge consensus (forced boundaries)
 
-`Stage6Planner.ComputeMultiChargeConsensus`
-(`Osprey.Tasks/Stage6Planner.cs:106`) calls
-`MultiChargeConsensus.SelectRescoreTargets(entries, config.RunFdr)` per file. When
-a peptide has FDR-passing detections at several charge states, the best
-SVM-scoring charge defines the consensus `(apex, start, end)`; the other charge
-states are re-scored there. These land in
-`PerFileConsensusTargets` keyed by file name.
+`MultiChargeConsensus.SelectRescoreTargets(entries, config.RunFdr)` runs per file
+inside the rescore itself (`PerFileRescoreTask.TryAssembleRescoreTargets`), on the
+run's own survivors. When a peptide has FDR-passing detections at several charge
+states, the best SVM-scoring charge defines the consensus `(apex, start, end)`; the
+other charge states are re-scored there. These targets are not written to
+`reconciliation.json`; FirstPassFDR only counts them (`Stage6Planner.ScanFiles`).
 
 ### 2. UseCwtPeak (stored CWT candidate)
 
-`ReconcileAction.UseCwtPeak` — during reconciliation planning
-(`Stage6Planner.PlanReconciliation`, `Osprey.Tasks/Stage6Planner.cs:258`), if the
+`ReconcileAction.UseCwtPeak` - during reconciliation planning
+(`ReconciliationPlanner.FilePlanner.PlanFile`, called from
+`RunReconciliationPlanner.PlanRun`), if the
 current peak's apex is not at the expected consensus RT but a stored CWT
 candidate is, the planner switches to that candidate's `(start, apex, end)`. CWT
 candidates are stored during the first-pass search (up to
@@ -102,9 +108,12 @@ together, so spectra are loaded only once per file.
 
 `PerFileRescoreTask.Run` (`Osprey.Tasks/PerFileRescoreTask.cs:185`) pulls the
 planning byproducts through the typed pipeline registry
-(`ctx.Get<CompactedEntries>()`, `ctx.Get<ReconciliationActions>()`,
-`ctx.Get<PerFileConsensusTargets>()`, `ctx.Get<PerFileGapFillForRescore>()`, etc.)
-and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
+(`ctx.Get<CompactedEntries>()`, `ctx.Get<PlanningPerformed>()`, etc.) - no
+all-runs map of actions, consensus targets or gap-fill exists. Each run is planned
+inside its own iteration: the per-run hydrate (`RescoreHydration.HydrateOneRun`)
+calls back into `PerFileRescoreTask.PlanAndWriteRun`, which plans the run from the
+consensus file and saves its `reconciliation.json` before the rescore consumes that
+plan. It then dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
 `RescoreOneFile` (`PerFileRescoreTask.cs:644`) does:
 
 1. **Resume probe** — `TryResumeRescoredFile` skips a file whose
@@ -273,13 +282,15 @@ upstream boundary state is rehydrated lazily rather than hand-assembled. (The
 
 - `RescoreHydration.HydrateOneRun` (`Osprey.Tasks/RescoreHydration.cs`) hydrates ONE
   run: it loads the run's pre-compaction `FdrEntry` stubs from its `.scores.parquet`,
-  overlays its `.1st-pass.fdr_scores.bin` sidecar (SVM scores + q-values + PEP), parses
-  its `reconciliation.json` envelope into the action map + refined calibration +
-  gap-fill targets, and compacts the stubs against the analysis-wide retained base_id
-  summary (`RetainedBaseIdSidecar`): the join-wide first-pass base_ids **unioned** with
-  the base_ids of every reconciliation-action target, so cross-file-rescued entries
-  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and its
-  paired decoy stay together, and the actions are mapped to post-compaction indices.
+  overlays its `.1st-pass.fdr_scores.bin` sidecar (SVM scores + q-values + PEP), and
+  compacts the stubs against the analysis-wide retained base_id summary
+  (`RetainedBaseIdSidecar`): the join-wide first-pass base_ids. Every reconciliation
+  action targets a survivor, so that set already keeps every action target. Compaction
+  is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and its paired decoy stay
+  together. It then calls its `planRun` callback (`PerFileRescoreTask.PlanAndWriteRun`)
+  on the compacted survivors, which plans the run and saves its `reconciliation.json`,
+  and turns the returned plan into the action map + refined calibration + gap-fill
+  targets, with the actions mapped to post-compaction indices.
   The all-runs equivalent (`HydrateCompactedStreaming` + `RescoreCompaction.Apply`) was
   removed on 2026-10-12: no route that could finish still reached it.
 
@@ -293,23 +304,27 @@ computed by Stage 6 planning. The flags that affect this stage:
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` (`PerFileRescoreTask`) runs this stage as a standalone worker. `SecondPassFDR` (`SecondPassFdrTask`) rehydrates reconciled parquets instead of re-scoring. |
 | `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`OspreyConfig.Includes`: the selected stage runs by itself). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
-| `ReconciliationConfig.Enabled` | true | Gates reconciliation planning + `reconciliation.json` inputs (`PerFileRescoreTask.cs:158`). Disabling leaves only multi-charge consensus rescore. |
-| `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection, calibration refit, and reconciliation planning (`Stage6Planner.cs`). Not a CLI flag; config field. |
+| `ReconciliationConfig.Enabled` | true | Gates the consensus input: PerFileRescoring declares and reads `<blib-stem>.1st-pass.consensus.json` only when on (`PerFileRescoreTask.Inputs`, `CreateRunPlanner`). When off, each run is still planned and its `reconciliation.json` written, but with no consensus the plan is empty. Disabling leaves only multi-charge consensus rescore. |
+| `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection (`Stage6Planner.cs`), calibration refit, and reconciliation planning (`RunReconciliationPlanner.cs`). Not a CLI flag; config field. |
 | `ReconciliationConfig.TopNPeaks` | 5 (`ReconciliationConfig.cs:36`) | CWT candidates stored per precursor at first-pass; the pool `UseCwtPeak` overrides are drawn from. |
 | `--no-prefilter` (`PrefilterEnabled`) | true | Only affects non-override entries; override entries always skip the pre-filter (`PeakDataExtractor.cs:117`). The gap-fill CWT pass forces prefilter off regardless (`PerFileRescoreTask.cs:1375`). |
 | `--parallel-files-rescoring [N]`, else `--parallel-files [N]` | off (sequential) | Runs per-file rescores concurrently under `RunPlan.RescoringFileParallelism`, which `PerFileRescoreTask` resolves for itself; output is byte-identical to sequential (gated by SubsetPipelineTest). |
 | `--threads <count>` | all cores | Inner window parallelism per file; divided across concurrent files under `--parallel-files` (`PerFileRescoreTask.cs:684`). |
-| `--protein-fdr <v>` | optional (`EffectiveProteinFdr`) | Feeds the protein-rescue gate into consensus RT computation (`Stage6Planner.cs:176`), affecting which entries become reconciliation targets. |
+| `--protein-fdr <v>` | optional (`EffectiveProteinFdr`) | Feeds the protein-rescue gate into consensus RT computation (`Stage6Planner.ScanFiles`), affecting which entries become reconciliation targets. |
 
 Diagnostic env vars that dump this stage (each with a `*_ONLY=1` early-exit
-variant): `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT`,
-`OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`, plus the per-entry
+variant): `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT` (both in
+FirstPassFDR, `Stage6Planner.BuildConsensus`), plus the per-entry
 `OSPREY_DIAG_SEARCH_ENTRY_IDS` search-XIC dump and `OSPREY_DUMP_CWT_PATH`
-(`Stage6Planner.cs`, `PeakDataExtractor.cs:154`). The multicharge,
+(`PeakDataExtractor.cs:154`). The multicharge,
 reconciliation, and rescored dumps (`OSPREY_DUMP_MULTICHARGE`,
 `OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`) were removed from C# on
 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic) and are
-Rust-only.
+Rust-only. The refit dumps (`OSPREY_DUMP_REFIT`, `OSPREY_DUMP_LOESS_FIT`, with
+`OSPREY_REFIT_ONLY` and `OSPREY_LOESS_FIT_ONLY`) were removed from C# on 2026-10-16:
+each wrote every run's refit at once, and each run's refit is now in its own
+`reconciliation.json` as `refined_rt_calibration`. Setting any removed name fails at
+startup like any unknown `OSPREY_*` name.
 `OSPREY_TRACE_PEPTIDE` per-peptide tracing is documented in 18-peptide-trace.md.
 
 ## Divergences from the Rust documentation

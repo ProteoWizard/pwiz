@@ -48,7 +48,7 @@ route does not reach - one resumed as already re-scored, one with no re-scoring 
 the same from-disk route at the end of the task. Both routes read the reconciled parquet and
 the q-value sidecar back from disk, so they write the same bytes. The one shortcut is the
 library: when the process already holds it, the export uses it rather than loading the
-`.libcache` again. A load of its own retains fragments only for the base_ids in the retained
+derived `.blib` again. A load of its own retains fragments only for the base_ids in the retained
 summary, as `--task SecondPassFDR` loads it: every row the export reads is a reconciled
 survivor, so none loses its spectrum.
 
@@ -143,11 +143,19 @@ A run with nothing to export still gets a valid zero-row file with its footer (P
 
 ## File format
 
-Apache Parquet, ZSTD, written through `FileSaver` (`Osprey.IO/TrainingExportParquet.cs`), in row
-groups of 20,000 rows. Scalar columns are plain parquet columns. Every per-ion array is a
-`byte[]` column holding a **little-endian typed blob with no length prefix**, exactly the scores
-parquet's convention (`ParquetBlobCodec`): the element count is `bytes / sizeof(element)`, and
+Apache Parquet, ZSTD, written through `SimpleFileSaver`
+(`pwiz_tools/CarafeSharp/CarafeSharp.Contracts/TrainingExportParquet.cs`), in row groups of
+20,000 rows. Scalar columns are plain parquet columns. Every per-ion array is a `byte[]` column
+holding a **little-endian typed blob with no length prefix**, exactly the scores parquet's
+convention (`ParquetBlobCodec`, beside it): the element count is `bytes / sizeof(element)`, and
 an empty array is a NULL cell, never a zero-length blob.
+
+The writer, the reader and the record (`TrainingRecord`, whose property names follow the
+columns below) and the footer keys (`TrainingExportKeys`) are one assembly,
+`CarafeSharp.Contracts`, that Osprey writes through and CarafeSharp reads through: a renamed
+column or a format bump changes both tools or fails the build. The reader refuses a format
+version it does not read, a missing column, and a row whose per-ion arrays do not hold
+`4 * (L - 1)` slots.
 
 ### Slot order
 
