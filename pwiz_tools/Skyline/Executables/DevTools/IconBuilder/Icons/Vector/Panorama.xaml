@@ -1,9 +1,10 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- Panorama: a pale yellow sun ring with a white interior behind, a blue ground gradient over
+  <!-- Panorama: a gold sun ring (paler outer edge, centered 1.5 units right of the
+       canvas middle so it runs off the right edge, as in the original) with a white interior behind, a blue ground gradient over
        the lower third, three high-rise blocks in the middle, and the Space Needle at the left edge
        (spire, domed saucer with a tapered underside, one thin vertical core). -->
-  <Ellipse Canvas.Left="-0.5" Canvas.Top="4.5" Width="33" Height="33" Fill="#FFFFFF" Stroke="#FBEBC0" StrokeThickness="4"/>
-  <Ellipse Canvas.Left="0.5" Canvas.Top="5.5" Width="31" Height="31" Stroke="#F6D98F" StrokeThickness="2"/>
+  <Ellipse Canvas.Left="0" Canvas.Top="3.5" Width="35" Height="35" Fill="#FFFFFF" Stroke="#FBE39A" StrokeThickness="2"/>
+  <Ellipse Canvas.Left="2" Canvas.Top="5.5" Width="31" Height="31" Stroke="#F7CB55" StrokeThickness="2"/>
   <!-- Ground -->
   <Rectangle Canvas.Left="0" Canvas.Top="22" Width="32" Height="10">
     <Rectangle.Fill>

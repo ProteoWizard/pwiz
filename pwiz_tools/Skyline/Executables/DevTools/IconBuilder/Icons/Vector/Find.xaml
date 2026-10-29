@@ -1,49 +1,130 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- Binoculars: two blue barrels that widen toward the bottom, each with a small white eyepiece
-       highlight, a lighter mid band and a large pale lens, joined by a dark navy bridge. -->
-  <Path Data="M 5,3.5 Q 5,2 6.5,2 L 9.5,2 Q 11,2 11,3.5 L 12,8 L 13,14 L 13,26 Q 13,28 11,28 L 4,28 Q 2,28 2,26 L 2,14 L 4,8 Z" Stroke="#1E3A6E" StrokeThickness="1" StrokeLineJoin="Round">
-    <Path.Fill>
-      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#5D86BE" Offset="0"/>
-        <GradientStop Color="#3C64A4" Offset="0.5"/>
-        <GradientStop Color="#1F4280" Offset="1"/>
-      </LinearGradientBrush>
-    </Path.Fill>
-  </Path>
-  <Path Data="M 21,3.5 Q 21,2 22.5,2 L 25.5,2 Q 27,2 27,3.5 L 28,8 L 30,14 L 30,26 Q 30,28 28,28 L 21,28 Q 19,28 19,26 L 19,14 L 20,8 Z" Stroke="#1E3A6E" StrokeThickness="1" StrokeLineJoin="Round">
-    <Path.Fill>
-      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#5D86BE" Offset="0"/>
-        <GradientStop Color="#3C64A4" Offset="0.5"/>
-        <GradientStop Color="#1F4280" Offset="1"/>
-      </LinearGradientBrush>
-    </Path.Fill>
-  </Path>
-  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="8" Height="6" Fill="#1E3F75"/>
-  <Rectangle Canvas.Left="14" Canvas.Top="9" Width="4" Height="4" Fill="#2C5390"/>
-  <!-- Eyepiece highlights -->
-  <Rectangle Canvas.Left="7" Canvas.Top="3" Width="2" Height="2" Fill="#F4F7FB"/>
-  <Rectangle Canvas.Left="23" Canvas.Top="3" Width="2" Height="2" Fill="#F4F7FB"/>
-  <!-- Mid bands -->
-  <Rectangle Canvas.Left="5" Canvas.Top="8" Width="6" Height="3" RadiusX="0.5" RadiusY="0.5" Fill="#C9DAF0" Opacity="0.9"/>
-  <Rectangle Canvas.Left="21" Canvas.Top="8" Width="6" Height="3" RadiusX="0.5" RadiusY="0.5" Fill="#C9DAF0" Opacity="0.9"/>
-  <!-- Lenses -->
-  <Rectangle Canvas.Left="4" Canvas.Top="15" Width="7" Height="10" RadiusX="1" RadiusY="1">
-    <Rectangle.Fill>
-      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FFFFFF" Offset="0"/>
-        <GradientStop Color="#DCE7F5" Offset="0.5"/>
-        <GradientStop Color="#9FBBE0" Offset="1"/>
-      </LinearGradientBrush>
-    </Rectangle.Fill>
-  </Rectangle>
-  <Rectangle Canvas.Left="21" Canvas.Top="15" Width="7" Height="10" RadiusX="1" RadiusY="1">
-    <Rectangle.Fill>
-      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FFFFFF" Offset="0"/>
-        <GradientStop Color="#DCE7F5" Offset="0.5"/>
-        <GradientStop Color="#9FBBE0" Offset="1"/>
-      </LinearGradientBrush>
-    </Rectangle.Fill>
-  </Rectangle>
+  <!-- Find: blue binoculars with white eyepiece and lens highlights, the same stepped outline as FindResults.
+       Traced pixel for pixel from the native bitmap: each rectangle is a run of one color on the
+       2-unit grid, so the 1x render is the original and larger sizes keep its stepped outline. -->
+  <Rectangle Canvas.Left="6" Canvas.Top="2" Width="2" Height="2" Fill="#90A3C0"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="2" Width="2" Height="2" Fill="#778DB3"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="2" Width="2" Height="2" Fill="#486394"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="2" Width="2" Height="2" Fill="#97A7C0"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="2" Width="2" Height="2" Fill="#778DB3"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="2" Width="2" Height="2" Fill="#486394"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="4" Width="2" Height="2" Fill="#667BA1"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="4" Width="2" Height="2" Fill="#F1F4F9"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="4" Width="2" Height="2" Fill="#20417D"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="4" Width="2" Height="2" Fill="#BEBEBF"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="4" Width="2" Height="2" Fill="#BEBEBF"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="4" Width="2" Height="2" Fill="#667BA1"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="4" Width="2" Height="2" Fill="#F1F4F9"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="4" Width="2" Height="2" Fill="#20417D"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="6" Width="2" Height="2" Fill="#97A7C0"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="6" Width="2" Height="2" Fill="#7A91B7"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="6" Width="2" Height="2" Fill="#4F6B9D"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="6" Width="2" Height="2" Fill="#304F8B"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="6" Width="2" Height="2" Fill="#35538A"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="6" Width="2" Height="2" Fill="#91A5C4"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="6" Width="2" Height="2" Fill="#7A91B7"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="6" Width="2" Height="2" Fill="#4F6B9D"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="6" Width="2" Height="2" Fill="#304F8B"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="6" Width="2" Height="2" Fill="#35538A"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="8" Width="2" Height="2" Fill="#7F96BA"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="8" Width="2" Height="2" Fill="#F8F9FB"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="8" Width="2" Height="2" Fill="#B1C3DE"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="8" Width="2" Height="2" Fill="#7591C3"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="2" Height="2" Fill="#214485"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="8" Width="2" Height="2" Fill="#BFBFBF"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="8" Width="2" Height="2" Fill="#7F96BA"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="8" Width="2" Height="2" Fill="#F8F9FB"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="8" Width="2" Height="2" Fill="#B2C4DF"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="8" Width="2" Height="2" Fill="#87A2D0"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="8" Width="2" Height="2" Fill="#244686"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="10" Width="2" Height="2" Fill="#BABCBF"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="10" Width="2" Height="2" Fill="#7F95B9"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="10" Width="2" Height="2" Fill="#637EAC"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="10" Width="2" Height="2" Fill="#49669B"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="10" Width="2" Height="2" Fill="#2D4F8C"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="10" Width="2" Height="2" Fill="#3B5A94"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="10" Width="2" Height="2" Fill="#4A679C"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="10" Width="2" Height="2" Fill="#637BA8"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="10" Width="2" Height="2" Fill="#7089B2"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="10" Width="2" Height="2" Fill="#5772A3"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="10" Width="2" Height="2" Fill="#284A87"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="10" Width="2" Height="2" Fill="#214484"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="10" Width="2" Height="2" Fill="#B9BBBE"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="12" Width="2" Height="2" Fill="#BEBFC0"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="2" Height="2" Fill="#7C92B9"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="12" Width="2" Height="2" Fill="#EAF0F7"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="12" Width="2" Height="2" Fill="#F0F6FD"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="12" Width="2" Height="2" Fill="#C4D5F0"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="12" Width="2" Height="2" Fill="#5F7FB5"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="12" Width="2" Height="2" Fill="#264887"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="12" Width="2" Height="2" Fill="#345189"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="12" Width="2" Height="4" Fill="#768DB2"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="12" Width="2" Height="2" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="12" Width="2" Height="2" Fill="#F3F6FB"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="12" Width="2" Height="2" Fill="#C1D2EE"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="12" Width="2" Height="2" Fill="#5676AD"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="12" Width="2" Height="2" Fill="#244787"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="14" Width="2" Height="2" Fill="#A5B0C0"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="14" Width="2" Height="2" Fill="#7289B0"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="14" Width="2" Height="2" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="14" Width="2" Height="2" Fill="#C7D2E7"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="14" Width="2" Height="2" Fill="#8BA2CB"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="14" Width="2" Height="2" Fill="#4D6CA6"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="14" Width="2" Height="2" Fill="#173C7E"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="14" Width="2" Height="2" Fill="#9DA8B9"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="14" Width="2" Height="2" Fill="#D2D9E6"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="14" Width="2" Height="2" Fill="#CDD8EC"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="14" Width="2" Height="2" Fill="#89A0CA"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="14" Width="2" Height="2" Fill="#5576AC"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="14" Width="2" Height="2" Fill="#183B7C"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="14" Width="2" Height="2" Fill="#9AA6BA"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="16" Width="2" Height="2" Fill="#8EA0BD"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="2" Height="2" Fill="#6C85B0"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="16" Width="2" Height="2" Fill="#4E6B9F"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="16" Width="2" Height="2" Fill="#315391"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="16" Width="2" Height="2" Fill="#294987"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="16" Width="2" Height="2" Fill="#264684"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="16" Width="2" Height="2" Fill="#17397C"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="16" Width="2" Height="2" Fill="#264683"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="16" Width="2" Height="2" Fill="#7087AE"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="16" Width="2" Height="2" Fill="#4E6B9F"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="16" Width="2" Height="2" Fill="#315491"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="16" Width="2" Height="2" Fill="#294B8A"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="16" Width="2" Height="2" Fill="#1C3D7C"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="16" Width="2" Height="2" Fill="#143777"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="16" Width="2" Height="2" Fill="#3A5991"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="18" Width="2" Height="2" Fill="#869ABD"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="18" Width="2" Height="2" Fill="#FDFDFE"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="18" Width="2" Height="2" Fill="#E1E8F5"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="18" Width="2" Height="2" Fill="#B8C8E4"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="18" Width="2" Height="2" Fill="#849ECD"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="18" Width="2" Height="8" Fill="#20407E"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="18" Width="2" Height="8" Fill="#627EAB"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="18" Width="2" Height="6" Fill="#E5E8F1"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="18" Width="2" Height="6" Fill="#DFE2EB"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="18" Width="2" Height="6" Fill="#AFBFDD"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="18" Width="2" Height="6" Fill="#6C89BC"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="18" Width="2" Height="6" Fill="#294A86"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="20" Width="2" Height="6" Fill="#7B91B6"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="6" Fill="#FAFAFC"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="20" Width="2" Height="6" Fill="#B8C8E3"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="2" Height="6" Fill="#8CA3CD"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="20" Width="2" Height="6" Fill="#5F80B9"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="24" Width="2" Height="2" Fill="#E2E6EF"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="24" Width="2" Height="2" Fill="#BAC6E0"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="24" Width="2" Height="2" Fill="#93A9D0"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="24" Width="2" Height="2" Fill="#5375AF"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="24" Width="2" Height="2" Fill="#274987"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="26" Width="2" Height="2" Fill="#7084A5"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="2" Height="2" Fill="#5A77A4"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="26" Width="2" Height="2" Fill="#3F5F95"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="26" Width="2" Height="2" Fill="#39588F"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="26" Width="2" Height="2" Fill="#39578E"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="26" Width="2" Height="2" Fill="#2D4A83"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="26" Width="2" Height="2" Fill="#6983AC"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="26" Width="2" Height="2" Fill="#57709B"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="26" Width="2" Height="2" Fill="#4E6C9E"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="26" Width="2" Height="2" Fill="#3C5B92"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="26" Width="2" Height="2" Fill="#31518A"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="26" Width="2" Height="2" Fill="#183976"/>
 </Canvas>

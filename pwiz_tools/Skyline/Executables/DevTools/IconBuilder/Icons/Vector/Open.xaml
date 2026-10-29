@@ -1,23 +1,23 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- Open: slate-outlined page, white shading to light blue at the lower right. A tan curved arrow
-       emerges from the page's top edge (navy base block), sweeps up and over to the right, and ends
-       in a navy arrowhead pointing right. -->
-  <Rectangle Canvas.Left="3" Canvas.Top="7" Width="18" Height="22" Stroke="#4D607A" StrokeThickness="2">
-    <Rectangle.Fill>
+  <!-- Open: a page with light slate left and top edges, dark slate right and bottom edges, white
+       shading to light blue at the lower right and a folded top-right corner. A thin slate arrow
+       starts above the page, left of the corner, curls clockwise around where the unfolded corner
+       would be and ends pointing straight down beside the page's right edge, as in the original. -->
+  <Path Data="M 3,7 L 15,7 L 21,13 L 21,31 L 3,31 Z">
+    <Path.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FFFFFF" Offset="0"/>
-        <GradientStop Color="#FFFFFF" Offset="0.45"/>
-        <GradientStop Color="#CFDAE8" Offset="1"/>
+        <GradientStop Color="#FFFFFF" Offset="0.4"/>
+        <GradientStop Color="#C9D5E5" Offset="1"/>
       </LinearGradientBrush>
-    </Rectangle.Fill>
-  </Rectangle>
-  <Rectangle Canvas.Left="4" Canvas.Top="24" Width="4" Height="4" Fill="#C0CCDC" Opacity="0.8"/>
-  <!-- Arrow base where it leaves the page -->
-  <Path Data="M 13,6 L 20,6 L 20,9 L 17,12 L 13,12 Z" Fill="#3C4A68"/>
-  <!-- Curved stem -->
-  <Path Data="M 16.5,9 Q 16.5,2.5 22,2.5 L 24,2.5" Stroke="#B8B3A5" StrokeThickness="4" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
-  <Path Data="M 15,8 Q 15,1 22,1 L 24,1" Stroke="#E6E3DA" StrokeThickness="1"/>
-  <!-- Arrowhead pointing right -->
-  <Path Data="M 23,0 L 29.5,4 L 23,8 Z" Fill="#3C4A68"/>
-  <Path Data="M 24,2 L 26,3.2 L 24,4.4 Z" Fill="#F2F4F7" Opacity="0.8"/>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 15,7 L 15,13 L 21,13 Z" Fill="#C5CCD0" Stroke="#96A4B6" StrokeThickness="1" StrokeLineJoin="Miter"/>
+  <Path Data="M 3,31 L 3,7 L 15,7" Stroke="#96A4B6" StrokeThickness="2"/>
+  <Path Data="M 15,7 L 21,13 L 21,31 L 3,31" Stroke="#354963" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Arrow stem: a slate arc with a pale edge along the inside of the curve -->
+  <Path Data="M 12.5,4.5 C 13,0.5 21.5,-0.5 23.5,3" Stroke="#5F7494" StrokeThickness="2.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 13.5,4.5 C 14,1.5 21,0.5 22.8,2.6" Stroke="#D8DACF" StrokeThickness="1" Opacity="0.9" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <!-- Arrowhead pointing down -->
+  <Path Data="M 20.5,2.5 L 26.5,2.5 L 23.5,8.5 Z" Fill="#4F6990"/>
 </Canvas>

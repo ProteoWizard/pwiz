@@ -1,0 +1,77 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Find results window icon: a small window (blue title bar, white body with three equal text
+       rows, gray, navy, gray, each with a left margin; light left edge, dark slate right and bottom
+       edges) with dark gray binoculars over its lower-right corner. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="6" Width="28" Height="14">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#D9E2F7" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="28" Height="4">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#7D9FEA" Offset="0"/>
+        <GradientStop Color="#2C6BE9" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="6" Canvas.Top="8" Width="18" Height="2" Fill="#A6A6A6"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="12" Width="18" Height="2" Fill="#001B71"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="16" Width="18" Height="2" Fill="#A6A6A6"/>
+  <Path Data="M 3,6 L 3,20" Stroke="#9EAEC3" StrokeThickness="2"/>
+  <Path Data="M 29,6 L 29,21 L 2,21" Stroke="#354963" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Binoculars traced from the native pixels on the 2-unit grid: two-pixel eyepieces on top,
+       objectives twice as wide below them, a bright specular column one pixel in from each
+       outer edge, dark inner columns and a black bridge between the halves. -->
+  <Canvas>
+    <!-- Left barrel: eyepiece, flare row, objective columns (outer mid gray, specular, dark, darker) -->
+    <Rectangle Canvas.Left="18" Canvas.Top="16" Width="2" Height="4" Fill="#767676"/>
+    <Rectangle Canvas.Left="20" Canvas.Top="16" Width="2" Height="4" Fill="#525252"/>
+    <Rectangle Canvas.Left="16" Canvas.Top="20" Width="2" Height="2" Fill="#767676"/>
+    <Rectangle Canvas.Left="18" Canvas.Top="20" Width="2" Height="2" Fill="#B5B5B5"/>
+    <Rectangle Canvas.Left="20" Canvas.Top="20" Width="2" Height="2" Fill="#3C3D3D"/>
+    <Rectangle Canvas.Left="14" Canvas.Top="22" Width="2" Height="10" Fill="#767676"/>
+    <Rectangle Canvas.Left="16" Canvas.Top="22" Width="2" Height="10">
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#4E4E4E" Offset="0"/>
+          <GradientStop Color="#E6E6E6" Offset="0.3"/>
+          <GradientStop Color="#BBBBBB" Offset="0.5"/>
+          <GradientStop Color="#6A6A6A" Offset="0.75"/>
+          <GradientStop Color="#5A5A5A" Offset="1"/>
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+    <Rectangle Canvas.Left="18" Canvas.Top="22" Width="2" Height="10" Fill="#525252"/>
+    <Rectangle Canvas.Left="20" Canvas.Top="22" Width="2" Height="6" Fill="#3C3D3D"/>
+    <Rectangle Canvas.Left="20" Canvas.Top="28" Width="2" Height="2" Fill="#8A8A8A"/>
+    <!-- Right barrel, mirrored -->
+    <Rectangle Canvas.Left="24" Canvas.Top="16" Width="2" Height="4" Fill="#767676"/>
+    <Rectangle Canvas.Left="26" Canvas.Top="16" Width="2" Height="4" Fill="#525252"/>
+    <Rectangle Canvas.Left="24" Canvas.Top="20" Width="2" Height="2" Fill="#3C3D3D"/>
+    <Rectangle Canvas.Left="26" Canvas.Top="20" Width="2" Height="2" Fill="#B5B5B5"/>
+    <Rectangle Canvas.Left="28" Canvas.Top="20" Width="2" Height="2" Fill="#404040"/>
+    <Rectangle Canvas.Left="24" Canvas.Top="22" Width="2" Height="6" Fill="#3C3D3D"/>
+    <Rectangle Canvas.Left="24" Canvas.Top="28" Width="2" Height="2" Fill="#8A8A8A"/>
+    <Rectangle Canvas.Left="26" Canvas.Top="22" Width="2" Height="10" Fill="#767676"/>
+    <Rectangle Canvas.Left="28" Canvas.Top="22" Width="2" Height="10">
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#4E4E4E" Offset="0"/>
+          <GradientStop Color="#E6E6E6" Offset="0.3"/>
+          <GradientStop Color="#BBBBBB" Offset="0.5"/>
+          <GradientStop Color="#6A6A6A" Offset="0.75"/>
+          <GradientStop Color="#5A5A5A" Offset="1"/>
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+    <Rectangle Canvas.Left="30" Canvas.Top="22" Width="2" Height="10" Fill="#525252"/>
+    <!-- Bridge -->
+    <Rectangle Canvas.Left="22" Canvas.Top="20" Width="2" Height="2" Fill="#000000"/>
+    <Rectangle Canvas.Left="22" Canvas.Top="22" Width="2" Height="2" Fill="#767676"/>
+    <Rectangle Canvas.Left="22" Canvas.Top="24" Width="2" Height="2" Fill="#000000"/>
+  </Canvas>
+</Canvas>

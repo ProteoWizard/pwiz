@@ -1,8 +1,8 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- Panorama publish: a yellow-orange sun ring over pale sky, the Space Needle and a blue
+  <!-- Panorama publish: a gold-orange sun ring (centered 1.5 units right of the middle) over pale sky, the Space Needle and a blue
        building skyline at the left, blue ground below, and a green left-pointing arrow with a
        white outline over the lower right. -->
-  <Ellipse Canvas.Left="0" Canvas.Top="1.5" Width="32" Height="32" StrokeThickness="3.5">
+  <Ellipse Canvas.Left="1.5" Canvas.Top="1.5" Width="32" Height="32" StrokeThickness="3.5">
     <Ellipse.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
         <GradientStop Color="#FFEAA3" Offset="0"/>
@@ -11,9 +11,9 @@
     </Ellipse.Fill>
     <Ellipse.Stroke>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FBE996" Offset="0"/>
-        <GradientStop Color="#FFE087" Offset="0.4"/>
-        <GradientStop Color="#FFBB22" Offset="1"/>
+        <GradientStop Color="#FFDC6E" Offset="0"/>
+        <GradientStop Color="#FFD33F" Offset="0.4"/>
+        <GradientStop Color="#FFBE1C" Offset="1"/>
       </LinearGradientBrush>
     </Ellipse.Stroke>
   </Ellipse>

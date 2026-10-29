@@ -2,7 +2,7 @@
   <!-- Edit note: a pale yellow note with a dark khaki 2-unit border and shaded lower edge, and a
        dark-outlined yellow pencil lying diagonally across it from the upper right (red eraser, gray
        ferrule) down to a wood tip and graphite point at the lower left. -->
-  <Rectangle Canvas.Left="2" Canvas.Top="9" Width="22" Height="18" RadiusX="1" RadiusY="1" Stroke="#857450" StrokeThickness="2">
+  <Rectangle Canvas.Left="2" Canvas.Top="8" Width="22" Height="20" RadiusX="1" RadiusY="1" Stroke="#857450" StrokeThickness="2">
     <Rectangle.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FDF8D2" Offset="0"/>
@@ -11,7 +11,7 @@
       </LinearGradientBrush>
     </Rectangle.Fill>
   </Rectangle>
-  <Rectangle Canvas.Left="3" Canvas.Top="24" Width="20" Height="2" Fill="#A89560" Opacity="0.9"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="24" Width="18" Height="2" Fill="#A89560" Opacity="0.9"/>
   <!-- Pencil, drawn horizontally with the tip at the origin, then rotated to point down-left -->
   <Canvas>
     <Canvas.RenderTransform>

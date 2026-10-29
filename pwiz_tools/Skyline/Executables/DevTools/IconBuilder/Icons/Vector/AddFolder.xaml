@@ -13,8 +13,9 @@
     </Rectangle.Fill>
   </Rectangle>
   <Path Data="M 6,14.5 L 25,14.5" Stroke="#FFFCE6" StrokeThickness="1"/>
-  <!-- Plus sign -->
-  <Path Data="M 12.5,7.5 L 18.5,7.5 L 18.5,12.5 L 23.5,12.5 L 23.5,18.5 L 18.5,18.5 L 18.5,23.5 L 12.5,23.5 L 12.5,18.5 L 7.5,18.5 L 7.5,12.5 L 12.5,12.5 Z" Stroke="#257A25" StrokeThickness="1" StrokeLineJoin="Miter">
+  <!-- Plus sign: 18 units across, arms 6.5 units wide including the outline (the native plus is
+       a 1-pixel bright line inside a 1-pixel dark outline), centered at (15,17). -->
+  <Path Data="M 12.5,8 L 17.5,8 L 17.5,14.5 L 24,14.5 L 24,19.5 L 17.5,19.5 L 17.5,26 L 12.5,26 L 12.5,19.5 L 6,19.5 L 6,14.5 L 12.5,14.5 Z" Stroke="#257A25" StrokeThickness="1.5" StrokeLineJoin="Miter">
     <Path.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#6CD46C" Offset="0"/>

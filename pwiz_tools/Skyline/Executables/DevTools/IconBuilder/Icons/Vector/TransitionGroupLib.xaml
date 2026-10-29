@@ -1,23 +1,23 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- TransitionGroupLib: the TransitionGroup peaks with the lower-right corner cleared for
-       the black library glyph. -->
+  <!-- TransitionGroupLib: the TransitionGroup peaks (stepped, with shoulders) with the
+       lower-right corner cleared for the black library glyph. -->
   <Canvas>
     <Canvas.Clip>
       <CombinedGeometry GeometryCombineMode="Exclude">
         <CombinedGeometry.Geometry1><RectangleGeometry Rect="0,0,32,32"/></CombinedGeometry.Geometry1>
-        <CombinedGeometry.Geometry2><RectangleGeometry Rect="18,14,14,18"/></CombinedGeometry.Geometry2>
+        <CombinedGeometry.Geometry2><RectangleGeometry Rect="18,20,14,12"/></CombinedGeometry.Geometry2>
       </CombinedGeometry>
     </Canvas.Clip>
-    <Path Data="M 0,24 L 9,24 C 13,24 13.5,15 15,4 L 16,2.5 L 19.5,25 M 19,24 L 32,24" Stroke="#0A8A0A" StrokeThickness="2" StrokeLineJoin="Round"/>
-    <Path Data="M 6,24.5 C 10,24.5 11.5,16 13.5,11 L 15.5,10 L 18,24" Stroke="#2024E0" StrokeThickness="2.5" StrokeLineJoin="Round"/>
-    <Path Data="M 0,26 L 9,26 C 11,26 12.5,21 15,19.5 L 16.5,19.5 L 19.5,26 L 23,26" Stroke="#E52814" StrokeThickness="2" StrokeLineJoin="Round"/>
+    <Path Data="M 0,25 L 7,25 L 11,23 L 13,21 L 13,15 L 15,13 L 15,7 L 17,7 L 17,3 L 19,9 L 19,21 L 21,23 L 21,25 L 32,25" Stroke="#0A8A0A" StrokeThickness="2" StrokeLineJoin="Round"/>
+    <Path Data="M 7,25 L 13,19 L 13,15 L 15,11 L 17,13 L 17,21" Stroke="#2024E0" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+    <Path Data="M 0,27 L 9,27 L 11,25 L 13,25 L 15,23 L 17,21 L 17,25 L 19,25 L 19,27 L 32,27" Stroke="#E52814" StrokeThickness="2" StrokeLineJoin="Round"/>
   </Canvas>
-  <Rectangle Canvas.Left="19" Canvas.Top="28" Width="12" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="28" Width="12" Height="2" Fill="#000000"/>
   <Rectangle Canvas.Left="20" Canvas.Top="20" Width="2" Height="8" Fill="#000000"/>
-  <Rectangle Canvas.Left="25" Canvas.Top="16" Width="2" Height="12" Fill="#000000"/>
-  <Rectangle Canvas.Left="29" Canvas.Top="24" Width="2" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="16" Width="2" Height="12" Fill="#000000"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="24" Width="2" Height="4" Fill="#000000"/>
   <Rectangle Canvas.Left="22" Canvas.Top="21" Width="1" Height="7" Fill="#9A9A9A"/>
-  <Rectangle Canvas.Left="27" Canvas.Top="17" Width="1" Height="11" Fill="#9A9A9A"/>
-  <Rectangle Canvas.Left="18" Canvas.Top="28" Width="1" Height="2" Fill="#9A9A9A"/>
-  <Rectangle Canvas.Left="19" Canvas.Top="30" Width="12" Height="1" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="17" Width="1" Height="11" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="30" Canvas.Top="25" Width="1" Height="5" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="30" Width="13" Height="1" Fill="#9A9A9A"/>
 </Canvas>

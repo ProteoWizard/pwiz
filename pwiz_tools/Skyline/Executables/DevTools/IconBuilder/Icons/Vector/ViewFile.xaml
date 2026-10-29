@@ -1,6 +1,10 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- View file: thick near-black rounded frame with a pale fill and four short diagonal
-       strokes pointing in from the corners. -->
-  <Rectangle Canvas.Left="3.5" Canvas.Top="3.5" Width="25" Height="25" RadiusX="2" RadiusY="2" Fill="#F4F4F4" Stroke="#303030" StrokeThickness="3"/>
-  <Path Data="M 7,7 L 11,11 M 25,7 L 21,11 M 7,25 L 11,21 M 25,25 L 21,21" Stroke="#505050" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <!-- View file: a 2-unit near-black square frame (the native 1-pixel frame at 1..13, so units
+       2..28) over a faint dark interior tint (the native's 10% black) and four 2-unit diagonal strokes pointing in from the
+       corners. They start inside the frame band (same color, so the cap corners stay hidden under the
+       frame) and overrun the last pixel centre a little so the end pixels are fully covered at
+       1x; a flat cap at the centre would halve them. -->
+  <Rectangle Canvas.Left="4" Canvas.Top="4" Width="22" Height="22" Fill="#1E1E1E" Opacity="0.1"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="26" Height="26" Stroke="#212121" StrokeThickness="2"/>
+  <Path Data="M 3.5,3.5 L 10.3,10.3 M 26.5,3.5 L 19.7,10.3 M 3.5,26.5 L 10.3,19.7 M 26.5,26.5 L 19.7,19.7" Stroke="#212121" StrokeThickness="2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
 </Canvas>

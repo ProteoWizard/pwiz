@@ -1,7 +1,11 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- TransitionGroupDecoy: three overlapping flat-topped humps on one baseline: orange in
-       the back and tallest, dark red on the left, bright red on the right in front. -->
-  <Path Data="M 10,21 C 12,21 13,8 16,8 L 18,8 C 20.5,8 21,21 23,21" Stroke="#F08A26" StrokeThickness="2.5" StrokeLineJoin="Round"/>
-  <Path Data="M 0,21 L 7,21 C 8.5,21 9,11 11,11 L 14,11 C 16,11 16.5,21 18,21" Stroke="#8E1C1C" StrokeThickness="2.5" StrokeLineJoin="Round"/>
-  <Path Data="M 16,21 C 18,21 19.5,12 22,12 L 24,12 C 26,12 26.5,21 28,21 L 32,21" Stroke="#E5331C" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+  <!-- TransitionGroupDecoy traced from the native pixels: three stepped traces on one baseline
+       (units: one native pixel is 2x2). Orange at the back is a tall narrow peak with a ramp on
+       its lower left and a small shoulder on the right; maroon is a sharp peak with a steep left
+       flank and a stepped right flank; red in front runs flat, ramps up to a plateau, climbs to a
+       short spike at the right and drops back to its own baseline. -->
+  <Path Data="M 9,23 L 11,23 L 13,21 L 15,19 L 15,11 L 17,9 L 19,11 L 19,13 L 21,13 L 21,21 L 23,23" Stroke="#E06000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 0,23 L 7,23 L 7,17 L 9,17 L 9,13 L 11,11 L 13,13 L 13,15 L 15,15 L 17,19 L 19,21 L 21,23 L 32,23" Stroke="#800000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 0,21 L 11,21 L 11,19 L 13,19 L 13,17 L 21,17 L 21,15 L 25,15 L 25,19 L 27,19 L 27,21 L 32,21" Stroke="#E02000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="12" Width="2" Height="4" Fill="#E02000"/>
 </Canvas>

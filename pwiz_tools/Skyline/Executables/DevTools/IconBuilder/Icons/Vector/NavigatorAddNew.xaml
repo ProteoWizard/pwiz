@@ -1,7 +1,8 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
   <!-- Binding navigator "add new": a yellow plus with a gold-to-brown outline, lit from the
-       upper left. Traced from the stock WinForms glyph embedded in AlignmentForm/ListDesigner. -->
-  <Path Data="M 12,5 L 20,5 L 20,12 L 27,12 L 27,20 L 20,20 L 20,27 L 12,27 L 12,20 L 5,20 L 5,12 L 12,12 Z" StrokeThickness="2" StrokeLineJoin="Miter">
+       upper left. Traced from the stock WinForms glyph embedded in AlignmentForm/ListDesigner:
+       arms 8 units wide (2-unit outline, 4-unit interior) spanning 4..28 on both axes. -->
+  <Path Data="M 13,5 L 19,5 L 19,13 L 27,13 L 27,19 L 19,19 L 19,27 L 13,27 L 13,19 L 5,19 L 5,13 L 13,13 Z" StrokeThickness="2" StrokeLineJoin="Miter">
     <Path.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FFF4A8" Offset="0"/>

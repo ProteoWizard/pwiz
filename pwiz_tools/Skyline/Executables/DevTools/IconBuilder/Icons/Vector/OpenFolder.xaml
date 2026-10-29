@@ -18,8 +18,9 @@
     </Path.Fill>
   </Path>
   <Path Data="M 9,13 L 28,13" Stroke="#FFFBE0" StrokeThickness="1" Opacity="0.9"/>
-  <!-- Arrow: arc from the left over the top, head pointing down at the right -->
-  <Path Data="M 18.5,4.5 A 5,4 0 0 1 28.5,4.5" Stroke="#8CA0BC" StrokeThickness="2.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
-  <Path Data="M 19,3.5 A 4.5,3.2 0 0 1 28,3.5" Stroke="#D8E0EC" StrokeThickness="0.8" Opacity="0.9"/>
-  <Path Data="M 25,3.5 L 32,3.5 L 28.5,8.5 Z" Fill="#3C5078"/>
+  <!-- Arrow: arc from the left over the top, head pointing down at the right; sits 1.5 units
+       lower than the original, whose arc was cut off by the top edge -->
+  <Path Data="M 18.5,6 A 5,4 0 0 1 28.5,6" Stroke="#8CA0BC" StrokeThickness="2.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 19,5 A 4.5,3.2 0 0 1 28,5" Stroke="#D8E0EC" StrokeThickness="0.8" Opacity="0.9"/>
+  <Path Data="M 25,5 L 32,5 L 28.5,10 Z" Fill="#3C5078"/>
 </Canvas>

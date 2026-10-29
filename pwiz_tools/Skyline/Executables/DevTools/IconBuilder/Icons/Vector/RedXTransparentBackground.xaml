@@ -1,7 +1,8 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="28" Height="28">
-  <!-- Glossy red X: dark red outline, red gradient body, white glints on the upper arms. -->
-  <Path Data="M 5,5 L 23,23 M 23,5 L 5,23" Stroke="#8A0000" StrokeThickness="8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-  <Path Data="M 5,5 L 23,23 M 23,5 L 5,23" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+  <!-- Glossy red X with square-cut arm ends (flat caps, as in the native bitmap): a dark red
+       outline 7 units wide, a red gradient body 5 units wide, white glints on the upper arms. -->
+  <Path Data="M 5,5 L 23,23 M 23,5 L 5,23" Stroke="#8A0000" StrokeThickness="7" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 5.7,5.7 L 22.3,22.3 M 22.3,5.7 L 5.7,22.3" StrokeThickness="5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat">
     <Path.Stroke>
       <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#F04040" Offset="0"/>

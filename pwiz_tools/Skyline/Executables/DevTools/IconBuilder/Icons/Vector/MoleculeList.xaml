@@ -1,7 +1,8 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
   <!-- Molecule list window: the EmptyList window with its right half holding a pastel pink panel
-       and an anthracene, three fused six-membered rings stacked vertically, drawn ball-and-stick
-       in the Molecule icon's style (gray bonds, shaded red atoms). -->
+       and a fluorene (two benzene rings joined by a five-membered ring, its CH2 apex toward the
+       list on the left), drawn ball-and-stick in the Molecule icon's style (gray bonds, shaded red
+       atoms). -->
   <Canvas.Resources>
     <RadialGradientBrush x:Key="Atom" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.65" RadiusY="0.65">
       <GradientStop Color="#F4A8A8" Offset="0"/>
@@ -41,21 +42,20 @@
   <Rectangle Canvas.Left="6" Canvas.Top="24" Width="10" Height="2" Fill="#4A524A"/>
   <Rectangle Canvas.Left="2" Canvas.Top="28" Width="2" Height="2" Fill="#AD2152"/>
   <Rectangle Canvas.Left="6" Canvas.Top="28" Width="10" Height="2" Fill="#525252"/>
-  <!-- Bonds: three fused flat-top hexagons (r 5) stacked vertically, centered at x 24 -->
-  <Path Data="M 29,6.5 L 26.5,10.83 L 21.5,10.83 L 19,6.5 L 21.5,2.17 L 26.5,2.17 Z M 29,15.16 L 26.5,19.49 L 21.5,19.49 L 19,15.16 L 21.5,10.83 L 26.5,10.83 Z M 29,23.82 L 26.5,28.15 L 21.5,28.15 L 19,23.82 L 21.5,19.49 L 26.5,19.49 Z" Stroke="#7B7B7B" StrokeThickness="1.8" StrokeLineJoin="Round"/>
-  <!-- Atoms at the fourteen ring vertices -->
-  <Ellipse Canvas.Left="19.7" Canvas.Top="0.37" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="24.7" Canvas.Top="0.37" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="17.2" Canvas.Top="4.7" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="27.2" Canvas.Top="4.7" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="19.7" Canvas.Top="9.03" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="24.7" Canvas.Top="9.03" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="17.2" Canvas.Top="13.36" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="27.2" Canvas.Top="13.36" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="19.7" Canvas.Top="17.69" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="24.7" Canvas.Top="17.69" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="17.2" Canvas.Top="22.02" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="27.2" Canvas.Top="22.02" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="19.7" Canvas.Top="26.35" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
-  <Ellipse Canvas.Left="24.7" Canvas.Top="26.35" Width="3.6" Height="3.6" Fill="{StaticResource Atom}"/>
+  <!-- Bonds: fluorene rings with bond length 5.2 mirrored to point left, centered at 23.05,16 -->
+  <Path Data="M 18.63,16.00 L 21.68,20.21 L 26.63,18.60 L 26.63,13.40 L 21.68,11.79 Z M 21.68,20.21 L 20.60,25.29 L 24.47,28.77 L 29.41,27.17 L 30.49,22.08 L 26.63,18.60 Z M 26.63,13.40 L 30.49,9.92 L 29.41,4.83 L 24.47,3.23 L 20.60,6.71 L 21.68,11.79 Z" Stroke="#7B7B7B" StrokeThickness="1.8" StrokeLineJoin="Round"/>
+  <!-- Atoms at the thirteen ring vertices -->
+  <Ellipse Canvas.Left="16.93" Canvas.Top="14.30" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.98" Canvas.Top="18.51" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.93" Canvas.Top="16.90" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="24.93" Canvas.Top="11.70" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="19.98" Canvas.Top="10.09" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="18.90" Canvas.Top="23.59" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="22.77" Canvas.Top="27.07" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.71" Canvas.Top="25.47" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="28.79" Canvas.Top="20.38" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="28.79" Canvas.Top="8.22" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="27.71" Canvas.Top="3.13" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="22.77" Canvas.Top="1.53" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="18.90" Canvas.Top="5.01" Width="3.4" Height="3.4" Fill="{StaticResource Atom}"/>
 </Canvas>

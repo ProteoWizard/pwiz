@@ -1,23 +1,29 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
-  <!-- TransitionGroupLibDecoy: the TransitionGroupDecoy humps with the lower-right corner
-       cleared for the black library glyph. -->
+  <!-- TransitionGroupLibDecoy: the TransitionGroupDecoy traces with the lower-right corner
+       cleared for the black library glyph (the same glyph as FragmentLib, bars on even units). -->
   <Canvas>
     <Canvas.Clip>
       <CombinedGeometry GeometryCombineMode="Exclude">
         <CombinedGeometry.Geometry1><RectangleGeometry Rect="0,0,32,32"/></CombinedGeometry.Geometry1>
-        <CombinedGeometry.Geometry2><RectangleGeometry Rect="18,14,14,18"/></CombinedGeometry.Geometry2>
+        <CombinedGeometry.Geometry2>
+          <GeometryGroup>
+            <RectangleGeometry Rect="18,18,14,14"/>
+            <RectangleGeometry Rect="24,12,8,20"/>
+          </GeometryGroup>
+        </CombinedGeometry.Geometry2>
       </CombinedGeometry>
     </Canvas.Clip>
-    <Path Data="M 10,21 C 12,21 13,8 16,8 L 18,8 C 20.5,8 21,21 23,21" Stroke="#F08A26" StrokeThickness="2.5" StrokeLineJoin="Round"/>
-    <Path Data="M 0,21 L 7,21 C 8.5,21 9,11 11,11 L 14,11 C 16,11 16.5,21 18,21" Stroke="#8E1C1C" StrokeThickness="2.5" StrokeLineJoin="Round"/>
-    <Path Data="M 16,21 C 18,21 19.5,12 22,12 L 24,12 C 26,12 26.5,21 28,21 L 32,21" Stroke="#E5331C" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+    <Path Data="M 9,23 L 11,23 L 13,21 L 15,19 L 15,11 L 17,9 L 19,11 L 19,13 L 21,13 L 21,21 L 23,23" Stroke="#E06000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+    <Path Data="M 0,23 L 7,23 L 7,17 L 9,17 L 9,13 L 11,11 L 13,13 L 13,15 L 15,15 L 17,19 L 19,21 L 21,23 L 32,23" Stroke="#800000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+    <Path Data="M 0,21 L 11,21 L 11,19 L 13,19 L 13,17 L 21,17 L 21,15 L 25,15 L 25,19 L 27,19 L 27,21 L 32,21" Stroke="#E02000" StrokeThickness="2" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+    <Rectangle Canvas.Left="24" Canvas.Top="12" Width="2" Height="4" Fill="#E02000"/>
   </Canvas>
-  <Rectangle Canvas.Left="19" Canvas.Top="28" Width="12" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="28" Width="12" Height="2" Fill="#000000"/>
   <Rectangle Canvas.Left="20" Canvas.Top="20" Width="2" Height="8" Fill="#000000"/>
-  <Rectangle Canvas.Left="25" Canvas.Top="16" Width="2" Height="12" Fill="#000000"/>
-  <Rectangle Canvas.Left="29" Canvas.Top="24" Width="2" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="16" Width="2" Height="12" Fill="#000000"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="24" Width="2" Height="4" Fill="#000000"/>
   <Rectangle Canvas.Left="22" Canvas.Top="21" Width="1" Height="7" Fill="#9A9A9A"/>
-  <Rectangle Canvas.Left="27" Canvas.Top="17" Width="1" Height="11" Fill="#9A9A9A"/>
-  <Rectangle Canvas.Left="18" Canvas.Top="28" Width="1" Height="2" Fill="#9A9A9A"/>
-  <Rectangle Canvas.Left="19" Canvas.Top="30" Width="12" Height="1" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="17" Width="1" Height="11" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="30" Canvas.Top="25" Width="1" Height="5" Fill="#9A9A9A"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="30" Width="13" Height="1" Fill="#9A9A9A"/>
 </Canvas>

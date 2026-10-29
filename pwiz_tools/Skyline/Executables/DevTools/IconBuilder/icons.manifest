@@ -30,8 +30,8 @@ Error                      vector  20,24,32
 File                       vector  20,24,32
 FileMissing                vector  20,24,32
 Filter                     raster  20,24,32
-Find                       raster  20,24,32
-FindNext                   raster  20,24,32
+Find                       vector  20,24,32
+FindNext                   vector  20,24,32
 Folder                     vector  20,24,32
 FolderMissing              vector  20,24,32
 FolderSampleSet            vector  20,24,32
@@ -58,7 +58,7 @@ IrtCalculator              vector  20,24,32
 Keep                       vector  20,24,32
 LabKey                     vector  18,21,28
 Locked                     vector  20,24,32
-MethodFile                 raster  20,24,32
+MethodFile                 vector  20,24,32
 Molecule                   vector  20,24,32
 MoleculeIrt                vector  20,24,32
 MoleculeIrtLib             vector  20,24,32
@@ -72,7 +72,7 @@ noAccess                   vector  20,24,32
 noAccessFolder             vector  20,24,32
 NoPeak                     vector  20,24,32
 Note                       vector  20,24,32
-Open                       raster  20,24,32
+Open                       vector  20,24,32
 OpenFolder                 vector  20,24,32
 OptDB                      vector  20,24,32
 Panorama                   vector  20,24,32
@@ -93,7 +93,7 @@ PeptideQcLib               vector  20,24,32
 PeptideStandard            vector  20,24,32
 PeptideStandardLib         vector  20,24,32
 Pindownlight               raster  20,24,32
-Pinleftlight               vector  20,24,32
+Pinleftlight               raster  20,24,32
 Print                      vector  20,24,32
 Properties_Button          vector  20,24,32
 ProtDB                     vector  20,24,32
@@ -114,8 +114,8 @@ TransitionGroupDecoy       vector  20,24,32
 TransitionGroupLib         vector  20,24,32
 TransitionGroupLibDecoy    vector  20,24,32
 Trash                      vector  20,24,32
-UIModeMixed                vector  20,24,32
-UIModeProteomic            vector  20,24,32
+UIModeMixed                raster  20,24,32
+UIModeProteomic            raster  20,24,32
 UIModeSmallMolecules       vector  20,24,32
 Unlocked                   vector  20,24,32
 up_pro32                   vector  20,24,32
@@ -123,7 +123,7 @@ ViewFile                   vector  20,24,32
 Wand                       vector  20,24,32
 WandProhibit               vector  20,24,32
 warning                    vector  20,24,32
-magnifier_zoom_in          raster  20,24,32
+magnifier_zoom_in          vector  20,24,32
 DropDownArrow              vector  20,24,32
 MacroMenuArrow             vector  20,24,32
 NavigatorAddNew            vector  20,24,32

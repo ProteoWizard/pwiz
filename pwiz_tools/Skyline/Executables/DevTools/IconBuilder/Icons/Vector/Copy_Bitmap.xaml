@@ -3,7 +3,7 @@
        Each has a dark brown frame with a tan inner line, a blue sky, an orange sun with a
        yellow highlight at the upper right and two-tone green hills at the lower left. -->
   <!-- Back picture -->
-  <Rectangle Canvas.Left="5" Canvas.Top="5" Width="14" Height="14" Stroke="#6B5A32" StrokeThickness="2">
+  <Rectangle Canvas.Left="4" Canvas.Top="4" Width="16" Height="16" Stroke="#6B5A32" StrokeThickness="2">
     <Rectangle.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FFFFFF" Offset="0"/>
@@ -15,9 +15,9 @@
   <Ellipse Canvas.Left="13" Canvas.Top="8" Width="2.5" Height="2.5" Fill="#FFC050" Opacity="0.9"/>
   <Path Data="M 6,18 L 6,15 C 9,12 12,13 15,17 L 18,16 L 18,18 Z" Fill="#3F8A1E"/>
   <Path Data="M 6,18 L 6,16 C 8,14 10,15 12,17 L 12,18 Z" Fill="#7BC23C"/>
-  <Rectangle Canvas.Left="6.5" Canvas.Top="6.5" Width="11" Height="11" Stroke="#CBB57A" StrokeThickness="1" Opacity="0.8"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="6" Width="12" Height="12" Stroke="#CBB57A" StrokeThickness="1" Opacity="0.8"/>
   <!-- Front picture -->
-  <Rectangle Canvas.Left="13" Canvas.Top="13" Width="14" Height="14" Stroke="#6B5A32" StrokeThickness="2">
+  <Rectangle Canvas.Left="12" Canvas.Top="12" Width="16" Height="16" Stroke="#6B5A32" StrokeThickness="2">
     <Rectangle.Fill>
       <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FFFFFF" Offset="0"/>
@@ -29,5 +29,5 @@
   <Ellipse Canvas.Left="21" Canvas.Top="16" Width="2.5" Height="2.5" Fill="#FFC050" Opacity="0.9"/>
   <Path Data="M 14,26 L 14,23 C 17,20 20,21 23,25 L 26,24 L 26,26 Z" Fill="#3F8A1E"/>
   <Path Data="M 14,26 L 14,24 C 16,22 18,23 20,25 L 20,26 Z" Fill="#7BC23C"/>
-  <Rectangle Canvas.Left="14.5" Canvas.Top="14.5" Width="11" Height="11" Stroke="#CBB57A" StrokeThickness="1" Opacity="0.8"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="14" Width="12" Height="12" Stroke="#CBB57A" StrokeThickness="1" Opacity="0.8"/>
 </Canvas>

@@ -1,15 +1,16 @@
 <Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
   <!-- Audit log, traced from the native pixels: a square-cornered 2-unit near-black cover outline
-       at 75% opacity (outer 4..28 x 2..30) over a faint dark interior tint, four opaque binding
-       rings centered on the left border, and a teal outlined label with a faint teal interior. -->
+       at two-thirds opacity (outer 4..28 x 2..30) over a faint dark interior tint, four opaque
+       binding rings on the left border, and a teal outlined label with a faint teal interior.
+       Every edge sits on an even unit so the 1x render matches the native drawing. -->
   <Rectangle Canvas.Left="6" Canvas.Top="4" Width="20" Height="24" Fill="#1A1A1A" Opacity="0.075"/>
-  <Rectangle Canvas.Left="5" Canvas.Top="3" Width="22" Height="26" Stroke="#212121" StrokeThickness="2" Opacity="0.75"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="2" Width="24" Height="28" Stroke="#212121" StrokeThickness="2" Opacity="0.7"/>
   <!-- Binding rings -->
-  <Rectangle Canvas.Left="2" Canvas.Top="5.75" Width="6" Height="2.5" RadiusX="1" RadiusY="1" Fill="#212121"/>
-  <Rectangle Canvas.Left="2" Canvas.Top="11.75" Width="6" Height="2.5" RadiusX="1" RadiusY="1" Fill="#212121"/>
-  <Rectangle Canvas.Left="2" Canvas.Top="17.75" Width="6" Height="2.5" RadiusX="1" RadiusY="1" Fill="#212121"/>
-  <Rectangle Canvas.Left="2" Canvas.Top="23.75" Width="6" Height="2.5" RadiusX="1" RadiusY="1" Fill="#212121"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="6" Width="6" Height="2" RadiusX="1" RadiusY="1" Fill="#212121"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="6" Height="2" RadiusX="1" RadiusY="1" Fill="#212121"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="18" Width="6" Height="2" RadiusX="1" RadiusY="1" Fill="#212121"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="24" Width="6" Height="2" RadiusX="1" RadiusY="1" Fill="#212121"/>
   <!-- Label -->
-  <Rectangle Canvas.Left="11" Canvas.Top="7" Width="12" Height="4" Stroke="#006758" StrokeThickness="2"/>
-  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="10" Height="2" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="10" Height="2" Fill="#006758" Opacity="0.16"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="6" Width="14" Height="6" Stroke="#006758" StrokeThickness="2"/>
 </Canvas>
