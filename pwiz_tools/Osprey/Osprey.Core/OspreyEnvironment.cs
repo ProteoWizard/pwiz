@@ -95,7 +95,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
             @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
             @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
-            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
             @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
@@ -769,6 +769,17 @@ namespace pwiz.Osprey.Core
                 return mode;
             throw new InvalidOperationException(@"OSPREY_RECONCILIATION must be off or symmetric-decoys: " + value);
         }
+
+        /// <summary>
+        /// OSPREY_DUMP_RUN_PEP (experiment): a folder. When set, the transfer second pass fits each
+        /// run's posterior error probability from that run's first-pass target-vs-paired-decoy
+        /// winners and writes, per run, every survivor's class (unchanged, moved, gap-fill), score,
+        /// run q and run PEP to <c>&lt;run&gt;.run_pep.tsv</c> there. Null when unset: nothing is fitted.
+        /// </summary>
+        public static readonly string RunPepDumpDir = string.IsNullOrWhiteSpace(
+            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP"))
+            ? null
+            : Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP").Trim();
 
         private static string[] ParseFeatureMask(string value)
         {

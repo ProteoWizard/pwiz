@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using pwiz.Common.Pipeline;
@@ -31,6 +32,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -2278,6 +2280,10 @@ namespace pwiz.Osprey.Tasks
             }
             BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
             BuildScoreToQTable(pepScores, pepQs, out double[] pepScoresDesc, out double[] pepQDesc);
+            // OSPREY_DUMP_RUN_PEP (experiment): this run's own score-to-PEP curve from its first-pass
+            // competition, read at each survivor's final score - the per-replicate PEP of a peak.
+            PepEstimator runPep = OspreyEnvironment.RunPepDumpDir != null ? FitRunPep(firstPassByEntryId.Values) : null;
+            var runPepRows = runPep != null ? new List<string>(survivors.Count) : null;
 
             foreach (var entry in survivors)
             {
@@ -2306,18 +2312,76 @@ namespace pwiz.Osprey.Tasks
                 FdrExperimentRecord? exp1 = null;
                 if (globalExperiment.TryGetValue(entry.EntryId, out var expFound))
                     exp1 = expFound;
-                switch (AssignPerRunQ(entry, newScore, rec1, exp1,
-                    precScoresDesc, precQDesc, pepScoresDesc, pepQDesc))
+                var perRunClass = AssignPerRunQ(entry, newScore, rec1, exp1,
+                    precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
+                runPepRows?.Add(RunPepRow(entry, perRunClass, runPep));
+                switch (perRunClass)
                 {
                     case PerRunClass.Unchanged: tally.Unchanged++; break;
                     case PerRunClass.Moved: tally.Moved++; break;
                     default: tally.GapFill++; break;
                 }
             }
+            if (runPepRows != null)
+                WriteRunPepRows(fileName, runPepRows);
             // Counted only HERE, where the whole-run loop counted it: the unreadable-sidecar
             // path above returns first, so a run whose sidecar could not be read was never one
             // this pass finished.
             tally.FilesDone++;
+        }
+
+        /// <summary>
+        /// The run's posterior error probability as a function of score: <see cref="PepEstimator"/>
+        /// fitted on the run's first-pass target-decoy competition, one winner per base id (the higher
+        /// of the target and its paired decoy, the target on a tie), fed in base-id order because the
+        /// KDE sum is order-sensitive.
+        /// </summary>
+        private static PepEstimator FitRunPep(IEnumerable<FdrScoreRecord> records)
+        {
+            var best = new SortedDictionary<uint, (double Target, double Decoy)>();
+            foreach (var rec in records)
+            {
+                uint baseId = rec.EntryId & ~LibraryEntry.DECOY_ID_BIT;
+                bool isDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
+                var pair = best.TryGetValue(baseId, out var found) ? found : (double.NaN, double.NaN);
+                if (isDecoy)
+                    pair.Item2 = double.IsNaN(pair.Item2) ? rec.Score : Math.Max(pair.Item2, rec.Score);
+                else
+                    pair.Item1 = double.IsNaN(pair.Item1) ? rec.Score : Math.Max(pair.Item1, rec.Score);
+                best[baseId] = pair;
+            }
+            var scores = new List<double>(best.Count);
+            var isDecoyWinner = new List<bool>(best.Count);
+            foreach (var pair in best.Values)
+            {
+                bool decoyWins = double.IsNaN(pair.Target) || (!double.IsNaN(pair.Decoy) && pair.Decoy > pair.Target);
+                scores.Add(decoyWins ? pair.Decoy : pair.Target);
+                isDecoyWinner.Add(decoyWins);
+            }
+            return PepEstimator.FitDefault(scores.ToArray(), isDecoyWinner.ToArray());
+        }
+
+        private static string RunPepRow(FdrEntry entry, PerRunClass perRunClass, PepEstimator runPep)
+        {
+            return string.Join(TextUtil.SEPARATOR_TSV, entry.ModifiedSequence, entry.Charge.ToString(CultureInfo.InvariantCulture),
+                entry.IsDecoy ? @"1" : @"0", perRunClass.ToString(),
+                entry.Score.ToString(@"R", CultureInfo.InvariantCulture),
+                entry.RunPrecursorQvalue.ToString(@"R", CultureInfo.InvariantCulture),
+                runPep.PosteriorError(entry.Score).ToString(@"R", CultureInfo.InvariantCulture));
+        }
+
+        private static void WriteRunPepRows(string fileName, List<string> rows)
+        {
+            Directory.CreateDirectory(OspreyEnvironment.RunPepDumpDir);
+            string path = Path.Combine(OspreyEnvironment.RunPepDumpDir,
+                Path.GetFileNameWithoutExtension(fileName) + @".run_pep.tsv");
+            using (var writer = new StreamWriter(path))
+            {
+                writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV,
+                    @"modified_sequence", @"charge", @"is_decoy", @"class", @"score", @"run_q", @"run_pep"));
+                foreach (string row in rows)
+                    writer.WriteLine(row);
+            }
         }
 
         /// <summary>How a survivor was classified against its 1st-pass sidecar record.</summary>
