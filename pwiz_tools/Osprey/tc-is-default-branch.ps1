@@ -1,7 +1,10 @@
 <#
 .SYNOPSIS
     Exits 0 when this TeamCity build is on the configuration's default branch
-    (master), 1 when it is on any other branch (a pull/<N> build).
+    (master), 2 when it is on any other branch (a pull/<N> build, or any
+    non-default branch the config builds). Any other exit code - 1 from an
+    unhandled error, 9009 when pwsh is missing - means "unknown", and
+    tcbuild.bat keeps coverage for it.
 
 .DESCRIPTION
     tcbuild.bat collects dotCover coverage only on master. Running the Osprey
@@ -51,4 +54,4 @@ if ($null -eq $isDefault) {
 if ($isDefault -eq 'true') {
     exit 0
 }
-exit 1
+exit 2

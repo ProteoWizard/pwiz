@@ -18,7 +18,7 @@ REM   is needed.
 REM
 REM Outputs consumed by TeamCity:
 REM   * pwiz_tools/Osprey/TestResults/*.trx                  (vstest importData)
-REM   * pwiz_tools/Osprey/TestResults/*.dcvr                 (dotCover importData)
+REM   * pwiz_tools/Osprey/TestResults/*.dcvr                 (dotCover importData, master only)
 REM   * pwiz_tools/Osprey/dist/Osprey-<ver>-win-x64.zip      (publishArtifacts)
 REM   * pwiz_tools/Osprey/dist/Osprey-Setup-<ver>.exe         (publishArtifacts)
 REM   The installers are unsigned here; signing is a later CI step. The
@@ -32,7 +32,8 @@ REM and master builds after each merge are enough to watch coverage over time. S
 REM tc-is-default-branch.ps1.
 set COVERAGE=-Coverage
 pwsh -NoProfile -File "%~dp0tc-is-default-branch.ps1"
-if %ERRORLEVEL% NEQ 0 set COVERAGE=
+REM Exit 2 is "not the default branch"; any other failure keeps coverage.
+if %ERRORLEVEL% EQU 2 set COVERAGE=
 if "%COVERAGE%"=="" (echo Not the default branch: running tests without coverage.) else (echo Collecting coverage.)
 
 pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity %COVERAGE% -Configuration Release
