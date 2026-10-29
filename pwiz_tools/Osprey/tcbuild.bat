@@ -1,5 +1,5 @@
 @echo off
-REM TeamCity entry point: build + test Osprey with dotCover and TeamCity service
+REM TeamCity entry point: build + test Osprey (with dotCover on master) and TeamCity service
 REM messages, then package the unsigned redistributable installers so they are
 REM published as artifacts of this per-commit config (the Tier-C "testing"
 REM installers a collaborator can grab before an official release). TeamCity
@@ -27,14 +27,22 @@ REM   no server-side artifact-path configuration is required.
 
 setlocal
 
-pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release
+REM dotCover coverage only on master: it makes the subset-pipeline tests ~8x slower,
+REM and master builds after each merge are enough to watch coverage over time. See
+REM tc-is-default-branch.ps1.
+set COVERAGE=-Coverage
+pwsh -NoProfile -File "%~dp0tc-is-default-branch.ps1"
+if %ERRORLEVEL% NEQ 0 set COVERAGE=
+if "%COVERAGE%"=="" (echo Not the default branch: running tests without coverage.) else (echo Collecting coverage.)
+
+pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity %COVERAGE% -Configuration Release
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 REM CarafeSharp (pwiz_tools/CarafeSharp) trains the spectral libraries Osprey searches and
 REM has no config of its own, so this one builds and tests it too, with its own test results
 REM and coverage snapshot. It needs no test data; the Carafe parity tests are Inconclusive
 REM without it.
-pwsh -NoProfile -File "%~dp0..\CarafeSharp\build.ps1" -TeamCity -Coverage
+pwsh -NoProfile -File "%~dp0..\CarafeSharp\build.ps1" -TeamCity %COVERAGE%
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 pwsh -NoProfile -File "%~dp0package.ps1" -TeamCity -Rid win-x64 -Setup
