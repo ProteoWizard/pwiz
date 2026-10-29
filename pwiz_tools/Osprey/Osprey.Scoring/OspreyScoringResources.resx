@@ -223,6 +223,12 @@
   <data name="PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_" xml:space="preserve">
     <value>Peak sharpness (log10)</value>
   </data>
+  <data name="PeakSpectrumCosineMeanCalc_DisplayName_Library_cosine_across_peak__mean_" xml:space="preserve">
+    <value>Library cosine across peak (mean)</value>
+  </data>
+  <data name="PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_" xml:space="preserve">
+    <value>Library cosine across peak (SD)</value>
+  </data>
   <data name="PeptideLengthCalc_DisplayName_Peptide_length" xml:space="preserve">
     <value>Peptide length</value>
   </data>

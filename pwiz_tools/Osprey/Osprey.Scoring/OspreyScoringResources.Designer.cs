@@ -451,6 +451,24 @@ namespace pwiz.Osprey.Scoring {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library cosine across peak (mean).
+        /// </summary>
+        public static string PeakSpectrumCosineMeanCalc_DisplayName_Library_cosine_across_peak__mean_ {
+            get {
+                return ResourceManager.GetString("PeakSpectrumCosineMeanCalc_DisplayName_Library_cosine_across_peak__mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library cosine across peak (SD).
+        /// </summary>
+        public static string PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_ {
+            get {
+                return ResourceManager.GetString("PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide length.
         /// </summary>
         public static string PeptideLengthCalc_DisplayName_Peptide_length {

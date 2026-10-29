@@ -53,7 +53,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// The PIN feature column names: the 21 of the Rust get_pin_feature_names(), then the
-        /// C#-only runner-up, context and per-fragment-rank features (masked by default).
+        /// C#-only runner-up, context, per-fragment-rank and spectrum-across-peak features (masked by default).
         /// </summary>
         public static readonly string[] PIN_FEATURE_NAMES =
         {
@@ -107,9 +107,12 @@ namespace pwiz.Osprey.IO
             @"frag_rank4_intensity_share",
             @"frag_rank5_intensity_share",
             @"frag_rank6_intensity_share",
+            // Spectrum across the peak: library cosine at every scan (2)
+            @"peak_spectrum_cosine_mean",
+            @"peak_spectrum_cosine_sd",
         };
 
-        public const int NUM_PIN_FEATURES = 39;
+        public const int NUM_PIN_FEATURES = 41;
 
         #endregion
 

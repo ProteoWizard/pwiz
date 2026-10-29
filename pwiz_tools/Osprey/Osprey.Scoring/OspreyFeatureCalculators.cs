@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-38 are C#-only: the runner-up, context and per-fragment-rank families,
+    /// never returns null. Slots 21-40 are C#-only: the runner-up, context, per-fragment-rank and spectrum-across-peak families,
     /// masked by default (<see cref="DEFAULT_MASKED_FEATURES"/>, OSPREY_FEATURE_MASK) while
     /// they are evaluated. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -43,11 +43,11 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 39;
+        public const int FeatureCount = 41;
 
         /// <summary>
-        /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up, context and
-        /// per-fragment-rank families, still under evaluation. A masked feature is written as 0, so the
+        /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up, context,
+        /// per-fragment-rank and spectrum-across-peak families, still under evaluation. A masked feature is written as 0, so the
         /// standardizer gives it scale 1 and value 0 and the classifier cannot use it -
         /// which keeps the default search's results what they were before these features.
         /// </summary>
@@ -59,6 +59,7 @@ namespace pwiz.Osprey.Scoring
             @"frag_rank4_abs_mass_error", @"frag_rank5_abs_mass_error", @"frag_rank6_abs_mass_error",
             @"frag_rank1_intensity_share", @"frag_rank2_intensity_share", @"frag_rank3_intensity_share",
             @"frag_rank4_intensity_share", @"frag_rank5_intensity_share", @"frag_rank6_intensity_share",
+            @"peak_spectrum_cosine_mean", @"peak_spectrum_cosine_sd",
         };
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
@@ -124,6 +125,10 @@ namespace pwiz.Osprey.Scoring
                 calculators[26 + r] = new FragmentRankMassErrorCalc(r);
                 calculators[26 + FragmentRankApexMatch.RANK_COUNT + r] = new FragmentRankIntensityShareCalc(r);
             }
+
+            // Spectrum-across-peak family: the library cosine at every scan of the peak.
+            calculators[39] = new PeakSpectrumCosineMeanCalc();
+            calculators[40] = new PeakSpectrumCosineSdCalc();
 
             return calculators;
         }
