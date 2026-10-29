@@ -101,6 +101,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public interface IProgressLock
         {
             int? LockLineCount { get; }
+            /// <summary>Highest percent complete the progress bar shows while this lock is set, or null for no limit.</summary>
+            int? MaxPercentComplete { get; }
             string FilterMessage(string message);
         }
 
@@ -163,6 +165,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             int percentComplete = status.PercentComplete;
             if (status.SegmentCount > 0)
                 percentComplete = status.Segment * 100 / status.SegmentCount + status.ZoomedPercentComplete / status.SegmentCount;
+            if (ProgressLock?.MaxPercentComplete != null)
+                percentComplete = Math.Min(percentComplete, ProgressLock.MaxPercentComplete.Value);
 
             if (!IsProgressLocked)
             {
