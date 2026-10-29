@@ -174,11 +174,16 @@ public static class MSDataFile
             return;
         }
 
-        // mzML reopens the file for each pass, so it can still be rewritten after a skip when
-        // gzip leaves it unable to seek.
+        // mzML and mzXML reopen the file for each pass, so they can still be rewritten after a
+        // skip when gzip leaves them unable to seek.
         if (config.Format == WriteFormat.Mzml)
         {
             CreateMzmlWriter(config, ilr).Write(msd, () => OpenOutputStream(path, config.Gzip));
+            return;
+        }
+        if (config.Format == WriteFormat.MzXml)
+        {
+            CreateMzxmlWriter(config, ilr).Write(msd, () => OpenOutputStream(path, config.Gzip));
             return;
         }
 
@@ -200,12 +205,7 @@ public static class MSDataFile
                 CreateMzmlWriter(config, ilr).Write(msd, output);
                 break;
             case WriteFormat.MzXml:
-                new MzxmlWriter(config.EncoderConfig)
-                {
-                    Indexed = config.Indexed,
-                    IterationListenerRegistry = ilr,
-                    ContinueOnError = config.ContinueOnError,
-                }.Write(msd, output);
+                CreateMzxmlWriter(config, ilr).Write(msd, output);
                 break;
             case WriteFormat.Mgf:
                 using (var tw = new StreamWriter(output, leaveOpen: true))
@@ -240,6 +240,14 @@ public static class MSDataFile
 
     private static MzmlWriter CreateMzmlWriter(WriteConfig config, IterationListenerRegistry? ilr) =>
         new MzmlWriter(config.EncoderConfig)
+        {
+            Indexed = config.Indexed,
+            IterationListenerRegistry = ilr,
+            ContinueOnError = config.ContinueOnError,
+        };
+
+    private static MzxmlWriter CreateMzxmlWriter(WriteConfig config, IterationListenerRegistry? ilr) =>
+        new MzxmlWriter(config.EncoderConfig)
         {
             Indexed = config.Indexed,
             IterationListenerRegistry = ilr,

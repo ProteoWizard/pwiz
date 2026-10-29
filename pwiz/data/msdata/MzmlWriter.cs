@@ -29,6 +29,9 @@ namespace Pwiz.Data.MsData.Mzml;
 public sealed class MzmlWriter
 #pragma warning restore CA1001
 {
+    /// <summary>Names the counts a skip leaves too high, for the warning when they cannot be corrected.</summary>
+    internal const string COUNTS_STILL_INCLUDE = "the spectrumList and chromatogramList counts still include";
+
     private readonly BinaryEncoderConfig _encoderConfig;
 
     // Mutable state only during Write(). An instance may be reused for successive Write calls.
@@ -130,28 +133,16 @@ public sealed class MzmlWriter
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentNullException.ThrowIfNull(stream);
 
-        bool canRewrite = stream.CanSeek && ExternalBinarySink is null;
-        long start = canRewrite ? stream.Position : 0;
-        ContinueOnErrorPolicy.WriteUntilNothingNewIsSkipped(excluded =>
-        {
-            if (excluded.Count > 0)
-            {
-                stream.Position = start;
-                stream.SetLength(start);
-            }
-            return WritePass(msd, stream, excluded);
-        }, canRewrite, SkipLog);
+        ContinueOnErrorPolicy.WriteToStream(stream, (s, excluded) => WritePass(msd, s, excluded),
+            ExternalBinarySink is null, COUNTS_STILL_INCLUDE, SkipLog);
     }
 
     /// <summary>Writes to a fresh stream from <paramref name="openOutput"/> on every pass, so a
     /// rewrite after a skip also works for output that cannot seek, such as gzip.</summary>
     internal void Write(MSData msd, Func<Stream> openOutput)
     {
-        ContinueOnErrorPolicy.WriteUntilNothingNewIsSkipped(excluded =>
-        {
-            using var stream = openOutput();
-            return WritePass(msd, stream, excluded);
-        }, ExternalBinarySink is null, SkipLog);
+        ContinueOnErrorPolicy.WriteToFreshStreams(openOutput, (s, excluded) => WritePass(msd, s, excluded),
+            ExternalBinarySink is null, COUNTS_STILL_INCLUDE, SkipLog);
     }
 
     /// <summary>Writes the whole document once, leaving out the items in

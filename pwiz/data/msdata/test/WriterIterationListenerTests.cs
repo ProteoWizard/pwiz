@@ -234,6 +234,8 @@ public class WriterIterationListenerTests
                 Assert.AreEqual(2, ListCount(System.Text.Encoding.UTF8.GetString(bytes), "spectrumList"),
                     $"{format}: spectrumList count");
             }
+            if (format == WriteFormat.MzXml)
+                Assert.AreEqual(2, ScanCount(System.Text.Encoding.UTF8.GetString(bytes)), $"{format}: msRun scanCount");
         }
     }
 
@@ -260,14 +262,14 @@ public class WriterIterationListenerTests
     [TestMethod]
     public void AllWriters_ContinueOnError_StillReportProgressForTheSkippedSpectrum()
     {
-        // mzML rewrites the output once a spectrum is skipped, so its list count holds only the
-        // spectra written, and progress starts over for that second pass.
+        // mzML and mzXML rewrite the output once a spectrum is skipped, so their counts hold only
+        // the spectra written, and progress starts over for that second pass.
         var onePass = new[] { 0, 1, 2 };
         var twoPasses = new[] { 0, 1, 2, 0, 1, 2 };
         var writers = new (string Format, int[] Expected, Action<MSData, IterationListenerRegistry> Write)[]
         {
             ("mzML", twoPasses, (msd, reg) => new MzmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
-            ("mzXML", onePass, (msd, reg) => new MzxmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("mzXML", twoPasses, (msd, reg) => new MzxmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
             ("MGF", onePass, (msd, reg) => new MgfSerializer { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
             ("MS2", onePass, (msd, reg) => new SerializerMSn(MSnType.Ms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
             ("CMS2", onePass, (msd, reg) => new SerializerMSn(MSnType.Cms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
@@ -386,10 +388,10 @@ public class WriterIterationListenerTests
     }
 
     [TestMethod]
-    public void Mzml_ContinueOnError_CountsOnlyTheWrittenSpectraInGzipAndMzMLbFiles()
+    public void MzmlAndMzxml_ContinueOnError_CountOnlyTheWrittenSpectraInGzipAndMzMLbFiles()
     {
-        // Neither output can be rewound in place - a GZipStream cannot seek, and mzMLb also
-        // holds the binary arrays in HDF5 datasets - so both are rewritten from the start.
+        // None of these outputs can be rewound in place - a GZipStream cannot seek, and mzMLb also
+        // holds the binary arrays in HDF5 datasets - so each is rewritten from the start.
         string dir = Path.Combine(Path.GetTempPath(), $"skipcount-{Guid.NewGuid():N}");
         Directory.CreateDirectory(dir);
         try
@@ -404,6 +406,13 @@ public class WriterIterationListenerTests
             Assert.AreEqual(2, ListCount(gzMzml, "spectrumList"), "mzML.gz: spectrumList count");
             Assert.AreEqual(2, new MzmlReader().Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(gzMzml))).Run.SpectrumList!.Count,
                 "mzML.gz: spectra read back");
+
+            string gzMzxmlPath = Path.Combine(dir, "out.mzXML.gz");
+            MSDataFile.Write(BuildDocWithUnreadableSpectrum(), gzMzxmlPath,
+                new WriteConfig { Format = WriteFormat.MzXml, Gzip = true, ContinueOnError = true });
+            using (var gz = new System.IO.Compression.GZipStream(File.OpenRead(gzMzxmlPath), System.IO.Compression.CompressionMode.Decompress))
+            using (var reader = new StreamReader(gz))
+                Assert.AreEqual(2, ScanCount(reader.ReadToEnd()), "mzXML.gz: msRun scanCount");
 
             string mzMLbPath = Path.Combine(dir, "out.mzMLb");
             MSDataFile.Write(BuildDocWithUnreadableSpectrum(), mzMLbPath,
@@ -427,7 +436,7 @@ public class WriterIterationListenerTests
     }
 
     [TestMethod]
-    public void Mzml_ContinueOnError_WarnsWhenTheStreamCannotBeRewound()
+    public void MzmlAndMzxml_ContinueOnError_WarnWhenTheStreamCannotBeRewound()
     {
         using var log = new StringWriter();
         using var output = new NonSeekableStream();
@@ -441,6 +450,21 @@ public class WriterIterationListenerTests
             lines[1]);
         Assert.AreEqual(3, ListCount(System.Text.Encoding.UTF8.GetString(output.ToArray()), "spectrumList"),
             "the count written before the skip is left as it was");
+
+        using var mzxmlLog = new StringWriter();
+        using var mzxmlOutput = new NonSeekableStream();
+        new MzxmlWriter { ContinueOnError = true, SkipLog = mzxmlLog }.Write(BuildDocWithUnreadableSpectrum(), mzxmlOutput);
+        Assert.AreEqual(
+            "Warning: the output cannot be rewritten, so the msRun scanCount still includes the 1 item(s) skipped",
+            mzxmlLog.ToString().TrimEnd().Split(Environment.NewLine)[1]);
+        Assert.AreEqual(3, ScanCount(System.Text.Encoding.UTF8.GetString(mzxmlOutput.ToArray())), "mzXML: scanCount left as it was");
+    }
+
+    private static int ScanCount(string mzxml)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(mzxml, "<msRun scanCount=\"(\\d+)\"");
+        Assert.IsTrue(match.Success, "no <msRun scanCount> in the output");
+        return int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     [TestMethod]

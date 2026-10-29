@@ -68,7 +68,7 @@ public sealed class MzMlbWriter
         ArgumentException.ThrowIfNullOrEmpty(path);
 
         ContinueOnErrorPolicy.WriteUntilNothingNewIsSkipped(
-            excluded => WritePass(msd, path, excluded), canRewrite: true, SkipLog);
+            excluded => WritePass(msd, path, excluded), canRewrite: true, MzmlWriter.COUNTS_STILL_INCLUDE, SkipLog);
     }
 
     private SkippedItems WritePass(MSData msd, string path, SkippedItems excluded)

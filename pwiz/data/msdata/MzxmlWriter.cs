@@ -32,10 +32,17 @@ namespace Pwiz.Data.MsData.MzXml;
 public sealed class MzxmlWriter
 #pragma warning restore CA1001
 {
+    /// <summary>Names the count a skip leaves too high, for the warning when it cannot be corrected.</summary>
+    private const string COUNTS_STILL_INCLUDE = "the msRun scanCount still includes";
+
     private readonly BinaryEncoderConfig _encoderConfig;
 
     private HashingCountingStream? _stream;
     private List<(int ScanNumber, long Offset)>? _scanOffsets;
+
+    // Spectra the current pass leaves out, and the ones it skips itself.
+    private SkippedItems _excluded = new();
+    private SkippedItems _skipped = new();
 
     /// <summary>When true, emit the <c>&lt;index&gt;</c> + <c>&lt;indexOffset&gt;</c> footer.
     /// Always emit a <c>&lt;sha1&gt;</c> trailer regardless (matches cpp).</summary>
@@ -76,11 +83,34 @@ public sealed class MzxmlWriter
     }
 
     /// <summary>Writes <paramref name="msd"/> as mzXML XML to <paramref name="stream"/>.</summary>
+    /// <remarks>When <see cref="ContinueOnError"/> skips a spectrum, the msRun scanCount already
+    /// written is too high, so the output is rewritten from where it started without the skipped
+    /// spectra. That needs a seekable stream; otherwise the count is left overstated and a warning
+    /// goes to <see cref="SkipLog"/>.</remarks>
     public void Write(MSData msd, Stream stream)
     {
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentNullException.ThrowIfNull(stream);
 
+        ContinueOnErrorPolicy.WriteToStream(stream, (s, excluded) => WritePass(msd, s, excluded),
+            canRewrite: true, COUNTS_STILL_INCLUDE, SkipLog);
+    }
+
+    /// <summary>Writes to a fresh stream from <paramref name="openOutput"/> on every pass, so a
+    /// rewrite after a skip also works for output that cannot seek, such as gzip.</summary>
+    internal void Write(MSData msd, Func<Stream> openOutput)
+    {
+        ContinueOnErrorPolicy.WriteToFreshStreams(openOutput, (s, excluded) => WritePass(msd, s, excluded),
+            canRewrite: true, COUNTS_STILL_INCLUDE, SkipLog);
+    }
+
+    /// <summary>Writes the whole document once, leaving out the spectra in
+    /// <paramref name="excluded"/> and counting only the rest, and returns the spectra this pass
+    /// skipped itself.</summary>
+    private SkippedItems WritePass(MSData msd, Stream stream, SkippedItems excluded)
+    {
+        _excluded = excluded;
+        _skipped = new SkippedItems();
         _stream = new HashingCountingStream(stream);
         _scanOffsets = new List<(int, long)>();
         try
@@ -94,6 +124,7 @@ public sealed class MzxmlWriter
             _stream = null;
             _scanOffsets = null;
         }
+        return _skipped;
     }
 
     private static XmlWriter CreateWriter(Stream s) =>
@@ -147,7 +178,7 @@ public sealed class MzxmlWriter
     private void WriteMsRun(MSData msd, XmlWriter w)
     {
         var sl = msd.Run.SpectrumList;
-        int scanCount = sl?.Count ?? 0;
+        int scanCount = (sl?.Count ?? 0) - _excluded.Spectra.Count;
         string startTime = "PT0S";
         string? endTime = null;
         if (sl is not null && sl.Count > 0)
@@ -317,9 +348,15 @@ public sealed class MzxmlWriter
             // Before the fetch, so skipped and filtered spectra still report progress.
             registry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
 
+            // A spectrum an earlier pass skipped is left out without being fetched or logged again.
+            if (_excluded.Spectra.Contains(i))
+                continue;
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(sl, i, ContinueOnError, SkipLog);
             if (spec is null)
+            {
+                _skipped.Spectra.Add(i);
                 continue;
+            }
 
             // Skip Thermo non-MS spectra (cpp Serializer_mzXML.cpp:775-777).
             if (nativeIdFormat == CVID.MS_Thermo_nativeID_format
