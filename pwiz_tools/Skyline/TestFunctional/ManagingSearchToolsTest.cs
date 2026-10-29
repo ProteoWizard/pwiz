@@ -203,28 +203,28 @@ namespace pwiz.SkylineTestFunctional
             };
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
 
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dda;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // With only 1 source, no add/remove prefix/suffix dialog
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             });
 
             // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Import FASTA" page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(testFilesDir.GetTestPath(TestSettings.FastaFilename));
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -240,10 +240,10 @@ namespace pwiz.SkylineTestFunctional
 
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
             });
 
             TestSettings.BeforeSettingsAction?.Invoke();
@@ -264,7 +264,7 @@ namespace pwiz.SkylineTestFunctional
             });
             SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;

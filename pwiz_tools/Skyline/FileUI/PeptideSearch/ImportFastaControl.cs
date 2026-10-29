@@ -31,7 +31,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -589,21 +588,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (docNew == null)
                     return false;
 
-                var hasDecoys = docNew.Peptides.Any(pep => pep.IsDecoy);
-                if (AutoTrain)
+                docNew = ImportPeptideSearch.ChangeAutoTrain(docNew, AutoTrain);
+                if (docNew == null)
                 {
-                    if (!hasDecoys)
-                    {
-                        MessageDlg.Show(this, PeptideSearchResources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
-                        return false;
-                    }
-                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(i =>
-                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.mprophet_model)));
-                }
-                else if (hasDecoys)
-                {
-                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(i =>
-                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.default_model)));
+                    MessageDlg.Show(this, PeptideSearchResources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
+                    return false;
                 }
 
                 DocumentContainer.ModifyDocumentNoUndo(doc =>

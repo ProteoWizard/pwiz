@@ -136,7 +136,7 @@
     <value>4</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>キャンセル</value>
+    <value>Cancel</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -163,7 +163,7 @@
     <value>3</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
-    <value>次へ(&amp;N) &gt;</value>
+    <value>&amp;Next &gt;</value>
   </data>
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
@@ -175,311 +175,11 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
-  <data name="cbMissedCleavages.Items" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="cbMissedCleavages.Items1" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="cbMissedCleavages.Items2" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="cbMissedCleavages.Items3" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="cbMissedCleavages.Items4" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="cbMissedCleavages.Items5" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="cbMissedCleavages.Items6" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="cbMissedCleavages.Items7" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="cbMissedCleavages.Items8" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="cbMissedCleavages.Items9" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="cbMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 95</value>
-  </data>
-  <data name="cbMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 21</value>
-  </data>
-  <data name="cbMissedCleavages.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-    <value>タンパク質の酵素消化で分解後、ペプチドで許容される未切断の最大数。</value>
-  </data>
-  <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
-    <value>cbMissedCleavages</value>
-  </data>
-  <data name="&gt;&gt;cbMissedCleavages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
-  </data>
-  <data name="comboEnzyme.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboEnzyme.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="comboEnzyme.ToolTip" xml:space="preserve">
-    <value>質量分析計への注入前にタンパク質をペプチドに消化するために
-使用するプロテアーゼ酵素です
-</value>
-  </data>
-  <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
-    <value>comboEnzyme</value>
-  </data>
-  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 158</value>
-  </data>
-  <data name="comboBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboBackgroundProteome.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>質量分析計に導入される試料マトリックス内に存在し得る
-全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
-  </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
-    <value>comboBackgroundProteome</value>
-  </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBox1.Items" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="comboBox1.Items1" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="comboBox1.Items2" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="comboBox1.Items3" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="comboBox1.Items4" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="comboBox1.Items5" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="comboBox1.Items6" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="comboBox1.Items7" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="comboBox1.Items8" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="comboBox1.Items9" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="comboBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 95</value>
-  </data>
-  <data name="comboBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 21</value>
-  </data>
-  <data name="comboBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="comboBox1.ToolTip" xml:space="preserve">
-    <value>タンパク質の酵素消化で分解後、ペプチドで許容される未切断の最大数。</value>
-  </data>
-  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
-    <value>comboBox1</value>
-  </data>
-  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
-  </data>
-  <data name="comboBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="comboBox2.ToolTip" xml:space="preserve">
-    <value>質量分析計への注入前にタンパク質をペプチドに消化するために
-使用するプロテアーゼ酵素です
-</value>
-  </data>
-  <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
-    <value>comboBox2</value>
-  </data>
-  <data name="&gt;&gt;comboBox2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBox3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 158</value>
-  </data>
-  <data name="comboBox3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboBox3.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboBox3.ToolTip" xml:space="preserve">
-    <value>質量分析計に導入される試料マトリックス内に存在し得る
-全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
-  </data>
-  <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
-    <value>comboBox3</value>
-  </data>
-  <data name="&gt;&gt;comboBox3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>最大未切断数(&amp;M)：</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>酵素(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label15.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
-  </data>
-  <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
-  </data>
-  <data name="label15.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label15.Text" xml:space="preserve">
-    <value>バックグラウンドプロテオーム(&amp;B)：</value>
-  </data>
-  <data name="&gt;&gt;label15.Name" xml:space="preserve">
-    <value>label15</value>
-  </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>最大未切断数(&amp;M)：</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label8.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label8.Text" xml:space="preserve">
-    <value>酵素(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;label8.Name" xml:space="preserve">
-    <value>label8</value>
-  </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
-  </data>
-  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
-  </data>
-  <data name="label9.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label9.Text" xml:space="preserve">
-    <value>バックグラウンドプロテオーム(&amp;B)：</value>
-  </data>
-  <data name="&gt;&gt;label9.Name" xml:space="preserve">
-    <value>label9</value>
-  </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="btnEarlyFinish.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -496,7 +196,7 @@
     <value>1</value>
   </data>
   <data name="btnEarlyFinish.Text" xml:space="preserve">
-    <value>完了(&amp;F)</value>
+    <value>&amp;Finish</value>
   </data>
   <data name="&gt;&gt;btnEarlyFinish.Name" xml:space="preserve">
     <value>btnEarlyFinish</value>
@@ -508,7 +208,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnEarlyFinish.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -556,7 +256,7 @@
     <value>0</value>
   </data>
   <data name="label14.Text" xml:space="preserve">
-    <value>スペクトルライブラリ</value>
+    <value>Spectral Library</value>
   </data>
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
@@ -637,7 +337,7 @@
     <value>0</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
-    <value>クロマトグラムを抽出</value>
+    <value>Extract Chromatograms</value>
   </data>
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
@@ -718,7 +418,7 @@
     <value>0</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-    <value>修飾を追加</value>
+    <value>Add Modifications</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -802,7 +502,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>トランジション設定を行う</value>
+    <value>Configure Transition Settings</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -883,7 +583,7 @@
     <value>0</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-    <value>フルスキャン設定を行う</value>
+    <value>Configure Full-Scan Settings</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
@@ -964,7 +664,7 @@
     <value>0</value>
   </data>
   <data name="lblFasta.Text" xml:space="preserve">
-    <value>FASTAをインポート</value>
+    <value>Import FASTA</value>
   </data>
   <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
     <value>lblFasta</value>
@@ -1042,13 +742,13 @@
     <value>12, 9</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 20</value>
+    <value>151, 20</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>変換設定</value>
+    <value>Conversion Settings</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1126,13 +826,13 @@
     <value>12, 9</value>
   </data>
   <data name="lblSearchSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 20</value>
+    <value>123, 20</value>
   </data>
   <data name="lblSearchSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="lblSearchSettings.Text" xml:space="preserve">
-    <value>検索設定</value>
+    <value>Search Settings</value>
   </data>
   <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
     <value>lblSearchSettings</value>
@@ -1216,7 +916,7 @@
     <value>0</value>
   </data>
   <data name="lblDDASearch.Text" xml:space="preserve">
-    <value>DDA検索</value>
+    <value>DDA Search</value>
   </data>
   <data name="&gt;&gt;lblDDASearch.Name" xml:space="preserve">
     <value>lblDDASearch</value>
@@ -1300,7 +1000,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="btnBack.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -1318,7 +1018,7 @@
     <value>2</value>
   </data>
   <data name="btnBack.Text" xml:space="preserve">
-    <value>&lt; 戻る(&amp;B)</value>
+    <value>&lt; &amp;Back</value>
   </data>
   <data name="btnBack.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1333,6 +1033,87 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBack.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblSettingsPreset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="lblSettingsPreset.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSettingsPreset.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 609</value>
+  </data>
+  <data name="lblSettingsPreset.Size" type="System.Drawing.Size, System.Drawing">
+    <value>40, 13</value>
+  </data>
+  <data name="lblSettingsPreset.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="lblSettingsPreset.Text" xml:space="preserve">
+    <value>Preset:</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPreset.Name" xml:space="preserve">
+    <value>lblSettingsPreset</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPreset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPreset.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPreset.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="cbSettingsPreset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbSettingsPreset.Location" type="System.Drawing.Point, System.Drawing">
+    <value>54, 606</value>
+  </data>
+  <data name="cbSettingsPreset.Size" type="System.Drawing.Size, System.Drawing">
+    <value>140, 21</value>
+  </data>
+  <data name="cbSettingsPreset.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;cbSettingsPreset.Name" xml:space="preserve">
+    <value>cbSettingsPreset</value>
+  </data>
+  <data name="&gt;&gt;cbSettingsPreset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSettingsPreset.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSettingsPreset.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnSavePreset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnSavePreset.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 605</value>
+  </data>
+  <data name="btnSavePreset.Size" type="System.Drawing.Size, System.Drawing">
+    <value>45, 23</value>
+  </data>
+  <data name="btnSavePreset.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="btnSavePreset.Text" xml:space="preserve">
+    <value>Save...</value>
+  </data>
+  <data name="&gt;&gt;btnSavePreset.Name" xml:space="preserve">
+    <value>btnSavePreset</value>
+  </data>
+  <data name="&gt;&gt;btnSavePreset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSavePreset.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnSavePreset.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1354,7 +1135,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ペプチド検索のインポート</value>
+    <value>Import Peptide Search</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
@@ -1369,7 +1150,7 @@
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ImportPeptideSearchDlg</value>
+    <value>PeptideSearchWizardDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>

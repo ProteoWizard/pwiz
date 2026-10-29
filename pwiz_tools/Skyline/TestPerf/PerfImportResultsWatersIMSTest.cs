@@ -91,7 +91,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var doc = SkylineWindow.Document;
                 RunUI(() =>
                 {
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                     importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
                     importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
                 });
@@ -110,13 +110,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // We're on the "Extract Chromatograms" page of the wizard.
                 // All the files should be found, and we should
                 // just be able to move to the next page.
-                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
                 // Skip Match Modifications page.
                 RunUI(() =>
                 {
-                    AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                    AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
                     AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 });
 

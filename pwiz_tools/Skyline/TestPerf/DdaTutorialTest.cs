@@ -136,18 +136,18 @@ namespace TestPerf
             WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Select DDA Files to Search page");
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Import Peptide Search - Select DDA Files to Search page");
 
             // We're on the "Build Spectral Library" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = false;
-                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DDA Files page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Import Peptide Search - After Selecting DDA Files page");
 
             if (SearchFiles.Count() > 1)
             {
@@ -161,8 +161,8 @@ namespace TestPerf
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Match Modifications" page. Add SILAC mods and M+16
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - Add Modifications page");
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+            PauseForScreenShot<PeptideSearchWizardDlg.MatchModsPage>("Import Peptide Search - Add Modifications page");
 
             var editHeavyModListUI =
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddHeavyModification);
@@ -193,31 +193,31 @@ namespace TestPerf
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
 
             RunUI(() => importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true));
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - After adding modifications page");
+            PauseForScreenShot<PeptideSearchWizardDlg.MatchModsPage>("Import Peptide Search - After adding modifications page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the MS1 full scan settings page. Set tolerance to 20ppm
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20);
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page");
+            PauseForScreenShot<PeptideSearchWizardDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Import FASTA" page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("DdaSearchMs1Filtering\\2014_01_HUMAN_UPS.fasta"));
                 importPeptideSearchDlg.ImportFastaControl.ScrollFastaTextToEnd();   // So that the FASTA file name is visible
                 //importPeptideSearchDlg.ImportFastaControl.SetFastaContent(@"D:\test\Skyline\downloads\Tutorials\DdaSearchMs1Filtering\DdaSearchMS1Filtering\2021-11-09-decoys-2014_01_HUMAN_UPS.fasta");
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page");
+            PauseForScreenShot<PeptideSearchWizardDlg.FastaPage>("Import Peptide Search - Import FASTA page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page));
 
             bool useMsAmanda = IsPauseForScreenShots; // Tutorial still uses MSAmanda
 
@@ -250,7 +250,7 @@ namespace TestPerf
 
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page");
+            PauseForScreenShot<PeptideSearchWizardDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page");
 
             // Save a preset with the current settings before starting the search
             const string SEARCH_PRESET_NAME = "DDA Tutorial Preset";
@@ -301,11 +301,11 @@ namespace TestPerf
 
             try
             {
-                WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
+                WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_page);
                 if (IsPauseForScreenShots)
                 {
                     WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.IsProgressLocked);
-                    PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", null,
+                    PauseForScreenShot<PeptideSearchWizardDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", null,
                         bmp => bmp.CleanupBorder().FillProgressBar(importPeptideSearchDlg.SearchControl.ProgressBar));
                     RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = null); // Unfreeze progress
                 }
@@ -462,15 +462,15 @@ namespace TestPerf
             // create order-dependent failures for any test that runs after this one.
             var savedPresets = Settings.Default.SearchSettingsPresets.ToList();
 
-            var dlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var dlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             try
             {
                 RunUI(() =>
                 {
-                    Assert.IsTrue(dlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                    Assert.IsTrue(dlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                     dlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).Take(1).ToArray();
-                    Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, dlg.BuildPepSearchLibControl.WorkflowType);
+                    Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dda, dlg.BuildPepSearchLibControl.WorkflowType);
 
                     // Apply the saved preset
                     dlg.SelectedPresetName = presetName;
@@ -478,7 +478,7 @@ namespace TestPerf
                 });
 
                 // Match modifications page
-                WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
 
                 // Verify preset mods are checked
                 RunUI(() =>
@@ -495,7 +495,7 @@ namespace TestPerf
                 RunUI(() => Assert.IsTrue(dlg.ClickNextButton()));
 
                 // FASTA page - verify settings
-                WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 RunUI(() =>
                 {
                     if (!string.IsNullOrEmpty(preset.EnzymeName))
@@ -510,7 +510,7 @@ namespace TestPerf
                 });
 
                 // Search settings page - verify settings
-                WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 RunUI(() =>
                 {
                     var searchSettings = dlg.SearchSettingsControl;

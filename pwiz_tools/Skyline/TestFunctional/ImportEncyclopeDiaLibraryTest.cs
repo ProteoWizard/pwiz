@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 var buildPepSearchCtrl = importPeptideSearchDlg.BuildPepSearchLibControl;
-                buildPepSearchCtrl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                buildPepSearchCtrl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
                 buildPepSearchCtrl.UseExistingLibrary = true;
                 buildPepSearchCtrl.ExistingLibraryPath = elibPath;
                 importPeptideSearchDlg.ClickNextButton();

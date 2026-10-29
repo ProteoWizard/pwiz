@@ -316,13 +316,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public void Initialize(ImportPeptideSearchDlg.Workflow workflow)
+        public void Initialize(PeptideSearchWizardDlg.Workflow workflow)
         {
             // Reset control locations, in case this isn't the first call to Initialize.
             foreach (var kvp in _originalLocations)
                 kvp.Key.Location = new Point(kvp.Key.Location.X, kvp.Value.Y);
 
-            if (workflow != ImportPeptideSearchDlg.Workflow.dia)
+            if (workflow != PeptideSearchWizardDlg.Workflow.dia)
             {
                 var nextTop = Controls.Cast<Control>().Select(c => c.Top).Where(t => t > cbExclusionUseDIAWindow.Top).Min();
                 int offset = nextTop - cbExclusionUseDIAWindow.Top;
@@ -332,8 +332,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             switch (workflow)
             {
-                case ImportPeptideSearchDlg.Workflow.dia:
-                case ImportPeptideSearchDlg.Workflow.prm:
+                case PeptideSearchWizardDlg.Workflow.dia:
+                case PeptideSearchWizardDlg.Workflow.prm:
                     // If these are just the document defaults, use something more appropriate for DIA
                     var settingsCurrent = _documentContainer.Document.Settings.TransitionSettings;
                     var settings = settingsCurrent;
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         Equals(settings.Filter, defFilter
                             .ChangePeptideIonTypes(defFilter.PeptideIonTypes.Union(new [] { IonType.precursor}).ToArray())
                             .ChangeSmallMoleculeIonTypes(defFilter.SmallMoleculeIonTypes.Union(new [] { IonType.precursor}).ToArray())
-                            .ChangeExclusionUseDIAWindow(defFilter.ExclusionUseDIAWindow || workflow == ImportPeptideSearchDlg.Workflow.dia)))
+                            .ChangeExclusionUseDIAWindow(defFilter.ExclusionUseDIAWindow || workflow == PeptideSearchWizardDlg.Workflow.dia)))
                     {
                         settings = settings.ChangeFilter(settings.Filter
                             .ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })

@@ -616,8 +616,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Launch Import Peptide Search dialog. The DIA-NN -lib.parquet is passed as a
             // search file so BiblioSpec builds a .blib from it via DiaNNSpecLibReader.
             using var importPeptideSearchDlg = new ImportPeptideSearchDlg(SkylineWindow, _libraryManager,
-                false, ImportPeptideSearchDlg.Workflow.dia);
-            importPeptideSearchDlg.BuildPepSearchLibControl.ForceWorkflow(ImportPeptideSearchDlg.Workflow.dia);
+                PeptideSearchWizardDlg.Workflow.dia);
+            importPeptideSearchDlg.BuildPepSearchLibControl.ForceWorkflow(PeptideSearchWizardDlg.Workflow.dia);
             importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] { specLibPath });
             importPeptideSearchDlg.ImportFastaControl.SetFastaContent(ImportFastaControl.ImportSettings.FastaFile.Path, true);
             importPeptideSearchDlg.ImportFastaControl.Enzyme = ImportFastaControl.ImportSettings.Enzyme;

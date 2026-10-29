@@ -401,7 +401,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Preset 1: MSAmanda DDA with specific tolerances and FASTA settings
             const string PRESET_1_NAME = "MSAmanda - Test Config";
-            const ImportPeptideSearchDlg.Workflow PRESET_1_WORKFLOW = ImportPeptideSearchDlg.Workflow.dda;
+            const PeptideSearchWizardDlg.Workflow PRESET_1_WORKFLOW = PeptideSearchWizardDlg.Workflow.dda;
             const SearchEngine PRESET_1_ENGINE = SearchEngine.MSAmanda;
             const double PRESET_1_PRECURSOR_TOL = 10;
             const MzTolerance.Units PRESET_1_PRECURSOR_UNIT = MzTolerance.Units.ppm;
@@ -430,32 +430,32 @@ namespace pwiz.SkylineTestFunctional
 
             PrepareDocument("TestSettingsPreset.sky");
 
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // Navigate through wizard to the search settings page, setting values along the way
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dda;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
 
                 Assert.IsTrue(importPeptideSearchDlg.SettingsPresetVisible, "Preset should be visible on spectra page");
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 // Match modifications page - uncheck Carbamidomethyl for preset 1
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.SettingsPresetVisible, "Preset should be visible on mods page");
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck Carbamidomethyl (C)
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 // Full scan settings page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 // Import FASTA page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.IsTrue(importPeptideSearchDlg.SettingsPresetVisible, "Preset should be visible on FASTA page");
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(PRESET_1_FASTA));
                 importPeptideSearchDlg.ImportFastaControl.Enzyme = Settings.Default.GetEnzymeByName(PRESET_1_ENZYME);
@@ -463,7 +463,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
                 // DDA search settings page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.SettingsPresetVisible, "Preset should be visible on search settings page");
             });
 
@@ -518,7 +518,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 // Set to a different enzyme than preset 1
                 var enzyme2 = Settings.Default.EnzymeList.FirstOrDefault(e => e.Name != PRESET_1_ENZYME);
                 Assert.IsNotNull(enzyme2, "Should have at least 2 enzymes in the enzyme list");
@@ -528,8 +528,14 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = PRESET_2_MISSED_CLEAVAGES;
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods - re-check Carbamidomethyl for preset 2
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, true); // check Carbamidomethyl (C)
+
+                // The preset that is still selected must not undo that change when the user leaves the page and comes back
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.MatchModificationsControl.CheckedModificationNames.Contains(@"Carbamidomethyl (C)"));
             });
             RunUI(() => importPeptideSearchDlg.SaveSettingsPreset(PRESET_2_NAME));
 
@@ -566,7 +572,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 9;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 searchSettingsControl.PrecursorTolerance = new MzTolerance(99, MzTolerance.Units.ppm);
                 searchSettingsControl.FragmentTolerance = new MzTolerance(99, MzTolerance.Units.ppm);
                 searchSettingsControl.CutoffScore = 0.99;
@@ -595,7 +601,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual(PRESET_1_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
                 Assert.AreEqual(preset1FastaPath, importPeptideSearchDlg.ImportFastaControl.FastaFile);
             });
@@ -606,7 +612,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
 
                 importPeptideSearchDlg.SelectedPresetName = PRESET_2_NAME;
             });
@@ -617,11 +623,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual(PRESET_2_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
 
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 Assert.AreEqual(PRESET_2_ENGINE, searchSettingsControl.SelectedSearchEngine);
                 Assert.AreEqual(PRESET_2_PRECURSOR_TOL, searchSettingsControl.PrecursorTolerance.Value, 0.001);
                 Assert.AreEqual(PRESET_2_PRECURSOR_UNIT, searchSettingsControl.PrecursorTolerance.Unit);
@@ -643,7 +649,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual(PRESET_2_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
             });
 
@@ -694,7 +700,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.AreEqual(DEFAULT_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages,
                     "Default preset should set missed cleavages to 0");
             });
@@ -749,7 +755,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
 
                 // Currently preset 2
                 Assert.AreEqual(PRESET_2_MISSED_CLEAVAGES, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
@@ -793,7 +799,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
 
                 // Switch to preset 1 - Carbamidomethyl should be unchecked
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
@@ -824,10 +830,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
 
                 // Both presets are DDA; manually change to PRM and save a temporary preset
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.prm;
                 importPeptideSearchDlg.SaveSettingsPreset("PRM Preset");
 
                 // Switch to preset 1 - should restore DDA workflow
@@ -839,12 +845,12 @@ namespace pwiz.SkylineTestFunctional
 
                 // Switch to PRM preset - should change to PRM
                 importPeptideSearchDlg.SelectedPresetName = "PRM Preset";
-                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.prm, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.prm, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
                     "PRM preset should set PRM workflow on spectra page");
 
                 // Switch to Default from PRM - should reset workflow to DDA and IRT to None
                 importPeptideSearchDlg.SelectedPresetName = DEFAULT_PRESET_NAME;
-                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
                     "Default preset should reset workflow to DDA from PRM on spectra page");
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards.IsEmpty,
                     "Default preset should reset IRT standard to None on spectra page");
@@ -852,7 +858,7 @@ namespace pwiz.SkylineTestFunctional
                 // Switch to MSFragger DIA preset - should set DIA workflow
                 const string MSFRAGGER_DIA_PRESET = "MSFragger high-high DIA (Q-Exactive, Q-Tof)";
                 importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
-                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dia, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dia, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
                     "MSFragger DIA preset should set DIA workflow");
 
                 // Switch to preset 1 - should restore DDA and Auto IRT
@@ -861,6 +867,19 @@ namespace pwiz.SkylineTestFunctional
                     "Preset 1 should restore DDA workflow on spectra page");
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards.IsAuto,
                     "Preset 1 should restore Auto IRT standard on spectra page");
+            });
+
+            // A preset chosen on a later page cannot change which pages the workflow chosen on the first page shows
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Full scan
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.SelectedPresetName = "PRM Preset";
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods, not the PRM transition settings page
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
+                importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
             });
 
             // Test importing presets from .params files
@@ -873,7 +892,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.SearchSettingsPresets.Clear();
         }
 
-        private void TestImportParamsFilePresets(ImportPeptideSearchDlg importPeptideSearchDlg)
+        private void TestImportParamsFilePresets(RunPeptideSearchDlg importPeptideSearchDlg)
         {
             const string COMET_PRESET_NAME = "Imported Comet";
             const string MSFRAGGER_PRESET_NAME = "Imported MSFragger";
@@ -989,7 +1008,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open Edit List dialog from the preset combo's "Edit list..." option
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
-                () => FindOpenForm<ImportPeptideSearchDlg>().SelectEditList());
+                () => FindOpenForm<RunPeptideSearchDlg>().SelectEditList());
 
             // Get names from the editable list (excludes built-in defaults)
             IList<string> editableNames = null;
@@ -1046,7 +1065,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Opening Edit List should not throw despite missing defaults
             var editListDlg2 = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
-                () => FindOpenForm<ImportPeptideSearchDlg>().SelectEditList());
+                () => FindOpenForm<RunPeptideSearchDlg>().SelectEditList());
             OkDialog(editListDlg2, editListDlg2.OkDialog);
 
             // Restore defaults for cleanup
@@ -1111,26 +1130,26 @@ namespace pwiz.SkylineTestFunctional
             PrepareDocument("TestDdaSearch.sky");
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
 
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm; // will go back and switch to DDA
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.prm; // will go back and switch to DDA
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // With only 1 source, no add/remove prefix/suffix dialog
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 // Test going back and switching workflow to DDA. This used to cause an exception.
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dda;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             });
 
             bool errorExpected = TestSettings.ExpectedResultsFinal.expectedException != null || TestSettings.TestDependencyErrors;
@@ -1187,13 +1206,29 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(editListUI, editListUI.OkDialog);
 
-                // Test back/next buttons
+                // Test back/next buttons, and that the checked modifications survive leaving the page in
+                // either direction and coming back
                 RunUI(() =>
                 {
+                    var modsControl = importPeptideSearchDlg.MatchModificationsControl;
+                    var firstMod = modsControl.MatchedModifications.First();
+                    bool firstModChecked = modsControl.CheckedModificationNames.Contains(firstMod);
+                    modsControl.ChangeItem(0, !firstModChecked);
+                    var checkedMods = string.Join(@", ", modsControl.CheckedModificationNames);
+
                     Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                     Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+                    AssertEx.AreEqual(checkedMods, string.Join(@", ", modsControl.CheckedModificationNames));
+
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+                    AssertEx.AreEqual(checkedMods, string.Join(@", ", modsControl.CheckedModificationNames));
+
+                    modsControl.ChangeItem(0, firstModChecked);
                 });
             }
 
@@ -1201,7 +1236,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -1209,7 +1244,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Import FASTA" page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(TestSettings.FastaFilename));
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -1217,10 +1252,10 @@ namespace pwiz.SkylineTestFunctional
 
             // We're on the "Adjust Search Settings" page
             bool? searchSucceeded = null;
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
             });
 
             TestSettings.BeforeSettingsAction?.Invoke();
@@ -1297,7 +1332,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
@@ -1342,7 +1377,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Go back to search settings page (triggers filename restoration)
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
 
                 // Verify the filenames by checking the data sources
                 var actualSources = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources;
@@ -1355,7 +1390,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Start a second search, test cannot-close-during-search, then cancel
             SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.DDASearchPage));
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
 
             SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
@@ -1394,7 +1429,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // CONSIDER: Why does this end up on the next page after a cancel?
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
             });
 
@@ -1410,7 +1445,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(SkylineWindow.DocumentUI.IsLoaded, TextUtil.LineSeparate("Document not loaded:",
                     TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptions)));
                 // We're on the "Match Modifications" page again.
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
                 for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
                     importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
@@ -1527,7 +1562,7 @@ namespace pwiz.SkylineTestFunctional
         /// <param name="succeeded">Whether that search succeeded</param>
         /// <param name="expectedScoredHits">Scored hits per file, or null to repeat only a failed search</param>
         /// <returns>Whether the last search attempted succeeded</returns>
-        private bool RetrySearchWhileScoredHitsDiffer(ImportPeptideSearchDlg importPeptideSearchDlg, bool succeeded,
+        private bool RetrySearchWhileScoredHitsDiffer(RunPeptideSearchDlg importPeptideSearchDlg, bool succeeded,
             int[] expectedScoredHits)
         {
             if (TestSettings.ExpectedScoredHits == null)
@@ -1556,7 +1591,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     importPeptideSearchDlg.SearchControl.SearchFinished += OnSearchFinished;
                     AssertEx.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
                 });
                 SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
@@ -1602,13 +1637,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Integration.IsAutoTrain,
                 "Document not fully settled before reopening wizard - mProphet auto-train still pending"));
 
-            var importPeptideSearchDlg2 = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg2 = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg2.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
-                importPeptideSearchDlg2.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dda;
+                importPeptideSearchDlg2.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
 
                 // Apply the preset from the first page
                 importPeptideSearchDlg2.SelectedPresetName = presetName;
@@ -1620,7 +1655,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // Full scan
                 Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // FASTA
-                Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
 
                 // Verify FASTA settings
                 if (!string.IsNullOrEmpty(preset.EnzymeName))
@@ -1630,7 +1665,7 @@ namespace pwiz.SkylineTestFunctional
                     "Missed cleavages should be restored from preset in new wizard");
 
                 Assert.IsTrue(importPeptideSearchDlg2.ClickNextButton()); // Search settings
-                Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg2.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
             });
 
             // Verify search settings
@@ -1656,7 +1691,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.SearchSettingsPresets.Clear();
         }
 
-        private void TestDependencyErrors(ImportPeptideSearchDlg importPeptideSearchDlg)
+        private void TestDependencyErrors(RunPeptideSearchDlg importPeptideSearchDlg)
         {
             bool? searchSucceeded = null;
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
