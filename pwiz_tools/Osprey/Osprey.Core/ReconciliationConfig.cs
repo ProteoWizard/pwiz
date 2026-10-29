@@ -29,8 +29,11 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public class ReconciliationConfig
     {
-        /// <summary>Enable inter-replicate peak reconciliation (default: true for multi-file).</summary>
-        public bool Enabled { get; set; } = true;
+        /// <summary>
+        /// Enable inter-replicate peak reconciliation (default: true for multi-file; false under the
+        /// OSPREY_RECONCILIATION=off experiment).
+        /// </summary>
+        public bool Enabled { get; set; } = !OspreyEnvironment.ReconciliationDisabled;
 
         /// <summary>Number of CWT candidate peaks to store per precursor.</summary>
         public int TopNPeaks { get; set; } = 5;

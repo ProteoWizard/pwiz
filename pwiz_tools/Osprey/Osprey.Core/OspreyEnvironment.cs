@@ -110,7 +110,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
@@ -740,6 +740,35 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
+
+        /// <summary>
+        /// OSPREY_RECONCILIATION (experiment): <c>off</c> disables cross-run reconciliation (the
+        /// default of <c>ReconciliationConfig.Enabled</c>); <c>symmetric-decoys</c> keeps it but builds a
+        /// decoy's consensus RT only from its picks in the runs where its paired target's peptide
+        /// qualified, as the target's consensus is built only from its qualifying runs. Unset, the
+        /// decoy's consensus pools every pick. Any other value throws.
+        /// </summary>
+        public static readonly string ReconciliationMode = ParseReconciliationMode(
+            Environment.GetEnvironmentVariable(@"OSPREY_RECONCILIATION"));
+
+        /// <summary>True under OSPREY_RECONCILIATION=off.</summary>
+        public static bool ReconciliationDisabled => ReconciliationMode == RECONCILIATION_OFF;
+
+        /// <summary>True under OSPREY_RECONCILIATION=symmetric-decoys.</summary>
+        public static bool ReconciliationSymmetricDecoys => ReconciliationMode == RECONCILIATION_SYMMETRIC_DECOYS;
+
+        private const string RECONCILIATION_OFF = @"off";
+        private const string RECONCILIATION_SYMMETRIC_DECOYS = @"symmetric-decoys";
+
+        private static string ParseReconciliationMode(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            string mode = value.Trim().ToLowerInvariant();
+            if (mode == RECONCILIATION_OFF || mode == RECONCILIATION_SYMMETRIC_DECOYS)
+                return mode;
+            throw new InvalidOperationException(@"OSPREY_RECONCILIATION must be off or symmetric-decoys: " + value);
+        }
 
         private static string[] ParseFeatureMask(string value)
         {
