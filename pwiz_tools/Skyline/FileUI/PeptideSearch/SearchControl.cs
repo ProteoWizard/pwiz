@@ -71,9 +71,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         protected List<ProgressEntry> _progressTextItems = new List<ProgressEntry>();
 
+        private readonly int _timestampsToLogGap;
+
         public SearchControl()
         {
             InitializeComponent();
+            _timestampsToLogGap = btnOpenLog.Left - showTimestampsCheckbox.Right;
+            PlaceTimestampsCheckbox(false);
             UpdateUI = UpdateSearchEngineProgress;
         }
 
@@ -315,7 +319,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         protected void SetLogFilePath(string logFilePath)
         {
             LogFilePath = logFilePath;
-            btnOpenLog.Visible = !string.IsNullOrEmpty(logFilePath);
+            bool showLog = !string.IsNullOrEmpty(logFilePath);
+            btnOpenLog.Visible = showLog;
+            PlaceTimestampsCheckbox(showLog);
+        }
+
+        private void PlaceTimestampsCheckbox(bool showLog)
+        {
+            // Right aligned with the progress box, or left of the Open Log button when there is a log.
+            int right = showLog ? btnOpenLog.Left - _timestampsToLogGap : btnOpenLog.Right;
+            showTimestampsCheckbox.Left = right - showTimestampsCheckbox.Width;
         }
 
         /// <summary>
