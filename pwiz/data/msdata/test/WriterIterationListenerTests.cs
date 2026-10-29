@@ -224,12 +224,14 @@ public class WriterIterationListenerTests
                 .ToArray();
             CollectionAssert.AreEqual(new[] { 100.0, 102.0 }, firstMzs, $"{format}: surviving spectra");
 
-            // mzML is the only one of these formats that stores spectrum indices, so it is the one
-            // that has to renumber the survivors to leave no gap.
+            // mzML is the only one of these formats that stores spectrum indices and a list count,
+            // so it is the one that has to renumber the survivors and count only them.
             if (format == WriteFormat.Mzml)
             {
                 for (int i = 0; i < sl.Count; i++)
                     Assert.AreEqual(i, sl.GetSpectrum(i).Index, $"{format}: index of survivor {i}");
+                Assert.AreEqual(2, ListCount(System.Text.Encoding.UTF8.GetString(bytes), "spectrumList"),
+                    $"{format}: spectrumList count");
             }
         }
     }
@@ -257,22 +259,26 @@ public class WriterIterationListenerTests
     [TestMethod]
     public void AllWriters_ContinueOnError_StillReportProgressForTheSkippedSpectrum()
     {
-        var writers = new (string Format, Action<MSData, IterationListenerRegistry> Write)[]
+        // mzML rewrites the output once a spectrum is skipped, so its list count holds only the
+        // spectra written, and progress starts over for that second pass.
+        var onePass = new[] { 0, 1, 2 };
+        var twoPasses = new[] { 0, 1, 2, 0, 1, 2 };
+        var writers = new (string Format, int[] Expected, Action<MSData, IterationListenerRegistry> Write)[]
         {
-            ("mzML", (msd, reg) => new MzmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
-            ("mzXML", (msd, reg) => new MzxmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
-            ("MGF", (msd, reg) => new MgfSerializer { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
-            ("MS2", (msd, reg) => new SerializerMSn(MSnType.Ms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
-            ("CMS2", (msd, reg) => new SerializerMSn(MSnType.Cms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
+            ("mzML", twoPasses, (msd, reg) => new MzmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("mzXML", onePass, (msd, reg) => new MzxmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("MGF", onePass, (msd, reg) => new MgfSerializer { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("MS2", onePass, (msd, reg) => new SerializerMSn(MSnType.Ms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
+            ("CMS2", onePass, (msd, reg) => new SerializerMSn(MSnType.Cms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
         };
-        foreach (var (format, write) in writers)
+        foreach (var (format, expected, write) in writers)
         {
             var reg = new IterationListenerRegistry();
             var listener = new RecordingListener();
             reg.AddListener(listener, iterationPeriod: 1);
             write(BuildDocWithUnreadableSpectrum(), reg);
-            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, listener.Updates.Select(u => u.IterationIndex).ToArray(),
-                $"{format}: one update per input spectrum, including the skipped one");
+            CollectionAssert.AreEqual(expected, listener.Updates.Select(u => u.IterationIndex).ToArray(),
+                $"{format}: one update per input spectrum per pass, including the skipped one");
         }
     }
 
@@ -325,5 +331,117 @@ public class WriterIterationListenerTests
             Enumerable.Range(0, cl.Count).Select(i => cl.GetChromatogram(i).Id).ToArray(), "surviving chromatograms");
         for (int i = 0; i < cl.Count; i++)
             Assert.AreEqual(i, cl.GetChromatogram(i).Index, $"index of survivor {i}");
+        Assert.AreEqual(2, ListCount(mzml, "chromatogramList"), "chromatogramList count");
+    }
+
+    [TestMethod]
+    public void Mzml_ContinueOnError_CountsOnlyTheWrittenSpectraInGzipAndMzMLbFiles()
+    {
+        // Neither output can be rewound in place - a GZipStream cannot seek, and mzMLb also
+        // holds the binary arrays in HDF5 datasets - so both are rewritten from the start.
+        string dir = Path.Combine(Path.GetTempPath(), $"skipcount-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        try
+        {
+            string gzPath = Path.Combine(dir, "out.mzML.gz");
+            MSDataFile.Write(BuildDocWithUnreadableSpectrum(), gzPath,
+                new WriteConfig { Format = WriteFormat.Mzml, Gzip = true, ContinueOnError = true });
+            string gzMzml;
+            using (var gz = new System.IO.Compression.GZipStream(File.OpenRead(gzPath), System.IO.Compression.CompressionMode.Decompress))
+            using (var reader = new StreamReader(gz))
+                gzMzml = reader.ReadToEnd();
+            Assert.AreEqual(2, ListCount(gzMzml, "spectrumList"), "mzML.gz: spectrumList count");
+            Assert.AreEqual(2, new MzmlReader().Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(gzMzml))).Run.SpectrumList!.Count,
+                "mzML.gz: spectra read back");
+
+            string mzMLbPath = Path.Combine(dir, "out.mzMLb");
+            MSDataFile.Write(BuildDocWithUnreadableSpectrum(), mzMLbPath,
+                new WriteConfig { Format = WriteFormat.MzMLb, ContinueOnError = true });
+            string innerMzml;
+            using (var conn = Pwiz.Data.MsData.MzMlb.MzMlbConnection.OpenForRead(mzMLbPath))
+            using (var reader = new StreamReader(conn.OpenMzMlStream()))
+                innerMzml = reader.ReadToEnd();
+            Assert.AreEqual(2, ListCount(innerMzml, "spectrumList"), "mzMLb: spectrumList count");
+            var mzMLb = new MSData();
+            new Pwiz.Data.MsData.Readers.MzMlbReaderAdapter().Read(mzMLbPath, mzMLb);
+            CollectionAssert.AreEqual(new[] { 100.0, 102.0 },
+                Enumerable.Range(0, mzMLb.Run.SpectrumList!.Count)
+                    .Select(i => mzMLb.Run.SpectrumList.GetSpectrum(i, getBinaryData: true).GetMZArray()!.Data[0]).ToArray(),
+                "mzMLb: surviving spectra keep their own peaks");
+        }
+        finally
+        {
+            try { Directory.Delete(dir, recursive: true); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void Mzml_ContinueOnError_WarnsWhenTheStreamCannotBeRewound()
+    {
+        using var log = new StringWriter();
+        using var output = new NonSeekableStream();
+        new MzmlWriter { ContinueOnError = true, SkipLog = log }.Write(BuildDocWithUnreadableSpectrum(), output);
+
+        var lines = log.ToString().TrimEnd().Split(Environment.NewLine);
+        Assert.AreEqual(2, lines.Length, log.ToString());
+        StringAssert.StartsWith(lines[0], "Skipping spectrum 1 ");
+        Assert.AreEqual(
+            "Warning: the output cannot be rewritten, so the spectrumList and chromatogramList counts still include the 1 item(s) skipped",
+            lines[1]);
+        Assert.AreEqual(3, ListCount(System.Text.Encoding.UTF8.GetString(output.ToArray()), "spectrumList"),
+            "the count written before the skip is left as it was");
+    }
+
+    [TestMethod]
+    public void Mzml_ContinueOnError_StopsRewritingWhenEveryPassSkipsSomethingNew()
+    {
+        var msd = BuildMsnDocWithSpectra(4);
+        msd.Run.SpectrumList = new FailsAnotherSpectrumEachPass(msd.Run.SpectrumList!);
+        using var log = new StringWriter();
+        string mzml = new MzmlWriter { ContinueOnError = true, SkipLog = log }.Write(msd);
+
+        var lines = log.ToString().TrimEnd().Split(Environment.NewLine);
+        CollectionAssert.AreEqual(new[] { "Skipping spectrum 0 ", "Skipping spectrum 1 ", "Skipping spectrum 2 " },
+            lines.Take(3).Select(l => l[..l.IndexOf('"')]).ToArray(), "one new skip per pass");
+        Assert.AreEqual(
+            "Warning: items were still failing after 3 passes, so the spectrumList and chromatogramList counts still include the 1 item(s) skipped in the last one",
+            lines[3]);
+        Assert.AreEqual(2, ListCount(mzml, "spectrumList"), "the last pass counted the 2 it was told to leave out, not the new one");
+    }
+
+    /// <summary>Fails spectrum p on pass p, the way a reader with intermittent failures can keep
+    /// turning up new bad spectra. The last spectrum, always read, marks the end of each pass.</summary>
+    private sealed class FailsAnotherSpectrumEachPass : SpectrumListBase
+    {
+        private readonly ISpectrumList _inner;
+        private int _pass;
+
+        public FailsAnotherSpectrumEachPass(ISpectrumList inner) => _inner = inner;
+
+        public override int Count => _inner.Count;
+
+        public override SpectrumIdentity SpectrumIdentity(int index) => _inner.SpectrumIdentity(index);
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        {
+            if (index == Count - 1)
+                _pass++;
+            else if (index == _pass)
+                throw new InvalidOperationException("intermittent failure");
+            return _inner.GetSpectrum(index, getBinaryData);
+        }
+    }
+
+    private static int ListCount(string mzml, string listElement)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(mzml, $"<{listElement} count=\"(\\d+)\"");
+        Assert.IsTrue(match.Success, $"no <{listElement} count> in the output");
+        return int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>A write-only sink that cannot seek, like a pipe or a network stream.</summary>
+    private sealed class NonSeekableStream : MemoryStream
+    {
+        public override bool CanSeek => false;
     }
 }

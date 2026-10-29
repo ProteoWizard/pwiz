@@ -99,6 +99,10 @@ public sealed class MzmlWriter
     // WriteBinaryDataArray / WriteIntegerDataArray know which context they're in.
     private string _externalArrayContextPrefix = "spectrum_";
 
+    // Items the current pass leaves out, and the ones it skips itself.
+    private SkippedItems _excluded = new();
+    private SkippedItems _skipped = new();
+
     /// <summary>Creates a writer that encodes binary arrays with the given config.</summary>
     public MzmlWriter(BinaryEncoderConfig? encoderConfig = null)
     {
@@ -117,11 +121,52 @@ public sealed class MzmlWriter
     }
 
     /// <summary>Writes <paramref name="msd"/> as mzML XML to <paramref name="stream"/> in UTF-8 (no BOM).</summary>
+    /// <remarks>When <see cref="ContinueOnError"/> skips an item, the list counts already written
+    /// are too high, so the output is rewritten from where it started without the skipped items.
+    /// That needs a seekable stream with the binary arrays inline; otherwise the counts are left
+    /// overstated and a warning goes to <see cref="SkipLog"/>.</remarks>
     public void Write(MSData msd, Stream stream)
     {
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentNullException.ThrowIfNull(stream);
 
+        bool canRewrite = stream.CanSeek && ExternalBinarySink is null;
+        long start = canRewrite ? stream.Position : 0;
+        ContinueOnErrorPolicy.WriteUntilNothingNewIsSkipped(excluded =>
+        {
+            if (excluded.Count > 0)
+            {
+                stream.Position = start;
+                stream.SetLength(start);
+            }
+            return WritePass(msd, stream, excluded);
+        }, canRewrite, SkipLog);
+    }
+
+    /// <summary>Writes to a fresh stream from <paramref name="openOutput"/> on every pass, so a
+    /// rewrite after a skip also works for output that cannot seek, such as gzip.</summary>
+    internal void Write(MSData msd, Func<Stream> openOutput)
+    {
+        ContinueOnErrorPolicy.WriteUntilNothingNewIsSkipped(excluded =>
+        {
+            using var stream = openOutput();
+            return WritePass(msd, stream, excluded);
+        }, ExternalBinarySink is null, SkipLog);
+    }
+
+    /// <summary>Writes the whole document once, leaving out the items in
+    /// <paramref name="excluded"/> and counting only the rest, and returns the items this pass
+    /// skipped itself.</summary>
+    internal SkippedItems WritePass(MSData msd, Stream stream, SkippedItems excluded)
+    {
+        _excluded = excluded;
+        _skipped = new SkippedItems();
+        WriteDocument(msd, stream);
+        return _skipped;
+    }
+
+    private void WriteDocument(MSData msd, Stream stream)
+    {
         // Clear any leftover captures from a previous Write call.
         _capturedSpectrumOffsets = null;
         CapturedEndOfSpectrumList = 0;
@@ -525,18 +570,24 @@ public sealed class MzmlWriter
     private void WriteChromatogramList(XmlWriter w, IChromatogramList list)
     {
         w.WriteStartElement("chromatogramList");
-        MzmlXml.WriteCountAttr(w, list.Count);
+        MzmlXml.WriteCountAttr(w, list.Count - _excluded.Chromatograms.Count);
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
         int skipped = 0;
         for (int i = 0; i < list.Count; i++)
         {
-            // Same per-item-fetch guard and renumbering as the spectrum loop. Matches cpp
-            // IO.cpp:3132-3160 chromatogram-write loop.
+            // Same per-item-fetch guard, exclusion and renumbering as the spectrum loop.
+            // Matches cpp IO.cpp:3132-3160 chromatogram-write loop.
+            if (_excluded.Chromatograms.Contains(i))
+            {
+                skipped++;
+                continue;
+            }
             var chrom = ContinueOnErrorPolicy.GetChromatogramOrSkip(list, i, ContinueOnError, SkipLog);
             if (chrom is null)
             {
+                _skipped.Chromatograms.Add(i);
                 skipped++;
                 continue;
             }
@@ -707,7 +758,7 @@ public sealed class MzmlWriter
     private void WriteSpectrumList(XmlWriter w, ISpectrumList list)
     {
         w.WriteStartElement("spectrumList");
-        MzmlXml.WriteCountAttr(w, list.Count);
+        MzmlXml.WriteCountAttr(w, list.Count - _excluded.Spectra.Count);
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
@@ -724,17 +775,23 @@ public sealed class MzmlWriter
             // Per-item fetch is the failure-prone step (vendor SDK throws during
             // GetSpectrum, e.g. a corrupted scan that can't be centroided). cpp
             // IO.cpp:3001-3017 wraps only the fetch; the actual write is not in
-            // the catch.
+            // the catch. A spectrum an earlier pass skipped is left out without
+            // being fetched or logged again.
+            if (_excluded.Spectra.Contains(i))
+            {
+                skipped++;
+                continue;
+            }
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(list, i, ContinueOnError, SkipLog);
             if (spec is null)
             {
+                _skipped.Spectra.Add(i);
                 skipped++;
                 continue;
             }
             // Survivors are renumbered so a skip leaves no gap in the written indices
             // (cpp IO.cpp:3028). The index is written rather than assigned because the
-            // list may hand back the caller's own Spectrum. The list's count attribute
-            // above still counts the skipped spectra, as cpp's does.
+            // list may hand back the caller's own Spectrum.
             WriteSpectrum(w, spec, i - skipped);
         }
 

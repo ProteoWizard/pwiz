@@ -9,6 +9,43 @@ namespace Pwiz.Data.MsData;
 /// </summary>
 internal static class ContinueOnErrorPolicy
 {
+    // Each pass after the first is a whole rewrite, so a reader that fails differently every
+    // time it is asked must not be able to keep the write going indefinitely.
+    private const int MAX_WRITE_PASSES = 3;
+
+    /// <summary>
+    /// Runs <paramref name="writePass"/>, which writes the whole output while leaving out the
+    /// items it is given and returns the ones it skipped itself, until a pass skips nothing new.
+    /// A format that writes its item counts before its items (mzML) needs this to get them right
+    /// after a skip. When <paramref name="canRewrite"/> is false, or the passes run out, the
+    /// output keeps its overstated counts and a warning saying so goes to <paramref name="skipLog"/>.
+    /// </summary>
+    public static void WriteUntilNothingNewIsSkipped(Func<SkippedItems, SkippedItems> writePass,
+        bool canRewrite, TextWriter skipLog)
+    {
+        var excluded = new SkippedItems();
+        for (int pass = 1; ; pass++)
+        {
+            var skipped = writePass(excluded);
+            if (skipped.Count == 0)
+                return;
+            if (!canRewrite)
+            {
+                skipLog.WriteLine("Warning: the output cannot be rewritten, so the spectrumList and chromatogramList " +
+                                  $"counts still include the {skipped.Count} item(s) skipped");
+                return;
+            }
+            if (pass == MAX_WRITE_PASSES)
+            {
+                skipLog.WriteLine($"Warning: items were still failing after {pass} passes, so the spectrumList and " +
+                                  $"chromatogramList counts still include the {skipped.Count} item(s) skipped in the last one");
+                return;
+            }
+            excluded.Spectra.UnionWith(skipped.Spectra);
+            excluded.Chromatograms.UnionWith(skipped.Chromatograms);
+        }
+    }
+
     /// <summary>
     /// Reads spectrum <paramref name="index"/> with its binary data. On failure, when
     /// <paramref name="continueOnError"/> is true, logs the skip to <paramref name="skipLog"/> and
@@ -50,4 +87,13 @@ internal static class ContinueOnErrorPolicy
             return null;
         }
     }
+}
+
+/// <summary>Indices of the spectra and chromatograms a write pass skipped, or that a rewrite
+/// leaves out because an earlier pass skipped them.</summary>
+internal sealed class SkippedItems
+{
+    public HashSet<int> Spectra { get; } = new();
+    public HashSet<int> Chromatograms { get; } = new();
+    public int Count => Spectra.Count + Chromatograms.Count;
 }
