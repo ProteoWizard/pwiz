@@ -48,6 +48,12 @@
     <StartupObject>pwiz.Skyline.Program</StartupObject>
   </PropertyGroup>
 
+  <!-- SkylineOutDir puts this project's output in a folder of its own, leaving the referenced
+       projects' outputs where they are. -->
+  <PropertyGroup Condition="'$(SkylineOutDir)' != ''">
+    <OutDir>$([MSBuild]::EnsureTrailingSlash('$(SkylineOutDir)'))</OutDir>
+  </PropertyGroup>
+
   <!-- The Skyline tree has lots of sibling-project sources under Executables/,
        CommonTest/, BullseyeSharp/, Documentation/, etc. - these have their
        own csprojs. Stop the SDK from globbing them into this build. -->
