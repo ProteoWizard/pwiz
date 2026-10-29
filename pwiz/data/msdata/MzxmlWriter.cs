@@ -315,7 +315,7 @@ public sealed class MzxmlWriter
         for (int i = 0; i < count; i++)
         {
             // Before the fetch, so skipped and filtered spectra still report progress.
-            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+            registry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
 
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(sl, i, ContinueOnError, SkipLog);
             if (spec is null)

@@ -770,7 +770,7 @@ public sealed class MzmlWriter
             // Broadcast progress before the fetch, so a spectrum skipped under ContinueOnError
             // still reports. Throttling is handled by the registry's per-listener period/timer
             // settings; we just push every spectrum.
-            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+            registry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
 
             // Per-item fetch is the failure-prone step (vendor SDK throws during
             // GetSpectrum, e.g. a corrupted scan that can't be centroided). cpp

@@ -102,7 +102,7 @@ public sealed class SerializerMSn
         for (int i = 0; i < count; i++)
         {
             // Before the fetch, so a skipped or filtered-out spectrum still reports progress
-            IterationListenerRegistry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+            IterationListenerRegistry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(msd.Run.SpectrumList, i, ContinueOnError, SkipLog);
             if (spec is null) continue;
             int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
@@ -237,7 +237,7 @@ public sealed class SerializerMSn
         for (int i = 0; i < count; i++)
         {
             // Before the fetch, so a skipped or filtered-out spectrum still reports progress
-            IterationListenerRegistry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+            IterationListenerRegistry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(msd.Run.SpectrumList, i, ContinueOnError, SkipLog);
             if (spec is null) continue;
             int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);

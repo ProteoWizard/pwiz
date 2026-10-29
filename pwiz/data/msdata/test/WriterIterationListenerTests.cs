@@ -316,6 +316,32 @@ public class WriterIterationListenerTests
                         format, continueOnError),
                     $"{format}, continueOnError={continueOnError}: cancellation must stop the write");
             }
+
+            // A progress listener asks to cancel by returning Cancel, which is how MSConvertGUI
+            // stops a conversion when its progress window closes.
+            var reg = new IterationListenerRegistry();
+            var canceler = new CancelingListener(cancelAt: 1);
+            reg.AddListener(canceler, iterationPeriod: 1);
+            Assert.ThrowsException<OperationCanceledException>(
+                () => WriteThroughMSDataFile(BuildMsnDocWithSpectra(3), format, continueOnError: true, reg),
+                $"{format}: a listener returning Cancel must stop the write");
+            CollectionAssert.AreEqual(new[] { 0, 1 }, canceler.Seen, $"{format}: nothing written past the cancel");
+        }
+    }
+
+    /// <summary>Returns <see cref="IterationStatus.Cancel"/> from the given iteration on.</summary>
+    private sealed class CancelingListener : IIterationListener
+    {
+        private readonly int _cancelAt;
+
+        public CancelingListener(int cancelAt) => _cancelAt = cancelAt;
+
+        public List<int> Seen { get; } = new();
+
+        public IterationStatus Update(IterationUpdate message)
+        {
+            Seen.Add(message.IterationIndex);
+            return message.IterationIndex >= _cancelAt ? IterationStatus.Cancel : IterationStatus.Ok;
         }
     }
 
