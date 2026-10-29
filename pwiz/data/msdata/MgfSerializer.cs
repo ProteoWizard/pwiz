@@ -60,9 +60,10 @@ public sealed class MgfSerializer
         int scansWritten = 0;
         for (int i = 0; i < count; i++)
         {
+            // Before the fetch, as the other writers do, so a spectrum that fails still reports.
+            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(msd.Run.SpectrumList, i, ContinueOnError, SkipLog);
             if (spec is not null && WriteSpectrum(w, spec)) scansWritten++;
-            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }
 

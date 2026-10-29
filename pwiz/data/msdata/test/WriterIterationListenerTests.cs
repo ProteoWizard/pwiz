@@ -177,10 +177,11 @@ public class WriterIterationListenerTests
         return msd;
     }
 
-    private static byte[] WriteThroughMSDataFile(MSData msd, WriteFormat format, bool continueOnError)
+    private static byte[] WriteThroughMSDataFile(MSData msd, WriteFormat format, bool continueOnError,
+        IterationListenerRegistry? ilr = null)
     {
         using var ms = new MemoryStream();
-        MSDataFile.Write(msd, ms, new WriteConfig { Format = format, ContinueOnError = continueOnError });
+        MSDataFile.Write(msd, ms, new WriteConfig { Format = format, ContinueOnError = continueOnError }, ilr);
         return ms.ToArray();
     }
 
@@ -288,10 +289,15 @@ public class WriterIterationListenerTests
         // EnumerationException is what makes msconvert suggest re-running with --continueOnError.
         foreach (var format in s_streamedFormats)
         {
+            var reg = new IterationListenerRegistry();
+            var listener = new RecordingListener();
+            reg.AddListener(listener, iterationPeriod: 1);
             var ex = Assert.ThrowsException<EnumerationException>(
-                () => WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(), format, continueOnError: false),
+                () => WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(), format, continueOnError: false, reg),
                 $"{format}: an unreadable spectrum must stop the write");
             Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException, $"{format}: inner exception");
+            // Every writer reports a spectrum before fetching it, so the last update names the one that failed.
+            Assert.AreEqual(BadIndex, listener.Updates.Last().IterationIndex, $"{format}: last progress update");
         }
     }
 

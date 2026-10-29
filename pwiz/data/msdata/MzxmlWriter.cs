@@ -314,18 +314,26 @@ public sealed class MzxmlWriter
         var registry = IterationListenerRegistry;
         for (int i = 0; i < count; i++)
         {
+            // Before the fetch, so skipped and filtered spectra still report progress.
+            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+
             var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(sl, i, ContinueOnError, SkipLog);
-            if (spec is null) { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
+            if (spec is null)
+                continue;
 
             // Skip Thermo non-MS spectra (cpp Serializer_mzXML.cpp:775-777).
             if (nativeIdFormat == CVID.MS_Thermo_nativeID_format
                 && !spec.Id.StartsWith("controllerType=0 controllerNumber=1", StringComparison.Ordinal))
-            { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
+            {
+                continue;
+            }
 
             // Skip spectra from a non-default source file.
             if (spec.SourceFile is not null && defaultSourceFile is not null
                 && !ReferenceEquals(spec.SourceFile, defaultSourceFile))
-            { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
+            {
+                continue;
+            }
 
             int scanNumber = ResolveScanNumber(nativeIdFormat, spec);
 
@@ -334,7 +342,6 @@ public sealed class MzxmlWriter
             RecordOffset(w, scanNumber, indentDepth: 2);
 
             WriteScan(w, spec, scanNumber, instrumentIndex);
-            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }
 
