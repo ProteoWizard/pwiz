@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-26 are C#-only: the runner-up and context families,
+    /// never returns null. Slots 21-38 are C#-only: the runner-up, context and per-fragment-rank families,
     /// masked by default (<see cref="DEFAULT_MASKED_FEATURES"/>, OSPREY_FEATURE_MASK) while
     /// they are evaluated. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -43,11 +43,11 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 27;
+        public const int FeatureCount = 39;
 
         /// <summary>
-        /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up and context
-        /// families, still under evaluation. A masked feature is written as 0, so the
+        /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up, context and
+        /// per-fragment-rank families, still under evaluation. A masked feature is written as 0, so the
         /// standardizer gives it scale 1 and value 0 and the classifier cannot use it -
         /// which keeps the default search's results what they were before these features.
         /// </summary>
@@ -55,6 +55,10 @@ namespace pwiz.Osprey.Scoring
         {
             @"peak_coelution_margin", @"peak_rank_margin", @"peak_candidate_count",
             @"context_peptide_length", @"context_precursor_charge", @"context_precursor_mz",
+            @"frag_rank1_abs_mass_error", @"frag_rank2_abs_mass_error", @"frag_rank3_abs_mass_error",
+            @"frag_rank4_abs_mass_error", @"frag_rank5_abs_mass_error", @"frag_rank6_abs_mass_error",
+            @"frag_rank1_intensity_share", @"frag_rank2_intensity_share", @"frag_rank3_intensity_share",
+            @"frag_rank4_intensity_share", @"frag_rank5_intensity_share", @"frag_rank6_intensity_share",
         };
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
@@ -112,6 +116,14 @@ namespace pwiz.Osprey.Scoring
             calculators[24] = new PeptideLengthCalc();
             calculators[25] = new PrecursorChargeCalc();
             calculators[26] = new PrecursorMzCalc();
+
+            // Per-fragment-rank family: the top library fragments matched at the apex, one feature
+            // per rank, so the classifier can weigh each rank separately.
+            for (int r = 1; r <= FragmentRankApexMatch.RANK_COUNT; r++)
+            {
+                calculators[26 + r] = new FragmentRankMassErrorCalc(r);
+                calculators[26 + FragmentRankApexMatch.RANK_COUNT + r] = new FragmentRankIntensityShareCalc(r);
+            }
 
             return calculators;
         }

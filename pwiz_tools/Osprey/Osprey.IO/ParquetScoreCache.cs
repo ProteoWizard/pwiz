@@ -53,7 +53,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// The PIN feature column names: the 21 of the Rust get_pin_feature_names(), then the
-        /// C#-only runner-up and context features (masked by default).
+        /// C#-only runner-up, context and per-fragment-rank features (masked by default).
         /// </summary>
         public static readonly string[] PIN_FEATURE_NAMES =
         {
@@ -94,9 +94,22 @@ namespace pwiz.Osprey.IO
             @"context_peptide_length",
             @"context_precursor_charge",
             @"context_precursor_mz",
+            // Per-fragment-rank: the top 6 library fragments matched at the apex (12)
+            @"frag_rank1_abs_mass_error",
+            @"frag_rank2_abs_mass_error",
+            @"frag_rank3_abs_mass_error",
+            @"frag_rank4_abs_mass_error",
+            @"frag_rank5_abs_mass_error",
+            @"frag_rank6_abs_mass_error",
+            @"frag_rank1_intensity_share",
+            @"frag_rank2_intensity_share",
+            @"frag_rank3_intensity_share",
+            @"frag_rank4_intensity_share",
+            @"frag_rank5_intensity_share",
+            @"frag_rank6_intensity_share",
         };
 
-        public const int NUM_PIN_FEATURES = 27;
+        public const int NUM_PIN_FEATURES = 39;
 
         #endregion
 

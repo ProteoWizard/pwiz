@@ -306,6 +306,24 @@ namespace pwiz.Osprey.Scoring {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragment {0} intensity share.
+        /// </summary>
+        public static string FragmentRankIntensityShareCalc_DisplayName_Fragment__0__intensity_share {
+            get {
+                return ResourceManager.GetString("FragmentRankIntensityShareCalc_DisplayName_Fragment__0__intensity_share", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment {0} mass error (abs).
+        /// </summary>
+        public static string FragmentRankMassErrorCalc_DisplayName_Fragment__0__mass_error__abs_ {
+            get {
+                return ResourceManager.GetString("FragmentRankMassErrorCalc_DisplayName_Fragment__0__mass_error__abs_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mass error (signed mean).
         /// </summary>
         public static string MassAccuracyMeanCalc_DisplayName_Mass_error__signed_mean_ {

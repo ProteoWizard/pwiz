@@ -175,6 +175,12 @@
   <data name="FragmentCoelutionSumCalc_DisplayName_Fragment_co_elution__sum_" xml:space="preserve">
     <value>Fragment co-elution (sum)</value>
   </data>
+  <data name="FragmentRankIntensityShareCalc_DisplayName_Fragment__0__intensity_share" xml:space="preserve">
+    <value>Fragment {0} intensity share</value>
+  </data>
+  <data name="FragmentRankMassErrorCalc_DisplayName_Fragment__0__mass_error__abs_" xml:space="preserve">
+    <value>Fragment {0} mass error (abs)</value>
+  </data>
   <data name="MassAccuracyMeanCalc_DisplayName_Mass_error__signed_mean_" xml:space="preserve">
     <value>Mass error (signed mean)</value>
   </data>
