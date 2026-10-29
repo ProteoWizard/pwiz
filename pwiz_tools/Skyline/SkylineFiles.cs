@@ -61,6 +61,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -332,14 +333,21 @@ namespace pwiz.Skyline
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         using var fileStream = File.OpenRead(path);
-                        using var progressStream = new ProgressStream(fileStream);
+                        // The hash is computed under the read-ahead stream, so it happens on the reading
+                        // thread as each block comes off the disk instead of on the thread parsing the XML
+                        using var hashingStream = new HashingStream(fileStream, true);
+                        // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                        using var sequentialReadStream = new SequentialReadStream(hashingStream, true);
+                        using var progressStream = new ProgressStream(sequentialReadStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
-                        using var hashingStream = new HashingStream(progressStream, true);
                         // Wrap stream in XmlReader so that BaseUri is known
-                        var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8),
+                        var reader = XmlReader.Create(new StreamReader(progressStream, Encoding.UTF8),
                             new XmlReaderSettings { IgnoreWhitespace = true }, path);
                         XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                         document = (SrmDocument) ser.Deserialize(reader);
+                        // The parser can stop before the end of the file, and the reading thread may still be hashing.
+                        // Reading to the end waits for that thread to hash the last block.
+                        sequentialReadStream.CopyTo(Stream.Null);
                         var skylineDocumentHash = hashingStream.Done();
 
                         try
@@ -1342,14 +1350,6 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// When saving to a new name ("Save As"), copies the document-specific spectral library
-        /// to the new name and updates the document to reference the library by its new name. This
-        /// includes renaming the library on each precursor's spectrum header info so that the saved
-        /// file does not require a slow settings update the next time it is opened. Returns the
-        /// updated document (which has also been set as the current document), or the current
-        /// document unchanged if there is no document-specific library to rename.
-        /// </summary>
-        /// <summary>
         /// If the document has a document-specific spectral library and this is a "Save As" to a new
         /// name, copies the library files to the new name and returns a <see cref="RenamedDocumentLibrary"/>
         /// holding the copied (not yet committed) files together with the document renamed to reference
@@ -1360,15 +1360,20 @@ namespace pwiz.Skyline
         /// </summary>
         private RenamedDocumentLibrary RenameDocumentLibraryAs(SrmDocument document, string newDocFilePath)
         {
-            string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+            var libraries = document.Settings.PeptideSettings.Libraries;
+            if (!libraries.HasDocumentLibrary)
+                return null;
+
+            // Copy from the file the document library spec names. For a document opened from disk
+            // this is the library beside the current .sky file, but a document built in memory may
+            // hold a document library written somewhere else.
+            string oldDocLibFile = libraries.LibrarySpecs.FirstOrDefault(spec => spec != null && spec.IsDocumentLibrary)?.FilePath;
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-            // If the document has no document-specific library, or the files for it do not
-            // exist on disk, or it's stale due to conversion of document to small molecule
-            // representation, there is nothing to rename.
-            if (!document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                || !File.Exists(oldDocLibFile)
-                || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
+            // If the files for the library do not exist on disk, or the library is already
+            // at the new name, there is nothing to copy.
+            if (!File.Exists(oldDocLibFile) ||
+                string.Equals(Path.GetFullPath(oldDocLibFile), Path.GetFullPath(newDocLibFile), StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
@@ -3679,6 +3684,11 @@ namespace pwiz.Skyline
             ShowDiannSearchDlg();
         }
 
+        private void ospreySearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowOspreySearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3840,6 +3850,30 @@ namespace pwiz.Skyline
                 return false; // user canceled
             }
             return true;
+        }
+
+        public void ShowOspreySearchDlg()
+        {
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            if (!OspreyInstaller.EnsureInstalled(this))
+                return;
+
+            using (var dlg = new OspreySearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
         }
 
         public void ShowFeatureDetectionDlg()

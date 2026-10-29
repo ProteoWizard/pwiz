@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
@@ -290,7 +291,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         return null;
                     }
                     totalDetected += detected;
-                    builder.FlushFile();
+                    builder.FlushFile(f);
                 }
             }
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-end");

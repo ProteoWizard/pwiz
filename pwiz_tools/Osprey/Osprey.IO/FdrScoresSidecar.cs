@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -51,18 +53,19 @@ namespace pwiz.Osprey.IO
     /// records + the validity stamp, all little-endian; see <see cref="BinarySidecarStamp"/>):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 8)
+    ///   version       [8]      = u8 (= 9)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   stamp_length  [24..28] = u32
-    ///   reserved      [28..32] = 4 bytes (zero)
+    ///   sums_length   [28..32] = u32, the length of feature_sums (0 when absent)
     ///   body          [32..]   = entry_count * 36 bytes:
     ///                            [0..4]   u32 entry_id
     ///                            [4..12]  f64 svm_score
     ///                            [12..20] f64 run_precursor_qvalue
     ///                            [20..28] f64 run_peptide_qvalue
     ///                            [28..36] f64 apex_rt
+    ///   feature_sums  [..]     = sums_length bytes, the run's <see cref="FeatureSums"/>
     ///   stamp         [..end]  = stamp_length bytes, the writing task's <see cref="ArtifactStamp"/>
     /// </code>
     /// Records are written pre-compaction at the Stage 5 → Stage 6
@@ -153,6 +156,14 @@ namespace pwiz.Osprey.IO
     /// the records, replacing the <c>.osprey.task</c> file that used to sit beside every
     /// sidecar. The records keep their offsets; only the exact-length check now adds the stamp.
     ///
+    /// v8 -> v9 (2026-10-17): the first-pass sidecar carries the run's <see cref="FeatureSums"/> -
+    /// its share of the first-pass model's feature report - between the records and the stamp,
+    /// its length in the header's last four bytes. The share is computed from the run's
+    /// standardized feature vectors while the score pass has them, and nothing later does, so
+    /// a report asked for after the analysis (or over runs that resumed from this file) had no
+    /// Model tab without it (doc 00, P16). Written on every first-pass write, with or without
+    /// <c>--model-diagnostics</c>; about 10 KB at 21 features. Second-pass sidecars carry none.
+    ///
     /// No conversion path is written: pre-first-public-release, an older sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
     /// costs a re-run rather than risking a misread record. A version bump is
@@ -176,7 +187,7 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 8;
+        public const byte FormatVersion = 9;
         public const int HeaderLength = BinarySidecarStamp.HEADER_LENGTH;
         public const int RecordLength = 36;
 
@@ -362,8 +373,10 @@ namespace pwiz.Osprey.IO
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
-                // than a corrupt one. The validity stamp after the records is not payload.
-                long payload = len - HeaderLength - BinarySidecarStamp.ReadLength(header);
+                // than a corrupt one. The feature sums and validity stamp after the records are
+                // not payload.
+                long payload = len - HeaderLength - BinarySidecarStamp.ReadExtensionLength(header) -
+                               BinarySidecarStamp.ReadLength(header);
                 if (payload < 0 || payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
@@ -453,7 +466,8 @@ namespace pwiz.Osprey.IO
         /// single-sourced with the FdrEntry overload via
         /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
         /// </summary>
-        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass, ArtifactStamp stamp)
+        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass, ArtifactStamp stamp,
+            FeatureSums featureSums = null)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (records == null) throw new ArgumentNullException(nameof(records));
@@ -465,7 +479,41 @@ namespace pwiz.Osprey.IO
                     WriteRecord(bw, r.EntryId, r.Score,
                         r.RunPrecursorQvalue, r.RunPeptideQvalue, r.ApexRt);
                 }
-            });
+            }, featureSums);
+        }
+
+        /// <summary>
+        /// The run's <see cref="FeatureSums"/> from a current-format first-pass sidecar, or null
+        /// when the file is missing, not current, or carries none.
+        /// </summary>
+        public static FeatureSums ReadFeatureSums(string path)
+        {
+            if (!IsCurrentFormat(path, Pass.FirstPass))
+                return null;
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var br = new BinaryReader(fs))
+                {
+                    var header = br.ReadBytes(HeaderLength);
+                    uint sumsLength = BinarySidecarStamp.ReadExtensionLength(header);
+                    if (sumsLength == 0 || sumsLength > int.MaxValue ||
+                        !TryComputeExpectedLen(header, out int recordCount, out _))
+                    {
+                        return null;
+                    }
+                    fs.Seek(HeaderLength + (long)recordCount * RecordLength, SeekOrigin.Begin);
+                    return FeatureSums.Read(br, (int)sumsLength);
+                }
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -503,15 +551,17 @@ namespace pwiz.Osprey.IO
         /// Shared header + atomic-write scaffold for both <c>Write</c>
         /// overloads. The caller supplies the body writer, which emits exactly
         /// <paramref name="entryCount"/> <see cref="RecordLength"/>-byte records via
-        /// <see cref="WriteRecord"/>. Atomic write via FileSaver: write to a unique
+        /// <see cref="WriteRecord"/>. Atomic write via SimpleFileSaver: write to a unique
         /// sibling temp file and promote it to the destination on Commit; on
-        /// exception the FileSaver disposes and deletes the temp without touching
+        /// exception the SimpleFileSaver disposes and deletes the temp without touching
         /// the destination. The FileStream is disposed before Commit so the file is
         /// unlocked when File.Move runs. <paramref name="stamp"/> is written after the body,
-        /// inside the same commit, so the file and its validity record land together.
+        /// inside the same commit, so the file and its validity record land together, and
+        /// <paramref name="featureSums"/>, when given, between the body and the stamp.
         /// </summary>
         private static void WriteInternal(
-            string path, int entryCount, Pass pass, ArtifactStamp stamp, Action<BinaryWriter> writeBody)
+            string path, int entryCount, Pass pass, ArtifactStamp stamp, Action<BinaryWriter> writeBody,
+            FeatureSums featureSums = null)
         {
             byte[] stampBytes = BinarySidecarStamp.Encode(stamp);
             AssertNotWrittenAlready(path);
@@ -519,7 +569,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 // 1 MB buffer: the body is millions of small records, and the default 4 KB buffer
                 // made a WriteFile call per 4 KB that left first-pass lanes blocked ~19 s per file.
@@ -532,9 +582,11 @@ namespace pwiz.Osprey.IO
                     bw.Write((byte)pass);                             // [9]
                     bw.Write(new byte[6]);                            // [10..16] reserved
                     bw.Write((ulong)entryCount);                      // [16..24]
-                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes);  // [24..32]
+                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes,
+                        featureSums?.ByteLength ?? 0);               // [24..32]
 
                     writeBody(bw);
+                    featureSums?.Write(bw);
                     bw.Write(stampBytes);
                 }
                 saver.Commit();
@@ -684,58 +736,93 @@ namespace pwiz.Osprey.IO
             for (int i = 0; i < entries.Count; i++)
                 byEntryId[entries[i].EntryId] = i;
 
+            return TryJoinRows(path, expectedPass, byEntryId, expectedAbsent, experimentRecords,
+                (row, record, experiment) =>
+                {
+                    var e = entries[row];
+                    e.Score              = record.Score;
+                    e.RunPrecursorQvalue = record.RunPrecursorQvalue;
+                    e.RunPeptideQvalue   = record.RunPeptideQvalue;
+                    // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
+                    // overload builds its entries from a parquet that already carries the column,
+                    // so the sidecar's copy is the same number arriving by a second route; writing
+                    // it would only create a way for the two to disagree silently. The consumer
+                    // that has no parquet row to start from reads records through
+                    // <see cref="ReadRecords"/>, which does decode it.
+                    //
+                    // Unlike TryReadOverlay's 2nd-pass use, the protein q IS applied: this is the
+                    // 1st-pass overlay, first-pass protein FDR has already run, and the pre-split
+                    // record carried that column here.
+                    if (experiment.HasValue)
+                    {
+                        var exp = experiment.Value;
+                        e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
+                        e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
+                        e.ExperimentProteinQvalue   = exp.ExperimentProteinQvalue;
+                        e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Join a per-file sidecar's records onto a caller's rows by entry_id: for each record,
+        /// <paramref name="onJoin"/> gets the row <paramref name="rowByEntryId"/> names, the
+        /// record, and the record's experiment record when <paramref name="experimentRecords"/>
+        /// has one. The single implementation of the join rules, shared by
+        /// <see cref="TryRead(string, IList{FdrEntry}, Pass, Func{uint, bool}, IReadOnlyDictionary{uint, FdrExperimentRecord})"/>
+        /// and any caller holding its rows in another shape, so the two cannot drift.
+        ///
+        /// <para>The rules: a record lands on the row its entry_id maps to (for a caller with
+        /// duplicate entry_ids, whichever row the map names - <c>TryRead</c> maps the last); a
+        /// row no record maps to is never handed over; a record with no row fails the read unless
+        /// <paramref name="expectedAbsent"/> says it was dropped on purpose, and the walk stops
+        /// there. A failure after records were handed over throws rather than returning false -
+        /// see <see cref="TryWalkRecords"/>.</para>
+        ///
+        /// <para>The experiment record is passed ONLY with a record that landed, so it reaches
+        /// exactly the rows this sidecar has a record for and no others (format v5, issue
+        /// #4486). Scoping is the whole point, and it is why this cannot be a separate loop over
+        /// the caller's rows: a gap-fill stub has no record here and keeps its Score = 0 / q = 1
+        /// defaults. Those columns are keyed by entry_id for the whole analysis, so a by-entry_id
+        /// loop hands a gap-fill stub the value its precursor earned in some other run - a value
+        /// this file's first pass never gave it. Measured cost of getting that wrong: 8,791
+        /// Astral rows moved off their 1.0 default at Stage 6, nine of which flipped a pass-2
+        /// co-assignment comparison.</para>
+        /// </summary>
+        public static bool TryJoinRows(string path, Pass expectedPass,
+            IReadOnlyDictionary<uint, int> rowByEntryId, Func<uint, bool> expectedAbsent,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Action<int, FdrScoreRecord, FdrExperimentRecord?> onJoin)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (rowByEntryId == null) throw new ArgumentNullException(nameof(rowByEntryId));
+            if (onJoin == null) throw new ArgumentNullException(nameof(onJoin));
+
             return TryWalkRecords(path, expectedPass, (chunk, off) =>
             {
-                uint recordEntryId = BitConverter.ToUInt32(chunk, off + 0);
-                if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
+                var record = DecodeRecord(chunk, off);
+                if (!rowByEntryId.TryGetValue(record.EntryId, out int row))
                 {
-                    // A caller that filtered its stub list says so by supplying the
-                    // predicate that did the filtering; a record it dropped on purpose
-                    // is expected to have no entry here.
+                    // A caller that filtered its rows says so by supplying the predicate that
+                    // did the filtering; a record it dropped on purpose is expected to have no
+                    // row here.
                     //
-                    // Otherwise the sidecar carries an entry the caller's stub list
-                    // doesn't contain. The caller is expected to pass a SUPERSET of the
-                    // sidecar's entries (the post-rescore parquet for the 1st-pass
-                    // sidecar, for example) - a record that fails to find its entry_id
-                    // signals the sidecar was written from a different parquet (or from a
-                    // different binary version with different entry_id assignment). That
-                    // is corruption, not the gap-fill or post-compaction case we tolerate,
-                    // and must be rejected.
-                    return expectedAbsent != null && expectedAbsent(recordEntryId);
+                    // Otherwise the sidecar carries an entry the caller's rows don't contain.
+                    // The caller is expected to pass a SUPERSET of the sidecar's entries (the
+                    // post-rescore parquet for the 1st-pass sidecar, for example) - a record that
+                    // fails to find its entry_id signals the sidecar was written from a different
+                    // parquet (or from a different binary version with different entry_id
+                    // assignment). That is corruption, not the gap-fill or post-compaction case
+                    // we tolerate, and must be rejected.
+                    return expectedAbsent != null && expectedAbsent(record.EntryId);
                 }
-                var e = entries[entryIdx];
-                e.Score                       = BitConverter.ToDouble(chunk, off + 4);
-                e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
-                e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
-                // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
-                // overload builds its entries from a parquet that already carries the column,
-                // so the sidecar's copy is the same number arriving by a second route; writing
-                // it would only create a way for the two to disagree silently. The consumer
-                // that has no parquet row to start from reads records through
-                // <see cref="ReadRecords"/>, which does decode it.
-                // The EXPERIMENT-scope half, applied HERE so it reaches exactly the entries this
-                // sidecar has a record for and no others (format v5, issue #4486).
-                //
-                // Scoping is the whole point, and it is why this cannot be a separate loop over
-                // the caller's stub list. The remarks above spell out who is deliberately left
-                // untouched: a gap-fill stub has no record here and keeps its Score = 0 / q = 1
-                // defaults. Those columns are keyed by entry_id for the whole analysis, so a
-                // by-entry_id loop hands a gap-fill stub the value its precursor earned in some
-                // other run - a value this file's first pass never gave it. Measured cost of
-                // getting that wrong: 8,791 Astral rows moved off their 1.0 default at Stage 6,
-                // nine of which flipped a pass-2 co-assignment comparison.
-                //
-                // Unlike TryReadOverlay's 2nd-pass use, the protein q IS applied: this is the
-                // 1st-pass overlay, first-pass protein FDR has already run, and the pre-split
-                // record carried that column here.
+                FdrExperimentRecord? experiment = null;
                 if (experimentRecords != null &&
-                    experimentRecords.TryGetValue(recordEntryId, out var exp))
+                    experimentRecords.TryGetValue(record.EntryId, out var exp))
                 {
-                    e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
-                    e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
-                    e.ExperimentProteinQvalue   = exp.ExperimentProteinQvalue;
-                    e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    experiment = exp;
                 }
+                onJoin(row, record, experiment);
                 return true;
             });
         }
@@ -781,12 +868,16 @@ namespace pwiz.Osprey.IO
                 // the second-pass protein FDR has yet to write its value, so an entry is
                 // entitled to the pass-1 protein q it already carries - which is exactly what
                 // the pre-split sidecar column held here too.
+                //
+                // The PEP is applied with the precursor q because the blib reports the two side
+                // by side, and the record's PEP comes from the same competition as its q.
                 if (experimentRecords != null &&
                     experimentRecords.TryGetValue(recordEntryId, out var exp))
                 {
                     e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    e.Pep                       = exp.Pep;
                 }
                 return true;
             });

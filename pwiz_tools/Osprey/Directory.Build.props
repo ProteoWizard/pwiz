@@ -23,14 +23,15 @@
     <Company>University of Washington</Company>
     <Copyright>Copyright (c) University of Washington 2026</Copyright>
     <!-- Osprey follows the Skyline version scheme YEAR.ORDINAL.BRANCH.DOY
-         (see pwiz_tools/Skyline/Jamfile.jam). <Version> is the source of truth
-         for standalone `dotnet build`; the Boost build and build.ps1 override it
-         with the day-of-year-stamped value via /p:Version. The DOY is 0 here as
-         the "not stamped by a dated build" sentinel. AssemblyVersion/FileVersion
+         (see pwiz_tools/Skyline/Jamfile.jam). This is the placeholder; on every
+         build path the StampOspreyInformationalVersion target in
+         Directory.Build.targets replaces it with the day-of-year-stamped value
+         from version.ps1. The DOY is 0 here as the "not stamped by a dated build"
+         sentinel. The scripts do not pass /p:Version: a global property would also
+         stamp the libraries Osprey shares with Skyline. AssemblyVersion/FileVersion
          are intentionally left to derive from Version; pinning them explicitly
-         would block the /p:Version override from reaching
-         Assembly.GetName().Version, which OspreyVersion.Current reads as the
-         logical osprey version. -->
+         would block the stamped Version from reaching Assembly.GetName().Version,
+         which OspreyVersion.Current reads as the logical osprey version. -->
     <Version>26.1.1.0</Version>
     <!-- Directory.Build.targets stamps AssemblyInformationalVersion itself as
          "<numeric>-<githash>[-dirty]"; keep the SDK from appending its own
@@ -41,5 +42,11 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
+
+  <!-- CarafeSharp's libtorch versions: Osprey.exe predicts spectral libraries through
+       CarafeSharp.Tasks. It ships the CPU runtime in torch\cpu and downloads the CUDA runtime on
+       request (LibTorchRuntimeLayout.targets, imported by Osprey.csproj); the pretrained models come
+       with UseCarafeModels=true (LibTorch.targets). One build serves the CPU and the GPU. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\CarafeSharp\LibTorch.props" />
 
 </Project>

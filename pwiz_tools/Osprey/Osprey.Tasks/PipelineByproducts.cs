@@ -23,12 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
-using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -211,34 +210,6 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// The probe-the-disk reconciliation bundle PerFileScoring hydrates from
-    /// sibling sidecars in worker mode, or <c>null</c> at a Stage-5 entry / any
-    /// straight-through run that wrote no bundle. The wrapper is always
-    /// published once (presence == "PerFileScoring has been materialized"); its
-    /// <see cref="Value"/> is the nullable bundle, so a consumer distinguishes
-    /// "no bundle" (Value == null) from "producer not yet run" (cache miss).
-    /// </summary>
-    internal sealed class RescoreBundle
-    {
-        public RescoreInputs Value { get; }
-        public RescoreBundle(RescoreInputs value) { Value = value; }
-    }
-
-    /// <summary>
-    /// Stage 6 multi-charge consensus rescore targets per file (post-compaction
-    /// apex/start/end by stub index), produced by FirstPassFDR's planning step.
-    /// </summary>
-    internal sealed class PerFileConsensusTargets
-    {
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> Value { get; }
-        public PerFileConsensusTargets(
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> value)
-        {
-            Value = value;
-        }
-    }
-
-    /// <summary>
     /// Whether FirstPassFDR's Stage 6 planning block actually ran (<c>true</c>) vs
     /// was skipped (single-file / reconciliation off) or rehydrated from disk
     /// (<c>false</c>). This is the gate PerFileRescore's self-gate checks to tell
@@ -252,99 +223,6 @@ namespace pwiz.Osprey.Tasks
     {
         public bool Value { get; }
         public PlanningPerformed(bool value) { Value = value; }
-    }
-
-    /// <summary>Stage 6 reconciliation actions keyed by (file, post-compaction index).</summary>
-    internal sealed class ReconciliationActions
-    {
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> Value { get; }
-        public ReconciliationActions(IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> value) { Value = value; }
-    }
-
-    /// <summary>Per-file refined RT calibrations from the Stage 6 calibration refit.</summary>
-    internal sealed class RefinedCalibrations
-    {
-        // DEFERRED, for the reason PerFileGapFillForRescore below gives at length: the two are
-        // filled by ONE read of every run's reconciliation.json, and the per-run rescore path
-        // never looks at either.
-        private readonly Func<IReadOnlyDictionary<string, RTCalibration>> _build;
-        private IReadOnlyDictionary<string, RTCalibration> _value;
-        private bool _built;
-
-        public RefinedCalibrations(IReadOnlyDictionary<string, RTCalibration> value)
-        {
-            _value = value;
-            _built = true;
-        }
-
-        /// <summary>Build on first read.</summary>
-        public RefinedCalibrations(Func<IReadOnlyDictionary<string, RTCalibration>> build)
-        {
-            _build = build;
-        }
-
-        public IReadOnlyDictionary<string, RTCalibration> Value
-        {
-            get
-            {
-                if (!_built)
-                {
-                    _value = _build?.Invoke();
-                    _built = true;
-                }
-                return _value;
-            }
-        }
-    }
-
-    /// <summary>Per-file gap-fill targets for the Stage 6 rescore.</summary>
-    internal sealed class PerFileGapFillForRescore
-    {
-        // DEFERRED. This and RefinedCalibrations are filled by a SINGLE read of every run's
-        // reconciliation.json (RescoreHydration.ReadGapFillAndCalibrations), and on the per-run
-        // rescore path NOTHING reads the result: RescoreOneFile takes run.GapFill and
-        // run.RefinedCalibration out of each run's OWN envelope inside its own iteration, and
-        // only falls back to these all-runs maps on the other path. A --task PerFileRescoring
-        // worker never touches them at all.
-        //
-        // Measured on the 446-run CHS cohort, three ways: dotTrace 69.7s total in
-        // ReadGapFillAndCalibrations (68.2s of it inside ReconciliationFile.Load, own time ~0,
-        // so it is all JSON deserialization); an in-code probe at 92.7s; and a night run's log
-        // gap at 111s. It varies with OS file-cache state because it is I/O bound over 446
-        // files - and it was the single largest time gap in an otherwise flat rescore.
-        //
-        // Their real consumer is Stage 7's pool rebuild (PerFileRescoreTask.Rehydrate ->
-        // OverlayReconciledIntoFiles), which runs much later and legitimately needs the whole-run
-        // form. Deferring moves the cost to that reader rather than removing it - which is the
-        // point: the work belongs to whoever needs the product, at the moment they need it.
-        private readonly Func<IReadOnlyDictionary<string, List<GapFillTarget>>> _build;
-        private IReadOnlyDictionary<string, List<GapFillTarget>> _value;
-        private bool _built;
-
-        public PerFileGapFillForRescore(IReadOnlyDictionary<string, List<GapFillTarget>> value)
-        {
-            _value = value;
-            _built = true;
-        }
-
-        /// <summary>Build on first read.</summary>
-        public PerFileGapFillForRescore(Func<IReadOnlyDictionary<string, List<GapFillTarget>>> build)
-        {
-            _build = build;
-        }
-
-        public IReadOnlyDictionary<string, List<GapFillTarget>> Value
-        {
-            get
-            {
-                if (!_built)
-                {
-                    _value = _build?.Invoke();
-                    _built = true;
-                }
-                return _value;
-            }
-        }
     }
 
     /// <summary>
@@ -395,10 +273,8 @@ namespace pwiz.Osprey.Tasks
         protected PerFileEntries(List<KeyValuePair<string, List<FdrEntry>>> value) { _buffer = value; }
 
         /// <summary>
-        /// The shared buffer, at this milestone's state. Reading it is the PULL:
-        /// a DEFERRED milestone (see <see cref="RescoredEntries"/>) does the work that
-        /// reaches its state here, on the first read, so a process where nobody reads
-        /// it never pays for it.
+        /// The shared buffer, at this milestone's state. <see cref="RescoredEntries"/>
+        /// refuses it: its runs are read one at a time through its per-file source.
         /// </summary>
         public virtual List<KeyValuePair<string, List<FdrEntry>>> Value => _buffer;
 
@@ -406,8 +282,8 @@ namespace pwiz.Osprey.Tasks
         /// The run's file names, in buffer order, WITHOUT pulling a deferred milestone.
         ///
         /// <para>The keys are present from the moment the buffer is built and never change:
-        /// a deferred build fills each file's list IN PLACE - <c>BuildRescoredPool</c> walks
-        /// the very pairs it materializes into - and adds no pair. So a consumer that needs
+        /// a per-file source fills each file's list IN PLACE - it writes into the very pairs it
+        /// materializes - and adds no pair. So a consumer that needs
         /// only names can have them without materializing every file's survivors, which at
         /// 446 CHS runs meant building 289 M entries to answer a question about 446 strings.</para>
         ///
@@ -499,53 +375,35 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// The buffer after PerFileRescore's Stage 6 rescore / reconciliation overlay.
+    /// The buffer after PerFileRescore's Stage 6 rescore / reconciliation overlay, read ONE
+    /// FILE AT A TIME through its per-file source.
     ///
-    /// <para>May be published DEFERRED. The streamed Stage 6 rescore drops each file's
-    /// entries as it goes (issue #4526), so reaching this milestone means re-reading every
-    /// file's artifacts - 16 minutes and 27 GB at 82 SEA-AD files. That is whole-run join
-    /// work, and PerFileRescoring is a per-file HPC task whose process exits at its end, so
-    /// it must not be the one to pay it: a <c>--task PerFileRescoring</c> worker has no
-    /// SecondPassFDR to serve. Deferring it to the first <see cref="Value"/> read moves the
-    /// cost to the consumer that needs the global pool, and a worker skips the work because
-    /// nothing pulled it rather than because a predicate asked whether its own consumer was
-    /// going to run (issue #4597).</para>
+    /// <para>The streamed Stage 6 rescore drops each file's entries as it goes (issue #4526),
+    /// so the buffer holds one EMPTY list per run, and the source brings a run to its
+    /// post-rescore state from disk when a consumer asks for it: <see cref="StreamFiles"/> for
+    /// a fold over every run, <see cref="MaterializeFile"/> for a consumer that picks the run.
+    /// Nothing reads every run's survivors at once. A whole-run build stood behind
+    /// <see cref="Value"/> until no route read it, and reading <see cref="Value"/> now throws
+    /// rather than handing back the empty lists - a blib with no precursors, and no
+    /// error.</para>
     ///
-    /// <para>Run-once, and a FAILED build stays failed: the build overlays reconciled
-    /// parquets and appends gap-fill rows, so running it a second time over one buffer
-    /// duplicates them, and resuming from a half-filled buffer reports a plausible wrong
-    /// number rather than an error. <see cref="Lazy{T}"/> in
-    /// <see cref="LazyThreadSafetyMode.ExecutionAndPublication"/> is exactly those two
-    /// semantics - one execution however many readers arrive, and a cached exception
-    /// rethrown to every later reader instead of a silently partial pool.</para>
+    /// <para>The source is null only on a <c>--task PerFileRescoring</c> worker whose analysis
+    /// has no retained base_id summary to rebuild from. Nothing reads the milestone there: the
+    /// worker exits after Stage 6.</para>
     /// </summary>
     internal sealed class RescoredEntries : PerFileEntries
     {
-        private readonly Lazy<bool> _materialize;
-
-        /// <summary>Brings ONE file's list to its post-rescore state; null when this run has
-        /// no per-file source and the whole-run buffer is the only way to read entries.</summary>
+        /// <summary>Brings ONE file's list to its post-rescore state.</summary>
         private readonly Action<string, List<FdrEntry>> _materializeFile;
-
-        /// <summary>
-        /// Set once <see cref="StreamFiles"/> has dropped a file it materialized. From that
-        /// point the buffer's lists are EMPTY rather than unbuilt, and <see cref="Value"/>
-        /// refuses rather than handing them back - see the throw for why that distinction is
-        /// worth an exception.
-        /// </summary>
-        private bool _streamed;
 
         /// <summary>
         /// Applied to each file right after the per-file source has filled it, so a consumer
         /// that runs LATER in the stage sees the state the stage has reached rather than the
         /// state on disk when the fold started.
         ///
-        /// <para>This is what makes a re-enumerable stream equivalent to a resident pool that
-        /// is stamped in place. On the resident path a pass-2 overlay or an experiment-q floor
-        /// is written onto the entries and every later pass reads it; on the streamed path the
-        /// entries are gone, so the same fact has to be re-applied to each run as it is
-        /// rebuilt. Both arms end up applying the identical operation to the identical rows -
-        /// once per run either way - which is why the two produce the same bytes.</para>
+        /// <para>The entries do not outlive a fold, so a fact the stage computes - a pass-2
+        /// overlay, an experiment-q floor - has to be re-applied to each run as it is rebuilt,
+        /// where a resident pool would have been stamped once.</para>
         ///
         /// <para>Added to by the stage, in the order the stage computes the facts: the
         /// second-pass sidecar overlay once the sidecars are final, then the experiment-q floors
@@ -556,11 +414,9 @@ namespace pwiz.Osprey.Tasks
         private Action<string, List<FdrEntry>> _postMaterialize;
 
         /// <summary>
-        /// True when this milestone has a per-file source, so a consumer may fold through
-        /// <see cref="StreamFiles"/> without the buffer holding every file at once - and, the
-        /// half that callers actually branch on, so a stage knows whether a fact it computes
-        /// has to be re-applied per file (<see cref="AddPostMaterialize"/>) or can simply be
-        /// stamped onto a pool that is going to stay.
+        /// True when this milestone has a per-file source, which every milestone a consumer
+        /// reads does. Kept as the question Stage 7 asks before its first pull, so a missing
+        /// source is reported where the join starts rather than as an empty fold.
         /// </summary>
         public bool Streams => _materializeFile != null;
 
@@ -573,30 +429,35 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public int Lanes { get; set; } = 1;
 
-        /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
-        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+        /// <param name="value">The shared backing buffer, one list per run, filled one run at
+        /// a time by <paramref name="materializeFile"/>.</param>
+        /// <param name="materializeFile">Brings ONE file's list to its post-rescore state.
+        /// Null only where nothing will read the milestone (see the class remarks).</param>
+        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value,
+            Action<string, List<FdrEntry>> materializeFile)
+            : base(value)
+        {
+            _materializeFile = materializeFile;
+        }
+
+        /// <summary>
+        /// Refused: the run's survivors are never all resident. Fold through
+        /// <see cref="StreamFiles"/> or read one run with <see cref="MaterializeFile"/>.
+        /// </summary>
+        public override List<KeyValuePair<string, List<FdrEntry>>> Value =>
+            throw new InvalidOperationException(
+                @"RescoredEntries.Value was read, but the second-pass survivors are read one run " +
+                @"at a time: fold through StreamFiles or read one run with MaterializeFile.");
 
         /// <summary>
         /// Append to the per-file overlay described on <see cref="_postMaterialize"/>, so it
         /// runs after everything already installed.
-        ///
-        /// <para>REFUSED on a run with no per-file source, rather than ignored. There the
-        /// entries are the pool and the caller must stamp them in place as it always did; an
-        /// overlay installed and never invoked would leave a stage believing it had applied
-        /// something it had not, which is the class of defect this whole area keeps producing.
-        /// Callers branch on <see cref="Streams"/> and do one or the other.</para>
         /// </summary>
         public void AddPostMaterialize(Action<string, List<FdrEntry>> overlay)
         {
             if (overlay == null)
                 throw new ArgumentNullException(nameof(overlay));
-            if (_materializeFile == null)
-            {
-                throw new InvalidOperationException(
-                    @"RescoredEntries.AddPostMaterialize was called on a milestone with no per-file " +
-                    @"source, where nothing would ever invoke it. Apply the operation to the " +
-                    @"resident buffer instead; branch on Streams.");
-            }
+            RequireSource();
             var existing = _postMaterialize;
             _postMaterialize = existing == null
                 ? overlay
@@ -604,97 +465,33 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The run's files, one at a time, for a consumer that ITERATES and does not retain.
-        ///
-        /// <para>Yields from the resident buffer. The enumeration shape is the point: every
-        /// Stage 7 consumer folds to an O(distinct) aggregate through this seam rather than
-        /// indexing into the pool, which is what lets a per-file source replace the buffer
-        /// behind it (#4486) without those consumers changing. A per-file streamed source
-        /// stood here once and was removed as unreachable: Stage 7 builds the pool before
-        /// any consumer runs, and the source's rebuild-from-disk overlaid only the 1st-pass
-        /// sidecar, so the second-pass gates would have read 1st-pass q-values had it ever
-        /// run. The lean-row work is what retires the pool build and puts a streamed source
-        /// here for real.</para>
-        /// </summary>
-        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> Files()
-        {
-            foreach (var kv in Value)
-                yield return kv;
-        }
-
-        /// <param name="value">The shared backing buffer, filled in place by
-        /// <paramref name="materialize"/>.</param>
-        /// <param name="materialize">Brings <paramref name="value"/> to its post-rescore
-        /// state on the first <see cref="Value"/> read. Throws on failure - a deferred build
-        /// has no return channel to the driver loop - and the throw is cached, so a second
-        /// reader sees the same failure rather than a partially built pool.</param>
-        /// <param name="materializeFile">Brings ONE file's list to its post-rescore state, for
-        /// <see cref="StreamFiles"/>. Optional: without it streaming falls back to the
-        /// whole-run build, which is what the resident A/B oracle wants.</param>
-        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value, Action materialize,
-            Action<string, List<FdrEntry>> materializeFile = null)
-            : base(value)
-        {
-            _materialize = new Lazy<bool>(() => { materialize(); return true; },
-                LazyThreadSafetyMode.ExecutionAndPublication);
-            _materializeFile = materializeFile;
-        }
-
-        public override List<KeyValuePair<string, List<FdrEntry>>> Value
-        {
-            get
-            {
-                // A pull AFTER a stream would hand back the buffer's now-empty lists, which is
-                // the failure this type's base class calls out by name: no exception, no
-                // warning, and a blib with no precursors. The whole point of streaming is that
-                // those entries are gone on purpose, so there is no honest value to return and
-                // rebuilding silently would restore the very peak the stream exists to avoid.
-                if (_streamed)
-                {
-                    throw new InvalidOperationException(
-                        @"RescoredEntries.Value was read after StreamFiles dropped the survivor " +
-                        @"pool. A consumer that runs after a streamed Stage 7 must fold through " +
-                        @"StreamFiles too, or run before the stream starts.");
-                }
-                // Reading Lazy.Value IS the build - once however many readers arrive, and a
-                // failure cached and rethrown rather than retried. The bool it yields only
-                // exists because Lazy needs a value type to hand back; discard it.
-                _ = _materialize?.Value;
-                return base.Value;
-            }
-        }
-
-        /// <summary>
         /// The run's files one at a time, each materialized on arrival and DROPPED once the
-        /// consumer has folded it - the streamed source <see cref="Files"/>'s comment has been
-        /// waiting for. Peak is one file's survivors plus whatever the consumer accumulates,
-        /// instead of every file's at once: at 446 CHS runs that is ~0.2 GB against ~79 GB.
+        /// consumer has folded it. Peak is one file's survivors plus whatever the consumer
+        /// accumulates, instead of every file's at once: at 446 CHS runs that is ~0.2 GB
+        /// against ~79 GB.
         ///
-        /// <para>Yields the buffer's own pairs, so a consumer that stamps entries stamps the
-        /// same objects it would have on the resident path. The stamps do not outlive the
-        /// yield, which is exactly why the per-file SIDECAR - not the entry - is what carries
-        /// Stage 7's results forward, as <c>ComputePass2TransferCompeteFull</c> documents.</para>
+        /// <para>Yields the buffer's own pairs, and the stamps a consumer writes onto them do
+        /// not outlive the yield, which is exactly why the per-file SIDECAR - not the entry - is
+        /// what carries Stage 7's results forward, as <c>ComputePass2TransferCompeteFull</c>
+        /// documents.</para>
         ///
         /// <para>Re-enumerable: a second pass re-materializes each file from disk. Two passes
         /// are the shape a fold-then-apply step needs (accumulate O(distinct) floors over every
-        /// file, then apply them), and paying a second read is the trade that removes the pool.
-        /// Falls back to the resident walk when this run has no per-file source, so the
-        /// oracle paths are unaffected.</para>
+        /// file, then apply them), and paying a second read is the trade that removes the pool.</para>
         /// </summary>
         /// <param name="label">What this fold is doing, for the per-run progress line. Supply
-        /// it: on a streamed source each pass REBUILDS every run from disk, so a fold that used
-        /// to walk memory in seconds now runs for minutes, and an unreported one is a silence
-        /// in the middle of a multi-hour stage - the shape this codebase has repeatedly had to
-        /// go back and fix. Null suppresses the line, which is right only for a fold that
-        /// already reports its own progress.</param>
+        /// it: each pass REBUILDS every run from disk, so a fold runs for minutes, and an
+        /// unreported one is a silence in the middle of a multi-hour stage - the shape this
+        /// codebase has repeatedly had to go back and fix. Null suppresses the line, which is
+        /// right only for a fold that already reports its own progress.</param>
         public IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamFiles(string label = null)
         {
-            if (_materializeFile == null)
-            {
-                foreach (var kv in Files())
-                    yield return kv;
-                yield break;
-            }
+            RequireSource();
+            return StreamSourcedFiles(label);
+        }
+
+        private IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamSourcedFiles(string label)
+        {
             // Disposed by the enumerator's own finally, so an abandoned fold closes its
             // reporter rather than leaving the heading as the last line in the log.
             using (var progress = label == null
@@ -704,16 +501,8 @@ namespace pwiz.Osprey.Tasks
             {
                 int done = 0;
                 // base.Value, not Value: the pairs and their (empty) lists are what we
-                // materialize INTO, so reaching them must not trigger the whole-run build this
-                // method exists to replace - nor trip the _streamed guard on a second pass.
+                // materialize INTO.
                 var files = base.Value;
-                // Marked BEFORE any file is materialized, not after. A consumer that breaks out of
-                // the walk - or an enumerator abandoned by an exception - would otherwise leave
-                // this false with runs already materialized, and a later Value read would sail
-                // past the guard and hand back one populated run plus N-1 empty lists: the silent
-                // almost-empty pool the guard exists to make impossible.
-                if (files.Count > 0)
-                    _streamed = true;
                 int consumed = 0;
                 try
                 {
@@ -754,52 +543,51 @@ namespace pwiz.Osprey.Tasks
         /// other than this buffer's order - the streamed pass-2 competition asks for the file
         /// the FDR layer has just decided to read next, not for "the next one".
         ///
-        /// <para>The list is the buffer's own, so a caller that stamps entries stamps what the
-        /// resident path would have. On the streamed source it has just been filled from disk
-        /// and the caller owns dropping it (<see cref="DropFile"/>); on the resident source it
-        /// is already filled and must NOT be dropped, which is why the two halves are separate
-        /// calls rather than one scoped helper - only the caller knows whether it is done with
+        /// <para>The list is the buffer's own, just filled from disk, and the caller owns
+        /// dropping it (<see cref="DropFile"/>): only the caller knows whether it is done with
         /// the file or merely finished one of several passes over it.</para>
         ///
         /// <para>An unknown name returns an empty list rather than throwing: that is what the
-        /// resident lookup this replaces did for a file the buffer never held, and turning it
+        /// resident lookup this replaced did for a file the buffer never held, and turning it
         /// into a throw here would convert a tolerated input-naming drift (reported in its own
         /// words upstream) into an abort hours into a run.</para>
         /// </summary>
         public List<FdrEntry> MaterializeFile(string fileName)
         {
+            RequireSource();
             foreach (var kv in base.Value)
             {
                 if (!string.Equals(kv.Key, fileName, StringComparison.Ordinal))
                     continue;
-                if (_materializeFile != null)
-                {
-                    _materializeFile(kv.Key, kv.Value);
-                    _postMaterialize?.Invoke(kv.Key, kv.Value);
-                }
+                _materializeFile(kv.Key, kv.Value);
+                _postMaterialize?.Invoke(kv.Key, kv.Value);
                 return kv.Value;
             }
             return new List<FdrEntry>();
         }
 
         /// <summary>
-        /// Release one file materialized by <see cref="MaterializeFile"/>. A no-op on the
-        /// resident source, where the buffer IS the pool and dropping it would destroy the only
-        /// copy - the same asymmetry <see cref="StreamFiles"/> encodes by falling back to
-        /// <see cref="Files"/>.
+        /// Release one file materialized by <see cref="MaterializeFile"/>.
         /// </summary>
         public void DropFile(string fileName)
         {
-            if (_materializeFile == null)
-                return;
             foreach (var kv in base.Value)
             {
                 if (!string.Equals(kv.Key, fileName, StringComparison.Ordinal))
                     continue;
-                _streamed = true;
                 kv.Value.Clear();
                 kv.Value.TrimExcess();
                 return;
+            }
+        }
+
+        private void RequireSource()
+        {
+            if (_materializeFile == null)
+            {
+                throw new InvalidOperationException(
+                    @"RescoredEntries was read on a milestone with no per-file source, which only " +
+                    @"a rescore worker publishes and nothing there reads.");
             }
         }
     }

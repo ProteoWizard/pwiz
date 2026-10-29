@@ -115,6 +115,9 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
+            // Native heap keeps growing while tiered JIT recompiles the vendor readers' hot methods,
+            // and Mobilion's SDK frees its internal HDF5 caches only periodically
+            {"TestTicChromatogram", new ExpandedLeakCheck()},
             // Tests which show the native common file dialog need more iterations to stabilize
             // because the Windows shell cache grows
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
@@ -291,7 +294,7 @@ namespace TestRunner
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;skipsystemheaps=off;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
-            "demo=off;showformnames=off;status=off;buildcheck=0;" +
+            "demo=off;showformnames=off;status=off;buildcheck=0;aiconnector=off;" +
             "stage=off;configuration=Debug;stageprojects=;stageruntime=on;" +
             "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;perffirst=off;" +
@@ -2246,6 +2249,7 @@ namespace TestRunner
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
+            bool aiConnector = commandLineArgs.ArgAsBool("aiconnector"); // Register each test's Skyline with the MCP, so a session can drive a paused test
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
@@ -2334,7 +2338,7 @@ namespace TestRunner
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
-                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
+                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount, aiConnector);
 
             // Configure dotMemory snapshot settings only when explicitly requested
             if (commandLineArgs.HasArg("dotmemorywarmup") || commandLineArgs.HasArg("dotmemorywaitruns"))

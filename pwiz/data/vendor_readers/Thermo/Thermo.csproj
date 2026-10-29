@@ -59,13 +59,13 @@
   <Target Name="ExtractThermoAssemblies"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences"
-          Inputs="$(ThermoArchive)"
-          Outputs="$(ThermoAssembliesDir)/ThermoFisher.CommonCore.RawFileReader.dll">
+          Inputs="$(ThermoArchive);$(ThermoAssembliesDir)/ThermoFisher.CommonCore.RawFileReader.dll"
+          Outputs="$(ThermoAssembliesDir)/.ExtractThermoAssemblies.stamp">
     <!--
       Extract vendor_api/Thermo/*.dll from the encrypted 7z on build. The
       -pi-agree-to-the-vendor-licenses password gates the archive (see make_Thermo_7z.bat).
       MSBuild's Inputs/Outputs drive incrementality: re-runs only when the 7z is newer than the
-      flattened RawFileReader DLL.
+      stamp touched at the end of the target.
       -->
     <MakeDir Directories="$(ThermoAssembliesDir)" />
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(ThermoAssembliesDir)&quot; &quot;$(ThermoArchive)&quot; vendor_api/Thermo/*.dll" StandardOutputImportance="low" />
@@ -76,6 +76,8 @@
     <Copy SourceFiles="@(_ThermoDll)"
           DestinationFolder="$(ThermoAssembliesDir)"
           SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(ThermoAssembliesDir)/.ExtractThermoAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <ItemGroup Condition="'$(IAgreeToVendorLicenses)' == 'true'">

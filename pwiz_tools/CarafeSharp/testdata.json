@@ -1,0 +1,126 @@
+{
+  "comment": [
+    "The test data packages the CarafeSharp parity tests compare with. CarafeSharp.Test reads this file",
+    "(TestData.cs) and so do the scripts that build, fetch and verify the packages.",
+    "Each zip holds one top folder, named like the zip, and extracts to <root>/<folder>: <root> is",
+    "CARAFESHARP_TESTDATA when it is set, else <Downloads>/Perftests, where <Downloads> is",
+    "SKYLINE_DOWNLOAD_PATH or the user's Downloads folder, as the Skyline and Osprey perf tests use it.",
+    "MANIFEST.sha256 at the top folder is written last, when the zip is built, and marks a complete",
+    "package: a package folder without it fails the tests.",
+    "Paths in 'contents' are relative to the top folder. A path ending in '/' is a folder, copied with",
+    "its files except those the package's 'exclude' patterns and the entry's own 'exclude' name; an",
+    "'include' list keeps only matching files.",
+    "Carafe's own files (parameter.txt, *.carafe.sig) keep the absolute paths Carafe recorded; the tests",
+    "find those files inside the package by name. The stage-1 command.txt files, which are ours, write",
+    "a path inside the package as {DATA}/<path from the top folder>.",
+    "A url or sha256 of PLACEHOLDER marks a package not uploaded yet. A package is never republished",
+    "under the same name: extraction never overwrites, so a changed package gets a new version."
+  ],
+  "packages": [
+    {
+      "id": "testfiles",
+      "zip": "carafesharp-testfiles-v1.zip",
+      "folder": "carafesharp-testfiles-v1",
+      "url": "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/carafesharp-testfiles-v1.zip",
+      "sha256": "dc1a04c200bb762e37d83c194c88a08636b9452fb95cbdc1cb497f2bd0f0afee",
+      "size": 1518099270,
+      "testCategory": "",
+      "description": "Carafe 2.2.0 reference runs of the Stellar example (HeLa _21, hela-filtered.fasta), the stage-1 entrapment FASTA builds, and small library references.",
+      "exclude": [ "*.libcache" ],
+      "contents": [
+        { "path": "stellar/hela-filtered.fasta" },
+        { "path": "stellar/carafe-osprey-entrapment/carafe_log.txt" },
+        { "path": "stellar/carafe-osprey-entrapment/carafe_settings.json" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_library_db_peptides.fasta" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_library_db_pairing.tsv" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_library_db_peptides.fasta.carafe.sig" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_train_db_peptides.fasta" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_train_db_pairing.tsv" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_train_db_peptides.fasta.carafe.sig" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_initial_library/" },
+        { "path": "stellar/carafe-osprey-entrapment/osprey_new_library/" },
+        { "path": "stellar/carafe-osprey/carafe_log.txt" },
+        { "path": "stellar/carafe-osprey/carafe_settings.json" },
+        { "path": "stellar/carafe-osprey/osprey_train_db_peptides.fasta" },
+        { "path": "stellar/carafe-osprey/osprey_train_db_pairing.tsv" },
+        { "path": "stellar/carafe-osprey/osprey_train_db_peptides.fasta.carafe.sig" },
+        { "path": "stellar/carafe-osprey/osprey_initial_library/", "include": [ "*.parquet", "parameter.txt" ] },
+        { "path": "stellar/carafe-osprey/osprey_new_library/", "include": [ "*.parquet", "*.tsv", "*.txt", "*.json", "*.pt" ], "exclude": [ "carafe_spectral_library.tsv" ] },
+        { "path": "stage1/builds/" },
+        { "path": "stage1/fixtures/" },
+        { "path": "stage1/uniprot_mouse_dec2024_yeastENO1.fasta" },
+        { "path": "library-references/m3/ref/nocut-every50/" },
+        { "path": "library-references/m3/ref/trypsin-proteins/" },
+        { "path": "library-references/m3/fixtures/" },
+        { "path": "library-references/carafe_main_varmod/" },
+        { "path": "library-references/hela-300.fasta" }
+      ]
+    },
+    {
+      "id": "astral",
+      "zip": "carafesharp-testfiles-astral-v1.zip",
+      "folder": "carafesharp-testfiles-astral-v1",
+      "url": "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/carafesharp-testfiles-astral-v1.zip",
+      "sha256": "d245321814fae5d510e8780e3f11b1f9bd0045b15b66d8e8b60105fbf25f85d3",
+      "size": 4794773084,
+      "testCategory": "Astral",
+      "description": "The Carafe 2.2.0 reference run of the Astral example (HeLa _55, the human FASTA), for the tests in TestCategory Astral.",
+      "exclude": [ "*.libcache" ],
+      "contents": [
+        { "path": "astral/uniprot_human_jan2025_yeastENO1_contam_ADpeps.fasta" },
+        { "path": "astral/Carafe-Osprey-entrapment/carafe_log.txt" },
+        { "path": "astral/Carafe-Osprey-entrapment/carafe_settings.json" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_library_db_peptides.fasta" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_library_db_pairing.tsv" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_library_db_peptides.fasta.carafe.sig" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_train_db_peptides.fasta" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_train_db_pairing.tsv" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_train_db_peptides.fasta.carafe.sig" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_initial_library/" },
+        { "path": "astral/Carafe-Osprey-entrapment/osprey_new_library/" }
+      ]
+    },
+    {
+      "id": "export",
+      "zip": "carafesharp-export-v1.zip",
+      "folder": "carafesharp-export-v1",
+      "url": "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/carafesharp-export-v1.zip",
+      "sha256": "1e2071d453c6fe963b93ea70ea803c06d138f0452358ccb8baeb5f0714d76fb2",
+      "size": 67127081,
+      "testCategory": "",
+      "description": "Osprey's CarafeSharp training export (format 2) of the Stellar _21 search, written by #4708 from the .raw. It changes whenever Osprey does, so it is packaged apart.",
+      "exclude": [],
+      "contents": [
+        { "path": "stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet" }
+      ]
+    },
+    {
+      "id": "regression-export",
+      "zip": "carafesharp-export-v2.zip",
+      "folder": "carafesharp-export-v2",
+      "url": "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/carafesharp-export-v2.zip",
+      "sha256": "059a2e1673fed68ab0fc44a80ee387985e17ffa465d5552f83382b08dc6c4240",
+      "size": 60339997,
+      "testCategory": "",
+      "description": "Osprey's CarafeSharp training export (format 2) of the Stellar _21 search of CarafeSharp's Chronologer starting library, as the workflow runs it, written from the .raw, for the Stellar golden regression. It changes whenever Osprey does, so it is packaged apart.",
+      "exclude": [],
+      "contents": [
+        { "path": "stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet" }
+      ]
+    },
+    {
+      "id": "astral-export",
+      "zip": "carafesharp-export-astral-v2.zip",
+      "folder": "carafesharp-export-astral-v2",
+      "url": "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/carafesharp-export-astral-v2.zip",
+      "sha256": "26fd07fb2218a295b68ca4cf795e09d2779637218ac21d3d8757ae5cea6e0e2f",
+      "size": 144142263,
+      "testCategory": "Astral",
+      "description": "Osprey's CarafeSharp training export (format 2) of the Astral _55 search of CarafeSharp's Chronologer starting library, as the workflow runs it, written from the .raw, for the Astral golden regression. It changes whenever Osprey does, so it is packaged apart.",
+      "exclude": [],
+      "contents": [
+        { "path": "astral/Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55.training.parquet" }
+      ]
+    }
+  ]
+}

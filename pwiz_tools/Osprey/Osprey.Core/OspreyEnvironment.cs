@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -82,19 +83,19 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly ISet<string> KnownVariables = new HashSet<string>(VariableNameComparer)
         {
-            @"OSPREY_ALLOW_UNFIXED_RESIDENT", @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
+            @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
             @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
             @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
             @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
-            @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
+            @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
             @"OSPREY_DUMP_COASSIGN_ROWS", @"OSPREY_DUMP_CONSENSUS", @"OSPREY_DUMP_CWT_PATH",
             @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
-            @"OSPREY_DUMP_LOESS_FIT", @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
+            @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
             @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
-            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_REFIT", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
             @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
@@ -102,17 +103,17 @@ namespace pwiz.Osprey.Core
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
-            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST", @"OSPREY_LOESS_FIT_ONLY",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
             @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_REFIT_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
-            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
+            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
             @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
             @"OSPREY_VERSION_OVERRIDE"
         };
@@ -209,14 +210,14 @@ namespace pwiz.Osprey.Core
         public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") ?? 1;
 
         /// <summary>
-        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
-        /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="SimpleFileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>SimpleFileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
         /// <c>Commit()</c> - the real path then holds the previous content or nothing,
-        /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
+        /// never a partial write (see <c>SimpleFileSaver</c>'s own doc comment). Set this to
         /// inspect what a write got through before it was abandoned: on an uncommitted
         /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
-        /// its normal <c>~OS</c>-prefixed name) instead of deleted. It never touches the
+        /// its normal <c>~SK</c>-prefixed name) instead of deleted. It never touches the
         /// real path, so presence-proves-completeness still holds for every consumer;
         /// only a developer who knows to look for the temp sees the partial content.
         /// </summary>
@@ -364,6 +365,16 @@ namespace pwiz.Osprey.Core
         /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
         /// </summary>
         public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
+
+        /// <summary>
+        /// DEVELOPER. <c>OSPREY_STOP_AFTER_TASKS=N</c> ends the run cleanly once N tasks have RUN in
+        /// it - a task skipped because its outputs are current does not count - with exit code 0
+        /// and a <c>[TASK] stop:</c> line. Run again and again, a run then advances exactly one task
+        /// at a time, which is how a resume test shows that a re-run skips every task already done
+        /// and recomputes none of it. Read on every access, so a command-line test can vary it;
+        /// unset or 0 for no stop.
+        /// </summary>
+        public static int StopAfterTasks => ParseIntOrNull(@"OSPREY_STOP_AFTER_TASKS") ?? 0;
 
         /// <summary>
         /// DIAGNOSTIC. Calibration and the Stage 6 re-score read a run's spectra cache one isolation
@@ -822,8 +833,7 @@ namespace pwiz.Osprey.Core
         ///     Restores calibration while keeping the re-scoring ID gain.
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
-        ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
-        ///     <c>ResidentPaths</c>.
+        ///     pool. Re-adding a resident pool for it is the #4446 regression.
         /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
         /// test can set it (<see cref="OverrideVariables"/>).
@@ -911,84 +921,15 @@ namespace pwiz.Osprey.Core
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
 
         /// <summary>
-        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take. Legal values are exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>, which has
-        /// been EMPTY since projection-off left it (2026-10-10), so no value admits anything;
-        /// any resident path is refused no matter what this is set to.
-        ///
-        /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
-        /// amnesty to every trigger at once. That is not a hypothetical failure: it let
-        /// <c>OSPREY_PASS2_QVALUE=transfer</c> silently regress back onto the resident pool for
-        /// ten days (#4438 removed the forcing, a #4446 merge artifact restored it), because
-        /// developers simply set the boolean and a re-broken memory bound looked like normal
-        /// operating procedure. A named token cannot do that: an unlisted path errors even with
-        /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
-        /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
-        ///
-        /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
-        /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. A LIST keeps the property that matters - every
-        /// admitted path is still named individually, so nothing rides along unnamed the way
-        /// the blanket boolean allowed - while a single value only ever prevented honest
-        /// work.</para>
-        ///
-        /// Re-read on each access, like <see cref="Pass2QValue"/>. Intended for local testing. The standing
-        /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -
-        /// and an INHERITED value is cleared at startup unless a deliberate A/B switch needs it.
-        /// A resident path appearing anywhere in the gate fails CI rather than riding along on
-        /// an ambient allowance, and any token the gate is ever made to require has to carry an
-        /// open issue to remove it again.
+        /// OSPREY_DIANN_REPORTS: also write <c>&lt;output&gt;.protein_groups.tsv</c> and
+        /// <c>&lt;output&gt;.stats.tsv</c>, the search's results in the shape of DIA-NN's
+        /// <c>pg_matrix</c> and <c>stats.tsv</c>, for comparing the two tools. Off by default:
+        /// they hold nothing the output .blib does not, and nothing in Osprey reads them.
+        /// Re-read on every access, so a test can switch it per command line with
+        /// <see cref="OverrideVariables"/>.
         /// </summary>
-        public static string AllowUnfixedResident =>
-            (GetVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
-
-        /// <summary>
-        /// True when <see cref="AllowUnfixedResident"/> names anything that is not a legal token,
-        /// so the guard can say "that value is not a known path" instead of printing the
-        /// same message it prints when the variable is unset. Without this, a typo
-        /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
-        /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
-        /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
-        /// </summary>
-        public static bool AllowUnfixedResidentUnrecognized => UnrecognizedResidentTokens.Length > 0;
-
-        /// <summary>
-        /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
-        /// The warning names THESE rather than the whole value: the flag is a list and
-        /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
-        /// token with a live one still grants the live one. Empty when every token is known.
-        /// </summary>
-        public static string UnrecognizedResidentTokens =>
-            string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
-                v => !ResidentPaths.KNOWN_UNFIXED.Any(
-                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
-
-        /// <summary>
-        /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
-        /// <paramref name="token"/>. Case-insensitive, matching how the rest of the CLI parses
-        /// tokens: the guard's message names the exact token to set, so rejecting the operator's
-        /// own value for capitalization would read as the guard ignoring what they just did.
-        /// </summary>
-        public static bool NamesResidentPath(string allowValue, string token)
-        {
-            return SplitResidentTokens(allowValue).Any(
-                v => string.Equals(v, token, StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// The individual tokens in an OSPREY_ALLOW_UNFIXED_RESIDENT setting. Comma and semicolon
-        /// both separate, and empty entries are dropped, so a trailing separator is not a typo
-        /// the operator has to hunt for.
-        /// </summary>
-        private static IEnumerable<string> SplitResidentTokens(string allowValue)
-        {
-            if (string.IsNullOrEmpty(allowValue))
-                return Array.Empty<string>();
-            return allowValue
-                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(v => v.Trim())
-                .Where(v => v.Length > 0);
-        }
+        public static bool DiannReports =>
+            IsSetAndNotZero(@"OSPREY_DIANN_REPORTS");
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default

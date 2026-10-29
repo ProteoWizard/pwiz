@@ -399,8 +399,8 @@ namespace pwiz.Osprey.Scoring
             // (total - prefix) instead would poison EVERY y ion the moment any residue is
             // unknown, because total itself is then NaN -- and a leading unknown residue
             // would empty the ladder outright, which the caller reads as "accept".
-            // Selenocysteine (U) and the ambiguity codes B/Z/X/J/O are all absent from
-            // PeptideFragmentMass's standard residues and do occur in UniProt-derived libraries.
+            // The ambiguity codes B/Z/X/J/O are absent from PeptideFragmentMass's residues and
+            // do occur in UniProt-derived libraries. (Selenocysteine, U, was until 2026-10-16.)
             var prefix = new double[len + 1];
             for (int i = 0; i < len; i++)
             {
@@ -519,6 +519,7 @@ namespace pwiz.Osprey.Scoring
                 target.RetentionTime);
             decoy.RtCalibrated = target.RtCalibrated;
             decoy.IsDecoy = true;
+            decoy.PairingId = target.PairingId;
             decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
             decoy.Fragments = omitFragments
                 ? Array.Empty<LibraryFragment>()

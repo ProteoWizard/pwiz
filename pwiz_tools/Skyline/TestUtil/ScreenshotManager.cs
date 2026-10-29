@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Common.SystemUtil.PInvoke;

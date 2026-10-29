@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -978,8 +979,16 @@ namespace pwiz.Osprey.Test
         /// ParquetIndex against a column on one, the row stream itself on the other. A parity
         /// test that compares everything BUT the value whose two sources differ is exactly the
         /// test that would pass while they disagreed.</para>
+        ///
+        /// <para>Also an <see cref="IFdrFirstPassSink"/>, for the streaming first pass, which hands
+        /// over run-scope values per file and experiment-scope values per distinct entry instead
+        /// of one call per row. <see cref="Finish"/> joins the two back into the same per-row view
+        /// the resident path produces, so every comparison against the resident oracle holds the
+        /// streaming path to it row by row. Anything the join cannot place - a file out of order,
+        /// an entry delivered twice or out of order, a row whose entry never arrived - counts as an
+        /// <see cref="OrderViolations"/>.</para>
         /// </summary>
-        private sealed class CapturingSink : IFdrOutputSink
+        private sealed class CapturingSink : IFdrOutputSink, IFdrFirstPassSink
         {
             private readonly Dictionary<(int, int), double> _scores = new Dictionary<(int, int), double>();
             private readonly Dictionary<(int, int), double> _expAgg = new Dictionary<(int, int), double>();
@@ -988,6 +997,19 @@ namespace pwiz.Osprey.Test
                 new Dictionary<(int, int), (uint, bool, byte, string)>();
             private readonly Dictionary<(int, int), double> _apexRts = new Dictionary<(int, int), double>();
             private (int File, int Row) _last = (-1, -1);
+            // The streaming first pass's two granularities, joined in Finish.
+            private readonly List<FdrRunScopeRows> _runScope = new List<FdrRunScopeRows>();
+            private readonly Dictionary<uint, (double Aggregate, double PrecursorQ, double PeptideQ, double Pep)> _experiment =
+                new Dictionary<uint, (double, double, double, double)>();
+            private readonly List<FdrFileRows> _rowFolds = new List<FdrFileRows>();
+            private uint? _lastEntryId;
+
+            /// <param name="foldRows">Ask the streaming first pass for its --model-diagnostics row
+            /// walk, and hold every row it hands over to the joined view.</param>
+            public CapturingSink(bool foldRows = false)
+            {
+                FoldsRowExperimentValues = foldRows;
+            }
 
             /// <summary>
             /// Calls that did not arrive in (file, row) order. The production sinks fold rows
@@ -996,6 +1018,9 @@ namespace pwiz.Osprey.Test
             /// many file lanes produced them.
             /// </summary>
             public int OrderViolations { get; private set; }
+
+            /// <summary>Rows of the diagnostics walk checked against the joined view.</summary>
+            public int RowFoldsChecked { get; private set; }
 
             public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
                 byte charge, string peptide, double score, double experimentAggregateScore,
@@ -1014,8 +1039,93 @@ namespace pwiz.Osprey.Test
                 _apexRts[(fileIdx, rowIdx)] = apexRt;
             }
 
+            public object PrepareRunScope(int fileIdx, FdrRunScopeRows rows)
+            {
+                return rows;
+            }
+
+            public void AcceptRunScope(int fileIdx, object prepared)
+            {
+                if (fileIdx != _runScope.Count)
+                    OrderViolations++;
+                _runScope.Add((FdrRunScopeRows)prepared);
+            }
+
+            public void AcceptExperimentEntry(uint entryId, string peptide, double experimentAggregateScore,
+                double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+            {
+                // Once per entry, ascending: the order the experiment sidecar is written in.
+                if (_lastEntryId.HasValue && entryId <= _lastEntryId.Value)
+                    OrderViolations++;
+                _lastEntryId = entryId;
+                _experiment[entryId] = (experimentAggregateScore, experimentPrecursorQvalue,
+                    experimentPeptideQvalue, pep);
+            }
+
+            public bool FoldsRowExperimentValues { get; }
+
+            public object PrepareRowFold(int fileIdx, FdrFileRows rows)
+            {
+                return rows;
+            }
+
+            public void AcceptRowFold(int fileIdx, object prepared)
+            {
+                if (fileIdx != _rowFolds.Count)
+                    OrderViolations++;
+                _rowFolds.Add((FdrFileRows)prepared);
+            }
+
             public void Finish(IOspreyLog log)
             {
+                for (int f = 0; f < _runScope.Count; f++)
+                {
+                    var rows = _runScope[f];
+                    for (int r = 0; r < rows.Count; r++)
+                    {
+                        if (!_experiment.TryGetValue(rows.EntryIds[r], out var exp))
+                        {
+                            OrderViolations++;
+                            continue;
+                        }
+                        Accept(f, r, rows.EntryIds[r], rows.IsDecoys[r], rows.Charges[r], rows.Peptides[r],
+                            rows.Scores[r], exp.Aggregate, rows.ApexRts[r],
+                            new FdrQValues(rows.RunPrecursorQvalues[r], rows.RunPeptideQvalues[r],
+                                exp.PrecursorQ, exp.PeptideQ, exp.Pep));
+                    }
+                }
+                // The diagnostics walk derives every row's values again, from the rows themselves;
+                // it must agree with the join, bit for bit, or the report describes other numbers.
+                for (int f = 0; f < _rowFolds.Count; f++)
+                {
+                    var rows = _rowFolds[f];
+                    for (int r = 0; r < rows.Count; r++)
+                    {
+                        RowFoldsChecked++;
+                        if (!_q.TryGetValue((f, r), out var joined) ||
+                            _ident[(f, r)].EntryId != rows.EntryIds[r] ||
+                            !_scores[(f, r)].Equals(rows.Scores[r]) ||
+                            !SameQValues(joined, rows.QAt(r)))
+                        {
+                            RowFoldMismatches++;
+                        }
+                    }
+                }
+            }
+
+            /// <summary>Rows of the diagnostics walk that disagree with the joined view.</summary>
+            public int RowFoldMismatches { get; private set; }
+
+            /// <summary>The q-values the diagnostics walk handed the fold for one row.</summary>
+            public FdrQValues FoldQAt(int fileIdx, int rowIdx) => _rowFolds[fileIdx].QAt(rowIdx);
+
+            private static bool SameQValues(FdrQValues a, FdrQValues b)
+            {
+                return a.RunPrecursorQvalue.Equals(b.RunPrecursorQvalue) &&
+                       a.RunPeptideQvalue.Equals(b.RunPeptideQvalue) &&
+                       a.ExperimentPrecursorQvalue.Equals(b.ExperimentPrecursorQvalue) &&
+                       a.ExperimentPeptideQvalue.Equals(b.ExperimentPeptideQvalue) &&
+                       a.Pep.Equals(b.Pep);
             }
 
             public double ScoreAt(int fileIdx, int rowIdx) => _scores[(fileIdx, rowIdx)];
@@ -1161,44 +1271,47 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(abortRes);
 
             // Streaming-from-row-source path (the change under test): identity streamed straight
-            // from the fixture (== parquet), features by fileName, no resident projection.
-            var sinkStr = RunStreamingArm(fixtureStr, featuresStr, percConfig);
+            // from the fixture (== parquet), features by fileName, no resident projection. It
+            // also runs the --model-diagnostics row walk, which with no sidecar to read re-scores
+            // every file, and must hand the fold exactly the per-row values the oracle has.
+            var sinkStr = RunStreamingArm(fixtureStr, featuresStr, percConfig, foldRows: true);
             AssertSinkMatchesOracle(sinkRes, sinkStr, fixtureStr, projSet);
+            Assert.AreEqual(projSet.TotalRows, sinkStr.RowFoldsChecked);
 
             // Third arm: the same streaming path, but pass 1's finished run-scope output is
-            // captured and handed back to pass 2 instead of pass 2 recomputing it. On this arm
-            // pass 2 takes BOTH run q-values off the sidecar rather than sorting the file again,
-            // so a divergence here - measured against the SAME resident oracle, not merely
-            // against the other streaming arm - is the read-back disagreeing with the sort it
-            // replaces. Nothing else in the pass changes, which is why one fixture and one
-            // oracle cover all three arms.
+            // captured and handed back to the --model-diagnostics row walk instead of the walk
+            // recomputing it. On this arm the walk takes BOTH run q-values off the sidecar rather
+            // than sorting the file again, so a divergence here - measured against the SAME
+            // resident oracle, not merely against the other streaming arm - is the read-back
+            // disagreeing with the sort it replaces.
             var fixtureSide = BuildMultiObservationEquivFixture(nFeat, out var featuresSide);
             var sidecar = new SidecarStandIn();
-            var sinkSide = RunStreamingArm(fixtureSide, featuresSide, percConfig, sidecar);
+            var sinkSide = RunStreamingArm(fixtureSide, featuresSide, percConfig, sidecar, foldRows: true);
             // Without these the arm could pass vacuously: a pass 1 that flushed nothing, or a
-            // pass 2 that never asked, leaves pass 2 on the recompute path, which matches the
+            // walk that never asked, leaves the walk on the recompute path, which matches the
             // oracle too. Pass 1 asks for each file before writing it, so every read-back that
-            // succeeds is pass 2's.
+            // succeeds is the walk's.
             Assert.AreEqual(fixtureSide.Count, sidecar.Count);
             Assert.AreEqual(fixtureSide.Count, sidecar.ReadBacks);
             AssertSinkMatchesOracle(sinkRes, sinkSide, fixtureSide, projSet);
+            Assert.AreEqual(projSet.TotalRows, sinkSide.RowFoldsChecked);
 
-            // The read-back must also be what pass 2 EMITS. Served q-values replaced by sentinels
-            // no computation could produce must arrive at the sink unchanged; a pass 2 that read
-            // the sidecar but still emitted a recompute would match the oracle above and fail here.
+            // The read-back must also be what the walk FOLDS. Served q-values replaced by sentinels
+            // no computation could produce must arrive at the fold unchanged; a walk that read the
+            // sidecar but still folded a recompute would match the oracle above and fail here.
             const double markedPrecursorQ = 0.123456789;
             const double markedPeptideQ = 0.987654321;
             var fixtureMarked = BuildMultiObservationEquivFixture(nFeat, out var featuresMarked);
             var marked = new SidecarStandIn(records => records.ConvertAll(rec =>
                 (rec.EntryId, rec.Score, markedPrecursorQ, markedPeptideQ)));
-            var sinkMarked = RunStreamingArm(fixtureMarked, featuresMarked, percConfig, marked);
+            var sinkMarked = RunStreamingArm(fixtureMarked, featuresMarked, percConfig, marked, foldRows: true);
             Assert.AreEqual(fixtureMarked.Count, marked.ReadBacks);
             for (int f = 0; f < fixtureMarked.Count; f++)
             {
                 for (int r = 0; r < fixtureMarked[f].Value.Count; r++)
                 {
-                    Assert.AreEqual(markedPrecursorQ, sinkMarked.QAt(f, r).RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(markedPeptideQ, sinkMarked.QAt(f, r).RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(markedPrecursorQ, sinkMarked.FoldQAt(f, r).RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(markedPeptideQ, sinkMarked.FoldQAt(f, r).RunPeptideQvalue, 0.0);
                 }
             }
 
@@ -1219,14 +1332,15 @@ namespace pwiz.Osprey.Test
                     served.Insert(0, records[0]);
                 return served;
             });
-            var sinkLong = RunStreamingArm(fixtureLong, featuresLong, percConfig, oneTooMany);
+            var sinkLong = RunStreamingArm(fixtureLong, featuresLong, percConfig, oneTooMany, foldRows: true);
             Assert.AreEqual(fixtureLong.Count, oneTooMany.ReadBacks);
             AssertSinkMatchesOracle(sinkRes, sinkLong, fixtureLong, projSet);
+            Assert.AreEqual(projSet.TotalRows, sinkLong.RowFoldsChecked);
 
             // Fifth arm: file lanes. Files share precursors and tie exactly, so the competition,
-            // the clamp floors and first-seen tie-breaks all cross files; with histograms on, the
-            // contribution accumulator's order-free half is merged per file while its sums are
-            // replayed in row order. Production shape throughout: pass 1 writes the sidecar and
+            // the clamp floors and first-seen tie-breaks all cross files; each file's feature-report
+            // share is reduced on its lane and the shares added in file order. Production shape
+            // throughout: pass 1 writes the sidecar and
             // pass 2 reads it back.
             const int laneFiles = 6;
             var lanesConfig = new PercolatorConfig
@@ -1256,11 +1370,12 @@ namespace pwiz.Osprey.Test
             var fixtureLanes = BuildMultiObservationEquivFixture(nFeat, out var featuresLanes, laneFiles, true);
             var sidecarLanes = new SidecarStandIn();
             var sinkLanes = RunStreamingArm(fixtureLanes, featuresLanes, lanesConfig, sidecarLanes,
-                4, c => contributionsLanes = c);
+                4, c => contributionsLanes = c, true);
             Assert.AreEqual(laneFiles, sidecarLanes.Count);
             Assert.AreEqual(laneFiles, sidecarLanes.ReadBacks);
             AssertSinkMatchesOracle(sinkLanesRes, sinkOneLane, fixtureOneLane, projLanes);
             AssertSinkMatchesOracle(sinkLanesRes, sinkLanes, fixtureLanes, projLanes);
+            Assert.AreEqual(projLanes.TotalRows, sinkLanes.RowFoldsChecked);
             AssertContributionsEqual(contributionsRes, contributionsOneLane);
             AssertContributionsEqual(contributionsRes, contributionsLanes);
 
@@ -1280,6 +1395,35 @@ namespace pwiz.Osprey.Test
             AssertSinkMatchesOracle(sinkRes, sinkFlush, fixtureFlush, projSet);
             flushes.AssertOnePerFile(fixtureFlush, sinkFlush);
             AssertResumedFileMatchesFreshRun(fixtureFlush, featuresFlush, percConfig, model, sinkFlush, flushes);
+
+            AssertEntryDisagreementsRefused(nFeat, percConfig);
+        }
+
+        /// <summary>
+        /// The experiment scope is computed once per entry, so the two ways an entry can fail to
+        /// HAVE one value - which the per-row path's experiment accumulator refused - must still
+        /// be refused rather than resolved silently from whichever row came first:
+        /// <list type="bullet">
+        /// <item>a single-file run, where the experiment q IS the run q, with an entry whose
+        /// candidate rows in that file carry different run q-values (the fixture's three peaks per
+        /// precursor: only the best wins the run competition);</item>
+        /// <item>an entry_id that carries a different peptide in another run.</item>
+        /// </list>
+        /// </summary>
+        private static void AssertEntryDisagreementsRefused(int nFeat, PercolatorConfig config)
+        {
+            var singleFile = BuildMultiObservationEquivFixture(nFeat, out var singleFeatures, 1);
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                RunStreamingArm(singleFile, singleFeatures, config));
+
+            var renamed = BuildMultiObservationEquivFixture(nFeat, out var renamedFeatures, 2, true);
+            foreach (var entry in renamed[1].Value)
+            {
+                if (entry.EntryId == renamed[0].Value[0].EntryId)
+                    entry.ModifiedSequence += "X";
+            }
+            Assert.ThrowsException<InvalidOperationException>(() =>
+                RunStreamingArm(renamed, renamedFeatures, config));
         }
 
         /// <summary>
@@ -1368,16 +1512,18 @@ namespace pwiz.Osprey.Test
             flushes.AssertOnePerFile(fixtureStr, sinkStr);
             AssertTreeFeatureDistributions(residentContributions, streamedContributions, projSet.TotalRows);
 
-            // The same on file lanes, the sidecar written by pass 1 and read back by pass 2 as in
-            // production: the trees score each file on its lane, and the distributions' sums are
-            // replayed in row order while their histograms merge per file.
+            // The same on file lanes, the sidecar written by pass 1 and read back by the
+            // --model-diagnostics row walk as in production: the trees score each file on its
+            // lane and reduces its share of the distributions there, and the shares are added in
+            // file order.
             FeatureContributions laneContributions = null;
             var fixtureLanes = BuildNonMonotoneFirstPassFixture(out var featuresLanes);
             var sidecarLanes = new SidecarStandIn();
             var sinkLanes = RunStreamingArm(fixtureLanes, featuresLanes, treeConfig, sidecarLanes, 4,
-                c => laneContributions = c);
+                c => laneContributions = c, true);
             Assert.AreEqual(fixtureLanes.Count, sidecarLanes.ReadBacks);
             Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureLanes, sinkRes, sinkLanes));
+            Assert.AreEqual(projSet.TotalRows, sinkLanes.RowFoldsChecked);
             AssertTreeFeatureDistributions(residentContributions, laneContributions, projSet.TotalRows);
 
             // A resume adopts the persisted model instead of training. Scoring with the adopted
@@ -1448,6 +1594,7 @@ namespace pwiz.Osprey.Test
             var featuresLoaded = new List<string>();
             var flushes = new RunScopeFlushes();
             var sink = new CapturingSink();
+            FeatureContributions resumedContributions = null;
             Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture),
                 f =>
@@ -1455,11 +1602,35 @@ namespace pwiz.Osprey.Test
                     featuresLoaded.Add(f);
                     return features[f];
                 },
-                config, OspreyLog.None, "First-pass", sink,
+                config, OspreyLog.None, "First-pass", sink, c => resumedContributions = c,
                 tryStreamCompletedScores: (fileName, onScore) =>
                     fileName == resumedFile && freshFlushes.Replay(fileName, onScore),
-                pretrainedModel: model, flushFileRunScope: flushes.Flush));
+                pretrainedModel: model, flushFileRunScope: flushes.Flush,
+                tryLoadFeatureSums: freshFlushes.FeatureSumsOf));
             AssertSinksIdentical(fixture, freshSink, sink);
+            // The feature report covers the resumed file too, from its sidecar's share: the same
+            // report as scoring every file. It once covered only the files scored in the process.
+            FeatureContributions scoredContributions = null;
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f],
+                config, OspreyLog.None, "First-pass", new CapturingSink(), c => scoredContributions = c,
+                pretrainedModel: model));
+            AssertContributionsEqual(scoredContributions, resumedContributions);
+            // A resumed file with no share leaves no honest report rather than a partial one.
+            bool captured = false;
+            FeatureContributions withoutShare = null;
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f],
+                config, OspreyLog.None, "First-pass", new CapturingSink(), c =>
+                {
+                    captured = true;
+                    withoutShare = c;
+                },
+                tryStreamCompletedScores: (fileName, onScore) =>
+                    fileName == resumedFile && freshFlushes.Replay(fileName, onScore),
+                pretrainedModel: model));
+            Assert.IsTrue(captured, "the feature report is always handed to the caller");
+            Assert.IsNull(withoutShare, "a resumed file without a share must not yield a partial feature report");
             Assert.IsFalse(featuresLoaded.Contains(resumedFile), "a resumed file's features are not loaded");
             CollectionAssert.AreEqual(fixture.Skip(1).Select(kv => kv.Key).ToList(), flushes.FileNames,
                 "only the files actually scored are flushed");
@@ -1528,7 +1699,7 @@ namespace pwiz.Osprey.Test
 
             public void Flush(string fileName, int fileIndex, int rowCount, uint[] entryIds,
                 double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
-                double[] apexRts)
+                double[] apexRts, FeatureSums featureSums)
             {
                 _flushes.Add(new Flushed
                 {
@@ -1538,8 +1709,16 @@ namespace pwiz.Osprey.Test
                     Scores = scores.Take(rowCount).ToArray(),
                     RunPrecursorQvalues = runPrecursorQvalues.Take(rowCount).ToArray(),
                     RunPeptideQvalues = runPeptideQvalues.Take(rowCount).ToArray(),
-                    ApexRts = apexRts.Take(rowCount).ToArray()
+                    ApexRts = apexRts.Take(rowCount).ToArray(),
+                    FeatureSums = featureSums
                 });
+            }
+
+            /// <summary>The flushed file's feature-report share, as <c>tryLoadFeatureSums</c> would
+            /// read it off that file's sidecar; null when the file was never flushed.</summary>
+            public FeatureSums FeatureSumsOf(string fileName)
+            {
+                return _flushes.Find(fl => fl.FileName == fileName)?.FeatureSums;
             }
 
             /// <summary>Feed one flushed file back as <c>tryStreamCompletedScores</c> would read
@@ -1590,6 +1769,7 @@ namespace pwiz.Osprey.Test
                 public double[] RunPrecursorQvalues;
                 public double[] RunPeptideQvalues;
                 public double[] ApexRts;
+                public FeatureSums FeatureSums;
             }
         }
 
@@ -1633,6 +1813,7 @@ namespace pwiz.Osprey.Test
             CapturingSink expected, CapturingSink actual)
         {
             Assert.AreEqual(expected.Count, actual.Count);
+            Assert.AreEqual(0, actual.RowFoldMismatches, "the diagnostics row walk must agree with the joined rows");
             int compared = 0;
             for (int f = 0; f < fixture.Count; f++)
             {
@@ -1673,9 +1854,9 @@ namespace pwiz.Osprey.Test
         private static CapturingSink RunStreamingArm(List<KeyValuePair<string, List<FdrEntry>>> fixture,
             Dictionary<string, List<double[]>> features, PercolatorConfig config,
             SidecarStandIn sidecar = null, int fileLanes = 1,
-            Action<FeatureContributions> captureContributions = null)
+            Action<FeatureContributions> captureContributions = null, bool foldRows = false)
         {
-            var sink = new CapturingSink();
+            var sink = new CapturingSink(foldRows);
             Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f], config, OspreyLog.None,
                 "First-pass", sink, captureContributions, null, sidecar?.Read, null, sidecar?.Write,
@@ -1685,7 +1866,8 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Exact equality of two feature-contribution reports: the per-feature values derived from
-        /// the floating-point target/decoy sums, and the histogram counts.
+        /// the floating-point target/decoy sums, and the histogram counts. Bit for bit, so the NaN
+        /// a tree ensemble reports for every weight-based value compares equal to itself.
         /// </summary>
         private static void AssertContributionsEqual(FeatureContributions expected, FeatureContributions actual)
         {
@@ -1694,16 +1876,22 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(expected.Features.Count, actual.Features.Count);
             for (int i = 0; i < expected.Features.Count; i++)
             {
-                Assert.AreEqual(expected.Features[i].Coefficient, actual.Features[i].Coefficient, 0.0);
-                Assert.AreEqual(expected.Features[i].TargetDecoyMeanGap, actual.Features[i].TargetDecoyMeanGap, 0.0);
-                Assert.AreEqual(expected.Features[i].Weighted, actual.Features[i].Weighted, 0.0);
-                Assert.AreEqual(expected.Features[i].Percent, actual.Features[i].Percent, 0.0);
+                AssertSameBits(expected.Features[i].Coefficient, actual.Features[i].Coefficient);
+                AssertSameBits(expected.Features[i].TargetDecoyMeanGap, actual.Features[i].TargetDecoyMeanGap);
+                AssertSameBits(expected.Features[i].Weighted, actual.Features[i].Weighted);
+                AssertSameBits(expected.Features[i].Percent, actual.Features[i].Percent);
             }
-            Assert.AreEqual(expected.Composite, actual.Composite, 0.0);
+            AssertSameBits(expected.Composite, actual.Composite);
             // Collected, or the merge they test was never exercised.
             Assert.IsNotNull(expected.TargetHistograms);
             AssertHistogramsEqual(expected.TargetHistograms, actual.TargetHistograms);
             AssertHistogramsEqual(expected.DecoyHistograms, actual.DecoyHistograms);
+        }
+
+        private static void AssertSameBits(double expected, double actual)
+        {
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual),
+                string.Format(CultureInfo.InvariantCulture, "expected {0:R}, actual {1:R}", expected, actual));
         }
 
         private static void AssertHistogramsEqual(IReadOnlyList<int[]> expected, IReadOnlyList<int[]> actual)
@@ -1753,7 +1941,7 @@ namespace pwiz.Osprey.Test
             public int ReadBacks => Volatile.Read(ref _readBacks);
 
             public FileRunScopeSink Write =>
-                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts, featureSums) =>
                 {
                     // Copied out, not retained: the sink contract says these arrays are the
                     // pass's own scratch and are reused after this returns.
@@ -1937,8 +2125,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// One file's apex RTs indexed by <c>ParquetIndex</c>, off a resident
         /// <see cref="FdrEntry"/> fixture - the unit-test stand-in for
-        /// <c>ParquetScoreCache.ReadApexRtsByParquetIndex</c>, which reads the same thing out of
-        /// the file's <c>.scores.parquet</c>. Supplied to the RESIDENT score path, whose
+        /// the production reader that read the same thing out of the file's
+        /// <c>.scores.parquet</c> until the resident first pass left production. Supplied to
+        /// the RESIDENT score path, whose
         /// projection rows carry no retention time (issue #4355) while the per-file FDR sidecar
         /// they feed has a column for one (format v7, issue #4522).
         /// </summary>
@@ -2002,28 +2191,28 @@ namespace pwiz.Osprey.Test
             string report;
             string defaultReport;
             PercolatorResults results;
-            var savedOut = OspreyOutput.Out;
+            var savedOut = CommandOutput.Out;
             bool savedVerbose = OspreyOutput.Verbose;
             try
             {
                 // Default console (verbose off): the model sanity-check table must NOT
                 // appear -- it is gated behind --verbose (issue #4364).
                 var defaultCapture = new StringWriter();
-                OspreyOutput.Out = defaultCapture;
+                CommandOutput.Out = defaultCapture;
                 OspreyOutput.Verbose = false;
                 PercolatorTrainer.RunPercolator(entries, config);
                 defaultReport = defaultCapture.ToString();
 
                 // Verbose console: the table is emitted.
                 var capture = new StringWriter();
-                OspreyOutput.Out = capture;
+                CommandOutput.Out = capture;
                 OspreyOutput.Verbose = true;
                 results = PercolatorTrainer.RunPercolator(entries, config);
                 report = capture.ToString();
             }
             finally
             {
-                OspreyOutput.Out = savedOut;
+                CommandOutput.Out = savedOut;
                 OspreyOutput.Verbose = savedVerbose;
             }
 

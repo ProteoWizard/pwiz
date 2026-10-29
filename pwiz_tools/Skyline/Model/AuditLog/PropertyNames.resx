@@ -1847,4 +1847,43 @@
   <data name="ImputationSettings_AlignmentTarget" xml:space="preserve">
     <value>Alignment Target</value>
   </data>
+  <data name="GlobalQValueFilter_Level" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="GlobalQValueFilter_Cutoff" xml:space="preserve">
+    <value>Cutoff</value>
+  </data>
+  <data name="ImportFastaSettings_QValueFilter" xml:space="preserve">
+    <value>Global cutoff</value>
+  </data>
+  <data name="ViewLibrarySettings_QValueFilter" xml:space="preserve">
+    <value>Global cutoff</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_OspreySearchSettings" xml:space="preserve">
+    <value>Osprey search settings</value>
+  </data>
+  <data name="OspreySearchSettings_Resolution" xml:space="preserve">
+    <value>MS/MS resolution</value>
+  </data>
+  <data name="OspreySearchSettings_FragmentTolerance" xml:space="preserve">
+    <value>Fragment tolerance</value>
+  </data>
+  <data name="OspreySearchSettings_FragmentUnit" xml:space="preserve">
+    <value>Fragment tolerance unit</value>
+  </data>
+  <data name="OspreySearchSettings_RunFdr" xml:space="preserve">
+    <value>Run FDR</value>
+  </data>
+  <data name="OspreySearchSettings_ExperimentFdr" xml:space="preserve">
+    <value>Experiment FDR</value>
+  </data>
+  <data name="OspreySearchSettings_ProteinFdr" xml:space="preserve">
+    <value>Protein FDR</value>
+  </data>
+  <data name="OspreySearchSettings_Threads" xml:space="preserve">
+    <value>Threads</value>
+  </data>
+  <data name="OspreySearchSettings_NonDefaultAdditionalSettings" xml:space="preserve">
+    <value>Osprey non-default settings</value>
+  </data>
 </root>

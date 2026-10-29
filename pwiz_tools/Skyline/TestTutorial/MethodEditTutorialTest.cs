@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
@@ -596,7 +597,7 @@ namespace pwiz.SkylineTestTutorial
                     {
                         var completeRect = statementCompletionForm.Bounds;
                         var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow);
-                        bmp = bmp.CleanupBorder(skylineRect, ScreenshotProcessingExtensions.CornerForm, completeRect);
+                        bmp = bmp.CleanupBorder(skylineRect, ScreenshotBorder.CornerForm, completeRect);
 
                         int top = completeRect.Top - aboveAutoComplete;
                         int bottom = Math.Max(skylineRect.Bottom, completeRect.Bottom);

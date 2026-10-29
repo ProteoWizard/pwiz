@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.Reconciliation;
@@ -30,77 +31,35 @@ using pwiz.Osprey.FDR.Reconciliation;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// What one file's planning produced, handed to the caller the moment that file is done
-    /// so its <c>.reconciliation.json</c> can be written and its entries released.
+    /// The cross-run half of Stage 6 planning, run by <see cref="FirstPassFdrTask"/>: one pass
+    /// over every run's survivors, folding each into the cross-run reductions, and then the
+    /// consensus retention times built from them. Mirrors the Stage 6 entry block in
+    /// osprey/src/pipeline.rs ~3208-3273 up to the consensus.
     ///
-    /// <para>A named object rather than six positional parameters: the two calibrations, the
-    /// actions and the gap-fill list are easy to transpose, and a transposition here would
-    /// write a plausible-looking envelope describing the wrong file.</para>
-    /// </summary>
-    internal sealed class Stage6FilePlan
-    {
-        public string FileName;
-        public IReadOnlyList<FdrEntry> Entries;
-        /// <summary>This file's non-Keep actions by entry index. EMPTY means planning ran and
-        /// chose Keep for every entry; NULL means planning did not run at all (empty consensus,
-        /// single-file, or a diagnostic dump about to exit). The distinction matters to a
-        /// consumer writing an envelope: an empty list is a planned result, a null is the
-        /// absence of one.</summary>
-        public IReadOnlyList<KeyValuePair<int, ReconcileAction>> Actions;
-        public IReadOnlyList<GapFillTarget> GapFill;
-        public RTCalibration RefinedCalibration;
-        /// <summary>The join-wide first-pass passing base_id set, complete before the first
-        /// file is planned. Every file's envelope records the same set, which is what lets an
-        /// HPC worker holding one file compact to the join's set rather than its own.</summary>
-        public HashSet<uint> GlobalBaseIds;
-    }
-
-    /// <summary>Receives each file's plan as it is produced. See <see cref="Stage6FilePlan"/>.</summary>
-    internal delegate void Stage6FilePlanned(Stage6FilePlan plan);
-
-    /// <summary>
-    /// Stage 6 planning subsystem extracted from <see cref="FirstPassFdrTask"/>.
-    /// Runs the four cross-file planning phases that produce the rescore plan
-    /// <see cref="PerFileRescoreTask"/> executes: multi-charge consensus per
-    /// file, cross-run consensus RTs, per-file calibration refit, and
-    /// reconciliation planning. Mirrors the Stage 6 entry block in
-    /// osprey/src/pipeline.rs ~3208-3273.
+    /// <para><b>The per-run half is not here.</b> Refitting a run's calibration, planning its
+    /// reconciliation actions and finding its gap-fill targets read only that run plus the
+    /// <see cref="Stage6Consensus"/> this produces, so they run in
+    /// <see cref="PerFileRescoreTask"/>, one run at a time, on the node that rescores the run
+    /// (<see cref="RunReconciliationPlanner"/>). They used to be a second pass here, which on a
+    /// 446-run cohort kept 42 minutes of per-run work in the one join every HPC run waits
+    /// for.</para>
     ///
-    /// <para><b>Two passes over the files, never all of them at once.</b> The phases were
-    /// written against one buffer holding every file's survivors, which at 446 files is 289 M
-    /// entries and ~100 GB - the peak that killed that run (issue #4526). What they actually
-    /// need across files is far smaller: the qualifying peptide, base-id and precursor sets,
-    /// and one detection per (peptide, run). On a 257-file cohort that is ~96 K peptides and
-    /// ~24 M detections, three orders of magnitude below the survivor count. So pass A folds
-    /// each file into those reductions and drops it, the barrier turns them into the consensus,
-    /// and pass B replays each file to refit, plan, gap-fill and hand the result straight to
-    /// <see cref="Stage6FilePlanned"/> - which writes the envelope and lets the entries go.
-    /// Nothing here is O(files x entries).</para>
-    ///
-    /// Standalone collaborator (not part of the scoring-task family):
-    /// takes the pipeline context for logging, and routes every diagnostic dump
-    /// through the injected <c>_ctx.Diagnostics</c> sink (the *_ONLY abort uses
-    /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-6 dump
-    /// call order bisection relies on. Pure planning -- writing the
-    /// .reconciliation.json envelopes and publishing the typed byproduct slots
-    /// stays in <see cref="FirstPassFdrTask"/>.
+    /// <para>One run resident at a time. What the consensus needs across runs is the qualifying
+    /// peptide, base-id and precursor sets and one detection per (peptide, run) - on a 257-run
+    /// cohort ~96 K peptides and ~24 M detections, three orders of magnitude below the survivor
+    /// count. Nothing here is O(runs x entries).</para>
     /// </summary>
     internal sealed class Stage6Planner
     {
-        /// <summary>
-        /// The four cross-file planning byproducts Stage 6 produces. Consumed by
-        /// <see cref="FirstPassFdrTask"/> to publish the typed byproduct slots
-        /// <see cref="PerFileRescoreTask"/> reads. <see cref="ReconciliationActions"/> is null
-        /// when reconciliation was skipped (single-file / empty consensus).
-        /// </summary>
-        internal sealed class Stage6Plan
+        /// <summary>What the pass produces: the consensus every run plans from, and the
+        /// join-wide set of base_ids that survived first-pass compaction.</summary>
+        internal sealed class Result
         {
-            public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets;
-            public IReadOnlyList<PeptideConsensusRT> Consensus;
-            // Concrete Dictionary (not IReadOnlyDictionary) to match the
-            // parameter the caller forwards it to.
-            public Dictionary<string, RTCalibration> RefinedCalibrations;
-            public IReadOnlyDictionary<(string File, int Index), ReconcileAction> ReconciliationActions;
+            public Stage6Consensus Consensus;
+
+            /// <summary>The distinct base_ids of every run's survivors. Every reconciliation
+            /// action targets a survivor, so this is the whole set the rescore retains.</summary>
+            public HashSet<uint> GlobalBaseIds;
         }
 
         private readonly PipelineContext _ctx;
@@ -111,26 +70,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Run the four Stage 6 planning phases and return the plan, loading each file's
-        /// survivors twice rather than holding all of them once. Phase order matches Rust
-        /// pipeline.rs:3217 -- multi-charge consensus first (independent), then cross-run
-        /// consensus RTs, which feed the calibration refit, which feeds reconciliation
-        /// planning.
+        /// Fold every run into the cross-run reductions, then build the consensus. Phase order
+        /// matches Rust pipeline.rs:3217 - multi-charge consensus first (independent), then
+        /// cross-run consensus RTs, which feed each run's calibration refit and planning.
         ///
-        /// <para><paramref name="loadFileEntries"/> is called twice per file - once in each
-        /// pass - and its result may be released as soon as this returns.</para>
+        /// <para><paramref name="loadFileEntries"/> is called once per run, and its result may be
+        /// released as soon as that run is folded.</para>
         /// </summary>
-        internal Stage6Plan Plan(
+        internal Result Plan(
             IReadOnlyList<string> fileNames,
             Func<string, IReadOnlyList<FdrEntry>> loadFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            IReadOnlyDictionary<(string ModifiedSequence, byte Charge),
-                (uint TargetEntryId, uint DecoyEntryId)> libLookup,
-            IReadOnlyDictionary<uint, double> libPrecursorMz,
-            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            OspreyConfig config,
-            Stage6FilePlanned onFilePlanned)
+            OspreyConfig config)
         {
             if (fileNames == null)
                 throw new ArgumentNullException(nameof(fileNames));
@@ -139,18 +91,38 @@ namespace pwiz.Osprey.Tasks
 
             var scan = ScanFiles(fileNames, loadFileEntries, perFileParquetPaths, config);
             var consensus = BuildConsensus(scan, perFileCalibrations, fileNames.Count);
-            return PlanFiles(fileNames, loadFileEntries, scan, consensus, perFileCalibrations,
-                perFileParquetPaths, libLookup, libPrecursorMz, perFileIsolationMz, config,
-                onFilePlanned);
+            if (consensus.Count == 0)
+            {
+                if (fileNames.Count == 1)
+                {
+                    // A one-file search says nothing here: it has no cross-run reconciliation to
+                    // skip. A --task run over one file does: that task is named for the
+                    // reconciliation.
+                    if (!ScoringTaskShared.IsSingleFileSearch(config))
+                        _ctx.LogInfo(OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation__skipped__because_there_is_only_one_file_);
+                }
+                else
+                {
+                    _ctx.LogInfo(OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation__skipped__because_no_peptide_was_detected_in_enough_files_to_);
+                }
+            }
+            return new Result
+            {
+                Consensus = new Stage6Consensus
+                {
+                    Consensus = consensus,
+                    PassingBaseIds = scan.PassingBaseIds,
+                    PassingPrecursors = scan.PassingPrecursors,
+                },
+                GlobalBaseIds = scan.GlobalBaseIds,
+            };
         }
 
-        /// <summary>What pass A accumulates: phase 1's per-file rescore targets plus the
-        /// cross-file reductions the barrier and pass B need. Every member is O(distinct
-        /// peptides), O(distinct precursors) or O(peptides x runs) - none is O(files x
-        /// entries), which is the whole point of the split.</summary>
+        /// <summary>What the pass accumulates: the cross-run reductions the consensus and each
+        /// run's plan need. Every member is O(distinct peptides), O(distinct precursors) or
+        /// O(peptides x runs) - none is O(runs x entries).</summary>
         private sealed class ScanResult
         {
-            public Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets;
             public ConsensusRts.Accumulator ConsensusAccumulator;
             public HashSet<(uint, byte)> PassingBaseIds;
             public HashSet<(string ModifiedSequence, byte Charge)> PassingPrecursors;
@@ -159,9 +131,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Pass A: fold every file into the cross-file reductions, and compute phase 1's
-        /// per-file multi-charge rescore targets while the file is loaded. Each file is
-        /// released before the next is read.
+        /// Fold every run into the cross-run reductions, and count its multi-charge rescore
+        /// targets while it is loaded. Each run is released before the next is read.
         /// </summary>
         private ScanResult ScanFiles(
             IReadOnlyList<string> fileNames,
@@ -171,8 +142,6 @@ namespace pwiz.Osprey.Tasks
         {
             var scan = new ScanResult
             {
-                PerFileConsensusTargets =
-                    new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>(),
                 // Cross-file consensus is only meaningful with > 1 file -- mirrors Rust
                 // pipeline.rs:4146 where reconciliation_enabled requires per_file_entries.len()
                 // > 1; single-file runs skip consensus, refit and reconciliation entirely,
@@ -194,12 +163,12 @@ namespace pwiz.Osprey.Tasks
             // parquet does not hide the others -- and still before any planning happens.
             var cwtInvalid = new List<string>();
 
-            _ctx.LogBlockReads(@"Planning before pass 1");
+            _ctx.LogBlockReads(@"Planning before the consensus pass");
             using (var scanProgress = new ProgressReporter(
                        ScoringTaskShared.IsSingleFileSearch(config)
-                           ? OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_
-                           : CountText.Format(fileNames.Count, OspreyTasksResources.Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file,
-                               OspreyTasksResources.Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files),
+                           ? OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus_planning
+                           : CountText.Format(fileNames.Count, OspreyTasksResources.Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file,
+                               OspreyTasksResources.Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files),
                        fileNames.Count))
             {
                 int done = 0;
@@ -219,9 +188,9 @@ namespace pwiz.Osprey.Tasks
                 {
                     string fileName = fileNames[i];
                     var entries = file.Entries;
-                    var targets = file.Targets;
-                    scan.PerFileConsensusTargets[fileName] = targets;
-                    scan.TotalMulticharge += targets.Count;
+                    // Counted, not kept: each run's rescore derives its own multi-charge targets
+                    // from its own survivors, so the cross-run map that stood here had no reader.
+                    scan.TotalMulticharge += file.Targets.Count;
                     scan.ConsensusAccumulator?.AddFile(fileName, entries);
                     ReconciliationPlanner.CollectPassingBaseIds(
                         entries, config.Reconciliation.ConsensusFdr, scan.PassingBaseIds);
@@ -246,9 +215,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The barrier: phase 2, cross-run consensus RTs (target peptides + paired decoys,
+        /// The barrier: cross-run consensus RTs (target peptides + paired decoys,
         /// sigmoid(score)-weighted median, hard run_precursor_qvalue gate) computed from what
-        /// pass A accumulated. No file is read here.
+        /// the pass accumulated. No file is read here.
         /// </summary>
         private IReadOnlyList<PeptideConsensusRT> BuildConsensus(
             ScanResult scan,
@@ -289,19 +258,10 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Fires UNCONDITIONALLY when OSPREY_DUMP_CONSENSUS=1, so an empty consensus
-            // still produces a header-only cs_stage6_consensus.tsv - the same rule the
-            // reconciliation dump below follows.
-            //
-            // This was gated on consensus.Count > 0 to match Rust's dump_stage6_consensus,
-            // which elides the file when there is nothing to write, because the cross-impl
-            // Test-Regression then saw an asymmetric-absence FAIL. That fixed the comparator's
-            // complaint by deleting the FILE, which is backwards: a reader of the directory
-            // then cannot tell "empty consensus" from "the dump crashed before writing", and
-            // the comparator was subsequently taught to treat symmetric absence as agreement,
-            // entrenching it. No live cross-impl gate compares this dump any more
-            // (Compare-EndToEnd-Crossimpl.ps1 does not), and its one consumer, Test-Snapshot,
-            // is same-impl. See "Never conditionally write an output artifact" in
-            // ai/docs/osprey-development-guide.md.
+            // still produces a header-only cs_stage6_consensus.tsv. Its one consumer,
+            // Test-Snapshot, is same-impl, and a reader of the directory must be able to tell
+            // "empty consensus" from "the dump crashed before writing". See "Never
+            // conditionally write an output artifact" in ai/docs/osprey-development-guide.md.
             if (_ctx.Diagnostics?.DumpConsensus ?? false)
             {
                 _ctx.Diagnostics?.WriteStage6ConsensusDump(consensus);
@@ -309,168 +269,6 @@ namespace pwiz.Osprey.Tasks
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
             }
             return consensus;
-        }
-
-        /// <summary>
-        /// Pass B: phase 3 (per-file calibration refit on consensus peptides), phase 4
-        /// (reconciliation planning), and gap-fill identification - all per file, all handed to
-        /// <paramref name="onFilePlanned"/> before the next file is read.
-        /// </summary>
-        private Stage6Plan PlanFiles(
-            IReadOnlyList<string> fileNames,
-            Func<string, IReadOnlyList<FdrEntry>> loadFileEntries,
-            ScanResult scan,
-            IReadOnlyList<PeptideConsensusRT> consensus,
-            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            IReadOnlyDictionary<(string ModifiedSequence, byte Charge),
-                (uint TargetEntryId, uint DecoyEntryId)> libLookup,
-            IReadOnlyDictionary<uint, double> libPrecursorMz,
-            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            OspreyConfig config,
-            Stage6FilePlanned onFilePlanned)
-        {
-            // A refit-only bisection dump exits before planning, exactly as it did when refit
-            // and planning were separate passes over the whole cohort. Deciding it up front
-            // keeps the early exit from doing a cohort's worth of planning it will discard.
-            //
-            // Gated on the DUMP flag as well as the ONLY flag, because the two env vars are
-            // independent and only the dump block calls ExitAfterDump. Testing the ONLY flag
-            // alone would skip planning and then NOT exit, so the run would write no
-            // reconciliation envelope at all and still report success.
-            bool refitOnlyExit =
-                ((_ctx.Diagnostics?.DumpLoessFit ?? false) && (_ctx.Diagnostics?.LoessFitOnly ?? false)) ||
-                ((_ctx.Diagnostics?.DumpRefit ?? false) && (_ctx.Diagnostics?.RefitOnly ?? false));
-            var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            // Empty consensus (single-file / no cross-file evidence) is a legitimate
-            // skip, not an error -- only a corrupt input aborts (in pass A).
-            bool planning = consensus.Count > 0 && !refitOnlyExit;
-            var actions = planning ? new Dictionary<(string, int), ReconcileAction>() : null;
-            // The planner and the gap-fill identifier are handed refinedCalibrations, but the file
-            // walk below passes each file's own refit to them explicitly: files are planned on
-            // file lanes while the map is filled in file order, and a lookup would race those
-            // writes. Each reads only the file it is planning, so nothing else is needed.
-            var planner = planning
-                ? new ReconciliationPlanner.FilePlanner(
-                    consensus, scan.PassingBaseIds, refinedCalibrations, perFileCalibrations)
-                : null;
-            var gapFiller = planning
-                ? new GapFillTargetIdentifier.FileIdentifier(
-                    consensus, scan.PassingPrecursors, refinedCalibrations, perFileCalibrations,
-                    libLookup, libPrecursorMz, perFileIsolationMz)
-                : null;
-
-            _ctx.LogBlockReads(@"Planning before pass 2");
-            using (var planProgress = new ProgressReporter(
-                       ScoringTaskShared.IsSingleFileSearch(config)
-                           ? OspreyTasksResources.Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_
-                           : CountText.Format(fileNames.Count, OspreyTasksResources.Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file,
-                               OspreyTasksResources.Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files),
-                       fileNames.Count))
-            {
-                int done = 0;
-                // Planning a file reads only that file - its survivors, its CWT candidates, its
-                // own refit, passed in explicitly rather than read from refinedCalibrations - so
-                // files are planned on the file lanes. Recording the refit and the actions, and
-                // the caller's per-file write, happen on this thread in file order.
-                Stage6FilePlan PlanOneFile(int i)
-                {
-                    string fileName = fileNames[i];
-                    var entries = loadFileEntries(fileName);
-                    var refined = CalibrationRefit.Refit(consensus, entries, config.Reconciliation.ConsensusFdr);
-
-                    List<KeyValuePair<int, ReconcileAction>> fileActions = null;
-                    IReadOnlyList<GapFillTarget> fileGapFill = Array.Empty<GapFillTarget>();
-                    // Both exist exactly when planning.
-                    if (planner != null && gapFiller != null)
-                    {
-                        // Load this file's CWT candidates on demand and release them when it is
-                        // planned - a lane holds one file's at a time.
-                        fileActions = new List<KeyValuePair<int, ReconcileAction>>();
-                        planner.PlanFile(fileName, refined, entries,
-                            CwtCandidateLoader.LoadOneFile(fileName, perFileParquetPaths), fileActions);
-                        fileGapFill = gapFiller.IdentifyFile(fileName, refined, entries);
-                    }
-                    return new Stage6FilePlan
-                    {
-                        FileName = fileName,
-                        Entries = entries,
-                        Actions = fileActions,
-                        GapFill = fileGapFill,
-                        RefinedCalibration = refined,
-                        GlobalBaseIds = scan.GlobalBaseIds,
-                    };
-                }
-
-                void RecordFilePlan(int i, Stage6FilePlan filePlan)
-                {
-                    if (filePlan.RefinedCalibration != null)
-                        refinedCalibrations[filePlan.FileName] = filePlan.RefinedCalibration;
-                    // Exists exactly when planning, which is also when the file plan has actions.
-                    if (actions != null && filePlan.Actions != null)
-                    {
-                        foreach (var action in filePlan.Actions)
-                            actions[(filePlan.FileName, action.Key)] = action.Value;
-                    }
-
-                    // Nothing is handed on when a diagnostic dump is about to end the run: the
-                    // caller writes a per-file envelope from this, and an envelope recording
-                    // "no actions" because planning was skipped would be indistinguishable
-                    // from one that was planned and found none.
-                    if (!refitOnlyExit)
-                        onFilePlanned?.Invoke(filePlan);
-                    planProgress.Report(++done);
-                }
-
-                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FirstPassFdrLanes, PlanOneFile, RecordFilePlan);
-            }
-
-            if (fileNames.Count > 1)
-            {
-                _ctx.LogInfo(string.Format(
-                    OspreyTasksResources.Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_,
-                    refinedCalibrations.Count, fileNames.Count));
-            }
-
-            if (_ctx.Diagnostics?.DumpLoessFit ?? false)
-            {
-                _ctx.Diagnostics?.WriteStage6LoessFitDump(refinedCalibrations);
-                if (_ctx.Diagnostics?.LoessFitOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
-            }
-
-            if (_ctx.Diagnostics?.DumpRefit ?? false)
-            {
-                _ctx.Diagnostics?.WriteStage6RefitDump(refinedCalibrations);
-                if (_ctx.Diagnostics?.RefitOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_REFIT_ONLY");
-            }
-
-            if (planning)
-            {
-                _ctx.LogInfo(string.Format(
-                    OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation___0__peak_re_picks_and_boundary_imputations_planned_across__1__,
-                    actions.Count, fileNames.Count));
-            }
-            else if (fileNames.Count == 1)
-            {
-                // A one-file search says nothing here: it has no cross-run reconciliation to skip.
-                // A --task run over one file does: that task is named for the reconciliation.
-                if (!ScoringTaskShared.IsSingleFileSearch(config))
-                    _ctx.LogInfo(OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation__skipped__because_there_is_only_one_file_);
-            }
-            else
-            {
-                _ctx.LogInfo(OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation__skipped__because_no_peptide_was_detected_in_enough_files_to_);
-            }
-
-            return new Stage6Plan
-            {
-                PerFileConsensusTargets = scan.PerFileConsensusTargets,
-                Consensus = consensus,
-                RefinedCalibrations = refinedCalibrations,
-                ReconciliationActions = actions,
-            };
         }
     }
 }

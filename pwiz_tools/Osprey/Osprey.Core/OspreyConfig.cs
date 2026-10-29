@@ -45,9 +45,6 @@ namespace pwiz.Osprey.Core
         /// <summary>Primary output: blib for Skyline.</summary>
         public string OutputBlib { get; set; }
 
-        /// <summary>Optional: TSV report output path.</summary>
-        public string OutputReport { get; set; }
-
         /// <summary>
         /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
         /// annotations, and exit without searching. No input files are needed.
@@ -114,8 +111,11 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string CacheDir { get; set; }
 
-        /// <summary>Resolution mode for binning.</summary>
-        public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.Auto;
+        /// <summary>
+        /// Resolution mode for binning. HRAM unless the command line says unit: there is no
+        /// detection from the data yet, so the default is the instruments most searches use.
+        /// </summary>
+        public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.HRAM;
 
         /// <summary>Fragment tolerance for LibCosine scoring.</summary>
         public FragmentToleranceConfig FragmentTolerance { get; set; } = FragmentToleranceConfig.Default();
@@ -234,8 +234,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 
-        /// <summary>Write PIN files for external tools.</summary>
-        public bool WritePin { get; set; }
 
         /// <summary>
         /// -d / --diagnostics: master switch that turns on the cross-impl
@@ -275,12 +273,25 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
+        /// The command line this run was given, as one line of text, recorded in the library it
+        /// writes (<c>LibMetadata</c>, key <c>osprey.command</c>) so the library carries how it
+        /// was made. Null (a config built in code) records nothing. Runtime-only.
+        /// </summary>
+        public string CommandLine { get; set; }
+
+        /// <summary>
         /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
         /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
         /// tools and regression.ps1 read. Off by default so the human log stays clean.
         /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
+
+        /// <summary>
+        /// --task-files: print the files the selected task reads and writes for this command line,
+        /// as the task declares them, and exit without running it. Runtime-only.
+        /// </summary>
+        public bool PrintTaskFiles { get; set; }
 
         /// <summary>
         /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
@@ -297,6 +308,14 @@ namespace pwiz.Osprey.Core
         /// Off by default, and in no identity hash: off, it is not declared at all.
         /// </summary>
         public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
+
+        /// <summary>
+        /// The one-command library build (<c>--fasta</c>): the library is predicted before the
+        /// search and <see cref="LibrarySource"/> is set to it when it has been. Off by default,
+        /// and in no identity hash of the search: the search keys on the library file it reads,
+        /// whichever way the file came to exist.
+        /// </summary>
+        public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
@@ -638,7 +657,6 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public enum ResolutionMode
     {
-        Auto,
         UnitResolution,
         HRAM
     }
@@ -656,7 +674,6 @@ namespace pwiz.Osprey.Core
             {
                 return new[]
                 {
-                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
                     OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
                     OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
                 };

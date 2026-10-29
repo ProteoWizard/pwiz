@@ -20,6 +20,7 @@ create(DslContext.projectId, BuildType({
     id = AbsoluteId("ProteoWizard_ProteoWizardAndSkylineDockerContainerNetWineX8664")
     name = "ProteoWizard and Skyline Docker container .NET (Wine x86_64)"
     description = "Builds the container from the latest binary snapshots"
+    paused = true
 
     artifactRules = """
         **/*.log => logs.tar.gz
@@ -46,7 +47,7 @@ create(DslContext.projectId, BuildType({
 
     vcs {
         root(AbsoluteId("ProteoWizard_GithubContainer"), "+:. => container")
-        root(AbsoluteId("ProteoWizard_PwizGithubMasterWithPRs"))
+        root(DslContext.settingsRoot)
 
         checkoutMode = CheckoutMode.ON_AGENT
         checkoutDir = "pwiz-container"
@@ -85,17 +86,17 @@ create(DslContext.projectId, BuildType({
             id = "RUNNER_334"
             scriptContent = """
                 TC=##teamcity
-
+                
                 # The three skipped method tests each shell out to a vendor method builder
                 # (BuildThermoMethod / BuildShimadzuMethod / BuildAgilentMethod), which drives a
                 # vendor method-authoring SDK. Those are not expected to work under Wine and
                 # nobody needs them to, so they are excluded rather than left failing - a
                 # permanently red test is indistinguishable from a new one.
-
+                
                 echo " ${'$'}{TC}[testSuiteStarted name='Skyline Test.dll']"
                 wine TestRunner test=Test.dll skip=CodeInspection,TestCommandLineExportThermoMethod language=en loop=1 runsmallmoleculeversions=1 teamcitytestdecoration=1
                 echo " ${'$'}{TC}[testSuiteFinished name='Skyline Test.dll']"
-
+                
                 echo " ${'$'}{TC}[testSuiteStarted name='Skyline TestData.dll']"
                 wine TestRunner test=TestData.dll skip=TestInstallFromZip,ConsoleMethodTest,TestExportMethodShimadzu language=en loop=1 runsmallmoleculeversions=1 teamcitytestdecoration=1
                 echo " ${'$'}{TC}[testSuiteFinished name='Skyline TestData.dll']"

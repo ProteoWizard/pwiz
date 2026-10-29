@@ -660,11 +660,7 @@ public sealed class MzmlWriter
         if (arr.DataProcessing is not null) w.WriteAttributeString("dataProcessingRef", XmlIdEncoding.Encode(arr.DataProcessing.Id));
 
         MzmlXml.WriteCvParam(w, new CVParam(CVID.MS_64_bit_integer));
-        MzmlXml.WriteCvParam(w, new CVParam(_encoderConfig.Compression switch
-        {
-            BinaryCompression.Zlib => CVID.MS_zlib_compression,
-            _ => CVID.MS_no_compression,
-        }));
+        MzmlXml.WriteCvParam(w, new CVParam(CompressionCvid(_encoderConfig.Compression)));
         WriteArrayParamsExcludingEncoding(w, arr);
 
         w.WriteStartElement("binary");
@@ -960,6 +956,15 @@ public sealed class MzmlWriter
 
         // Resolve per-array config using the Numpress/Compression/Precision overrides (keyed by array type).
         var cfg = ResolvePerArrayConfig(_encoderConfig, arr);
+        // Truncation and prediction are mzMLb-only: cpp IO.cpp resolves the prediction override
+        // inside its mzMLb branch, and the base64 encoder never applies either. Left set, the
+        // prediction cvParam would claim a transform the data did not get, and its name implies
+        // zlib, which is wrong for zstd output.
+        if (cfg.Prediction != BinaryPrediction.None)
+        {
+            cfg = cfg.Clone();
+            cfg.Prediction = BinaryPrediction.None;
+        }
         var encoder = new BinaryDataEncoder(cfg);
         string base64 = encoder.Encode(CollectionsMarshal.AsSpan(arr.Data), out _, out var actualNumpress);
 
@@ -1141,6 +1146,8 @@ public sealed class MzmlWriter
     private void WriteBinaryDataArrayMzMlb(XmlWriter w, BinaryDataArray arr)
     {
         var cfg = ResolvePerArrayConfig(_encoderConfig, arr);
+        if (cfg.Compression.IsValueWise())
+            throw new NotSupportedException($"{cfg.Compression} compression is not supported in mzMLb.");
         CVID typeCv = ArrayTypeCvid(arr);
         var data = CollectionsMarshal.AsSpan(arr.Data);
 
@@ -1305,10 +1312,28 @@ public sealed class MzmlWriter
         CVID.MS_64_bit_float or CVID.MS_32_bit_float => true,
         CVID.MS_64_bit_integer or CVID.MS_32_bit_integer => true,
         CVID.MS_zlib_compression or CVID.MS_no_compression => true,
+        CVID.MS_zstd_compression or CVID.MS_byte_shuffled_zstd_compression or CVID.MS_dictionary_encoded_zstd_compression => true,
+        CVID.MS_truncation__delta_prediction_and_zlib_compression => true,
+        CVID.MS_truncation__linear_prediction_and_zlib_compression => true,
         CVID.MS_MS_Numpress_linear_prediction_compression => true,
         CVID.MS_MS_Numpress_positive_integer_compression => true,
         CVID.MS_MS_Numpress_short_logged_float_compression => true,
+        CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression => true,
+        CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression => true,
+        CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression => true,
+        CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression => true,
+        CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression => true,
+        CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression => true,
         _ => false,
+    };
+
+    private static CVID CompressionCvid(BinaryCompression compression) => compression switch
+    {
+        BinaryCompression.Zlib => CVID.MS_zlib_compression,
+        BinaryCompression.Zstd => CVID.MS_zstd_compression,
+        BinaryCompression.ByteShuffleZstd => CVID.MS_byte_shuffled_zstd_compression,
+        BinaryCompression.DictZstd => CVID.MS_dictionary_encoded_zstd_compression,
+        _ => CVID.MS_no_compression,
     };
 
     private static void EmitEncodingCvParams(XmlWriter w, BinaryEncoderConfig cfg)
@@ -1328,26 +1353,24 @@ public sealed class MzmlWriter
 
         if (cfg.Numpress == BinaryNumpress.None)
         {
-            MzmlXml.WriteCvParam(w, new CVParam(cfg.Compression switch
-            {
-                BinaryCompression.Zlib => CVID.MS_zlib_compression,
-                _ => CVID.MS_no_compression,
-            }));
+            MzmlXml.WriteCvParam(w, new CVParam(CompressionCvid(cfg.Compression)));
             return;
         }
 
-        // Numpress: single CV term also encodes whether zlib is layered on top. When zlib is
-        // stacked we use the "followed_by_zlib" variant instead of emitting a separate zlib CV.
-        bool zlib = cfg.Compression == BinaryCompression.Zlib;
-        CVID numpressCv = (cfg.Numpress, zlib) switch
+        // Numpress: single CV term also encodes whether zlib or zstd is layered on top. When one
+        // is stacked we use the "followed_by_zlib/zstd" variant instead of emitting a separate CV.
+        CVID numpressCv = (cfg.Numpress, cfg.Compression) switch
         {
-            (BinaryNumpress.Linear, false) => CVID.MS_MS_Numpress_linear_prediction_compression,
-            (BinaryNumpress.Linear, true)  => CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression,
-            (BinaryNumpress.Pic,    false) => CVID.MS_MS_Numpress_positive_integer_compression,
-            (BinaryNumpress.Pic,    true)  => CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression,
-            (BinaryNumpress.Slof,   false) => CVID.MS_MS_Numpress_short_logged_float_compression,
-            (BinaryNumpress.Slof,   true)  => CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression,
-            _ => throw new InvalidOperationException($"Unsupported numpress combo: {cfg.Numpress}, zlib={zlib}"),
+            (BinaryNumpress.Linear, BinaryCompression.None) => CVID.MS_MS_Numpress_linear_prediction_compression,
+            (BinaryNumpress.Linear, BinaryCompression.Zlib) => CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression,
+            (BinaryNumpress.Linear, BinaryCompression.Zstd) => CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression,
+            (BinaryNumpress.Pic,    BinaryCompression.None) => CVID.MS_MS_Numpress_positive_integer_compression,
+            (BinaryNumpress.Pic,    BinaryCompression.Zlib) => CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression,
+            (BinaryNumpress.Pic,    BinaryCompression.Zstd) => CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression,
+            (BinaryNumpress.Slof,   BinaryCompression.None) => CVID.MS_MS_Numpress_short_logged_float_compression,
+            (BinaryNumpress.Slof,   BinaryCompression.Zlib) => CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression,
+            (BinaryNumpress.Slof,   BinaryCompression.Zstd) => CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression,
+            _ => throw new InvalidOperationException($"Unsupported numpress combo: {cfg.Numpress}, compression={cfg.Compression}"),
         };
         MzmlXml.WriteCvParam(w, new CVParam(numpressCv));
     }

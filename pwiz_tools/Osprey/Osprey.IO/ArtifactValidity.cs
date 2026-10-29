@@ -21,6 +21,7 @@
 using System;
 using System.IO;
 using System.Text;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -67,7 +68,7 @@ namespace pwiz.Osprey.IO
             // other SQLite file is read the same way rather than reading as unstamped, which
             // would re-run the whole of SecondPassFDR on every invocation.
             if (EndsWith(path, BLIB_EXT) || HasSqliteHeader(path))
-                return BlibWriter.ReadStamp(path);
+                return OspreyBlibWriter.ReadStamp(path);
             return null;
         }
 
