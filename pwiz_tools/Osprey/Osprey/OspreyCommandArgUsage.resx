@@ -235,6 +235,9 @@
   <data name="_fasta" xml:space="preserve">
     <value>Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in place of {0}. The library is written beside the output as {1} and can be given to {0} next time; its working files go in {2}. The options of the Library Digest and Library Prediction sections apply, and with {3} those of Library Tuning.</value>
   </data>
+  <data name="_precursors" xml:space="preserve">
+    <value>With {0} and {1}: predict a spectral library for exactly the precursors of this tab-separated table (columns {2}, in alphabase's notation, as Skyline writes it for its Build Library) and write it beside the output as {3}, the TSV peptdeep writes. The pretrained models or {4} predict; the Library Prediction options apply, the Library Digest options and the entrapment do not. With {5} and {6}, the FASTA is the training library the tuning runs are searched against, the models are tuned on them first, and the tuned models predict the table; {0} is then not needed, and the Library Digest and Library Tuning options apply to the training library.</value>
+  </data>
   <data name="_model" xml:space="preserve">
     <value>With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) instead of the pretrained models. With {2}, the tuning starts from it.</value>
   </data>
@@ -258,5 +261,83 @@
   </data>
   <data name="_task_files" xml:space="preserve">
     <value>With {0}: print the files the task reads and writes for this command line, one per line as input or output, the task and the path, and exit without running it: what a node must be given and what it hands on.</value>
+  </data>
+  <data name="_cache_dir_property" xml:space="preserve">
+    <value>Spectra cache folder</value>
+  </data>
+  <data name="_decoys_in_library_property" xml:space="preserve">
+    <value>Use the library's decoys</value>
+  </data>
+  <data name="_demux_property" xml:space="preserve">
+    <value>Demultiplex staggered windows</value>
+  </data>
+  <data name="_device_property" xml:space="preserve">
+    <value>Prediction device</value>
+  </data>
+  <data name="_experiment_fdr_property" xml:space="preserve">
+    <value>Experiment FDR</value>
+  </data>
+  <data name="_fdr_level_property" xml:space="preserve">
+    <value>Experiment FDR level</value>
+  </data>
+  <data name="_fdrbench_property" xml:space="preserve">
+    <value>FDRBench output file</value>
+  </data>
+  <data name="_fdrbench_pass_property" xml:space="preserve">
+    <value>FDRBench pass</value>
+  </data>
+  <data name="_fdrbench_per_run_property" xml:space="preserve">
+    <value>FDRBench row per run</value>
+  </data>
+  <data name="_fragment_tolerance_property" xml:space="preserve">
+    <value>Fragment tolerance</value>
+  </data>
+  <data name="_fragment_unit_property" xml:space="preserve">
+    <value>Fragment tolerance unit</value>
+  </data>
+  <data name="_model_diagnostics_property" xml:space="preserve">
+    <value>Write model diagnostics report</value>
+  </data>
+  <data name="_no_prefilter_property" xml:space="preserve">
+    <value>Score without prefilter</value>
+  </data>
+  <data name="_parallel_files_property" xml:space="preserve">
+    <value>Parallel files</value>
+  </data>
+  <data name="_parallel_files_caching_property" xml:space="preserve">
+    <value>Parallel files (caching)</value>
+  </data>
+  <data name="_parallel_files_rescoring_property" xml:space="preserve">
+    <value>Parallel files (re-scoring)</value>
+  </data>
+  <data name="_parallel_files_scoring_property" xml:space="preserve">
+    <value>Parallel files (scoring)</value>
+  </data>
+  <data name="_protein_fdr_property" xml:space="preserve">
+    <value>Protein FDR</value>
+  </data>
+  <data name="_reconciliation_compaction_fdr_property" xml:space="preserve">
+    <value>Reconciliation FDR</value>
+  </data>
+  <data name="_resolution_property" xml:space="preserve">
+    <value>Resolution</value>
+  </data>
+  <data name="_run_fdr_property" xml:space="preserve">
+    <value>Run FDR</value>
+  </data>
+  <data name="_shared_peptides_property" xml:space="preserve">
+    <value>Shared peptides</value>
+  </data>
+  <data name="_threads_property" xml:space="preserve">
+    <value>Threads</value>
+  </data>
+  <data name="_training_export_max_q_property" xml:space="preserve">
+    <value>Training export maximum q-value</value>
+  </data>
+  <data name="_verbose_property" xml:space="preserve">
+    <value>Verbose output</value>
+  </data>
+  <data name="_culture" xml:space="preserve">
+    <value>Write the messages in the named language (en, ja, zh-Hans) instead of the operating system's. Numbers in the arguments are read in the invariant culture (a period as the decimal separator) whatever the language, and the argument can be given anywhere on the command line.</value>
   </data>
 </root>

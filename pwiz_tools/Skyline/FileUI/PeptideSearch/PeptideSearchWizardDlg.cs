@@ -1,6 +1,7 @@
 /*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2012 University of Washington - Seattle, WA
  * 
@@ -291,6 +292,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SetDocument(docNew, Document);
         }
 
+        /// <summary>
+        /// The settings of the Osprey search whose library this wizard imports, for the import's
+        /// audit log entry (<see cref="FormSettings"/>); null on every other route.
+        /// </summary>
+        public OspreySearchSettings OspreySearchSettings { get; set; }
+
         public ImportPeptideSearchSettings FormSettings
         {
             get
@@ -306,6 +313,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ImportFastaControl.AssociateProteinsSettings,
                     DdaSearchSettings,
                     DdaConverterSettings,
+                    OspreySearchSettings,
                     ImportPeptideSearch.SettingsHardklor,
                     ModeUI);
             }
@@ -344,6 +352,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 AssociateProteinsSettings associateProteinsSettings,
                 SearchSettingsControl.DdaSearchSettings ddaSearchSettings,
                 ConverterSettingsControl.DdaConverterSettings ddaConverterSettings,
+                OspreySearchSettings ospreySearchSettings,
                 ImportPeptideSearch.HardklorSettings hardklorSearchSettings,
                 SrmDocument.DOCUMENT_TYPE docType)
             {
@@ -356,6 +365,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 AssociateProteinsSettings = associateProteinsSettings;
                 DdaSearchSettings = ddaSearchSettings;
                 DdaConverterSettings = ddaConverterSettings;
+                OspreySearchSettings = ospreySearchSettings;
                 HardklorSearchSettings = hardklorSearchSettings;
                 _docType = docType;
             }
@@ -396,6 +406,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [TrackChildren]
             public ConverterSettingsControl.DdaConverterSettings DdaConverterSettings { get; private set; }
 
+            // Osprey search settings (the Osprey Search wizard's import)
+            [TrackChildren]
+            public OspreySearchSettings OspreySearchSettings { get; private set; }
+
             // Hardklor settings
             [TrackChildren]
             public ImportPeptideSearch.HardklorSettings HardklorSearchSettings { get; private set; }
@@ -414,6 +428,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     doc.Settings.TransitionSettings.FullScan,
                     ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings),
                     AssociateProteinsSettings.DEFAULT,
+                    null,
                     null,
                     null,
                     null,

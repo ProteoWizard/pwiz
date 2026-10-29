@@ -168,10 +168,6 @@ $modes = @(
     @{ Id = '6';  Title = 'library-fragment release engaged'
        Proves = 'The release RAN on every leg that holds the library and did NOT run on --task FirstPassFDR; output-neutral by design, so only the logs can see it. Free.'
        Lines = @('mode6 (library-fragment release engaged)'); When = { param($s) $true }; Gate = 'every dataset' }
-    # Opt-in: a switch, not a spec key, so no default run (and no gate) prints its line.
-    @{ Id = '13'; Title = 'stepwise one command == straight-through (opt-in)'
-       Proves = 'The tuned one command (--fasta --training-input) stopped after every task by OSPREY_STOP_AFTER_TASKS=1 and run again until done: each run skips every finished task and runs exactly the next, in order, and the result equals a straight-through run at 1e-9. The real-scale twin of SubsetPipelineTest.TestSubsetLibraryBuildTunedStepwise; about 35 minutes.'
-       Lines = @('mode13 (stepwise one command==straight)'); When = { param($s) $false }; Gate = 'opt-in: -StepwiseOneCommand, Stellar only; no line in a default run' }
 
 )
 

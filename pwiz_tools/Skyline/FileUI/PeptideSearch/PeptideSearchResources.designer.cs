@@ -958,6 +958,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FASTA files.
+        /// </summary>
+        public static string OspreyFastaControl_BrowseFasta_FASTA_files {
+            get {
+                return ResourceManager.GetString("OspreyFastaControl_BrowseFasta_FASTA_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey did not produce a spectral library..
         /// </summary>
         public static string OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_ {
@@ -1137,6 +1146,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
             }
         }
 
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The additional settings last used, {0}, are set on the pages of the wizard or are not valid for the installed Osprey, and were ignored..
+        /// </summary>
+        public static string OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_ {
+            get {
+                return ResourceManager.GetString("OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_", resourceCulture);
+            }
+        }
         /// <summary>
         ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
         /// </summary>

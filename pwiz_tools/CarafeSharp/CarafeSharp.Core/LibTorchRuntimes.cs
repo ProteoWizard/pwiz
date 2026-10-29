@@ -25,7 +25,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.CarafeSharp.Models
+namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
     /// Why a computer cannot predict on the GPU, from <see cref="LibTorchRuntimes.GetCudaUnavailability"/>.
@@ -49,8 +49,10 @@ namespace pwiz.CarafeSharp.Models
     /// builds them: the CPU runtime shipped in torch\cpu beside the application, and the CUDA runtime
     /// downloaded from nuget.org into a folder of installed runtimes the first time the application
     /// predicts on a computer whose GPU can use it. Skyline installs into its Tools folder, like the
-    /// search engines it downloads; Osprey into the folder its command line names. A process loads
-    /// one runtime and keeps it (<see cref="LibTorchRuntime"/>).
+    /// search engines it downloads; Osprey into the folder its command line names. Detection and
+    /// install only, so an application that runs the prediction in another process (Skyline runs
+    /// Osprey) needs no TorchSharp; the process that predicts loads one runtime and keeps it
+    /// (CarafeSharp.Models' LibTorchRuntime).
     /// </summary>
     public class LibTorchRuntimes
     {
@@ -138,7 +140,8 @@ namespace pwiz.CarafeSharp.Models
         /// </summary>
         public bool IsCudaDriverFound => _cudaDriverFound;
 
-        public LibTorchRuntime CpuRuntime => new LibTorchRuntime(Path.Combine(ApplicationDirectory, TORCH_FOLDER, CPU_FOLDER));
+        /// <summary>The folder of the CPU runtime shipped beside the application.</summary>
+        public string CpuRuntimeDirectory => Path.Combine(ApplicationDirectory, TORCH_FOLDER, CPU_FOLDER);
 
         /// <summary>
         /// Installs the CUDA runtime, or null when this build lists no CUDA runtime packages. Read
@@ -190,27 +193,6 @@ namespace pwiz.CarafeSharp.Models
         }
 
         public bool IsCudaInstalled => CudaInstaller?.IsInstalled ?? false;
-
-        /// <summary>
-        /// Whether this process can still choose between the CPU and the GPU: it has not loaded a libtorch
-        /// yet, and a process cannot change the one it loaded.
-        /// </summary>
-        public bool CanChooseRuntime => LibTorchRuntime.Loaded == null;
-
-        /// <summary>
-        /// Loads the CUDA runtime when asked to, it is installed and the GPU can use it, otherwise the CPU
-        /// runtime, unless this process already loaded one, and returns the runtime loaded.
-        /// </summary>
-        public LibTorchRuntime Load(bool useCuda)
-        {
-            var runtime = LibTorchRuntime.Loaded;
-            if (runtime == null)
-            {
-                runtime = useCuda && CanUseCuda && IsCudaInstalled ? CudaInstaller.Runtime : CpuRuntime;
-                runtime.Load();
-            }
-            return runtime;
-        }
 
         /// <summary>
         /// Downloads the CUDA runtime's packages one at a time and installs the runtime from them.

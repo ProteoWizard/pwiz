@@ -265,30 +265,66 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AlphaPeptDeep finished in {0} minutes {1} seconds..
+        ///   Looks up a localized string similar to The fine-tuned model {0} was not written..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_ {
+        public static string CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes" +
-                        "__1__seconds_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuning a model on the DIA runs and predicting the library.
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicted the library in {0} minutes {1} seconds..
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_ {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting the library with the {0} model.
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed at {0}..
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_ {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_", resourceCulture);
+            }
+        }
+
         
         /// <summary>
         ///   Looks up a localized string similar to Importing spectral library.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
+        public static string CarafeLibraryBuilder_Importing_spectral_library {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Importing_spectral_library", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_Importing_spectral_library", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to BlibBuild completed successfully..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
+        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
+                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
                         "y_", resourceCulture);
             }
         }
@@ -296,57 +332,21 @@ namespace pwiz.Skyline.Model {
         /// <summary>
         ///   Looks up a localized string similar to BlibBuild failed to complete..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
+        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Predicting with the fine-tuned model {0}: {1}.
+        ///   Looks up a localized string similar to Failed to predict the library..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_ {
+        public static string CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_", resourceCulture);
             }
         }
 
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to predict the library with AlphaPeptDeep..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_ {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Predicting with AlphaPeptDeep on the CPU..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Predicting with AlphaPeptDeep on the GPU..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Running AlphaPeptDeep.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
@@ -1435,6 +1435,42 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value '{0}' is not valid for {1}, which must be a whole number, blank, or '{2}'..
+        /// </summary>
+        public static string OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__ {
+            get {
+                return ResourceManager.GetString("OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter '{0}' to give the argument without a value..
+        /// </summary>
+        public static string OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_ {
+            get {
+                return ResourceManager.GetString("OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey at {0} could not be run..
+        /// </summary>
+        public static string OspreyProperties_Run_Osprey_at__0__could_not_be_run_ {
+            get {
+                return ResourceManager.GetString("OspreyProperties_Run_Osprey_at__0__could_not_be_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey at {0} did not report its settings: {1}.
+        /// </summary>
+        public static string OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_ {
+            get {
+                return ResourceManager.GetString("OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The precursor m/z {0} is not measureable with your current instrument settings..
         /// </summary>
         public static string PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_ {
@@ -2423,12 +2459,12 @@ namespace pwiz.Skyline.Model {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to This build of Skyline does not list the NVIDIA CUDA runtime packages..
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed, so its NVIDIA CUDA runtime packages are not known..
         /// </summary>
-        public static string TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NVIDIA_CUDA_runtime_packages_ {
+        public static string TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_ {
             get {
-                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NV" +
-                        "IDIA_CUDA_runtime_packages_", resourceCulture);
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_" +
+                        "installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_", resourceCulture);
             }
         }
 
