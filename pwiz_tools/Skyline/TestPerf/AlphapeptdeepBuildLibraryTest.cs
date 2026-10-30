@@ -27,7 +27,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
@@ -208,7 +207,11 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                Assert.AreEqual(6, dlg.PeptidesCount);
+                // Every document peptide the models predicted, the phosphopeptide included: Chronologer,
+                // Carafe's default RT model, encodes phosphorylation and was trained on it, so its RT is
+                // kept, where the peptdeep TSV path zeroed it (the CCS, from the pretrained AlphaPeptDeep
+                // model, is withheld for it - see CarafeSharp's ModelSupport)
+                Assert.AreEqual(7, dlg.PeptidesCount);
                 Assert.AreEqual(1, dlg.RunsConvertedCount); // Libraries now convert through internal alignment to single RT scale
                 Assert.AreEqual(0, dlg.RunsFailedCount);
             });

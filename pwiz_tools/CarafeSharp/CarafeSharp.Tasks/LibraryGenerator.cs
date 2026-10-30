@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
@@ -68,6 +69,11 @@ namespace pwiz.CarafeSharp.Tasks
         private readonly Stopwatch _buildClock = new Stopwatch();
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
+        // What the models were trained to predict per modification: the pretrained models', extended
+        // by a saved model's training modifications; precursors withheld a value are counted for the log
+        private ModelSupport _support = ModelSupport.PRETRAINED;
+        private int _withheldRt;
+        private int _withheldCcs;
         private DecoyPairGate _pairGate;
         private List<PairingManifestRow> _contractManifest;
         // The pairing the DecoyPairs table is planned from: the in-memory digest's, or the manifest file's.
@@ -239,6 +245,12 @@ namespace pwiz.CarafeSharp.Tasks
                 {
                     Log(string.Format(CultureInfo.InvariantCulture,
                         @"Chronologer could not encode {0} peptide forms; AlphaPeptDeep's pretrained model predicted their RT", chronologer.FallbackCount));
+                }
+                if (_withheldRt > 0 || _withheldCcs > 0)
+                {
+                    Log(string.Format(CultureInfo.InvariantCulture,
+                        @"Withheld the RT of {0} precursors and the CCS of {1}, whose modifications the models were not trained for",
+                        _withheldRt, _withheldCcs));
                 }
             }
             Log(string.Format(CultureInfo.InvariantCulture, @"Wrote {0} precursors in {1:F1} s", SpectrumCount, _clock.Elapsed.TotalSeconds));
@@ -530,15 +542,24 @@ namespace pwiz.CarafeSharp.Tasks
                 ccsPredictions = ccs.Predict(requests.Select(r => r.Precursor).ToArray());
                 _ccsClock.Stop();
             }
+            // Chronologer predicts the RT of any peptide form it encodes; the forms it handed to the
+            // fallback AlphaPeptDeep model, like every form of another RT model, get the table's verdict
+            var chronologer = ((rt as AlignedRtPredictor)?.Inner ?? rt) as ChronologerRtPredictor;
+            var fallbackForms = chronologer != null ? new HashSet<int>(chronologer.LastFallback) : null;
             _buildClock.Start();
             var spectra = new LibrarySpectrum[requests.Count];
             Parallel.For(0, requests.Count, i =>
             {
                 int form = formIndex[i];
                 double retentionTime = LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[form], _libraryRtMax, irt.Slope, irt.Intercept);
-                spectra[i] = isoforms[form] != null
+                var spectrum = isoforms[form] != null
                     ? builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime, ccsPredictions?[i])
                     : builder.Build(requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime, ccsPredictions?[i]);
+                // A precursor table's library (Skyline's) carries nothing a model was not trained for;
+                // a digest's library is written as Carafe writes it, which its parity tests hold it to
+                if (PrecursorTablePath != null && spectrum != null && peptides[form].ModNames.Count > 0)
+                    WithholdUnsupported(spectrum, peptides[form], fallbackForms != null && !fallbackForms.Contains(form));
+                spectra[i] = spectrum;
             });
             List<LibrarySpectrum> built;
             if (_pairGate == null)
@@ -556,6 +577,24 @@ namespace pwiz.CarafeSharp.Tasks
             }
             _buildClock.Stop();
             return built;
+        }
+
+        /// <summary>
+        /// Takes back what the models were not trained to predict for a modified peptide
+        /// (<see cref="ModelSupport"/>): its RT, unless Chronologer predicted it itself, and its CCS.
+        /// </summary>
+        private void WithholdUnsupported(LibrarySpectrum spectrum, PeptideForm peptide, bool chronologerPredicted)
+        {
+            var predictions = _support.Get(peptide);
+            bool withholdRt = !chronologerPredicted && (predictions & ModelPredictions.rt) == 0;
+            bool withholdCcs = spectrum.CollisionalCrossSection.HasValue && (predictions & ModelPredictions.ccs) == 0;
+            if (!withholdRt && !withholdCcs)
+                return;
+            spectrum.Withhold(withholdRt, withholdCcs);
+            if (withholdRt)
+                Interlocked.Increment(ref _withheldRt);
+            if (withholdCcs)
+                Interlocked.Increment(ref _withheldCcs);
         }
 
         /// <summary>
@@ -695,7 +734,12 @@ namespace pwiz.CarafeSharp.Tasks
         /// </summary>
         private CarafeModelDirectory OpenModelFile()
         {
-            return LibraryModels.OpenModelFile(_settings, Log, out _modelFileFolder);
+            var modelDirectory = LibraryModels.OpenModelFile(_settings, Log, out _modelFileFolder);
+            // The saved model predicts the modifications it was trained on
+            var training = CarafeModelFile.ReadDescription(_settings.ModelFile).Training;
+            if (training?.Modifications != null)
+                _support = ModelSupport.PRETRAINED.WithTrainingModifications(training.Modifications.Keys);
+            return modelDirectory;
         }
 
         private Ms2Model LoadMs2Model(CarafeModelDirectory modelDirectory, Device device)

@@ -34,7 +34,9 @@ namespace pwiz.CarafeSharp.Test
     /// <summary>
     /// The prediction of a precursor table (<see cref="LibraryGenerator.PrecursorTablePath"/>): the
     /// table's precursors, with their modification sites and charges, come out as a .blib alone,
-    /// each with its retention time, its CCS and its 1/K0, under Carafe's fragment rules.
+    /// each with its retention time, its CCS and its 1/K0, under Carafe's fragment rules; a
+    /// phosphopeptide keeps Chronologer's RT and is withheld the CCS the pretrained model was not
+    /// trained for (<see cref="ModelSupport"/>).
     /// </summary>
     [TestClass]
     public class PrecursorTableLibraryTest
@@ -58,6 +60,7 @@ namespace pwiz.CarafeSharp.Test
                     string.Join("\t", @"2", @"ACDEFGHIK", @"Carbamidomethyl@C", @"2"),
                     string.Empty,
                     string.Join("\t", @"3", @"QPEPTIDEK", @"Gln->pyro-Glu@Q^Any_N-term", @"0"),
+                    string.Join("\t", @"2", @"SKYLINEPEPTIDER", @"Phospho@S", @"1"),
                 });
                 string outputPath = Path.Combine(folder, @"output_libs", @"predict.blib");
                 var log = new StringWriter();
@@ -70,26 +73,33 @@ namespace pwiz.CarafeSharp.Test
                 var generator = new LibraryGenerator(settings, log) { PrecursorTablePath = tablePath };
                 generator.Run();
 
-                Assert.AreEqual(3, generator.SpectrumCount, log.ToString());
+                Assert.AreEqual(4, generator.SpectrumCount, log.ToString());
                 Assert.AreEqual(outputPath, generator.BlibPath);
                 Assert.IsNull(generator.TsvPath, @"a precursor table's library is a .blib alone");
                 Assert.IsTrue(File.Exists(outputPath), outputPath);
-                StringAssert.Contains(log.ToString(), @"Predicting 3 precursors (3 peptide forms)");
+                StringAssert.Contains(log.ToString(), @"Predicting 4 precursors (4 peptide forms)");
+                StringAssert.Contains(log.ToString(), @"Withheld the RT of 0 precursors and the CCS of 1");
                 StringAssert.Contains(log.ToString(), @"Library RT: iRT = ");
 
                 using (var connection = new SQLiteConnection(@"Data Source=" + outputPath + @";Version=3;Read Only=True"))
                 {
                     connection.Open();
-                    Assert.AreEqual(3L, Scalar(connection, @"SELECT numSpecs FROM LibInfo"));
+                    Assert.AreEqual(4L, Scalar(connection, @"SELECT numSpecs FROM LibInfo"));
                     var rows = Rows(connection, @"SELECT peptideSeq, peptideModSeq, precursorCharge, precursorMz, retentionTime, " +
                                                 @"collisionalCrossSectionSqA, ionMobility, numPeaks FROM RefSpectra ORDER BY id");
                     // The table's order, its charges, and Skyline's mass-shift notation from alphabase's masses
-                    CollectionAssert.AreEqual(new[] { @"LGGNEQVTR", @"ACDEFGHIK", @"QPEPTIDEK" }, rows.Select(r => (string)r[0]).ToArray());
-                    CollectionAssert.AreEqual(new[] { 2L, 2L, 3L }, rows.Select(r => (long)r[2]).ToArray());
+                    CollectionAssert.AreEqual(new[] { @"LGGNEQVTR", @"ACDEFGHIK", @"QPEPTIDEK", @"SKYLINEPEPTIDER" }, rows.Select(r => (string)r[0]).ToArray());
+                    CollectionAssert.AreEqual(new[] { 2L, 2L, 3L, 2L }, rows.Select(r => (long)r[2]).ToArray());
                     Assert.AreEqual(@"LGGNEQVTR", (string)rows[0][1]);
                     StringAssert.StartsWith((string)rows[1][1], @"AC[+57.02");
                     StringAssert.StartsWith((string)rows[2][1], @"Q[-17.02");
-                    foreach (var row in rows)
+                    // The phosphopeptide: Chronologer encodes phosphorylation, so its RT stays; the CCS the
+                    // pretrained AlphaPeptDeep model was not trained for is withheld, with the 1/K0 from it
+                    var phospho = rows[3];
+                    StringAssert.StartsWith((string)phospho[1], @"S[+79.96");
+                    Assert.IsTrue((double)phospho[4] != 0, @"phosphopeptide RT");
+                    Assert.IsTrue(phospho[5] is DBNull && phospho[6] is DBNull, @"phosphopeptide CCS and 1/K0");
+                    foreach (var row in rows.Take(3))
                     {
                         Assert.IsTrue((double)row[3] > 200, @"precursor m/z");
                         Assert.IsTrue((double)row[4] != 0, @"retention time");
@@ -98,7 +108,7 @@ namespace pwiz.CarafeSharp.Test
                         long peaks = (long)row[7];
                         Assert.IsTrue(peaks >= settings.MinFragments && peaks <= settings.TopFragments, @"peaks: " + peaks);
                     }
-                    CollectionAssert.AreEqual(new[] { @"2:2", @"3:1" },
+                    CollectionAssert.AreEqual(new[] { @"2:2", @"3:1", @"4:1" },
                         Rows(connection, @"SELECT RefSpectraID || ':' || position FROM Modifications ORDER BY RefSpectraID").Select(r => (string)r[0]).ToArray());
                     Assert.AreEqual(57.0215, (double)Scalar(connection, @"SELECT mass FROM Modifications WHERE RefSpectraID = 2"), 1e-3);
                     Assert.AreEqual(-17.0265, (double)Scalar(connection, @"SELECT mass FROM Modifications WHERE RefSpectraID = 3"), 1e-3);
