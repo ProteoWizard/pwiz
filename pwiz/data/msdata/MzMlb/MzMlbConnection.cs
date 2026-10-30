@@ -37,6 +37,7 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
     /// this exact string.</summary>
     public const string CurrentVersion = "mzMLb 1.0";
 
+    // ReSharper disable once MemberInitializerValueIgnored
     private long _fileId = -1L;
     private DatasetHandle _mzML;
     // Cache for the binary datasets we've opened (cheaper than re-resolving by

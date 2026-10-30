@@ -52,7 +52,9 @@ public class MzIdentMLReader : BuildParser
 
     // cpp parity: MzIdentMLReader.h:55-65 — pwizReader_ + analysisType_ + fileMap_ +
     // scoreThreshold_ + isScoreLookup_.
+    // ReSharper disable once MemberInitializerValueIgnored
     private Analysis _analysisType = Analysis.Unknown;
+    // ReSharper disable once MemberInitializerValueIgnored
     private readonly IdentDataFile _pwizReader = null!;
     private readonly Dictionary<string, List<PSM?>> _fileMap = new(StringComparer.Ordinal);
     private double _scoreThreshold;

@@ -186,9 +186,11 @@ internal sealed class WiffFile : AbstractWiffFile
             foreach (var info in _provider.GetBasicSampleInfos(wiffPath))
                 allNames.Add(info.SampleName ?? string.Empty);
             var unique = DisambiguateSampleNames(allNames);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (sampleIndex0 >= 0 && sampleIndex0 < unique.Length)
                 _sampleName = unique[sampleIndex0];
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         // The `SampleNumber < SampleCount` term reproduces an off-by-one in cpp. See
@@ -438,6 +440,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
             int level = _exp.GetMassSpectrumInfo(cycle1Based - 1).MSLevel;
             if (level > 0) return level;
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
         return _info.ExperimentType switch
         {
@@ -684,6 +687,7 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     {
         // Clearcore2's MSExperiment owns native readers (the BPC fetch on MRM
         // experiments leaks file handles past WiffFile.Dispose without this).
+        // ReSharper disable once EmptyGeneralCatchClause
         try { _exp.Dispose(); } catch { }
     }
 

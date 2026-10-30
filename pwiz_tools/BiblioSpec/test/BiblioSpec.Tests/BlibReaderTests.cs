@@ -392,6 +392,7 @@ public class BlibReaderTests
             Assert.IsNotNull(peaks);
             CollectionAssert.AreEqual(mzs, peaks.Mzs);
             CollectionAssert.AreEqual(new[] { 1f, 0.25f }, peaks.Intensities);
+            // ReSharper disable once DisposeOnUsingVariable
             reader.Dispose();
 
             // Without the peaks table at all, the scan with peaks still runs, with null blobs.

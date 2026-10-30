@@ -124,6 +124,7 @@ namespace Pwiz.SeeMS
         public PointMap( ZedGraph.IPointList pointList )
         {
             for( int i = 0; i < pointList.Count; ++i )
+                // ReSharper disable once VirtualMemberCallInConstructor
                 Add( pointList[i].X, pointList[i].Y );
         }
     }

@@ -330,6 +330,7 @@ public sealed class CwtPeakDetector : IPeakDetector
         if (windowSize > corrMatrixLength) windowSize = corrMatrixLength / 2;
         int hfWindow = windowSize / 2;
         windowSize = 2 * hfWindow;
+        windowSize = Math.Max(windowSize, 1); // unlikely, but be safe
 
         int nNoiseBins = corrMatrixLength / windowSize + 1;
         var noises = new double[nNoiseBins];

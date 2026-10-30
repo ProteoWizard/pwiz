@@ -81,6 +81,7 @@ namespace Pwiz.SeeMS
 
             // Start a fresh log file each run (overwrite). Keeps it small and focused on the
             // current session for easy paste-back.
+            // ReSharper disable once EmptyGeneralCatchClause
             try { File.WriteAllText(LogFilePath, string.Empty); } catch { }
             Log(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                 "seems-sharp starting; args=[{0}]; pid={1}; cwd={2}",

@@ -184,6 +184,7 @@ public static class Fasta
         ArgumentNullException.ThrowIfNull(pd);
         if (pd.ProteinList is null) throw new InvalidOperationException("ProteomeData has no ProteinList");
 
+        // ReSharper disable once UsingStatementResourceInitialization
         using var w = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: 1 << 16, leaveOpen: true)
         {
             NewLine = "\n", // cpp emits '\n', not "\r\n"

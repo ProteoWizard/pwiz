@@ -82,6 +82,8 @@ resharper_assign_null_to_not_null_attribute_highlighting = none
 [{pwiz,build,examples,scripts/installer,pwiz_tools/BiblioSpec,pwiz_tools/Commandline,pwiz_tools/MSConvertGUI,pwiz_tools/SeeMS,pwiz_tools/BullseyeSharp}/**.cs]
 # Prefer file-scoped namespaces
 csharp_style_namespace_declarations = file_scoped:warning
+# ...but keep it out of the ReSharper inspection gate, which looks for risky code, not style
+resharper_arrange_namespace_body_highlighting = none
 
 # Use var when the type is apparent
 csharp_style_var_when_type_is_apparent = true:suggestion

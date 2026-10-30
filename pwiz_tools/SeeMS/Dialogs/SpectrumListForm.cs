@@ -116,6 +116,7 @@ namespace Pwiz.SeeMS
         private bool hasMergedSpectra = false;
         private bool hasNativeIdSpectra = false;
 
+		// ReSharper disable once ParameterHidesMember
 		private void initializeGridView( CVID nativeIdFormat )
 		{
             // force handle creation
@@ -444,6 +445,7 @@ namespace Pwiz.SeeMS
             UpdateRow( rowIndex, null );
         }
 
+        // ReSharper disable once ParameterHidesMember
         public void UpdateRow( int rowIndex, ISpectrumList spectrumList )
         {
             SpectrumDataSet.SpectrumTableRow row = ( spectraSource[rowIndex] as DataRowView ).Row as SpectrumDataSet.SpectrumTableRow;

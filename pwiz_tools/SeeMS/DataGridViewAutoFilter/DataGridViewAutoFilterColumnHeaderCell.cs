@@ -66,11 +66,13 @@ namespace DataGridViewAutoFilter
         /// <param name="oldHeaderCell">The DataGridViewColumnHeaderCell to copy property values from.</param>
         public DataGridViewAutoFilterColumnHeaderCell(DataGridViewColumnHeaderCell oldHeaderCell)
         {
+            // ReSharper disable once VirtualMemberCallInConstructor
             this.ContextMenuStrip = oldHeaderCell.ContextMenuStrip;
             this.ErrorText = oldHeaderCell.ErrorText;
             this.Tag = oldHeaderCell.Tag;
             this.ToolTipText = oldHeaderCell.ToolTipText;
             this.Value = oldHeaderCell.Value;
+            // ReSharper disable once VirtualMemberCallInConstructor
             this.ValueType = oldHeaderCell.ValueType;
 
             // Use HasStyle to avoid creating a new style object
@@ -1123,6 +1125,7 @@ namespace DataGridViewAutoFilter
                 return filter;
             }
 
+            // ReSharper disable once StringIndexOfIsCultureSpecific.1
             if (filter.IndexOf(currentColumnFilter) > 0)
             {
                 // If the current column filter is not the first filter, return
@@ -1317,6 +1320,7 @@ namespace DataGridViewAutoFilter
             // Return String.Empty if there is no appropriate data source or
             // there is no filter in effect. 
             if (String.IsNullOrEmpty(data.Filter) ||
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 data == null || 
                 data.DataSource == null || 
                 !data.SupportsFiltering)
