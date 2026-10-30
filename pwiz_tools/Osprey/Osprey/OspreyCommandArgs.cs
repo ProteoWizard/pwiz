@@ -204,12 +204,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
-        // Skyline's Build Library: the document's precursors as they are, no digest, the TSV
-        // peptdeep wrote. A phase of its own and nothing else, so the search options never apply.
+        // Skyline's Build Library: the document's precursors as they are, no digest, the output
+        // .blib itself. A phase of its own and nothing else, so the search options never apply.
         public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
             { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
-                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText,
+                string.Join(@", ", PrecursorTable.COLUMNS), LibrarySource.EXT_BLIB, ARG_MODEL.ArgumentText,
                 ARG_TRAINING_INPUT.ArgumentText, ARG_FASTA.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))

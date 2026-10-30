@@ -1245,8 +1245,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var progressMonitorForFile = new ProgressMonitorForFile(rawFile.GetFileName(), _parallelProgressMonitor);
                 var mzmlFilePath = HardklorSearchEngine.GetMzmlFilePath(rawFile).GetFilePath();
                 IProgressStatus status = new ProgressStatus();
-                const string MSCONVERT_EXE = @"msconvert";
-                status = status.ChangeSegmentName(MSCONVERT_EXE);
+                status = status.ChangeSegmentName(MsconvertExe.NAME);
 
                 string convertMessage;
                 if ((string.Compare(mzmlFilePath, rawFile.GetFilePath(), StringComparison.OrdinalIgnoreCase) == 0) ||
@@ -1268,12 +1267,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                     status = status.ChangeMessage(convertMessage);
                     progressMonitorForFile.UpdateProgress(status); // Update main window log
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
+                    var psi = new ProcessStartInfo(MsconvertExe.Path)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         Arguments =
-                            "-v -z --mzML " +
+                            $"{MsconvertExe.VERBOSE_PROGRESS_ARGS} -z --mzML " +
                             $"-o {Path.GetDirectoryName(mzmlFilePath).Quote()} " +
                             $"--outfile {Path.GetFileName(mzmlFilePath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
