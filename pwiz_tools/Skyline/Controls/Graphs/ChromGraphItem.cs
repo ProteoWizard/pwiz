@@ -181,6 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public double RetentionWindow { get; set; }
 
         public double[] RetentionMsMs { get; set; }
+        public string[] RetentionMsMsLabels { get; set; }
         public double[] MidasRetentionMsMs { get; set; }
         public double? SelectedRetentionMsMs { get; set; }
 
@@ -496,15 +497,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (RetentionMsMs != null)
             {
-                foreach (double retentionTime in RetentionMsMs)
+                for (int i = 0; i < RetentionMsMs.Length; i++)
                 {
+                    double retentionTime = RetentionMsMs[i];
                     Color color = COLOR_MSMSID_TIME;
                     if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
                     {
                         color = ColorScheme.ChromGraphItemSelected;
                     }
+                    string label = RetentionMsMsLabels?[i] ?? GraphsResources.ChromGraphItem_AddAnnotations_ID;
                     AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
-                        GraphsResources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
+                        label, GraphObjType.ms_ms_id, color,
                         ScaleRetentionTime(retentionTime));
                 }
             }
