@@ -58,13 +58,14 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, MODS_USING_PARENS + TEXT_LIB_YEAST_NIST +
-                                                       TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT +
-                                                       TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE +
-                                                       LIB_TEXT_MONA + LIB_TEXT_MZVAULT +
-                                                       LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS +
-                                                       LIB_TEXT_NO_ADDUCT + TEXT_RIKEN + TEXT_USING_EXACTMASS_COMMENT +
-                                                       TEXT_USING_EXACTMASS_ARG + NIST_TERM_MODS);
+            var libText = MODS_USING_PARENS + TEXT_LIB_YEAST_NIST +
+                          TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT +
+                          TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE +
+                          LIB_TEXT_MONA + LIB_TEXT_MZVAULT +
+                          LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS +
+                          LIB_TEXT_NO_ADDUCT + TEXT_RIKEN + TEXT_FRAGHUB + TEXT_RT_SECS + TEXT_USING_EXACTMASS_COMMENT +
+                          TEXT_USING_EXACTMASS_ARG + NIST_TERM_MODS;
+            streamManager.TextFiles.Add(PATH_NIST_LIB, libText);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -75,7 +76,22 @@ namespace pwiz.SkylineTest
 
             var librarySpec = new NistLibSpec("Yeast (NIST)", PATH_NIST_LIB);
 
-            Library lib1 = librarySpec.LoadLibrary(loader);
+            Library lib1;
+            using (var capture = new UserMessageCapture())
+            {
+                lib1 = librarySpec.LoadLibrary(loader);
+
+                // Unlabeled "RetentionTime:" values draw one warning per assumed unit, naming the first such line
+                var lines = libText.Split('\n');
+                int LineNumber(string prefix) => Array.FindIndex(lines, l => l.StartsWith(prefix)) + 1;
+                AssertEx.AreEqualDeep(new[]
+                {
+                    string.Format(LibResources.NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_seconds,
+                        PATH_NIST_LIB, LineNumber("RetentionTime: 4830.6"), "VLHNFLTTPSK"),
+                    string.Format(LibResources.NistLibraryBase_CreateCache_Retention_times_in__0__do_not_state_their_units__read_as_minutes,
+                        PATH_NIST_LIB, LineNumber("RETENTIONTIME: 6.82"), "Withanone; PlaSMA ID-2558")
+                }, capture.CapturedMessages.Where(m => m.Contains(PATH_NIST_LIB)).ToArray());
+            }
             CheckLibrary(lib1, 100);
             CheckLibrary(lib1, 46, KEYS_LIB_BICENE_NIST);
 
@@ -144,6 +160,25 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(lib2.TryGetLibInfo(key, out info));
             AssertEx.AreEqual(61.389, ((NistSpectrumHeaderInfo)info).RT, .001);
             AssertEx.AreEqual(28, peaksInfo.Peaks.Length);
+
+            // Verify that MS-DIAL "RETENTIONTIME:" is read as minutes, and FragHub "RT:" likewise (including "RT: NOT FOUND")
+            var rtDict = new Dictionary<string, double?>
+            {
+                {"ZAKICGFSIJSCSF-LPUQOGTASA-N", 4.0667}, // MS-DIAL
+                {"COLNVLDHVKWLRT-QMMMGPOBSA-N", null}, // FragHub, RT not found
+                {"OUYCCCASQSFEME-QMMMGPOBSA-N", 5.25}, // FragHub
+                {"QIVBCDIJIAJPQS-VIFPVBQESA-N", 5.25} // RetentionTimeSecs
+            };
+            foreach (var kvp in rtDict)
+            {
+                key = lib2Keys.First(k => Equals(kvp.Key, k.SmallMoleculeLibraryAttributes.InChiKey));
+                Assert.IsTrue(lib2.TryGetLibInfo(key, out info));
+                AssertEx.AreEqual(kvp.Value, ((NistSpectrumHeaderInfo)info).RT, .0001, kvp.Key);
+            }
+
+            // Verify that the adduct is read from "PRECURSORTYPE:" as well as NIST's "Precursor_type:"
+            key = lib2Keys.First(k => Equals("OUYCCCASQSFEME-QMMMGPOBSA-N", k.SmallMoleculeLibraryAttributes.InChiKey));
+            AssertEx.AreEqual("[M+I]-", key.Adduct.AdductFormula);
 
             // Check use of ion mobility
             var ccsDict = new Dictionary<string, double?>()
@@ -1425,6 +1460,71 @@ namespace pwiz.SkylineTest
             "67.0295	10\n" +
             "96.9602	1000\n" +
             "241.0032	9200\n";
+
+        private const string TEXT_FRAGHUB = // As from https://zenodo.org/records/18888110
+            "\n" +
+            "NAME: Phenylalanine\n" +
+            "PRECURSORMZ: 164.071\n" +
+            "PRECURSORTYPE: [M-H]-\n" +
+            "FORMULA: C9H11NO2\n" +
+            "INCHIKEY: COLNVLDHVKWLRT-QMMMGPOBSA-N\n" +
+            "INCHI: InChI=1S/C9H11NO2/c10-8(9(11)12)6-7-4-2-1-3-5-7/h1-5,8H,6,10H2,(H,11,12)/t8-/m0/s1\n" +
+            "SMILES: N[C@@H](Cc1ccccc1)C(=O)O\n" +
+            "RT: NOT FOUND\n" +
+            "IONMODE: negative\n" +
+            "INSTRUMENTTYPE: LC-ITFT\n" +
+            "INSTRUMENT: Thermo Fisher Scientific Q-Exactive\n" +
+            "COLLISIONENERGY: NOT FOUND\n" +
+            "EXACTMASS: 165.078978592\n" +
+            "IONIZATION: ITFT\n" +
+            "MSLEVEL: 2\n" +
+            "COMMENT: FILENAME=ALL_GNPS.json; FILEHASH=ca14404a6e11627cbf9c10ca5d6e1759c45fe75bb64805bb4586b709316b8b6b; PREDICTED=false; SPLASH=splash10-01ot-1900000000-6c30a06686190daf5921; SPECTRUMID=CCMSLIB00000578130; RESOLUTION=HIGH; SYNON=NOT FOUND; FRAGMENTATIONMODE=NOT FOUND; AVERAGEMASS=165.19199999999998; ENTROPY=1.9303524370754654; ONTOLOGIES = \"CLASSYFIRE_SUPERCLASS=Organic acids and derivatives, CLASSYFIRE_CLASS = Carboxylic acids and derivatives, CLASSYFIRE_SUBCLASS = Amino acids, peptides, and analogues, NPCLASS_PATHWAY = Amino acids and Peptides|Shikimates and Phenylpropanoids, NPCLASS_SUPERCLASS = Small peptides, NPCLASS_CLASS = Aminoacids\"\n" +
+            "NUM PEAKS: 18\n" +
+            "51.33021900 0.00100006\n" +
+            "62.47280900 0.00096420\n" +
+            "63.83922200 0.00108340\n" +
+            "72.00759900 0.29989155\n" +
+            "72.71434800 0.00157124\n" +
+            "73.01107800 0.00446998\n" +
+            "74.74858100 0.00090233\n" +
+            "91.05383300 0.03135088\n" +
+            "92.05699200 0.00103129\n" +
+            "103.05360400 0.00867897\n" +
+            "118.06503300 0.00427942\n" +
+            "119.04867600 0.00134279\n" +
+            "146.06012000 0.00684872\n" +
+            "147.04408300 1.00000000\n" +
+            "148.04736300 0.06077377\n" +
+            "149.00846900 0.00433143\n" +
+            "164.07075500 0.72636069\n" +
+            "165.07429500 0.04403303\n" +
+            "\n" +
+            "NAME: Tyrosine\n" + // Same layout, but with an RT value, and an adduct that inference from formula and m/z would not find
+            "PRECURSORMZ: 307.9789\n" +
+            "PRECURSORTYPE: [M+I]-\n" +
+            "FORMULA: C9H11NO3\n" +
+            "INCHIKEY: OUYCCCASQSFEME-QMMMGPOBSA-N\n" +
+            "RETENTIONTIME: NOT FOUND\n" + // Must not make the RT below look like seconds
+            "RT: 5.25\n" +
+            "IONMODE: negative\n" +
+            "INSTRUMENTTYPE: LC-ITFT\n" +
+            "NUM PEAKS: 3\n" +
+            "126.90447600 1.00000000\n" +
+            "180.06607000 0.10000000\n" +
+            "307.97891000 0.50000000\n";
+
+        private const string TEXT_RT_SECS = // MS-DIAL field names, but with units stated explicitly
+            "\n" +
+            "NAME: Tryptophan\n" +
+            "PRECURSORMZ: 203.0826\n" +
+            "PRECURSORTYPE: [M-H]-\n" +
+            "FORMULA: C11H12N2O2\n" +
+            "INCHIKEY: QIVBCDIJIAJPQS-VIFPVBQESA-N\n" +
+            "RetentionTimeSecs: 315\n" + // 5.25 minutes
+            "IONMODE: Negative\n" +
+            "Num Peaks: 2\n" +
+            "116.0500\t1000\n" +
+            "203.0826\t500\n";
 
         private const string TEXT_NIST_PARENTHESIS =
             "\n" +
