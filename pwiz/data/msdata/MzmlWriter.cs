@@ -29,6 +29,9 @@ namespace Pwiz.Data.MsData.Mzml;
 public sealed class MzmlWriter
 #pragma warning restore CA1001
 {
+    /// <summary>Names the counts a skip leaves too high, for the warning when they cannot be corrected.</summary>
+    internal const string COUNTS_STILL_INCLUDE = "the spectrumList and chromatogramList counts still include";
+
     private readonly BinaryEncoderConfig _encoderConfig;
 
     // Mutable state only during Write(). An instance may be reused for successive Write calls.
@@ -99,6 +102,10 @@ public sealed class MzmlWriter
     // WriteBinaryDataArray / WriteIntegerDataArray know which context they're in.
     private string _externalArrayContextPrefix = "spectrum_";
 
+    // Items the current pass leaves out, and the ones it skips itself.
+    private SkippedItems _excluded = new();
+    private SkippedItems _skipped = new();
+
     /// <summary>Creates a writer that encodes binary arrays with the given config.</summary>
     public MzmlWriter(BinaryEncoderConfig? encoderConfig = null)
     {
@@ -117,11 +124,40 @@ public sealed class MzmlWriter
     }
 
     /// <summary>Writes <paramref name="msd"/> as mzML XML to <paramref name="stream"/> in UTF-8 (no BOM).</summary>
+    /// <remarks>When <see cref="ContinueOnError"/> skips an item, the list counts already written
+    /// are too high, so the output is rewritten from where it started without the skipped items.
+    /// That needs a seekable stream with the binary arrays inline; otherwise the counts are left
+    /// overstated and a warning goes to <see cref="SkipLog"/>.</remarks>
     public void Write(MSData msd, Stream stream)
     {
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentNullException.ThrowIfNull(stream);
 
+        ContinueOnErrorPolicy.WriteToStream(stream, (s, excluded) => WritePass(msd, s, excluded),
+            ExternalBinarySink is null, COUNTS_STILL_INCLUDE, SkipLog);
+    }
+
+    /// <summary>Writes to a fresh stream from <paramref name="openOutput"/> on every pass, so a
+    /// rewrite after a skip also works for output that cannot seek, such as gzip.</summary>
+    internal void Write(MSData msd, Func<Stream> openOutput)
+    {
+        ContinueOnErrorPolicy.WriteToFreshStreams(openOutput, (s, excluded) => WritePass(msd, s, excluded),
+            ExternalBinarySink is null, COUNTS_STILL_INCLUDE, SkipLog);
+    }
+
+    /// <summary>Writes the whole document once, leaving out the items in
+    /// <paramref name="excluded"/> and counting only the rest, and returns the items this pass
+    /// skipped itself.</summary>
+    internal SkippedItems WritePass(MSData msd, Stream stream, SkippedItems excluded)
+    {
+        _excluded = excluded;
+        _skipped = new SkippedItems();
+        WriteDocument(msd, stream);
+        return _skipped;
+    }
+
+    private void WriteDocument(MSData msd, Stream stream)
+    {
         // Clear any leftover captures from a previous Write call.
         _capturedSpectrumOffsets = null;
         CapturedEndOfSpectrumList = 0;
@@ -525,37 +561,35 @@ public sealed class MzmlWriter
     private void WriteChromatogramList(XmlWriter w, IChromatogramList list)
     {
         w.WriteStartElement("chromatogramList");
-        MzmlXml.WriteCountAttr(w, list.Count);
+        MzmlXml.WriteCountAttr(w, list.Count - _excluded.Chromatograms.Count);
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
-        for (int i = 0; i < list.Count; i++)
+        int count = list.Count;
+        int skipped = 0;
+        for (int i = 0; i < count; i++)
         {
-            // Same per-item-fetch guard as the spectrum loop above. Matches cpp
-            // IO.cpp:3132-3149 chromatogram-write loop.
-            Chromatogram chrom;
-            try
+            // Same progress, cancel check, per-item-fetch guard, exclusion and renumbering as
+            // the spectrum loop. Matches cpp IO.cpp:3132-3160 chromatogram-write loop.
+            IterationListenerRegistry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing chromatograms"));
+            if (_excluded.Chromatograms.Contains(i))
             {
-                chrom = list.GetChromatogram(i, getBinaryData: true);
+                skipped++;
+                continue;
             }
-            catch (System.Exception ex)
+            var chrom = ContinueOnErrorPolicy.GetChromatogramOrSkip(list, i, ContinueOnError, SkipLog);
+            if (chrom is null)
             {
-                if (ContinueOnError)
-                {
-                    string id;
-                    try { id = list.ChromatogramIdentity(i).Id; }
-                    catch { id = "?"; }
-                    SkipLog.WriteLine($"Skipping chromatogram {i} \"{id}\": {ex.Message}");
-                    continue;
-                }
-                throw new Pwiz.Util.Misc.EnumerationException(ex.Message, ex);
+                _skipped.Chromatograms.Add(i);
+                skipped++;
+                continue;
             }
-            WriteChromatogram(w, chrom);
+            WriteChromatogram(w, chrom, i - skipped);
         }
         w.WriteEndElement();
     }
 
-    private void WriteChromatogram(XmlWriter w, Chromatogram chrom)
+    private void WriteChromatogram(XmlWriter w, Chromatogram chrom, int index)
     {
         // Chromatogram binary arrays sit in datasets prefixed "chromatogram_"
         // (vs. "spectrum_" for spectra) when an mzMLb sink is wired up.
@@ -565,7 +599,7 @@ public sealed class MzmlWriter
         _externalArrayContextPrefix = "chromatogram_";
         try
         {
-            WriteChromatogramInner(w, chrom);
+            WriteChromatogramInner(w, chrom, index);
         }
         finally
         {
@@ -573,11 +607,11 @@ public sealed class MzmlWriter
         }
     }
 
-    private void WriteChromatogramInner(XmlWriter w, Chromatogram chrom)
+    private void WriteChromatogramInner(XmlWriter w, Chromatogram chrom, int index)
     {
         ArmOffsetCapture(w);
         w.WriteStartElement("chromatogram");
-        w.WriteAttributeString("index", chrom.Index.ToString(CultureInfo.InvariantCulture));
+        w.WriteAttributeString("index", index.ToString(CultureInfo.InvariantCulture));
         // cpp IO.cpp:2833 emits chromatogram.id raw ("not an XML:ID"); reader IO.cpp doesn't
         // decode it either. Chromatogram ids are free-form ("TIC", "- SRM SIC Q1=309.0 ...").
         w.WriteAttributeString("id", chrom.Id);
@@ -713,44 +747,41 @@ public sealed class MzmlWriter
     private void WriteSpectrumList(XmlWriter w, ISpectrumList list)
     {
         w.WriteStartElement("spectrumList");
-        MzmlXml.WriteCountAttr(w, list.Count);
+        MzmlXml.WriteCountAttr(w, list.Count - _excluded.Spectra.Count);
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
         int count = list.Count;
         var registry = IterationListenerRegistry;
+        int skipped = 0;
         for (int i = 0; i < count; i++)
         {
+            // Broadcast progress before the fetch, so a spectrum skipped under ContinueOnError
+            // still reports. Throttling is handled by the registry's per-listener period/timer
+            // settings; we just push every spectrum.
+            registry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
+
             // Per-item fetch is the failure-prone step (vendor SDK throws during
             // GetSpectrum, e.g. a corrupted scan that can't be centroided). cpp
             // IO.cpp:3001-3017 wraps only the fetch; the actual write is not in
-            // the catch. ContinueOnError → log + skip; otherwise wrap as
-            // EnumerationException so msconvert can show the --continueOnError
-            // hint. Catches Exception because vendor SDKs throw arbitrary types
-            // (IOException, IndexOutOfRangeException, vendor-specific) with no
-            // shared base — same as cpp catching std::exception&.
-            Spectrum spec;
-            try
+            // the catch. A spectrum an earlier pass skipped is left out without
+            // being fetched or logged again.
+            if (_excluded.Spectra.Contains(i))
             {
-                spec = list.GetSpectrum(i, getBinaryData: true);
+                skipped++;
+                continue;
             }
-            catch (System.Exception ex)
+            var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(list, i, ContinueOnError, SkipLog);
+            if (spec is null)
             {
-                if (ContinueOnError)
-                {
-                    string id;
-                    try { id = list.SpectrumIdentity(i).Id; }
-                    catch { id = "?"; }
-                    SkipLog.WriteLine($"Skipping spectrum {i} \"{id}\": {ex.Message}");
-                    continue;
-                }
-                throw new Pwiz.Util.Misc.EnumerationException(ex.Message, ex);
+                _skipped.Spectra.Add(i);
+                skipped++;
+                continue;
             }
-            WriteSpectrum(w, spec);
-
-            // Broadcast progress before moving on. Throttling is handled by the registry's
-            // per-listener period/timer settings; we just push every spectrum.
-            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+            // Survivors are renumbered so a skip leaves no gap in the written indices
+            // (cpp IO.cpp:3028). The index is written rather than assigned because the
+            // list may hand back the caller's own Spectrum.
+            WriteSpectrum(w, spec, i - skipped);
         }
 
         w.WriteEndElement();
@@ -765,11 +796,11 @@ public sealed class MzmlWriter
         }
     }
 
-    private void WriteSpectrum(XmlWriter w, Spectrum spec)
+    private void WriteSpectrum(XmlWriter w, Spectrum spec, int index)
     {
         ArmOffsetCapture(w);
         w.WriteStartElement("spectrum");
-        w.WriteAttributeString("index", spec.Index.ToString(CultureInfo.InvariantCulture));
+        w.WriteAttributeString("index", index.ToString(CultureInfo.InvariantCulture));
         // cpp IO.cpp:2611 emits spectrum.id raw ("not an XML:ID"); reader IO.cpp:2716 skips
         // decode_xml_id. Vendor scan IDs (e.g. "scan=1", "merged=0 frame=0", "controllerType=0
         // controllerNumber=1 scan=1") are free-form strings, not constrained to NCName.

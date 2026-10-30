@@ -20,8 +20,10 @@
 //
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 
 namespace MSConvertGUI
@@ -33,11 +35,14 @@ namespace MSConvertGUI
         public static event EventHandler<string> StderrCaptured;
         internal static void OnStderrCaptured(string e) => StderrCaptured?.Invoke(null, e);
 
-        // The cpp/CLI build registered a P/Invoke callback into pwiz_bindings_cli.dll's
-        // SetCerrCallback() so vendor SDK stderr lines (Thermo / Bruker errors) could
-        // bubble up to the GUI's log viewer. pwiz-sharp has no cpp/CLI bridge; vendor
-        // SDKs run inside the same .NET process and write to the standard Console.Error
-        // stream directly. Console output redirection happens at the MainForm level.
+        /// <summary>
+        /// Sends everything written to <see cref="Console.Error"/> to <see cref="StderrCaptured"/>,
+        /// which the progress window adds to each running job's log. The library writes its
+        /// --continueOnError skip messages there, and vendor SDKs their errors; a WinForms app has
+        /// no console, so without this they are lost. The cpp/CLI build did the same through
+        /// pwiz_bindings_cli.dll's SetCerrCallback().
+        /// </summary>
+        internal static void CaptureStderr() => Console.SetError(TextWriter.Synchronized(new StderrForwarder()));
 
         /// <summary>
         /// The main entry point for the application.
@@ -59,6 +64,7 @@ namespace MSConvertGUI
 
             singleInstanceHandler.Launching += (sender, e) =>
             {
+                CaptureStderr();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 MSConvertRemoteAccountServices.Initialize();
@@ -82,5 +88,26 @@ namespace MSConvertGUI
             return;
         }
         #endregion
+
+        /// <summary>Forwards each write to <see cref="OnStderrCaptured"/>. The progress window
+        /// buffers the pieces until a line ends.</summary>
+        private sealed class StderrForwarder : TextWriter
+        {
+            public override Encoding Encoding => Encoding.UTF8;
+
+            public override void Write(char value) => Write(value.ToString());
+
+            public override void Write(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                    return;
+                // The caller is often a writer mid-conversion; a log that cannot be shown
+                // (a closing window, say) must not abort it.
+                try { OnStderrCaptured(value); }
+                catch (Exception) { }
+            }
+
+            public override void Write(char[] buffer, int index, int count) => Write(new string(buffer, index, count));
+        }
     }
 }
