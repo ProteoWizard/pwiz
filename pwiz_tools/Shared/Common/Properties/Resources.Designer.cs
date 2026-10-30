@@ -371,6 +371,16 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Alphabetical {
+            get {
+                object obj = ResourceManager.GetObject("Alphabetical", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap BoolColumn {
             get {
                 object obj = ResourceManager.GetObject("BoolColumn", resourceCulture);
@@ -411,6 +421,16 @@ namespace pwiz.Common.Properties {
         public static System.Drawing.Bitmap close {
             get {
                 object obj = ResourceManager.GetObject("close", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Cluster {
+            get {
+                object obj = ResourceManager.GetObject("Cluster", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -511,6 +531,16 @@ namespace pwiz.Common.Properties {
         public static string ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_ {
             get {
                 return ResourceManager.GetString("ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Copy {
+            get {
+                object obj = ResourceManager.GetObject("Copy", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -711,6 +741,26 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Edit_Redo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Filter {
             get {
                 object obj = ResourceManager.GetObject("Filter", resourceCulture);
@@ -856,9 +906,29 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Find {
+            get {
+                object obj = ResourceManager.GetObject("Find", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap FreezeCells {
             get {
                 object obj = ResourceManager.GetObject("FreezeCells", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap HiddenColumns {
+            get {
+                object obj = ResourceManager.GetObject("HiddenColumns", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -1090,6 +1160,46 @@ namespace pwiz.Common.Properties {
         public static string NavBar_UpdateGroupTotalDropdown_Transforms {
             get {
                 return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_Transforms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorFirst {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorFirst", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorLast {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorLast", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorNext {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorNext", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap NavigatorPrevious {
+            get {
+                object obj = ResourceManager.GetObject("NavigatorPrevious", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
