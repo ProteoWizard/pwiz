@@ -340,6 +340,10 @@ namespace AutoQC
                 // Import the annotations file if it has changed
                 ImportAnnotationsFileIfChanged();
 
+                // Checked before GetFile, which can wait for a new file to finish acquiring.
+                if (LogIfSkylineNotFound())
+                    break;
+
                 var filePath = _fileWatcher.GetFile();
                
                 if (filePath != null)
@@ -363,12 +367,8 @@ namespace AutoQC
                     TryReimportOldFiles(e, false);
                 }
 
-                // AutoQC finds Skyline only at startup, so every later import would fail the same way.
-                if (_skylineNotFound)
-                {
-                    _logger.LogError(GetSkylineNotFoundMessage());
+                if (LogIfSkylineNotFound())
                     break;
-                }
 
                 if (_panoramaFatalError)
                 {
@@ -405,6 +405,18 @@ namespace AutoQC
                     Thread.Sleep(WAIT_FOR_NEW_FILE);
                 }
             }
+        }
+
+        /// <summary>
+        /// Logs the stop message and returns true when the last Skyline run found no Skyline. AutoQC finds Skyline only at
+        /// startup, so every later import would fail the same way, and the caller stops the configuration.
+        /// </summary>
+        private bool LogIfSkylineNotFound()
+        {
+            if (!_skylineNotFound)
+                return false;
+            _logger.LogError(GetSkylineNotFoundMessage());
+            return true;
         }
 
         private void TryReimportOldFiles(DoWorkEventArgs e, bool forceImport)
@@ -444,6 +456,10 @@ namespace AutoQC
                     e.Result = CANCELED;
                     return;
                 }
+
+                // ProcessNewFiles logs the message and stops the configuration
+                if (_skylineNotFound)
+                    return;
 
                 var filePath = importContext.GetCurrentFile();
                 if (!_fileWatcher.RawDataExists(filePath))
@@ -536,6 +552,9 @@ namespace AutoQC
                     e.Result = CANCELED;
                     return false;
                 }
+
+                if (LogIfSkylineNotFound())
+                    return false;
 
                 var filePath = importContext.GetCurrentFile();
                 if (!_fileWatcher.RawDataExists(filePath))
@@ -1291,7 +1310,7 @@ namespace AutoQC
             // A missing ClickOnce Skyline is reported by SkylineRunner, and ProcessRunner records it in
             // SkylineNotFound. Any other missing Skyline is detected here, when the run failed and its
             // SkylineCmd.exe no longer exists. That happens when an Inno Setup or administrative Skyline was
-            // uninstalled, or a custom Skyline folder was deleted or moved. ProcessNewFiles and RunConfiguration
+            // uninstalled, or a custom Skyline folder was deleted or moved. The import loops and RunConfiguration
             // check the flag and stop the configuration.
             _skylineNotFound = _processRunner.SkylineNotFound ||
                                (status == ProcStatus.Error && !File.Exists(processInfo.Executable));
