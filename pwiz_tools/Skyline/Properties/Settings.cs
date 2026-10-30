@@ -1992,11 +1992,10 @@ namespace pwiz.Skyline.Properties
                 enzymeName: DEFAULT_ENZYME_NAME,
                 maxMissedCleavages: 0);
 
-            // Engine-specific presets, sorted alphabetically. DIA-NN presets live in
-            // their own list (DiannSearchSettingsPresetList) so the peptide-search wizard
-            // and the DIA-NN search wizard each see only what's applicable.
+            // Engine-specific presets, sorted alphabetically
             foreach (var preset in CometSearchEngine.GetDefaultPresets()
                          .Concat(MsFraggerSearchEngine.GetDefaultPresets())
+                         .Concat(DiannHelpers.GetDefaultPresets())
                          .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
                 yield return preset;
         }
@@ -2012,6 +2011,10 @@ namespace pwiz.Skyline.Properties
     }
 
 
+    /// <summary>
+    /// The presets the DIA-NN Search wizard saved, which Run Peptide Search, where DIA-NN searches now run,
+    /// moves into <see cref="SearchSettingsPresetList"/>. Kept so the settings that hold them still load.
+    /// </summary>
     public sealed class DiannSearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
     {
         public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)

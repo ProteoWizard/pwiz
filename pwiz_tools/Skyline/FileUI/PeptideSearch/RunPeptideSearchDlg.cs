@@ -56,6 +56,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private string _runSearchFingerprint; // The search inputs of the run in progress
         private string _searchFingerprint; // The search inputs of the last search that succeeded
         private string[] _searchResultFilenames; // The result files of that search
+        private bool _overwriteDocumentLibrary; // Replace the document library rather than add to it
         private bool _runCompleted;
 
         // True from the start of the run until it finishes or fails: the search and the steps after it stream
@@ -156,6 +157,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ConverterSettingsControl ConverterSettingsControl { get; }
         public SearchSettingsControl SearchSettingsControl { get; }
         public SearchControl SearchControl { get; }
+
+        /// <summary>
+        /// Sets the wizard up to search DIA spectra directly with <paramref name="searchEngine"/>,
+        /// which the user can still change.
+        /// </summary>
+        public void PreselectDirectDiaSearch(SearchEngine searchEngine)
+        {
+            BuildPepSearchLibControl.WorkflowType = Workflow.dia;
+            ConverterSettingsControl.UseDiaUmpire = false;
+            ConverterSettingsControl.DirectDiaSearchEngine = searchEngine;
+        }
 
         /// <summary>
         /// True once the run has finished and its document has been applied to Skyline.
@@ -269,10 +281,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool LeaveConverterSettingsPage()
         {
+            UpdateSearchedSpectra();
+            return true;
+        }
+
+        /// <summary>
+        /// Sets which spectra the search engine searches from the DIA search method page, and offers the
+        /// engines that can search them.
+        /// </summary>
+        private void UpdateSearchedSpectra()
+        {
             ImportPeptideSearch.IsGpfData = ConverterSettingsControl.IsGpf;
             ImportPeptideSearch.IsDIASearch = !ConverterSettingsControl.UseDiaUmpire;
             SearchSettingsControl.InitializeControls();
-            return true;
         }
 
         private bool LeaveSearchSettingsPage()
@@ -315,7 +336,35 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             _namedResults = GetNamedResultsWithLockMass();
-            return _namedResults != null;
+            if (_namedResults == null)
+                return false;
+
+            // Asked last, once nothing else can keep the user on the page
+            return AskOverwriteDocumentLibrary();
+        }
+
+        /// <summary>
+        /// When the document already has its library, asks whether the run replaces it or adds to it.
+        /// False when the user cancels.
+        /// </summary>
+        private bool AskOverwriteDocumentLibrary()
+        {
+            _overwriteDocumentLibrary = false;
+            if (IsFeatureDetectionWorkflow)
+                return true; // Detected features go into a library of their own
+            var docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+            if (!Document.Settings.HasDocumentLibrary || !File.Exists(docBlibPath))
+                return true;
+
+            var choice = MultiButtonMsgDlg.Show(this,
+                string.Format(PeptideSearchResources.RunPeptideSearchDlg_PrepareRun_A_spectral_library_already_exists_at___0___Overwrite_it__or_append_the_new_results_to_it_, docBlibPath),
+                PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Overwrite,
+                PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Append,
+                true);
+            if (choice == DialogResult.Cancel)
+                return false;
+            _overwriteDocumentLibrary = choice == DialogResult.Yes;
+            return true;
         }
 
         /// <summary>
@@ -428,6 +477,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IsFeatureDetection = IsFeatureDetectionWorkflow,
                 CutoffScore = SearchSettingsControl.CutoffScore,
                 IncludeAmbiguousMatches = BuildPepSearchLibControl.IncludeAmbiguousMatches,
+                OverwriteDocumentLibrary = _overwriteDocumentLibrary,
                 IrtStandard = BuildPepSearchLibControl.IrtStandards,
                 CirtPeptideCount = BuildPepSearchLibControl.CirtPeptideCount,
                 RecalibrateIrtStandard = BuildPepSearchLibControl.RecalibrateIrtStandard,
@@ -687,8 +737,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void InitSettingsPresetControls()
         {
-            // DIA-NN presets are owned by Settings.Default.DiannSearchSettingsPresets and
-            // surface only in DiannSearchDlg's dropdown; this list is DDA/DIA engines only.
             _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
                 cbSettingsPreset,
                 Settings.Default.SearchSettingsPresets,
@@ -707,6 +755,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 if (!presets.Any(p => p.Name == defaultPreset.Name))
                     presets.Insert(0, defaultPreset);
+            }
+
+            // Move in the presets the DIA-NN Search wizard saved, now that DIA-NN searches run here
+            var diannPresets = Settings.Default.DiannSearchSettingsPresets;
+            var diannDefaultNames = diannPresets.GetDefaults().Select(p => p.Name).ToHashSet();
+            var savedDiannPresets = diannPresets.Where(p => !diannDefaultNames.Contains(p.Name)).ToList();
+            foreach (var preset in savedDiannPresets)
+            {
+                // A preset of another engine may have the same name
+                var name = Helpers.GetUniqueName(preset.Name, n => !presets.Any(p => p.Name == n));
+                presets.Add(name == preset.Name ? preset : (SearchSettingsPreset) preset.ChangeName(name));
+                diannPresets.Remove(preset);
             }
         }
 
@@ -775,7 +835,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void ApplyPreset(SearchSettingsPreset preset)
         {
+            // DIA-NN takes ppm tolerances only; checked before the preset changes anything
+            if (preset.SearchEngine == SearchEngine.DIANN &&
+                (preset.PrecursorToleranceValue > 0 && preset.PrecursorToleranceUnit != MzTolerance.Units.ppm ||
+                 preset.FragmentToleranceValue > 0 && preset.FragmentToleranceUnit != MzTolerance.Units.ppm))
+            {
+                MessageDlg.Show(this, string.Format(PeptideSearchResources.SearchSettingsControl_ApplySearchSettingsPreset_DiaNN_requires_ppm_tolerances_, preset.Name));
+                return;
+            }
+
             _lastAppliedPreset = preset;
+
+            // A DIA preset chooses on the DIA search method page how its engine searches the DIA spectra:
+            // DIA-NN directly, MSFragger directly or after DIA-Umpire, the other engines after DIA-Umpire
+            if (preset.Workflow == SearchWorkflowType.dia)
+            {
+                if (preset.SearchEngine == SearchEngine.DIANN)
+                    ConverterSettingsControl.UseDiaUmpire = false;
+                else if (preset.SearchEngine != SearchEngine.MSFragger)
+                    ConverterSettingsControl.UseDiaUmpire = true;
+                if (preset.SearchEngine == SearchEngine.DIANN || preset.SearchEngine == SearchEngine.MSFragger)
+                    ConverterSettingsControl.DirectDiaSearchEngine = preset.SearchEngine;
+
+                // Past that page, the search settings page offers the engine it now chooses
+                if (IsPageApplicable(Pages.converter_settings_page) && IsAtOrAfterPage(Pages.dda_search_settings_page))
+                    UpdateSearchedSpectra();
+            }
 
             // Apply search engine settings
             SearchSettingsControl?.ApplySearchSettingsPreset(preset);

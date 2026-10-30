@@ -211,13 +211,22 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static void DeleteDocumentLibrary(SrmDocument doc, LibraryManager libraryManager, string docBlibPath)
         {
+            ReleaseDocumentLibrary(doc, libraryManager);
+            FileEx.SafeDelete(docBlibPath, true);
+            FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+        }
+
+        /// <summary>
+        /// Closes the document's read streams on its library and evicts the cached <see cref="Library"/>
+        /// from <paramref name="libraryManager"/>, so the library file can be deleted or moved.
+        /// </summary>
+        public static void ReleaseDocumentLibrary(SrmDocument doc, LibraryManager libraryManager)
+        {
             ClosePeptideSearchLibraryStreams(doc);
             var docLibSpecs = doc.Settings.PeptideSettings.Libraries.LibrarySpecs
                 .Where(s => s != null && s.IsDocumentLibrary).ToArray();
             if (docLibSpecs.Length > 0)
                 libraryManager.ReleaseLibraries(docLibSpecs);
-            FileEx.SafeDelete(docBlibPath, true);
-            FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
         }
 
         /// <summary>
@@ -405,10 +414,10 @@ namespace pwiz.Skyline.Model
                     var msDataFilePath = new MsDataFilePath(dataFile);
                     var noExtName = msDataFilePath.GetFileNameWithoutExtension();
 
-                    // A caller may have pre-populated SpectrumSourceFiles (e.g. DiannSearchDlg
-                    // seeds the files it just searched). The pre-population key may not match
-                    // the blib's storage form — DIA-NN libraries store ".raw" filenames with
-                    // extension but ".mzML" filenames without — so accept either as a match.
+                    // A caller may have pre-populated SpectrumSourceFiles with the files it searched.
+                    // The pre-population key may not match the blib's storage form — DIA-NN libraries
+                    // store ".raw" filenames with extension but ".mzML" filenames without — so accept
+                    // either as a match.
                     string lookupKey;
                     if (SpectrumSourceFiles.ContainsKey(dataFile))
                         lookupKey = dataFile;

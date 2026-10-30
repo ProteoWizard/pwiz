@@ -19,14 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
@@ -47,10 +48,13 @@ namespace pwiz.SkylineTestFunctional
 
         // When true, the test runs search settings that DIA-NN 1.9.1 reports zero
         // precursors against (q-value 0.01 + tiny inputs + 1.9.1's --gen-spec-lib
-        // heuristic) and asserts that DiannSearchDlg surfaces a friendly empty-results
+        // heuristic) and asserts that the run stops with a friendly empty-results
         // message instead of handing the empty lib.parquet off to BlibBuild (which would
         // otherwise abort with a confusing "process cannot access the file" error).
         private bool _expectEmptyResults;
+
+        // The DIA file searched. DIA-NN reads mzML itself, but not mzXML, which Skyline converts to mzML first.
+        private string _searchFileName = @"23aug2017_hela_serum_timecourse_wide_1c.mzML";
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -77,8 +81,8 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Repro for the "no peptides" case: 1.9.1 + strict 1% FDR drops every ID from
-        /// the tiny test inputs, producing a zero-row lib.parquet. Without the
-        /// DiannSearchDlg empty-results gate, BlibBuild would be invoked on the empty
+        /// the tiny test inputs, producing a zero-row lib.parquet. Without the DIA-NN
+        /// engine's empty-results check, BlibBuild would be invoked on the empty
         /// parquet, hit abort_current_library on the empty redundant.blib, fail to
         /// remove the file (unfinalized SQLite statements keep the handle open), and
         /// surface a confusing "process cannot access the file" IOException.
@@ -92,6 +96,21 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZipSuffix = @"empty_1_9_1";
             _versionUnderTest = DiannHelpers.DIANN_191_VERSION;
             _expectEmptyResults = true;
+            RunFunctionalTest();
+        }
+
+        /// <summary>
+        /// A format DIA-NN cannot read is converted to mzML before the search, and the results
+        /// of the converted file still reach the replicate named after the original.
+        /// </summary>
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        public void TestDiannSearchConverted()
+        {
+            TestFilesZip = @"TestFunctional\DiannSearchTest.zip";
+            TestFilesZipSuffix = @"converted";
+            _versionUnderTest = DiannHelpers.DIANN_VERSION;
+            _searchFileName = @"23aug2017_hela_serum_timecourse_wide_1c.mzXML";
             RunFunctionalTest();
         }
 
@@ -111,29 +130,6 @@ namespace pwiz.SkylineTestFunctional
         {
             // Per-version doc keeps both runs' artifacts side-by-side for diff/debug.
             PrepareDocument($"DiannSearchTest_{version}.sky");
-
-            // 1.9.1 needs a relaxed BlibBuild cutoff: with only ~6 IDs total across the
-            // tiny test mzMLs, DIA-NN's Global.Q.Value (cross-run FDR) lands around 0.11
-            // even though per-run Q.Value is ~0.003. Default 0.95 score (≈ q-value 0.05)
-            // would reject all of them. 2.x's lib output skips this path entirely so
-            // leaving the cutoff alone for 2.5.0 keeps that test honest. The empty-results
-            // test also leaves it alone because we want DIA-NN itself to produce zero
-            // entries, not have Skyline's post-filter strip them.
-            double savedCutoff = Settings.Default.LibraryResultCutOff;
-            if (version == DiannHelpers.DIANN_191_VERSION && !_expectEmptyResults)
-                RunUI(() => Settings.Default.LibraryResultCutOff = 0.5);
-            try
-            {
-                RunSearchAgainstDiannVersionImpl(version, downloadInfo);
-            }
-            finally
-            {
-                RunUI(() => Settings.Default.LibraryResultCutOff = savedCutoff);
-            }
-        }
-
-        private void RunSearchAgainstDiannVersionImpl(string version, FileDownloadInfo downloadInfo)
-        {
 
             // SimpleFileDownloader's FileAlreadyDownloaded check consults SearchToolList
             // for SearchToolType.DIANN and returns that path if set — so if a previous
@@ -168,220 +164,253 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(File.Exists(realDiannPath),
                 $@"DIA-NN {version} not at expected path after download: {realDiannPath}");
 
-            DiannSearchDlg searchDlg;
+            // Point SearchToolList at a path that doesn't exist on disk so DiannBinary
+            // resolves to a non-existent path (forcing the install check to prompt),
+            // regardless of what's actually present in the default Tools directory.
+            const string bogusPath = @"C:\__diann_not_installed__\diann.exe";
+            var customPreset = MakeCustomPreset();
+            bool savedWarnOnPresetChange = Settings.Default.WarnOnPresetChange;
+            RunUI(() =>
+            {
+                if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
+                    Settings.Default.SearchToolList.Remove(
+                        Settings.Default.SearchToolList[SearchToolType.DIANN]);
+                Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                    bogusPath, string.Empty, Path.GetDirectoryName(bogusPath), false));
+                Settings.Default.SearchSettingsPresets.Add(customPreset);
+                Settings.Default.WarnOnPresetChange = false; // Presets change on later pages here
+            });
             try
             {
-                // Point SearchToolList at a path that doesn't exist on disk so DiannBinary
-                // resolves to a non-existent path (forcing EnsureDiannInstalled to prompt),
-                // regardless of what's actually present in the default Tools directory.
-                const string bogusPath = @"C:\__diann_not_installed__\diann.exe";
-                RunUI(() =>
-                {
-                    if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
-                        Settings.Default.SearchToolList.Remove(
-                            Settings.Default.SearchToolList[SearchToolType.DIANN]);
-                    Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
-                        bogusPath, string.Empty, Path.GetDirectoryName(bogusPath), false));
-                });
-
-                // Part A: no DIA-NN registered anywhere -> DiannDownloadDlg appears.
-                DiannHelpers.RegisteredDiannPathOverride = () => null;
-                var downloadDlg = ShowDialog<DiannDownloadDlg>(SkylineWindow.ShowDiannSearchDlg);
-                OkDialog(downloadDlg, () => downloadDlg.DialogResult = DialogResult.Cancel);
-                AssertEx.IsNull(FindOpenForm<DiannSearchDlg>());
-
-                // Part B: an existing DIA-NN install is "discovered" via registry ->
-                // MultiButtonMsgDlg asks the user to reuse it or download; choose "Use Existing".
-                DiannHelpers.RegisteredDiannPathOverride = () => realDiannPath;
-                var useExisting = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ShowDiannSearchDlg);
-                OkDialog(useExisting, () => useExisting.DialogResult = DialogResult.Yes);
-                searchDlg = WaitForOpenForm<DiannSearchDlg>();
-                RunUI(() => AssertEx.AreEqual(realDiannPath, DiannHelpers.DiannBinary));
-
-                // Exercise preset apply/save before the wizard walk. Catches regressions
-                // like the silent-fallback Enzyme lookup and any field that ApplyPreset
-                // forgets to map.
-                VerifyPresetRoundTrip(searchDlg);
+                RunSearch(version, realDiannPath, customPreset);
             }
             finally
             {
                 DiannHelpers.RegisteredDiannPathOverride = null;
+                RunUI(() =>
+                {
+                    Settings.Default.WarnOnPresetChange = savedWarnOnPresetChange;
+                    foreach (var name in new[] { customPreset.Name, SNAPSHOT_PRESET_NAME })
+                    {
+                        var preset = Settings.Default.SearchSettingsPresets.FirstOrDefault(p => p.Name == name);
+                        if (preset != null)
+                            Settings.Default.SearchSettingsPresets.Remove(preset);
+                    }
+                });
             }
+        }
 
+        private const string SNAPSHOT_PRESET_NAME = @"DIA-NN unit-test snapshot";
+
+        private void RunSearch(string version, string realDiannPath, SearchSettingsPreset customPreset)
+        {
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library.fasta");
             // Single-file search exercises the no-MBR path. Multi-file coverage belongs
             // in a perf test; this functional test is intentionally minimal.
             string[] diaFilePaths =
             {
-                TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1c.mzML")
+                TestFilesDir.GetTestPath(_searchFileName)
             };
+            string documentDir = Path.GetDirectoryName(SkylineWindow.DocumentFilePath) ?? string.Empty;
 
-            // Page 0: Data files - add wide window DIA file
-            RunUI(() => AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page));
-            RunUI(() => searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
-                .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileName(p), p)).ToArray());
-
-            // Page 1: FASTA
-            RunUI(searchDlg.NextPage);
+            // The DIA-NN Search menu item opens Run Peptide Search set up to search DIA spectra with DIA-NN
+            var dlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowDiannSearchDlg);
             RunUI(() =>
             {
-                AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.fasta_page);
-                searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.spectra_page, dlg.CurrentPage);
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Workflow.dia, dlg.BuildPepSearchLibControl.WorkflowType);
+                dlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
+                dlg.BuildPepSearchLibControl.DdaSearchDataSources = diaFilePaths
+                    .Select(p => (MsDataFileUri) new MsDataFilePath(p)).ToArray();
+
+                // A DIA-NN preset chosen on the first page reaches the DIA-NN engine, which the search
+                // settings page makes only once the DIA search method page has chosen DIA-NN
+                dlg.SelectedPresetName = customPreset.Name;
+                AssertEx.IsTrue(dlg.ClickNextButton()); // 1 file: no prefix dialog
             });
 
-            // Page 2: Modifications (defaults: Carbamidomethyl C fixed, Oxidation M variable)
-            RunUI(searchDlg.NextPage);
-            RunUI(() => AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.modifications_page));
-
-            // Page 3: Search settings
-            RunUI(searchDlg.NextPage);
             RunUI(() =>
             {
-                AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.search_settings_page);
-                searchDlg.Ms1Tolerance = 10;
-                searchDlg.Ms2Tolerance = 20;
-                // 1.9.1's --gen-spec-lib heuristic drops every confident ID from a tiny
-                // input at strict 1% FDR. Loosening to 30% gives the heuristic enough
-                // candidates that some pass through and the lib parquet gets populated;
-                // 0.3 is also the largest q-value Skyline's BlibBuild grid considers
-                // non-"unusually permissive" (BlibBuild.SuggestedRange max = 0.3), so the
-                // permissive-threshold warning dialog doesn't fire. 2.5.0 stays at 1%.
-                // The empty-results test keeps 1.9.1 at 1% precisely to drive that
-                // zero-entry path.
-                searchDlg.QValueThreshold = (version == DiannHelpers.DIANN_191_VERSION && !_expectEmptyResults) ? 0.3 : 0.01;
-                searchDlg.Threads = Environment.ProcessorCount;
-                searchDlg.DiannSearchConfig.AdditionalSettings[@"MinPrecursorCharge"].Value = 2;
-                searchDlg.DiannSearchConfig.AdditionalSettings[@"MaxPrecursorCharge"].Value = 3;
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.match_modifications_page, dlg.CurrentPage);
+                var checkedMods = dlg.MatchModificationsControl.CheckedModificationNames.ToList();
+                AssertEx.IsTrue(checkedMods.Contains(@"Carbamidomethyl (C)"), string.Join(@", ", checkedMods));
+                AssertEx.IsTrue(checkedMods.Contains(@"Oxidation (M)"), string.Join(@", ", checkedMods));
+                AssertEx.IsTrue(dlg.ClickNextButton());
             });
 
-            // Page 4: Start search
-            RunUI(searchDlg.NextPage);
-
-            // Wait for search to complete (DIA-NN can take a while)
-            try
+            RunUI(() =>
             {
-                bool? searchSucceeded = null;
-                searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
-                WaitForConditionUI(300000, () => searchSucceeded.HasValue); // 5 minute timeout
-                RunUI(() => AssertEx.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
-            }
-            finally
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.import_fasta_page, dlg.CurrentPage);
+                AssertEx.AreEqual(@"Trypsin/P", dlg.ImportFastaControl.Enzyme?.Name);
+                AssertEx.AreEqual(2, dlg.ImportFastaControl.MaxMissedCleavages);
+                // DIA-NN supplies peak boundaries, so no decoys and no mProphet model unless the user asks
+                AssertEx.IsTrue(string.IsNullOrEmpty(dlg.ImportFastaControl.DecoyGenerationMethod));
+                AssertEx.IsFalse(dlg.ImportFastaControl.AutoTrain);
+                dlg.ImportFastaControl.SetFastaContent(fastaFilepath);
+                AssertEx.IsTrue(dlg.ClickNextButton());
+            });
+
+            RunUI(() =>
             {
-                File.WriteAllText("DiannSearchControlLog.txt", searchDlg.SearchControl.LogText);
-            }
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.converter_settings_page, dlg.CurrentPage);
+                AssertEx.IsFalse(dlg.ConverterSettingsControl.UseDiaUmpire);
+                AssertEx.AreEqual(SearchEngine.DIANN, dlg.ConverterSettingsControl.DirectDiaSearchEngine);
+                AssertEx.IsTrue(dlg.ClickNextButton());
+            });
 
-            // Verify spectral library (parquet) was created
-            AssertEx.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath));
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.dda_search_settings_page, dlg.CurrentPage);
+                var settings = dlg.SearchSettingsControl;
+                AssertEx.AreEqual(SearchEngine.DIANN, settings.SelectedSearchEngine);
+                AssertEx.AreEqualDeep(new[] { SearchEngine.DIANN }, settings.SearchEngineChoices.ToArray());
+                VerifyPresetApplied(dlg, 15, 25, 0.05, 6, 40, 2, 5);
 
-            // Delete any leftover .blib from a previous run so the existing-blib
-            // overwrite prompt doesn't fire (that path is covered in a dedicated test).
-            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
-            if (File.Exists(docBlibPath))
-                File.Delete(docBlibPath);
+                // Round trip through a saved preset
+                dlg.SaveSettingsPreset(SNAPSHOT_PRESET_NAME);
+                var snapshot = Settings.Default.SearchSettingsPresets.First(p => p.Name == SNAPSHOT_PRESET_NAME);
+                AssertEx.AreEqual(SearchEngine.DIANN, snapshot.SearchEngine);
+                AssertEx.AreEqual(15.0, snapshot.PrecursorToleranceValue);
+                AssertEx.AreEqual(25.0, snapshot.FragmentToleranceValue);
+                AssertEx.AreEqual(0.05, snapshot.CutoffScore);
+                AssertEx.AreEqual(@"Trypsin/P", snapshot.EnzymeName);
+                AssertEx.AreEqual(2, snapshot.MaxMissedCleavages);
+                AssertEx.AreEqual(SearchWorkflowType.dia, snapshot.Workflow);
+                AssertEx.IsTrue(snapshot.HasExplicitModifications);
+                AssertEx.AreEqual(2, snapshot.StructuralModifications.Count);
+                AssertEx.IsTrue(snapshot.AdditionalSettingsXml?.Contains(@"MinPepLen") == true);
+                AssertEx.IsTrue(snapshot.AdditionalSettingsXml?.Contains(@"MaxPrecursorCharge") == true);
+
+                // A built-in DIA-NN preset applied over it sets every value back
+                dlg.SelectedPresetName = DiannHelpers.PRESET_ORBITRAP;
+                VerifyPresetApplied(dlg, 10, 20, 0.01, 7, 30, 2, 3);
+                AssertEx.AreEqual(@"Trypsin", dlg.ImportFastaControl.Enzyme?.Name);
+                AssertEx.AreEqual(1, dlg.ImportFastaControl.MaxMissedCleavages);
+
+                // The settings of this search. 1.9.1's --gen-spec-lib heuristic drops every
+                // confident ID from a tiny input at strict 1% FDR. Loosening to 30% gives the
+                // heuristic enough candidates that some pass through and the lib parquet gets
+                // populated, and the library build keeps them at the same cutoff; 0.3 is also
+                // the largest q-value Skyline considers non-"unusually permissive"
+                // (BlibBuild.SuggestedRange max = 0.3). 2.5.0 stays at 1%. The empty-results
+                // test keeps 1.9.1 at 1% precisely to drive that zero-entry path.
+                settings.CutoffScore = version == DiannHelpers.DIANN_191_VERSION && !_expectEmptyResults ? 0.3 : 0.01;
+                settings.SetAdditionalSetting(DiannSearchEngine.THREADS, Environment.ProcessorCount.ToString(CultureInfo.InvariantCulture));
+            });
+
+            // Leaving the search settings page makes sure DIA-NN is installed.
+            // No DIA-NN registered anywhere: the download dialog, which leaves the user on the page when canceled.
+            DiannHelpers.RegisteredDiannPathOverride = () => null;
+            var downloadDlg = ShowDialog<DiannDownloadDlg>(() => dlg.ClickNextButton());
+            OkDialog(downloadDlg, () => downloadDlg.DialogResult = DialogResult.Cancel);
+            RunUI(() => AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.dda_search_settings_page, dlg.CurrentPage));
+
+            // An existing DIA-NN install is "discovered" via the registry: the user is asked to reuse it or
+            // download one; choose "Use Existing".
+            DiannHelpers.RegisteredDiannPathOverride = () => realDiannPath;
+            var useExisting = ShowDialog<MultiButtonMsgDlg>(() => dlg.ClickNextButton());
+            OkDialog(useExisting, () => useExisting.DialogResult = DialogResult.Yes);
+            WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(realDiannPath, DiannHelpers.DiannBinary);
+                AssertEx.IsTrue(dlg.ClickNextButton());
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.full_scan_settings_page, dlg.CurrentPage);
+                dlg.FullScanSettingsControl.IsolationSchemeName = PropertiesResources.IsolationSchemeList_GetDefaults_Results_only;
+            });
+
+            // Run. The new document has no library of its own, so nothing asks whether to replace it.
+            SkylineWindow.BeginInvoke(() => dlg.ClickNextButton());
 
             if (_expectEmptyResults)
             {
-                // DIA-NN returned a zero-row lib.parquet — the empty-results gate in
-                // DiannSearchDlg.ImportDiannLibrary should surface a friendly message
-                // and leave the wizard on run_page instead of opening
-                // ImportPeptideSearchDlg (which would call BlibBuild and hit the
-                // unfinalized-statement / file-locked failure mode).
-                var emptyMsg = ShowDialog<MessageDlg>(searchDlg.NextPage);
-                AssertEx.Contains(emptyMsg.Message, @"no precursors");
+                // DIA-NN returned a zero-row lib.parquet. The run stops with a message that says so,
+                // instead of handing the empty library to BlibBuild, which fails confusingly on it.
+                var emptyMsg = WaitForOpenForm<MessageDlg>(300000);
+                RunUI(() => AssertEx.AreEqual(string.Format(ModelResources.DiannSearchEngine_Run_DIA_NN_found_no_precursors_at_q_value__0_, 0.01),
+                    emptyMsg.Message));
                 OkDialog(emptyMsg, emptyMsg.OkDialog);
-                AssertEx.IsNull(FindOpenForm<ImportPeptideSearchDlg>(),
-                    @"ImportPeptideSearchDlg should not open when DIA-NN returns 0 precursors");
-                RunUI(() => AssertEx.IsTrue(searchDlg.CurrentPage == DiannSearchDlg.Pages.run_page,
-                    @"wizard should stay on run_page so user can go back to settings"));
+                WaitForConditionUI(() => dlg.RunSucceeded.HasValue);
+                RunUI(() => AssertEx.IsFalse(dlg.RunSucceeded.Value));
 
-                // Confirm the .blib is also clean — even though BlibBuild was never
-                // invoked, the gate must not have left a partial file behind.
-                AssertEx.IsFalse(File.Exists(docBlibPath),
-                    @"no .blib should exist when empty-results gate fired");
+                string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
+                AssertEx.IsFalse(File.Exists(docBlibPath), @"no .blib should be built from empty results");
                 AssertEx.IsFalse(File.Exists(BiblioSpecLiteSpec.GetRedundantName(docBlibPath)),
-                    @"no .redundant.blib should exist when empty-results gate fired");
+                    @"no .redundant.blib should be built from empty results");
 
-                OkDialog(searchDlg, () => searchDlg.DialogResult = DialogResult.Cancel);
+                OkDialog(dlg, dlg.ClickCancelButton);
                 return;
             }
 
-            // Transition to Import Peptide Search wizard. DiannSearchDlg pre-loads the
-            // DIA-NN -lib.parquet as the search input; the wizard opens on the spectra
-            // page and BlibBuild converts the parquet to a .blib via DiaNNSpecLibReader.
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
-            WaitForDocumentLoaded();
-            // BlibBuild score-type lookup on the parquet runs async on the spectra page;
-            // wait for it to finish before the Next button can validate.
-            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
-
-            // 1.9.1's lib parquet only contains entries from the relaxed --qvalue 0.3
-            // search (1% FDR drops all entries due to 1.9.1's empirical-lib heuristic).
-            // Match the BlibBuild per-file score_threshold so the entries survive the
-            // filter. 0.3 sits at the top of Skyline's "non-permissive" q-value range,
-            // so this also avoids the MultiButtonMsgDlg confirmation.
-            if (version == DiannHelpers.DIANN_191_VERSION)
+            try
             {
-                RunUI(() =>
-                {
-                    foreach (var f in importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files)
-                        f.ScoreThreshold = 0.3;
-                });
+                WaitForConditionUI(300000, () => dlg.RunSucceeded.HasValue, () => dlg.SearchControl.LogText); // DIA-NN can take a while
+                RunUI(() => AssertEx.IsTrue(dlg.RunSucceeded.Value, dlg.SearchControl.LogText));
+            }
+            finally
+            {
+                File.WriteAllText("DiannSearchControlLog.txt", dlg.SearchControl.LogText);
             }
 
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
-                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
-
-                // DiannSearchDlg pre-populated the chromatograms page with the searched
-                // files, so all should appear in Found and Missing should be empty
-                // (no second entry under a different filename casing/extension).
-                var importResults = importPeptideSearchDlg.ImportResultsControl;
-                var foundPaths = importResults.FoundResultsFiles.Select(f => f.Path).ToHashSet();
-                AssertEx.AreEqual(diaFilePaths.Length, foundPaths.Count,
-                    $@"expected {diaFilePaths.Length} found result files, got {foundPaths.Count}");
-                foreach (var p in diaFilePaths)
-                    AssertEx.IsTrue(foundPaths.Contains(p), $@"missing pre-populated file in Found list: {p}");
-                AssertEx.IsFalse(importResults.MissingResultsFiles.Any(),
-                    $@"unexpected entries in Missing list: {string.Join(@", ", importResults.MissingResultsFiles)}");
-
+                // DIA-NN's console output is the run page's log file, and its library is the search result
+                AssertEx.IsTrue(dlg.SearchControl.CanOpenLog);
+                AssertEx.AreEqual(Path.Combine(documentDir, DiannHelpers.STDOUT_LOG_NAME), dlg.SearchControl.LogFilePath);
+                AssertEx.IsTrue(File.Exists(Path.Combine(documentDir, DiannHelpers.OUTPUT_LIB_NAME)));
             });
 
-            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton())); // 1 file → no rename dialog
+            // DIA-NN searched the mzML conversion of a file it cannot read
+            var searchFilePath = diaFilePaths[0];
+            var convertedPath = Path.Combine(Path.GetDirectoryName(searchFilePath) ?? string.Empty,
+                MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, Path.GetFileNameWithoutExtension(searchFilePath) + @".mzML");
+            bool isConverted = new DiannSearchEngine(documentDir).GetSearchFileNeedsConversion(new MsDataFilePath(searchFilePath), out _);
+            AssertEx.AreEqual(_searchFileName.EndsWith(@".mzXML"), isConverted);
+            AssertEx.AreEqual(isConverted, File.Exists(convertedPath), convertedPath);
 
+            // The truncated mzML may not yield enough confident IDs to populate every target type, so the
+            // counts are not checked: what matters is that the run goes through every step and BlibBuild
+            // converts the DIA-NN parquet into the document's library.
+            OkDialog(dlg, () => dlg.ClickNextButton()); // Finish
+            WaitForDocumentLoaded();
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
-                // DIA-NN default mods (Carbamidomethyl C, Oxidation M) are detected from
-                // the library; add them all so library precursors match document targets.
-                importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
-                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
-                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-                importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName =
-                    PropertiesResources.IsolationSchemeList_GetDefaults_Results_only;
-                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
-                importPeptideSearchDlg.ImportFastaControl.AutoTrain = false;
+                AssertEx.IsTrue(SkylineWindow.Document.Settings.HasDocumentLibrary);
+                SkylineWindow.SaveDocument();
             });
-
-            // Finish wizard → AssociateProteinsDlg. The truncated mzML may not yield enough
-            // confident IDs to populate every target type, so we don't assert specific counts
-            // here — the value of this test is that the wizard advances cleanly through every
-            // page and BlibBuild successfully converts the DIA-NN parquet to a .blib.
-            var associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            WaitForConditionUI(() => associateProteinsDlg.DocumentFinalCalculated);
-            using (new WaitDocumentChange(null, true))
-            {
-                OkDialog(associateProteinsDlg, associateProteinsDlg.OkDialog);
-            }
-
-            WaitForDocumentLoaded();
-            RunUI(() => SkylineWindow.SaveDocument());
+            VerifyPeakBoundsFromLibrary(searchFilePath);
         }
+
+        /// <summary>
+        /// DIA-NN's peak boundaries in the library, which name the file DIA-NN searched, set the
+        /// peaks of the replicate, which names the file the user chose.
+        /// </summary>
+        private void VerifyPeakBoundsFromLibrary(string searchFilePath)
+        {
+            var doc = SkylineWindow.Document;
+            var replicateFile = doc.Settings.MeasuredResults.Chromatograms.Single().MSDataFilePaths.Single();
+            AssertEx.AreEqual(Path.GetFileName(searchFilePath), replicateFile.GetFileName());
+            var library = doc.Settings.PeptideSettings.Libraries.Libraries.Single();
+            int peptidesWithBounds = 0;
+            foreach (var peptide in doc.Peptides)
+            {
+                var bounds = library.GetExplicitPeakBounds(replicateFile, new[] { peptide.ModifiedTarget });
+                if (bounds == null)
+                    continue;
+                peptidesWithBounds++;
+                foreach (var nodeGroup in peptide.TransitionGroups)
+                {
+                    var chromInfo = nodeGroup.Results?[0].FirstOrDefault();
+                    AssertEx.IsNotNull(chromInfo?.StartRetentionTime, peptide.ModifiedSequenceDisplay);
+                    AssertEx.AreEqual(bounds.StartTime, chromInfo.StartRetentionTime.Value, PEAK_BOUND_TOLERANCE, peptide.ModifiedSequenceDisplay);
+                    AssertEx.AreEqual(bounds.EndTime, chromInfo.EndRetentionTime.Value, PEAK_BOUND_TOLERANCE, peptide.ModifiedSequenceDisplay);
+                }
+            }
+            AssertEx.IsTrue(peptidesWithBounds > 0, @"no library peak boundaries for " + replicateFile);
+        }
+
+        // Peak boundaries snap to the nearest chromatogram point, which can be a scan cycle away
+        private const double PEAK_BOUND_TOLERANCE = 0.1;
 
         private void PrepareDocument(string documentFile)
         {
@@ -392,23 +421,19 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Apply a non-default preset to <paramref name="searchDlg"/> and assert every field
-        /// the preset is supposed to control actually changed on the dialog. Then snapshot
-        /// the dialog back into a preset and assert the values round-trip. Picks values
-        /// that differ from both the dialog's startup defaults AND each other (e.g. enzyme
-        /// "Trypsin/P" instead of "Trypsin") so silent-fallback bugs are visible.
+        /// A DIA-NN preset with values that differ from both the wizard's defaults and the built-in
+        /// presets (e.g. enzyme "Trypsin/P" instead of "Trypsin"), so a value the wizard fails to apply shows.
         /// </summary>
-        private void VerifyPresetRoundTrip(DiannSearchDlg searchDlg)
+        private static SearchSettingsPreset MakeCustomPreset()
         {
-            // Built-in DIA-NN presets must be registered against the SearchSettingsPresets
-            // list (DiannSearchSettingsPresets) and tagged with SearchEngine.DIANN.
+            // Built-in DIA-NN presets are tagged with SearchEngine.DIANN and offered with the other engines' presets
             var defaults = DiannHelpers.GetDefaultPresets().ToList();
             AssertEx.AreEqual(3, defaults.Count, @"expected 3 built-in DIA-NN presets");
             foreach (var dflt in defaults)
             {
                 AssertEx.AreEqual(SearchEngine.DIANN, dflt.SearchEngine);
-                AssertEx.IsTrue(Settings.Default.DiannSearchSettingsPresets.Any(p => p.Name == dflt.Name),
-                    $@"built-in preset '{dflt.Name}' missing from DiannSearchSettingsPresets");
+                AssertEx.IsTrue(new SearchSettingsPresetList().GetDefaults().Any(p => p.Name == dflt.Name),
+                    $@"built-in preset '{dflt.Name}' missing from the search settings presets");
             }
 
             var carbamidomethyl = UniMod.GetModification(@"Carbamidomethyl (C)", true);
@@ -434,58 +459,6 @@ namespace pwiz.SkylineTestFunctional
                 structuralModifications: new[] { carbamidomethyl, oxidationM },
                 workflowType: SearchWorkflowType.dia,
                 hasExplicitModifications: true);
-
-            RunUI(() =>
-            {
-                searchDlg.ApplyPreset(custom);
-                AssertEx.AreEqual(15.0, searchDlg.Ms1Tolerance);
-                AssertEx.AreEqual(25.0, searchDlg.Ms2Tolerance);
-                AssertEx.AreEqual(0.05, searchDlg.QValueThreshold);
-                AssertEx.AreEqual(@"Trypsin/P", searchDlg.ImportFastaControl.Enzyme?.Name,
-                    @"ApplyPreset did not switch enzyme to 'Trypsin/P'");
-                AssertEx.AreEqual(2, searchDlg.ImportFastaControl.MaxMissedCleavages);
-                var fixedNames = searchDlg.FixedMods.Select(m => m.Name).ToList();
-                var variableNames = searchDlg.VariableMods.Select(m => m.Name).ToList();
-                AssertEx.IsTrue(fixedNames.Contains(@"Carbamidomethyl (C)"),
-                    $@"expected fixed Carbamidomethyl (C), got [{string.Join(",", fixedNames)}]");
-                AssertEx.IsTrue(variableNames.Contains(@"Oxidation (M)"),
-                    $@"expected variable Oxidation (M), got [{string.Join(",", variableNames)}]");
-
-                // Engine-specific bag landed in DiannSearchConfig.AdditionalSettings.
-                var addl = searchDlg.DiannSearchConfig.AdditionalSettings;
-                AssertEx.AreEqual(@"6", addl[@"MinPepLen"].Value.ToString());
-                AssertEx.AreEqual(@"40", addl[@"MaxPepLen"].Value.ToString());
-                AssertEx.AreEqual(@"2", addl[@"MinPrecursorCharge"].Value.ToString());
-                AssertEx.AreEqual(@"5", addl[@"MaxPrecursorCharge"].Value.ToString());
-
-                // Round-trip: snapshot the dialog into a new preset and assert the
-                // values match what we just applied.
-                var snapshot = searchDlg.BuildPresetFromCurrentSettings(@"snapshot");
-                AssertEx.AreEqual(SearchEngine.DIANN, snapshot.SearchEngine);
-                AssertEx.AreEqual(15.0, snapshot.PrecursorToleranceValue);
-                AssertEx.AreEqual(25.0, snapshot.FragmentToleranceValue);
-                AssertEx.AreEqual(0.05, snapshot.CutoffScore);
-                AssertEx.AreEqual(@"Trypsin/P", snapshot.EnzymeName);
-                AssertEx.AreEqual(2, snapshot.MaxMissedCleavages);
-                AssertEx.AreEqual(SearchWorkflowType.dia, snapshot.Workflow);
-                AssertEx.IsTrue(snapshot.HasExplicitModifications);
-                AssertEx.AreEqual(2, snapshot.StructuralModifications.Count);
-                AssertEx.IsTrue(snapshot.AdditionalSettingsXml?.Contains(@"MinPepLen") == true);
-                AssertEx.IsTrue(snapshot.AdditionalSettingsXml?.Contains(@"MaxPrecursorCharge") == true);
-
-                // Re-apply a built-in default and verify the values flip back. This catches
-                // any state that ApplyPreset doesn't reset cleanly.
-                var defaultPreset = defaults.First(p => p.Name == DiannHelpers.PRESET_ORBITRAP);
-                searchDlg.ApplyPreset(defaultPreset);
-                AssertEx.AreEqual(10.0, searchDlg.Ms1Tolerance);
-                AssertEx.AreEqual(20.0, searchDlg.Ms2Tolerance);
-                AssertEx.AreEqual(0.01, searchDlg.QValueThreshold);
-                AssertEx.AreEqual(@"Trypsin", searchDlg.ImportFastaControl.Enzyme?.Name,
-                    @"ApplyPreset(Orbitrap) did not restore enzyme to 'Trypsin'");
-                AssertEx.AreEqual(1, searchDlg.ImportFastaControl.MaxMissedCleavages);
-                AssertEx.AreEqual(@"2", searchDlg.DiannSearchConfig.AdditionalSettings[@"MinPrecursorCharge"].Value.ToString());
-                AssertEx.AreEqual(@"3", searchDlg.DiannSearchConfig.AdditionalSettings[@"MaxPrecursorCharge"].Value.ToString());
-            });
 
             // XML round-trip: the user reported custom DIA-NN presets disappearing on
             // Skyline restart. Mirror what happens on Save()/Reload by writing the preset
@@ -515,6 +488,23 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(custom.StructuralModifications.Count, deserialized.StructuralModifications.Count);
             AssertEx.IsTrue(deserialized.AdditionalSettingsXml?.Contains(@"MinPepLen") == true,
                 @"AdditionalSettingsXml did not survive round-trip");
+            return custom;
+        }
+
+        private static void VerifyPresetApplied(RunPeptideSearchDlg dlg, double ms1Ppm, double ms2Ppm, double qValue,
+            int minPepLen, int maxPepLen, int minCharge, int maxCharge)
+        {
+            var settings = dlg.SearchSettingsControl;
+            AssertEx.AreEqual(ms1Ppm, settings.PrecursorTolerance.Value);
+            AssertEx.AreEqual(MzTolerance.Units.ppm, settings.PrecursorTolerance.Unit);
+            AssertEx.AreEqual(ms2Ppm, settings.FragmentTolerance.Value);
+            AssertEx.AreEqual(MzTolerance.Units.ppm, settings.FragmentTolerance.Unit);
+            AssertEx.AreEqual(qValue, settings.CutoffScore);
+            var additional = settings.AdditionalSettings;
+            AssertEx.AreEqual(minPepLen, additional[@"MinPepLen"].Value);
+            AssertEx.AreEqual(maxPepLen, additional[@"MaxPepLen"].Value);
+            AssertEx.AreEqual(minCharge, additional[@"MinPrecursorCharge"].Value);
+            AssertEx.AreEqual(maxCharge, additional[@"MaxPrecursorCharge"].Value);
         }
 
         /// <summary>

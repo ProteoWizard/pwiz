@@ -29,6 +29,7 @@ using Microsoft.Win32;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
@@ -47,6 +48,68 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>DIA-NN's console output, teed to disk as it runs, beside the --out file (the document).</summary>
         public const string STDOUT_LOG_NAME = @"diann-skyline-stdout.log";
+
+        /// <summary>The library of what the search found, which BiblioSpec builds the document library from.</summary>
+        public const string OUTPUT_LIB_NAME = @"diann-output-lib.parquet";
+
+        /// <summary>The search report, found by BiblioSpec from <see cref="OUTPUT_LIB_NAME"/> by dropping "-lib".</summary>
+        public const string OUTPUT_REPORT_NAME = @"diann-output.parquet";
+
+        /// <summary>The file in a Bruker .d folder that holds timsTOF data, which DIA-NN reads.</summary>
+        public const string TIMSTOF_ANALYSIS_FILE = @"analysis.tdf";
+
+        /// <summary>
+        /// Whether DIA-NN reads a spectrum file of the given <see cref="DataSourceUtil"/> source type
+        /// itself; files it does not read are converted to mzML first.
+        /// </summary>
+        /// <param name="sourceType">The file's <see cref="DataSourceUtil"/> source type</param>
+        /// <param name="isTimsTof">For a Bruker .d folder, whether it holds timsTOF data (rather than BAF or TSF)</param>
+        /// <param name="isOneSampleOfSeveral">Whether the file is one sample picked from a multi-sample file</param>
+        public static bool ReadsFormat(string sourceType, bool isTimsTof, bool isOneSampleOfSeveral)
+        {
+            switch (sourceType)
+            {
+                case DataSourceUtil.TYPE_THERMO_RAW:
+                case DataSourceUtil.TYPE_MZML:
+                    return true;
+                case DataSourceUtil.TYPE_WIFF:
+                case DataSourceUtil.TYPE_WIFF2:
+                    // DIA-NN cannot be told to search only one sample of a file
+                    return !isOneSampleOfSeveral;
+                case DataSourceUtil.TYPE_BRUKER:
+                    return isTimsTof;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Counts the precursors in a DIA-NN library parquet. False when the file cannot be read.
+        /// </summary>
+        /// <remarks>
+        /// Read through <see cref="ActionUtil.CallWithoutSynchronizationContext{T}"/> because
+        /// ParquetReader.CreateAsync's continuation posts back to the calling SynchronizationContext,
+        /// and blocking on it from the UI thread deadlocks.
+        /// </remarks>
+        public static bool TryCountLibraryRows(string parquetPath, out long rowCount)
+        {
+            long? count = ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                try
+                {
+                    using var stream = File.OpenRead(parquetPath);
+                    // The reader holds nothing of its own over a caller's stream, so it is not disposed
+                    var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                    return (long?) reader.RowGroups.Sum(rg => rg.RowCount);
+                }
+                catch
+                {
+                    return null;
+                }
+            });
+            rowCount = count ?? 0;
+            return count.HasValue;
+        }
         public static string DiannDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), DIANN_FILENAME);
         public static string DiannBinary =>
             Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.DIANN, Path.Combine(DiannDirectory, @"diann.exe"));
@@ -734,8 +797,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             // Names paired so DiaNNSpecLibReader's "-lib.parquet" -> ".parquet"
             // report-derivation rule resolves the report file from the lib filename.
-            string outputReportPath = Path.Combine(outputDir, @"diann-output.parquet");
-            string outputLibPath = Path.Combine(outputDir, @"diann-output-lib.parquet");
+            string outputReportPath = Path.Combine(outputDir, OUTPUT_REPORT_NAME);
+            string outputLibPath = Path.Combine(outputDir, OUTPUT_LIB_NAME);
 
             if (cancelToken.IsCancellationRequested)
                 return null;
@@ -808,7 +871,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public double Ms1Accuracy { get; set; }
         public double Ms2Accuracy { get; set; }
-        public double QValue { get; set; } = 0.01;
+        public const double DEFAULT_QVALUE = 0.01;
+        // DIA-NN's CLI default for --var-mods is 1; the GUI default is 2. Match the GUI
+        // so we're not silently more restrictive than what most DIA-NN users get.
+        public const int DEFAULT_MAX_VAR_MODS = 2;
+
+        public double QValue { get; set; } = DEFAULT_QVALUE;
         public int Threads { get; set; } = Environment.ProcessorCount;
         public int MinPepLen { get; set; } = 7;
         public int MaxPepLen { get; set; } = 30;
@@ -816,9 +884,7 @@ namespace pwiz.Skyline.Model.Lib
         public int MaxPrCharge { get; set; } = 4;
         public int MaxMissedCleavages { get; set; } = 1;
         public bool MetExcision { get; set; } = true;
-        // DIA-NN's CLI default for --var-mods is 1; the GUI default is 2. Match the GUI
-        // so we're not silently more restrictive than what most DIA-NN users get.
-        public int MaxVarMods { get; set; } = 2;
+        public int MaxVarMods { get; set; } = DEFAULT_MAX_VAR_MODS;
 
         /// <summary>
         /// When true, <see cref="DiannHelpers.GeneratePredictedLibrary"/> short-circuits and returns

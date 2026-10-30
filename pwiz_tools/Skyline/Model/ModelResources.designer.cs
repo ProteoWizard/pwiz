@@ -519,6 +519,37 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-NN found no precursors at q-value {0}. Go back to the search settings page to widen the q-value threshold, change peptide-length or charge-range filters, or verify that the FASTA and DIA data files are matched correctly..
+        /// </summary>
+        public static string DiannSearchEngine_Run_DIA_NN_found_no_precursors_at_q_value__0_ {
+            get {
+                return ResourceManager.GetString("DiannSearchEngine_Run_DIA_NN_found_no_precursors_at_q_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN search did not produce a spectral library output..
+        /// </summary>
+        public static string DiannSearchEngine_Run_DIA_NN_search_did_not_produce_a_spectral_library_output_ {
+            get {
+                return ResourceManager.GetString("DiannSearchEngine_Run_DIA_NN_search_did_not_produce_a_spectral_library_output_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The DIA-NN spectral library file could not be read:
+        ///
+        ///{0}
+        ///
+        ///The file may be truncated or corrupted from an interrupted search. Try running the search again..
+        /// </summary>
+        public static string DiannSearchEngine_Run_The_DIA_NN_spectral_library_file_could_not_be_read {
+            get {
+                return ResourceManager.GetString("DiannSearchEngine_Run_The_DIA_NN_spectral_library_file_could_not_be_read", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Re-using existing DIA-Umpire file (with equivalent settings) for {0}.
         /// </summary>
         public static string DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_ {

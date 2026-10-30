@@ -48,36 +48,88 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             _diaUmpireAdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
 
-            // Searching the DIA spectra directly (without DIA-Umpire) needs to know whether they are
-            // gas phase fractions
+            // Searching the DIA spectra directly (without DIA-Umpire) needs an engine that can, and for
+            // MSFragger, whether they are gas phase fractions: a row of its own between the description and
+            // the DIA-Umpire settings, which move down to make room for it
+            const int rowHeight = 30;
+            _lblDirectDiaSearchEngine = new Label
+            {
+                AutoSize = true,
+                Location = new Point(3, 7),
+                Name = @"lblDirectDiaSearchEngine",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Search_engine_for_the_DIA_spectra_
+            };
+            _comboDirectDiaSearchEngine = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                // An AutoSize label has its width only once shown, so the combo goes after its preferred width
+                Location = new Point(_lblDirectDiaSearchEngine.Left + _lblDirectDiaSearchEngine.PreferredWidth + 6, 3),
+                Name = @"comboDirectDiaSearchEngine",
+                Width = 100
+            };
+            _comboDirectDiaSearchEngine.Items.AddRange(new object[] { @"MSFragger", @"DIA-NN" });
+            _comboDirectDiaSearchEngine.SelectedIndex = 0;
             _cbGpf = new CheckBox
             {
                 AutoSize = true,
-                Location = new Point(cbDiaUmpire.Right + 12, cbDiaUmpire.Top),
+                Location = new Point(_comboDirectDiaSearchEngine.Right + 12, 5),
                 Name = @"cbGpf",
                 Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation,
                 UseVisualStyleBackColor = true
             };
-            diaUmpireDescriptionPanel.Controls.Add(_cbGpf);
-            UpdateGpf();
+            var directDiaPanel = new Panel
+            {
+                Location = new Point(diaUmpireDescriptionPanel.Left, diaUmpireDescriptionPanel.Bottom),
+                Size = new Size(diaUmpireDescriptionPanel.Width, rowHeight),
+                Name = @"directDiaPanel"
+            };
+            directDiaPanel.Controls.AddRange(new Control[] { _lblDirectDiaSearchEngine, _comboDirectDiaSearchEngine, _cbGpf });
+            diaUmpireTabPage.Controls.Add(directDiaPanel);
+            diaUmpireSettingsPanel.Top += rowHeight;
+            btnAdditionalSettings.Top -= rowHeight;
+            _comboDirectDiaSearchEngine.SelectedIndexChanged += (sender, args) => UpdateDirectDiaControls();
+            UpdateDirectDiaControls();
 
             LoadComboboxEntries();
         }
 
+        /// <summary>
+        /// The engines that can search DIA spectra directly, in the order the list shows them.
+        /// </summary>
+        private static readonly SearchEngine[] DIRECT_DIA_SEARCH_ENGINES = { SearchEngine.MSFragger, SearchEngine.DIANN };
+
+        private readonly Label _lblDirectDiaSearchEngine;
+        private readonly ComboBox _comboDirectDiaSearchEngine;
         private readonly CheckBox _cbGpf;
 
         /// <summary>
-        /// True when the DIA files searched without DIA-Umpire are gas phase fractions.
+        /// The engine that searches the DIA spectra when they do not go through DIA-Umpire.
+        /// </summary>
+        public SearchEngine DirectDiaSearchEngine
+        {
+            get => DIRECT_DIA_SEARCH_ENGINES[_comboDirectDiaSearchEngine.SelectedIndex];
+            set
+            {
+                int index = Array.IndexOf(DIRECT_DIA_SEARCH_ENGINES, value);
+                if (index < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, null);
+                _comboDirectDiaSearchEngine.SelectedIndex = index;
+            }
+        }
+
+        /// <summary>
+        /// True when the DIA files MSFragger searches without DIA-Umpire are gas phase fractions.
         /// </summary>
         public bool IsGpf
         {
-            get => _cbGpf.Checked && !UseDiaUmpire;
+            get => _cbGpf.Checked && _cbGpf.Enabled;
             set => _cbGpf.Checked = value;
         }
 
-        private void UpdateGpf()
+        private void UpdateDirectDiaControls()
         {
-            _cbGpf.Enabled = !UseDiaUmpire;
+            _lblDirectDiaSearchEngine.Enabled = _comboDirectDiaSearchEngine.Enabled = !UseDiaUmpire;
+            _cbGpf.Enabled = !UseDiaUmpire && DirectDiaSearchEngine == SearchEngine.MSFragger;
         }
 
         public enum Protocol
@@ -377,7 +429,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void cbDiaUmpire_CheckedChanged(object sender, EventArgs e)
         {
             diaUmpireSettingsPanel.Enabled = cbDiaUmpire.Checked;
-            UpdateGpf();
+            UpdateDirectDiaControls();
         }
     }
 }
