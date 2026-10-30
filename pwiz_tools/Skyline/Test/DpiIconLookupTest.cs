@@ -61,14 +61,20 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestDpiIconLookup()
         {
+            CheckSkylineLookup();
+            CheckCommonLookup();
+        }
+
+        private static void CheckSkylineLookup()
+        {
             using (var save = Resources.Save)
-                Assert.AreEqual(nameof(Resources.Save), DpiUtil.GetIconName(save));
+                AssertEx.AreEqual(nameof(Resources.Save), DpiUtil.GetIconName(save));
             using (var statusButton = Resources.AllIonsStatusButton)   // 14 px native
-                Assert.AreEqual(nameof(Resources.AllIonsStatusButton), DpiUtil.GetIconName(statusButton));
+                AssertEx.AreEqual(nameof(Resources.AllIonsStatusButton), DpiUtil.GetIconName(statusButton));
             using (var unknown = new Bitmap(ICON_NATIVE_MAX, ICON_NATIVE_MAX))
-                Assert.IsNull(DpiUtil.GetIconName(unknown));
+                AssertEx.IsNull(DpiUtil.GetIconName(unknown));
             using (var large = Resources.ProteoWizard)
-                Assert.IsNull(DpiUtil.GetIconName(large));
+                AssertEx.IsNull(DpiUtil.GetIconName(large));
             // A ToolStripItem makes its ImageTransparentColor transparent in the bitmap it is
             // given, which is how the designer's keyed natives arrive at PrepareIcons
             foreach (var key in new[] { Color.Magenta, Color.Fuchsia, Color.White, Color.Transparent })
@@ -77,12 +83,12 @@ namespace pwiz.SkylineTest
                 {
                     button.ImageTransparentColor = key;
                     button.Image = Resources.Save;
-                    Assert.AreEqual(nameof(Resources.Save), DpiUtil.GetIconName(button.Image, key), key.Name);
+                    AssertEx.AreEqual(nameof(Resources.Save), DpiUtil.GetIconName(button.Image, key), key.Name);
                 }
             }
 
             var checkedIcons = CheckNativeLookup(typeof(Resources), Resources.ResourceManager, PIXEL_TWINS);
-            Assert.IsTrue(checkedIcons > 100, $@"Expected the small icons of Resources.resx, found {checkedIcons}");
+            AssertEx.IsTrue(checkedIcons > 100, $@"Expected the small icons of Resources.resx, found {checkedIcons}");
         }
 
         /// <summary>
@@ -90,20 +96,19 @@ namespace pwiz.SkylineTest
         /// which the loader indexes per assembly: a Common native resolves through its own
         /// Resources class and not through Skyline's.
         /// </summary>
-        [TestMethod]
-        public void TestDpiCommonIconLookup()
+        private static void CheckCommonLookup()
         {
             using (var pivot = CommonResources.Pivot)
             {
-                Assert.AreEqual(nameof(CommonResources.Pivot), DpiIcons.GetIconName(typeof(CommonResources), pivot));
-                Assert.IsNull(DpiUtil.GetIconName(pivot));
+                AssertEx.AreEqual(nameof(CommonResources.Pivot), DpiIcons.GetIconName(typeof(CommonResources), pivot));
+                AssertEx.IsNull(DpiUtil.GetIconName(pivot));
             }
             using (var save = Resources.Save)
-                Assert.IsNull(DpiIcons.GetIconName(typeof(CommonResources), save));
+                AssertEx.IsNull(DpiIcons.GetIconName(typeof(CommonResources), save));
 
             var checkedIcons = CheckNativeLookup(typeof(CommonResources), CommonResources.ResourceManager,
                 COMMON_PIXEL_TWINS);
-            Assert.IsTrue(checkedIcons > 25,
+            AssertEx.IsTrue(checkedIcons > 25,
                 $@"Expected the small icons of pwiz.Common's Resources.resx, found {checkedIcons}");
         }
 
@@ -127,9 +132,9 @@ namespace pwiz.SkylineTest
                     var name = (string) entry.Key;
                     var found = DpiIcons.GetIconName(resourcesType, bitmap);
                     if (twins.TryGetValue(name, out var twin))
-                        Assert.AreEqual(twin, found, $@"{name} should resolve to its pixel twin {twin}");
+                        AssertEx.AreEqual(twin, found, $@"{name} should resolve to its pixel twin {twin}");
                     else
-                        Assert.AreEqual(name, found,
+                        AssertEx.AreEqual(name, found,
                             $@"{name} resolves to {found ?? @"null"}: identical pixels under two names?");
                     checkedIcons++;
                 }

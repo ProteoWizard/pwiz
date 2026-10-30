@@ -28,6 +28,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -50,6 +51,12 @@ namespace pwiz.Common.Controls
         private static readonly int[] ICON_SIZES = { 20, 24, 32 };
         private static readonly int[] ICON_SIZES_SMALL = { 18, 21, 28 };
 
+        // Images this class produced for the display DPI, so a second PrepareIcons pass over
+        // the same controls (a control prepared in its constructor, then again by the form that
+        // hosts it) leaves them as they are instead of scaling them a second time
+        private static readonly ConditionalWeakTable<Image, object> _prepared =
+            new ConditionalWeakTable<Image, object>();
+
         /// <summary>
         /// Returns an icon at the pixel size the control's DPI calls for: the smallest
         /// embedded size at or above the target, resampled down when they differ, or the
@@ -63,10 +70,7 @@ namespace pwiz.Common.Controls
         {
             if (!DpiScale.IsScaled(control))
                 return native;
-            var target = DpiScale.ScaleSize(control, native.Size);
-            var icon = IconSource.ForResources(resourcesType).LoadIcon(name, native.Width, target);
-            if (icon == null)
-                return DpiScale.ScaleImage(control, native, transparentKey);
+            var icon = LoadOrResample(resourcesType, control, name, native, transparentKey);
             native.Dispose();
             return icon;
         }
@@ -115,7 +119,7 @@ namespace pwiz.Common.Controls
         /// owner's drawing. A button's ImageList is scaled as a whole; an image shared by
         /// several controls is replaced once and shared again. Called when a form loads; a
         /// context menu that is not attached to a control, or a control created later, goes
-        /// through <see cref="PrepareIcons(ToolStrip)"/> or this method itself. No-op at
+        /// through <see cref="PrepareIcons(ToolStrip, Type)"/> or this method itself. No-op at
         /// 100%, where the natives are right as they are.
         /// </summary>
         public static void PrepareIcons(Control root)
@@ -170,7 +174,8 @@ namespace pwiz.Common.Controls
         {
             foreach (ToolStripItem item in items)
             {
-                if (item is ToolStripDropDownItem dropDown)
+                // HasDropDownItems first: reading DropDownItems creates an empty drop-down for a leaf
+                if (item is ToolStripDropDownItem dropDown && dropDown.HasDropDownItems)
                     PrepareIcons(dropDown.DropDownItems, control, owner, replaced);
                 // An item drawn from its strip's ImageList by index or key is left to the list
                 if (item.ImageIndex >= 0 || !string.IsNullOrEmpty(item.ImageKey))
@@ -180,26 +185,46 @@ namespace pwiz.Common.Controls
         }
 
         /// <summary>
-        /// The image to show for a 96-DPI designer image at the control's DPI: the result of
-        /// <see cref="GetIcon"/> for a Resources.resx icon of any known assembly, the bicubic
-        /// resample for anything else when asked for, otherwise the image itself.
+        /// The image to show for a 96-DPI designer image at the control's DPI: the embedded
+        /// icon for a Resources.resx native of any known assembly, the bicubic resample for
+        /// anything else when asked for, otherwise the image itself. An image already prepared
+        /// for the display DPI is returned as it is. The original is never disposed: other code
+        /// may still hold it, e.g. to copy between items or to restore later.
         /// </summary>
         private static Image ReplaceIcon(Control control, IconSource owner, Image image,
             Dictionary<Image, Image> replaced, bool resampleUnknown, Color transparentKey = default)
         {
-            if (image == null)
-                return null;
+            if (image == null || _prepared.TryGetValue(image, out _))
+                return image;
             if (replaced.TryGetValue(image, out var result))
                 return result;
             var source = IconSource.FindNative(image, transparentKey, owner, out var name);
             if (source != null)
-                result = GetIcon(source.ResourcesType, control, name, image);
+                result = LoadOrResample(source.ResourcesType, control, name, image, null);
             else if (resampleUnknown)
-                result = DpiScale.ScaleImage(control, image);
+                result = MarkPrepared(DpiScale.Resample(image, DpiScale.ScaleSize(control, image.Size)));
             else
                 result = image;
             replaced.Add(image, result);
             return result;
+        }
+
+        /// <summary>
+        /// The embedded icon at the size the control's DPI calls for, or the native resampled
+        /// to it when none is embedded. The native is left for the caller to dispose or keep.
+        /// </summary>
+        private static Image LoadOrResample(Type resourcesType, Control control, string name, Image native,
+            Color? transparentKey)
+        {
+            var target = DpiScale.ScaleSize(control, native.Size);
+            var icon = IconSource.ForResources(resourcesType).LoadIcon(name, native.Width, target);
+            return MarkPrepared(icon ?? DpiScale.Resample(native, target, transparentKey));
+        }
+
+        private static Image MarkPrepared(Image image)
+        {
+            _prepared.AddOrUpdate(image, null);
+            return image;
         }
 
         /// <summary>
@@ -213,12 +238,15 @@ namespace pwiz.Common.Controls
             private static readonly Dictionary<Assembly, IconSource> _byAssembly =
                 new Dictionary<Assembly, IconSource>();
             private static readonly List<IconSource> _sources = new List<IconSource>();
+            // Guards the caches above and each source's tables: forms can load on more than one UI thread
+            private static readonly object LOCK = new object();
 
             private readonly Assembly _assembly;
             private readonly ResourceManager _resources;
             private readonly string[] _resourceNames;
             private readonly Dictionary<int, Dictionary<string, string>> _nativeNames =
                 new Dictionary<int, Dictionary<string, string>>();
+            private List<KeyValuePair<string, Bitmap>> _smallNatives;
 
             private IconSource(Assembly assembly, Type resourcesType)
             {
@@ -244,22 +272,25 @@ namespace pwiz.Common.Controls
             /// </summary>
             public static IconSource ForAssembly(Assembly assembly, Type resourcesType = null)
             {
-                if (_byAssembly.TryGetValue(assembly, out var source))
-                    return source;
-                if (resourcesType == null)
+                lock (LOCK)
                 {
-                    var resourcesName = assembly.GetManifestResourceNames()
-                        .FirstOrDefault(n => n.EndsWith(RESOURCES_SUFFIX, StringComparison.Ordinal));
-                    if (resourcesName != null)
+                    if (_byAssembly.TryGetValue(assembly, out var source))
+                        return source;
+                    if (resourcesType == null)
                     {
-                        var typeName = resourcesName.Substring(0, resourcesName.Length - @".resources".Length);
-                        resourcesType = assembly.GetType(typeName);
+                        var resourcesName = assembly.GetManifestResourceNames()
+                            .FirstOrDefault(n => n.EndsWith(RESOURCES_SUFFIX, StringComparison.Ordinal));
+                        if (resourcesName != null)
+                        {
+                            var typeName = resourcesName.Substring(0, resourcesName.Length - @".resources".Length);
+                            resourcesType = assembly.GetType(typeName);
+                        }
                     }
+                    source = new IconSource(assembly, resourcesType);
+                    _byAssembly.Add(assembly, source);
+                    _sources.Add(source);
+                    return source;
                 }
-                source = new IconSource(assembly, resourcesType);
-                _byAssembly.Add(assembly, source);
-                _sources.Add(source);
-                return source;
             }
 
             /// <summary>
@@ -285,20 +316,26 @@ namespace pwiz.Common.Controls
                 if (image.Width > ICON_NATIVE || image.Height > ICON_NATIVE)
                     return null;
                 var key = GetPixelKey(image, Color.Empty);
-                if (owner != null && owner.GetNativeNames(transparentKey).TryGetValue(key, out name))
-                    return owner;
-                foreach (var source in _sources)
+                lock (LOCK)
                 {
-                    if (source != owner && source.GetNativeNames(transparentKey).TryGetValue(key, out name))
-                        return source;
+                    if (owner != null && owner.GetNativeNames(transparentKey).TryGetValue(key, out name))
+                        return owner;
+                    foreach (var source in _sources)
+                    {
+                        if (source != owner && source.GetNativeNames(transparentKey).TryGetValue(key, out name))
+                            return source;
+                    }
+                    return null;
                 }
-                return null;
             }
 
             public string GetNativeName(Image image, Color transparentKey)
             {
                 var key = GetPixelKey(image, Color.Empty);
-                return GetNativeNames(transparentKey).TryGetValue(key, out var name) ? name : null;
+                lock (LOCK)
+                {
+                    return GetNativeNames(transparentKey).TryGetValue(key, out var name) ? name : null;
+                }
             }
 
             /// <summary>
@@ -332,35 +369,47 @@ namespace pwiz.Common.Controls
 
             /// <summary>
             /// Pixel-content key to Resources.resx name for every bitmap up to 16 px, with the
-            /// given transparent key applied, built on first use per key color. Enumerating
-            /// the resource set deserializes a fresh bitmap per entry (objects are not cached
-            /// the way strings are), so each one is disposed once keyed.
+            /// given transparent key applied, built on first use per key color. Called under LOCK.
             /// </summary>
             private Dictionary<string, string> GetNativeNames(Color transparentKey)
             {
                 if (_nativeNames.TryGetValue(transparentKey.ToArgb(), out var names))
                     return names;
                 names = new Dictionary<string, string>();
-                var resourceSet = _resources?.GetResourceSet(CultureInfo.InvariantCulture, true, true);
-                if (resourceSet != null)
+                foreach (var native in GetSmallNatives())
                 {
-                    foreach (DictionaryEntry entry in resourceSet)
-                    {
-                        if (!(entry.Value is Bitmap bitmap))
-                            continue;
-                        using (bitmap)
-                        {
-                            if (bitmap.Width > ICON_NATIVE || bitmap.Height > ICON_NATIVE)
-                                continue;
-                            var key = GetPixelKey(bitmap, transparentKey);
-                            var name = (string) entry.Key;
-                            if (!names.TryGetValue(key, out var existing) || string.CompareOrdinal(name, existing) < 0)
-                                names[key] = name;
-                        }
-                    }
+                    var key = GetPixelKey(native.Value, transparentKey);
+                    if (!names.TryGetValue(key, out var existing) || string.CompareOrdinal(native.Key, existing) < 0)
+                        names[key] = native.Key;
                 }
                 _nativeNames[transparentKey.ToArgb()] = names;
                 return names;
+            }
+
+            /// <summary>
+            /// The Resources.resx bitmaps up to 16 px, decoded once and kept for keying under
+            /// each transparent color. Enumerating the resource set deserializes a fresh bitmap
+            /// per entry (objects are not cached the way strings are), so the larger ones are
+            /// disposed right away. Called under LOCK.
+            /// </summary>
+            private List<KeyValuePair<string, Bitmap>> GetSmallNatives()
+            {
+                if (_smallNatives != null)
+                    return _smallNatives;
+                _smallNatives = new List<KeyValuePair<string, Bitmap>>();
+                var resourceSet = _resources?.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+                if (resourceSet == null)
+                    return _smallNatives;
+                foreach (DictionaryEntry entry in resourceSet)
+                {
+                    if (!(entry.Value is Bitmap bitmap))
+                        continue;
+                    if (bitmap.Width > ICON_NATIVE || bitmap.Height > ICON_NATIVE)
+                        bitmap.Dispose();
+                    else
+                        _smallNatives.Add(new KeyValuePair<string, Bitmap>((string) entry.Key, bitmap));
+                }
+                return _smallNatives;
             }
 
             /// <summary>

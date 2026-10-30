@@ -20,6 +20,7 @@
 
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace pwiz.Common.Controls
@@ -32,6 +33,11 @@ namespace pwiz.Common.Controls
     /// </summary>
     public static class ImageListScaler
     {
+        // Lists already sized for the display DPI: scaling one again would compound the factor,
+        // e.g. a list scaled in a dialog's constructor and again for the buttons that share it
+        private static readonly ConditionalWeakTable<ImageList, object> _scaledLists =
+            new ConditionalWeakTable<ImageList, object>();
+
         /// <summary>
         /// Scales the list and every icon in it to the display DPI. Icons added afterwards
         /// go through <see cref="AddScaled"/> or <see cref="AddRangeScaled"/>, which resample
@@ -41,8 +47,9 @@ namespace pwiz.Common.Controls
         /// </summary>
         public static void ScaleToDpi(Control control, ImageList imageList)
         {
-            if (imageList == null || !DpiScale.IsScaled(control))
+            if (imageList == null || !DpiScale.IsScaled(control) || _scaledLists.TryGetValue(imageList, out _))
                 return;
+            _scaledLists.AddOrUpdate(imageList, null);
             var originals = new List<KeyValuePair<string, Image>>();
             for (int i = 0; i < imageList.Images.Count; i++)
                 originals.Add(new KeyValuePair<string, Image>(imageList.Images.Keys[i], imageList.Images[i]));
@@ -74,8 +81,9 @@ namespace pwiz.Common.Controls
         /// </summary>
         public static void PrepareForDpi(Control control, ImageList imageList)
         {
-            if (!DpiScale.IsScaled(control))
+            if (!DpiScale.IsScaled(control) || _scaledLists.TryGetValue(imageList, out _))
                 return;
+            _scaledLists.AddOrUpdate(imageList, null);
             imageList.ColorDepth = ColorDepth.Depth32Bit;
             imageList.ImageSize = DpiScale.ScaleSize(control, imageList.ImageSize);
             imageList.TransparentColor = Color.Transparent;
