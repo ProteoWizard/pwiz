@@ -3483,10 +3483,12 @@ namespace pwiz.Skyline.Controls.Graphs
 //                    GraphPaneFromPoint(clickPoint.Value).ReverseTransform(clickPoint.Value, out xScaled, out yScaled);
 //                    Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled);
 
+                    // A click is not a zoom, even when the mouse moved more than ZedGraph requires to zoom.
+                    graphControl.CancelZoom();
                     var fullScanPoint = FindFullScanPoint(clickPoint.Value);
                     if (fullScanPoint != null)
                         FireClickedChromatogram(fullScanPoint);
-                    // Leave the release unhandled, so that ZedGraph ends the zoom the press began.
+                    // Leave the release unhandled, so that ZedGraph clears the rest of its drag state.
                     return false;
                 }
             }
