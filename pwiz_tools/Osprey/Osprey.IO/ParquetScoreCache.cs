@@ -2191,8 +2191,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load only the 21 PIN feature columns from a Parquet cache.
-        /// Returns a list of feature vectors (one double[] per row).
+        /// Load only the PIN feature columns from a Parquet cache, for the FDR stage.
+        /// Returns a list of feature vectors (one double[] per row). A feature masked by
+        /// <see cref="PinFeatureMask"/> reads as 0: this is where the mask is applied, so the
+        /// parquet itself always holds every feature.
         /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
@@ -2223,7 +2225,7 @@ namespace pwiz.Osprey.IO
                             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                             {
                                 double v = featureCols[f][row];
-                                features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                                features[f] = PinFeatureMask.IsMasked(f) || double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                             }
                             allFeatures.Add(features);
                         }

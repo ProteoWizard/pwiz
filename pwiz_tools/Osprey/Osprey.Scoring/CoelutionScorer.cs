@@ -316,13 +316,6 @@ namespace pwiz.Osprey.Scoring
             for (int f = 21; f < features.Length; f++)
                 features[f] = OspreyFeatureCalculators.Get(f).Calculate(ospreyContext, ospreyPeakData);
 
-            // Masked features are written as 0: constant, so the classifier cannot use them.
-            for (int f = 0; f < features.Length; f++)
-            {
-                if (OspreyFeatureCalculators.IsMasked(f))
-                    features[f] = 0.0;
-            }
-
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the
             // byproduct published above; gated by ShouldDumpMpFor as before. The

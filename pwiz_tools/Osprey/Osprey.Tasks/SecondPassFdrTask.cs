@@ -308,6 +308,7 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                + PinFeatureMask.ValidityKeySuffix()
                 // The fold-versus-resident term is GONE with OSPREY_STAGE7_STREAM (2026-09-10):
                 // it distinguished two arms an operator could pick between, and only one arm
                 // remains. It was empty on the streamed default, so no existing output directory

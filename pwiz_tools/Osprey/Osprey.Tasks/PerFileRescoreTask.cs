@@ -333,6 +333,7 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                + PinFeatureMask.ValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).

@@ -23,9 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -206,14 +208,22 @@ namespace pwiz.Osprey.Tasks
         /// The demultiplexing settings are here for the same reason: they
         /// decide the spectra every task's output is computed from. See
         /// <see cref="DemuxCache.ValidityKeySuffix(OspreyConfig)"/>.
+        ///
+        /// So is the XIC fragment count (OSPREY_XIC_FRAGMENTS): it decides the
+        /// peaks Stage 4 finds and the features it writes for them. It is
+        /// emitted for every count, the default 6 included, because scores
+        /// written before it was keyed carry no term and were computed under a
+        /// count nothing recorded - and under the feature mask, which scoring
+        /// applied then and no longer does (see <c>PinFeatureMask</c>).
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}{3}{4}",
+            @"search={0};library={1}{2}{3}{4};xic={5}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
             ReaderTerm(ctx.Config.LibrarySource?.Format),
-            DemuxCache.ValidityKeySuffix(ctx.Config));
+            DemuxCache.ValidityKeySuffix(ctx.Config),
+            TopFragmentExtractor.SearchTopNFragments.ToString(CultureInfo.InvariantCulture));
 
         /// <summary>The reader-version term of the validity key for a library of <paramref name="format"/>.</summary>
         private static string ReaderTerm(LibraryFormat? format)

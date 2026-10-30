@@ -33,6 +33,7 @@ using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
+using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -95,7 +96,7 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM + XicTerm(), tsvKeys[PerFileScoringTask.TASK_NAME],
                     @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
@@ -103,7 +104,7 @@ namespace pwiz.Osprey.Test
 
                 var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM,
+                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM + XicTerm(),
                     blibKeys[PerFileScoringTask.TASK_NAME]);
                 foreach (var key in blibKeys)
                     StringAssert.Contains(key.Value, OspreyTask.BLIB_READER_TERM, key.Key + @" must key on the blib reader");
@@ -350,6 +351,12 @@ namespace pwiz.Osprey.Test
             taskKey = task.ValidityKey(ctx);
             declared = task.Outputs(ctx).Contains(export);
             return task.OutputValidityKey(ctx, taskKey, export);
+        }
+
+        /// <summary>The XIC fragment-count term every task's key ends with.</summary>
+        private static string XicTerm()
+        {
+            return @";xic=" + TopFragmentExtractor.SearchTopNFragments.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
@@ -616,6 +623,12 @@ namespace pwiz.Osprey.Test
         /// output is written before pass 2 exists, and keying it on the mode
         /// would re-run Stages 1-4 (hours at 82 files) to reproduce parquets
         /// that cannot have changed.
+        ///
+        /// The XIC fragment count follows the pick: it decides the peaks and
+        /// features Stage 4 writes, so every task carries it. The feature mask
+        /// follows the training selection: scoring writes every feature and the
+        /// mask is applied when the FDR stage loads them, so per-file scoring must
+        /// NOT key on it - that is what lets a mask arm adopt another arm's scores.
         /// </summary>
         private static void AssertEveryTaskCarriesTheSuffixesItNeeds()
         {
@@ -630,6 +643,7 @@ namespace pwiz.Osprey.Test
             // exists to prevent. Same exemption shape: the tasks that run before a model is
             // trained cannot key on how it was trained.
             string train = OspreyEnvironment.TrainSampleValidityKeySuffix();
+            string mask = PinFeatureMask.ValidityKeySuffix();
 
             foreach (var task in tasks)
             {
@@ -645,6 +659,11 @@ namespace pwiz.Osprey.Test
                                    task.Name == SecondPassFdrTask.TASK_NAME;
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
+                    task.Name, expectTrain ? @"" : @"NOT "));
+                StringAssert.Contains(key, XicTerm(), string.Format(
+                    @"{0} must key on the XIC fragment count", task.Name));
+                Assert.AreEqual(expectTrain, key.Contains(mask), string.Format(
+                    @"{0} must {1} key on the feature mask",
                     task.Name, expectTrain ? @"" : @"NOT "));
             }
         }

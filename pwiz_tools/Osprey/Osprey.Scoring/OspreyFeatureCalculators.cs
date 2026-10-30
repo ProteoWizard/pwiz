@@ -36,8 +36,8 @@ namespace pwiz.Osprey.Scoring
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
     /// never returns null. Slots 21-40 are C#-only: the runner-up, context, per-fragment-rank and spectrum-across-peak families,
-    /// masked by default (<see cref="DEFAULT_MASKED_FEATURES"/>, OSPREY_FEATURE_MASK) while
-    /// they are evaluated. (Scores the Rust engine computes but excludes from its PIN features
+    /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
+    /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
     /// </summary>
     public static class OspreyFeatureCalculators
@@ -45,26 +45,7 @@ namespace pwiz.Osprey.Scoring
         /// <summary>Number of PIN features (the feature-vector width).</summary>
         public const int FeatureCount = 41;
 
-        /// <summary>
-        /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up, context,
-        /// per-fragment-rank and spectrum-across-peak families, still under evaluation. A masked feature is written as 0, so the
-        /// standardizer gives it scale 1 and value 0 and the classifier cannot use it -
-        /// which keeps the default search's results what they were before these features.
-        /// </summary>
-        public static readonly string[] DEFAULT_MASKED_FEATURES =
-        {
-            @"peak_coelution_margin", @"peak_rank_margin", @"peak_candidate_count",
-            @"context_peptide_length", @"context_precursor_charge", @"context_precursor_mz",
-            @"frag_rank1_abs_mass_error", @"frag_rank2_abs_mass_error", @"frag_rank3_abs_mass_error",
-            @"frag_rank4_abs_mass_error", @"frag_rank5_abs_mass_error", @"frag_rank6_abs_mass_error",
-            @"frag_rank1_intensity_share", @"frag_rank2_intensity_share", @"frag_rank3_intensity_share",
-            @"frag_rank4_intensity_share", @"frag_rank5_intensity_share", @"frag_rank6_intensity_share",
-            @"peak_spectrum_cosine_mean", @"peak_spectrum_cosine_sd",
-        };
-
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
-
-        private static readonly bool[] _masked = CreateMask(OspreyEnvironment.FeatureMask ?? DEFAULT_MASKED_FEATURES);
 
         private static IOspreyFeatureCalculator[] CreateCalculators()
         {
@@ -133,22 +114,6 @@ namespace pwiz.Osprey.Scoring
             return calculators;
         }
 
-        private static bool[] CreateMask(string[] maskedNames)
-        {
-            var masked = new bool[FeatureCount];
-            foreach (string name in maskedNames)
-            {
-                int index = System.Array.FindIndex(_calculators, c => c.Name == name);
-                if (index < 0)
-                {
-                    throw new System.InvalidOperationException(
-                        string.Format(@"OSPREY_FEATURE_MASK names an unknown feature: {0}", name));
-                }
-                masked[index] = true;
-            }
-            return masked;
-        }
-
         /// <summary>
         /// The calculator for the given PIN feature index (0 to FeatureCount - 1). All are
         /// populated, so this never returns null.
@@ -156,15 +121,6 @@ namespace pwiz.Osprey.Scoring
         public static IOspreyFeatureCalculator Get(int featureIndex)
         {
             return _calculators[featureIndex];
-        }
-
-        /// <summary>
-        /// True when the feature at <paramref name="featureIndex"/> is masked (written as 0):
-        /// named in OSPREY_FEATURE_MASK, or in <see cref="DEFAULT_MASKED_FEATURES"/> when it is unset.
-        /// </summary>
-        public static bool IsMasked(int featureIndex)
-        {
-            return _masked[featureIndex];
         }
 
         /// <summary>

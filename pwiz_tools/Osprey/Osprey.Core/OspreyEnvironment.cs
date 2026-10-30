@@ -733,10 +733,11 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_XIC_FRAGMENTS"));
 
         /// <summary>
-        /// OSPREY_FEATURE_MASK: the scoring features to mask (write as 0, so the classifier cannot
-        /// use them), as comma-separated feature names, or <c>none</c> to mask nothing. Null when
-        /// unset: the scoring layer then masks its default set, the features still under
-        /// evaluation. An unknown name stops the search at startup.
+        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (read as 0 when the
+        /// FDR stage loads features, so the classifier cannot use them), as comma-separated feature
+        /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
+        /// under evaluation, is masked. Scoring writes every feature either way, so arms that differ
+        /// only in the mask share their per-file scores. An unknown name stops the search at startup.
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
@@ -776,10 +777,8 @@ namespace pwiz.Osprey.Core
         /// winners and writes, per run, every survivor's class (unchanged, moved, gap-fill), score,
         /// run q and run PEP to <c>&lt;run&gt;.run_pep.tsv</c> there. Null when unset: nothing is fitted.
         /// </summary>
-        public static readonly string RunPepDumpDir = string.IsNullOrWhiteSpace(
-            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP"))
-            ? null
-            : Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP").Trim();
+        public static readonly string RunPepDumpDir = ParseRunPepDumpDir(
+            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP"));
 
         /// <summary>
         /// OSPREY_PEP_FORMULA=ratio (experiment): <c>PepEstimator</c> estimates PEP as
@@ -806,6 +805,11 @@ namespace pwiz.Osprey.Core
             if (string.Equals(value.Trim(), @"none", StringComparison.OrdinalIgnoreCase))
                 return Array.Empty<string>();
             return value.Split(',').Select(name => name.Trim()).Where(name => name.Length > 0).ToArray();
+        }
+
+        private static string ParseRunPepDumpDir(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
 
         private static int? ParseXicFragments(string value)
