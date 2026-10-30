@@ -418,7 +418,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    ReportExceptionUI(x, new StackTrace(1, true));
+                    ReportExceptionUI(x, new StackTrace(1, true), false);
                 }
 
 //                ConcurrencyVisualizer.StartEvents(MainWindow);
@@ -724,12 +724,20 @@ namespace pwiz.Skyline
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            ShutDownWithException((Exception)e.ExceptionObject);
+        }
+
+        /// <summary>
+        /// Saves the exception to be reported on the next start, then kills the process.
+        /// </summary>
+        private static void ShutDownWithException(Exception exception)
+        {
             // Only the first unhandled exception is reported.
             lock (_unhandledExceptionLock)
             {
                 try
                 {
-                    ReportShutdownDlg.SaveExceptionFile((Exception)e.ExceptionObject);
+                    ReportShutdownDlg.SaveExceptionFile(exception);
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception ex)
@@ -764,19 +772,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            var stackTrace = new StackTrace(1, true);
-            var mainWindow = MainWindow;
-            try
-            {
-                if (mainWindow != null && !mainWindow.IsDisposed)
-                {
-                    mainWindow.BeginInvoke(new Action<Exception, StackTrace>(ReportExceptionUI), exception, stackTrace);
-                }
-            }
-            catch (Exception exception2)
-            {
-                Messages.WriteAsyncDebugMessage(@"Exception in ReportException: {0}", exception2);
-            }
+            BeginReportExceptionUI(exception, new StackTrace(1, true), false);
         }
 
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
@@ -803,7 +799,12 @@ namespace pwiz.Skyline
 
             Messages.WriteAsyncDebugMessage(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
-            ReportExceptionUI(e.Exception, stackTrace);
+            // This handler runs inside the WndProc that threw, which can be deep inside another
+            // component's modal state, such as a DigitalRune dock drag whose message filter would
+            // see every message pumped by the ReportErrorDlg and hit-test indicators it has already
+            // disposed. Show the dialog once the stack has unwound back to the main message loop.
+            if (!BeginReportExceptionUI(e.Exception, stackTrace, false))
+                ReportExceptionUI(e.Exception, stackTrace, false);
         }
 
         /// <summary>
@@ -900,7 +901,28 @@ namespace pwiz.Skyline
             return reachedCompletionSignal;
         }
 
-        private static void ReportExceptionUI(Exception exception, StackTrace stackTrace)
+        /// <summary>
+        /// Queues the <see cref="ReportErrorDlg"/> to the main window's message loop.
+        /// Returns false if there is no main window able to take it.
+        /// </summary>
+        private static bool BeginReportExceptionUI(Exception exception, StackTrace stackTrace, bool isRetry)
+        {
+            var mainWindow = MainWindow;
+            if (mainWindow == null || mainWindow.IsDisposed || !mainWindow.IsHandleCreated)
+                return false;
+            try
+            {
+                mainWindow.BeginInvoke(new Action(() => ReportExceptionUI(exception, stackTrace, isRetry)));
+                return true;
+            }
+            catch (Exception exception2)
+            {
+                Messages.WriteAsyncDebugMessage(@"Exception in BeginReportExceptionUI: {0}", exception2);
+                return false;
+            }
+        }
+
+        private static void ReportExceptionUI(Exception exception, StackTrace stackTrace, bool isRetry)
         {
             try
             {
@@ -911,9 +933,12 @@ namespace pwiz.Skyline
             }
             catch (Exception e2)
             {
-                // We had an error trying to bring up the ReportErrorDlg.
-                // Skyline is going to shut down, but we want to preserve the original exception.
-                throw new AggregateException(exception, e2);
+                // We had an error trying to bring up the ReportErrorDlg. Try once more from the
+                // main message loop, reporting both exceptions, before shutting down. Shut down
+                // explicitly: a rethrow from a queued call only comes back to ThreadExceptionEventHandler.
+                var aggregateException = new AggregateException(exception, e2);
+                if (isRetry || !BeginReportExceptionUI(aggregateException, stackTrace, true))
+                    ShutDownWithException(aggregateException);
             }
         }
 
