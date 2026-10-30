@@ -719,16 +719,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Filter1 {
-            get {
-                object obj = ResourceManager.GetObject("Filter1", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid filter column &apos;{0}&apos;.
         /// </summary>
         public static string FilterClause_MakePredicate_Invalid_filter_column___0__ {

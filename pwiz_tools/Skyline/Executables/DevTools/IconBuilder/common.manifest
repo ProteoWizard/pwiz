@@ -1,0 +1,40 @@
+# pwiz.Common icon sources (Shared/Common/Resources). Same format as icons.manifest:
+#   Name kind sizes, with kind vector (Icons/Vector/Common/Name.xaml) or raster
+#   (Icons/Raster/Common/Name.W.H.png). Names are pwiz.Common Resources.resx property names.
+# MatchCase is 15 px native; it uses the 16 px size set like the loader does.
+# DropImageNoBackground (10x4) is recolored at run time by LiteDropDownList and is not listed.
+@vector Icons\Vector\Common
+@raster Icons\Raster\Common
+@output ..\..\..\..\Shared\Common\Resources\Icons
+
+Alphabetical               vector  20,24,32
+BoolColumn                 vector  20,24,32
+Cluster                    vector  20,24,32
+DataColumn                 vector  20,24,32
+Delete                     vector  20,24,32
+Filter                     raster  20,24,32
+FreezeCells                vector  20,24,32
+HiddenColumns              vector  20,24,32
+LinkColumn                 vector  20,24,32
+MatchCase                  vector  20,24,32
+NumberColumn               vector  20,24,32
+Pivot                      vector  20,24,32
+PivotAndFilter             vector  20,24,32
+PivotColumn                vector  20,24,32
+PlainLayout                vector  20,24,32
+SublistColumn              vector  20,24,32
+TextColumn                 vector  20,24,32
+UnknownUiMode              vector  20,24,32
+agg_count                  vector  20,24,32
+agg_groupby                vector  20,24,32
+agg_max                    vector  20,24,32
+agg_mean                   vector  20,24,32
+agg_median                 vector  20,24,32
+agg_min                    vector  20,24,32
+agg_stddev                 vector  20,24,32
+agg_sum                    vector  20,24,32
+close                      vector  20,24,32
+down_pro32                 vector  20,24,32
+maximize                   vector  20,24,32
+restore                    vector  20,24,32
+up_pro32                   vector  20,24,32

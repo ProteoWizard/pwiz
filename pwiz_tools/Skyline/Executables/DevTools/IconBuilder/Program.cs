@@ -41,6 +41,7 @@ namespace IconBuilder
     internal class Program
     {
         private const string MANIFEST_NAME = "icons.manifest";
+        private const string MANIFEST_EXTENSION = ".manifest";
         private const string VECTOR_DIR = @"Icons\Vector";
         private const string RASTER_DIR = @"Icons\Raster";
         // Relative to the folder holding icons.manifest: Skyline embeds Resources\Icons\*.png
@@ -57,53 +58,80 @@ namespace IconBuilder
                 return 1;
             }
 
-            manifestPath ??= FindManifest();
-            if (manifestPath == null || !File.Exists(manifestPath))
+            // One manifest per assembly that embeds icons: icons.manifest for Skyline, and every
+            // other *.manifest next to it (common.manifest for pwiz.Common), unless one is named.
+            var manifestPaths = new List<string>();
+            if (manifestPath != null)
+            {
+                manifestPaths.Add(manifestPath);
+            }
+            else
+            {
+                var found = FindManifest();
+                if (found != null)
+                {
+                    manifestPaths.Add(found);
+                    manifestPaths.AddRange(Directory.GetFiles(Path.GetDirectoryName(found)!, "*" + MANIFEST_EXTENSION)
+                        .Where(p => !string.Equals(Path.GetFileName(p), MANIFEST_NAME, StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
+                }
+            }
+            if (manifestPaths.Count == 0 || !File.Exists(manifestPaths[0]))
             {
                 Console.WriteLine($"ERROR: {MANIFEST_NAME} not found. Run from the IconBuilder folder or pass --manifest <path>.");
                 return 1;
             }
+            if (outDir != null && manifestPaths.Count > 1)
+            {
+                Console.WriteLine("ERROR: --out needs --manifest, since each manifest names its own output folder.");
+                return 1;
+            }
 
-            var projectDir = Path.GetDirectoryName(manifestPath)!;
-            outDir ??= Path.GetFullPath(Path.Combine(projectDir, DEFAULT_OUT_DIR));
-            Directory.CreateDirectory(outDir);
-
-            var entries = ReadManifest(manifestPath);
+            var manifests = manifestPaths.Select(ReadManifest).ToList();
             if (names.Count > 0)
             {
-                var unknown = names.Where(n => !entries.Any(e => string.Equals(e.Name, n, StringComparison.OrdinalIgnoreCase))).ToList();
+                var unknown = names.Where(n => !manifests.Any(m => m.Entries.Any(e => string.Equals(e.Name, n, StringComparison.OrdinalIgnoreCase)))).ToList();
                 if (unknown.Count > 0)
                 {
-                    Console.WriteLine($"ERROR: not in {MANIFEST_NAME}: {string.Join(", ", unknown)}");
+                    Console.WriteLine($"ERROR: not in any manifest: {string.Join(", ", unknown)}");
                     return 1;
                 }
-                entries = entries.Where(e => names.Contains(e.Name, StringComparer.OrdinalIgnoreCase)).ToList();
             }
-
-            Console.WriteLine($"Manifest: {manifestPath}");
-            Console.WriteLine($"Output:   {outDir}");
-            Console.WriteLine($"Icons:    {entries.Count}");
-            Console.WriteLine();
 
             int written = 0, failed = 0;
-            foreach (var entry in entries)
+            foreach (var manifest in manifests)
             {
-                try
+                var entries = names.Count > 0
+                    ? manifest.Entries.Where(e => names.Contains(e.Name, StringComparer.OrdinalIgnoreCase)).ToList()
+                    : manifest.Entries;
+                if (entries.Count == 0)
+                    continue;
+                var manifestOut = outDir ?? manifest.OutDir;
+                Directory.CreateDirectory(manifestOut);
+
+                Console.WriteLine($"Manifest: {manifest.Path}");
+                Console.WriteLine($"Output:   {manifestOut}");
+                Console.WriteLine($"Icons:    {entries.Count}");
+                Console.WriteLine();
+                foreach (var entry in entries)
                 {
-                    var count = entry.Kind == SourceKind.vector
-                        ? RenderVector(Path.Combine(projectDir, VECTOR_DIR, entry.Name + ".xaml"), entry, outDir)
-                        : ScaleRaster(FindRaster(Path.Combine(projectDir, RASTER_DIR), entry.Name), entry, outDir);
-                    written += count;
-                    Console.WriteLine($"  {entry.Name,-26} {entry.Kind,-6} {string.Join(", ", entry.Sizes)}");
+                    try
+                    {
+                        var count = entry.Kind == SourceKind.vector
+                            ? RenderVector(Path.Combine(manifest.VectorDir, entry.Name + ".xaml"), entry, manifestOut)
+                            : ScaleRaster(FindRaster(manifest.RasterDir, entry.Name), entry, manifestOut);
+                        written += count;
+                        Console.WriteLine($"  {entry.Name,-26} {entry.Kind,-6} {string.Join(", ", entry.Sizes)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        Console.WriteLine($"  {entry.Name,-26} ERROR: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    failed++;
-                    Console.WriteLine($"  {entry.Name,-26} ERROR: {ex.Message}");
-                }
+                Console.WriteLine();
             }
 
-            Console.WriteLine();
             Console.WriteLine($"Done: {written} files written, {failed} icon(s) failed.");
             return failed == 0 ? 0 : 1;
         }
@@ -140,9 +168,11 @@ namespace IconBuilder
         {
             Console.WriteLine("Usage: IconBuilder [--manifest <path>] [--out <dir>] [IconName ...]");
             Console.WriteLine();
-            Console.WriteLine("  --manifest  Path to icons.manifest (default: found by walking up from the exe or cwd)");
-            Console.WriteLine("  --out       Output folder for <Name>.<Size>.png files (default: pwiz_tools/Skyline/Resources/Icons)");
-            Console.WriteLine("  IconName    Build only these icons (default: every icon in the manifest)");
+            Console.WriteLine("  --manifest  One manifest to build (default: icons.manifest, found by walking up from the exe or cwd,");
+            Console.WriteLine("              and every other *.manifest next to it, such as common.manifest for pwiz.Common)");
+            Console.WriteLine("  --out       Output folder for <Name>.<Size>.png files, with --manifest only (default: the");
+            Console.WriteLine("              manifest's @output folder, else pwiz_tools/Skyline/Resources/Icons)");
+            Console.WriteLine("  IconName    Build only these icons (default: every icon in the manifests)");
             Console.WriteLine();
             Console.WriteLine("Example: dotnet run -c Release -- Save Copy Paste");
         }
@@ -166,10 +196,14 @@ namespace IconBuilder
         /// <summary>
         /// Manifest lines are "Name kind sizes", whitespace separated, with kind "vector" or
         /// "raster" and sizes a comma list of square pixel sizes. Blank lines and lines starting
-        /// with # are ignored.
+        /// with # are ignored. Optional directives, relative to the manifest's folder, override
+        /// where sources are read and outputs written: "@vector dir", "@raster dir", "@output dir".
         /// </summary>
-        private static List<IconEntry> ReadManifest(string path)
+        private static Manifest ReadManifest(string path)
         {
+            var projectDir = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            string vectorDir = VECTOR_DIR, rasterDir = RASTER_DIR, outputDir = DEFAULT_OUT_DIR;
+            var fileName = Path.GetFileName(path);
             var entries = new List<IconEntry>();
             var lineNumber = 0;
             foreach (var rawLine in File.ReadLines(path))
@@ -179,13 +213,36 @@ namespace IconBuilder
                 if (line.Length == 0 || line.StartsWith("#"))
                     continue;
                 var parts = line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+                if (line.StartsWith("@"))
+                {
+                    if (parts.Length != 2)
+                        throw new FormatException($"{fileName} line {lineNumber}: expected '@vector|@raster|@output dir', got '{line}'");
+                    switch (parts[0])
+                    {
+                        case "@vector":
+                            vectorDir = parts[1];
+                            break;
+                        case "@raster":
+                            rasterDir = parts[1];
+                            break;
+                        case "@output":
+                            outputDir = parts[1];
+                            break;
+                        default:
+                            throw new FormatException($"{fileName} line {lineNumber}: unknown directive '{parts[0]}'");
+                    }
+                    continue;
+                }
                 // Enum.TryParse also accepts numeric strings, so require one of the names
                 if (parts.Length != 3 || !Enum.GetNames<SourceKind>().Contains(parts[1]) || !Enum.TryParse<SourceKind>(parts[1], out var kind))
-                    throw new FormatException($"{MANIFEST_NAME} line {lineNumber}: expected 'Name vector|raster sizes', got '{line}'");
+                    throw new FormatException($"{fileName} line {lineNumber}: expected 'Name vector|raster sizes', got '{line}'");
                 var sizes = parts[2].Split(',').Select(s => int.Parse(s.Trim())).ToArray();
                 entries.Add(new IconEntry(parts[0], kind, sizes));
             }
-            return entries;
+            return new Manifest(path, entries,
+                Path.GetFullPath(Path.Combine(projectDir, vectorDir)),
+                Path.GetFullPath(Path.Combine(projectDir, rasterDir)),
+                Path.GetFullPath(Path.Combine(projectDir, outputDir)));
         }
 
         private static int RenderVector(string xamlPath, IconEntry entry, string outDir)
@@ -285,5 +342,7 @@ namespace IconBuilder
         }
 
         private record IconEntry(string Name, SourceKind Kind, int[] Sizes);
+
+        private record Manifest(string Path, List<IconEntry> Entries, string VectorDir, string RasterDir, string OutDir);
     }
 }

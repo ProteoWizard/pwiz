@@ -24,6 +24,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
+using System.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -35,7 +37,9 @@ namespace pwiz.SkylineTest
     /// Executables/DevTools/IconBuilder embedded next to it (Resources/Icons/Name.Size.png),
     /// each decoding to the size its name claims. A missing or misnamed file would otherwise
     /// make the DPI-aware loader fall back silently to a blurry resample of the 16 px bitmap.
-    /// The size lists and resource naming here mirror the loader's (DpiUtil.GetIcon).
+    /// The same holds for pwiz.Common's Resources.resx, whose icons IconBuilder writes from
+    /// common.manifest into Shared/Common/Resources/Icons. The size lists and resource naming
+    /// here mirror the loader's (DpiUtil.GetIcon).
     /// </summary>
     [TestClass]
     public class IconResourcesTest : AbstractUnitTest
@@ -49,11 +53,28 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestEmbeddedIconSizes()
         {
+            CheckEmbeddedIcons(Resources.ResourceManager, typeof(Resources).Assembly, 100,
+                bitmap => bitmap.Width == bitmap.Height && (bitmap.Width == ICON_SIZE || bitmap.Width == ICON_SIZE_SMALL));
+        }
+
+        [TestMethod]
+        public void TestEmbeddedCommonIconSizes()
+        {
+            // pwiz.Common also has a 15 px icon (MatchCase), which uses the 16 px size set.
+            // DropImageNoBackground (10x4) is recolored at run time and has no generated sizes.
+            CheckEmbeddedIcons(pwiz.Common.Properties.Resources.ResourceManager,
+                typeof(pwiz.Common.Properties.Resources).Assembly, 25,
+                bitmap => bitmap.Width == bitmap.Height && bitmap.Width >= ICON_SIZE_SMALL && bitmap.Width <= ICON_SIZE);
+        }
+
+        private static void CheckEmbeddedIcons(ResourceManager resourceManager, Assembly assembly, int minIcons,
+            Func<Bitmap, bool> isSmallIcon)
+        {
             var missing = new List<string>();
             var wrongSize = new List<string>();
             var checkedIcons = 0;
-            var resourceNames = typeof(Resources).Assembly.GetManifestResourceNames();
-            var resourceSet = Resources.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+            var resourceNames = assembly.GetManifestResourceNames();
+            var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(resourceSet);
             foreach (DictionaryEntry entry in resourceSet)
             {
@@ -61,29 +82,25 @@ namespace pwiz.SkylineTest
                     continue;
                 using (bitmap)
                 {
-                    if (!IsSmallIcon(bitmap))
+                    if (!isSmallIcon(bitmap))
                         continue;
                     checkedIcons++;
                     var name = (string)entry.Key;
                     var sizes = bitmap.Width == ICON_SIZE_SMALL ? ICON_SIZES_SMALL : ICON_SIZES;
                     foreach (var size in sizes)
-                        CheckEmbeddedIcon(resourceNames, name, size, missing, wrongSize);
+                        CheckEmbeddedIcon(assembly, resourceNames, name, size, missing, wrongSize);
                 }
             }
 
-            AssertEx.IsTrue(checkedIcons > 100, $@"Expected the small icons of Resources.resx, found {checkedIcons}");
+            AssertEx.IsTrue(checkedIcons > minIcons,
+                $@"Expected the small icons of {assembly.GetName().Name}'s Resources.resx, found {checkedIcons}");
             AssertEx.IsTrue(missing.Count == 0,
                 $@"Embedded icon sizes missing (run Executables/DevTools/IconBuilder): {string.Join(@", ", missing)}");
             AssertEx.IsTrue(wrongSize.Count == 0, $@"Embedded icons with the wrong size: {string.Join(@", ", wrongSize)}");
         }
 
-        private static bool IsSmallIcon(Bitmap bitmap)
-        {
-            return bitmap.Width == bitmap.Height && (bitmap.Width == ICON_SIZE || bitmap.Width == ICON_SIZE_SMALL);
-        }
-
-        private static void CheckEmbeddedIcon(string[] resourceNames, string name, int size, List<string> missing,
-            List<string> wrongSize)
+        private static void CheckEmbeddedIcon(Assembly assembly, string[] resourceNames, string name, int size,
+            List<string> missing, List<string> wrongSize)
         {
             // Matched by suffix so the root namespace never has to be spelled out here
             var suffix = string.Format(CultureInfo.InvariantCulture, ICON_RESOURCE_SUFFIX, name, size);
@@ -93,7 +110,7 @@ namespace pwiz.SkylineTest
                 missing.Add($@"{name}.{size}");
                 return;
             }
-            using (var stream = typeof(Resources).Assembly.GetManifestResourceStream(resourceName))
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
                 Assert.IsNotNull(stream);
                 using (var embedded = new Bitmap(stream))

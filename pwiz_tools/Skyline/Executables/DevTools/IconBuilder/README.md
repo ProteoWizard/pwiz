@@ -38,20 +38,32 @@ FragmentS                  vector  18,21,28
 
 Change an icon's source kind by editing its line; nothing else references the kind.
 
+`common.manifest` lists pwiz.Common's icons (`Shared/Common/Resources`) in the same format. It
+starts with directives, relative to the manifest's folder, that say where its sources live and
+where its outputs go; `icons.manifest` uses the defaults (`Icons/Vector`, `Icons/Raster`,
+`pwiz_tools/Skyline/Resources/Icons`):
+
+```
+@vector Icons\Vector\Common
+@raster Icons\Raster\Common
+@output ..\..\..\..\Shared\Common\Resources\Icons
+```
+
 ## Usage
 
 ```bash
 cd pwiz_tools/Skyline/Executables/DevTools/IconBuilder
-dotnet run -c Release                      # every icon in the manifest, into pwiz_tools/Skyline/Resources/Icons
+dotnet run -c Release                      # every icon in every manifest, each into its output folder
 dotnet run -c Release -- Save Copy Paste   # just these icons
-dotnet run -c Release -- --out <dir>       # somewhere else, e.g. for a gallery
+dotnet run -c Release -- --manifest icons.manifest --out <dir>   # one manifest, somewhere else
 ```
 
 Icon names in the manifest are the `Resources.resx` property names (`add_pro32`, `HomeIcon1`,
 `Properties_Button`), not the bitmap file names, because that is how callers ask for them.
 
 Requires the .NET 10 SDK. The tool finds `icons.manifest` by walking up from the current
-directory or the exe; `--manifest <path>` overrides that.
+directory or the exe and also builds every other `*.manifest` next to it; `--manifest <path>`
+builds just that one. Icon names given on the command line must be in one of the manifests.
 
 ## Updating a source
 
