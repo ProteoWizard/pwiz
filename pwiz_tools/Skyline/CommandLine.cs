@@ -2839,7 +2839,8 @@ namespace pwiz.Skyline
         /// <summary>
         /// Records the location of a library in the Spectral Library list, as Edit Library does. A document
         /// stores only a library's name and file name, so a library missing from the list is found again only
-        /// beside the document or in the default library folder.
+        /// beside the document or in the default library folder. Like any settings change from the command
+        /// line, it lasts for this session, or later ones with --save-settings.
         /// </summary>
         private void AddToSpectralLibraryList(LibrarySpec librarySpec)
         {
@@ -2857,7 +2858,6 @@ namespace pwiz.Skyline
                 }
             }
             libraryList.SetValue(librarySpec);
-            Settings.Default.SaveWithoutExceptions();
         }
 
 
