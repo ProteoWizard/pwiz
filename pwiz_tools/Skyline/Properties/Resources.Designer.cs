@@ -3533,16 +3533,6 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap DropDownArrow {
-            get {
-                object obj = ResourceManager.GetObject("DropDownArrow", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap DropImage {
             get {
                 object obj = ResourceManager.GetObject("DropImage", resourceCulture);

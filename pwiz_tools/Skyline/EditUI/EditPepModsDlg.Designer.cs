@@ -72,13 +72,11 @@ namespace pwiz.Skyline.EditUI
             // 
             // comboStatic1
             // 
-            this.comboStatic1.Image = global::pwiz.Skyline.Properties.Resources.DropDownArrow;
             resources.ApplyResources(this.comboStatic1, "comboStatic1");
             this.comboStatic1.Name = "comboStatic1";
             // 
             // comboHeavy1_1
             // 
-            this.comboHeavy1_1.Image = global::pwiz.Skyline.Properties.Resources.DropDownArrow;
             resources.ApplyResources(this.comboHeavy1_1, "comboHeavy1_1");
             this.comboHeavy1_1.Name = "comboHeavy1_1";
             // 

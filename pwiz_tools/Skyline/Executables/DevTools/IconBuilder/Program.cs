@@ -70,7 +70,15 @@ namespace IconBuilder
 
             var entries = ReadManifest(manifestPath);
             if (names.Count > 0)
+            {
+                var unknown = names.Where(n => !entries.Any(e => string.Equals(e.Name, n, StringComparison.OrdinalIgnoreCase))).ToList();
+                if (unknown.Count > 0)
+                {
+                    Console.WriteLine($"ERROR: not in {MANIFEST_NAME}: {string.Join(", ", unknown)}");
+                    return 1;
+                }
                 entries = entries.Where(e => names.Contains(e.Name, StringComparer.OrdinalIgnoreCase)).ToList();
+            }
 
             Console.WriteLine($"Manifest: {manifestPath}");
             Console.WriteLine($"Output:   {outDir}");
@@ -171,7 +179,8 @@ namespace IconBuilder
                 if (line.Length == 0 || line.StartsWith("#"))
                     continue;
                 var parts = line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length != 3 || !Enum.TryParse<SourceKind>(parts[1], out var kind))
+                // Enum.TryParse also accepts numeric strings, so require one of the names
+                if (parts.Length != 3 || !Enum.GetNames<SourceKind>().Contains(parts[1]) || !Enum.TryParse<SourceKind>(parts[1], out var kind))
                     throw new FormatException($"{MANIFEST_NAME} line {lineNumber}: expected 'Name vector|raster sizes', got '{line}'");
                 var sizes = parts[2].Split(',').Select(s => int.Parse(s.Trim())).ToArray();
                 entries.Add(new IconEntry(parts[0], kind, sizes));
@@ -253,7 +262,11 @@ namespace IconBuilder
                 {
                     g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                     g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                    g.DrawImage(source, new Rectangle(0, 0, size, size));
+                    // Without TileFlipXY the bicubic kernel samples transparent pixels outside the
+                    // source and leaves a semi-transparent fringe on the outer row and column.
+                    using var attributes = new ImageAttributes();
+                    attributes.SetWrapMode(WrapMode.TileFlipXY);
+                    g.DrawImage(source, new Rectangle(0, 0, size, size), 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
                 }
                 scaled.Save(outputPath, ImageFormat.Png);
             }

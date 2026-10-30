@@ -259,6 +259,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             this.bindingNavigatorDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorDeleteItem.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.bindingNavigatorDeleteItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             resources.ApplyResources(this.bindingNavigatorDeleteItem, "bindingNavigatorDeleteItem");
             this.bindingNavigatorDeleteItem.Name = "bindingNavigatorDeleteItem";
             // 

@@ -28,6 +28,7 @@ for path in sorted(glob.glob(os.path.join(src_dir, "*.png"))):
     name, w, h = m.group(1), int(m.group(2)), int(m.group(3))
     img = Image.open(path).convert("RGBA")
     if img.size != (w, h):
+        print("WARNING: skipped %s: image is %dx%d, name says %dx%d" % (os.path.basename(path), img.size[0], img.size[1], w, h))
         continue
     alpha = img.getchannel("A")
 
