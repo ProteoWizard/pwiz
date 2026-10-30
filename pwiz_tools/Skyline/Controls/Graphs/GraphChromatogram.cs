@@ -190,7 +190,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private string _nameChromatogramSet;
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
-        private PointF _fullScanTrackingPointLocation;
 
         // Active graph state
         private readonly GraphHelper _graphHelper;
@@ -203,7 +202,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _chromIndex;
         private bool _showPeptideTotals;
         private bool _enableTrackingDot;
-        private bool _showingTrackingDot;
 
         private const int MaxPeptidesDisplayed = 100;
         private const int FullScanPointSize = 12;
@@ -342,18 +340,19 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// User clicked on a chromatogram.
         /// </summary>
-        public void FireClickedChromatogram(GraphPane graphPane)
+        private void FireClickedChromatogram(FullScanPoint fullScanPoint)
         {
-            if (ClickedChromatogram == null || _closestCurve == null)
+            if (ClickedChromatogram == null)
                 return;
 
-            var clickedItem = (ChromGraphItem) _closestCurve.Tag;
+            var graphPane = fullScanPoint.GraphPane;
+            var clickedCurve = fullScanPoint.Curve;
+            var clickedItem = (ChromGraphItem) clickedCurve.Tag;
             if (clickedItem.TransitionNode == null)
                 return;
             var chromatogramInfo = clickedItem.Chromatogram;
 
-            double displayTime = graphPane.CurveList[FULLSCAN_TRACKING_INDEX][0].X;
-            var retentionTime = clickedItem.GetValidPeakBoundaryTime(displayTime);
+            var retentionTime = clickedItem.GetValidPeakBoundaryTime(fullScanPoint.DisplayTime);
             if (retentionTime.IsZero)
                 return;
             IList<CurveItem> curveList;
@@ -371,7 +370,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int? transitionIndex = null;
             foreach (var curve in curveList)
             {
-                var isClosestCurve = ReferenceEquals(curve, _closestCurve);
+                var isClosestCurve = ReferenceEquals(curve, clickedCurve);
                 if (isClosestCurve)
                     transitionIndex = transitions.Count;
 
@@ -391,7 +390,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (clickedItem.OptimizationStep.HasValue)
             {
                 // Add infos for other transitions with the same optimization step.
-                transitions.AddRange(GetOtherOptimizationTransitions(_closestCurve));
+                transitions.AddRange(GetOtherOptimizationTransitions(clickedCurve));
             }
 
             var measuredResults = DocumentUI.Settings.MeasuredResults;
@@ -407,7 +406,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private IEnumerable<TransitionFullScanInfo> GetOtherOptimizationTransitions(CurveItem clickedCurve)
         {
-            var clickedItem = _closestCurve.Tag as ChromGraphItem;
+            var clickedItem = clickedCurve.Tag as ChromGraphItem;
             if (clickedItem?.OptimizationStep == null)
                 yield break;
 
@@ -1683,11 +1682,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 _enableTrackingDot = false;
             if (_enableTrackingDot)
             {
-                // The recreated tracking point is invisible and at the origin, so the graph is no
-                // longer showing a dot the user can click, no matter what it was showing before.
-                // Without this the click is accepted and then silently discarded, because it reads
-                // its time from the point that was just reset.
-                _showingTrackingDot = false;
                 graphPane.CurveList.Insert(FULLSCAN_TRACKING_INDEX, CreateScanPoint(Color.Black));
                 graphPane.CurveList.Insert(FULLSCAN_SELECTED_INDEX, CreateScanPoint(Color.Red));
             }
@@ -3162,6 +3156,23 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private PeakBoundsDragInfo[] _peakBoundDragInfos;
 
+        /// <summary>
+        /// Where the left button went down, when what the press does depends on whether it is
+        /// released without dragging.
+        /// </summary>
+        private PointF? _mouseDownClickPoint;
+
+        /// <summary>
+        /// True if moving the mouse from <paramref name="start"/> to <paramref name="pt"/> is far
+        /// enough to begin a drag, by the system drag size.
+        /// </summary>
+        private static bool IsDrag(PointF start, PointF pt)
+        {
+            var dragSize = SystemInformation.DragSize;
+            return Math.Abs(pt.X - start.X) >= dragSize.Width ||
+                   Math.Abs(pt.Y - start.Y) >= dragSize.Height;
+        }
+
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             HideFullScanTrackingPoint();
@@ -3245,9 +3256,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Show full scan tracking dot.
-            ShowHighlightPoint(pt, doFullScanTracking);
-            if (IsOverHighlightPoint(pt))
+            var fullScanPoint = doFullScanTracking ? FindFullScanPoint(pt) : null;
+            if (fullScanPoint != null)
             {
+                ShowTrackingDot(fullScanPoint);
                 graphControl.Cursor = Cursors.Hand;
                 return true;
             }
@@ -3264,7 +3276,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HideFullScanTrackingPoint()
         {
-            _showingTrackingDot = false;
             if (!_enableTrackingDot)
                 return;
             foreach (var graphPane in GraphPanes)
@@ -3274,54 +3285,50 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private bool IsOverHighlightPoint(PointF pt)
+        /// <summary>
+        /// Finds the point on a chromatogram curve, within 20 pixels of <paramref name="pt"/>, which
+        /// clicking at <paramref name="pt"/> would show the spectrum for. Returns null if there is none.
+        /// </summary>
+        private FullScanPoint FindFullScanPoint(PointF pt)
         {
             if (!_enableTrackingDot)
-                return false;
+                return null;
             var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
-            return graphPane != null && _showingTrackingDot;
+            if (graphPane == null)
+                return null;
+            graphPane.FindClosestCurve(GetCurves(graphPane), pt, 20, out var closestCurve, out var closestPoint);
+            if (closestCurve == null)
+                return null;
+            graphPane.ReverseTransform(closestPoint, out var displayTime, out var intensity);
+            return new FullScanPoint(graphPane, closestCurve, displayTime, intensity);
         }
 
-        private CurveItem _closestCurve;
-
         /// <summary>
-        /// Display the closest curve point to the cursor.
+        /// Display the tracking dot at a point on a chromatogram curve.
         /// </summary>
-        /// <param name="pt">Cursor coordinates</param>
-        /// <param name="showPoint">True to display tracking point.</param>
-        private void ShowHighlightPoint(PointF pt, bool showPoint)
+        private void ShowTrackingDot(FullScanPoint fullScanPoint)
         {
-            var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
+            var curveList = fullScanPoint.GraphPane.CurveList;
+            if (curveList.Count <= FULLSCAN_TRACKING_INDEX)
+                return;
+            var color = fullScanPoint.Curve.Color;
+            var lineItem = (LineItem)curveList[FULLSCAN_TRACKING_INDEX];
+            lineItem[0].X = fullScanPoint.DisplayTime;
+            lineItem[0].Y = fullScanPoint.Intensity;
+            lineItem.Symbol.Fill.Color = Color.FromArgb(150, color);
+            lineItem.Symbol.Border.Color = Color.FromArgb(
+                (int)(color.R * 0.6),
+                (int)(color.G * 0.6),
+                (int)(color.B * 0.6));
+            lineItem.IsVisible = true;
 
-            if (graphPane != null && showPoint)
-            {
-                // Find the closest curve point to the cursor.
-                graphPane.FindClosestCurve(GetCurves(graphPane), pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
-
-                // Display the highlight point.
-                if (_closestCurve != null && graphPane.CurveList.Count > FULLSCAN_TRACKING_INDEX)
-                {
-                    double x, y;
-                    graphPane.ReverseTransform(_fullScanTrackingPointLocation, out x, out y);
-                    var lineItem = (LineItem)graphPane.CurveList[FULLSCAN_TRACKING_INDEX];
-                    lineItem[0].X = x;
-                    lineItem[0].Y = y;
-                    lineItem.Symbol.Fill.Color = Color.FromArgb(150, _closestCurve.Color);
-                    lineItem.Symbol.Border.Color = Color.FromArgb(
-                        (int)(_closestCurve.Color.R * 0.6),
-                        (int)(_closestCurve.Color.G * 0.6),
-                        (int)(_closestCurve.Color.B * 0.6));
-                    lineItem.IsVisible = true;
-                    _showingTrackingDot = true;
-
-                    graphControl.Invalidate(graphControl.Region);
-                    graphControl.Update();
-                }
-            }
+            graphControl.Invalidate(graphControl.Region);
+            graphControl.Update();
         }
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            _mouseDownClickPoint = null;
             if (ModifierKeys != Keys.None)
             {
                 return false;
@@ -3329,21 +3336,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
-                if (!_showPeptideTotals && IsOverHighlightPoint(pt))
-                {
-                    var graphPane = GraphPaneFromPoint(pt);
-                    if (graphPane != null)
-                    {
-                        // Uncomment to get coordinates for tests
-//                        double xScaled, yScaled;
-//                        graphPane.ReverseTransform(pt, out xScaled, out yScaled);
-//                        Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled); 
-
-                        FireClickedChromatogram(graphPane);
-                    }
-                    return true;
-                }
-
+                bool overLabel = false;
                 using (Graphics g = CreateGraphics())
                 {
                     GraphPane nearestGraphPane;
@@ -3354,6 +3347,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var label = nearest as TextObj;
                         if (label != null)
                         {
+                            overLabel = true;
                             // Select corresponding peptide.
                             if (_showPeptideTotals)
                             {
@@ -3448,6 +3442,15 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
+
+                // A press on a full-scan point shows the spectrum only if it is released without
+                // moving. Leave the press unhandled so that ZedGraph can zoom if the mouse is dragged.
+                // A label hides the tracking dot, so the press does nothing on one.
+                if (!_showPeptideTotals && !overLabel && FindFullScanPoint(pt) != null)
+                {
+                    _mouseDownClickPoint = pt;
+                    graphControl.Cursor = Cursors.Hand;
+                }
             }
             else if (_peakBoundDragInfos != null)
             {
@@ -3469,6 +3472,22 @@ namespace pwiz.Skyline.Controls.Graphs
                     DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
                     EndDrag(true);
                     return true;
+                }
+
+                var clickPoint = _mouseDownClickPoint;
+                _mouseDownClickPoint = null;
+                if (clickPoint.HasValue && !IsDrag(clickPoint.Value, pt))
+                {
+                    // Uncomment to get coordinates for tests
+//                    double xScaled, yScaled;
+//                    GraphPaneFromPoint(clickPoint.Value).ReverseTransform(clickPoint.Value, out xScaled, out yScaled);
+//                    Console.WriteLine(@"Clicked x={0}, y={1}", xScaled, yScaled);
+
+                    var fullScanPoint = FindFullScanPoint(clickPoint.Value);
+                    if (fullScanPoint != null)
+                        FireClickedChromatogram(fullScanPoint);
+                    // Leave the release unhandled, so that ZedGraph ends the zoom the press began.
+                    return false;
                 }
             }
             else if (_peakBoundDragInfos != null)
@@ -3700,6 +3719,25 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        /// <summary>
+        /// A point on a chromatogram curve, where clicking shows the spectrum at that time.
+        /// </summary>
+        private class FullScanPoint
+        {
+            public FullScanPoint(GraphPane graphPane, CurveItem curve, double displayTime, double intensity)
+            {
+                GraphPane = graphPane;
+                Curve = curve;
+                DisplayTime = displayTime;
+                Intensity = intensity;
+            }
+
+            public GraphPane GraphPane { get; }
+            public CurveItem Curve { get; }
+            public double DisplayTime { get; }
+            public double Intensity { get; }
+        }
+
         private ImputedPeak ProduceImputedPeak(ProductionMonitor productionMonitor, ImputedBoundsParameter imputedBoundsParameter)
         {
             PeakBoundaryImputer peakBoundaryImputer = new PeakBoundaryImputer(imputedBoundsParameter.Document);
@@ -3717,10 +3755,10 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.PerformMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
-        public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
+        public bool IsOverFullScanPoint(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            return IsOverHighlightPoint(mouse);
+            return FindFullScanPoint(mouse) != null;
         }
 
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
