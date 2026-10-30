@@ -1,0 +1,21 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Pivot and filter: the Pivot icon's gray bars with Skyline's blue funnel scaled into the
+       open area at the lower right. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="6" Height="6" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="2" Width="18" Height="6" Fill="#808080"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="10" Width="6" Height="20" Fill="#808080"/>
+  <Canvas>
+    <Canvas.RenderTransform><TransformGroup><ScaleTransform ScaleX="0.74" ScaleY="0.8"/><TranslateTransform X="8.9" Y="6.4"/></TransformGroup></Canvas.RenderTransform>
+    <Path Data="M 1.5,3 Q 1.5,2 2.5,2 L 29.5,2 Q 30.5,2 30.5,3 L 30.5,5.5 L 19,16 L 19,28.5 Q 19,29.5 18,29.5 L 14,29.5 Q 13,29.5 13,28.5 L 13,16 L 1.5,5.5 Z" Stroke="#2A58A8" StrokeThickness="0.5">
+      <Path.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.4">
+          <GradientStop Color="#5E90D8" Offset="0"/>
+          <GradientStop Color="#3B6EC4" Offset="0.5"/>
+          <GradientStop Color="#2A5AB0" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Fill>
+    </Path>
+    <Path Data="M 6,4 L 10,4 L 15,25 L 12,25 Z" Fill="#E6EEFA" Opacity="0.85"/>
+    <Path Data="M 3,3 L 29,3 L 29,4.5 L 3,4.5 Z" Fill="#9DBBE8" Opacity="0.6"/>
+  </Canvas>
+</Canvas>

@@ -1,0 +1,4 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Close: a black X of two 3-pixel-wide diagonal strokes with square-cut ends. -->
+  <Path Data="M 3.5,3.5 L 28.5,28.5 M 28.5,3.5 L 3.5,28.5" Stroke="#000000" StrokeThickness="4.2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+</Canvas>

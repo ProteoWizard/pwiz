@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Standard deviation: a black sigma, a 2-pixel ring with a bar running right from its top, level with the top band of the ring. -->
+  <Ellipse Canvas.Left="0" Canvas.Top="8" Width="26" Height="24" Stroke="#000000" StrokeThickness="4"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="18" Height="4" Fill="#000000"/>
+</Canvas>

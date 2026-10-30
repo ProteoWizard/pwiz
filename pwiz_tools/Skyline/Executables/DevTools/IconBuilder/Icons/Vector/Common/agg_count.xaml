@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Count: a thin black number sign with slanted strokes. -->
+  <Rectangle Canvas.Left="4" Canvas.Top="10" Width="24" Height="2" Fill="#000000"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="24" Height="2" Fill="#000000"/>
+  <Path Data="M 15.5,0 L 7,32 M 23.5,0 L 15,32" Stroke="#000000" StrokeThickness="2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+</Canvas>

@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Mean: a black x with a bar above it (x-bar). -->
+  <Rectangle Canvas.Left="10" Canvas.Top="2" Width="12" Height="4" Fill="#000000"/>
+  <Canvas>
+    <Canvas.Clip><RectangleGeometry Rect="0,10,32,22"/></Canvas.Clip>
+    <Path Data="M 6.4,8.5 L 25.6,33.5 M 25.6,8.5 L 6.4,33.5" Stroke="#000000" StrokeThickness="3.2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  </Canvas>
+</Canvas>
