@@ -41,16 +41,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private IViewEditor _viewEditor;
         private bool _showHiddenFields;
         private bool _alphabetical;
-        private static readonly Image[] ImagelistImages =
-        {
-            Resources.DataColumn,
-            Resources.TextColumn,
-            Resources.NumberColumn,
-            Resources.BoolColumn,
-            Resources.LinkColumn,
-            Resources.SublistColumn,
-            Resources.PivotColumn,
-        };
         private enum ImageIndexes
         {
             Unknown,
@@ -68,11 +58,24 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 {
                     TransparentColor = Color.Magenta,
                 };
-            ImageList.Images.AddRange(ImagelistImages);
-            ImageListScaler.ScaleToDpi(this, ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
+            // One icon per ImageIndexes value, rendered for the display DPI (issue #4599)
+            ImageListScaler.PrepareForDpi(this, ImageList);
+            AddImage(nameof(Resources.DataColumn), Resources.DataColumn);
+            AddImage(nameof(Resources.TextColumn), Resources.TextColumn);
+            AddImage(nameof(Resources.NumberColumn), Resources.NumberColumn);
+            AddImage(nameof(Resources.BoolColumn), Resources.BoolColumn);
+            AddImage(nameof(Resources.LinkColumn), Resources.LinkColumn);
+            AddImage(nameof(Resources.SublistColumn), Resources.SublistColumn);
+            AddImage(nameof(Resources.PivotColumn), Resources.PivotColumn);
             DrawMode = TreeViewDrawMode.OwnerDrawText;
             ShowNodeToolTips = true;
         }
+
+        private void AddImage(string name, Image image)
+        {
+            ImageList.Images.Add(DpiIcons.GetIcon(typeof(Resources), this, name, image, Color.Magenta));
+        }
+
         [Browsable(false)]
         [DefaultValue(null)]
         public ColumnDescriptor RootColumn

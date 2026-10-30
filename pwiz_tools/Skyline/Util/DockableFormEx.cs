@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
@@ -96,7 +97,7 @@ namespace pwiz.Skyline.Util
             base.OnLoad(e);
 
             // Toolbar, menu and button images at the display DPI (issue #4599)
-            DpiUtil.PrepareIcons(this);
+            DpiIcons.PrepareIcons(this);
 
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
             GetModeUIHelper().OnLoad(this);

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.GUI;
 
 namespace pwiz.Common.SystemUtil
@@ -74,6 +75,9 @@ namespace pwiz.Common.SystemUtil
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+
+            // Toolbar, menu and button images at the display DPI (issue #4599)
+            DpiIcons.PrepareIcons(this);
 
             // For unit testing, move window offscreen.
             if (Offscreen)

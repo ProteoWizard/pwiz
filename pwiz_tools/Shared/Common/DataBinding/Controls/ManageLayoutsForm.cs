@@ -43,11 +43,17 @@ namespace pwiz.Common.DataBinding.Controls
         public ManageLayoutsForm()
         {
             InitializeComponent();
-            imageList1.Images.Add(Resources.PlainLayout);
-            imageList1.Images.Add(Resources.Filter);
-            imageList1.Images.Add(Resources.Pivot);
-            imageList1.Images.Add(Resources.PivotAndFilter);
-            ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
+            // One icon per LayoutType value, rendered for the display DPI (issue #4599)
+            ImageListScaler.PrepareForDpi(this, imageList1);
+            AddImage(nameof(Resources.PlainLayout), Resources.PlainLayout);
+            AddImage(nameof(Resources.Filter), Resources.Filter);
+            AddImage(nameof(Resources.Pivot), Resources.Pivot);
+            AddImage(nameof(Resources.PivotAndFilter), Resources.PivotAndFilter);
+        }
+
+        private void AddImage(string name, Image image)
+        {
+            imageList1.Images.Add(DpiIcons.GetIcon(typeof(Resources), this, name, image, Color.Magenta));
         }
 
         public ViewLayoutList ViewLayoutList

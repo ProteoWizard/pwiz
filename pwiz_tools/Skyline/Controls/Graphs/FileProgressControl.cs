@@ -22,6 +22,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _stateProvider = stateProvider;
             InitializeComponent();
             // Created after its host has loaded, so the warning icon is scaled here
-            DpiUtil.PrepareIcons(this);
+            DpiIcons.PrepareIcons(this);
             labelPercent.Text = string.Empty;
             TabStop = false;
 

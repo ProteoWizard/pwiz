@@ -18,22 +18,27 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.Resources;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using CommonResources = pwiz.Common.Properties.Resources;
 
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// DpiUtil.PrepareIcons finds the resource name of a designer image by its pixels, so
-    /// every small Resources.resx bitmap must map back to its own name - or to a twin with
-    /// identical pixels, listed here so a new ambiguity is caught when an icon is added.
+    /// DpiIcons.PrepareIcons finds the resource name of a designer image by its pixels, so
+    /// every small Resources.resx bitmap of Skyline and of pwiz.Common must map back to its
+    /// own name - or to a twin with identical pixels, listed here so a new ambiguity is
+    /// caught when an icon is added.
     /// </summary>
     [TestClass]
     public class DpiIconLookupTest : AbstractUnitTest
@@ -45,6 +50,12 @@ namespace pwiz.SkylineTest
         {
             { @"PeakBlank", @"Blank" },
             { @"ReplicateMissing", @"FileMissing" }
+        };
+
+        private static readonly Dictionary<string, string> COMMON_PIXEL_TWINS = new Dictionary<string, string>
+        {
+            { @"PlainLayout", @"DataColumn" },
+            { @"Filter1", @"Filter" }
         };
 
         [TestMethod]
@@ -70,8 +81,41 @@ namespace pwiz.SkylineTest
                 }
             }
 
+            var checkedIcons = CheckNativeLookup(typeof(Resources), Resources.ResourceManager, PIXEL_TWINS);
+            Assert.IsTrue(checkedIcons > 100, $@"Expected the small icons of Resources.resx, found {checkedIcons}");
+        }
+
+        /// <summary>
+        /// The Document Grid bar and the Edit Report dialog draw pwiz.Common's resources,
+        /// which the loader indexes per assembly: a Common native resolves through its own
+        /// Resources class and not through Skyline's.
+        /// </summary>
+        [TestMethod]
+        public void TestDpiCommonIconLookup()
+        {
+            using (var pivot = CommonResources.Pivot)
+            {
+                Assert.AreEqual(nameof(CommonResources.Pivot), DpiIcons.GetIconName(typeof(CommonResources), pivot));
+                Assert.IsNull(DpiUtil.GetIconName(pivot));
+            }
+            using (var save = Resources.Save)
+                Assert.IsNull(DpiIcons.GetIconName(typeof(CommonResources), save));
+
+            var checkedIcons = CheckNativeLookup(typeof(CommonResources), CommonResources.ResourceManager,
+                COMMON_PIXEL_TWINS);
+            Assert.IsTrue(checkedIcons > 25,
+                $@"Expected the small icons of pwiz.Common's Resources.resx, found {checkedIcons}");
+        }
+
+        /// <summary>
+        /// Every bitmap up to 16 px in the resource set resolves to its own name, or to the
+        /// listed twin; returns how many were checked.
+        /// </summary>
+        private static int CheckNativeLookup(Type resourcesType, ResourceManager resourceManager,
+            Dictionary<string, string> twins)
+        {
             var checkedIcons = 0;
-            var resourceSet = Resources.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+            var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             foreach (DictionaryEntry entry in resourceSet)
             {
                 if (!(entry.Value is Bitmap bitmap))
@@ -81,15 +125,16 @@ namespace pwiz.SkylineTest
                     if (bitmap.Width > ICON_NATIVE_MAX || bitmap.Height > ICON_NATIVE_MAX)
                         continue;
                     var name = (string) entry.Key;
-                    var found = DpiUtil.GetIconName(bitmap);
-                    if (PIXEL_TWINS.TryGetValue(name, out var twin))
+                    var found = DpiIcons.GetIconName(resourcesType, bitmap);
+                    if (twins.TryGetValue(name, out var twin))
                         Assert.AreEqual(twin, found, $@"{name} should resolve to its pixel twin {twin}");
                     else
-                        Assert.AreEqual(name, found, $@"{name} resolves to {found ?? @"null"}: identical pixels under two names?");
+                        Assert.AreEqual(name, found,
+                            $@"{name} resolves to {found ?? @"null"}: identical pixels under two names?");
                     checkedIcons++;
                 }
             }
-            Assert.IsTrue(checkedIcons > 100, $@"Expected the small icons of Resources.resx, found {checkedIcons}");
+            return checkedIcons;
         }
     }
 }
