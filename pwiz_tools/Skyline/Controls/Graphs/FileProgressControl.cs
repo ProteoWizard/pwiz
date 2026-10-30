@@ -61,6 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _stateProvider = stateProvider;
             InitializeComponent();
+            // Created after its host has loaded, so the warning icon is scaled here
+            DpiUtil.PrepareIcons(this);
             labelPercent.Text = string.Empty;
             TabStop = false;
 

@@ -39,6 +39,8 @@ namespace pwiz.Skyline.Menus
         public TreeNodeContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
             InitializeComponent();
+            // Shown by code rather than attached to the tree, so no form's load reaches it
+            DpiUtil.PrepareIcons(contextMenuTreeNode);
         }
 
         public new ContextMenuStrip ContextMenuStrip => contextMenuTreeNode;

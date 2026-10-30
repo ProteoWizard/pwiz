@@ -9,6 +9,7 @@ using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -26,7 +27,8 @@ namespace pwiz.Skyline.FileUI
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);
             actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
             newFolderButton.Visible = true;
-            newFolderButton.Image = Resources.AddFolder;
+            // Not a FormEx, so the toolbar image is sized for the display DPI here
+            newFolderButton.Image = DpiUtil.GetIcon(this, nameof(Resources.AddFolder), Resources.AddFolder);
             newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
         }
 
