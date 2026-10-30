@@ -148,12 +148,43 @@ namespace pwiz.Skyline.Model.Lib
             string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},branch:{TEAMCITY_BRANCH},status:SUCCESS,count:1";
             // A locator in the path answers with the one build as the document root
             var build = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/{buildLocator}")).Root;
-            string buildId = build?.Name.LocalName == @"build" ? build.Attribute(@"id")?.Value : null;
-            if (string.IsNullOrEmpty(buildId))
+            if (build?.Name.LocalName != @"build")
             {
                 throw new IOException(string.Format(@"No successful {0} build on branch {1} at {2}",
                     TEAMCITY_BUILD_TYPE, TEAMCITY_BRANCH, TEAMCITY_SERVER));
             }
+            return GetBuildDownloadInfo(client, build);
+        }
+
+        /// <summary>
+        /// The download of the finished, successful Osprey build of one commit, on whatever branch
+        /// (every push of a pull request builds Osprey too), or false when that commit has none. A
+        /// test on TeamCity takes this before the latest master build, so that a change to Osprey and
+        /// Skyline together is tested against its own Osprey rather than master's. The package is
+        /// cached under a name carrying the revision, since every build of a day shares the version
+        /// in the zip's name and a cached master zip would otherwise pass for it.
+        /// </summary>
+        public static bool TryGetRevisionBuildDownloadInfo(string revision, out FileDownloadInfo downloadInfo)
+        {
+            downloadInfo = default;
+            using var client = new HttpClientWithProgress();
+            string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},revision:{revision},branch:default:any,status:SUCCESS,state:finished,count:1";
+            // A locator in the query answers with a list, empty when nothing matches
+            var builds = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds?locator={buildLocator}")).Root;
+            var build = builds?.Elements(@"build").FirstOrDefault();
+            if (build == null)
+                return false;
+            downloadInfo = GetBuildDownloadInfo(client, build);
+            string zipName = downloadInfo.DownloadUrl.Segments.Last();
+            string shortRevision = revision.Length > 8 ? revision.Substring(0, 8) : revision;
+            downloadInfo.MirrorFilename = zipName.Substring(0, zipName.Length - OSPREY_ZIP_SUFFIX.Length) + @"-" + shortRevision + OSPREY_ZIP_SUFFIX;
+            return true;
+        }
+
+        /// <summary>The download of <paramref name="build"/>'s package, named from its artifact list and addressed by build id, so a build finishing meanwhile cannot change what is downloaded.</summary>
+        private static FileDownloadInfo GetBuildDownloadInfo(HttpClientWithProgress client, XElement build)
+        {
+            string buildId = build.Attribute(@"id")?.Value;
             var artifacts = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/id:{buildId}/artifacts/children/"));
             string zipName = artifacts.Root?.Elements(@"file").Select(f => f.Attribute(@"name")?.Value)
                 .FirstOrDefault(n => n != null && n.StartsWith(@"Osprey-") && n.EndsWith(OSPREY_ZIP_SUFFIX));
