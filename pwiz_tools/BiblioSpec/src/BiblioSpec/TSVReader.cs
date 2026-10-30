@@ -1106,6 +1106,7 @@ public sealed class TSVReader : BuildParser
         // fileID assignment order matches cpp byte-for-byte.
         private readonly SortedDictionary<string, List<PSM>> _filePsmMap =
             new(StringComparer.Ordinal);
+        // ReSharper disable once MemberInitializerValueIgnored
         private readonly string _libraryTsvPath = string.Empty;
 
         public PaserResultReader(BlibBuilder builder, string tsvName, ProgressIndicator? parentProgress)

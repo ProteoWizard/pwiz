@@ -182,6 +182,7 @@ namespace MSConvertGUI
             InitializeComponents();
             if (existing != null)
             {
+                // ReSharper disable once VirtualMemberCallInConstructor
                 Text = "Edit Account";
                 if (existing is UnifiAccount)
                     _typeCombo.SelectedIndex = 0;

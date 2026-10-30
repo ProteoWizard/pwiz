@@ -327,7 +327,9 @@ namespace Pwiz.SeeMS
                     foreach (var form in CurrentGraphFormList.Where(g => g.Sources.Any(s => s.Source == source.Source)))
                         form.Close();
                     foreach (var form in dockPanel.Contents.ToArray())
+                        // ReSharper disable once ConstantNullCoalescingCondition
                         if (((form as ManagedDockableForm)?.Source ?? null) == source)
+                            // ReSharper disable once ConstantConditionalAccessQualifier
                             (form as DockableForm)?.Close();
                     source.Source.MSDataFile.Dispose();
                     dataSourceMap.Remove(filepath);
@@ -1381,6 +1383,7 @@ namespace Pwiz.SeeMS
 
             GraphItem graphItem = graphForm.FocusedItem.Tag as GraphItem;
             SpectrumSource source = graphItem.Source.Source;
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if( source == null || graphItem == null )
                 return;
 

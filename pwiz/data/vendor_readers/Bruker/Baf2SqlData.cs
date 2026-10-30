@@ -211,6 +211,7 @@ internal sealed class Baf2SqlData : IBrukerData
     public string AnalysisDirectory => _analysisDir;
 
     /// <inheritdoc/>
+    // ReSharper disable once MemberInitializerValueIgnored
     public IReadOnlyDictionary<string, string> GlobalMetadata { get; } = new Dictionary<string, string>();
 
     /// <inheritdoc/>

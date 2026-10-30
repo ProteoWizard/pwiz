@@ -114,6 +114,7 @@ namespace MSConvertGUI
             var map = new Dictionary<string, IList<string>>();
             foreach (var r in _inner.Readers)
             {
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 if (r.FileExtensions is null || r.FileExtensions.Count == 0) continue;
                 map[r.TypeName] = r.FileExtensions.ToList();
             }

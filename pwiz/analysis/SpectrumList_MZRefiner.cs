@@ -403,6 +403,7 @@ public sealed class SpectrumList_MZRefiner : SpectrumListWrapper
             int offset = m.Location switch
             {
                 0 => Pwiz.Util.Proteome.ModificationMap.NTerminus,
+                // ReSharper disable once PatternAlwaysMatches
                 int loc when loc == pep.Sequence.Length + 1 => Pwiz.Util.Proteome.ModificationMap.CTerminus,
                 _ => m.Location - 1,
             };

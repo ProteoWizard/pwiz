@@ -529,6 +529,7 @@ public sealed class HttpUnifiDataSource : IUnifiDataSource, IDisposable
         bins.Append("]}");
 
         var content = new StringContent(bins.ToString(), Encoding.UTF8, "application/json");
+        // ReSharper disable once UsingStatementResourceInitialization
         using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
         using var response = _client.SendAuthenticatedPostSync(request);
         if (!response.IsSuccessStatusCode)

@@ -52,6 +52,7 @@ namespace Pwiz.SeeMS
                 } else
                 {
                     // compare the items as strings
+                    // ReSharper disable once StringCompareToIsCultureSpecific
                     compareResult = xText.CompareTo( yText );
                 }
             }
