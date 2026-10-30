@@ -30,6 +30,8 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Communication;
@@ -383,7 +385,8 @@ namespace pwiz.SkylineTestFunctional
         /// would show the Predict For choices ignored - which a document digested from the same FASTA
         /// could not, its count being the FASTA's either way. The document also has auto-select off
         /// for peptides and transitions, which the digest for prediction must override: as the
-        /// document's settings stand, a FASTA's proteins get no peptides.
+        /// document's settings stand, a FASTA's proteins get no peptides. And it is given a library
+        /// pick that ranks peptides, which the digest's pick by filter must clear first or be refused.
         /// </summary>
         private void TestKoinaLibraryBuildForFasta()
         {
@@ -392,7 +395,12 @@ namespace pwiz.SkylineTestFunctional
             FileEx.SafeDelete(outBlib);
             // The rat plasma document again: the last library build left a new, empty document
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            RunUI(() => SkylineWindow.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideLibraries(lib =>
+                lib.ChangePick(PeptidePick.library).ChangeRankId(LibrarySpec.PEP_RANK_COPIES)), true));
             var docOpen = SkylineWindow.Document;
+            AssertEx.IsFalse(docOpen.Settings.PeptideSettings.Filter.AutoSelect);
+            AssertEx.IsFalse(docOpen.Settings.TransitionSettings.Filter.AutoSelect);
+            AssertEx.IsNotNull(docOpen.Settings.PeptideSettings.Libraries.RankId);
             Settings.Default.Koina = false; // No live prediction for the selected node after the build
 
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -428,6 +436,7 @@ namespace pwiz.SkylineTestFunctional
             var docPredicted = builder.Document;
             AssertEx.IsFalse(ReferenceEquals(docOpen, docPredicted));
             AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_REVERSE, builder.DecoyMethod);
+            AssertEx.IsNotNull(builder.EntrapmentTargets, @"the FASTA gave no entrapment peptides");
             var entrapmentSet = new HashSet<Target>(builder.EntrapmentTargets);
             AssertEx.IsTrue(entrapmentSet.Count > 0, @"the FASTA gave no entrapment peptides");
             var targets = docPredicted.Peptides.Where(p => !p.IsDecoy).ToArray();
@@ -470,9 +479,11 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsFalse(library.Contains(nodePepOpen.TransitionGroups.First().GetLibKey(docOpen.Settings, nodePepOpen)),
                 @"the library holds a peptide of the open document");
             // DecoyPairs finds a precursor by unmodified sequence and charge, and leaves out one the
-            // library holds twice, which a variable oxidation makes of every methionine peptide here
+            // library holds twice, which a variable oxidation makes of every methionine peptide here;
+            // the library holds one spectrum per library key, however many document nodes share it
             AssertEx.IsTrue(OspreyHelpers.LibraryHasDecoyPairs(outBlib), @"the library has no DecoyPairs table");
-            var uniquelyHeld = heldPrecursors.GroupBy(h => (h.NodePep.Target.Sequence, h.NodeGroup.PrecursorCharge))
+            var uniquelyHeld = heldPrecursors.GroupBy(h => h.NodeGroup.GetLibKey(docPredicted.Settings, h.NodePep)).Select(g => g.First())
+                .GroupBy(h => (h.NodePep.Target.Sequence, h.NodeGroup.PrecursorCharge))
                 .Where(g => g.Count() == 1).Select(g => g.Single()).ToArray();
             var pairedTargets = new HashSet<(string, int)>(uniquelyHeld.Where(h => !h.NodePep.IsDecoy)
                 .Select(h => (h.NodePep.Target.Sequence, h.NodeGroup.PrecursorCharge)));
