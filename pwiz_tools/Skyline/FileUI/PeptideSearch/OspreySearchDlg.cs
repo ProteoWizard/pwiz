@@ -618,7 +618,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>
         /// Osprey writes the document library, so an existing one is replaced, with the user's
         /// consent, before the search starts: its streams closed and the cached library released,
-        /// as the DIA-NN path does, so the file can be unlinked. Returns false when the user cancels.
+        /// so the file can be unlinked. Returns false when the user cancels.
         /// </summary>
         private bool StartSearch()
         {

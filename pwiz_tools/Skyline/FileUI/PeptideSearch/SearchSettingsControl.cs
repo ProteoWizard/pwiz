@@ -44,6 +44,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly RunPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
         private SearchEngine? _searchEngine;
+        private readonly Dictionary<SearchEngine, string> _engineNames = new Dictionary<SearchEngine, string>();
+        private List<SearchEngine> _engineChoices = new List<SearchEngine>();
+        private (bool IsDia, bool IsGpf) _engineContext; // What the search engine was made for
+        private SearchSettingsPreset _preset; // Applied to its engine whenever that engine is made for the spectra
+
+        /// <summary>
+        /// The engines that search DDA spectra, including DIA spectra DIA-Umpire has turned into pseudo-DDA spectra.
+        /// </summary>
+        private static readonly SearchEngine[] DDA_SEARCH_ENGINES =
+        {
+            SearchEngine.MSAmanda, SearchEngine.MSGFPlus, SearchEngine.MSFragger, SearchEngine.Comet, SearchEngine.Tide
+        };
 
         public SearchSettingsControl(RunPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
@@ -51,10 +63,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
 
+            // The designer's items name the engines in SearchEngine order
+            for (int i = 0; i < searchEngineComboBox.Items.Count; i++)
+                _engineNames[(SearchEngine) i] = (string) searchEngineComboBox.Items[i];
+            _engineNames[SearchEngine.DIANN] = @"DIA-NN";
+
             if (ImportPeptideSearch.IsFeatureDetection)
             {
-                SearchEngineComboBox_SelectedIndexChanged(null, null); // Initialize
-                _searchEngine = SearchEngine.Hardklor;
+                MakeSelectedSearchEngine(); // Hardklor
                 // Hide all controls other than the logo picture box
                 foreach (Control control in Controls)
                 {
@@ -91,25 +107,74 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void InitializeControls()
         {
-            if (_searchEngine == null || ImportPeptideSearch.IsDIASearch && _searchEngine != SearchEngine.MSFragger)
-                searchEngineComboBox.SelectedIndex = ImportPeptideSearch.IsDIASearch ? 2 : 0; // currently only supported by MSFragger
+            if (!ImportPeptideSearch.IsFeatureDetection)
+                LoadEngineChoices();
 
             LoadMassUnitEntries();
         }
 
-        private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Offers the engines that can search the spectra: for DIA spectra searched directly, the one
+        /// engine the DIA search method page chose; otherwise the DDA engines. Makes the engine again
+        /// when the spectra it searches have changed (e.g. DDA to DIA), since engines are made for them.
+        /// </summary>
+        private void LoadEngineChoices()
         {
-            if (_searchEngine == SelectedSearchEngine && ImportPeptideSearch.SearchEngine?.IsDisposed != true)
-                return; // nothing to do
+            var choices = ImportPeptideSearch.IsDIASearch
+                ? new List<SearchEngine> { _documentContainer.ConverterSettingsControl.DirectDiaSearchEngine }
+                : DDA_SEARCH_ENGINES.ToList();
+            var engine = _preset != null && choices.Contains(_preset.SearchEngine)
+                ? _preset.SearchEngine
+                : _searchEngine.HasValue && choices.Contains(_searchEngine.Value) ? _searchEngine.Value : choices[0];
 
-            if (ImportPeptideSearch.IsDIASearch && SelectedSearchEngine != SearchEngine.MSFragger) // currently only supported by MSFragger
+            searchEngineComboBox.SelectedIndexChanged -= SearchEngineComboBox_SelectedIndexChanged;
+            try
             {
-                MessageDlg.Show(Parent, DdaSearchResources.SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported);
-                SelectedSearchEngine = _searchEngine.Value; // go back to previous selection
-                return;
+                if (!choices.SequenceEqual(_engineChoices))
+                {
+                    _engineChoices = choices;
+                    searchEngineComboBox.Items.Clear();
+                    searchEngineComboBox.Items.AddRange(choices.Select(choice => (object) _engineNames[choice]).ToArray());
+                    searchEngineComboBox.Enabled = choices.Count > 1;
+                }
+                searchEngineComboBox.SelectedIndex = choices.IndexOf(engine);
+            }
+            finally
+            {
+                searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
             }
 
-            _searchEngine = (SearchEngine) searchEngineComboBox.SelectedIndex;
+            if (_searchEngine != engine || _engineContext != CurrentEngineContext || ImportPeptideSearch.SearchEngine?.IsDisposed != false)
+            {
+                MakeSelectedSearchEngine();
+                if (_preset?.SearchEngine == engine)
+                    ApplyPresetSettings(_preset);
+            }
+        }
+
+        private (bool IsDia, bool IsGpf) CurrentEngineContext => (ImportPeptideSearch.IsDIASearch, ImportPeptideSearch.IsGpfData);
+
+        /// <summary>
+        /// The engines the search engine list offers.
+        /// </summary>
+        public IList<SearchEngine> SearchEngineChoices => _engineChoices;
+
+        private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (searchEngineComboBox.SelectedIndex < 0 ||
+                _searchEngine == SelectedSearchEngine && ImportPeptideSearch.SearchEngine?.IsDisposed == false)
+                return; // nothing to do
+
+            // An engine the user chose over the preset's is not set back to the preset's
+            if (_preset != null && _preset.SearchEngine != SelectedSearchEngine)
+                _preset = null;
+            MakeSelectedSearchEngine();
+        }
+
+        private void MakeSelectedSearchEngine()
+        {
+            _searchEngine = SelectedSearchEngine;
+            _engineContext = CurrentEngineContext;
             ImportPeptideSearch.SearchEngine?.Dispose();
             ImportPeptideSearch.SearchEngine = InitSelectedSearchEngine();
             InitializeEngine();
@@ -152,12 +217,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                return ImportPeptideSearch.IsFeatureDetection ? SearchEngine.Hardklor : (SearchEngine) searchEngineComboBox.SelectedIndex;
+                if (ImportPeptideSearch.IsFeatureDetection)
+                    return SearchEngine.Hardklor;
+                int index = searchEngineComboBox.SelectedIndex;
+                return index >= 0 ? _engineChoices[index] : _searchEngine ?? DDA_SEARCH_ENGINES[0];
             }
 
             set
             {
-                searchEngineComboBox.SelectedIndex = (int) value;
+                int index = _engineChoices.IndexOf(value);
+                if (index < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, null);
+                searchEngineComboBox.SelectedIndex = index;
             }
         }
 
@@ -237,6 +308,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(TideSearchEngine.FilesToDownload);
                 case SearchEngine.MSAmanda:
                     return EnsureRequiredFilesDownloaded(MSAmandaSearchWrapper.FilesToDownload);
+                case SearchEngine.DIANN:
+                    return DiannDownloadDlg.EnsureDiannInstalled(TopLevelControl, ShowSearchToolsDlg);
                 case SearchEngine.Hardklor:
                     return true;
                 default:
@@ -260,6 +333,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return CometSearchEngine.FilesToDownload;
                 case SearchEngine.Tide:
                     return TideSearchEngine.FilesToDownload;
+                case SearchEngine.DIANN:
+                    return DiannHelpers.FilesToDownload;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -292,6 +367,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return new TideSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
+                case SearchEngine.DIANN:
+                    return new DiannSearchEngine(Path.GetDirectoryName(_documentContainer.DocumentFilePath));
                 default:
                     throw new NotImplementedException();
             }
@@ -437,6 +514,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 BiblioSpecLiteBuilder.GetDefaultScoreThreshold(ImportPeptideSearch.SearchEngine.CutoffScoreName) ??
                 ImportPeptideSearch.SearchEngine.DefaultCutoffScore;
             ImportPeptideSearch.SearchEngine.SetCutoffScore(CutoffScore);
+
+            // DIA-NN chooses its mass accuracies itself when they are 0
+            if (SelectedSearchEngine == SearchEngine.DIANN)
+            {
+                if (string.IsNullOrEmpty(txtMS1Tolerance.Text))
+                    txtMS1Tolerance.Text = 0.ToString(LocalizationHelper.CurrentCulture);
+                if (string.IsNullOrEmpty(txtMS2Tolerance.Text))
+                    txtMS2Tolerance.Text = 0.ToString(LocalizationHelper.CurrentCulture);
+            }
         }
 
         private void LoadMassUnitEntries()
@@ -511,7 +597,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
 
             var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
-            var allMods = modSettings.StaticModifications.Union(modSettings.AllHeavyModifications);
+            var allMods = ImportPeptideSearch.SearchEngine.SearchesIsotopeLabels
+                ? modSettings.StaticModifications.Union(modSettings.AllHeavyModifications)
+                : modSettings.StaticModifications;
             ImportPeptideSearch.SearchEngine.SetModifications(allMods, Convert.ToInt32(cbMaxVariableMods.SelectedItem));
 
             if (ImportPeptideSearch.IsFeatureDetection)
@@ -756,9 +844,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             using (var openDlg = new OpenFileDialog())
             {
-                openDlg.Filter = TextUtil.FileDialogFilterAll(
+                // Comet and MSFragger .params files, and DIA-NN's .cfg argument lists
+                openDlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
                     PeptideSearchResources.ImportPeptideSearchDlg_ImportPresetFromFile_Params_files,
-                    @".params");
+                    @".params", @".cfg"));
                 openDlg.Title = PeptideSearchResources.SearchSettingsControl_ImportFromParamsFile;
                 if (openDlg.ShowDialog(this) != DialogResult.OK)
                     return;
@@ -806,17 +895,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             driverTools.EditList();
         }
 
+        /// <summary>
+        /// Applies a preset's search engine and settings. A preset whose engine the list does not offer yet
+        /// (e.g. DIA-NN, before the DIA search method page chose it) is applied once it does.
+        /// </summary>
         public void ApplySearchSettingsPreset(SearchSettingsPreset preset)
         {
+            _preset = preset;
+            if (!_engineChoices.Contains(preset.SearchEngine))
+                return;
+
             // Set search engine first (triggers InitializeEngine via event handler)
             SelectedSearchEngine = preset.SearchEngine;
+            ApplyPresetSettings(preset);
+        }
 
-            // Set tolerances: zero means clear the fields (use engine defaults)
-            if (preset.PrecursorToleranceValue > 0)
+        private void ApplyPresetSettings(SearchSettingsPreset preset)
+        {
+            // Set tolerances: zero means clear the fields (use engine defaults), except for DIA-NN,
+            // which chooses them itself when they are 0
+            if (preset.PrecursorToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)
                 PrecursorTolerance = preset.PrecursorTolerance;
             else
                 txtMS1Tolerance.Text = string.Empty;
-            if (preset.FragmentToleranceValue > 0)
+            if (preset.FragmentToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)
                 FragmentTolerance = preset.FragmentTolerance;
             else
                 txtMS2Tolerance.Text = string.Empty;

@@ -36,6 +36,57 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public const DialogResult SpecifyManuallyResult = DialogResult.Retry;
 
+        /// <summary>
+        /// Loops until DIA-NN is installed, the user lets us install it, or the user cancels.
+        /// Returns true if DIA-NN is available, false if the user declined to proceed.
+        /// If the Windows uninstall registry exposes an existing DIA-NN install, the user
+        /// is asked whether to reuse that install or download our bundled version.
+        /// </summary>
+        /// <param name="owner">The window the prompts belong to</param>
+        /// <param name="showSearchToolsDlg">Opens the Search Tools list, for a user who specifies the path manually</param>
+        public static bool EnsureDiannInstalled(IWin32Window owner, Action showSearchToolsDlg)
+        {
+            if (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                var registered = DiannHelpers.TryGetRegisteredDiannPath();
+                if (!string.IsNullOrEmpty(registered))
+                {
+                    var choice = MultiButtonMsgDlg.Show(owner,
+                        string.Format(AlertsResources.EnsureDiannInstalled_Use_existing_or_download__0____1__,
+                            registered, DiannHelpers.DIANN_VERSION),
+                        AlertsResources.EnsureDiannInstalled_Use_Existing,
+                        AlertsResources.EnsureDiannInstalled_Download,
+                        true);
+                    if (choice == DialogResult.Cancel)
+                        return false;
+                    if (choice == DialogResult.Yes)
+                    {
+                        if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.DIANN))
+                            Settings.Default.SearchToolList.Remove(
+                                Settings.Default.SearchToolList[SearchToolType.DIANN]);
+                        Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.DIANN,
+                            registered, string.Empty, Path.GetDirectoryName(registered), false));
+                    }
+                    // choice == DialogResult.No: fall through to the download dialog
+                }
+            }
+
+            while (!File.Exists(DiannHelpers.DiannBinary))
+            {
+                using var downloadDlg = new DiannDownloadDlg();
+                var result = downloadDlg.ShowDialog(owner);
+                if (result == DialogResult.OK)
+                    continue; // download succeeded - loop to re-check
+                if (result == SpecifyManuallyResult)
+                {
+                    showSearchToolsDlg();
+                    continue; // re-check after user edits the list
+                }
+                return false; // user canceled
+            }
+            return true;
+        }
+
         public DiannDownloadDlg()
         {
             InitializeComponent();
