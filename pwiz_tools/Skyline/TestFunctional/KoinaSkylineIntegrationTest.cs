@@ -1,6 +1,7 @@
 /*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2019 University of Washington - Seattle, WA
  * 
@@ -48,6 +49,12 @@ namespace pwiz.SkylineTestFunctional
         private bool RecordData => false;
 
         private string ExpectedQueriesJsonFilepath => TestContext.GetProjectDirectory("TestFunctional/KoinaSkylineIntegrationTest2.data/koinaQueries.json");
+
+        /// <summary>The queries of the Predict For route, recorded apart from the document's so that re-recording one leaves the other as it was.</summary>
+        private string FastaQueriesJsonFilepath => TestContext.GetProjectDirectory("TestFunctional/KoinaSkylineIntegrationTest2.data/koinaFastaQueries.json");
+
+        /// <summary>Three single-peptide proteins, none of them in the rat plasma document.</summary>
+        private string PredictForFastaPath => TestContext.GetProjectDirectory("TestFunctional/KoinaSkylineIntegrationTest2.data/ThreeProteins.fasta");
 
         [TestMethod]
         public void TestKoinaSkylineIntegration()
@@ -99,6 +106,12 @@ namespace pwiz.SkylineTestFunctional
                 //Assert.AreEqual(expected, ((FakeKoinaPredictionClient)KoinaPredictionClient.Current).QueryIndex);
 
                 TestKoinaLibraryBuild(true);
+            }
+            // The Predict For route: a protein FASTA, with decoys and entrapment, predicted for a
+            // document that differs from it
+            using (new FakeKoina(RecordData, FastaQueriesJsonFilepath))
+            {
+                TestKoinaLibraryBuildForFasta();
             }
             KoinaConstants.CACHE_PREV_PREDICTION = true;
         }
@@ -360,6 +373,116 @@ namespace pwiz.SkylineTestFunctional
                 peptidesRepeat.Select(p => new KoinaRetentionTimeModel.PeptideDocNodeWrapper(p.NodePep)).ToArray(),
                 out var rtQuery));
             rtQuery.AssertMatchesSpectra(spectrumDisplayInfos);
+        }
+
+        /// <summary>
+        /// The Predict For route: the library is predicted for a protein FASTA's digest, with a
+        /// reverse-sequence decoy of every peptide and entrapment peptides shuffled from the FASTA's
+        /// own, while the open document keeps its peptides. The FASTA shares no peptide with the
+        /// rat plasma document, so a library holding the document's peptides, or lacking the FASTA's,
+        /// would show the Predict For choices ignored - which a document digested from the same FASTA
+        /// could not, its count being the FASTA's either way. The document also has auto-select off
+        /// for peptides and transitions, which the digest for prediction must override: as the
+        /// document's settings stand, a FASTA's proteins get no peptides.
+        /// </summary>
+        private void TestKoinaLibraryBuildForFasta()
+        {
+            const string libraryName = "KoinaFasta";
+            var outBlib = TestFilesDir.GetTestPath(libraryName + BiblioSpecLiteSpec.EXT);
+            FileEx.SafeDelete(outBlib);
+            // The rat plasma document again: the last library build left a new, empty document
+            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            var docOpen = SkylineWindow.Document;
+            Settings.Default.Koina = false; // No live prediction for the selected node after the build
+
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            RunUI(() =>
+            {
+                buildLibrary.Koina = true;
+                buildLibrary.LibraryName = libraryName;
+                buildLibrary.LibraryPath = outBlib;
+                buildLibrary.NCE = 32;
+                // The document's precursors are the default, with Finish on the first page; a FASTA's
+                // precursors lead to the Predict For page
+                AssertEx.IsTrue(buildLibrary.PredictForDocument);
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibrary.NextButtonText);
+                buildLibrary.PredictForDocument = false;
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_btnPrevious_Click__Next__, buildLibrary.NextButtonText);
+                buildLibrary.OkWizardPage();
+                AssertEx.AreEqual(BuildLibraryDlg.Pages.predict_for, buildLibrary.CurrentPage);
+                buildLibrary.PredictForFastaPath = PredictForFastaPath;
+                buildLibrary.AddDecoys = true;
+                buildLibrary.AddEntrapment = true;
+                AssertEx.IsFalse(buildLibrary.EntrapmentFromFasta);
+                AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibrary.NextButtonText);
+            });
+            RunUI(buildLibrary.OkWizardPage);
+            WaitForCondition(() => buildLibrary.Builder != null);
+            var builder = (KoinaLibraryBuilder)buildLibrary.Builder;
+            WaitForClosedForm(buildLibrary);
+
+            // The FASTA's document, not the open one: its peptides, the entrapment peptides and a
+            // reverse-sequence decoy of each, and none of the open document's. The generator leaves
+            // out a decoy that duplicates another or gets no precursor, so a few targets go unpaired.
+            var docPredicted = builder.Document;
+            AssertEx.IsFalse(ReferenceEquals(docOpen, docPredicted));
+            AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_REVERSE, builder.DecoyMethod);
+            var entrapmentSet = new HashSet<Target>(builder.EntrapmentTargets);
+            AssertEx.IsTrue(entrapmentSet.Count > 0, @"the FASTA gave no entrapment peptides");
+            var targets = docPredicted.Peptides.Where(p => !p.IsDecoy).ToArray();
+            AssertEx.IsTrue(targets.Any(p => !entrapmentSet.Contains(p.Target)), @"the FASTA gave no peptides");
+            var targetSequences = new HashSet<string>(targets.Select(p => p.Target.Sequence));
+            var decoys = docPredicted.Peptides.Where(p => p.IsDecoy).ToArray();
+            AssertEx.IsTrue(decoys.Length > 0 && decoys.Length <= targets.Length, string.Format(@"{0} decoys for {1} targets", decoys.Length, targets.Length));
+            AssertEx.IsTrue(decoys.All(p => targetSequences.Contains(p.SourceUnmodifiedTarget.Sequence)), @"a decoy has no target in the document");
+            var openSequences = new HashSet<string>(docOpen.Peptides.Select(p => p.Target.Sequence));
+            AssertEx.IsFalse(targets.Any(p => openSequences.Contains(p.Target.Sequence)), @"the FASTA shares a peptide with the open document");
+
+            // The library holds every precursor Koina can predict (a peptide too long for it, or whose
+            // precursors the transition settings exclude, contributes nothing), none of the open
+            // document's, and pairs the decoys with their targets and flags the entrapment peptides,
+            // as the Carafe source's does
+            WaitForConditionUI(() => peptideSettings.AvailableLibraries.Contains(libraryName));
+            RunUI(() => peptideSettings.PickedLibraries = new[] { libraryName });
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+            WaitForCondition(() => File.Exists(outBlib));
+            WaitForDocumentLoaded();
+            var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Single(lib => lib != null && lib.Name == libraryName);
+            var heldPrecursors = new List<(PeptideDocNode NodePep, TransitionGroupDocNode NodeGroup)>();
+            int supportedCount = 0;
+            foreach (var nodePep in docPredicted.Peptides)
+            {
+                bool supported = KoinaHelpers.EncodeSequence(docPredicted.Settings, nodePep, IsotopeLabelType.light, out _) != null;
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    if (supported)
+                        supportedCount++;
+                    bool held = library.Contains(nodeGroup.GetLibKey(docPredicted.Settings, nodePep));
+                    AssertEx.AreEqual(supported, held, nodeGroup.ToString());
+                    if (held)
+                        heldPrecursors.Add((nodePep, nodeGroup));
+                }
+            }
+            AssertEx.IsTrue(supportedCount > 0, @"Koina supports none of the precursors");
+            AssertEx.AreEqual(supportedCount, library.SpectrumCount);
+            var nodePepOpen = docOpen.Peptides.First();
+            AssertEx.IsFalse(library.Contains(nodePepOpen.TransitionGroups.First().GetLibKey(docOpen.Settings, nodePepOpen)),
+                @"the library holds a peptide of the open document");
+            // DecoyPairs finds a precursor by unmodified sequence and charge, and leaves out one the
+            // library holds twice, which a variable oxidation makes of every methionine peptide here
+            AssertEx.IsTrue(OspreyHelpers.LibraryHasDecoyPairs(outBlib), @"the library has no DecoyPairs table");
+            var uniquelyHeld = heldPrecursors.GroupBy(h => (h.NodePep.Target.Sequence, h.NodeGroup.PrecursorCharge))
+                .Where(g => g.Count() == 1).Select(g => g.Single()).ToArray();
+            var pairedTargets = new HashSet<(string, int)>(uniquelyHeld.Where(h => !h.NodePep.IsDecoy)
+                .Select(h => (h.NodePep.Target.Sequence, h.NodeGroup.PrecursorCharge)));
+            int expectedEntrapmentRows = pairedTargets.Count(t => entrapmentSet.Contains(new Target(t.Item1)));
+            int expectedDecoyRows = uniquelyHeld.Count(h => h.NodePep.IsDecoy &&
+                pairedTargets.Contains((h.NodePep.SourceUnmodifiedTarget.Sequence, h.NodeGroup.PrecursorCharge)));
+            LibraryDecoyPairs.Count(outBlib, out int decoyRows, out int entrapmentRows);
+            AssertEx.IsTrue(expectedDecoyRows > 0 && expectedEntrapmentRows > 0, @"the library pairs nothing");
+            AssertEx.AreEqual(expectedDecoyRows, decoyRows);
+            AssertEx.AreEqual(expectedEntrapmentRows, entrapmentRows);
         }
 
         public void TestKoinaOptions()

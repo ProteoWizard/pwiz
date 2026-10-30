@@ -416,9 +416,13 @@ namespace pwiz.Skyline.SettingsUI
         {
             var doc = _documentUiContainer.DocumentUI;
             _entrapmentTargets = null;
-            // A digest for prediction keeps every peptide the filter allows: the library-match pick
-            // would keep only peptides with spectra already, which is the opposite of the point
-            var settingsDigest = doc.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.filter));
+            // A digest for prediction keeps every peptide the filter allows, with every precursor the
+            // transition filter allows: the library-match pick would keep only peptides with spectra
+            // already, and auto-select off would digest the proteins into no peptides, or the peptides
+            // into no precursors, which are the opposite of the point
+            var settingsDigest = doc.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.filter))
+                .ChangePeptideFilter(filter => filter.ChangeAutoSelect(true))
+                .ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
             if (!PredictForDocument)
             {
                 doc = ImportFastaToPredict(new SrmDocument(settingsDigest), PredictForFastaPath, out _);
