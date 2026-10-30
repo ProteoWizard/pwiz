@@ -564,9 +564,10 @@ namespace AutoQC
                 return this;
             }
             ProgramaticallyRemoveAt(index);
+            // Keep the logger. The Log tab has not yet displayed the last lines a stopping configuration logged.
             ProgramaticallyInsertConfig(index,
                 new AutoQcConfig(config.Name, enabled, config.Created, config.Modified, config.MainSettings,
-                    config.PanoramaSettings, config.SkylineSettings), uiControl, configRunner.GetStatus());
+                    config.PanoramaSettings, config.SkylineSettings), uiControl, configRunner.GetStatus(), configRunner.GetLogger());
             BaseState.ModelHasChanged();
             return this;
         }
@@ -625,14 +626,15 @@ namespace AutoQC
             return this;
         }
 
-        protected AutoQcConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl, 
-            RunnerStatus runnerStatus)
+        protected AutoQcConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl,
+            RunnerStatus runnerStatus, Logger logger = null)
         {
             BaseState.ProgramaticallyInsertConfig(index, iconfig);
-            return AddConfig(iconfig, uiControl, runnerStatus);
+            return AddConfig(iconfig, uiControl, runnerStatus, logger);
         }
 
-        private AutoQcConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl, RunnerStatus runnerStatus = RunnerStatus.Stopped)
+        private AutoQcConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl, RunnerStatus runnerStatus = RunnerStatus.Stopped,
+            Logger existingLogger = null)
         {
             var config = (AutoQcConfig)iconfig;
             if (ConfigRunners.ContainsKey(config.Name))
@@ -646,7 +648,8 @@ namespace AutoQC
 
             var logFile = config.getConfigFilePath("AutoQC.log");
 
-            var logger = new Logger(logFile, config.Name, false);  // Do not initialize the logger in the constructor; it will be initialized when we start the config.
+            // Do not initialize the logger in the constructor; it will be initialized when we start the config.
+            var logger = existingLogger ?? new Logger(logFile, config.Name, false);
             LogList = LogList.Add(logger);
             var runner = new ConfigRunner(config, logger, runnerStatus, uiControl);
             ConfigRunners = ConfigRunners.Add(config.Name, runner);

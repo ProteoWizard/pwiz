@@ -331,7 +331,8 @@ namespace AutoQC
             var customCmdPath = SharedBatch.Properties.Settings.Default.SkylineCustomCmdPath;
             if (!string.IsNullOrEmpty(customCmdPath))
             {
-                ProgramLog.Info(string.Format("The saved default for the Skyline installation directory option is: {0}.", customCmdPath));
+                ProgramLog.Info(string.Format("The saved default for the Skyline installation directory option is: {0}.",
+                    Path.GetDirectoryName(customCmdPath)));
             }
         }
 

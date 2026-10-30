@@ -1,6 +1,7 @@
 /*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,11 +53,17 @@ namespace AutoQC
         private bool _errorLogged;
         private bool _fileImportIgnored;
         private bool _fatalPanoramaError;
+        private bool _skylineNotFound;
 
         public ProcessRunner(Logger logger)
         {
             _logger = logger;
         }
+
+        /// <summary>
+        /// True if the last process failed because the ClickOnce Skyline it starts is not installed.
+        /// </summary>
+        public bool SkylineNotFound => _skylineNotFound;
 
         private static Process CreateProcess(ProcessInfo procInfo)
         {
@@ -204,6 +211,13 @@ namespace AutoQC
             {
                 _fatalPanoramaError = true;
                 return true;
+            }
+
+            // SkylineRunner.exe and SkylineDailyRunner.exe print this when the ClickOnce Skyline is not installed.
+            // "Could not connect to Skyline" is not counted. It means Skyline is installed but did not start in time.
+            if (message.StartsWith("Error: Unable to find Skyline program"))
+            {
+                _skylineNotFound = true;
             }
 
             if (!message.StartsWith("Error")) return false;
