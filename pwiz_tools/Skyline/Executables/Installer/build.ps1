@@ -89,7 +89,7 @@ foreach ($required in @('SkylineCmd.exe', 'msconvert.exe', 'BlibBuild.exe')) {
 }
 # Hardklor.exe is native C++, which only build.bat builds (with Visual Studio's MSBuild).
 if (-not (Test-Path (Join-Path $SkylineBinDir 'Hardklor.exe'))) {
-    throw "Hardklor.exe is missing from $SkylineBinDir. Run build.bat $Configuration --build-only first; it builds the native Hardklor.exe that Skyline.csproj deploys."
+    throw "Hardklor.exe is missing from $SkylineBinDir. Run build.bat $Configuration --build-only --i-agree-to-the-vendor-licenses first; it builds the native Hardklor.exe that Skyline.csproj deploys."
 }
 
 # Version off the exe: FileVersion is the numeric YY.N.B.DDD that SkylineVersion.targets
