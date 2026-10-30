@@ -229,7 +229,7 @@
     <value>Determines how any results in the imported document are handled. The default is to remove them.</value>
   </data>
   <data name="_import_fasta" xml:space="preserve">
-    <value>Import a FASTA file into the open document.</value>
+    <value>Import a FASTA file into the open document. A file whose first line starts with "&gt;&gt;" is imported as peptide lists instead: each "&gt;&gt;name" line starts a list, followed by one peptide per line, with modifications in brackets and an optional precursor charge written as repeated "+" (e.g. "PEPTIDEK++").</value>
   </data>
   <data name="_import_file" xml:space="preserve">
     <value>Attach a replicate to the open document.</value>
@@ -280,7 +280,7 @@
     <value>If building a spectral library with iRT standards, recalibrate the iRT standard values relative to the peptides being added.</value>
   </data>
   <data name="_import_search_file" xml:space="preserve">
-    <value>Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. Use –import-fasta argument to add matched peptides as targets.</value>
+    <value>Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. A single existing BiblioSpec library (.blib) is added to the document as it is, without building a new library. Use –import-fasta argument to add matched peptides as targets.</value>
   </data>
   <data name="_import_search_include_ambiguous" xml:space="preserve">
     <value>Prevent spectra with multiple ambiguous peptide matches from being discarded when building the spectral library.</value>

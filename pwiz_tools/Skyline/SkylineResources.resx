@@ -545,6 +545,9 @@
   <data name="CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
     <value>Error: The file {0} appears to be a redundant library.</value>
   </data>
+  <data name="CommandLine_SetLibrary_Warning__The_spectral_library__0__in_the_library_list_changed_from__1__to__2__" xml:space="preserve">
+    <value>Warning: The spectral library {0} in the library list changed from {1} to {2}.</value>
+  </data>
   <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the transition library settings.</value>
   </data>
@@ -1258,6 +1261,9 @@ Do you want to save the document now?</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_" xml:space="preserve">
     <value>Error: Failed to build the spectral library.</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_Using_the_existing_spectral_library__0_" xml:space="preserve">
+    <value>Using the existing spectral library {0}</value>
   </data>
   <data name="SkylineWindow_ImportAnnotations_Reading_annotations" xml:space="preserve">
     <value>Reading annotations</value>

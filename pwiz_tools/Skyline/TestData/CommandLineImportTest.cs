@@ -109,6 +109,58 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(docList.PeptideGroups.All(nodePepGroup => nodePepGroup.IsPeptideList));
             Assert.IsTrue(docList.PeptideTransitionGroups.All(nodeGroup => nodeGroup.HasLibInfo));
 
+            // The same peptide lists given to --import-fasta, as File > Import > FASTA accepts them
+            var outFastaListPath = TestFilesDir.GetTestPath("import-search-fasta-list.sky");
+            listArgs[1] = "--out=" + outFastaListPath;
+            listArgs[listArgs.Count - 1] = "--import-fasta=" + pepListPath;
+            output = RunCommand(listArgs.ToArray());
+            AssertEx.Contains(output, lineList);
+            var docFastaList = ResultsUtil.DeserializeDocument(outFastaListPath);
+            AssertEx.IsDocumentState(docFastaList, null, 5, 26, 78);
+            Assert.IsTrue(docFastaList.PeptideGroups.All(nodePepGroup => nodePepGroup.IsPeptideList));
+            AssertEx.ValidatesAgainstSchema(File.ReadAllText(outFastaListPath));
+
+            // An existing .blib outside the document folder joins the document as it is, without a library build
+            var existingLibPath = Path.Combine(TestFilesDir.GetTestPath("existing"), "existing.blib");
+            Directory.CreateDirectory(Path.GetDirectoryName(existingLibPath));
+            File.Copy(TestFilesDir.GetTestPath("import-search.blib"), existingLibPath);
+            var existingLibBytes = File.ReadAllBytes(existingLibPath);
+            var outExistingPath = TestFilesDir.GetTestPath("import-existing.sky");
+            var existingArgs = args.ToList();
+            existingArgs[1] = "--out=" + outExistingPath;
+            existingArgs[2] = "--import-search-file=" + existingLibPath;
+            output = RunCommand(existingArgs.ToArray());
+            AssertEx.Contains(output, string.Format(SkylineResources.CommandLine_ImportSearchInternal_Using_the_existing_spectral_library__0_, existingLibPath));
+            Assert.IsFalse(output.Contains(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_));
+            Assert.IsFalse(File.Exists(BiblioSpecLiteSpec.GetLibraryFileName(outExistingPath)));
+            CollectionAssert.AreEqual(existingLibBytes, File.ReadAllBytes(existingLibPath));
+            var docExisting = ResultsUtil.DeserializeDocument(outExistingPath);
+            Assert.IsTrue(docExisting.Settings.HasResults);
+            Assert.IsTrue(docExisting.Settings.MeasuredResults.ContainsChromatogram("CAexample"));
+            AssertEx.IsDocumentState(docExisting, null, 5, 26, 78);
+            var existingLibraries = docExisting.Settings.PeptideSettings.Libraries;
+            Assert.IsFalse(existingLibraries.HasDocumentLibrary);
+            Assert.AreEqual(1, existingLibraries.Libraries.Count);
+            Assert.AreEqual("existing", existingLibraries.Libraries[0].Name);
+            Assert.IsTrue(Settings.Default.SpectralLibraryList.TryGetValue("existing", out var existingListSpec));
+            Assert.AreEqual(existingLibPath, existingListSpec.FilePath);
+
+            // Reopening finds a library outside the document folder through the library list, for an
+            // existing search library and for one given to --add-library-path
+            var addedLibPath = Path.Combine(TestFilesDir.GetTestPath("added"), "added.blib");
+            Directory.CreateDirectory(Path.GetDirectoryName(addedLibPath));
+            File.Copy(existingLibPath, addedLibPath);
+            var outAddedPath = TestFilesDir.GetTestPath("add-library.sky");
+            RunCommand("--in=" + docPath, "--out=" + outAddedPath, "--add-library-path=" + addedLibPath);
+            Assert.IsTrue(Settings.Default.SpectralLibraryList.TryGetValue("added", out var addedListSpec));
+            Assert.AreEqual(addedLibPath, addedListSpec.FilePath);
+            foreach (var (reopenPath, libraryName) in new[] { (outExistingPath, "existing"), (outAddedPath, "added") })
+            {
+                output = RunCommand("--in=" + reopenPath, "--save");
+                Assert.IsFalse(output.Contains(string.Format(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, libraryName)),
+                    output);
+            }
+
             // without mods
             var outPath2 = TestFilesDir.GetTestPath("import-search2.sky");
             output = RunCommand("--in=" + docPath,

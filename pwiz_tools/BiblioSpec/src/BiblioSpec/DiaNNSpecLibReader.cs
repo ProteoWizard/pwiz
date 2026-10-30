@@ -49,8 +49,9 @@
 //   - The DiaNN reader is one of two BiblioSpec readers that builds a non-redundant
 //     library directly (cpp <c>NonRedundantPSM</c>); a custom <c>RetentionTimes</c>
 //     SQLite table is created up-front and populated row-by-row from the report.
-//   - Parquet sibling files are NOT supported in this port (no Apache Arrow
-//     dependency). Speclibs that need a .parquet report throw a clear error.
+//   - Parquet is read with Parquet.Net (NuGet) where cpp uses Apache Arrow: both a
+//     .parquet report and a DIA-NN v2+ report-lib.parquet library, given directly or
+//     found beside a *-lib.parquet.skyline.speclib.
 //   - Modifications are resolved via the C# Unimod port (Pwiz.Data.Common.Unimod)
 //     for "(UniMod:N)" tags; non-UniMod bracketed deltas are parsed as numbers.
 

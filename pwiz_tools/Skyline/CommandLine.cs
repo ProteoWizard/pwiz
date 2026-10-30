@@ -506,6 +506,17 @@ namespace pwiz.Skyline
                 if (!ImportSearch(commandArgs))
                     return false;
 
+                // A peptide list given to --import-fasta joins the document here, like one given to --import-pep-list
+                if (commandArgs.ImportingFasta && PeptideGroupBuilder.IsPeptideListFile(commandArgs.FastaPath))
+                {
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportPeptideList(null, commandArgs.FastaPath); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.FastaPath, true))
+                    {
+                        return false;
+                    }
+                }
                 if (commandArgs.ImportingPeptideList)
                 {
                     if (!HandleExceptions(commandArgs,
@@ -2607,24 +2618,37 @@ namespace pwiz.Skyline
                 IrtStandard = GetIrtStandard(commandArgs)
             };
             var import = ImportPeptideSearch;
+            string documentPath = commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile;
 
-            // Build library
-            var builder = import.GetLibBuilder(doc, commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile, commandArgs.IncludeAmbiguousMatches);
-            builder.PreferEmbeddedSpectra = commandArgs.PreferEmbeddedSpectra;
-            ImportPeptideSearch.ClosePeptideSearchLibraryStreams(doc);
-            _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
-            foreach (var file in commandArgs.SearchResultsFiles)
-                _out.WriteLine(Path.GetFileName(file));
-            if (!builder.BuildLibrary(progressMonitor))
+            LibrarySpec docLibSpec;
+            if (IsExistingLibrarySearch(commandArgs))
             {
-                _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_);
-                return false;
+                // Like "Use existing" in the Import Peptide Search wizard, a single .blib joins the
+                // document as it is, where building would rewrite it through BlibBuild
+                string libraryPath = commandArgs.SearchResultsFiles[0];
+                _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Using_the_existing_spectral_library__0_, libraryPath);
+                docLibSpec = GetExistingLibrarySpec(doc, libraryPath, documentPath);
             }
+            else
+            {
+                // Build library
+                var builder = import.GetLibBuilder(doc, documentPath, commandArgs.IncludeAmbiguousMatches);
+                builder.PreferEmbeddedSpectra = commandArgs.PreferEmbeddedSpectra;
+                ImportPeptideSearch.ClosePeptideSearchLibraryStreams(doc);
+                _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
+                foreach (var file in commandArgs.SearchResultsFiles)
+                    _out.WriteLine(Path.GetFileName(file));
+                if (!builder.BuildLibrary(progressMonitor))
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_);
+                    return false;
+                }
 
-            if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
-                _out.WriteLine(builder.AmbiguousMatchesMessage);
+                if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
+                    _out.WriteLine(builder.AmbiguousMatchesMessage);
 
-            var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
+                docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
+            }
 
             _out.WriteLine(SkylineResources.CommandLine_ImportSearch_Loading_library);
             var libraryManager = new LibraryManager();
@@ -2739,8 +2763,8 @@ namespace pwiz.Skyline
                 }
             }
 
-            // Import FASTA
-            if (commandArgs.ImportingFasta)
+            // Import FASTA (a peptide list is imported after the search instead)
+            if (commandArgs.ImportingFasta && !PeptideGroupBuilder.IsPeptideListFile(commandArgs.FastaPath))
             {
 
                 _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(commandArgs.FastaPath));
@@ -2767,6 +2791,73 @@ namespace pwiz.Skyline
             // Import results
             SetDocument(doc);
             return true;
+        }
+
+        /// <summary>
+        /// True when the search to import is one existing non-redundant BiblioSpec library, which joins
+        /// the document without a library build.
+        /// </summary>
+        private static bool IsExistingLibrarySearch(CommandArgs commandArgs)
+        {
+            if (commandArgs.SearchResultsFiles.Count != 1)
+                return false;
+            string path = commandArgs.SearchResultsFiles[0];
+            return path.EndsWith(BiblioSpecLiteSpec.EXT, StringComparison.OrdinalIgnoreCase) &&
+                   !path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// The library spec for an existing library added through a peptide search, chosen as
+        /// BuildPeptideSearchLibraryControl.AddExistingLibrary chooses it: the document's own spec for the
+        /// file, the document library when the file is the one named after the document, the library list's
+        /// spec for the file, or else a new spec under a unique name, recorded in the library list.
+        /// </summary>
+        private LibrarySpec GetExistingLibrarySpec(SrmDocument doc, string libraryPath, string documentPath)
+        {
+            var peptideLibraries = doc.Settings.PeptideSettings.Libraries;
+            var librarySpec = peptideLibraries.LibrarySpecs.FirstOrDefault(spec => spec != null && IsSamePath(spec.FilePath, libraryPath));
+            if (librarySpec != null)
+                return librarySpec;
+            if (!string.IsNullOrEmpty(documentPath) && IsSamePath(libraryPath, BiblioSpecLiteSpec.GetLibraryFileName(documentPath)))
+                return new BiblioSpecLiteSpec(Path.GetFileNameWithoutExtension(documentPath), libraryPath).ChangeDocumentLibrary(true);
+            librarySpec = Settings.Default.SpectralLibraryList.FirstOrDefault(spec => spec != null && IsSamePath(spec.FilePath, libraryPath));
+            if (librarySpec != null)
+                return librarySpec;
+
+            var existingNames = new HashSet<string>(Settings.Default.SpectralLibraryList.Select(spec => spec.Name));
+            existingNames.UnionWith(peptideLibraries.LibrarySpecs.Where(spec => spec != null).Select(spec => spec.Name));
+            librarySpec = new BiblioSpecLiteSpec(Helpers.GetUniqueName(Path.GetFileNameWithoutExtension(libraryPath), existingNames), libraryPath);
+            AddToSpectralLibraryList(librarySpec);
+            return librarySpec;
+        }
+
+        private static bool IsSamePath(string path1, string path2)
+        {
+            return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2), StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Records the location of a library in the Spectral Library list, as Edit Library does. A document
+        /// stores only a library's name and file name, so a library missing from the list is found again only
+        /// beside the document or in the default library folder.
+        /// </summary>
+        private void AddToSpectralLibraryList(LibrarySpec librarySpec)
+        {
+            if (librarySpec.IsDocumentLibrary)
+                return;
+            var libraryList = Settings.Default.SpectralLibraryList;
+            if (libraryList.TryGetValue(librarySpec.Name, out var listSpec))
+            {
+                if (Equals(listSpec, librarySpec))
+                    return;
+                if (!IsSamePath(listSpec.FilePath, librarySpec.FilePath))
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_SetLibrary_Warning__The_spectral_library__0__in_the_library_list_changed_from__1__to__2__,
+                        librarySpec.Name, listSpec.FilePath, librarySpec.FilePath);
+                }
+            }
+            libraryList.SetValue(librarySpec);
+            Settings.Default.SaveWithoutExceptions();
         }
 
 
@@ -3091,6 +3182,13 @@ namespace pwiz.Skyline
 
         public void ImportFasta(string path, bool keepEmptyProteins)
         {
+            // Like File > Import > FASTA, a file whose first line starts with ">>" holds peptide lists
+            if (PeptideGroupBuilder.IsPeptideListFile(path))
+            {
+                ImportPeptideList(null, path);
+                return;
+            }
+
             _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(path));
             using (var readerFasta = new StreamReader(PathEx.SafePath(path)))
             {
@@ -3705,6 +3803,7 @@ namespace pwiz.Skyline
             SrmSettings newSettings = _doc.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(librarySpecs));
             // TODO(nicksh): Audit logging
             ModifyDocument(d => d.ChangeSettings(newSettings));
+            AddToSpectralLibraryList(librarySpec);
 
             return true;
         }

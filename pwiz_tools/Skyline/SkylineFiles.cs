@@ -2003,7 +2003,7 @@ namespace pwiz.Skyline
             try
             {
                 long lineCount = Helpers.CountLinesInFile(fastaFile);
-                bool peptideList = IsPeptideList(fastaFile);
+                bool peptideList = PeptideGroupBuilder.IsPeptideListFile(fastaFile);
                 using (var readerFasta = new StreamReader(fastaFile))
                 {
                     ImportFasta(readerFasta, lineCount, peptideList, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
@@ -2014,13 +2014,6 @@ namespace pwiz.Skyline
                 MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
                                                     fastaFile, x.Message), x);
             }
-        }
-
-        private bool IsPeptideList(string fastaFile)
-        {
-            using var reader = new StreamReader(fastaFile);
-            var line = reader.ReadLine();
-            return line != null && line.StartsWith(PeptideGroupBuilder.PEPTIDE_LIST_PREFIX);
         }
 
         public class ImportFastaInfo

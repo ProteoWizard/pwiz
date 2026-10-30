@@ -1094,6 +1094,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using the existing spectral library {0}.
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal_Using_the_existing_spectral_library__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_Using_the_existing_spectral_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly..
         /// </summary>
         public static string CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_ {
@@ -1601,6 +1610,15 @@ namespace pwiz.Skyline {
         public static string CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_ {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The spectral library {0} in the library list changed from {1} to {2}..
+        /// </summary>
+        public static string CommandLine_SetLibrary_Warning__The_spectral_library__0__in_the_library_list_changed_from__1__to__2__ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetLibrary_Warning__The_spectral_library__0__in_the_library_list_changed_from__1__to__2__", resourceCulture);
             }
         }
         

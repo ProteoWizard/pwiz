@@ -3067,6 +3067,17 @@ namespace pwiz.Skyline.Model
         private readonly ModificationMatcher _modMatcher;
         private bool _autoManageChildren;
 
+        /// <summary>
+        /// True when the file at <paramref name="path"/> is a list of peptides, signaled by a first line
+        /// starting with <see cref="PEPTIDE_LIST_PREFIX"/>, rather than FASTA protein sequences.
+        /// </summary>
+        public static bool IsPeptideListFile(string path)
+        {
+            using var reader = new StreamReader(PathEx.SafePath(path));
+            var line = reader.ReadLine();
+            return line != null && line.StartsWith(PEPTIDE_LIST_PREFIX);
+        }
+
         public PeptideGroupBuilder(FastaSequence fastaSequence, SrmSettings settings, string sourceFile, TargetMap<bool> irtTargets)
         {
             _activeFastaSeq = fastaSequence;

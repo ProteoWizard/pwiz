@@ -799,7 +799,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import a FASTA file into the open document..
+        ///   Looks up a localized string similar to Import a FASTA file into the open document. A file whose first line starts with &quot;&gt;&gt;&quot; is imported as peptide lists instead: each &quot;&gt;&gt;name&quot; line starts a list, followed by one peptide per line, with modifications in brackets and an optional precursor charge written as repeated &quot;+&quot; (e.g. &quot;PEPTIDEK++&quot;)..
         /// </summary>
         public static string _import_fasta {
             get {
@@ -970,7 +970,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. Use –import-fasta argument to add matched peptides as targets..
+        ///   Looks up a localized string similar to Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. A single existing BiblioSpec library (.blib) is added to the document as it is, without building a new library. Use –import-fasta argument to add matched peptides as targets..
         /// </summary>
         public static string _import_search_file {
             get {
