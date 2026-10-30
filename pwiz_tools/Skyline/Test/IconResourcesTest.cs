@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using CommonResources = pwiz.Common.Properties.Resources;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -62,8 +63,7 @@ namespace pwiz.SkylineTest
         {
             // pwiz.Common also has a 15 px icon (MatchCase), which uses the 16 px size set.
             // DropImageNoBackground (10x4) is recolored at run time and has no generated sizes.
-            CheckEmbeddedIcons(pwiz.Common.Properties.Resources.ResourceManager,
-                typeof(pwiz.Common.Properties.Resources).Assembly, 25,
+            CheckEmbeddedIcons(CommonResources.ResourceManager, typeof(CommonResources).Assembly, 25,
                 bitmap => bitmap.Width == bitmap.Height && bitmap.Width >= ICON_SIZE_SMALL && bitmap.Width <= ICON_SIZE);
         }
 
