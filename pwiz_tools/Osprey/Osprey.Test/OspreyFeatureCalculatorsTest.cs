@@ -482,6 +482,63 @@ namespace pwiz.Osprey.Test
                 "the ja display labels should be translated");
         }
 
+        /// <summary>
+        /// Reference-correlation family: the reference is the fragment that correlates best with
+        /// the others, so an interfered fragment that is also the most intense - the peak-shape
+        /// reference - is not chosen, and the clean fragments still correlate with the reference.
+        /// </summary>
+        [TestMethod]
+        public void TestReferenceCorrelationIgnoresInterferedTopFragment()
+        {
+            var rts = new[] { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0 };
+            var profile = new[] { 1.0, 5.0, 20.0, 40.0, 20.0, 5.0, 1.0 };
+            var xics = new List<XicData>();
+            foreach (double scale in new[] { 10.0, 8.0, 6.0, 4.0 })
+                xics.Add(new XicData(xics.Count, rts, profile.Select(v => v * scale + 1.0).ToArray()));
+            // Most intense, but its signal rises across the peak instead of following the profile.
+            xics.Add(new XicData(xics.Count, rts, new[] { 100.0, 300.0, 500.0, 700.0, 900.0, 1100.0, 1300.0 }));
+            var peakData = new FakePeakData(xics, new XICPeakBounds { StartIndex = 0, EndIndex = 6, ApexIndex = 3 });
+
+            var context = new OspreyScoringContext(null);
+            var refCorr = ReferenceCorrelations.GetOrCompute(context, peakData);
+            Assert.AreEqual(4, refCorr.SortedCorrelations.Length);
+            Assert.IsTrue(refCorr.KthBest(3) > 0.99, string.Format("Clean fragments follow the reference, got {0:F4}", refCorr.KthBest(3)));
+            Assert.IsTrue(refCorr.KthBest(4) < 0.5, string.Format("The interfered fragment does not, got {0:F4}", refCorr.KthBest(4)));
+            Assert.AreEqual(3, refCorr.CountGood());
+            Assert.AreEqual(0.0, refCorr.KthBest(5), TOLERANCE);
+            // Apex: 401 + 321 + 241 + 161 + 700; without the top (700) the rest sum to 1124.
+            Assert.AreEqual(Math.Log10(1.0 + 1124.0), refCorr.ApexLogIntensityExcludingTop, TOLERANCE);
+            Assert.AreSame(refCorr, ReferenceCorrelations.GetOrCompute(context, peakData), "Computed once per candidate");
+
+            // A one-scan spike on a clean fragment hurts the raw correlation more than the spike-filtered one.
+            var spiked = xics.Take(4).Select(x => new XicData(x.FragmentIndex, rts, (double[]) x.Intensities.Clone())).ToList();
+            spiked[3].Intensities[5] = 400.0;
+            var spikeData = new FakePeakData(spiked, new XICPeakBounds { StartIndex = 0, EndIndex = 6, ApexIndex = 3 });
+            var spikeCorr = ReferenceCorrelations.GetOrCompute(new OspreyScoringContext(null), spikeData);
+            Assert.IsTrue(spikeCorr.MinFilteredTopMean(3) > spikeCorr.SortedCorrelations.Average(),
+                string.Format("Spike filtering should recover correlation: {0:F4} vs {1:F4}",
+                    spikeCorr.MinFilteredTopMean(3), spikeCorr.SortedCorrelations.Average()));
+        }
+
+        /// <summary>
+        /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
+        /// each new feature adds to both, so a calculator whose name differs from its column
+        /// would write one feature under another's name. The default FDR mask resolves names
+        /// against the columns, so each of its names must be a C#-only column, never one of the
+        /// 21 Rust features.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureNamesAndDefaultMask()
+        {
+            var names = ParquetScoreCache.PIN_FEATURE_NAMES;
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, names.Length);
+            for (int i = 0; i < names.Length; i++)
+                Assert.AreEqual(names[i], OspreyFeatureCalculators.Get(i).Name, string.Format("Feature {0}", i));
+
+            foreach (string name in PinFeatureMask.DEFAULT_MASKED_FEATURES)
+                Assert.IsTrue(Array.IndexOf(names, name) >= 21, name);
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment

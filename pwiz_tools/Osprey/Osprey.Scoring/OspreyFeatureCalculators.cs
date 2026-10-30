@@ -35,8 +35,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-46 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak and median-polish top-k families,
+    /// never returns null. Slots 21-52 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k and reference-correlation families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 47;
+        public const int FeatureCount = 53;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -120,6 +120,15 @@ namespace pwiz.Osprey.Scoring
             calculators[44] = new MedianPolishTop3MeanR2Calc();
             calculators[45] = new MedianPolishMedianR2Calc();
             calculators[46] = new MedianPolishGoodFitCountCalc();
+
+            // Reference-correlation family: each fragment against the best-correlated fragment,
+            // raw and spike-filtered, and apex intensity without the top fragment (after DIA-NN).
+            calculators[47] = new ReferenceKthCorrelationCalc(2);
+            calculators[48] = new ReferenceKthCorrelationCalc(3);
+            calculators[49] = new ReferenceKthCorrelationCalc(5);
+            calculators[50] = new ReferenceGoodCountCalc();
+            calculators[51] = new ReferenceMinFilteredTop3Calc();
+            calculators[52] = new ApexIntensityExcludingTopCalc();
 
             return calculators;
         }

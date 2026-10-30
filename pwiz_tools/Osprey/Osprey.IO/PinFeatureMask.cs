@@ -38,8 +38,8 @@ namespace pwiz.Osprey.IO
     {
         /// <summary>
         /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up, context,
-        /// per-fragment-rank, spectrum-across-peak and median-polish top-k
-        /// families, still under evaluation. Masking
+        /// per-fragment-rank, spectrum-across-peak, median-polish top-k and
+        /// reference-correlation families, still under evaluation. Masking
         /// them keeps the default search's results what they were before these features.
         /// </summary>
         public static readonly string[] DEFAULT_MASKED_FEATURES =
@@ -53,6 +53,8 @@ namespace pwiz.Osprey.IO
             @"peak_spectrum_cosine_mean", @"peak_spectrum_cosine_sd",
             @"mp_fragment_r2_rank2", @"mp_fragment_r2_rank3", @"mp_fragment_r2_rank4",
             @"mp_fragment_r2_top3_mean", @"mp_fragment_r2_median", @"mp_n_fragments_good_fit",
+            @"ref_corr_rank2", @"ref_corr_rank3", @"ref_corr_rank5", @"ref_n_corr_good",
+            @"ref_minfilt_corr_top3_mean", @"apex_log_intensity_excl_top",
         };
 
         // Lazy so an unknown name surfaces as its own exception at first use rather than as a

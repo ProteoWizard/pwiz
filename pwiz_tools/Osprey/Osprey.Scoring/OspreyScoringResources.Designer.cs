@@ -503,6 +503,42 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reference fragment correlation (rank {0}).
+        /// </summary>
+        public static string ReferenceKthCorrelationCalc_DisplayName_Reference_fragment_correlation__rank__0__ {
+            get {
+                return ResourceManager.GetString("ReferenceKthCorrelationCalc_DisplayName_Reference_fragment_correlation__rank__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragments correlating with reference.
+        /// </summary>
+        public static string ReferenceGoodCountCalc_DisplayName_Fragments_correlating_with_reference {
+            get {
+                return ResourceManager.GetString("ReferenceGoodCountCalc_DisplayName_Fragments_correlating_with_reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spike-filtered reference correlation (top 3 mean).
+        /// </summary>
+        public static string ReferenceMinFilteredTop3Calc_DisplayName_Spike_filtered_reference_correlation__top_3_mean_ {
+            get {
+                return ResourceManager.GetString("ReferenceMinFilteredTop3Calc_DisplayName_Spike_filtered_reference_correlation__top_3_mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex intensity without top fragment.
+        /// </summary>
+        public static string ApexIntensityExcludingTopCalc_DisplayName_Apex_intensity_without_top_fragment {
+            get {
+                return ResourceManager.GetString("ApexIntensityExcludingTopCalc_DisplayName_Apex_intensity_without_top_fragment", resourceCulture);
+            }
+        }
 
         /// <summary>
         ///   Looks up a localized string similar to Peptide length.

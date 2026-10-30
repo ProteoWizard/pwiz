@@ -241,6 +241,18 @@
   <data name="MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit" xml:space="preserve">
     <value>Median polish fragments with good fit</value>
   </data>
+  <data name="ReferenceKthCorrelationCalc_DisplayName_Reference_fragment_correlation__rank__0__" xml:space="preserve">
+    <value>Reference fragment correlation (rank {0})</value>
+  </data>
+  <data name="ReferenceGoodCountCalc_DisplayName_Fragments_correlating_with_reference" xml:space="preserve">
+    <value>Fragments correlating with reference</value>
+  </data>
+  <data name="ReferenceMinFilteredTop3Calc_DisplayName_Spike_filtered_reference_correlation__top_3_mean_" xml:space="preserve">
+    <value>Spike-filtered reference correlation (top 3 mean)</value>
+  </data>
+  <data name="ApexIntensityExcludingTopCalc_DisplayName_Apex_intensity_without_top_fragment" xml:space="preserve">
+    <value>Apex intensity without top fragment</value>
+  </data>
   <data name="PeptideLengthCalc_DisplayName_Peptide_length" xml:space="preserve">
     <value>Peptide length</value>
   </data>

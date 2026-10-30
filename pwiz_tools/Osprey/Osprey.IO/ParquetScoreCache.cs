@@ -117,9 +117,16 @@ namespace pwiz.Osprey.IO
             @"mp_fragment_r2_top3_mean",
             @"mp_fragment_r2_median",
             @"mp_n_fragments_good_fit",
+            // Reference correlation: fragments against the best-correlated fragment (6)
+            @"ref_corr_rank2",
+            @"ref_corr_rank3",
+            @"ref_corr_rank5",
+            @"ref_n_corr_good",
+            @"ref_minfilt_corr_top3_mean",
+            @"apex_log_intensity_excl_top",
         };
 
-        public const int NUM_PIN_FEATURES = 47;
+        public const int NUM_PIN_FEATURES = 53;
 
         #endregion
 
