@@ -31,11 +31,15 @@ WiX admin .msi (per-machine) of the .NET Framework build:
     page's own name, or the folder's name when it is uploaded as index.html.
 
 Build:
-  1. Build Skyline Release x64 (pwiz_tools\Skyline\build.bat --build-only, or
-     Skyline.csproj from Visual Studio). The channel comes from the exe the build
-     produced (Skyline-daily.exe by default; MSBuildAssemblyName=Skyline for the
-     release channel) and the version from its FileVersion.
+  1. Build Skyline Release x64 once (pwiz_tools\Skyline\build.bat --build-only
+     --i-agree-to-the-vendor-licenses), which builds the native Hardklor.exe that
+     build.ps1 cannot. build.ps1 always builds with the vendor readers, so the same
+     flag here keeps it from recompiling everything that depends on them.
   2. pwsh -File pwiz_tools\Skyline\Executables\Installer\build.ps1
+     It builds Skyline.csproj again into an emptied bin\installer-build\Release,
+     which Skyline is never run from, and packages that. The channel comes from
+     the exe it produced (Skyline-daily.exe by default; MSBuildAssemblyName=Skyline
+     for the release channel) and the version from its FileVersion.
      Inno Setup 6 is fetched by scripts\installer\Ensure-InnoSetup.ps1 if the
      machine lacks it; the runtime EXE is cached under scripts\installer\cache.
      Pass -SignToolCommand '<signtool command with $f>' for a signed build.
