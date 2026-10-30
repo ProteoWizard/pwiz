@@ -110,9 +110,16 @@ namespace pwiz.Osprey.IO
             // Spectrum across the peak: library cosine at every scan (2)
             @"peak_spectrum_cosine_mean",
             @"peak_spectrum_cosine_sd",
+            // Median-polish top-k: per-fragment R^2 against the robust elution profile (6)
+            @"mp_fragment_r2_rank2",
+            @"mp_fragment_r2_rank3",
+            @"mp_fragment_r2_rank4",
+            @"mp_fragment_r2_top3_mean",
+            @"mp_fragment_r2_median",
+            @"mp_n_fragments_good_fit",
         };
 
-        public const int NUM_PIN_FEATURES = 41;
+        public const int NUM_PIN_FEATURES = 47;
 
         #endregion
 

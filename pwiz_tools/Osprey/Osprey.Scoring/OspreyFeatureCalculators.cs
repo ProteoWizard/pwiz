@@ -35,7 +35,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-40 are C#-only: the runner-up, context, per-fragment-rank and spectrum-across-peak families,
+    /// never returns null. Slots 21-46 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak and median-polish top-k families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -43,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 41;
+        public const int FeatureCount = 47;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -110,6 +111,15 @@ namespace pwiz.Osprey.Scoring
             // Spectrum-across-peak family: the library cosine at every scan of the peak.
             calculators[39] = new PeakSpectrumCosineMeanCalc();
             calculators[40] = new PeakSpectrumCosineSdCalc();
+
+            // Median-polish top-k family: per-fragment R^2 against the robust elution profile,
+            // keeping the best fragments rather than the worst (interference tolerant).
+            calculators[41] = new MedianPolishKthFragmentR2Calc(2);
+            calculators[42] = new MedianPolishKthFragmentR2Calc(3);
+            calculators[43] = new MedianPolishKthFragmentR2Calc(4);
+            calculators[44] = new MedianPolishTop3MeanR2Calc();
+            calculators[45] = new MedianPolishMedianR2Calc();
+            calculators[46] = new MedianPolishGoodFitCountCalc();
 
             return calculators;
         }

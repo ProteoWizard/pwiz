@@ -58,6 +58,51 @@ namespace pwiz.Osprey.Test
             return polish;
         }
 
+        #region Top-k fragment fits
+
+        [TestMethod]
+        public void TestTopKFragmentFitsTolerateOneInterferedFragment()
+        {
+            // Four fragments follow the profile; a fifth carries an interferer that peaks at the
+            // edges. The worst-fragment R^2 is set by the interfered one, while the top-k
+            // features, which keep the best fragments, still see four clean fits.
+            var scales = new[] { 100.0, 80.0, 50.0, 25.0 };
+            var xics = new List<KeyValuePair<int, double[]>>();
+            for (int f = 0; f < scales.Length; f++)
+            {
+                var row = new double[PROFILE.Length];
+                for (int s = 0; s < PROFILE.Length; s++)
+                    row[s] = scales[f] * PROFILE[s];
+                xics.Add(new KeyValuePair<int, double[]>(f, row));
+            }
+            xics.Add(new KeyValuePair<int, double[]>(4, new[] { 400.0, 60.0, 30.0, 60.0, 400.0 }));
+            var polish = TukeyMedianPolish.Compute(xics, RTS, 20, 1e-6);
+            Assert.IsNotNull(polish, "Compute should fit the fixture");
+
+            var context = new OspreyScoringContext(null);
+            context.AddInfo(new MedianPolishByproduct(polish, null));
+            var fits = MedianPolishFragmentFits.GetOrCompute(context);
+
+            double minR2 = TukeyMedianPolish.MinFragmentR2(polish);
+            Assert.IsTrue(minR2 < 0.5, string.Format("The interfered fragment should set min R^2 low, got {0:F4}", minR2));
+            Assert.AreEqual(5, fits.SortedR2.Length);
+            Assert.IsTrue(fits.KthBest(4) > 0.95, string.Format("4th best R^2 should be clean, got {0:F4}", fits.KthBest(4)));
+            Assert.IsTrue(fits.Median() > 0.95, string.Format("Median R^2 should be clean, got {0:F4}", fits.Median()));
+            Assert.AreEqual(4, fits.CountGood());
+            Assert.AreEqual(minR2, fits.KthBest(5), 1e-12);
+            Assert.AreEqual(0.0, fits.KthBest(6), 1e-12);
+            Assert.AreSame(fits, MedianPolishFragmentFits.GetOrCompute(context), "The fits are computed once per candidate");
+
+            // No published fit: every top-k value is 0.
+            var empty = MedianPolishFragmentFits.GetOrCompute(new OspreyScoringContext(null));
+            Assert.AreEqual(0.0, empty.KthBest(2), 1e-12);
+            Assert.AreEqual(0.0, empty.TopMean(3), 1e-12);
+            Assert.AreEqual(0.0, empty.Median(), 1e-12);
+            Assert.AreEqual(0, empty.CountGood());
+        }
+
+        #endregion
+
         #region Null-input guards
 
         [TestMethod]

@@ -467,7 +467,43 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragment R^2 (rank {0}).
+        /// </summary>
+        public static string MedianPolishKthFragmentR2Calc_DisplayName_Median_polish_fragment_R2__rank__0__ {
+            get {
+                return ResourceManager.GetString("MedianPolishKthFragmentR2Calc_DisplayName_Median_polish_fragment_R2__rank__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragment R^2 (top 3 mean).
+        /// </summary>
+        public static string MedianPolishTop3MeanR2Calc_DisplayName_Median_polish_fragment_R2__top_3_mean_ {
+            get {
+                return ResourceManager.GetString("MedianPolishTop3MeanR2Calc_DisplayName_Median_polish_fragment_R2__top_3_mean_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragment R^2 (median).
+        /// </summary>
+        public static string MedianPolishMedianR2Calc_DisplayName_Median_polish_fragment_R2__median_ {
+            get {
+                return ResourceManager.GetString("MedianPolishMedianR2Calc_DisplayName_Median_polish_fragment_R2__median_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragments with good fit.
+        /// </summary>
+        public static string MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit {
+            get {
+                return ResourceManager.GetString("MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Peptide length.
         /// </summary>

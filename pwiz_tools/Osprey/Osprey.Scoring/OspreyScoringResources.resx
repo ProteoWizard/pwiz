@@ -229,6 +229,18 @@
   <data name="PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_" xml:space="preserve">
     <value>Library cosine across peak (SD)</value>
   </data>
+  <data name="MedianPolishKthFragmentR2Calc_DisplayName_Median_polish_fragment_R2__rank__0__" xml:space="preserve">
+    <value>Median polish fragment R^2 (rank {0})</value>
+  </data>
+  <data name="MedianPolishTop3MeanR2Calc_DisplayName_Median_polish_fragment_R2__top_3_mean_" xml:space="preserve">
+    <value>Median polish fragment R^2 (top 3 mean)</value>
+  </data>
+  <data name="MedianPolishMedianR2Calc_DisplayName_Median_polish_fragment_R2__median_" xml:space="preserve">
+    <value>Median polish fragment R^2 (median)</value>
+  </data>
+  <data name="MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit" xml:space="preserve">
+    <value>Median polish fragments with good fit</value>
+  </data>
   <data name="PeptideLengthCalc_DisplayName_Peptide_length" xml:space="preserve">
     <value>Peptide length</value>
   </data>
