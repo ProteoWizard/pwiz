@@ -28,6 +28,7 @@ using pwiz.SkylineTestUtil;
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 
@@ -72,7 +73,10 @@ namespace pwiz.SkylineTestFunctional
             
             // Category: Download - Cancellation tests
             TestDownloadCancellationViaButton();
-            
+
+            // Category: Download - Retries of a tool download
+            TestDownloadRetries();
+
             // Category: Upload - Network failure tests
             TestUploadFileDnsFailure();
             TestUploadFileConnectionFailure();
@@ -418,6 +422,84 @@ namespace pwiz.SkylineTestFunctional
             // If a MessageDlg were shown, WaitForOpenForm would find it
             Assert.IsNull(TryWaitForOpenForm<MessageDlg>(50, () =>
                 FindOpenForm<LongWaitDlg>() == null));
+        }
+
+        /// <summary>
+        /// A tool download is retried after a failure that may not happen again, including a connection
+        /// that drops mid-download, and is not retried after a failure that will.
+        /// </summary>
+        private void TestDownloadRetries()
+        {
+            var filePath = TestContext.GetTestResultsPath("retried_download.dat");
+            var mockData = new byte[] { 0x01, 0x02, 0x03 };
+
+            // The connection drops mid-download twice, then the download succeeds
+            int attempts = 0;
+            var dropTwice = new HttpClientTestBehavior
+            {
+                ResponseFactory = uri => ++attempts <= 2 ? new DroppedConnectionStream() : new MemoryStream(mockData)
+            };
+            using (new HttpClientTestHelper(dropTwice))
+                DownloadToolFile(filePath);
+            Assert.AreEqual(3, attempts);
+            CollectionAssert.AreEqual(mockData, File.ReadAllBytes(filePath));
+
+            // A server error is retried MAX_DOWNLOAD_RETRIES times before the download fails
+            ValidateDownloadAttempts(new HttpRequestException("Response status code does not indicate success: 503 (Service Unavailable)."),
+                1 + MultiFileAsynchronousDownloadClient.MAX_DOWNLOAD_RETRIES, filePath);
+            // A missing file and having no network are not retried
+            ValidateDownloadAttempts(new HttpRequestException("Response status code does not indicate success: 404 (Not Found)."),
+                1, filePath);
+            ValidateDownloadAttempts(new HttpClientWithProgress.NoNetworkTestException(), 1, filePath);
+        }
+
+        private static void ValidateDownloadAttempts(Exception failure, int expectedAttempts, string filePath)
+        {
+            var behavior = new AttemptCountingTestBehavior { FailureException = failure };
+            using (new HttpClientTestHelper(behavior))
+            {
+                AssertEx.ThrowsException<NetworkRequestException>(() => DownloadToolFile(filePath));
+            }
+            Assert.AreEqual(expectedAttempts, behavior.Attempts, $"Download attempts after {failure.Message}");
+        }
+
+        private static void DownloadToolFile(string filePath)
+        {
+            using var client = new MultiFileAsynchronousDownloadClient(new SilentProgressMonitor(), 1);
+            client.DownloadFileAsyncOrThrow(new Uri("http://example.com/tool.zip"), filePath);
+        }
+
+        private class AttemptCountingTestBehavior : HttpClientTestBehavior
+        {
+            public int Attempts { get; private set; }
+
+            public override void OnException(Uri uri, Exception exception)
+            {
+                Attempts++;
+            }
+        }
+
+        /// <summary>
+        /// A response stream whose connection drops on the first read.
+        /// </summary>
+        private class DroppedConnectionStream : Stream
+        {
+            public override int Read(byte[] buffer, int offset, int count) =>
+                throw new IOException("The response ended prematurely.");
+
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+            public override void Flush() { }
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         }
 
         private static void TestSuccessCase()

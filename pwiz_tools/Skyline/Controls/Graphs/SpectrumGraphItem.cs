@@ -943,8 +943,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static void CustomizeAxis(Axis axis, string title)
         {
+            // No size here: GraphSpectrum sizes the titles from SpectrumFontSize, and this runs only
+            // when the pane's first spectrum is added, so a size here won until the next redraw.
             axis.Title.FontSpec.Family = @"Arial";
-            axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;
             SetAxisText(axis, title);
