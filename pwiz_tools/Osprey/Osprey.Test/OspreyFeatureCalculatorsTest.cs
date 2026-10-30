@@ -537,6 +537,24 @@ namespace pwiz.Osprey.Test
 
             foreach (string name in PinFeatureMask.DEFAULT_MASKED_FEATURES)
                 Assert.IsTrue(Array.IndexOf(names, name) >= 21, name);
+
+            Assert.IsFalse(ParquetScoreCache.CreateFeatureFlags(null, @"TEST").Any(m => m), "No list flags nothing");
+            Assert.IsFalse(ParquetScoreCache.CreateFeatureFlags(Array.Empty<string>(), @"TEST").Any(m => m), "'none' flags nothing");
+            var flagged = ParquetScoreCache.CreateFeatureFlags(new[] { @"xcorr", @"mp_n_fragments_good_fit" }, @"TEST");
+            for (int i = 0; i < names.Length; i++)
+            {
+                bool expected = names[i] == @"xcorr" || names[i] == @"mp_n_fragments_good_fit";
+                Assert.AreEqual(expected, flagged[i], names[i]);
+            }
+            Assert.ThrowsException<InvalidOperationException>(() => ParquetScoreCache.CreateFeatureFlags(new[] { @"no_such_feature" }, @"TEST"));
+
+            // The FDR log transform keeps 0, sign and order, and compresses a 20-SD tail of explained_intensity
+            // (mean 0.003, SD 0.01) to a few SD of its own scale.
+            Assert.AreEqual(0.0, ParquetScoreCache.LogCompress(0.0), TOLERANCE);
+            Assert.AreEqual(-ParquetScoreCache.LogCompress(0.5), ParquetScoreCache.LogCompress(-0.5), TOLERANCE);
+            Assert.IsTrue(ParquetScoreCache.LogCompress(0.003) < ParquetScoreCache.LogCompress(0.2));
+            Assert.IsTrue(ParquetScoreCache.LogCompress(0.2) / ParquetScoreCache.LogCompress(0.003) < 5,
+                "a value 66x the mean should land within a few times the mean's transformed value");
         }
 
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)

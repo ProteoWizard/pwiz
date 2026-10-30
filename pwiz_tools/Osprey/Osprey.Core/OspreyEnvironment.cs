@@ -98,7 +98,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FEATURE_LOG", @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
@@ -741,6 +741,16 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
+
+        /// <summary>
+        /// OSPREY_FDR_FEATURE_LOG (experiment): scoring features the FDR stages read back through
+        /// sign(v) * ln(1 + 1000 * |v|), as comma-separated feature names. A heavy-tailed feature
+        /// (explained_intensity: mean 0.003, SD 0.01, clean peaks at 0.2) otherwise reaches a linear
+        /// model 20 SD out, where a weight learned on the bulk of the data decides the score alone.
+        /// Null when unset. An unknown name stops the search when the FDR stage starts.
+        /// </summary>
+        public static readonly string[] FdrFeatureLog = ParseFeatureMask(
+            Environment.GetEnvironmentVariable(@"OSPREY_FDR_FEATURE_LOG"));
 
         /// <summary>
         /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT

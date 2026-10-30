@@ -128,6 +128,12 @@ namespace pwiz.Osprey.IO
 
         public const int NUM_PIN_FEATURES = 53;
 
+        /// <summary>
+        /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after
+        /// <see cref="PIN_FEATURE_NAMES"/>, which it looks names up in.
+        /// </summary>
+        private static readonly bool[] FDR_LOG_FEATURES = CreateFeatureFlags(OspreyEnvironment.FdrFeatureLog, @"OSPREY_FDR_FEATURE_LOG");
+
         #endregion
 
         #region Schema Fields
@@ -1123,6 +1129,48 @@ namespace pwiz.Osprey.IO
             var values = new T[RowCount(groupReader)];
             RunSync(groupReader.ReadAsync(field, values.AsMemory()));
             return values;
+        }
+
+        // Read PIN feature column f for the FDR stages, with the OSPREY_FDR_FEATURE_LOG transform applied
+        // when it names the feature, or null if the column is absent like any other column.
+        private static double[] ReadFeatureColumn(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, int f)
+        {
+            var values = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+            if (values != null && FDR_LOG_FEATURES[f])
+            {
+                for (int i = 0; i < values.Length; i++)
+                    values[i] = LogCompress(values[i]);
+            }
+            return values;
+        }
+
+        // sign(v) * ln(1 + 1000|v|): monotone, so feature order is kept, but a 20-SD tail becomes a few SD.
+        internal static double LogCompress(double v)
+        {
+            return Math.Sign(v) * Math.Log(1.0 + 1000.0 * Math.Abs(v));
+        }
+
+        /// <summary>
+        /// One flag per PIN feature, set for each of <paramref name="names"/>; none set when it is null.
+        /// An unknown name throws, naming <paramref name="variable"/>, the setting that listed it.
+        /// </summary>
+        internal static bool[] CreateFeatureFlags(string[] names, string variable)
+        {
+            var flags = new bool[NUM_PIN_FEATURES];
+            if (names == null)
+                return flags;
+            foreach (string name in names)
+            {
+                int index = Array.IndexOf(PIN_FEATURE_NAMES, name);
+                if (index < 0)
+                {
+                    throw new InvalidOperationException(
+                        string.Format(@"{0} names an unknown feature: {1}", variable, name));
+                }
+                flags[index] = true;
+            }
+            return flags;
         }
 
         private static string[] ReadStringColumnByName(ParquetRowGroupReader groupReader,
@@ -2152,7 +2200,7 @@ namespace pwiz.Osprey.IO
                 if (!scalarsOnly)
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                        featureCols[f] = ReadFeatureColumn(groupReader, fieldsByName, f);
                 }
 
                 int rowCount = entryIdCol.Length;
@@ -2226,7 +2274,7 @@ namespace pwiz.Osprey.IO
                         var featureCols = new double[NUM_PIN_FEATURES][];
                         for (int f = 0; f < NUM_PIN_FEATURES; f++)
                         {
-                            featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                            featureCols[f] = ReadFeatureColumn(groupReader, fieldsByName, f);
                         }
 
                         if (featureCols[0] == null)
