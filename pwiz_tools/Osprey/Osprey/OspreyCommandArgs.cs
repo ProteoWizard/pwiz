@@ -588,7 +588,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_TIMESTAMP = new OspreyArgument(@"timestamp",
             (c, p) => c._config.IsTimeStamped = true) { DescriptionArgs = () => new object[] { @"[yyyy/MM/dd HH:mm:ss]" } };
         public static readonly OspreyArgument ARG_MEMSTAMP = new OspreyArgument(@"memstamp",
-            (c, p) => c._config.IsMemStamped = true) { DescriptionArgs = () => new object[] { ARG_TIMESTAMP.ArgumentText } };
+            (c, p) => c._config.IsMemStamped = true);
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => GetPathToFile(string.Empty), (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
@@ -604,8 +604,8 @@ namespace pwiz.Osprey
         // -h/--help and -v/--version are terminal: their handlers render help / print the
         // version and exit 0. --help accepts an optional format/section value
         // (ascii | unicode | sections | html | <Section>); the description names the values.
-        public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
-            (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        // The developer dump bundle that -d / --diagnostics used to turn on is the
+        // OSPREY_DIAGNOSTICS variable (OspreyEnvironment.Diagnostics): the help is for users.
         // One flag, everything we know how to show. An opt-in token per expensive panel was built
         // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
         // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
@@ -638,7 +638,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
-                ARG_DIAGNOSTICS, ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
+                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {
