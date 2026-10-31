@@ -946,7 +946,7 @@ namespace TestRunner
 
         private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
         {
-            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck", "runsmallmoleculeversions", "recordauditlogs" })
+            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck", "runsmallmoleculeversions", "recordauditlogs", "dpiaware" })
                 testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
             return testRunnerCmd;
         }
