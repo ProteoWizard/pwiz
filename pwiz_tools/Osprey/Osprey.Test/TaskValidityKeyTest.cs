@@ -613,6 +613,22 @@ namespace pwiz.Osprey.Test
                 @"the default mask must skip the override-path detection");
             Assert.IsTrue(PinFeatureMask.UsesRunnerUpFeatures(f => f != margin),
                 @"any one runner-up feature unmasked must run the override-path detection");
+
+            // The FDR-stage feature switches change what the classifier trains on, so each keys differently too.
+            var log = new[] { @"explained_intensity" };
+            var clip = new[] { @"explained_intensity:0.1" };
+            var featureKeys = new[]
+            {
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, null, null),
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(log, null, null, null),
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, clip, null, null),
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, @"width", null),
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, @"scalefree", null),
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, null, 7),
+                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, null, 42),
+            };
+            Assert.AreEqual(string.Empty, featureKeys[0], @"unset switches must not change existing keys");
+            Assert.AreEqual(featureKeys.Length, featureKeys.Distinct().Count(), @"every switch must key differently");
         }
 
         /// <summary>

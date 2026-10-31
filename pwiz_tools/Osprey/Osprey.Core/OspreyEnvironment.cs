@@ -1296,10 +1296,12 @@ namespace pwiz.Osprey.Core
         /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
         /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
         /// every FDR output after it. Empty when both are unset, so default outputs keep their key.
+        /// The FDR-stage feature switches follow (<see cref="FdrFeatureValidityKeySuffix(string[], string[], string, ulong?)"/>).
         /// </summary>
         public static string FdrExperimentValidityKeySuffix()
         {
-            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm);
+            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm)
+                   + FdrFeatureValidityKeySuffix(FdrFeatureLog, FdrFeatureClip, FdrSharpness, FdrSeed);
         }
 
         /// <summary>
@@ -1313,6 +1315,28 @@ namespace pwiz.Osprey.Core
                 suffix += @";recon=" + reconciliationMode;
             if (pepRatioForm)
                 suffix += @";pep=ratio";
+            return suffix;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the FDR-stage feature switches <see cref="FdrFeatureLog"/>,
+        /// <see cref="FdrFeatureClip"/>, <see cref="FdrSharpness"/> and <see cref="FdrSeed"/>: each
+        /// changes the features or the draw the classifier trains on, and so every FDR output. A
+        /// switch emits nothing when unset, so default outputs keep their key. Names are kept in the
+        /// order given, so a reordered list only costs a re-run.
+        /// </summary>
+        public static string FdrFeatureValidityKeySuffix(string[] featureLog, string[] featureClip,
+            string sharpness, ulong? seed)
+        {
+            string suffix = string.Empty;
+            if (featureLog != null)
+                suffix += @";fdrlog=" + string.Join(@"+", featureLog);
+            if (featureClip != null)
+                suffix += @";fdrclip=" + string.Join(@"+", featureClip);
+            if (sharpness != null)
+                suffix += @";fdrsharp=" + sharpness;
+            if (seed.HasValue)
+                suffix += @";fdrseed=" + seed.Value.ToString(CultureInfo.InvariantCulture);
             return suffix;
         }
 
