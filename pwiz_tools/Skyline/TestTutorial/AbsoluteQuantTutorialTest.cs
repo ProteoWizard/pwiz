@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -128,7 +127,7 @@ namespace pwiz.SkylineTestTutorial
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(pasteDlg.PastePeptides);
                 WaitForProteinMetadataBackgroundLoaderCompletedUI();
-                RunUI(() => pasteDlg.Size = new Size(700, 210));
+                RunUI(() => pasteDlg.Size = ScaledSize(700, 210));
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List");
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
@@ -137,7 +136,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
-            RunUI( () => SkylineWindow.Size = new Size(840, 410));
+            RunUI( () => SkylineWindow.Size = ScaledSize(840, 410));
 
             PauseForScreenShot("Main window with Targets view");
 
@@ -190,7 +189,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI( () => 
                         {   //resize the window and activate the first standard chromatogram pane.
-                            RunUI(() => SkylineWindow.Size = new Size(1330, 720));
+                            RunUI(() => SkylineWindow.Size = ScaledSize(1330, 720));
                             var chrom = SkylineWindow.GraphChromatograms.First();
                             chrom.Select();
                         });
@@ -242,7 +241,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.PeptideTransitionGroups.First().TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
-            RunUI(() => SkylineWindow.Size = new Size(1470, 656));
+            RunUI(() => SkylineWindow.Size = ScaledSize(1470, 656));
             RestoreViewOnScreen(14);
             FocusDocument();
             PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light");
@@ -315,11 +314,11 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
-                    SkylineWindow.Width = 500;
+                    SkylineWindow.Width = Scaled(500);
                     var gridFloatingWindow = documentGridForm.Parent.Parent;
-                    gridFloatingWindow.Size = new Size(370, 315);
+                    gridFloatingWindow.Size = ScaledSize(370, 315);
                     gridFloatingWindow.Top = SkylineWindow.Top;
-                    gridFloatingWindow.Left = SkylineWindow.Right + 20;
+                    gridFloatingWindow.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<DocumentGridForm>("Document grid with concentrations filled in");
             }
@@ -342,8 +341,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var calibrationOpenForm = WaitForOpenForm<CalibrationForm>();
                     var calibrationFloatingWindow = calibrationOpenForm.Parent.Parent;
-                    calibrationFloatingWindow.Top = SkylineWindow.Bottom - calibrationFloatingWindow.Height - 35;
-                    calibrationFloatingWindow.Left = SkylineWindow.Left + 15;
+                    calibrationFloatingWindow.Top = SkylineWindow.Bottom - calibrationFloatingWindow.Height - Scaled(35);
+                    calibrationFloatingWindow.Left = SkylineWindow.Left + Scaled(15);
 
                 });
                 FocusDocument();
@@ -357,9 +356,9 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     var calibrationFloatingWindow = calibrationForm.Parent.Parent;
-                    calibrationFloatingWindow.Width = 565;
+                    calibrationFloatingWindow.Width = Scaled(565);
                     calibrationFloatingWindow.Top = SkylineWindow.Top;
-                    calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
+                    calibrationFloatingWindow.Left = SkylineWindow.Right + Scaled(20);
                 });
                 JiggleSelection();  // Otherwise, plot shows two legends
                 PauseForScreenShot<CalibrationForm>("View calibration curve");

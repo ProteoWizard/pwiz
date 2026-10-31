@@ -38,6 +38,7 @@ using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
@@ -187,6 +188,23 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
+
+        /// <summary>
+        /// Scales a window size written for 100% display scale, as tests set sizes for tutorial
+        /// screenshots, to the display scale the test runs at. Unchanged at 100%.
+        /// </summary>
+        public static Size ScaledSize(int width, int height)
+        {
+            return DpiScale.ScaleSize(SkylineWindow, new Size(width, height));
+        }
+
+        /// <summary>
+        /// Scales a length in pixels written for 100% display scale to the display scale the test runs at.
+        /// </summary>
+        public static int Scaled(int pixels)
+        {
+            return DpiScale.Scale(SkylineWindow, pixels);
+        }
 
         private bool _forceMzml;
 
