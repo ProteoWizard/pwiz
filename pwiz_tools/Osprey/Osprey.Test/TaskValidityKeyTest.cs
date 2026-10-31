@@ -598,6 +598,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Empty, none, @"the default must not change existing keys");
             var distinct = new HashSet<string> { none, recon, pep, both };
             Assert.AreEqual(4, distinct.Count, @"every combination must key differently");
+
+            // The override-path runner-up change keys the rescoring tasks only when the classifier
+            // sees a runner-up feature: empty under the default mask, present with every feature on.
+            Assert.AreEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(PinFeatureMask.IsMasked),
+                @"the default mask hides the runner-up features, so default keys must not change");
+            Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => false),
+                @"with the runner-up features on, the rescoring tasks must key on the change");
+            int margin = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_rank_margin");
+            Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => f != margin),
+                @"any one runner-up feature unmasked must key the change");
         }
 
         /// <summary>

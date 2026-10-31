@@ -322,8 +322,12 @@ other candidate's, the other floored at 0 (a lone candidate competes with uncorr
 can be negative when the pick preferred a less coeluting peak on RT or intensity.
 `peak_rank_margin` is the same difference in pick score (the learned pick model's, or the
 product form under `OSPREY_PICK_LDA=0`), 0 for a lone candidate. `peak_candidate_count` counts
-the candidates. The boundary-override path (Stage 6) scores a peak someone else chose and has
-no candidates: the margins read 0 and the count 1.
+the candidates. The boundary-override path (Stage 6: reconciliation and gap-fill) scores a peak
+someone else chose, so it runs the first-pass detection once more over the normal search window
+(`PeakDataExtractor.OverrideRunnerUpCandidates`) and compares the imposed peak with the
+candidates found there, the imposed peak standing in for any candidate whose apex falls inside
+its bounds. A peak moved off a stronger candidate then shows a negative margin. The Stage 6
+candidate list (`cwt_candidates`) stays empty on that path, as in Rust.
 
 **Context (24-26)** - peptide length, precursor charge and precursor m/z, as Percolator and
 DIA-NN use them: how reliable a match is depends on what is being matched. A decoy has its
@@ -363,7 +367,10 @@ nothing from it. The parquet always holds all 41, so:
 - searches that differ only in the mask share their per-file scores. The mask is in the validity
   keys of FirstPassFDR, PerFileRescoring and SecondPassFDR (`;featmask=default|none|<names>`) but
   not of PerFileScoring, so pointing a new mask at existing scores re-runs only the FDR stages
-  (minutes on three runs, against the whole search). See `14-intermediate-files.md`.
+  (minutes on three runs, against the whole search). See `14-intermediate-files.md`. When a
+  runner-up feature is unmasked, PerFileRescoring and SecondPassFDR also carry
+  `;runnerup=override-candidates`, because the override path's runner-up values changed (they
+  once reported a lone candidate); under the default mask the term is empty.
 - the training export (`22-training-export.md`) and anything else reading the parquet see every
   feature unmasked.
 

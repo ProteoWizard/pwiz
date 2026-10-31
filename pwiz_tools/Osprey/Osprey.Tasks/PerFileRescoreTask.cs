@@ -334,6 +334,7 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.ValidityKeySuffix()
+                + PinFeatureMask.RescoreValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass

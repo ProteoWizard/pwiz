@@ -92,6 +92,38 @@ namespace pwiz.Osprey.IO
             return @";featmask=" + mask;
         }
 
+        /// <summary>
+        /// The runner-up features, which read their candidates differently on the boundary-override
+        /// path since that path began comparing an imposed peak with the first pass's candidates
+        /// (it used to report a lone candidate).
+        /// </summary>
+        public static readonly string[] RUNNER_UP_FEATURES =
+        {
+            @"peak_coelution_margin", @"peak_rank_margin", @"peak_candidate_count",
+        };
+
+        /// <summary>
+        /// The validity-key term for the tasks that rescore peaks at override bounds and use those
+        /// scores (PerFileRescoring, SecondPassFDR): present only when the classifier sees a
+        /// runner-up feature, because only then did the override-path change move their output.
+        /// Under the default mask it is empty, so no default output directory is invalidated.
+        /// </summary>
+        public static string RescoreValidityKeySuffix()
+        {
+            return RescoreValidityKeySuffix(IsMasked);
+        }
+
+        /// <summary><see cref="RescoreValidityKeySuffix()"/> for an explicitly supplied mask.</summary>
+        public static string RescoreValidityKeySuffix(Func<int, bool> isMasked)
+        {
+            foreach (string name in RUNNER_UP_FEATURES)
+            {
+                if (!isMasked(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name)))
+                    return @";runnerup=override-candidates";
+            }
+            return string.Empty;
+        }
+
         private static bool[] CreateMask(string[] maskedNames)
         {
             var masked = new bool[ParquetScoreCache.NUM_PIN_FEATURES];

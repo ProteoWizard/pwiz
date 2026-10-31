@@ -285,10 +285,11 @@ namespace pwiz.Osprey.Scoring
                     ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
 
-            // The candidate peaks the pick chose among, for the runner-up features. None on the
-            // boundary-override path, where the calculators report a lone candidate.
-            if (ext.CapturedPeaks != null)
-                ospreyContext.AddInfo(new PeakCandidatesByproduct(ext.CapturedPeaks, bestPeak));
+            // The candidate peaks the runner-up features compare the chosen peak with: the ones the
+            // pick chose among, or for a peak rescored at override bounds, the ones the first pass
+            // would have chosen among.
+            if (ext.RunnerUpPeaks != null)
+                ospreyContext.AddInfo(new PeakCandidatesByproduct(ext.RunnerUpPeaks, bestPeak));
 
             // Build the full PIN feature vector
             double[] features = new double[OspreyFeatureCalculators.FeatureCount];

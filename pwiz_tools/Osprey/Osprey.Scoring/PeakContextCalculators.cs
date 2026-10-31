@@ -29,9 +29,11 @@ namespace pwiz.Osprey.Scoring
     /// fragment coelution and pick score, PUBLISHED BY THE HARNESS from
     /// <c>ScoreCandidate</c> (only the extractor holds them). The runner-up features
     /// read it: how far the chosen peak stands above the alternatives in its own
-    /// window, which a single apex score cannot show. Absent on the boundary-override
-    /// path, which scores a peak someone else chose; the features then report a lone
-    /// candidate.
+    /// window, which a single apex score cannot show. On the boundary-override path,
+    /// which scores a peak someone else chose, the candidates are the ones the first pass
+    /// would have chosen among, with the imposed peak in place of any whose apex it covers
+    /// (<c>PeakDataExtractor.OverrideRunnerUpCandidates</c>); there the chosen peak need not
+    /// be the best, and its margins can be negative.
     /// </summary>
     public sealed class PeakCandidatesByproduct
     {
@@ -134,7 +136,8 @@ namespace pwiz.Osprey.Scoring
 
     /// <summary>
     /// peak_candidate_count: how many candidate peaks passed apex acceptance in the
-    /// window, 1 on the boundary-override path. Many similar candidates mean the
+    /// window (on the boundary-override path, the imposed peak plus the first-pass
+    /// candidates it does not cover). Many similar candidates mean the
     /// window holds no single convincing peak.
     /// </summary>
     internal sealed class PeakCandidateCountCalc : SummaryOspreyFeatureCalculator
