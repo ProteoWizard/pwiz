@@ -45,9 +45,6 @@ namespace pwiz.Osprey.Core
         /// <summary>Primary output: blib for Skyline.</summary>
         public string OutputBlib { get; set; }
 
-        /// <summary>Optional: TSV report output path.</summary>
-        public string OutputReport { get; set; }
-
         /// <summary>
         /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
         /// annotations, and exit without searching. No input files are needed.
@@ -114,8 +111,11 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string CacheDir { get; set; }
 
-        /// <summary>Resolution mode for binning.</summary>
-        public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.Auto;
+        /// <summary>
+        /// Resolution mode for binning. HRAM unless the command line says unit: there is no
+        /// detection from the data yet, so the default is the instruments most searches use.
+        /// </summary>
+        public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.HRAM;
 
         /// <summary>Fragment tolerance for LibCosine scoring.</summary>
         public FragmentToleranceConfig FragmentTolerance { get; set; } = FragmentToleranceConfig.Default();
@@ -286,6 +286,12 @@ namespace pwiz.Osprey.Core
         /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
+
+        /// <summary>
+        /// --task-files: print the files the selected task reads and writes for this command line,
+        /// as the task declares them, and exit without running it. Runtime-only.
+        /// </summary>
+        public bool PrintTaskFiles { get; set; }
 
         /// <summary>
         /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
@@ -651,7 +657,6 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public enum ResolutionMode
     {
-        Auto,
         UnitResolution,
         HRAM
     }
@@ -669,7 +674,6 @@ namespace pwiz.Osprey.Core
             {
                 return new[]
                 {
-                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
                     OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
                     OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
                 };

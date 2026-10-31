@@ -57,6 +57,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ImageList = new ImageList
                 {
                     TransparentColor = Color.Magenta,
+                    ColorDepth = ColorDepth.Depth32Bit
                 };
             // One icon per ImageIndexes value, rendered for the display DPI (issue #4599)
             ImageListScaler.PrepareForDpi(this, ImageList);

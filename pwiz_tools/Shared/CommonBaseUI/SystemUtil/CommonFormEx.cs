@@ -37,7 +37,17 @@ namespace pwiz.Common.SystemUtil
         bool IsClosingOrDisposing { get; }
     }
 
-    public class CommonFormEx : Form, IFormView, IClosingAware
+    /// <summary>
+    /// A window that can say what it is showing, for a form listing (the JSON-RPC connector's
+    /// get_open_forms): an alert's text, a test pause's description. Null for nothing beyond the
+    /// caption.
+    /// </summary>
+    public interface IDetailedMessage
+    {
+        string DetailedMessage { get; }
+    }
+
+    public class CommonFormEx : Form, IFormView, IClosingAware, IDetailedMessage
     {
         /// <summary>
         /// Flag indicating the form is closing or disposing. Set early (in OnFormClosing)

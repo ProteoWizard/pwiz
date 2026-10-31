@@ -54,6 +54,9 @@ namespace pwiz.CarafeSharp
 
         private static int Main(string[] args)
         {
+            // CarafeSharp.exe owns its process, so Carafe's grammar and text are installed here and
+            // nowhere else; hosted in Skyline or Osprey, the declarations run under the host's.
+            CarafeCommandLine.InstallGrammar();
             return Run(args, Console.Out, Console.Error);
         }
 

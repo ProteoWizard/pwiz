@@ -236,9 +236,7 @@ namespace pwiz.Skyline.Model {
         ///
         ///{0}
         ///
-        ///Please consider using the fine-tuning method provided by Carafe for building this library.
-        ///
-        ///Would you like to continue building this predicted library?.
+        ///Please consider using the fine-tuning method provided by Carafe for building this library..
         /// </summary>
         public static string Alphapeptdeep_Warn_limited_modification {
             get {
@@ -247,94 +245,80 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected:
         ///
-        ///{0}
-        ///
-        ///Would you like to continue building this predicted library?.
+        ///{0}.
         /// </summary>
         public static string Alphapeptdeep_Warn_unknown_modification {
             get {
                 return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to AlphaPeptDeep finished in {0} minutes {1} seconds..
+        ///   Looks up a localized string similar to Would you like to continue building this predicted library?.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_ {
+        public static string Alphapeptdeep_Warn_continue_building {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes" +
-                        "__1__seconds_", resourceCulture);
+                return ResourceManager.GetString("Alphapeptdeep_Warn_continue_building", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to build library by running the AlphaPeptDeep cmd-flow command..
+        ///   Looks up a localized string similar to The fine-tuned model {0} was not written..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_ {
+        public static string CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_" +
-                        "the_peptdeep_cmd_flow_command_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_CopyTunedModel_The_fine_tuned_model__0__was_not_written_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuning a model on the DIA runs and predicting the library.
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Fine_tuning_a_model_on_the_DIA_runs_and_predicting_the_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting the library with the {0} model.
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed at {0}..
+        /// </summary>
+        public static string CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_ {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Osprey__which_predicts_the_library__is_not_installed_at__0_", resourceCulture);
+            }
+        }
+
         
         /// <summary>
         ///   Looks up a localized string similar to Importing spectral library.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
+        public static string CarafeLibraryBuilder_Importing_spectral_library {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Importing_spectral_library", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_Importing_spectral_library", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to BlibBuild completed successfully..
+        ///   Looks up a localized string similar to Failed to predict the library..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
+        public static string CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
-                        "y_", resourceCulture);
+                return ResourceManager.GetString("CarafeLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to BlibBuild failed to complete..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_ {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_" +
-                        "file_by_executing_the_peptdeep_export_settings_command_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Preparing settings file.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Running AlphaPeptDeep.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
@@ -1387,16 +1371,38 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
-        ///
-        ///{0}
-        ///
-        ///Would you like to continue?
-        ///    .
+        ///   Looks up a localized string similar to The value '{0}' is not valid for {1}, which must be a whole number, blank, or '{2}'..
         /// </summary>
-        public static string NvidiaInstaller_Requesting_Administrator_elevation {
+        public static string OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__ {
             get {
-                return ResourceManager.GetString("NvidiaInstaller_Requesting_Administrator_elevation", resourceCulture);
+                return ResourceManager.GetString("OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter '{0}' to give the argument without a value..
+        /// </summary>
+        public static string OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_ {
+            get {
+                return ResourceManager.GetString("OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey at {0} could not be run..
+        /// </summary>
+        public static string OspreyProperties_Run_Osprey_at__0__could_not_be_run_ {
+            get {
+                return ResourceManager.GetString("OspreyProperties_Run_Osprey_at__0__could_not_be_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey at {0} did not report its settings: {1}.
+        /// </summary>
+        public static string OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_ {
+            get {
+                return ResourceManager.GetString("OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_", resourceCulture);
             }
         }
         
@@ -2347,7 +2353,75 @@ namespace pwiz.Skyline.Model {
                         "lled_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to No NVIDIA GPU was found. Predicting on the GPU needs an NVIDIA GPU and its driver..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the" +
+                        "_GPU_needs_an_NVIDIA_GPU_and_its_driver_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NVIDIA GPU.
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} has compute capability {1}, but predicting on the GPU needs compute capability {2} or later..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_The__0__has_compute_capability__1___but_predicting_on_the_GPU_needs_compute_capability__2__or_later_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_The__0__has_compute_capability__1___but_pr" +
+                        "edicting_on_the_GPU_needs_compute_capability__2__or_later_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NVIDIA driver supports CUDA {0}, but predicting on the GPU needs a driver for CUDA {1} or later. Update the NVIDIA driver to predict on the GPU..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_The_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later__Update_the_NVIDIA_driver_to_predict_on_the_GPU_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_The_NVIDIA_driver_supports_CUDA__0___but_p" +
+                        "redicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later__Update_the_NVIDIA_dri" +
+                        "ver_to_predict_on_the_GPU_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey, which predicts the library, is not installed, so its NVIDIA CUDA runtime packages are not known..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_" +
+                        "installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the NVIDIA CUDA runtime (package {0} of {1}).
+        /// </summary>
+        public static string TorchRuntimes_InstallCuda_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1__ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_InstallCuda_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installing the NVIDIA CUDA runtime.
+        /// </summary>
+        public static string TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to precursor.
         /// </summary>

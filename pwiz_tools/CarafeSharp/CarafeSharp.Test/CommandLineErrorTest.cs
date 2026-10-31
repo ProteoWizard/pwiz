@@ -77,56 +77,63 @@ namespace pwiz.CarafeSharp.Test
             // Every error Carafe would stop on, and every option CarafeSharp does not port: exit 1,
             // the message and the usage on the error stream, nothing on the output.
             AssertUsageError(@"-bogus");
-            AssertUsageError(@"-printPTM");
-            AssertUsageError(@"-db");
+            AssertUsageError(@"--print-ptm");
+            AssertUsageError(@"--db");
             AssertUsageError(@"stray");
-            AssertUsageError(@"-build_koina_library", @"x");
-            AssertUsageError(@"-reconcile_manifest", @"o.tsv", @"-predicted_library", @"l.tsv");
-            AssertUsageError(@"-i", @"x.training.parquet", @"-mode", @"phospho");
-            AssertUsageError(@"-i", @"x.training.parquet", @"-cs");
-            AssertUsageError(@"-i", @"x.training.parquet", @"-device", @"tpu");
-            AssertUsageError(@"-db=");
+            AssertUsageError(@"--build-koina-library", @"x");
+            AssertUsageError(@"--reconcile-manifest", @"o.tsv", @"--predicted-library", @"l.tsv");
+            AssertUsageError(@"--i", @"x.training.parquet", @"--mode", @"phospho");
+            AssertUsageError(@"--i", @"x.training.parquet", @"--cs");
+            AssertUsageError(@"--i", @"x.training.parquet", @"--device", @"tpu");
+            AssertUsageError(@"--db=");
             // Carafe predicts no ion mobility for -tf rt or ms2, and then fails reading it.
-            AssertUsageError(@"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"rt", @"-ccs");
-            AssertUsageError(@"-i", @"x.training.parquet", @"-db", @"x.fasta", @"-tf", @"ms2", @"-ccs");
-            AssertUsageError(@"-db", @"x.fasta", @"-user_var_mods", @"1");
-            AssertUsageError(@"-db", @"x.fasta", @"-mode", @"phospho");
-            AssertUsageError(@"-db", @"x.fasta", @"-lf_format", @"parquet");
+            AssertUsageError(@"--db", @"x.fasta", @"--model-dir", _folder, @"--tf", @"rt", @"--ccs");
+            AssertUsageError(@"--i", @"x.training.parquet", @"--db", @"x.fasta", @"--tf", @"ms2", @"--ccs");
+            AssertUsageError(@"--db", @"x.fasta", @"--user-var-mods", @"1");
+            AssertUsageError(@"--db", @"x.fasta", @"--mode", @"phospho");
+            AssertUsageError(@"--db", @"x.fasta", @"--lf-format", @"parquet");
             // mzSpecLib only with -fast: without it Carafe writes any -lf_type as a TSV.
-            AssertUsageError(@"-db", @"x.fasta", @"-lf_type", @"mzSpecLib", @"-fast");
-            AssertUsageError(@"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"test");
+            AssertUsageError(@"--db", @"x.fasta", @"--lf-type", @"mzSpecLib", @"--fast");
+            AssertUsageError(@"--db", @"x.fasta", @"--model-dir", _folder, @"--tf", @"test");
             // -model is CarafeSharp's: only training's -tf values, in any case.
-            AssertUsageError(@"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-tf", @"foo");
-            Assert.AreEqual(@"ms2", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-tf", @"MS2" })
+            AssertUsageError(@"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--tf", @"foo");
+            Assert.AreEqual(@"ms2", CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--tf", @"MS2" })
                 .LibrarySettings.TrainingType);
             // -model_dir keeps Carafe's reading, where another value predicts with neither fine-tuned model, and says so.
-            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"MS2" }).Warnings
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model-dir", _folder, @"--tf", @"MS2" }).Warnings
                 .Any(w => w.StartsWith(@"--tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
-            AssertUsageError(@"-db", @"x.fasta", @"-fixMod", @"abc");
-            AssertUsageError(@"-db", @"x.fasta", @"-max_pep_charge", @"1");
-            AssertUsageError(@"-db", @"x.fasta", @"-nce", @"30x");
-            AssertUsageError(@"-build_entrapment_fasta", @"o.fasta", @"-db", @"i.fasta", @"-mz_filter", @"-user_var_mods", @"1");
-            AssertUsageError(@"-build_entrapment_fasta", @"o.fasta", @"-db", @"i.fasta", @"-decoy_seed", @"1.5");
+            AssertUsageError(@"--db", @"x.fasta", @"--fix-mod", @"abc");
+            // --enzyme takes the table's number or name; anything else is an error naming the option.
+            AssertUsageError(@"--db", @"x.fasta", @"--enzyme", @"99");
+            AssertUsageError(@"--db", @"x.fasta", @"--enzyme", @"trypsin/x");
+            StringAssert.Contains(Assert.ThrowsException<ArgumentException>(() =>
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--enzyme", @"2a" })).Message, CarafeCommandLine.ARG_ENZYME.ArgumentText);
+            Assert.AreEqual(EnzymeTable.GetIndexByName(@"nocut"), CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--enzyme", @"NoCut" })
+                .LibrarySettings.Digest.EnzymeIndex);
+            AssertUsageError(@"--db", @"x.fasta", @"--max-pep-charge", @"1");
+            AssertUsageError(@"--db", @"x.fasta", @"--nce", @"30x");
+            AssertUsageError(@"--build-entrapment-fasta", @"o.fasta", @"--db", @"i.fasta", @"--mz-filter", @"--user-var-mods", @"1");
+            AssertUsageError(@"--build-entrapment-fasta", @"o.fasta", @"--db", @"i.fasta", @"--decoy-seed", @"1.5");
 
             // The options those modes do read.
-            var library = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-nce", @"30", @"-ms_instrument", @"QE", @"-rt_max", @"45",
-                @"-pairing_manifest", @"m.tsv", @"-decoy_prefix", @"rev_" }).LibrarySettings;
+            var library = CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--nce", @"30", @"--ms-instrument", @"QE", @"--rt-max", @"45",
+                @"--pairing-manifest", @"m.tsv", @"--decoy-prefix", @"rev_" }).LibrarySettings;
             Assert.AreEqual(30.0, library.Nce);
             Assert.AreEqual(@"QE", library.Instrument);
             Assert.IsTrue(library.UserInstrument);
             Assert.AreEqual(45.0, library.RtMax);
             Assert.AreEqual(@"m.tsv", library.PairingManifest);
             Assert.AreEqual(@"rev_", library.DecoyPrefix);
-            var training = CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-nce", @"28", @"-ms_instrument", @"QE" }).TrainingSettings;
+            var training = CarafeCommandLine.Parse(new[] { @"--i", @"x.training.parquet", @"--nce", @"28", @"--ms-instrument", @"QE" }).TrainingSettings;
             Assert.AreEqual(28.0, training.Nce);
             Assert.AreEqual(@"QE", training.Instrument);
             // -ccs with training, as Carafe on Osprey's results: no CCS fine-tune, the library's 1/K0 from the CCS model.
-            var withMobility = CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-db", @"x.fasta", @"-ccs" });
+            var withMobility = CarafeCommandLine.Parse(new[] { @"--i", @"x.training.parquet", @"--db", @"x.fasta", @"--ccs" });
             Assert.IsTrue(withMobility.TrainingSettings.Library.PredictIonMobility);
             Assert.IsTrue(withMobility.Warnings.Any(w => w.StartsWith(@"--ccs: the CCS model is not fine-tuned", StringComparison.Ordinal)));
-            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-ccs" }).Warnings
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"--i", @"x.training.parquet", @"--ccs" }).Warnings
                 .Any(w => w.StartsWith(@"Ignored --ccs", StringComparison.Ordinal)));
-            Assert.AreEqual(7L, CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"o.fasta", @"-db", @"i.fasta", @"-decoy_seed", @"7" })
+            Assert.AreEqual(7L, CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"o.fasta", @"--db", @"i.fasta", @"--decoy-seed", @"7" })
                 .BuildSettings.DecoySeed);
         }
 
@@ -140,21 +147,21 @@ namespace pwiz.CarafeSharp.Test
             // Training checks the library FASTA, the start model and the pretrained models before
             // it creates the output folder or reads an export.
             string export = Path.Combine(_folder, @"run" + TrainingExportParquet.EXT);
-            AssertRunError(output, @"-i", export, @"-o", output, @"-db", missingFasta);
-            AssertRunError(output, @"-i", export, @"-o", output, @"-ms2_model", Path.Combine(_folder, @"missing.pt"));
-            AssertRunError(output, @"-i", export, @"-o", output, @"-pretrained", missingZip);
+            AssertRunError(output, @"--i", export, @"--o", output, @"--db", missingFasta);
+            AssertRunError(output, @"--i", export, @"--o", output, @"--ms2-model", Path.Combine(_folder, @"missing.pt"));
+            AssertRunError(output, @"--i", export, @"--o", output, @"--pretrained", missingZip);
             // Library prediction opens the models before the digest: the folder may be made, but it stays empty.
-            AssertRunError(output, @"-db", proteins, @"-o", output, @"-pretrained", missingZip);
+            AssertRunError(output, @"--db", proteins, @"--o", output, @"--pretrained", missingZip);
             Assert.AreEqual(0, Directory.GetFileSystemEntries(output).Length);
             // A stage-1 build of a FASTA that is not there.
             string built = Path.Combine(_folder, @"built.fasta");
-            AssertRunError(built, @"-build_entrapment_fasta", built, @"-db", missingFasta);
+            AssertRunError(built, @"--build-entrapment-fasta", built, @"--db", missingFasta);
 
             // A failure with a cause reports both: a .blib library that is not a database.
             string manifest = WriteText(@"manifest.tsv", PairingManifest.HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
             string notBlib = WriteText(@"library.blib", @"not a database");
             string reconciled = Path.Combine(_folder, @"reconciled.tsv");
-            var (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", manifest, @"-predicted_library", notBlib);
+            var (code, _, error) = Run(@"--reconcile-manifest", reconciled, @"--manifest", manifest, @"--predicted-library", notBlib);
             Assert.AreEqual(1, code);
             Assert.IsTrue(Lines(error).Length >= 2, error);
             StringAssert.Contains(Lines(error)[0], notBlib);
@@ -169,14 +176,14 @@ namespace pwiz.CarafeSharp.Test
             // Stage 1, with a warning on the error stream, and the manifest reconciled against a library.
             string built = Path.Combine(_folder, @"built.fasta");
             string manifest = Path.Combine(_folder, @"manifest.tsv");
-            var (code, output, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", manifest, @"-no_similarity_gate");
+            var (code, output, error) = Run(@"--build-entrapment-fasta", built, @"--db", proteins, @"--manifest", manifest, @"--no-similarity-gate");
             Assert.AreEqual(0, code, error);
             Assert.IsTrue(File.Exists(built) && File.Exists(manifest));
             Assert.AreEqual(1, Lines(error).Length, error);
             Assert.AreNotEqual(0, output.Length);
             string library = WriteText(@"library.tsv", PairingManifestReconciler.LIBRARY_SEQUENCE_COLUMN + "\nPEPTIDEK\nSAMPLER\n");
             string reconciled = Path.Combine(_folder, @"reconciled.tsv");
-            (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", manifest, @"-predicted_library", library);
+            (code, _, error) = Run(@"--reconcile-manifest", reconciled, @"--manifest", manifest, @"--predicted-library", library);
             Assert.AreEqual(0, code, error);
             Assert.IsTrue(File.Exists(reconciled));
 
@@ -189,8 +196,8 @@ namespace pwiz.CarafeSharp.Test
             string libraryFolder = Path.Combine(_folder, @"library");
             string blocker = Path.Combine(libraryFolder, BlibLibraryWriter.FILE_NAME);
             Directory.CreateDirectory(blocker);
-            var predict = new[] { @"-db", proteins, @"-o", libraryFolder, @"-model_dir", models, @"-lf_type", @"blib,DIA-NN",
-                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            var predict = new[] { @"--db", proteins, @"--o", libraryFolder, @"--model-dir", models, @"--lf-type", @"blib,DIA-NN",
+                @"--rt-max", @"30", @"--lf-min-n-frag", @"1", @"--device", @"cpu" };
             (code, _, error) = Run(predict);
             Assert.AreEqual(1, code, error);
             string savedBlib = Path.Combine(libraryFolder, @"carafe_spectral_library (2).blib");
@@ -211,7 +218,7 @@ namespace pwiz.CarafeSharp.Test
                 // A library open in another program fails the run before any work, leaving the folder as it was.
                 // (With a changed setting: the same command would be skipped, its stamped library being current.)
                 using (new FileStream(blocker, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    (code, _, error) = Run(predict.Concat(new[] { @"-nce", @"29" }).ToArray());
+                    (code, _, error) = Run(predict.Concat(new[] { @"--nce", @"29" }).ToArray());
                 Assert.AreEqual(1, code, error);
                 StringAssert.Contains(error, blocker + @" cannot be replaced");
                 CollectionAssert.AreEquivalent(written, Directory.GetFileSystemEntries(libraryFolder));
@@ -221,15 +228,15 @@ namespace pwiz.CarafeSharp.Test
             // DecoyPairs table (and, without -rt_max, iRT retention times): every pair one target
             // and one decoy of the same charge, the decoy the reverse of the target when so named.
             string pairedFolder = Path.Combine(_folder, @"paired");
-            (code, _, error) = Run(@"-db", built, @"-o", pairedFolder, @"-model_dir", models, @"-lf_type", @"blib",
-                @"-lf_min_n_frag", @"1", @"-device", @"cpu", @"-pairing_manifest", manifest);
+            (code, _, error) = Run(@"--db", built, @"--o", pairedFolder, @"--model-dir", models, @"--lf-type", @"blib",
+                @"--lf-min-n-frag", @"1", @"--device", @"cpu", @"--pairing-manifest", manifest);
             Assert.AreEqual(0, code, error);
             AssertDecoyPairs(Path.Combine(pairedFolder, BlibLibraryWriter.FILE_NAME));
             // A minimum of fragments that only one member of some pairs reaches: each pair is still
             // written whole, the member whose partner fell short left out with it.
             string wholeFolder = Path.Combine(_folder, @"whole");
-            (code, output, error) = Run(@"-db", built, @"-o", wholeFolder, @"-model_dir", models, @"-lf_type", @"blib",
-                @"-lf_min_n_frag", @"16", @"-device", @"cpu", @"-pairing_manifest", manifest);
+            (code, output, error) = Run(@"--db", built, @"--o", wholeFolder, @"--model-dir", models, @"--lf-type", @"blib",
+                @"--lf-min-n-frag", @"16", @"--device", @"cpu", @"--pairing-manifest", manifest);
             Assert.AreEqual(0, code, error);
             string droppedLine = Lines(output).Single(l => l.StartsWith(@"Pairs: dropped ", StringComparison.Ordinal));
             Assert.IsTrue(int.Parse(droppedLine.Split(' ')[2]) > 0, droppedLine);
@@ -245,7 +252,7 @@ namespace pwiz.CarafeSharp.Test
             // -log_file takes every line, stamped by -timestamp, and the console streams stay empty.
             string log = Path.Combine(_folder, @"run.log");
             string missingModel = Path.Combine(_folder, @"missing.carafemodel");
-            var (code, output, error) = Run(@"-model_info", missingModel, @"-log_file", log, @"-timestamp");
+            var (code, output, error) = Run(@"--model-info", missingModel, @"--log-file", log, @"--timestamp");
             Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
             Assert.AreEqual(string.Empty, output);
             Assert.AreEqual(string.Empty, error);
@@ -255,7 +262,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(CommandStatusWriter.IsErrorLine(logLines[0]), logLines[0]);
             StringAssert.Contains(logLines[0], missingModel);
             // A log file that cannot be opened is itself reported, on the console.
-            (code, _, error) = Run(@"-model_info", missingModel, @"-log_file", _folder);
+            (code, _, error) = Run(@"--model-info", missingModel, @"--log-file", _folder);
             Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
             Assert.IsTrue(CommandStatusWriter.IsErrorLine(Lines(error)[0]), error);
             // A usage error is an error line too, before the usage.
@@ -292,8 +299,8 @@ namespace pwiz.CarafeSharp.Test
             string proteins = WriteText(@"proteins.fasta", PROTEINS);
             string models = WriteRandomModels();
             string libraryFolder = Path.Combine(_folder, @"library");
-            var predict = new[] { @"-db", proteins, @"-o", libraryFolder, @"-model_dir", models, @"-lf_type", @"blib",
-                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            var predict = new[] { @"--db", proteins, @"--o", libraryFolder, @"--model-dir", models, @"--lf-type", @"blib",
+                @"--rt-max", @"30", @"--lf-min-n-frag", @"1", @"--device", @"cpu" };
             var (code, output, error) = Run(predict);
             Assert.AreEqual(0, code, error);
             string blib = Path.Combine(libraryFolder, BlibLibraryWriter.FILE_NAME);
@@ -312,15 +319,15 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(written, File.GetLastWriteTimeUtc(blib));
 
             // A setting the library depends on changed: predicted again.
-            (code, output, error) = Run(predict.Concat(new[] { @"-nce", @"28" }).ToArray());
+            (code, output, error) = Run(predict.Concat(new[] { @"--nce", @"28" }).ToArray());
             Assert.AreEqual(0, code, error);
             Assert.IsFalse(output.Contains(skipped), output);
             Assert.AreNotEqual(stamp.Key, CarafeStamps.Read(blib).Key);
 
             // A TSV-only prediction declares no output, so it always runs.
             string tsvFolder = Path.Combine(_folder, @"tsv");
-            var predictTsv = new[] { @"-db", proteins, @"-o", tsvFolder, @"-model_dir", models, @"-lf_type", @"DIA-NN",
-                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            var predictTsv = new[] { @"--db", proteins, @"--o", tsvFolder, @"--model-dir", models, @"--lf-type", @"DIA-NN",
+                @"--rt-max", @"30", @"--lf-min-n-frag", @"1", @"--device", @"cpu" };
             (code, _, error) = Run(predictTsv);
             Assert.AreEqual(0, code, error);
             (code, output, error) = Run(predictTsv);
@@ -339,14 +346,14 @@ namespace pwiz.CarafeSharp.Test
             Directory.CreateDirectory(manifest);
             foreach (string badManifest in new[] { manifest, built })
             {
-                var (badCode, _, badError) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", badManifest);
+                var (badCode, _, badError) = Run(@"--build-entrapment-fasta", built, @"--db", proteins, @"--manifest", badManifest);
                 Assert.AreEqual(1, badCode, badError);
                 Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
                 AssertNoTempFiles();
             }
 
             string goodManifest = Path.Combine(_folder, @"good-manifest.tsv");
-            var (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", goodManifest);
+            var (code, _, error) = Run(@"--build-entrapment-fasta", built, @"--db", proteins, @"--manifest", goodManifest);
             Assert.AreEqual(0, code, error);
             if (OperatingSystem.IsWindows())
             {
@@ -357,7 +364,7 @@ namespace pwiz.CarafeSharp.Test
                 File.SetAttributes(built, FileAttributes.ReadOnly);
                 try
                 {
-                    (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", goodManifest, @"-no_similarity_gate", @"-miss_c", @"2");
+                    (code, _, error) = Run(@"--build-entrapment-fasta", built, @"--db", proteins, @"--manifest", goodManifest, @"--no-similarity-gate", @"--miss-c", @"2");
                     Assert.AreEqual(1, code, error);
                 }
                 finally
@@ -373,7 +380,7 @@ namespace pwiz.CarafeSharp.Test
             string library = WriteText(@"library.tsv", PairingManifestReconciler.LIBRARY_SEQUENCE_COLUMN + "\nPEPTIDEK\nSAMPLER\n");
             string reconciled = Path.Combine(_folder, @"reconciled-folder.tsv");
             Directory.CreateDirectory(reconciled);
-            (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", goodManifest, @"-predicted_library", library);
+            (code, _, error) = Run(@"--reconcile-manifest", reconciled, @"--manifest", goodManifest, @"--predicted-library", library);
             Assert.AreEqual(1, code, error);
             AssertNoTempFiles();
         }

@@ -65,12 +65,6 @@ namespace pwiz.CarafeSharp.Test
     /// there instead, after checking that the fine-tuned MS2 model beats the pretrained one and
     /// that the library's DecoyPairs table pairs every target whose decoy was written.
     /// </para>
-    /// <para>
-    /// A chained run (<c>regression.ps1 -Leg Chained</c>) has no golden: Osprey searched the
-    /// committed Stellar subset with <c>--training-export</c>, and CarafeSharp trained on those
-    /// exports and predicted a library. Its checks are that each tool did its part and that
-    /// CarafeSharp read what Osprey wrote.
-    /// </para>
     /// </summary>
     [TestClass]
     public class RegressionTest
@@ -171,22 +165,6 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>A precursor may be in one library only when it has at most this many fragments (lf_min_n_frag + 1).</summary>
         private const int FEW_FRAGMENTS = 3;
 
-        private const string LEG_CHAINED = @"chained";
-        // A 1% run FDR keeps 118-159 precursors per run of the subset (2026-09-30). The floor is
-        // well below that: how many Osprey identifies is its own regression's to gate, and this
-        // leg's to see only that each export is a real one.
-        private const int CHAINED_MIN_EXPORTED = 50;
-        /// <summary>The target m/z of the one isolation window the Stellar subset keeps.</summary>
-        private const double CHAINED_WINDOW_TARGET = 594.5201;
-        /// <summary>The regression's -lf_min_n_frag.</summary>
-        private const int CHAINED_MIN_PEAKS = 2;
-        // The same model predicts the same spectrum to float32 rounding, which moves with the other
-        // peptides in a prediction batch: 8.6e-7 at most over the subset's wider window, and no
-        // difference at all over the same window (2026-09-30).
-        private const double SAVED_MODEL_INTENSITY_TOLERANCE = 1e-5;
-        /// <summary>The per-run second pass, which a run of a multi-run analysis selects on.</summary>
-        private const string SECOND_PASS = @"2";
-
         /// <summary>The MS2 metrics a golden's fine-tuned model must improve on.</summary>
         private static readonly string[] MS2_METRICS = { @"cos", @"pcc", @"sa", @"spc" };
 
@@ -222,16 +200,6 @@ namespace pwiz.CarafeSharp.Test
                 Assert.Inconclusive(@"{0} is not set: regression.ps1 runs this test on a run folder.", RUN_VARIABLE);
             Assert.IsTrue(Directory.Exists(runFolder), @"{0} names a folder that does not exist: {1}", RUN_VARIABLE, runFolder);
             string createFolder = Environment.GetEnvironmentVariable(CREATE_VARIABLE);
-
-            if (ReadLeg(runFolder) == LEG_CHAINED)
-            {
-                Assert.IsTrue(string.IsNullOrEmpty(createFolder), @"A chained run has no golden to make.");
-                CheckChained(runFolder);
-                WriteReport(runFolder);
-                Assert.AreEqual(0, _failures.Count, @"The chained run failed its checks:{0}{1}",
-                    Environment.NewLine, string.Join(Environment.NewLine, _failures));
-                return;
-            }
 
             var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
             _tolerances = Tolerances.For(run.Dataset);
@@ -456,165 +424,6 @@ namespace pwiz.CarafeSharp.Test
             CheckExactComparisons(golden, run);
         }
 
-        /// <summary>
-        /// The chained leg's checks: Osprey wrote an export per run, each with the precursors a
-        /// 1% run FDR keeps and the per-run second pass's q-values; CarafeSharp read them, trained
-        /// on a subset of their rows, wrote both models and finite metrics, recorded every run's
-        /// isolation window, and predicted a library whose spectra keep -lf_min_n_frag peaks. Then
-        /// the model it saved predicted the same spectra again with -model, as a user reuses it,
-        /// and was fine-tuned further on the same exports, starting from the models it holds.
-        /// </summary>
-        private void CheckChained(string folder)
-        {
-            int runs;
-            string exportFolder;
-            int savedExitCode;
-            string savedLibraryFolder;
-            int? furtherExitCode = null;
-            string furtherFolder = null;
-            using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(folder, RUN_INFO_FILE)))))
-            {
-                var root = info.RootElement;
-                Report(@"Chained run {0}: Osprey searched the Stellar subset with --training-export, CarafeSharp trained on its exports",
-                    folder);
-                Report(@"Run: commit {0}, {1} on {2}, {3}", root.GetProperty(@"commit").GetString(), root.GetProperty(@"device_used").GetString(),
-                    root.GetProperty(@"processor").GetString(), root.GetProperty(@"os_platform").GetString());
-                Check(root.GetProperty(@"osprey_exit_code").GetInt32() == 0, @"Osprey exit code {0}", root.GetProperty(@"osprey_exit_code").GetInt32());
-                Check(root.GetProperty(@"exit_code").GetInt32() == 0, @"CarafeSharp exit code {0}", root.GetProperty(@"exit_code").GetInt32());
-                runs = root.GetProperty(@"runs").GetInt32();
-                string relative = root.GetProperty(@"export_folder").GetString() ?? string.Empty;
-                exportFolder = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
-                savedExitCode = root.GetProperty(@"saved_model_exit_code").GetInt32();
-                savedLibraryFolder = Path.Combine(folder, root.GetProperty(@"saved_model_library").GetString() ?? string.Empty);
-                // A run made before the leg fine-tuned the saved model further has neither.
-                if (root.TryGetProperty(@"fine_tuned_further_exit_code", out var furtherExit))
-                {
-                    furtherExitCode = furtherExit.GetInt32();
-                    furtherFolder = Path.Combine(folder, root.GetProperty(@"fine_tuned_further").GetString() ?? string.Empty);
-                }
-            }
-
-            var exports = Directory.GetFiles(exportFolder, @"*" + TrainingExportParquet.EXT).OrderBy(p => p, StringComparer.Ordinal).ToList();
-            Check(exports.Count == runs, @"training exports: {0} for {1} runs", exports.Count, runs);
-            long exported = 0;
-            foreach (string path in exports)
-            {
-                var export = TrainingExport.Read(path);
-                exported += export.Records.Count;
-                string name = Path.GetFileName(path);
-                Check(export.Records.Count >= CHAINED_MIN_EXPORTED, @"{0}: {1} precursors (at least {2})", name, export.Records.Count, CHAINED_MIN_EXPORTED);
-                Check(export.RunQPass == SECOND_PASS, @"{0}: run q from pass {1} (the per-run second pass is {2})", name,
-                    export.RunQPass ?? @"unknown", SECOND_PASS);
-            }
-
-            string output = Path.Combine(folder, OUTPUT_FOLDER);
-            foreach (string table in TRAINING_TABLES)
-            {
-                int rows = File.ReadLines(TestData.RequireFile(Path.Combine(output, table))).Count() - 1;
-                Check(rows > 0, @"training table {0}: {1} rows", table, rows);
-            }
-            int psms = File.ReadLines(Path.Combine(output, CarafeTrainingDirectory.PSM_FILE)).Count() - 1;
-            Check(psms <= exported, @"{0}: {1} PSMs from {2} exported precursors", CarafeTrainingDirectory.PSM_FILE, psms, exported);
-            foreach (string model in MODEL_FILES)
-                Check(File.Exists(Path.Combine(output, model)), @"model {0} written", model);
-            foreach (var metric in ReadMetricValues(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS))))
-                Check(double.IsFinite(metric.Value), @"metric {0}: {1}", metric.Key, Format(metric.Value));
-
-            var meta = CarafeModelDirectory.Open(output).Runs;
-            Check(meta.Count == runs, @"{0}: {1} runs", CarafeModelDirectory.META_FILE, meta.Count);
-            foreach (var run in meta)
-            {
-                Check(run.PrecursorMzMin <= CHAINED_WINDOW_TARGET && CHAINED_WINDOW_TARGET <= run.PrecursorMzMax,
-                    @"{0} {1}: precursor m/z {2}-{3} holds the subset's window at {4}", CarafeModelDirectory.META_FILE, run.MsFile,
-                    Format(run.PrecursorMzMin), Format(run.PrecursorMzMax), Format(CHAINED_WINDOW_TARGET));
-            }
-
-            string blib = TestData.RequireFile(Path.Combine(output, BlibLibraryWriter.FILE_NAME));
-            var library = LibraryContent.Read(blib);
-            long fewestPeaks;
-            using (var connection = OpenLibrary(blib))
-            using (var command = new SQLiteCommand(@"SELECT MIN(numPeaks) FROM RefSpectra", connection))
-            {
-                object value = command.ExecuteScalar();
-                fewestPeaks = value is long peaks ? peaks : 0;
-            }
-            SQLiteConnection.ClearAllPools();
-            Check(library.Precursors > 0, @"library: {0} precursors, {1} peaks", library.Precursors, library.Peaks);
-            Check(fewestPeaks >= CHAINED_MIN_PEAKS, @"library: fewest peaks in a spectrum {0} (at least {1})", fewestPeaks, CHAINED_MIN_PEAKS);
-
-            // The saved model, and a library predicted from it with -model over a wider precursor
-            // window: every precursor of the library training predicted, with the same spectrum.
-            var saved = CarafeModelFile.Open(TestData.RequireFile(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME)));
-            Check(saved.Runs.Count == runs && saved.RtUsed, @"{0}: {1} training runs; {2}", CarafeModelFile.DEFAULT_FILE_NAME,
-                saved.Runs.Count, saved.Describe());
-            Check(savedExitCode == 0, @"CarafeSharp -model exit code {0}", savedExitCode);
-            var trainedSpectra = ReadSpectra(blib).ToDictionary(s => PrecursorKey(s.Sequence, s.Charge), StringComparer.Ordinal);
-            var savedSpectra = ReadSpectra(TestData.RequireFile(Path.Combine(savedLibraryFolder, BlibLibraryWriter.FILE_NAME)))
-                .ToDictionary(s => PrecursorKey(s.Sequence, s.Charge), StringComparer.Ordinal);
-            SQLiteConnection.ClearAllPools();
-            int missing = 0, differ = 0;
-            double largest = 0;
-            foreach (var pair in trainedSpectra)
-            {
-                if (!savedSpectra.TryGetValue(pair.Key, out var other))
-                {
-                    missing++;
-                    continue;
-                }
-                var spectrum = pair.Value;
-                if (spectrum.PrecursorMz != other.PrecursorMz || spectrum.RetentionTime != other.RetentionTime || !spectrum.Mz.SequenceEqual(other.Mz))
-                {
-                    differ++;
-                    continue;
-                }
-                largest = Math.Max(largest, spectrum.Intensity.Zip(other.Intensity, (a, b) => (double)Math.Abs(a - b)).Max());
-            }
-            Check(savedSpectra.Count > trainedSpectra.Count && missing == 0 && differ == 0 && largest <= SAVED_MODEL_INTENSITY_TOLERANCE,
-                @"library from the saved model: {0} precursors over the wider window; of the training run's {1}, {2} missing, {3} with " +
-                @"another m/z, RT or fragments, largest intensity difference {4} (at most {5})",
-                savedSpectra.Count, trainedSpectra.Count, missing, differ, Format(largest), Format(SAVED_MODEL_INTENSITY_TOLERANCE));
-
-            if (furtherExitCode == null)
-            {
-                Report(@"INFO the run did not fine-tune the saved model further (made before the leg did)");
-                return;
-            }
-            CheckFineTunedFurther(output, saved, furtherExitCode.Value, furtherFolder);
-        }
-
-        /// <summary>
-        /// The saved model fine-tuned further on the exports it was trained on (-model with
-        /// training). Its start models are the ones the first training chose, so their held-out
-        /// scores, on the same rows, are the first training's for those models: RT's fine-tuned
-        /// scores, and MS2's fine-tuned or pretrained ones as it chose. A new MS2 model that does
-        /// not beat a saved fine-tuned one leaves that one in the new file; the new file names the
-        /// saved one as its base.
-        /// </summary>
-        private void CheckFineTunedFurther(string output, CarafeModelFile saved, int exitCode, string furtherFolder)
-        {
-            Check(exitCode == 0, @"CarafeSharp -model with training exit code {0}", exitCode);
-            var first = ReadMetricValues(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS)))
-                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
-            var further = ReadMetricValues(TestData.RequireFile(Path.Combine(furtherFolder, ModelFiles.METRICS)))
-                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
-            string ms2Start = saved.Ms2Used ? @"finetuned" : @"pretrained";
-            foreach (var pair in further.Where(p => p.Key.Contains(@".pretrained.")))
-            {
-                string start = pair.Key.StartsWith(ModelFiles.METRICS_RT + @".", StringComparison.Ordinal)
-                    ? pair.Key.Replace(@".pretrained.", @".finetuned.")
-                    : pair.Key.Replace(@".pretrained.", @"." + ms2Start + @".");
-                Check(first.TryGetValue(start, out double expected) && expected == pair.Value,
-                    @"fine-tuned further: start {0} {1}, the first training's {2} {3}", pair.Key, Format(pair.Value), start,
-                    first.TryGetValue(start, out double value) ? Format(value) : @"(missing)");
-            }
-            var model = CarafeModelFile.Open(TestData.RequireFile(Path.Combine(furtherFolder, CarafeModelFile.DEFAULT_FILE_NAME)));
-            bool beat = CarafeModelDirectory.Open(furtherFolder, true).UseFineTunedMs2;
-            Check(model.Ms2FromBase == (!beat && saved.Ms2Used) && model.BaseModels.Count == 1 && model.BaseModels[0].Sha256 == saved.FileSha256,
-                @"fine-tuned further: {0}; base {1} (SHA-256 {2}, the saved model's {3})", model.Describe(),
-                model.BaseModels.Count == 0 ? @"none" : model.BaseModels[0].File, model.BaseModels.Count == 0 ? @"-" : model.BaseModels[0].Sha256,
-                saved.FileSha256);
-        }
-
         private void CheckMetrics(Golden golden, RunMeasurement run)
         {
             foreach (var pair in golden.Metrics)
@@ -796,35 +605,6 @@ namespace pwiz.CarafeSharp.Test
             File.WriteAllLines(Path.Combine(runFolder, REPORT_FILE), _report);
             foreach (string line in _report)
                 TestContext.WriteLine(@"{0}", line);
-        }
-
-        /// <summary>The leg regression-run.json records; runs from before the chained leg are isolated.</summary>
-        private static string ReadLeg(string runFolder)
-        {
-            using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(runFolder, RUN_INFO_FILE)))))
-                return info.RootElement.TryGetProperty(@"leg", out var leg) ? leg.GetString() : @"isolated";
-        }
-
-        /// <summary>Every number of model_evaluation_metrics.json, keyed by its path.</summary>
-        private static IEnumerable<KeyValuePair<string, double>> ReadMetricValues(string path)
-        {
-            var values = new List<KeyValuePair<string, double>>();
-            using (var json = JsonDocument.Parse(File.ReadAllText(path)))
-                AddNumbers(json.RootElement, string.Empty, values);
-            return values;
-        }
-
-        private static void AddNumbers(JsonElement element, string prefix, List<KeyValuePair<string, double>> values)
-        {
-            if (element.ValueKind == JsonValueKind.Object)
-            {
-                foreach (var property in element.EnumerateObject())
-                    AddNumbers(property.Value, prefix.Length == 0 ? property.Name : prefix + @"." + property.Name, values);
-            }
-            else if (element.ValueKind == JsonValueKind.Number)
-            {
-                values.Add(new KeyValuePair<string, double>(prefix, element.GetDouble()));
-            }
         }
 
         private static string DescribeArgumentChange(IReadOnlyList<string> golden, IReadOnlyList<string> run)

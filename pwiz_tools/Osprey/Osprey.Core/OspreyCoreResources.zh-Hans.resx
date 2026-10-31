@@ -166,10 +166,6 @@
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>
   </data>
-  <data name="ResolutionModeExtension_LOCALIZED_VALUES_auto" xml:space="preserve">
-    <value>自动</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_unit" xml:space="preserve">
     <value>单位分辨率</value>
     <comment>Needs Review:New resource</comment>

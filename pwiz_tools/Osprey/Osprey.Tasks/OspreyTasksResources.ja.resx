@@ -521,14 +521,6 @@
     <value>「{0}」の第1パス中間ファイルの読み取りに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
-    <value>{0}には少なくとも2個の入力ファイル（{3}）が必要ですが、指定されたのは{1:N0}個です。{2}用に書き込まれる中間ファイルは、整合の対象となる他のランがある場合にのみ役立ちます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_" xml:space="preserve">
-    <value>{0}にはラン間整合が必要ですが、構成でオフになっています。{1}用に書き込まれる中間ファイルは、ラン間整合が実行される場合にのみ役立ちます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_" xml:space="preserve">
     <value>{0}の書き込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1431,10 +1423,6 @@
   </data>
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
     <value>{0}：{1}の書き込みをスキップします（レポートのみ）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
-    <value>FDR閾値を通過したプリカーサーがありません。空の{0}を書き込みます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_across__0__runs_to__3_" xml:space="preserve">

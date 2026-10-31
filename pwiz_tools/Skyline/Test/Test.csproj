@@ -49,6 +49,13 @@
     <Compile Include="..\Executables\DevTools\AssortResources\ResourceReference.cs" Link="AssortResources\ResourceReference.cs" />
   </ItemGroup>
 
+  <!-- SkylineNightly's interrupted-run diagnosis, linked in rather than referenced: the project
+       is a WinExe with its own package set, and these files depend on neither. -->
+  <ItemGroup>
+    <Compile Include="..\SkylineNightly\MachineState.cs" Link="SkylineNightly\MachineState.cs" />
+    <Compile Include="..\SkylineNightly\RunInterruption.cs" Link="SkylineNightly\RunInterruption.cs" />
+  </ItemGroup>
+
   <!-- protoc-generated code lives under ProtocolBuffers\GeneratedCode\ and is
        git-ignored, so a clean checkout has none. Regenerate it from the .proto
        via generatecode.bat and inject the result into @(Compile) here rather
@@ -118,9 +125,6 @@
     <EmbeddedResource Include="MSstats\RatPlasmaQuantileNormalizedProcessedData.csv" />
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithInteraction.csv" />
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithoutInteraction.csv" />
-    <EmbeddedResource Include="predict.speclib.tsv" />
-    <EmbeddedResource Include="predict_transformed.speclib.tsv" />
-    <EmbeddedResource Include="predict_transformed.speclib.blib" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
     <EmbeddedResource Include="Reporting\ResultSummaryPivot.skyr" />

@@ -41,6 +41,7 @@ namespace ImageComparer
         #region synchronized members
         private readonly object _lock = new object();
         private ScreenshotFile _fileToShow;
+        private int _imageCount;    // All screenshots in the open folder, changed or not
         private OldScreenshot _oldScreenshot;
         private OldScreenshot _newScreenshot;
         private ScreenshotDiff _diff;
@@ -290,7 +291,7 @@ namespace ImageComparer
         {
             toolStripPrevious.Enabled = toolStripFileList.SelectedIndex > 0;
             toolStripNext.Enabled = toolStripFileList.SelectedIndex < toolStripFileList.Items.Count - 1;
-            toolStripRevert.Enabled = _diff?.IsDiff ?? false;
+            toolStripAccept.Enabled = toolStripRevert.Enabled = _diff?.IsDiff ?? false;
             toolStripGotoWeb.Enabled = _fileToShow != null;
             UpdateChangeCount();
         }
@@ -299,7 +300,7 @@ namespace ImageComparer
         {
             int total = toolStripFileList.Items.Count;
             int current = toolStripFileList.SelectedIndex + 1;
-            labelChangeCount.Text = total > 0 ? $@"{current}/{total} changes" : string.Empty;
+            labelChangeCount.Text = total > 0 ? $@"{current}/{total} changes in {_imageCount} images" : string.Empty;
         }
 
         private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
@@ -607,6 +608,8 @@ namespace ImageComparer
                 toolStripFileList.Items.Clear();
             else
             {
+                _imageCount = Directory.EnumerateFiles(folderPath, "*.png", SearchOption.AllDirectories)
+                    .Count(ScreenshotFile.IsMatch);
                 var changedFiles = GitFileHelper.GetChangedFilePaths(folderPath);
                 var listScreenshots = changedFiles.Where(ScreenshotFile.IsMatch)
                     .OrderBy(s => s, StringComparer.InvariantCultureIgnoreCase)
@@ -650,6 +653,37 @@ namespace ImageComparer
                 toolStripFileList.SelectedIndex++;
         }
 
+        /// <summary>
+        /// Accepts the change to the current screenshot by staging it in Git, which also removes it
+        /// from the list of changes still to review, and moves on to the next screenshot.
+        /// </summary>
+        private void Accept()
+        {
+            var fileToShow = _fileToShow;
+            if (fileToShow == null)
+                return;
+            try
+            {
+                GitFileHelper.AcceptFile(fileToShow.Path);
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException(string.Format("Failed to accept screenshot {0}", fileToShow.Path), e);
+                return;
+            }
+
+            // The list is sorted, so after the accepted file leaves it, the same index is the next file
+            int index = toolStripFileList.SelectedIndex;
+            OpenFolder(Settings.Default.LastOpenFolder);
+            int count = toolStripFileList.Items.Count;
+            if (count > 0)
+            {
+                int next = Math.Min(Math.Max(index, 0), count - 1);
+                if (toolStripFileList.SelectedIndex != next)
+                    toolStripFileList.SelectedIndex = next;
+            }
+        }
+
         private void Revert()
         {
             string filePath = _fileToShow.Path;
@@ -661,7 +695,7 @@ namespace ImageComparer
             }
             try
             {
-                GitFileHelper.RevertFileToHead(filePath);
+                GitFileHelper.RevertFile(filePath);
                 RefreshScreenshots();
             }
             catch (Exception e)
@@ -753,6 +787,9 @@ namespace ImageComparer
                     return true;
 
                 // Actions
+                case Keys.F10:
+                    Accept();
+                    return true;
                 case Keys.Control | Keys.Z:
                 case Keys.F12:
                     Revert();
@@ -875,7 +912,7 @@ namespace ImageComparer
                     buttonImageSource.Image = Resources.gitsource;
                     helpTip.SetToolTip(buttonImageSource,
                         LineSeparate(_defaultImageSourceTipText.Split('\n').First(),
-                            "Current: Git HEAD"));
+                            "Current: Git (staged or HEAD)"));
                     break;
                 case ImageSource.disk:
                 default:
@@ -903,6 +940,11 @@ namespace ImageComparer
         private void toolStripFileList_SelectedIndexChanged(object sender, EventArgs e)
         {
             SetPath(toolStripFileList.SelectedItem as ScreenshotFile);
+        }
+
+        private void toolStripAccept_Click(object sender, EventArgs e)
+        {
+            Accept();
         }
 
         private void toolStripRevert_Click(object sender, EventArgs e)

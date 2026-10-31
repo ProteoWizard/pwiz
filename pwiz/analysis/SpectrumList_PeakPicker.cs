@@ -26,9 +26,13 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     private readonly IPeakDetector? _algorithm;
     private readonly IntegerSet _msLevels;
     private readonly bool _preferVendor;
-    private readonly Func<int, bool, Spectrum>? _vendorCentroidPath;
+    private readonly Func<int, DetailLevel, Spectrum>? _vendorCentroidPath;
     private readonly string _mode;
     private readonly DataProcessing _dp;
+
+    // cpp minDetailLevel_: raised for good the first time a spectrum read at a lower level lacks
+    // its profile/centroid term, so later reads go straight to a level that carries it.
+    private volatile DetailLevel _minDetailLevel = DetailLevel.InstantMetadata;
 
     /// <summary>MS levels this detector targets (anything outside passes through).</summary>
     public IntegerSet MsLevels => _msLevels;
@@ -126,7 +130,7 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
             // Hand the reader the MS-level set so it can gate internally, as cpp does. The
             // gate cannot live at our call site below: we only learn a spectrum's MS level by
             // reading it, and by then a vendor centroid has already been applied.
-            _vendorCentroidPath = (i, b) => vendor.GetCentroidSpectrum(i, b, _msLevels);
+            _vendorCentroidPath = (i, level) => vendor.GetCentroidSpectrum(i, level, _msLevels);
             _mode = vendor.VendorCentroidName;
         }
         else
@@ -158,14 +162,36 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     }
 
     /// <inheritdoc/>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+        GetSpectrum(index, getBinaryData ? DetailLevel.FullData : DetailLevel.FullMetadata);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden, as cpp's is, so the detail level reaches the vendor list. The base class turns
+    /// every level below <see cref="DetailLevel.FullData"/> into a full-metadata read, which for a
+    /// reader that centroids in its SDK (Sciex) meant fetching and centroiding the peaks to answer
+    /// a question about the ms level.
+    /// </remarks>
+    public override Spectrum GetSpectrum(int index, DetailLevel detailLevel)
     {
+        if (detailLevel < _minDetailLevel)
+            detailLevel = _minDetailLevel;
+
         var spec = _vendorCentroidPath is not null
-            ? _vendorCentroidPath(index, getBinaryData)
-            : Inner.GetSpectrum(index, getBinaryData);
+            ? _vendorCentroidPath(index, detailLevel)
+            : Inner.GetSpectrum(index, detailLevel >= DetailLevel.FullData);
 
         int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
         if (!_msLevels.Contains(msLevel)) return spec;
+
+        if (detailLevel < DetailLevel.FullMetadata && !spec.Params.HasCVParamChild(CVID.MS_spectrum_representation))
+        {
+            // Only ever raised: a concurrent read that started lower must not undo another's raise.
+            var raised = detailLevel + 1;
+            if (raised > _minDetailLevel)
+                _minDetailLevel = raised;
+            return GetSpectrum(index, raised);
+        }
 
         bool isCentroid = spec.Params.HasCVParam(CVID.MS_centroid_spectrum);
         if (isCentroid)
@@ -196,6 +222,10 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         }
         spec.Params.Set(CVID.MS_centroid_spectrum);
         spec.DataProcessing = _dp;
+
+        // Unlike cpp, no return here below full metadata: the inner list may have been read at
+        // full metadata anyway (the non-vendor path, and vendors serving the bool overload), and
+        // its defaultArrayLength would then be the profile count under a centroid term.
 
         // In vendor-prefer mode, the vendor list may decline to centroid some spectra
         // (e.g. Thermo only has a centroid stream for FTMS analyzers). Those come back with

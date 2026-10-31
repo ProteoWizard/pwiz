@@ -102,6 +102,36 @@ public class ArgParserTests
         // --numpressLinear takes an inline tolerance.
         Assert.AreEqual(1e-5,
             Invoke("in.mzML", "--numpressLinear", "1e-5").WriteConfig.EncoderConfig.NumpressLinearErrorTolerance, 1e-12);
+
+        // --numpressLinearAbsTol turns on linear numpress with an absolute accuracy in place of the relative one.
+        var absTol = Invoke("in.mzML", "--numpressLinearAbsTol", "1e-4").WriteConfig.EncoderConfig;
+        Assert.AreEqual(BinaryNumpress.Linear, absTol.NumpressOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
+        Assert.AreEqual(1e-4, absTol.NumpressLinearAbsMassAcc);
+        Assert.AreEqual(0, absTol.NumpressLinearErrorTolerance);
+        Assert.AreEqual(0, Invoke("in.mzML", "--numpressLinearAbsTol", "-1").WriteConfig.EncoderConfig.NumpressOverrides.Count);
+    }
+
+    [TestMethod]
+    public void Zlib_OnByDefaultAndOffWithValue()
+    {
+        Assert.AreEqual(BinaryCompression.Zlib, Invoke("in.mzML").WriteConfig.EncoderConfig.Compression);
+        var cases = new (string Arg, BinaryCompression Expected)[]
+        {
+            ("--zlib", BinaryCompression.Zlib),
+            ("-z", BinaryCompression.Zlib),
+            ("--zlib=off", BinaryCompression.None),
+            ("--zlib=false", BinaryCompression.None),
+            ("--zlib=0", BinaryCompression.None),
+            ("--zlib=on", BinaryCompression.Zlib),
+        };
+        foreach (var (arg, expected) in cases)
+            Assert.AreEqual(expected, Invoke("in.mzML", arg).WriteConfig.EncoderConfig.Compression, arg);
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--zlib=maybe"));
+
+        // Numpress arrays follow the zlib setting.
+        var numpress = Invoke("in.mzML", "--zlib=off", "--numpressAll").WriteConfig.EncoderConfig;
+        Assert.AreEqual(BinaryCompression.None, numpress.Compression);
+        Assert.AreEqual(0, numpress.CompressionOverrides.Count);
     }
 
     [TestMethod]
@@ -150,13 +180,22 @@ public class ArgParserTests
     [TestMethod]
     public void Zstd_SwitchesMatchCpp()
     {
-        // --zstd replaces zlib everywhere, including the zlib numpress stacks on its arrays, in
-        // whichever order the switches come.
-        foreach (var args in new[] { new[] { "in.mzML", "--zstd", "--numpressLinear" }, new[] { "in.mzML", "--numpressLinear", "-z", "--zstd" } })
+        // The compression an array is written with: its override, else the global setting.
+        static BinaryCompression Effective(BinaryEncoderConfig encoder, CVID type) =>
+            encoder.CompressionOverrides.GetValueOrDefault(type, encoder.Compression);
+
+        // --zstd replaces zlib everywhere, including on the numpress arrays, in whichever order
+        // the switches come, and even with zlib turned off.
+        foreach (var args in new[]
+                 {
+                     new[] { "in.mzML", "--zstd", "--numpressLinear" },
+                     new[] { "in.mzML", "--numpressLinear", "-z", "--zstd" },
+                     new[] { "in.mzML", "--zstd", "--zlib=off" },
+                 })
         {
             var encoder = Invoke(args).WriteConfig.EncoderConfig;
             Assert.AreEqual(BinaryCompression.Zstd, encoder.Compression, string.Join(" ", args));
-            Assert.AreEqual(BinaryCompression.Zstd, encoder.CompressionOverrides[CVID.MS_m_z_array], string.Join(" ", args));
+            Assert.AreEqual(BinaryCompression.Zstd, Effective(encoder, CVID.MS_m_z_array), string.Join(" ", args));
         }
 
         // --mzShuffleZstd shuffles m/z and time and leaves the rest on zlib.
@@ -180,7 +219,7 @@ public class ArgParserTests
             var fromFile = Invoke("in.mzML", "-c", tmp, "--numpressSlof").WriteConfig.EncoderConfig;
             Assert.AreEqual(BinaryCompression.Zstd, fromFile.Compression);
             Assert.AreEqual(BinaryCompression.DictZstd, fromFile.CompressionOverrides[CVID.MS_m_z_array]);
-            Assert.AreEqual(BinaryCompression.Zstd, fromFile.CompressionOverrides[CVID.MS_intensity_array]);
+            Assert.AreEqual(BinaryCompression.Zstd, Effective(fromFile, CVID.MS_intensity_array));
         }
         finally { File.Delete(tmp); }
 
@@ -220,6 +259,12 @@ public class ArgParserTests
         Assert.ThrowsException<ArgumentException>(() => Invoke("--notanoption"), "unknown option");
         Assert.ThrowsException<ArgumentException>(() => Invoke(), "no input files");
         Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--filter"), "missing value");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "-o", "--mzXML"), "option name as value");
+
+        // A file list or config file that cannot be read is a command-line error, not a crash.
+        string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "-c", missing), "missing config file");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("-f", missing), "missing file list");
     }
 
     [TestMethod]
@@ -267,7 +312,8 @@ public class ArgParserTests
         // under its own name (aliases such as --32-bit and -h are accepted but not shown).
         string usage = ArgParser.Usage();
         string[] undocumented = { "--mzml", "--MGF", "--output-path", "--32-bit", "--32bit", "--64-bit", "--64bit", "--runIndex", "-h" };
-        foreach (string name in ArgParser.OptionNames.Except(undocumented))
+        string[] unsupported = { "--mz5", "--text" };
+        foreach (string name in ArgParser.OptionNames.Except(undocumented).Except(unsupported))
         {
             // "  --name", or "  -n [ --name ]" for an option with a short name
             bool shown = name.StartsWith("--", StringComparison.Ordinal)
@@ -282,6 +328,10 @@ public class ArgParserTests
         StringAssert.Contains(usage, "\n  --mzMLbChunkSize arg (=1048576) ");
         StringAssert.Contains(usage, "\n  --numpressLinear [arg(=2.0e-09)] ");
         StringAssert.Contains(usage, "\n  --mzML ");
+        StringAssert.Contains(usage, "\n  -z [ --zlib ] [=arg(=1)] ");
+        foreach (string name in unsupported)
+            Assert.IsFalse(usage.Contains("\n  " + name + " ", StringComparison.Ordinal), $"{name} is in the help");
+        Assert.IsFalse(usage.Contains("mz5", StringComparison.Ordinal), "the help offers mz5");
     }
 
     [TestMethod]
@@ -291,6 +341,16 @@ public class ArgParserTests
         Assert.IsTrue(HelpFor("-h").Detailed);
         Assert.IsTrue(HelpFor("in.mzML", "--doc").Doc, "inputs alongside a help flag still get help");
         Assert.AreEqual("msLevel", HelpFor("--help-filter", "msLevel").FilterName);
+        Assert.AreEqual("msLevel", HelpFor("--help-filter=msLevel").FilterName);
+
+        // Help wins over anything else wrong with the command line, and comes before any file is read.
+        string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
+        Assert.IsTrue(HelpFor("--help", "-o").Detailed);
+        Assert.IsTrue(HelpFor("-o", "--help").Detailed, "an option's name is not taken as a value");
+        Assert.IsTrue(HelpFor("--notanoption", "--help").Detailed);
+        Assert.IsTrue(HelpFor("-c", missing, "--help").Detailed);
+        Assert.IsTrue(HelpFor("-f", missing, "--doc").Doc);
+        Assert.IsTrue(HelpFor("--mz5", "--help").Detailed);
 
         // --help: details for every filter, ending with the version block.
         string help = ArgParser.HelpText(HelpFor("--help"));
@@ -314,6 +374,8 @@ public class ArgParserTests
         // --help-filter: that filter's details, or the filter names for an unknown one.
         StringAssert.StartsWith(ArgParser.HelpText(HelpFor("--help-filter", "msLevel")),
             "msLevel <mslevels>\nThis filter selects only spectra");
+        StringAssert.StartsWith(ArgParser.HelpText(HelpFor("--help-filter", "mslevel")), "msLevel <mslevels>\n",
+            "filter names ignore case, as in --filter");
         StringAssert.StartsWith(ArgParser.HelpText(HelpFor("--help-filter", "bogus")), "Invalid filter name: bogus\n");
     }
 
@@ -345,6 +407,38 @@ public class ArgParserTests
             Assert.AreEqual(BinaryCompression.Zlib, c.WriteConfig.EncoderConfig.Compression);
             Assert.IsFalse(c.WriteConfig.Gzip);
             CollectionAssert.AreEqual(new[] { "index [3,7]" }, c.Filters);
+
+            // Switches that are on by default turn off; boost's yes/no words count; an optional
+            // number takes a boolean; options with values all reach the config.
+            File.WriteAllLines(tmp, new[]
+            {
+                "zlib=off", "mgf=no", "singleThreaded=true", "numpressLinear = 1e-6", "mzMLbChunkSize=4096",
+                "mzMLbCompressionLevel=2", "mzTruncation=7", "mzDelta=yes", "inten32",
+            });
+            c = Invoke("in.mzML", "-c", tmp);
+            CollectionAssert.AreEqual(new[] { "in.mzML" }, c.InputFiles, "optional-number values are not input files");
+            var encoder = c.WriteConfig.EncoderConfig;
+            Assert.AreEqual(BinaryCompression.None, encoder.Compression);
+            Assert.AreEqual(WriteFormat.Mzml, c.WriteConfig.Format);
+            Assert.AreEqual(1, c.SingleThreaded);
+            Assert.AreEqual(1e-6, encoder.NumpressLinearErrorTolerance);
+            Assert.AreEqual(4096, c.WriteConfig.MzMLbChunkSize);
+            Assert.AreEqual(2, c.WriteConfig.MzMLbCompressionLevel);
+            Assert.AreEqual(7, encoder.TruncationOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
+            Assert.AreEqual(BinaryPrediction.Delta, encoder.PredictionOverrides[Pwiz.Data.Common.Cv.CVID.MS_m_z_array]);
+            Assert.AreEqual(0, Invoke("in.mzML", "-c", tmp, "--singleThreaded", "0").SingleThreaded);
+
+            // An option on the command line overrides the config file, wherever -c is.
+            var precision = Invoke("in.mzML", "--inten64", "-c", tmp).WriteConfig.EncoderConfig.PrecisionOverrides;
+            Assert.AreEqual(BinaryPrecision.Bits64, precision[Pwiz.Data.Common.Cv.CVID.MS_intensity_array]);
+            Assert.AreEqual(BinaryCompression.Zlib, Invoke("in.mzML", "-c", tmp, "--zlib").WriteConfig.EncoderConfig.Compression);
+            Assert.IsFalse(Invoke("in.mzML", "-c", tmp, "--mzDelta=false").MzDelta, "a later off cancels an earlier on");
+            Assert.AreEqual(0, Invoke("in.mzML", "-c", tmp, "--singleThreaded=false").SingleThreaded);
+            Assert.IsTrue(Invoke("in.mzML", "--mzDelta=false", "--mzDelta").MzDelta, "a later on wins over an earlier off");
+
+            // A bad line names the config file.
+            File.WriteAllLines(tmp, new[] { "notanoption=1" });
+            StringAssert.Contains(Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "-c", tmp)).Message, tmp);
         }
         finally { File.Delete(tmp); }
     }

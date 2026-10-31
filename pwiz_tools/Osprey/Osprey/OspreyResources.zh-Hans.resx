@@ -463,4 +463,16 @@
     <value>未指定谱图库。请使用 {0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OspreyCommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
+    <value>路径/到/文件</value>
+  </data>
+  <data name="OspreyCommandArgs_PATH_TO_FOLDER" xml:space="preserve">
+    <value>路径/到/文件夹</value>
+  </data>
+  <data name="OspreyCommandArgs_INT_VALUE" xml:space="preserve">
+    <value>&lt;整数&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_NUM_VALUE" xml:space="preserve">
+    <value>&lt;数&gt;</value>
+  </data>
 </root>

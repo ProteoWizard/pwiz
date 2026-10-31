@@ -1116,8 +1116,10 @@ namespace pwiz.Osprey.Tasks
                 ctx.TryGet<FirstPassPercolatorModel>(out var frozen) && frozen?.Results != null;
             if (haveInputs && OspreyEnvironment.Pass2ProteinCompact)
             {
+                // An empty stratum is an input (no protein had 2 or more detected peptides);
+                // only a missing one is not. If nothing passes, the .blib write says so.
                 haveInputs = ctx.TryGet<ProteinCompactStratum>(out var pcStratum) &&
-                             pcStratum?.BaseIds != null && pcStratum.BaseIds.Count > 0;
+                             pcStratum?.BaseIds != null;
                 if (haveInputs)
                     stratum = pcStratum.BaseIds;
             }

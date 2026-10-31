@@ -126,6 +126,7 @@ namespace pwiz.Skyline
         public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
+        public static bool AiConnector { get; set; }                // Set true to register each test's Skyline with the MCP (TestRunner aiconnector=on), so a session can drive a paused test
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
 
         public static int PauseSeconds
@@ -377,8 +378,11 @@ namespace pwiz.Skyline
                 // BeginInvokeOnUiThread, which target whichever of those windows is currently up. Only the JSON
                 // server actually comes up here: with no main window yet there is nothing for the legacy
                 // ToolService to bind to, and nothing needs it until an external tool is run.
+                // A functional test run with aiconnector=on registers the same way, so an MCP client can
+                // discover and drive the test's Skyline while the test is paused (the test harness
+                // pre-approves screen capture for the process, as McpConnectorTest does).
                 MainToolServiceName = Guid.NewGuid().ToString();
-                if (Settings.Default.EnableMcpAutoConnect)
+                if (Settings.Default.EnableMcpAutoConnect || AiConnector)
                 {
                     StartToolService();
                     MainJsonToolServer.WriteConnectionInfo();

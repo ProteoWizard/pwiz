@@ -278,15 +278,6 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to auto.
-        /// </summary>
-        public static string ResolutionModeExtension_LOCALIZED_VALUES_auto {
-            get {
-                return ResourceManager.GetString("ResolutionModeExtension_LOCALIZED_VALUES_auto", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to HRAM.
         /// </summary>
         public static string ResolutionModeExtension_LOCALIZED_VALUES_HRAM {

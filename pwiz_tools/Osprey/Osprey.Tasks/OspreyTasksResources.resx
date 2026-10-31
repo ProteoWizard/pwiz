@@ -418,12 +418,6 @@
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>Failed to read the first-pass intermediate file for '{0}': {1}</value>
   </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
-    <value>{0} requires at least 2 input files ({3}), but {1:N0} were given. The intermediate files it writes for {2} are only useful when there are other runs to reconcile against.</value>
-  </data>
-  <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_" xml:space="preserve">
-    <value>{0} requires cross-run reconciliation, which the configuration turns off. The intermediate files it writes for {1} are only useful when cross-run reconciliation runs.</value>
-  </data>
   <data name="FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_" xml:space="preserve">
     <value>Failed to write {0}: {1}</value>
   </data>
@@ -1147,9 +1141,6 @@
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
     <value>{0}: skipping the {1} write (report only).</value>
   </data>
-  <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
-    <value>No precursors pass the FDR threshold. Writing an empty {0}.</value>
-  </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_Wrote__1__library_spectra_with__2__peaks_across__0__runs_to__3_" xml:space="preserve">
     <value>Wrote {1:N0} library spectra with {2:N0} peaks across {0:N0} runs to {3}</value>
   </data>
@@ -1341,5 +1332,11 @@
   </data>
   <data name="Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files" xml:space="preserve">
     <value>Cross-run consensus across {0:N0} files</value>
+  </data>
+  <data name="FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_" xml:space="preserve">
+    <value>No precursor passed the first pass against {0}: none has a run-level peptide q-value at or below {1} ({2}) or a protein q-value at or below {3} ({4}), so the second pass has nothing to search and there is nothing to report. Check that the library suits these runs and that the thresholds are intended.</value>
+  </data>
+  <data name="SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_" xml:space="preserve">
+    <value>No precursor passed the second pass against {0}: none has an experiment-level q-value at or below {1} ({2}), so no {3} was written. Check that the library suits these runs and that the threshold is intended.</value>
   </data>
 </root>

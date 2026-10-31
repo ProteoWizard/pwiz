@@ -169,7 +169,7 @@ namespace pwiz.Osprey.Tasks
         /// between training and protein FDR legitimately has the model and no stratum - that is
         /// not a reason to reject the model. The two pair only when their stamps match: the same
         /// FirstPassFDR run stamps both alike, and a stratum left by an earlier run under another
-        /// key - this run computed an empty one and wrote none, or its write failed - would
+        /// key - this run's own stratum write failed - would
         /// otherwise be published with this run's model. An unpaired model loads with no stratum,
         /// and the caller's mode gate decides whether that is fatal.</para>
         /// </summary>
@@ -272,6 +272,12 @@ namespace pwiz.Osprey.Tasks
         /// nothing) when there is no stratum to persist, so the caller does not advertise an
         /// artifact a consumer cannot use.
         ///
+        /// <para>An EMPTY stratum is written like any other: no protein had 2 or more detected
+        /// peptides (a library with one protein per peptide gives this), which is a result.
+        /// Writing no file for it made it indistinguishable from a stratum that was never
+        /// computed, which PerFileRescoring refuses with advice to run FirstPassFDR again -
+        /// advice that cannot help, since the run would compute the same empty stratum.</para>
+        ///
         /// <para>Its own file, written when first-pass protein FDR ends, because that is the
         /// phase that computes it - the rule that keeps every artifact write-once. Bundling it
         /// with the model would force both to wait for the later phase.</para>
@@ -284,7 +290,7 @@ namespace pwiz.Osprey.Tasks
         {
             if (stamp == null)
                 throw new ArgumentNullException(nameof(stamp));
-            if (stratumBaseIds == null || stratumBaseIds.Count == 0)
+            if (stratumBaseIds == null)
                 return false;
 
             var sortedBaseIds = new uint[stratumBaseIds.Count];
@@ -362,7 +368,8 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Load a persisted protein-compact stratum, or null when <paramref name="path"/> is
-        /// absent, unreadable or carries no ids. Null-on-unreadable for the same reason
+        /// absent or unreadable. A file that lists no ids is an empty stratum, not a missing one
+        /// (see <see cref="SaveStratum"/>). Null-on-unreadable for the same reason
         /// <see cref="Load"/> is: a caller that cannot get the stratum must fall back to
         /// recomputing it, not crash.
         /// </summary>
@@ -374,8 +381,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 var dto = JsonConvert.DeserializeObject<StratumDto>(File.ReadAllText(path));
-                if (dto == null || dto.SchemaVersion != 1 ||
-                    dto.StratumBaseIds == null || dto.StratumBaseIds.Length == 0)
+                if (dto == null || dto.SchemaVersion != 1 || dto.StratumBaseIds == null)
                     return null;
                 return new HashSet<uint>(dto.StratumBaseIds);
             }

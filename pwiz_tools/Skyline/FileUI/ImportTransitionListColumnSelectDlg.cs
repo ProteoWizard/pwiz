@@ -197,6 +197,8 @@ namespace pwiz.Skyline.FileUI
             _associateProteinsMode = AssociateProteinsMode.preview;
 
             InitializeComponent();
+            // The combo box strip must blend with the empty area of the grid, whose default color changed in .NET 10
+            comboPanelOuter.BackColor = comboPanelInner.BackColor = dataGrid.BackgroundColor;
 
             if (assayLibrary) // Dialog title should be "Import Assay Library:Identify Columns" instead of "Transition List:Identify Columns"
             {

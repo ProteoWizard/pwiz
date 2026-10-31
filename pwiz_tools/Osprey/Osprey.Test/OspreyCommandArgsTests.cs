@@ -28,6 +28,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
@@ -99,6 +100,11 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML", @"a.mzML", @"b.mzML" },
                     Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath, OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
+                // --training-input-list is the same list for the tuning runs, after any --training-input.
+                CollectionAssert.AreEqual(new[] { @"t.mzML", @"a.mzML", @"b.mzML" },
+                    Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_TRAINING_INPUT + @"t.mzML",
+                        OspreyCommandArgs.ARG_TRAINING_INPUT_LIST + listPath).LibraryBuild.TrainingInputs.ToArray());
+
                 // A list that names nothing is fatal, not an empty cohort.
                 File.WriteAllLines(listPath, new[] { @"# nothing but a comment", string.Empty });
                 Assert.ThrowsException<InvalidDataException>(() => Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath));
@@ -111,6 +117,27 @@ namespace pwiz.Osprey.Test
             // A missing list is fatal too - the path is the operator's whole input set.
             Assert.ThrowsException<FileNotFoundException>(
                 () => Parse(OspreyCommandArgs.ARG_INPUT_LIST + Path.Combine(Path.GetTempPath(), @"osprey-no-such-list.txt")));
+        }
+
+        [TestMethod]
+        public void TestPrecursorsArg()
+        {
+            // --precursors enables the library build without a FASTA; the phase is Program's to set
+            // from --task, and the rules (the phase required, no FASTA beside it) are its too.
+            var config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            Assert.AreEqual(@"input.tsv", config.LibraryBuild.PrecursorTablePath);
+            Assert.IsNull(config.LibraryBuild.FastaPath);
+            Assert.IsTrue(config.LibraryBuild.Enabled);
+            Assert.AreEqual(0, config.LibraryBuild.OptionsWithoutFasta.Count);
+            // A saved model and the device apply to the table's prediction as to a FASTA's
+            config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", OspreyCommandArgs.ARG_MODEL + @"m.model.zip", OspreyCommandArgs.ARG_DEVICE + @"cpu");
+            Assert.AreEqual(@"m.model.zip", config.LibraryBuild.ModelPath);
+            Assert.AreEqual(@"cpu", config.LibraryBuild.Device);
+            Assert.AreEqual(0, config.LibraryBuild.OptionsWithoutFasta.Count);
+            Assert.AreEqual(0, config.LibraryBuild.DigestOptionsWithPrecursors.Count);
+            // A digest option is recorded by name, for Program to refuse: a table is not digested
+            config = Parse(OspreyCommandArgs.ARG_PRECURSORS + @"input.tsv", CarafeCommandLine.ARG_MISS_C + @"0", CarafeCommandLine.ARG_NCE + @"28");
+            CollectionAssert.AreEqual(new[] { CarafeCommandLine.ARG_MISS_C.ArgumentText }, config.LibraryBuild.DigestOptionsWithPrecursors);
         }
 
         [TestMethod]
@@ -133,8 +160,6 @@ namespace pwiz.Osprey.Test
             // Backslashes before the closing quote or an embedded quote are doubled, so the text parses back.
             Assert.AreEqual(@"""C:\out dir\\""", CommandLineText.Quote(@"C:\out dir\"));
             Assert.AreEqual(@"""a\\\""b c""", CommandLineText.Quote(@"a\""b c"));
-
-            Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.
             var work = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w");
@@ -387,8 +412,7 @@ namespace pwiz.Osprey.Test
             var commaDecimal = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
             var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
-            string ospreySeparator = ArgUsage.ArgumentValueSeparator;
-            var ospreyProvider = ArgUsage.ValueFormatProvider;
+            var osprey = ArgUsage.Current;
             var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
             try
             {
@@ -399,17 +423,15 @@ namespace pwiz.Osprey.Test
 
                 // A host that parses in the current culture leaves the provider unset and gets
                 // the value the way its user would type it.
-                ArgUsage.ValueFormatProvider = null;
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ArgumentValueSeparator = osprey.ArgumentValueSeparator });
                 Assert.AreEqual(argTolerance.ArgumentText + @" 0,5", argTolerance + 0.5);
-                ArgUsage.ValueFormatProvider = ospreyProvider;
 
-                ArgUsage.ArgumentValueSeparator = @"=";
+                ArgUsage.Install(new ArgUsageSettings { Grammar = osprey.Grammar, Provider = osprey.Provider, ValueFormatProvider = osprey.ValueFormatProvider });
                 Assert.AreEqual(argThreads.ArgumentText + @"=8", argThreads + 8);
             }
             finally
             {
-                ArgUsage.ArgumentValueSeparator = ospreySeparator;
-                ArgUsage.ValueFormatProvider = ospreyProvider;
+                ArgUsage.Install(osprey);
                 System.Threading.Thread.CurrentThread.CurrentCulture = culture;
             }
 
@@ -538,7 +560,8 @@ namespace pwiz.Osprey.Test
             var hosted = OspreyCommandArgs.HostedArguments.ToList();
             Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(a => !a.IsHosted), declared.Count,
                 @"Every declared argument must be in a help group");
-            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count, hosted.Count);
+            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count +
+                            CarafeCommandLine.HostedTrainingArguments.Count, hosted.Count);
             Assert.AreEqual(hosted.Count, OspreyCommandArgs.AllArguments.Count(a => a.IsHosted));
             foreach (var arg in hosted)
             {
@@ -573,13 +596,122 @@ namespace pwiz.Osprey.Test
             // declarations use; the prefix is the one thing that could still differ.
             Assert.AreEqual(OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyArgNames.Text(OspreyArgNames.TASK));
 
-            // And no orphans: every usage string belongs to a declared, non-internal argument.
+            // A property's label is under its usage key with the property suffix, for every one
+            // of Osprey's own arguments that is a property (a hosted one is labeled by CarafeSharp).
+            var propertyKeys = new HashSet<string>();
+            foreach (var arg in declared.Where(a => a.PropertyName != null))
+            {
+                string key = OspreyCommandArgs.UsageKey(arg.Name) + CarafeCommandLine.PROPERTY_SUFFIX;
+                propertyKeys.Add(key);
+                Assert.IsFalse(string.IsNullOrEmpty(OspreyCommandArgUsage.ResourceManager.GetString(key)),
+                    string.Format(@"Property {0} has no label {1} in OspreyCommandArgUsage.resx", arg.Name, key));
+                Assert.AreEqual(OspreyCommandArgUsage.ResourceManager.GetString(key), arg.PropertyName());
+            }
+
+            // And no orphans: every usage string belongs to a declared, non-internal argument, and
+            // every label to a property.
             var resourceSet = OspreyCommandArgUsage.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(resourceSet);
             foreach (DictionaryEntry entry in resourceSet)
             {
-                Assert.IsTrue(usageKeys.Contains((string) entry.Key),
-                    string.Format(@"OspreyCommandArgUsage.resx key {0} matches no argument", entry.Key));
+                string key = (string) entry.Key;
+                bool isLabel = key.EndsWith(CarafeCommandLine.PROPERTY_SUFFIX);
+                Assert.IsTrue(isLabel ? propertyKeys.Contains(key) : usageKeys.Contains(key),
+                    string.Format(@"OspreyCommandArgUsage.resx key {0} matches no argument", key));
+            }
+        }
+
+        /// <summary>
+        /// The properties a host builds its settings page from (<c>--help properties</c>): every
+        /// argument that is a setting of a run is one, with a label, a description, a scope and a
+        /// type, a default that is one of a list's values or a number within its range, and the
+        /// arguments that are not settings - inputs, outputs, commands, internal switches - are
+        /// exactly the ones listed here, so a new argument must be declared one or the other.
+        /// </summary>
+        [TestMethod]
+        public void TestPropertiesExport()
+        {
+            var notProperties = new[]
+            {
+                OspreyArgNames.INPUT, @"input-list", OspreyArgNames.LIBRARY, OspreyArgNames.OUTPUT, @"work-dir",
+                OspreyArgNames.OUTPUT_DIR, @"export-library", OspreyArgNames.FASTA, OspreyArgNames.PRECURSORS,
+                OspreyArgNames.TRAINING_INPUT, OspreyArgNames.TRAINING_INPUT_LIST, OspreyArgNames.MODEL,
+                OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
+                OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
+                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"version", @"culture",
+                // Developer options and outputs a user of a host's settings page has no use for
+                OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
+                @"training-export-xics", @"diagnostics", @"perf-stats",
+                // CarafeSharp's, hosted: the training seed
+                CarafeCommandLine.ARG_SEED.Name,
+            };
+            var all = OspreyCommandArgs.AllArguments.ToList();
+            CollectionAssert.AreEquivalent(notProperties, all.Where(a => a.PropertyName == null).Select(a => a.Name).ToList(),
+                @"An argument is a setting (Scope) or is listed here as none");
+            var properties = all.Where(a => a.PropertyName != null).ToList();
+            Assert.IsTrue(properties.All(a => a.Scope.HasValue));
+            // A hosted argument that is a setting is labeled by CarafeSharp, and one that is not has no label there
+            foreach (var arg in all.Where(a => a.IsHosted))
+                Assert.AreEqual(CarafeCommandLine.GetPropertyName(arg.Name), arg.PropertyName?.Invoke(), arg.Name);
+
+            string json;
+            using (var writer = new StringWriter())
+            {
+                OspreyCommandArgs.PrintUsage(OspreyProperties.HELP_FORMAT, writer);
+                json = writer.ToString();
+            }
+            Assert.AreEqual(OspreyProperties.Generate(), json);
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            Assert.AreEqual(@"Osprey", root.GetProperty(OspreyProperties.FIELD_TOOL).GetString());
+            Assert.AreEqual(OspreyVersion.DisplayVersion, root.GetProperty(OspreyProperties.FIELD_VERSION).GetString());
+            var exported = root.GetProperty(OspreyProperties.FIELD_PROPERTIES).EnumerateArray().ToList();
+            Assert.AreEqual(properties.Count, exported.Count);
+            var types = Enum.GetNames(typeof(ArgumentPropertyType));
+            var scopes = Enum.GetNames(typeof(OspreyPropertyScope));
+            foreach (var element in exported)
+            {
+                string name = element.GetProperty(OspreyProperties.FIELD_NAME).GetString();
+                var arg = properties.First(a => a.Name == name);
+                Assert.IsFalse(string.IsNullOrEmpty(element.GetProperty(OspreyProperties.FIELD_LABEL).GetString()), name);
+                Assert.IsFalse(string.IsNullOrEmpty(element.GetProperty(OspreyProperties.FIELD_DESCRIPTION).GetString()), name);
+                Assert.IsFalse(string.IsNullOrEmpty(element.GetProperty(OspreyProperties.FIELD_GROUP).GetString()), name);
+                CollectionAssert.Contains(scopes, element.GetProperty(OspreyProperties.FIELD_SCOPE).GetString(), name);
+                string type = element.GetProperty(OspreyProperties.FIELD_TYPE).GetString();
+                CollectionAssert.Contains(types, type, name);
+                Assert.AreEqual(arg.EffectivePropertyType.ToString(), type, name);
+                bool hasDefault = element.TryGetProperty(OspreyProperties.FIELD_DEFAULT, out var defaultElement);
+                string defaultValue = hasDefault ? defaultElement.GetString() : null;
+                bool hasValues = element.TryGetProperty(OspreyProperties.FIELD_VALUES, out var valuesElement);
+                Assert.AreEqual(type == ArgumentPropertyType.list.ToString(), hasValues, name);
+                if (hasValues)
+                {
+                    var values = valuesElement.EnumerateArray().Select(v => v.GetString()).ToList();
+                    CollectionAssert.AreEqual(arg.Values, values, name);
+                    if (hasDefault)
+                        CollectionAssert.Contains(values, defaultValue, name);
+                }
+                bool hasMin = element.TryGetProperty(OspreyProperties.FIELD_MIN, out var minElement);
+                bool hasMax = element.TryGetProperty(OspreyProperties.FIELD_MAX, out var maxElement);
+                bool isNumber = type == ArgumentPropertyType.number.ToString() || type == ArgumentPropertyType.integer.ToString();
+                Assert.IsTrue(isNumber || !(hasMin || hasMax), name + @": a range needs a number");
+                if (isNumber && hasDefault)
+                {
+                    Assert.IsTrue(double.TryParse(defaultValue, NumberStyles.Float, CultureInfo.InvariantCulture, out double d), name);
+                    Assert.IsTrue(!hasMin || d >= minElement.GetDouble(), name);
+                    Assert.IsTrue(!hasMax || d <= maxElement.GetDouble(), name);
+                }
+                if (type == ArgumentPropertyType.flag.ToString())
+                    Assert.IsFalse(hasDefault, name + @": a flag has no default to name");
+                Assert.AreEqual(arg.OptionalValue, element.TryGetProperty(OspreyProperties.FIELD_OPTIONAL, out _), name);
+            }
+            // The export follows the UI culture: a translated language keeps every label (English
+            // until translated, since the resources fall back), and the culture is recorded.
+            using (new CultureScope(CultureInfo.GetCultureInfo(@"ja")))
+            {
+                using var jaDocument = JsonDocument.Parse(OspreyProperties.Generate());
+                Assert.AreEqual(@"ja", jaDocument.RootElement.GetProperty(OspreyProperties.FIELD_CULTURE).GetString());
+                Assert.AreEqual(exported.Count, jaDocument.RootElement.GetProperty(OspreyProperties.FIELD_PROPERTIES).GetArrayLength());
             }
         }
 
@@ -623,6 +755,10 @@ namespace pwiz.Osprey.Test
             string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
             StringAssert.Contains(filtered, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
+            // The enzyme and modification tables come with the digest section that refers to them.
+            string digest = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Library_Digest);
+            StringAssert.Contains(digest, EnzymeTable.All.Last().Name);
+            StringAssert.Contains(digest, CarafeModification.TopModifications.Last().Name);
 
             // unknown section: a helpful message, no crash.
             Assert.AreEqual(string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,

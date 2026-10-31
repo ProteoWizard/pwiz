@@ -147,6 +147,12 @@ namespace ZedGraph
 		/// </summary>
 		private float _legendGroupNamesMaxWidth;
 
+		/// <summary>
+		/// Temp field: true if any legend entry has a legend group name. Valid only during draw.
+		/// Without groups, the legend keeps its original layout, which tutorial screenshots match.
+		/// </summary>
+		private bool _hasLegendGroups;
+
 	#endregion
 
 	#region Defaults
@@ -648,7 +654,7 @@ namespace ZedGraph
 							x = _rect.Left + halfGap / 2.0F + _legendGroupNamesMaxWidth +
 								( iWithinGroup % curHStack ) * curItemWidth;
 							y = _rect.Top + ( currentRow + iWithinGroup / curHStack ) * _legendItemHeight;
-                            y += halfGap / 2.0F; // Give margin to top of legend
+                            y += _hasLegendGroups ? halfGap / 2.0F : 3; // Give margin to top of legend
 
 							// Draw the legend label for the current curve
 							FontSpec tmpFont = ( curve._label._fontSpec != null ) ?
@@ -854,6 +860,7 @@ namespace ZedGraph
 					gapPix = _gap * _tmpSize;
 
 			_legendGroupNamesMaxWidth = 0;
+			_hasLegendGroups = false;
 			var calcGroupSizes = new System.Collections.Generic.List<int>();
 			var calcGroupMaxWidths = new System.Collections.Generic.List<float>();
 			var calcGroupHasSymbols = new System.Collections.Generic.List<bool>();
@@ -891,6 +898,7 @@ namespace ZedGraph
 							calcGroupName = curveGroupName;
 							if ( !string.IsNullOrEmpty( curveGroupName ) )
 							{
+								_hasLegendGroups = true;
 								var boldFont = (FontSpec)this.FontSpec.Clone();
 								boldFont.IsBold = true;
 								float dw = boldFont.GetWidth( g, curveGroupName, scaleFactor ) + halfGap;
@@ -986,31 +994,63 @@ namespace ZedGraph
 
 			}
 
-			// Compute per-group item widths and column counts
-			_groupItemWidths = new float[calcGroupSizes.Count];
-			_groupHStacks = new int[calcGroupSizes.Count];
 			float maxGroupRowWidth = 0;
-			for ( int gi = 0; gi < calcGroupSizes.Count; gi++ )
+			if ( !_hasLegendGroups )
 			{
-				float gMaxW = gi < calcGroupMaxWidths.Count ? calcGroupMaxWidths[gi] : 0;
-				bool gHasSymbols = gi < calcGroupHasSymbols.Count && calcGroupHasSymbols[gi];
-				float gItemWidth = _isShowLegendSymbols ? ( gHasSymbols ? 3.0f : 4.5f ) * _tmpSize + gMaxW : 1.0f * _tmpSize + gMaxW;
-				int gHStack = 1;
-				if ( _isHStack && gMaxW > 0 && widthAvail > 0 )
-				{
-					gHStack = (int)( ( widthAvail - halfGap - _legendGroupNamesMaxWidth ) / gItemWidth );
-					if ( gHStack > calcGroupSizes[gi] ) gHStack = calcGroupSizes[gi];
-					if ( gHStack == 0 ) gHStack = 1;
-				}
-				_groupItemWidths[gi] = gItemWidth;
-				_groupHStacks[gi] = gHStack;
-				float gRowWidth = _legendGroupNamesMaxWidth + gHStack * gItemWidth;
-				if ( gRowWidth > maxGroupRowWidth ) maxGroupRowWidth = gRowWidth;
-			}
+				// Without legend groups, use the original layout: one entry width and column
+				// count for all entries.
+				if ( _isShowLegendSymbols )
+					_legendItemWidth = 3.0f * _tmpSize + maxWidth;
+				else
+					_legendItemWidth = 0.5f * _tmpSize + maxWidth;
 
-			// Set scalar fields for FindPoint compatibility (use first group's values)
-			_legendItemWidth = _groupItemWidths.Length > 0 ? _groupItemWidths[0] : ( _isShowLegendSymbols ? 3.0f * _tmpSize : 0.5f * _tmpSize );
-			_hStack = _groupHStacks.Length > 0 ? _groupHStacks[0] : 1;
+				if ( _isHStack )
+				{
+					// Normally, the legend is:
+					//     available width / ( max width of any entry + space for line&symbol )
+					if ( maxWidth > 0 )
+						_hStack = (int)( ( widthAvail - halfGap ) / _legendItemWidth );
+
+					// You can never have more columns than legend entries
+					if ( _hStack > nCurve )
+						_hStack = nCurve;
+
+					// a saftey check
+					if ( _hStack == 0 )
+						_hStack = 1;
+				}
+
+				// Draw() reads the per-group arrays, so describe the whole legend as one group
+				_groupItemWidths = new[] { _legendItemWidth };
+				_groupHStacks = new[] { _hStack };
+			}
+			else
+			{
+				// Compute per-group item widths and column counts
+				_groupItemWidths = new float[calcGroupSizes.Count];
+				_groupHStacks = new int[calcGroupSizes.Count];
+				for ( int gi = 0; gi < calcGroupSizes.Count; gi++ )
+				{
+					float gMaxW = gi < calcGroupMaxWidths.Count ? calcGroupMaxWidths[gi] : 0;
+					bool gHasSymbols = gi < calcGroupHasSymbols.Count && calcGroupHasSymbols[gi];
+					float gItemWidth = _isShowLegendSymbols ? ( gHasSymbols ? 3.0f : 4.5f ) * _tmpSize + gMaxW : 1.0f * _tmpSize + gMaxW;
+					int gHStack = 1;
+					if ( _isHStack && gMaxW > 0 && widthAvail > 0 )
+					{
+						gHStack = (int)( ( widthAvail - halfGap - _legendGroupNamesMaxWidth ) / gItemWidth );
+						if ( gHStack > calcGroupSizes[gi] ) gHStack = calcGroupSizes[gi];
+						if ( gHStack == 0 ) gHStack = 1;
+					}
+					_groupItemWidths[gi] = gItemWidth;
+					_groupHStacks[gi] = gHStack;
+					float gRowWidth = _legendGroupNamesMaxWidth + gHStack * gItemWidth;
+					if ( gRowWidth > maxGroupRowWidth ) maxGroupRowWidth = gRowWidth;
+				}
+
+				// Set scalar fields for FindPoint compatibility (use first group's values)
+				_legendItemWidth = _groupItemWidths.Length > 0 ? _groupItemWidths[0] : ( _isShowLegendSymbols ? 3.0f * _tmpSize : 0.5f * _tmpSize );
+				_hStack = _groupHStacks.Length > 0 ? _groupHStacks[0] : 1;
+			}
 
 			// legend is:
 			//   item:     space  line  space  text   space
@@ -1027,15 +1067,27 @@ namespace ZedGraph
 			if ( _tmpSize > _legendItemHeight )
 				_legendItemHeight = _tmpSize;
 
-			// Compute total rows from per-group hStacks
-			int totalRows = 0;
-			for ( int gi = 0; gi < calcGroupSizes.Count; gi++ )
-				totalRows += Math.Max( 1, (int)Math.Ceiling( (double)calcGroupSizes[gi] / _groupHStacks[gi] ) );
-			if ( totalRows == 0 ) totalRows = 1;
-			float totLegHeight = totalRows * _legendItemHeight;
-            totLegHeight += halfGap;  // Give margin to top and bottom of legend
+			float totLegHeight, totLegWidth;
+			if ( !_hasLegendGroups )
+			{
+				// Original layout: rows of _hStack entries, with a fixed margin
+				totLegWidth = _hStack * _legendItemWidth;
+				totLegHeight = (float)Math.Ceiling( (double)nCurve / (double)_hStack )
+					* _legendItemHeight;
+				totLegHeight += 5;  // Give 2 or 3-pixel margin to top and bottom of legend
+			}
+			else
+			{
+				// Compute total rows from per-group hStacks
+				int totalRows = 0;
+				for ( int gi = 0; gi < calcGroupSizes.Count; gi++ )
+					totalRows += Math.Max( 1, (int)Math.Ceiling( (double)calcGroupSizes[gi] / _groupHStacks[gi] ) );
+				if ( totalRows == 0 ) totalRows = 1;
+				totLegHeight = totalRows * _legendItemHeight;
+				totLegHeight += halfGap;  // Give margin to top and bottom of legend
 
-			float totLegWidth = maxGroupRowWidth > 0 ? maxGroupRowWidth : _legendItemWidth;
+				totLegWidth = maxGroupRowWidth > 0 ? maxGroupRowWidth : _legendItemWidth;
+			}
 
 			RectangleF newRect = new RectangleF();
 

@@ -16,41 +16,74 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
     public class WizardPages : TabControl
     {
+        public WizardPages()
+        {
+            TabStop = false;    // Make sure the TabControl is not a tab stop
+        }
+
         /// <summary>
-        /// Adds a page body created at runtime to a wizard tab page, below the page's
-        /// title header and inset by a border, anchored to grow with the page.
+        /// Moves the focus to the first control on the new page only when the focus was already inside
+        /// this control. TabControl.SelectedIndex treats every change made in code as a user switching
+        /// tabs and always moves the focus onto the new page, so choosing a page from a control outside
+        /// it, such as a radio button or the Next button, would lose that control's focus.
+        /// </summary>
+        public new int SelectedIndex
+        {
+            get { return base.SelectedIndex; }
+            set
+            {
+                if (!IsHandleCreated || ContainsFocus || value == base.SelectedIndex)
+                {
+                    base.SelectedIndex = value;
+                    return;
+                }
+                // Changing the selection with the native message and raising the change ourselves
+                // leaves TabControl's private UI-selection flag clear, so it shows the page without
+                // moving the focus
+                User32.SendMessage(Handle, User32.WinMessageType.TCM_SETCURSEL, value, IntPtr.Zero);
+                OnSelectedIndexChanged(EventArgs.Empty);
+            }
+        }
+
+        public new void SelectTab(int index)
+        {
+            SelectedIndex = index;
+        }
+
+        /// <summary>
+        /// Places a page's control below its header text, filling the page to its borders and
+        /// stretching with it: the way a wizard page hosts the control that is its content.
         /// </summary>
         /// <param name="pageControl">The page body</param>
         /// <param name="tabPage">The wizard page to add it to</param>
         /// <param name="border">Left, right and bottom inset, in 96-DPI pixels</param>
         /// <param name="header">Height reserved above the body for the page title, in 96-DPI pixels</param>
+        /// <param name="footer">Height left free below the body, in 96-DPI pixels</param>
         /// <remarks>
         /// The page bodies are added after InitializeComponent, when the form has already
         /// auto-scaled, so these offsets must be scaled here or the body rides up under the
         /// title header on a high-DPI display.
         /// </remarks>
-        public static void AddPageControl(UserControl pageControl, TabPage tabPage, int border, int header)
+        public static void AddPageControl(UserControl pageControl, TabPage tabPage, int border, int header, int footer = 0)
         {
             border = DpiUtil.Scale(tabPage, border);
             header = DpiUtil.Scale(tabPage, header);
+            footer = DpiUtil.Scale(tabPage, footer);
             pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             pageControl.Location = new Point(border, header);
             pageControl.Width = tabPage.Width - border * 2;
-            pageControl.Height = tabPage.Height - header - border;
+            pageControl.Height = tabPage.Height - header - border - footer;
             tabPage.Controls.Add(pageControl);
-        }
-
-        public WizardPages()
-        {
-            TabStop = false;    // Make sure the TabControl is not a tab stop
         }
 
         protected override void WndProc(ref Message m)

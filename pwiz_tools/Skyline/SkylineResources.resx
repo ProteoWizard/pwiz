@@ -1223,6 +1223,21 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
     <value>Run Peptide Search</value>
   </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Osprey__0__is_not_installed__Skyline_can_download_it__about__1__MB__to_its_Tools_folder_" xml:space="preserve">
+    <value>Osprey {0} is not installed. Skyline can download it (about {1} MB) to its Tools folder.</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Download" xml:space="preserve">
+    <value>&amp;Download</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey" xml:space="preserve">
+    <value>Downloading Osprey</value>
+  </data>
+  <data name="OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build" xml:space="preserve">
+    <value>Looking for the latest Osprey build</value>
+  </data>
+  <data name="SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_" xml:space="preserve">
+    <value>Failed to download Osprey.</value>
+  </data>
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
     <value>You must save this document before running a peptide search.</value>
   </data>
