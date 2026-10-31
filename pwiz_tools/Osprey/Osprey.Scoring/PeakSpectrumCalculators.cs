@@ -93,7 +93,9 @@ namespace pwiz.Osprey.Scoring
 
         public override string DisplayName { get { return OspreyScoringResources.PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_; } }
 
-        public override bool IsReversedScore { get { return true; } }   // a steadier match is better
+        // Higher is better: a real peak's cosine rises and falls with its signal across the peak,
+        // while noise stays uniformly low (the trained SVM weights it positive).
+        public override bool IsReversedScore { get { return false; } }
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {

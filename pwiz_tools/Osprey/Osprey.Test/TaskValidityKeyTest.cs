@@ -60,6 +60,7 @@ namespace pwiz.Osprey.Test
             AssertSuffixesAreUnconditional();
             AssertEachArmKeysDifferently();
             AssertTrainingSampleLeversKeyDifferently();
+            AssertFdrExperimentSwitchesKeyDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
@@ -581,6 +582,22 @@ namespace pwiz.Osprey.Test
             Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, 0.01),
                 OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, 0.02),
                 @"two tolerances must key differently");
+        }
+
+        /// <summary>
+        /// OSPREY_RECONCILIATION and OSPREY_PEP_FORMULA change the first-pass consensus and PEP, so
+        /// each setting keys the FDR tasks differently. Unset they emit nothing, so default output
+        /// directories keep their key.
+        /// </summary>
+        private static void AssertFdrExperimentSwitchesKeyDifferently()
+        {
+            string none = OspreyEnvironment.FdrExperimentValidityKeySuffix(null, false);
+            string recon = OspreyEnvironment.FdrExperimentValidityKeySuffix(@"symmetric-decoys", false);
+            string pep = OspreyEnvironment.FdrExperimentValidityKeySuffix(null, true);
+            string both = OspreyEnvironment.FdrExperimentValidityKeySuffix(@"symmetric-decoys", true);
+            Assert.AreEqual(string.Empty, none, @"the default must not change existing keys");
+            var distinct = new HashSet<string> { none, recon, pep, both };
+            Assert.AreEqual(4, distinct.Count, @"every combination must key differently");
         }
 
         /// <summary>

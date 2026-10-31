@@ -304,7 +304,7 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// The core fit: the library's top-6 fragments' XICs over [start, end], then Osprey's
+        /// The core fit: the XICs of the library's top fragments (6, or OSPREY_XIC_FRAGMENTS) over [start, end], then Osprey's
         /// median polish on them - the same inputs and arguments as <c>CoelutionScorer</c>, so a
         /// peak of fewer than three scans has no fit, as it has no scored one.
         /// </summary>
@@ -364,8 +364,10 @@ namespace pwiz.Osprey.Scoring
                 if (float.IsNaN(current) || fragment.RelativeIntensity > current)
                     record.LibraryRelIntensity[slot] = fragment.RelativeIntensity;
             }
+            // The fragments FitCorePolish extracts XICs for, so the CORE flags and nCore agree
+            // under OSPREY_XIC_FRAGMENTS.
             foreach (int core in TopFragmentExtractor.SelectTopFragmentIndices(fragments,
-                         TopFragmentExtractor.CAL_TOP_N_FRAGMENTS))
+                         TopFragmentExtractor.SearchTopNFragments))
             {
                 if (slotOfFragment[core] >= 0)
                     record.IonFlags[slotOfFragment[core]] |= TrainingIonFlags.CORE;

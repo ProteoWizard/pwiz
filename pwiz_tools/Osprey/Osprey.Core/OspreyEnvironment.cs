@@ -743,22 +743,18 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
 
         /// <summary>
-        /// OSPREY_RECONCILIATION (experiment): <c>off</c> disables cross-run reconciliation (the
-        /// default of <c>ReconciliationConfig.Enabled</c>); <c>symmetric-decoys</c> keeps it but builds a
-        /// decoy's consensus RT only from its picks in the runs where its paired target's peptide
-        /// qualified, as the target's consensus is built only from its qualifying runs. Unset, the
-        /// decoy's consensus pools every pick. Any other value throws.
+        /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
+        /// only from its picks in the runs where its paired target's peptide qualified, as the
+        /// target's consensus is built only from its qualifying runs. Unset, the decoy's consensus
+        /// pools every pick. Any other value throws. (There is no <c>off</c>: with reconciliation
+        /// disabled the first pass writes no reconciliation data and per-file rescoring cannot run.)
         /// </summary>
         public static readonly string ReconciliationMode = ParseReconciliationMode(
             Environment.GetEnvironmentVariable(@"OSPREY_RECONCILIATION"));
 
-        /// <summary>True under OSPREY_RECONCILIATION=off.</summary>
-        public static bool ReconciliationDisabled => ReconciliationMode == RECONCILIATION_OFF;
-
         /// <summary>True under OSPREY_RECONCILIATION=symmetric-decoys.</summary>
         public static bool ReconciliationSymmetricDecoys => ReconciliationMode == RECONCILIATION_SYMMETRIC_DECOYS;
 
-        private const string RECONCILIATION_OFF = @"off";
         private const string RECONCILIATION_SYMMETRIC_DECOYS = @"symmetric-decoys";
 
         private static string ParseReconciliationMode(string value)
@@ -766,9 +762,9 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(value))
                 return null;
             string mode = value.Trim().ToLowerInvariant();
-            if (mode == RECONCILIATION_OFF || mode == RECONCILIATION_SYMMETRIC_DECOYS)
+            if (mode == RECONCILIATION_SYMMETRIC_DECOYS)
                 return mode;
-            throw new InvalidOperationException(@"OSPREY_RECONCILIATION must be off or symmetric-decoys: " + value);
+            throw new InvalidOperationException(@"OSPREY_RECONCILIATION must be symmetric-decoys: " + value);
         }
 
         /// <summary>
@@ -1263,6 +1259,30 @@ namespace pwiz.Osprey.Core
         public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
         {
             return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
+        /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
+        /// every FDR output after it. Empty when both are unset, so default outputs keep their key.
+        /// </summary>
+        public static string FdrExperimentValidityKeySuffix()
+        {
+            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm);
+        }
+
+        /// <summary>
+        /// <see cref="FdrExperimentValidityKeySuffix()"/> for explicitly supplied settings, in the
+        /// normalized form <see cref="ReconciliationMode"/> holds.
+        /// </summary>
+        public static string FdrExperimentValidityKeySuffix(string reconciliationMode, bool pepRatioForm)
+        {
+            string suffix = string.Empty;
+            if (reconciliationMode != null)
+                suffix += @";recon=" + reconciliationMode;
+            if (pepRatioForm)
+                suffix += @";pep=ratio";
+            return suffix;
         }
 
         /// <summary>

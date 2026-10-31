@@ -308,7 +308,7 @@ default is a separate decision, because it moves every golden.
 | 27-32 | `frag_rank1..6_abs_mass_error` | Per-fragment-rank | lower | `FragmentRankMassErrorCalc` (FragmentRankCalculators.cs:101) |
 | 33-38 | `frag_rank1..6_intensity_share` | Per-fragment-rank | (none; false) | `FragmentRankIntensityShareCalc` (:135) |
 | 39 | `peak_spectrum_cosine_mean` | Spectrum across the peak | higher | `PeakSpectrumCosineMeanCalc` (PeakSpectrumCalculators.cs:75) |
-| 40 | `peak_spectrum_cosine_sd` | Spectrum across the peak | lower (the data say higher; see below) | `PeakSpectrumCosineSdCalc` (:90) |
+| 40 | `peak_spectrum_cosine_sd` | Spectrum across the peak | higher (see below) | `PeakSpectrumCosineSdCalc` (:90) |
 
 `IsReversedScore` does not reach the classifier: the SVM learns each weight's sign, and the
 direction only labels the feature-contribution table and the model diagnostics (a weight
@@ -346,10 +346,9 @@ classifier weigh each rank separately.
 its end (the SG sweep's per-scan kernel, `SgWeightedSweep.ComputeCosineAtScan`, skipping scans
 outside the window), reduced to a mean and a population standard deviation. Where
 `sg_weighted_cosine` looks at the apex +/- 2 scans, these ask whether the library spectrum holds
-across the whole elution. `peak_spectrum_cosine_sd` was declared lower-is-better, but the
-trained SVM gives it a positive weight (7th largest on Astral): a real peak's cosine rises and falls
-with its signal across the peak, while noise stays uniformly low. Only the diagnostics label is
-affected.
+across the whole elution. `peak_spectrum_cosine_sd` is higher-is-better, against first
+intuition: the trained SVM gives it a positive weight (7th largest on Astral), because a real
+peak's cosine rises and falls with its signal across the peak while noise stays uniformly low.
 
 #### The feature mask (`OSPREY_FEATURE_MASK`)
 
