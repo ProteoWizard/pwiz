@@ -124,6 +124,9 @@ namespace ImageComparer
             int restoredIndex = FindBestSelectionIndex(previousSelection);
             if (toolStripFileList.SelectedIndex != restoredIndex)
                 toolStripFileList.SelectedIndex = restoredIndex;
+
+            // The shown file may have changed on disk, which reselecting it does not reload
+            RefreshScreenshots();
         }
 
         /// <summary>
