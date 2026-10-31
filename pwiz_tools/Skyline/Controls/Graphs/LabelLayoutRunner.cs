@@ -38,6 +38,24 @@ namespace pwiz.Skyline.Controls.Graphs
         private const double MAX_LABELS_PER_CELL = 4.0;
         private const double MAX_LABEL_AREA_RATIO = 0.3;
 
+        private static readonly List<WeakReference<LabelLayoutRunner>> RUNNERS = new List<WeakReference<LabelLayoutRunner>>();
+
+        /// <summary>
+        /// True if any runner has a layout waiting or running. Used by tests to wait for labels to be
+        /// placed before checking or capturing a graph. Must be called on the event thread.
+        /// </summary>
+        public static bool AnyPending
+        {
+            get
+            {
+                lock (RUNNERS)
+                {
+                    RUNNERS.RemoveAll(r => !r.TryGetTarget(out _));
+                    return RUNNERS.Any(r => r.TryGetTarget(out var runner) && runner.IsPending);
+                }
+            }
+        }
+
         private Thread _labelLayoutWorkerThread;
         private CancellationTokenSource _labelLayoutCts;
         private IProgressStatus _labelLayoutStatus;
@@ -202,6 +220,20 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             return result;
         }
+
+        public LabelLayoutRunner()
+        {
+            lock (RUNNERS)
+            {
+                RUNNERS.Add(new WeakReference<LabelLayoutRunner>(this));
+            }
+        }
+
+        /// <summary>
+        /// True while a requested layout is waiting for the debounce timer or running on the worker
+        /// thread, until its result has been applied on the event thread.
+        /// </summary>
+        public bool IsPending => _pendingRequest != null || _labelLayoutWorkerThread != null;
 
         public void Start(ZedGraphControl graphControl, IList<LabeledPoint> labeledPoints,
             IList<LabeledPoint.PointLayout> savedLayout, Action<List<LabeledPoint.PointLayout>> saveLayout)
