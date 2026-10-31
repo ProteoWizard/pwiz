@@ -352,4 +352,28 @@
   <data name="DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex" xml:space="preserve">
     <value>Apex correlation margin over best other apex</value>
   </data>
+  <data name="TopFragmentRefGoodCountCalc_DisplayName_Top_3_fragments_correlating_with_reference" xml:space="preserve">
+    <value>Top 3 fragments correlating with reference</value>
+  </data>
+  <data name="TopFragmentMpMinR2Calc_DisplayName_Median_polish_min_R2__top_3_fragments_" xml:space="preserve">
+    <value>Median polish min R2 (top 3 fragments)</value>
+  </data>
+  <data name="TopFragmentMpMedianR2Calc_DisplayName_Median_polish_median_R2__top_3_fragments_" xml:space="preserve">
+    <value>Median polish median R2 (top 3 fragments)</value>
+  </data>
+  <data name="TopFragmentCoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments_" xml:space="preserve">
+    <value>Fragment co-elution min (top 3 fragments)</value>
+  </data>
+  <data name="WideCoelutionSumCalc_DisplayName_Fragment_co_elution__sum__widened_span_" xml:space="preserve">
+    <value>Fragment co-elution (sum, widened span)</value>
+  </data>
+  <data name="WideCoelutingCountCalc_DisplayName_Co_eluting_fragment_count__widened_span_" xml:space="preserve">
+    <value>Co-eluting fragment count (widened span)</value>
+  </data>
+  <data name="WideCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak__widened_span_" xml:space="preserve">
+    <value>Coelution margin over runner-up peak (widened span)</value>
+  </data>
+  <data name="WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_" xml:space="preserve">
+    <value>Fragment co-elution min (top 3 fragments, widened span)</value>
+  </data>
 </root>

@@ -64,6 +64,8 @@ namespace pwiz.Osprey.IO
             @"tc_corr_rank5", @"tc_corr_rank6", @"tc_res_sum", @"tc_res_mean",
             @"heavy_sum6", @"heavy_n_good", @"tight45_sum6", @"tight20_sum6", @"tc_best_sum6",
             @"dom_best_corr_delta", @"dom_tot_corr_sum", @"dom_apex_count", @"dom_corr_margin",
+            @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
+            @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
         };
 
         // Lazy so an unknown name surfaces as its own exception at first use rather than as a

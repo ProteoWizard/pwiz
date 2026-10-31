@@ -35,8 +35,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-88 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation and peak-dominance families,
+    /// never returns null. Slots 21-96 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment and wide-span coelution families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 89;
+        public const int FeatureCount = 97;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -163,6 +163,20 @@ namespace pwiz.Osprey.Scoring
             calculators[86] = new DominanceTotalCorrSumCalc();
             calculators[87] = new DominanceApexCountCalc();
             calculators[88] = new DominanceCorrMarginCalc();
+
+            // Top-fragment family: reference, median-polish and pairwise agreement restricted to the three most intense
+            // library fragments, which still follow the peak when the deeper fragments are in the noise.
+            calculators[89] = new TopFragmentRefGoodCountCalc();
+            calculators[90] = new TopFragmentMpMinR2Calc();
+            calculators[91] = new TopFragmentMpMedianR2Calc();
+            calculators[92] = new TopFragmentCoelutionMinCalc();
+
+            // Wide-span coelution family: the bounds coelution features over max(bounds, apex +/- 0.08 min), so narrow
+            // bounds on a weak peak do not shrink the correlation to a few scans.
+            calculators[93] = new WideCoelutionSumCalc();
+            calculators[94] = new WideCoelutingCountCalc();
+            calculators[95] = new WideCoelutionMarginCalc();
+            calculators[96] = new WideTop3CoelutionMinCalc();
 
             return calculators;
         }

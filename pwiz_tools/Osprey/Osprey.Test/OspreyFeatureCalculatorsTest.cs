@@ -738,6 +738,110 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Top-fragment family: the three most intense library fragments co-elute while the other
+        /// three are noise. Restricted to the top three, the reference count, median-polish R^2 and
+        /// pairwise minimum stay high where the all-fragment minimum R^2 does not; a top-3 fragment
+        /// without an XIC counts as not following.
+        /// </summary>
+        [TestMethod]
+        public void TestTopFragments()
+        {
+            var rts = Enumerable.Range(0, 61).Select(i => 10.0 + 0.01 * i).ToArray();
+            var candidate = SixFragmentCandidate();
+            var xics = TopThreeCoelutingXics(rts, 10.3);
+            var bounds = new XICPeakBounds { StartIndex = 22, EndIndex = 38, ApexIndex = 30 };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate);
+            var polish = PolishOverBounds(xics, bounds);
+
+            var context = new OspreyScoringContext(new OspreyConfig());
+            var top = TopFragments.Compute(peakData, ReferenceCorrelations.GetOrCompute(context, peakData), polish);
+            Assert.AreEqual(2, top.RefGoodCount, "The two top fragments besides the reference follow it");
+            Assert.IsTrue(top.CoelutionMin > 0.99, string.Format("The top three co-elute, got {0:F4}", top.CoelutionMin));
+            var topR2 = Enumerable.Range(0, 3).Select(row => Math.Max(0.0, TukeyMedianPolish.FragmentR2(polish.Overall,
+                polish.RowEffects[row], polish.ColEffects, polish.Residuals[row]))).OrderBy(r2 => r2).ToArray();
+            Assert.AreEqual(topR2[0], top.MpMinR2, TOLERANCE);
+            Assert.AreEqual(topR2[1], top.MpMedianR2, TOLERANCE);
+            Assert.IsTrue(top.MpMinR2 > TukeyMedianPolish.MinFragmentR2(polish),
+                string.Format("Top 3 min R2 {0:F4} above the all-fragment min {1:F4}", top.MpMinR2, TukeyMedianPolish.MinFragmentR2(polish)));
+            Assert.AreEqual(0.0, TopFragments.Compute(peakData, ReferenceCorrelations.GetOrCompute(context, peakData), null).MpMinR2,
+                "No median-polish fit");
+
+            // Library fragment 1 (a top-3 fragment) without an XIC.
+            var missing = xics.Where(x => x.FragmentIndex != 1).ToList();
+            var missingPeak = new FakePeakData(missing, bounds, candidate: candidate);
+            var missingContext = new OspreyScoringContext(new OspreyConfig());
+            var gapped = TopFragments.Compute(missingPeak, ReferenceCorrelations.GetOrCompute(missingContext, missingPeak),
+                PolishOverBounds(missing, bounds));
+            Assert.AreEqual(1, gapped.RefGoodCount);
+            Assert.AreEqual(0.0, gapped.CoelutionMin, TOLERANCE);
+            Assert.AreEqual(0.0, gapped.MpMinR2, TOLERANCE);
+
+            context.AddInfo(new MedianPolishByproduct(polish, null));
+            var cached = TopFragments.GetOrCompute(context, peakData);
+            Assert.AreSame(cached, TopFragments.GetOrCompute(context, peakData), "Computed once per candidate");
+            Assert.AreEqual(top.RefGoodCount, OspreyFeatureCalculators.Get(89).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(top.MpMinR2, OspreyFeatureCalculators.Get(90).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(top.MpMedianR2, OspreyFeatureCalculators.Get(91).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(top.CoelutionMin, OspreyFeatureCalculators.Get(92).Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Wide-span coelution family: narrow bounds of apex +/- 1 scan widen to apex +/- 0.08 min
+        /// (8 scans at 0.01 min spacing), wide bounds stay as they are, and over the widened span each
+        /// feature equals its bounds counterpart computed with the bounds set to that span. The margin
+        /// widens a second candidate peak around its own apex.
+        /// </summary>
+        [TestMethod]
+        public void TestWideSpanCoelution()
+        {
+            var rts = Enumerable.Range(0, 121).Select(i => 10.0 + 0.01 * i).ToArray();
+            var candidate = SixFragmentCandidate();
+            var xics = TopThreeCoelutingXics(rts, 10.3);
+            var narrow = new XICPeakBounds { StartIndex = 29, EndIndex = 31, ApexIndex = 30 };
+            var narrowPeak = new FakePeakData(xics, narrow, candidate: candidate);
+            var wide = WideSpanCoelution.Compute(narrowPeak, null, WideSpanCoelution.HALF_WINDOW_MINUTES);
+            Assert.AreEqual(22, wide.SpanStart);
+            Assert.AreEqual(38, wide.SpanEnd);
+            Assert.AreEqual(0.0, wide.Margin, TOLERANCE, "No candidate peaks");
+
+            var broad = new XICPeakBounds { StartIndex = 10, EndIndex = 50, ApexIndex = 30 };
+            var broadWide = WideSpanCoelution.Compute(new FakePeakData(xics, broad, candidate: candidate), null,
+                WideSpanCoelution.HALF_WINDOW_MINUTES);
+            Assert.AreEqual(10, broadWide.SpanStart);
+            Assert.AreEqual(50, broadWide.SpanEnd);
+
+            var spanBounds = new XICPeakBounds { StartIndex = 22, EndIndex = 38, ApexIndex = 30 };
+            var spanPeak = new FakePeakData(xics, spanBounds, candidate: candidate);
+            var spanContext = new OspreyScoringContext(new OspreyConfig());
+            Assert.AreEqual(FeatureByName(@"fragment_coelution_sum").Calculate(spanContext, spanPeak), wide.Sum, TOLERANCE);
+            Assert.AreEqual(FeatureByName(@"n_coeluting_fragments").Calculate(spanContext, spanPeak), wide.NCoeluting, TOLERANCE);
+            Assert.AreEqual(TopFragments.Compute(spanPeak, ReferenceCorrelations.GetOrCompute(spanContext, spanPeak), null).CoelutionMin,
+                wide.Top3Min, TOLERANCE);
+            Assert.IsTrue(wide.Top3Min > 0.99, string.Format("The top three co-elute over the span, got {0:F4}", wide.Top3Min));
+
+            // A second candidate in noise at scan 90 (narrow bounds too), widened to 82-98 around its apex.
+            var other = new XICPeakBounds { StartIndex = 89, EndIndex = 91, ApexIndex = 90 };
+            var otherSpanPeak = new FakePeakData(xics, new XICPeakBounds { StartIndex = 82, EndIndex = 98, ApexIndex = 90 }, candidate: candidate);
+            const int pairs = 15;
+            double otherMean = FeatureByName(@"fragment_coelution_sum").Calculate(new OspreyScoringContext(new OspreyConfig()), otherSpanPeak) / pairs;
+            var candidates = new PeakCandidatesByproduct(new[] { (narrow, 0.5, 2.0), (other, 0.1, 1.0) }, narrow);
+            var withMargin = WideSpanCoelution.Compute(narrowPeak, candidates, WideSpanCoelution.HALF_WINDOW_MINUTES);
+            Assert.AreEqual(wide.Sum / pairs - Math.Max(0.0, otherMean), withMargin.Margin, TOLERANCE);
+            var notChosen = new PeakCandidatesByproduct(new[] { (other, 0.1, 1.0) }, narrow);
+            Assert.AreEqual(0.0, WideSpanCoelution.Compute(narrowPeak, notChosen, WideSpanCoelution.HALF_WINDOW_MINUTES).Margin,
+                TOLERANCE, "The chosen peak is not among the candidates");
+
+            var context = new OspreyScoringContext(new OspreyConfig());
+            context.AddInfo(candidates);
+            var cached = WideSpanCoelution.GetOrCompute(context, narrowPeak);
+            Assert.AreSame(cached, WideSpanCoelution.GetOrCompute(context, narrowPeak), "Computed once per candidate");
+            Assert.AreEqual(withMargin.Sum, OspreyFeatureCalculators.Get(93).Calculate(context, narrowPeak), TOLERANCE);
+            Assert.AreEqual(withMargin.NCoeluting, OspreyFeatureCalculators.Get(94).Calculate(context, narrowPeak), TOLERANCE);
+            Assert.AreEqual(withMargin.Margin, OspreyFeatureCalculators.Get(95).Calculate(context, narrowPeak), TOLERANCE);
+            Assert.AreEqual(withMargin.Top3Min, OspreyFeatureCalculators.Get(96).Calculate(context, narrowPeak), TOLERANCE);
+        }
+
+        /// <summary>
         /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
         /// each new feature adds to both, so a calculator whose name differs from its column
         /// would write one feature under another's name. The default FDR mask resolves names
@@ -781,6 +885,48 @@ namespace pwiz.Osprey.Test
                 Mz = mz,
                 Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal, Charge = 1 },
             };
+        }
+
+        // Six library fragments, intensities 100 down to 50, so fragments 0-2 are the top three.
+        private static LibraryEntry SixFragmentCandidate()
+        {
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            return new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+        }
+
+        // Fragments 0-2 share one Gaussian elution at apexRt over a small baseline; fragments 3-5 are positive
+        // noise with no peak.
+        private static List<XicData> TopThreeCoelutingXics(double[] rts, double apexRt)
+        {
+            var xics = new List<XicData>();
+            for (int f = 0; f < 6; f++)
+            {
+                int fragment = f;
+                double scale = 1.0 - 0.1 * f;
+                var intensities = rts.Select((rt, i) => fragment < 3
+                    ? scale * (1000.0 * Math.Exp(-Math.Pow((rt - apexRt) / 0.04, 2)) + 1.0)
+                    : 50.0 + 40.0 * Math.Sin(1.3 * i + 2.1 * fragment)).ToArray();
+                xics.Add(new XicData(f, rts, intensities));
+            }
+            return xics;
+        }
+
+        // The median-polish fit the harness publishes: every XIC cropped to the peak bounds.
+        private static TukeyMedianPolishResult PolishOverBounds(IReadOnlyList<XicData> xics, XICPeakBounds bounds)
+        {
+            int len = bounds.EndIndex - bounds.StartIndex + 1;
+            var peakXics = xics.Select(x => new KeyValuePair<int, double[]>(x.FragmentIndex,
+                x.Intensities.Skip(bounds.StartIndex).Take(len).ToArray())).ToList();
+            var peakRts = xics[0].RetentionTimes.Skip(bounds.StartIndex).Take(len).ToArray();
+            return TukeyMedianPolish.Compute(peakXics, peakRts, TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
+        }
+
+        private static IOspreyFeatureCalculator FeatureByName(string name)
+        {
+            return OspreyFeatureCalculators.Get(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name));
         }
 
         private sealed class FakePeakData : IOspreyApexSpectraPeakData

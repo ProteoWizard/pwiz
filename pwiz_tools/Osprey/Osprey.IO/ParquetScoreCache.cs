@@ -164,9 +164,19 @@ namespace pwiz.Osprey.IO
             @"dom_tot_corr_sum",
             @"dom_apex_count",
             @"dom_corr_margin",
+            // Top fragment: the 3 most intense library fragments only (4)
+            @"top3_ref_n_corr_good",
+            @"top3_mp_min_r2",
+            @"top3_mp_r2_median",
+            @"top3_coelution_min",
+            // Wide-span coelution: over max(bounds, apex +/- 0.08 min) (4)
+            @"wide_coelution_sum",
+            @"wide_n_coeluting",
+            @"wide_coelution_margin",
+            @"wide_top3_coelution_min",
         };
 
-        public const int NUM_PIN_FEATURES = 89;
+        public const int NUM_PIN_FEATURES = 97;
 
         /// <summary>
         /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after

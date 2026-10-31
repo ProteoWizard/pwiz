@@ -125,7 +125,7 @@ namespace pwiz.Osprey.Scoring
         }
 
         // Scans spanning halfWindowMinutes on each side of the apex, at the scan spacing around the apex; at least 2.
-        private static int HalfWindowScans(double[] rts, int apex, double halfWindowMinutes)
+        internal static int HalfWindowScans(double[] rts, int apex, double halfWindowMinutes)
         {
             if (rts == null || rts.Length < 2)
                 return 2;

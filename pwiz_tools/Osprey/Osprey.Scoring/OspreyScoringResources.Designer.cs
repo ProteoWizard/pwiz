@@ -840,5 +840,77 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Top 3 fragments correlating with reference.
+        /// </summary>
+        public static string TopFragmentRefGoodCountCalc_DisplayName_Top_3_fragments_correlating_with_reference {
+            get {
+                return ResourceManager.GetString("TopFragmentRefGoodCountCalc_DisplayName_Top_3_fragments_correlating_with_reference", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish min R2 (top 3 fragments).
+        /// </summary>
+        public static string TopFragmentMpMinR2Calc_DisplayName_Median_polish_min_R2__top_3_fragments_ {
+            get {
+                return ResourceManager.GetString("TopFragmentMpMinR2Calc_DisplayName_Median_polish_min_R2__top_3_fragments_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish median R2 (top 3 fragments).
+        /// </summary>
+        public static string TopFragmentMpMedianR2Calc_DisplayName_Median_polish_median_R2__top_3_fragments_ {
+            get {
+                return ResourceManager.GetString("TopFragmentMpMedianR2Calc_DisplayName_Median_polish_median_R2__top_3_fragments_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment co-elution min (top 3 fragments).
+        /// </summary>
+        public static string TopFragmentCoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments_ {
+            get {
+                return ResourceManager.GetString("TopFragmentCoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment co-elution (sum, widened span).
+        /// </summary>
+        public static string WideCoelutionSumCalc_DisplayName_Fragment_co_elution__sum__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideCoelutionSumCalc_DisplayName_Fragment_co_elution__sum__widened_span_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Co-eluting fragment count (widened span).
+        /// </summary>
+        public static string WideCoelutingCountCalc_DisplayName_Co_eluting_fragment_count__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideCoelutingCountCalc_DisplayName_Co_eluting_fragment_count__widened_span_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Coelution margin over runner-up peak (widened span).
+        /// </summary>
+        public static string WideCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak__widened_span_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment co-elution min (top 3 fragments, widened span).
+        /// </summary>
+        public static string WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_", resourceCulture);
+            }
+        }
     }
 }
