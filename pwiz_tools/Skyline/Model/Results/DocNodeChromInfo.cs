@@ -852,7 +852,10 @@ namespace pwiz.Skyline.Model.Results
                    peak.Fwhm == Fwhm &&
                    peak.IsFwhmDegenerate == IsFwhmDegenerate &&
                    Equals(peak.IsTruncated, IsTruncated) &&
-                   Equals(peak.Identified, Identified);
+                   Equals(peak.Identified, Identified) &&
+                   Equals(peak.PointsAcross, PointsAcrossPeak) &&
+                   peak.IsForcedIntegration == IsForcedIntegration &&
+                   Equals(peak.PeakShapeValues, PeakShapeValues);
         }
 
         /// <summary>
@@ -873,7 +876,8 @@ namespace pwiz.Skyline.Model.Results
                    (IsEqualTolerant(peak.Fwhm, Fwhm, tol * Fwhm)  || Equals(peak.Fwhm,Fwhm)) &&
                    Equals(peak.IsFwhmDegenerate, IsFwhmDegenerate) &&
                    Equals(peak.IsTruncated, IsTruncated) &&
-                   Equals(peak.Identified, Identified);
+                   Equals(peak.Identified, Identified) &&
+                   Equals(peak.PeakShapeValues, PeakShapeValues);
         }
 
         public bool IsEqualTolerant(double a, double b, double tol)
