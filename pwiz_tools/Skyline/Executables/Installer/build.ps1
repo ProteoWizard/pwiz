@@ -131,10 +131,35 @@ function Should-Skip([System.IO.FileInfo] $file, [string] $relName) {
 }
 
 Write-Host "`n==> stage payload" -ForegroundColor Cyan
+$binFiles = Get-ChildItem $SkylineBinDir -Recurse -File
+
+# Tests and test harnesses never ship. Test projects build into their own output, and
+# Stage-Tests.ps1 merges them with Skyline under bin\staging, so finding one here means
+# $SkylineBinDir is that test layout or a test project wrote into Skyline's output.
+# Checked before copying, so a wrong directory fails before a multi-GB copy. The names
+# cover the harnesses and the test projects; the MSTest / test platform assemblies every
+# test project brings along also catch a test project that is not in the list.
+$testAssemblies = @('AutoQCTest', 'CommonTest', 'ExampleArgCollector', 'SharedBatchTest',
+    'SkylineBatchTest', 'SkylineNightly', 'SkylineNightlyShim', 'SkylineTester', 'Test',
+    'TestArgCollector', 'TestCommandLineInteractiveTool', 'TestConnected', 'TestData',
+    'TestFunctional', 'TestHarness', 'TestInteractiveTool', 'TestPerf', 'TestRunner',
+    'TestRunnerLib', 'TestTutorial', 'TestUtil')
+$testPatterns = @('Microsoft.VisualStudio.TestPlatform.*', 'Microsoft.TestPlatform.*',
+    'Microsoft.Testing.*', 'Microsoft.VisualStudio.CodeCoverage.*', 'testhost*')
+$testFiles = $binFiles | Where-Object {
+    $file = $_
+    $file.Extension -in '.dll', '.exe' -and (
+        $testAssemblies -contains ($file.BaseName -replace '\.resources$', '') -or
+        ($testPatterns | Where-Object { $file.Name -like $_ }))
+} | ForEach-Object { $_.FullName.Substring($SkylineBinDir.Length + 1) }
+if ($testFiles) {
+    throw "$SkylineBinDir contains test files, which must not ship. Either it is a test layout (such as bin\staging) rather than the Skyline build output, or a test project built into the Skyline output and it needs a clean build:`n    $($testFiles -join "`n    ")"
+}
+
 if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
 New-Item -ItemType Directory $stagingDir -Force | Out-Null
 $copied = 0; $bytesCopied = 0L; $bytesSkipped = 0L
-Get-ChildItem $SkylineBinDir -Recurse -File | ForEach-Object {
+$binFiles | ForEach-Object {
     $rel = $_.FullName.Substring($SkylineBinDir.Length + 1)
     if (Should-Skip $_ $rel) { $bytesSkipped += $_.Length; return }
     $dest = Join-Path $stagingDir $rel

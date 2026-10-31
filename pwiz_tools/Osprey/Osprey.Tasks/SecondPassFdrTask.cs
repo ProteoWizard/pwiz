@@ -122,8 +122,9 @@ namespace pwiz.Osprey.Tasks
             // run while declaring it nowhere is worse than declaring it wrongly, because an
             // orchestrator building a node's shipping list from Inputs omits it, hands over
             // every run, and fails at the top of Stage 7 with the whole load already paid for.
-            // regression.ps1 only survives that today by relaying the file between phase dirs by
-            // hand. Provenance only, like its siblings - the driver validates by output stamp.
+            // regression.ps1's HPC chain stages each node from these declarations, so it fails
+            // the same way. Provenance only to the driver, like its siblings - it validates by
+            // output stamp.
             string retainedSummary = RetainedBaseIdSidecar.PathFor(
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config));
             if (!string.IsNullOrEmpty(retainedSummary))
@@ -137,6 +138,43 @@ namespace pwiz.Osprey.Tasks
                 // competition: the transfer competes nothing.
                 if (OspreyEnvironment.Pass2ProteinCompact)
                     yield return Pass2CompetitionDecoys.PathFor(input);
+                // The run's plan, which the worker writes beside its answer under the same stamp:
+                // the gap-fill entry ids are read from it, and a run whose plan is missing is
+                // refused as unanswered (Pass2FdrSidecar.HasWorkerStamp).
+                yield return ReconciliationFile.PathForInput(input);
+            }
+
+            // NOT the per-run .calibration.json. PerFileScoring's rehydrate reads it behind a
+            // File.Exists on every node that starts after Stage 4, but only into the RT
+            // calibrations and isolation windows that FirstPassFDR's consensus and
+            // PerFileRescoring's planner consume - nothing this task runs. A SecondPassFDR node
+            // given none produces the same blib and sidecars, which mode 3 of regression.ps1
+            // proves by withholding it.
+
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
+
+            // The frozen 1st-pass model and its stratum, under protein-compact only: that fold
+            // re-competes each run's records inside the stratum and refuses to run without both
+            // (ComputePass2FrozenCompetition). The transfer carries pass-1 values forward and
+            // needs neither: it reloads a model it finds, and nothing on its path reads it.
+            if (OspreyEnvironment.Pass2ProteinCompact)
+            {
+                string modelPath = FirstPassModelIO.PathFor(ctx.Config);
+                if (!string.IsNullOrEmpty(modelPath))
+                    yield return modelPath;
+                string stratumPath = FirstPassModelIO.StratumPathFor(ctx.Config);
+                if (!string.IsNullOrEmpty(stratumPath))
+                    yield return stratumPath;
+            }
+
+            // The pass-1 half of the --model-diagnostics report, which FirstPassFDR wrote because
+            // the pass-1 pool is gone by now: this task renders one page with both passes.
+            if (ctx.Config.ModelDiagnostics)
+            {
+                string pass1Diagnostics = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
+                if (!string.IsNullOrEmpty(pass1Diagnostics))
+                    yield return pass1Diagnostics;
             }
         }
 
@@ -543,10 +581,11 @@ namespace pwiz.Osprey.Tasks
                 {
                     WriteBlibOutput(rescored, nFiles, libraryById, proteinFdr, config, ctx);
                 }
-                catch (BlibOutputException ex)
+                catch (Exception ex) when (ex is BlibOutputException || ex is UserMessageException)
                 {
                     // A user-correctable state (the .blib is locked or its folder is not
-                    // writable), so an Error: line and a failure exit, not a stack trace.
+                    // writable, or nothing passed to write), so an Error: line and a failure
+                    // exit, not a stack trace.
                     ctx.LogError(ex.Message);
                     ctx.ExitCode = 1;
                     return false;
@@ -1053,12 +1092,14 @@ namespace pwiz.Osprey.Tasks
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
 
-            // Default user-facing reports (protein groups + per-replicate/experiment
-            // summary), modeled on DIA-NN. Additive files next to the output blib, so the
-            // byte-parity gate (blib + Stage-7 dump) is unaffected. The per-replicate
-            // protein counts re-run protein FDR per run, so this is the one place with the
-            // full per-file pool + library in hand.
-            if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
+            // The DIA-NN-shaped reports (protein groups + per-replicate/experiment summary),
+            // for comparing the two tools, under OSPREY_DIANN_REPORTS: they hold nothing the
+            // blib does not. Additive files next to the output blib, so the byte-parity gate
+            // (blib + Stage-7 dump) is unaffected. The per-replicate protein counts re-run
+            // protein FDR per run, so this is the one place with the full per-file pool +
+            // library in hand.
+            if (OspreyEnvironment.DiannReports &&
+                (config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
                 OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config,
                     ctx, ctx.LogWarning);
@@ -1201,10 +1242,16 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Stage 1 passing peptides: {0}", passingPeptides.Count);
             ctx.LogInfo(LogTag.COUNT, @"Stage 2 passing precursors: {0}", passingPrecursors.Count);
 
+            // A search that reports nothing fails rather than succeeding with an empty .blib,
+            // which only a later step could notice. An earlier run's .blib of the same name is
+            // removed, so nothing reads it as this run's result.
             if (passingEntries.Count == 0)
             {
-                ctx.LogWarning(string.Format(OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_,
-                    LibrarySource.EXT_BLIB));
+                BlibOutputWriter.RemoveOutput(config.OutputBlib);
+                throw new UserMessageException(string.Format(
+                    OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
+                    config.LibrarySource?.Path, config.ExperimentFdr,
+                    OspreyArgNames.Text(OspreyArgNames.EXPERIMENT_FDR), LibrarySource.EXT_BLIB));
             }
 
             // Ensure output directory exists

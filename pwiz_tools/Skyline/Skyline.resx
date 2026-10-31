@@ -517,6 +517,12 @@
   <data name="diannSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;DIA-NN Search...</value>
   </data>
+  <data name="ospreySearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="ospreySearchMenuItem.Text" xml:space="preserve">
+    <value>&amp;Osprey Search...</value>
+  </data>
   <data name="importFeatureDetectionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
   </data>

@@ -51,46 +51,75 @@ namespace pwiz.Common.CommandLine
 
     /// <summary>
     /// Static seams that decouple the generic CLI-argument framework from its host
-    /// application. Defaults keep PortableUtil a pure-BCL leaf usable on its own; a host
-    /// overrides them at startup (Skyline does so in the CommandArgs static constructor).
-    /// These are process-global, set once per process - not per parser instance - so a single
-    /// process is expected to host a single argument model (Skyline.exe and Osprey.exe are
-    /// separate processes). A future host that drives two argument models in one process would
-    /// need to revisit this.
+    /// application. Defaults keep PortableUtil a pure-BCL leaf usable on its own. They are
+    /// process-global, not per parser instance, so the program that owns the process installs
+    /// its argument model once at startup, through <see cref="Install"/>: Skyline in the
+    /// CommandArgs static constructor, Osprey in its, CarafeSharp.exe in Main. A library's
+    /// declarations hosted in another program's process - CarafeSharp's in Skyline and Osprey -
+    /// install nothing and run under the host's settings; a library that installed its own when
+    /// its type initialized decided how the host parsed its next command line.
     /// </summary>
     public static class ArgUsage
     {
+        /// <summary>
+        /// Installs an argument model's <see cref="ArgUsageSettings"/> on these seams, the one
+        /// way they are set. The program that owns the process calls it once at startup; a test
+        /// that parses under another grammar for a while takes <see cref="Current"/> first and
+        /// installs it again after.
+        /// </summary>
+        public static void Install(ArgUsageSettings settings)
+        {
+            Grammar = settings.Grammar;
+            ArgumentValueSeparator = settings.ArgumentValueSeparator;
+            ValueFormatProvider = settings.ValueFormatProvider;
+            Provider = settings.Provider;
+            IsRemoteUrl = settings.IsRemoteUrl;
+            IsWrappableListType = settings.IsWrappableListType;
+            HtmlEncode = settings.HtmlEncode;
+        }
+
+        /// <summary>The settings in force, as <see cref="Install"/> would install them again.</summary>
+        public static ArgUsageSettings Current
+        {
+            get
+            {
+                return new ArgUsageSettings
+                {
+                    Grammar = Grammar,
+                    ArgumentValueSeparator = ArgumentValueSeparator,
+                    ValueFormatProvider = ValueFormatProvider,
+                    Provider = Provider,
+                    IsRemoteUrl = IsRemoteUrl,
+                    IsWrappableListType = IsWrappableListType,
+                    HtmlEncode = HtmlEncode
+                };
+            }
+        }
+
         // Usage rendering format identifiers (also surfaced to users via Skyline's --help values).
         public const string FORMAT_ASCII = "ascii";
         public const string FORMAT_NO_BORDERS = "no-borders";
 
+        /// <summary>The provider in force until a host installs one, which throws on every use.</summary>
+        internal static readonly IArgUsageProvider NOT_INSTALLED_PROVIDER = new NotInstalledArgUsageProvider();
+
+        // Set only through Install, so the seams always change together and can be restored
+        // together; each is described on its ArgUsageSettings property.
+
         /// <summary>
         /// The grammar <see cref="CommandLineParser{TContext}"/> parses with and
-        /// <see cref="ArgumentBase.ArgumentText"/> spells arguments with. Defaults to
-        /// <see cref="CommandLineGrammar.STRICT"/>, Skyline's; Osprey and CarafeSharp install
-        /// theirs in the static constructor that declares their arguments.
+        /// <see cref="ArgumentBase.ArgumentText"/> spells arguments with.
         /// </summary>
-        public static CommandLineGrammar Grammar { get; set; } = CommandLineGrammar.STRICT;
+        public static CommandLineGrammar Grammar { get; private set; } = CommandLineGrammar.STRICT;
 
         /// <summary>
-        /// Separator between an argument and its value, both in the usage help
-        /// (e.g. <c>--name=&lt;value&gt;</c>) and in a token built by
-        /// <see cref="ArgumentBase.GetArgumentTextWithValue"/> / the <c>+</c> operator.
-        /// Defaults to <c>"="</c> for hosts whose grammar is <c>--name=value</c> (Skyline); a
-        /// host with space-separated values (Osprey) sets it to a space so the generated help
-        /// and the tokens its tests build both match what its parser actually accepts.
+        /// Separator between an argument and its value, both in the usage help and in a token
+        /// built by <see cref="ArgumentBase.GetArgumentTextWithValue"/> / the <c>+</c> operator.
         /// </summary>
-        public static string ArgumentValueSeparator { get; set; } = @"=";
+        public static string ArgumentValueSeparator { get; private set; } = @"=";
 
-        /// <summary>
-        /// Culture a non-string value is formatted with by the <c>+</c> operator, so that
-        /// <c>ARG_THRESHOLD + 0.05</c> renders the way the HOST parses. <c>null</c> (the
-        /// default) means the current culture at the time of the call, right for a host whose
-        /// parser tries the current culture first (Skyline); a host that parses numbers
-        /// invariantly (Osprey) sets <see cref="System.Globalization.CultureInfo.InvariantCulture"/>,
-        /// and moves this in the same change that moves its parser.
-        /// </summary>
-        public static IFormatProvider ValueFormatProvider { get; set; }
+        /// <summary>Culture a non-string value is formatted with by the <c>+</c> operator; null for the current culture.</summary>
+        public static IFormatProvider ValueFormatProvider { get; private set; }
 
         /// <summary>
         /// Host-supplied descriptions, headers and value-error messages. Defaults to a provider
@@ -99,25 +128,16 @@ namespace pwiz.Common.CommandLine
         /// a "seam not installed" bug into an immediate exception instead of silently emitting
         /// empty/mis-encoded output the byte-identical golden HTML test cannot catch.
         /// </summary>
-        public static IArgUsageProvider Provider { get; set; } = new NotInstalledArgUsageProvider();
+        public static IArgUsageProvider Provider { get; private set; } = NOT_INSTALLED_PROVIDER;
 
-        /// <summary>
-        /// Classifies a value as a remote URL (left untouched by <see cref="NameValuePair.ValueFullPath"/>
-        /// instead of being run through <see cref="System.IO.Path.GetFullPath(string)"/>). Default: never remote.
-        /// </summary>
-        public static Func<string, bool> IsRemoteUrl { get; set; } = _ => false;
+        /// <summary>Classifies a value as a remote URL, left untouched by <see cref="NameValuePair.ValueFullPath"/>.</summary>
+        public static Func<string, bool> IsRemoteUrl { get; private set; } = _ => false;
 
-        /// <summary>
-        /// Identifies value-example delegates whose argument text should be allowed to wrap
-        /// in HTML output (spaces left as-is rather than replaced with &amp;nbsp;). Default: none.
-        /// </summary>
-        public static Func<Func<string>, bool> IsWrappableListType { get; set; } = _ => false;
+        /// <summary>Identifies value-example delegates whose argument text may wrap in HTML output.</summary>
+        public static Func<Func<string>, bool> IsWrappableListType { get; private set; } = _ => false;
 
-        /// <summary>
-        /// HTML-encodes a string fragment. Defaults to <see cref="WebUtility.HtmlEncode(string)"/> (BCL on
-        /// all targets); a host may override to match a specific encoder's byte-for-byte output.
-        /// </summary>
-        public static Func<string, string> HtmlEncode { get; set; } = WebUtility.HtmlEncode;
+        /// <summary>HTML-encodes a string fragment; a host may match a specific encoder's byte-for-byte output.</summary>
+        public static Func<string, string> HtmlEncode { get; private set; } = WebUtility.HtmlEncode;
 
         private class NotInstalledArgUsageProvider : IArgUsageProvider
         {

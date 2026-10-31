@@ -120,7 +120,7 @@ pretrained model, and the log says so.
   its prediction is carried onto Chronologer's scale through both models' iRT kit fits: with
   `iRT = a x alphapeptdeep + b` and `iRT = c x chronologer + d`, `chronologer = (a / c) x alphapeptdeep + (b - d) / c`.
   The log counts them. This is why a library with Chronologer needs the pretrained AlphaPeptDeep archive too. With
-  the default digest (7 to 35 residues) and modifications (`--fixMod 1` carbamidomethyl-Cys, `--varMod 2` oxidized
+  the default digest (7 to 35 residues) and modifications (`--fix-mod 1` carbamidomethyl-Cys, `--var-mod 2` oxidized
   Met) no form is rejected; protein N-terminal acetyl and phospho S/T/Y are encoded too.
 - Batches of 2,048 forms, on the CPU or the GPU (`--device`).
 

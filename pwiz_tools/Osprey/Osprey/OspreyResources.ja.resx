@@ -463,4 +463,16 @@
     <value>スペクトルライブラリが指定されていません。{0}を使用してください</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OspreyCommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
+    <value>path/to/file（ファイル）</value>
+  </data>
+  <data name="OspreyCommandArgs_PATH_TO_FOLDER" xml:space="preserve">
+    <value>path/to/folder（フォルダ）</value>
+  </data>
+  <data name="OspreyCommandArgs_INT_VALUE" xml:space="preserve">
+    <value>&lt;整数&gt;</value>
+  </data>
+  <data name="OspreyCommandArgs_NUM_VALUE" xml:space="preserve">
+    <value>&lt;数字&gt;</value>
+  </data>
 </root>

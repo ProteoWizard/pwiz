@@ -97,28 +97,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="_cache_dir" xml:space="preserve">
-    <value>{0}キャッシュのディレクトリ（{1}より優先）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_decoy_pairing_manifest" xml:space="preserve">
-    <value>FDRBench 5列ペアリングマニフェスト（TSV）、{0}と併用</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_decoys_in_library" xml:space="preserve">
-    <value>リバースデコイを生成する代わりに、スペクトルライブラリにすでに含まれるデコイを使用します。デコイが認識されない場合は、エラーで停止します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_diagnostics" xml:space="preserve">
     <value>開発者向けの診断ダンプファイルを書き込みます（Rust実装との比較用）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_experiment_fdr" xml:space="preserve">
-    <value>実験レベルFDR閾値（デフォルト：0.01）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_fdr_level" xml:space="preserve">
-    <value>FDRレベル（デフォルト：{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_fdrbench" xml:space="preserve">
@@ -133,32 +113,12 @@
     <value>{0}と併用：ランレベルのQ値を使用して（プリカーサー、ラン）ごとに1行を出力します（「{1}」列を追加）。デフォルトでは、実験レベルのQ値を使用してプリカーサーごとに1行を出力します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_fragment_tolerance" xml:space="preserve">
-    <value>フラグメントm/z許容誤差（デフォルト：10）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_fragment_unit" xml:space="preserve">
-    <value>フラグメント許容誤差の単位（デフォルト：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_help" xml:space="preserve">
     <value>このヘルプメッセージを表示します（{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_input" xml:space="preserve">
-    <value>入力mzMLファイル</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_input_list" xml:space="preserve">
     <value>入力パスを記載したファイル（1行に1つ、#コメントは無視）。長い{0}リストの代わりに使用できます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_library" xml:space="preserve">
-    <value>スペクトルライブラリ（{0}、{1}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_log_file" xml:space="preserve">
-    <value>すべての出力をstderrではなくこのファイルに書き込みます</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_memstamp" xml:space="preserve">
@@ -169,52 +129,12 @@
     <value>トレーニング済みスコアリングモデル、FDR校正、単一ピークに対する複数IDの重複割り当てについて、自己完結型のインタラクティブなHTMLレポートを書き込みます</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_no_prefilter" xml:space="preserve">
-    <value>共溶出シグナルのプレフィルタを無効にします</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_output" xml:space="preserve">
-    <value>出力blibファイル</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_output_dir" xml:space="preserve">
-    <value>中間ファイルのディレクトリ（{0}より優先）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_parallel_files" xml:space="preserve">
-    <value>並列にスコアリングする入力ファイル数（OUTER）。指定なし：1ファイルずつ（デフォルト）。値なし：空きRAMとコア数から自動。&lt;N&gt;：RAM/コア数に関係なく正確にN。{0}とは別の設定です。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_perf_stats" xml:space="preserve">
     <value>スクリプトやパフォーマンスツールが読み取る、機械解析可能な{0}行を出力します（デフォルトはオフ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_protein_fdr" xml:space="preserve">
-    <value>タンパク質レベルFDR閾値（オプション）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_reconciliation_compaction_fdr" xml:space="preserve">
     <value>ラン間整合と第2パスのために第1パスのペプチドを保持する、ペプチドQ値閾値（デフォルト：0.01 = {0}。整合のプールを広げるには、例えば0.05に緩めます）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_report" xml:space="preserve">
-    <value>TSVレポートをファイルに書き込みます</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_resolution" xml:space="preserve">
-    <value>分解能モード（デフォルト：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_run_fdr" xml:space="preserve">
-    <value>ランレベルFDR閾値（デフォルト：0.01）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_shared_peptides" xml:space="preserve">
-    <value>共有ペプチドの処理（デフォルト：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_task" xml:space="preserve">
-    <value>HPC：パイプラインタスクを1つだけ実行します（1ノード = 1タスク）。完全なパイプラインを実行する場合は省略します。{0}は{1}キャッシュを準備し、{4}は{5}のparquetを書き込み（完了済みの実行では不足分のみ）、{2}は完了済みの実行の{3}レポートのみを再生成し、その他の出力は書き込みません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_threads" xml:space="preserve">
@@ -231,10 +151,6 @@
   </data>
   <data name="_version" xml:space="preserve">
     <value>バージョンを表示します</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_work_dir" xml:space="preserve">
-    <value>中間ファイルとスペクトルキャッシュをここに書き込みます（入力データを読み取り専用にできます）。デフォルト：入力の横</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

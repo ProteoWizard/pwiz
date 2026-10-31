@@ -174,7 +174,7 @@ searches, and their scripts are in the repository (`pwiz_tools/Osprey`).
   Windows cloud agent. `scripts/misc/vcs_trigger_and_paths_config.py` routes `pwiz_tools/CarafeSharp` (and
   `Shared/Lib/Parquet`) changes to both configs.
 - **Nightly** (`tctest.bat`, Osprey Windows .NET Perf/Regression, after Osprey's lanes): `tcregression.ps1` runs
-  `build.ps1 -TestData Fetch -RequireData`, `regression.ps1 -Dataset Stellar`, `regression.ps1 -Leg Chained`, and
+  `build.ps1 -TestData Fetch -RequireData`, `regression.ps1 -Dataset Stellar`, and
   `regression.ps1 -Dataset StellarSubset` twice, whose models and training tables must be the same bytes (a rerun on
   the agent repeats), about 19 minutes on an i9-14900. Its test data goes in `<Downloads>/Perftests/carafesharp`, not the default
   folder, so a per-commit build on the same agent does not find it and run the full-scale tests every commit.
@@ -184,13 +184,10 @@ searches, and their scripts are in the repository (`pwiz_tools/Osprey`).
 
 ## Regression
 
-`regression.ps1` has two legs:
-- **Isolated** (the default): it fine-tunes on the packaged Osprey training export and predicts the final
-  library, so it depends on CarafeSharp alone, and compares the run with a golden kept in
-  `regression.data/<dataset>`. It is the gate on training and prediction.
-- **Chained** (`-Leg Chained`): Osprey searches its committed Stellar subset with `--training-export`, and
-  CarafeSharp trains on those exports and predicts a library (see "The chained leg" below). It checks that
-  the two tools work together, needs no test data, and has no golden.
+`regression.ps1` fine-tunes on the packaged Osprey training export and predicts the final library, so it
+depends on CarafeSharp alone, and compares the run with a golden kept in `regression.data/<dataset>`. It is
+the gate on training and prediction. Osprey's export feeding CarafeSharp end to end is checked on Osprey's
+side (see "Osprey's export feeding CarafeSharp" below).
 
 `-Dataset StellarSubset` is the isolated leg on the committed `RegressionSubset.zip`, with no test data: 1,831
 of the Stellar export's 27,424 precursors (1,672 peptide forms, enough for the KDE alignment) and 438 pair
@@ -203,7 +200,6 @@ pwsh -File regression.ps1 -NoBuild -ExtraArgs "--cor 0.7"    # a sensitivity che
 pwsh -File regression.ps1 -CompareRun <run folder>          # compare an existing run again
 pwsh -File regression.ps1 -Export <x.training.parquet>      # fine-tune on another export instead
 pwsh -File regression.ps1 -CreateGolden                     # from a clean tree; -Force to replace
-pwsh -File regression.ps1 -Leg Chained                      # Osprey's export feeding CarafeSharp
 ```
 
 **The run.** The inputs come from the test data packages, by the rules the tests use: the training
@@ -309,31 +305,23 @@ Earlier goldens: on 2026-09-30 (8dfe512b59) for the acquisition layer (01-model-
 (8362e74827) when the Astral library began writing its pairs whole, and on 2026-10-02 (3c3d40a502, 9f98c03903) when
 Chronologer became the default RT model, all on the v1 exports.
 
-**The chained leg.** `regression.ps1` builds Osprey from the same checkout (or takes `-OspreyExe`),
-extracts `pwiz_tools/Osprey/Osprey.Test/TestData/StellarSubset.zip` (one isolation window of the three
-Stellar runs, 6.5-13.5 min, and a 358-precursor DIA-NN library; its README has the details), and writes
-a peptide FASTA of the library's 358 peptides. Osprey searches the three runs with `--training-export`,
-the full pipeline including the second pass: the subset is sized so a 1% run FDR keeps 118-159
-precursors per run. CarafeSharp then runs `--tf all` on the exports, with the isolated leg's library
-arguments, predicting a library from the FASTA. The comparator checks, with no golden:
-- an export per run, each with at least 50 precursors (how many is Osprey's regression's to gate) and
-  run q-values from the per-run second pass;
-- the four training tables are not empty, and hold no more PSMs than were exported;
+**Osprey's export feeding CarafeSharp.** `regression.ps1 -Leg Chained` ran Osprey and then
+CarafeSharp.exe on Osprey's committed Stellar subset. It retired when Osprey's one command gained
+`--training-input`, which runs the same chain in one process: Osprey's
+`SubsetPipelineTest.TestSubsetLibraryBuildTuned` (`pwiz_tools/Osprey/Osprey.Test`) runs it on every
+commit, on the three runs of `StellarSubset.zip`, with the checks the leg made:
+- an export per tuning run, each with at least 50 precursors and run q-values from the per-run second
+  pass;
+- the training tables are not empty, and hold no more PSMs than were exported;
 - both models are written and every metric is finite;
 - `meta.json` records each run, with a precursor window that holds the subset's (594.52 m/z);
-- the library has precursors, each with at least `--lf-min-n-frag` peaks.
-- the saved model (`carafe_fine_tuned_model.carafemodel`, [06](06-saved-models.md)) opens, and a second
-  library predicted from it with `--model` over a wider precursor window holds every precursor of the
-  first with the same m/z, retention time and fragments, and intensities within 1e-5 (float32
-  rounding moves with a batch's other peptides; over the same window the spectra are identical).
-- the saved model fine-tuned further on the same exports (`--model` with training) starts from the
-  models the first training chose: on the same held-out rows they score exactly as they did there (RT's
-  fine-tuned metrics, and MS2's fine-tuned or pretrained ones as it chose). The new file names the
-  saved one as its base, by SHA-256, and holds the saved MS2 model when its own did not beat it.
+- the model the run saved, given to `--model`, predicts the same spectra as the tuned run's library
+  (m/z, retention time and fragments exactly, intensities within 1e-5);
+- a further tuning of the saved model (`--model` with `--training-input`) names it as its base, by
+  SHA-256.
 
-Training on one isolation window says little about the models, so the chained leg does not judge them;
-the isolated leg does. After the builds it takes under a minute on the CPU: Osprey 7 s, CarafeSharp
-19 s to train, about 10 s for the library from the saved model, and 18 s to fine-tune it further.
+The fine-tune there is cut to an epoch or two, so it judges the chain, not the models; this script's
+golden does.
 
 **Another export: `-Export`.** The run fine-tunes on the given file instead of the packaged export,
 for example one Osprey wrote from the .raw on another platform. The export's SHA-256 is then reported
@@ -375,8 +363,8 @@ DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 t
 
 Statement coverage from `build.ps1 -Coverage`, with no test data (what CI sees; the pretrained archive
 is bundled, so its tests run) and with the data (`-RequireData`); and, merged with them, `regression.ps1`'s
-isolated and chained legs, measured by `ai/scripts/CarafeSharp/Measure-CumulativeCoverage.ps1` (2026-10-12,
-before the committed subsets).
+isolated and (since retired) chained legs, measured by `ai/scripts/CarafeSharp/Measure-CumulativeCoverage.ps1`
+(2026-10-12, before the committed subsets).
 
 | Assembly | No data | With data | With the regression |
 |---|---|---|---|

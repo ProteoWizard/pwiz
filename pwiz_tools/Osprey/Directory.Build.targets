@@ -11,18 +11,19 @@
 
   <!-- ProteowizardWrapper, CommonUtil and pwiz-sharp are not in Osprey.sln, so a solution build
        strips Configuration and Platform from references to them and every level below falls back
-       to Debug|AnyCPU. Give them this build's Configuration and AnyCPU, as
-       pwiz_tools\Directory.Build.targets does for Skyline.sln, so Osprey and Skyline share one
-       pwiz-sharp build in bin\<Configuration>. A target rather than reference metadata, because
-       the SDK flattens transitive references into every Osprey project and each one must pass the
-       same global properties, or a second instance is built. -->
+       to Debug|AnyCPU. Give them this build's Configuration and Platform (x64 from build.ps1 and the
+       x64 solution configuration), as pwiz_tools\Directory.Build.targets does for Skyline.sln, so
+       Osprey, Skyline, package.ps1 and the pwiz-sharp tests share one pwiz-sharp build in
+       bin\x64\<Configuration>. A target rather than reference metadata, because the SDK flattens
+       transitive references into every Osprey project and each one must pass the same global
+       properties, or a second instance is built. -->
   <Target Name="CarryConfigurationToOutOfSolutionReferences"
           AfterTargets="AssignProjectConfiguration"
           Condition="'$(CurrentSolutionConfigurationContents)' != ''">
     <ItemGroup>
       <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
         <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
-        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
+        <SetPlatform>Platform=$(Platform);ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
         <GlobalPropertiesToRemove />
       </ProjectReferenceWithConfiguration>
     </ItemGroup>
@@ -42,8 +43,12 @@
            mirrors pwiz_tools/Skyline AssemblyInformationalVersion; OspreyVersion
            parses it back for the version display). Set on every path.
          * Version = numeric  only while it is still the props placeholder, so an
-           explicit /p:Version from build.ps1 / package.ps1 / the Boost build (a
-           global property) still wins and this only fills the script-less gap.
+           explicit /p:Version (a global property) still wins. build.ps1 and
+           package.ps1 no longer pass one: a global property flows into every
+           referenced project, so it also stamped the libraries Osprey shares with
+           Skyline (BiblioSpec.IO) and made the two builds recompile each other's
+           output on every switch. This target is now how the scripts' builds get
+           their version too, and they check the result.
 
        pwsh is a hard project prerequisite (pwiz_tools/Osprey/tcbuild.bat), so the
        Exec is reliable on every build agent and dev shell. If git or pwsh is
