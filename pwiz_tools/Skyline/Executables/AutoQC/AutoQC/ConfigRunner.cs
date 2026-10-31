@@ -84,7 +84,7 @@ namespace AutoQC
         private DateTime _lastUploadAt = DateTime.MinValue;
 
         // Set if the last process reported that the ClickOnce Skyline it starts is not installed, or the SkylineCmd.exe
-        // it runs no longer exists.
+        // it runs no longer exists or is left over from an uninstall and cannot start.
         private bool _skylineNotFound;
 
         private bool _annotationsImportError;
@@ -1307,11 +1307,11 @@ namespace AutoQC
         {
             _processRunner = new ProcessRunner(_logger);
             var status = _processRunner.RunProcess(processInfo);
-            // A missing ClickOnce Skyline is reported by SkylineRunner, and ProcessRunner records it in
-            // SkylineNotFound. Any other missing Skyline is detected here, when the run failed and its
-            // SkylineCmd.exe no longer exists. That happens when an Inno Setup or administrative Skyline was
-            // uninstalled, or a custom Skyline folder was deleted or moved. The import loops and RunConfiguration
-            // check the flag and stop the configuration.
+            // A missing ClickOnce Skyline is reported by SkylineRunner, and a SkylineCmd.exe left over from an
+            // uninstall by its exit code. ProcessRunner records both in SkylineNotFound. Any other missing Skyline
+            // is detected here, when the run failed and its SkylineCmd.exe no longer exists. That happens when an
+            // Inno Setup or administrative Skyline was uninstalled, or a custom Skyline folder was deleted or moved.
+            // The import loops and RunConfiguration check the flag and stop the configuration.
             _skylineNotFound = _processRunner.SkylineNotFound ||
                                (status == ProcStatus.Error && !File.Exists(processInfo.Executable));
             return status;

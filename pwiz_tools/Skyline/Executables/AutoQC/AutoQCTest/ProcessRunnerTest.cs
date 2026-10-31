@@ -33,11 +33,14 @@ namespace AutoQCTest
     public class ProcessRunnerTest : AbstractUnitTest
     {
         private const int ERROR_FILE_NOT_FOUND = 2;
+        // The exit code of a .NET launcher whose runtime files are missing
+        private const int DOTNET_LIBRARY_MISSING = unchecked((int)0x80008083);
 
         /// <summary>
         /// Checks that <see cref="ConfigRunner.SkylineNotFound"/> is set only when the runner reports that the ClickOnce
-        /// Skyline is not installed, or the SkylineCmd.exe the configuration runs does not exist. <see cref="ConfigRunner"/>
-        /// then stops the configuration with an error, and a message that depends on the configuration's Skyline option.
+        /// Skyline is not installed, the SkylineCmd.exe the configuration runs does not exist, or it exits with the
+        /// code of a .NET launcher whose runtime files are missing. <see cref="ConfigRunner"/> then stops the
+        /// configuration with an error, and a message that depends on the configuration's Skyline option.
         /// </summary>
         [TestMethod]
         public void TestSkylineNotFound()
@@ -62,6 +65,9 @@ namespace AutoQCTest
             AssertRun(logger, ProcStatus.Error, true, 1,
                 "Error: Unable to find Skyline program at any of the following locations:",
                 @"C:\Users\user\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\MacCoss Lab, UW\Skyline-daily.appref-ms");
+            // SkylineCmd.exe left over from a Skyline uninstalled while it was running. The uninstaller removed the
+            // .NET runtime files next to it.
+            AssertRun(logger, ProcStatus.Error, true, DOTNET_LIBRARY_MISSING);
 
             // Skyline ran, or the process failed for a different reason. SkylineRunner prints "Could not connect to Skyline"
             // when Skyline is installed but does not start in time. ProcessRunner does not check for a missing
@@ -90,6 +96,7 @@ namespace AutoQCTest
                 // A later run that finds Skyline clears it
                 AssertConfigRun(runner, cmdExe, @"/c exit 0", false);
                 AssertConfigRun(runner, cmdExe, runnerNotFound, true);
+                AssertConfigRun(runner, cmdExe, @"/c exit " + DOTNET_LIBRARY_MISSING, true);
                 // An executable that exists and fails for a different reason
                 AssertConfigRun(runner, cmdExe, @"/c exit 1", false);
             }

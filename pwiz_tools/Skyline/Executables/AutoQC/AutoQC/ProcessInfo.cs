@@ -44,6 +44,9 @@ namespace AutoQC
 
     public class ProcessRunner
     {
+        // The exit code of a .NET launcher whose runtime files are missing
+        private const int DOTNET_LIBRARY_MISSING = unchecked((int)0x80008083);
+
         private ProcessInfo _procInfo;
         private readonly Logger _logger;
 
@@ -61,7 +64,8 @@ namespace AutoQC
         }
 
         /// <summary>
-        /// True if the last process failed because the ClickOnce Skyline it starts is not installed.
+        /// True if the last process failed because the ClickOnce Skyline it starts is not installed, or because the
+        /// SkylineCmd.exe it ran is left over from an uninstall and cannot start.
         /// </summary>
         public bool SkylineNotFound => _skylineNotFound;
 
@@ -104,6 +108,11 @@ namespace AutoQC
                     LogException(e, string.Format(Resources.ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_, _procInfo.ExeName));
                     return ProcStatus.Error;
                 }
+
+                // An uninstaller cannot delete a running SkylineCmd.exe or the files it has loaded, but removes the
+                // .NET runtime files next to them. Every later run of that SkylineCmd.exe exits with this code.
+                if (exitCode == DOTNET_LIBRARY_MISSING)
+                    _skylineNotFound = true;
 
                 if (_fileImportIgnored)
                 {
