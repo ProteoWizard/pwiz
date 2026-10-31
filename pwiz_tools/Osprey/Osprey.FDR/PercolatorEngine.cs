@@ -336,6 +336,8 @@ namespace pwiz.Osprey.FDR
         private static GbtParams BuildGbtParams()
         {
             var gbtParams = new GbtParams();
+            if (OspreyEnvironment.FdrSeed.HasValue)
+                gbtParams.Seed = OspreyEnvironment.FdrSeed.Value;
             if (OspreyEnvironment.GbtGamma.HasValue)
                 gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
             if (OspreyEnvironment.GbtRegLambda.HasValue)

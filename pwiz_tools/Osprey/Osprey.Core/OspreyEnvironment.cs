@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 
@@ -98,7 +99,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FEATURE_LOG", @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FEATURE_CLIP", @"OSPREY_FDR_FEATURE_LOG", @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_SHARPNESS", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
@@ -753,6 +754,26 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_FDR_FEATURE_LOG"));
 
         /// <summary>
+        /// OSPREY_FDR_FEATURE_CLIP (experiment): name:max pairs, comma-separated; the FDR stages read each named
+        /// feature capped at max, so a heavy tail stops growing a linear score. Null when unset.
+        /// </summary>
+        public static readonly string[] FdrFeatureClip = ParseFeatureMask(
+            Environment.GetEnvironmentVariable(@"OSPREY_FDR_FEATURE_CLIP"));
+
+        /// <summary>
+        /// OSPREY_FDR_SHARPNESS (experiment): <c>width</c> or <c>scalefree</c> replaces peak_sharpness as the FDR
+        /// stages read it, with the peak width or the edge slope divided by the apex. Null when unset.
+        /// </summary>
+        public static readonly string FdrSharpness = Environment.GetEnvironmentVariable(@"OSPREY_FDR_SHARPNESS");
+
+        /// <summary>
+        /// OSPREY_FDR_SEED (experiment): the Percolator seed in place of 42 (fold split, training subsample, GBDT
+        /// row and column sampling), to measure how much a feature-set comparison owes to the draw. Null when unset.
+        /// </summary>
+        public static readonly ulong? FdrSeed = ulong.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_SEED"),
+            NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) ? seed : null;
+
+        /// <summary>
         /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
         /// only from its picks in the runs where its paired target's peptide qualified, as the
         /// target's consensus is built only from its qualifying runs. Unset, the decoy's consensus
@@ -822,8 +843,8 @@ namespace pwiz.Osprey.Core
         {
             if (string.IsNullOrEmpty(value))
                 return null;
-            if (int.TryParse(value.Trim(), System.Globalization.NumberStyles.None,
-                    System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 2 && n <= 20)
+            if (int.TryParse(value.Trim(), NumberStyles.None,
+                    CultureInfo.InvariantCulture, out int n) && n >= 2 && n <= 20)
                 return n;
             throw new InvalidOperationException(@"OSPREY_XIC_FRAGMENTS must be a whole number from 2 to 20: " + value);
         }
@@ -1061,7 +1082,7 @@ namespace pwiz.Osprey.Core
         public static string ExperimentAgg =>
             MeanBestN >= 2
                 ? EXPERIMENT_AGG_MEAN_BEST_PREFIX +
-                  MeanBestN.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                  MeanBestN.ToString(CultureInfo.InvariantCulture)
                 : EXPERIMENT_AGG_MAX;
 
         /// <summary>True when <see cref="MeanBestN"/> selects a mean(best-N) reproducibility score
@@ -1165,7 +1186,7 @@ namespace pwiz.Osprey.Core
                 return string.Format(
                     @"OSPREY_MEANBEST2_FLOOR_PCT={0} is outside the valid range [0, 100]. It names a " +
                     @"percentile of the decoy score distribution to use as the missing-run floor.",
-                    pct.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    pct.Value.ToString(CultureInfo.InvariantCulture));
             }
             if (fileCount > 0 && MeanBestN > fileCount)
             {
@@ -1205,7 +1226,7 @@ namespace pwiz.Osprey.Core
             return @";expagg=" + ExperimentAgg
                    + @";floormean=" + MeanBest2FloorMean
                    + @";floorpct=" + (MeanBest2FloorPercentile?.ToString(
-                       System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+                       CultureInfo.InvariantCulture) ?? @"none");
         }
 
         /// <summary>
@@ -1337,9 +1358,9 @@ namespace pwiz.Osprey.Core
             if (maxTrainSizeOverride.HasValue)
             {
                 suffix += @";maxtrain=" +
-                          maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                          maxTrainSizeOverride.Value.ToString(CultureInfo.InvariantCulture);
             }
-            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", System.Globalization.CultureInfo.InvariantCulture);
+            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
         }
 
@@ -1367,7 +1388,7 @@ namespace pwiz.Osprey.Core
             if (pct.HasValue)
             {
                 return string.Format(@"decoy {0} percentile (OSPREY_MEANBEST2_FLOOR_PCT)",
-                    pct.Value.ToString(@"0.###", System.Globalization.CultureInfo.InvariantCulture));
+                    pct.Value.ToString(@"0.###", CultureInfo.InvariantCulture));
             }
             return @"decoy MEDIAN (default)";
         }
@@ -1387,8 +1408,8 @@ namespace pwiz.Osprey.Core
             // NumberStyles.None, not Integer: Integer also accepts a leading sign and surrounding
             // whitespace, so "mean-best-+3" and "mean-best- 3" parsed as 3 - two spellings of the
             // same arm that an A/B log could not tell apart from the canonical one.
-            return int.TryParse(tail, System.Globalization.NumberStyles.None,
-                       System.Globalization.CultureInfo.InvariantCulture, out int n) &&
+            return int.TryParse(tail, NumberStyles.None,
+                       CultureInfo.InvariantCulture, out int n) &&
                    n >= 2 && n <= MEAN_BEST_N_MAX
                 ? n
                 : 0;
@@ -1492,8 +1513,8 @@ namespace pwiz.Osprey.Core
             string v = GetVariable(name);
             if (string.IsNullOrEmpty(v))
                 return null;
-            return double.TryParse(v, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out double result)
+            return double.TryParse(v, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out double result)
                 ? result : null;
         }
 
@@ -1506,8 +1527,8 @@ namespace pwiz.Osprey.Core
         internal static double? ParseSvmCSelectionTolerance(string raw)
         {
             if (string.IsNullOrEmpty(raw) ||
-                !double.TryParse(raw, System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture, out double tolerance) ||
+                !double.TryParse(raw, NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out double tolerance) ||
                 !(tolerance >= 0 && tolerance < 1))
             {
                 return null;
