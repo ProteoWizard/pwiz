@@ -520,8 +520,10 @@ namespace pwiz.Osprey.Scoring
 
             // The candidates the runner-up features compare the chosen peak with. A first-pass pick
             // chose among capturedPeaks; a peak rescored at override bounds was chosen elsewhere, so
-            // it is compared with the candidates the first pass would have chosen among.
-            var runnerUpPeaks = overrideBounds.HasValue
+            // it is compared with the candidates the first pass would have chosen among - when a
+            // runner-up feature is in use. Otherwise capturedPeaks is null here and the masked
+            // features report a lone candidate without the second detection.
+            var runnerUpPeaks = overrideBounds.HasValue && context.OverrideRunnerUpCandidates
                 ? OverrideRunnerUpCandidates(candidate, windowSpectra, windowRts, expectedRt, rtTolerance,
                     twoSigmaSq, pickModel, config, overrideBounds.Value, bestPeak, bestCoelutionScore, bestRankScore)
                 : capturedPeaks;

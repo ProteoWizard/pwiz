@@ -608,6 +608,11 @@ namespace pwiz.Osprey.Test
             int margin = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_rank_margin");
             Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => f != margin),
                 @"any one runner-up feature unmasked must key the change");
+            // The key term and the second detection it records must switch together.
+            Assert.IsFalse(PinFeatureMask.UsesRunnerUpFeatures(PinFeatureMask.IsMasked),
+                @"the default mask must skip the override-path detection");
+            Assert.IsTrue(PinFeatureMask.UsesRunnerUpFeatures(f => f != margin),
+                @"any one runner-up feature unmasked must run the override-path detection");
         }
 
         /// <summary>

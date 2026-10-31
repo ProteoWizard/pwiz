@@ -33,7 +33,9 @@ namespace pwiz.Osprey.Scoring
     /// which scores a peak someone else chose, the candidates are the ones the first pass
     /// would have chosen among, with the imposed peak in place of any whose apex it covers
     /// (<c>PeakDataExtractor.OverrideRunnerUpCandidates</c>); there the chosen peak need not
-    /// be the best, and its margins can be negative.
+    /// be the best, and its margins can be negative. That takes a second detection, so it is
+    /// done only when a runner-up feature is unmasked; otherwise nothing is published there
+    /// and the features report a lone candidate.
     /// </summary>
     public sealed class PeakCandidatesByproduct
     {

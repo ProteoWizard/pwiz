@@ -103,10 +103,28 @@ namespace pwiz.Osprey.IO
         };
 
         /// <summary>
+        /// True when the classifier sees a runner-up feature. Only then does a peak rescored at
+        /// override bounds need the first pass's candidates, which take a second CWT detection
+        /// per peak (<c>ScoringContext.OverrideRunnerUpCandidates</c>); otherwise the detection
+        /// is skipped and the masked features report a lone candidate.
+        /// </summary>
+        public static bool UsesRunnerUpFeatures()
+        {
+            return UsesRunnerUpFeatures(IsMasked);
+        }
+
+        /// <summary><see cref="UsesRunnerUpFeatures()"/> for an explicitly supplied mask.</summary>
+        public static bool UsesRunnerUpFeatures(Func<int, bool> isMasked)
+        {
+            return RUNNER_UP_FEATURES.Any(name => !isMasked(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name)));
+        }
+
+        /// <summary>
         /// The validity-key term for the tasks that rescore peaks at override bounds and use those
-        /// scores (PerFileRescoring, SecondPassFDR): present only when the classifier sees a
-        /// runner-up feature, because only then did the override-path change move their output.
-        /// Under the default mask it is empty, so no default output directory is invalidated.
+        /// scores (PerFileRescoring, SecondPassFDR): present exactly when
+        /// <see cref="UsesRunnerUpFeatures()"/> is, because only then are the override-path
+        /// candidates found. Under the default mask it is empty, so no default output directory
+        /// is invalidated.
         /// </summary>
         public static string RescoreValidityKeySuffix()
         {
@@ -116,12 +134,7 @@ namespace pwiz.Osprey.IO
         /// <summary><see cref="RescoreValidityKeySuffix()"/> for an explicitly supplied mask.</summary>
         public static string RescoreValidityKeySuffix(Func<int, bool> isMasked)
         {
-            foreach (string name in RUNNER_UP_FEATURES)
-            {
-                if (!isMasked(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name)))
-                    return @";runnerup=override-candidates";
-            }
-            return string.Empty;
+            return UsesRunnerUpFeatures(isMasked) ? @";runnerup=override-candidates" : string.Empty;
         }
 
         private static bool[] CreateMask(string[] maskedNames)

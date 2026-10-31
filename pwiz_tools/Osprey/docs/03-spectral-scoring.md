@@ -327,7 +327,11 @@ someone else chose, so it runs the first-pass detection once more over the norma
 (`PeakDataExtractor.OverrideRunnerUpCandidates`) and compares the imposed peak with the
 candidates found there, the imposed peak standing in for any candidate whose apex falls inside
 its bounds. A peak moved off a stronger candidate then shows a negative margin. The Stage 6
-candidate list (`cwt_candidates`) stays empty on that path, as in Rust.
+candidate list (`cwt_candidates`) stays empty on that path, as in Rust. That second detection
+makes the re-score step 15-20% slower (about 2.5 s per file on the Astral test runs, 0.5 s on
+Stellar; a few percent of PerFileRescoring), so it runs only when a runner-up feature is unmasked (`PinFeatureMask.UsesRunnerUpFeatures`, passed in as
+`ScoringContext.OverrideRunnerUpCandidates`). Under the default mask, an override-path peak
+reports a lone candidate, which the classifier never sees.
 
 **Context (24-26)** - peptide length, precursor charge and precursor m/z, as Percolator and
 DIA-NN use them: how reliable a match is depends on what is being matched. A decoy has its
@@ -369,10 +373,13 @@ nothing from it. The parquet always holds all 41, so:
   not of PerFileScoring, so pointing a new mask at existing scores re-runs only the FDR stages
   (minutes on three runs, against the whole search). See `14-intermediate-files.md`. When a
   runner-up feature is unmasked, PerFileRescoring and SecondPassFDR also carry
-  `;runnerup=override-candidates`, because the override path's runner-up values changed (they
-  once reported a lone candidate); under the default mask the term is empty.
+  `;runnerup=override-candidates`, because only then does the override path find the first
+  pass's candidates (above); under the default mask the term is empty and the detection is
+  skipped. Pointing a mask that unmasks a runner-up feature at a default search's outputs
+  therefore re-runs rescoring too.
 - the training export (`22-training-export.md`) and anything else reading the parquet see every
-  feature unmasked.
+  feature unmasked, except that under a mask hiding all three runner-up features, peaks rescored
+  at override bounds carry lone-candidate runner-up values.
 
 #### The XIC count (`OSPREY_XIC_FRAGMENTS`)
 

@@ -1494,6 +1494,7 @@ namespace pwiz.Osprey.Tasks
             // peak-construction path.
             var context = new ScoringContext(fileConfig, fileName);
             context.BoundaryOverrides = boundaryOverrides;
+            context.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
             context.OriginalRtMad = rtMadFromCalJson;
 
             // Isolation windows come straight from the streaming index, the same list
@@ -2973,6 +2974,7 @@ namespace pwiz.Osprey.Tasks
 
                 var forcedContext = new ScoringContext(fileConfig, fileName);
                 forcedContext.BoundaryOverrides = forcedOverrides;
+                forcedContext.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
                 forcedContext.OriginalRtMad = rtMadFromCalJson;
 
                 var swForced = Stopwatch.StartNew();
