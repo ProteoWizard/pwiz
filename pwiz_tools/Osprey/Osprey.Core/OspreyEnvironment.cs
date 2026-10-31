@@ -99,7 +99,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FEATURE_CLIP", @"OSPREY_FDR_FEATURE_LOG", @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_SHARPNESS", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FEATURE_CLIP", @"OSPREY_FDR_FEATURE_LOG", @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_SHARPNESS", @"OSPREY_FDR_TRAIN_FDR", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
@@ -108,7 +108,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
-            @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
             @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
@@ -772,6 +772,22 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly ulong? FdrSeed = ulong.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_SEED"),
             NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) ? seed : null;
+
+        /// <summary>
+        /// OSPREY_FDR_TRAIN_FDR (experiment): the q-value under which Percolator takes targets as positives, in
+        /// place of 0.01. 1 trains on every target against the decoys, as DIA-NN 1.7.12's neural network does.
+        /// Not keyed: run each value into its own output directory. Null when unset.
+        /// </summary>
+        public static readonly double? FdrTrainFdr = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_TRAIN_FDR"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ? trainFdr : null;
+
+        /// <summary>
+        /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the configured
+        /// 0.5, to price precursors whose library RT the calibration maps badly (the SEA-AD gradient tail). It
+        /// enters the search identity, so every task keys on it. Null when unset.
+        /// </summary>
+        public static readonly double? MinRtTolerance = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_MIN_RT_TOLERANCE"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double minRtTolerance) ? minRtTolerance : null;
 
         /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation

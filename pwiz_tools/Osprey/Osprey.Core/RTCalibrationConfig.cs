@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Core
         public double FallbackRtTolerance { get; set; } = 2.0;
 
         /// <summary>Minimum RT tolerance (minutes) floor for local tolerance calculation.</summary>
-        public double MinRtTolerance { get; set; } = 0.5;
+        public double MinRtTolerance { get; set; } = OspreyEnvironment.MinRtTolerance ?? 0.5;
 
         /// <summary>Number of target peptides to sample for calibration (0 = use all).</summary>
         public int CalibrationSampleSize { get; set; } = 100000;
