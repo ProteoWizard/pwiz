@@ -404,30 +404,33 @@ against natural (Arabidopsis) entrapment filed under its targets' proteins, with
 `transfer` second pass (`12-second-pass-fdr.md`), whose reported q stays calibrated. "FDP" is
 the combined entrapment estimator; "at FDP x" counts precursors at the reported-q threshold
 where the measured FDP reaches x. Astral is HRAM (20 ppm), Stellar unit resolution (0.4 Th),
-ZT Scan HRAM demultiplexed data with a 9.08M-precursor library.
+ZT Scan HRAM demultiplexed data with a 9.08M-precursor library. The arms with the runner-up
+features on were measured with the override-path candidates described above; the lone-candidate
+values they replaced had moved these counts by at most 16 precursors (0.01%).
 
 | Astral (HRAM) | at q 1% (FDP) | at FDP 0.5% |
 |---|---|---|
 | default: 21 features, SVM, 6 XICs | 93,528 (1.04%) | 83,544 |
 | 21 features, SVM, 12 XICs | 100,071 (1.01%) | 90,238 (+8.0%) |
-| 41 features, SVM, 12 XICs | 106,064 (1.04%) | 96,270 (+15.2%) |
-| 41 features, GBDT, 12 XICs | 112,206 (1.04%) | 102,232 (+22.4%) |
+| 41 features, SVM, 12 XICs | 106,052 (1.04%) | 96,257 (+15.2%) |
+| 41 features, GBDT, 12 XICs | 112,202 (1.04%) | 102,227 (+22.4%) |
 
 | Stellar (unit resolution) | at q 1% (FDP) | at FDP 0.5% |
 |---|---|---|
 | default: 21 features, SVM, 6 XICs | 31,693 (0.71%) | 30,012 |
 | 21 features, SVM, 12 XICs | 26,313 (0.65%) | 25,413 (-15%) |
-| 41 features, SVM, 6 XICs | 33,120 (0.77%) | 31,542 (+5.1%) |
-| 41 features, GBDT, 6 XICs | 37,971 (0.97%) | 35,562 (+18.5%) |
-| 41 features, GBDT, 12 XICs | 31,000 (1.00%) | 29,516 (-1.7%) |
+| 41 features, SVM, 6 XICs | 33,118 (0.77%) | 31,540 (+5.1%) |
+| 41 features, SVM, 12 XICs | 27,451 (0.69%) | 26,585 (-11%) |
+| 41 features, GBDT, 6 XICs | 37,969 (0.97%) | 35,562 (+18.5%) |
+| 41 features, GBDT, 12 XICs | 30,999 (1.00%) | 29,514 (-1.7%) |
 
 | ZT Scan (HRAM, demultiplexed) | at q 1% (FDP) | at FDP 0.5% | at FDP 1% |
 |---|---|---|---|
 | default: 21 features, SVM, 6 XICs | 29,236 (0.98%) | 20,450 | 29,370 |
 | 41 features, SVM, 6 XICs | 31,944 (0.88%) | 28,004 (+37%) | 32,708 (+11%) |
-| 41 features, SVM, 12 XICs | 30,811 (1.19%) | 21,501 | 28,826 |
+| 41 features, SVM, 12 XICs | 30,811 (1.19%) | 21,501 | 28,827 |
 | 41 features, GBDT, 6 XICs | 27,975 (0.82%) | 24,402 | 29,248 |
-| 41 features, GBDT, 12 XICs | 33,200 (1.14%) | 28,915 | 32,561 |
+| 41 features, GBDT, 12 XICs | 33,201 (1.14%) | 28,915 | 32,562 |
 
 On a Stellar window-width set (HeLa; 2 Th and 4 Th acquired, 4 Th 50%-overlap and SuperOverlap
 demultiplexed; 3 replicates each), 41 features + GBDT + 6 XICs gained +5% to +10% over the default
@@ -437,8 +440,8 @@ demultiplexing interference from signal.
 Recommendations from these measurements:
 - **Features: use all 41 (`OSPREY_FEATURE_MASK=none`) on every kind of data.** They gain on all
   three datasets with every classifier and keep the reported q calibrated or conservative.
-- **XIC count: 6 at unit resolution; 12 on HRAM data with GBDT.** 12 XICs cost Stellar 15% and
-  gain Astral 8%. With the SVM on HRAM data the answer depends on the data: 12 gains on Astral
+- **XIC count: 6 at unit resolution; 12 on HRAM data with GBDT.** 12 XICs cost Stellar 15-16%
+  with either feature set and gain Astral 8%. With the SVM on HRAM data the answer depends on the data: 12 gains on Astral
   but loses on ZT Scan (-7% at FDP 1% under the same C rule) and makes its first pass optimistic
   there (1.18% at q 1%), so 6 is the safer choice for the SVM until that is understood.
 - **Classifier: GBDT (`OSPREY_FDR_MODEL=gbdt`, `07-fdr-control.md`) where it has enough
@@ -457,7 +460,7 @@ Which family carries the gain depends on the data. Leaving one family out of the
 | context (3) | -0.6% / -0.9% | -2.1% / -2.9% | -4.2% / -1.5% |
 | per-fragment-rank (12) | +0.9% / +0.2% | +0.2% / -0.5% | -12.1% / -4.0% |
 | spectrum across the peak (2) | -2.9% / -3.4% | -0.9% / -0.5% | -7.6% / -1.1% |
-| all 20 (the default mask) | -6.3% / -5.3% | -4.9% / -4.9% | -27% / -10.2% |
+| all 20 (the default mask) | -6.3% / -5.3% | -4.8% / -4.9% | -27% / -10.2% |
 
 No family is needed everywhere and none costs identifications anywhere, so the recommendation is
 all 41 rather than a per-instrument subset. Single-run differences under about 1% on Astral and
