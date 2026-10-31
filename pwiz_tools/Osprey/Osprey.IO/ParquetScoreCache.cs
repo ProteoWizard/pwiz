@@ -159,9 +159,14 @@ namespace pwiz.Osprey.IO
             @"tight45_sum6",
             @"tight20_sum6",
             @"tc_best_sum6",
+            // Peak dominance: the chosen peak against the other correlated apexes in the XIC range (4)
+            @"dom_best_corr_delta",
+            @"dom_tot_corr_sum",
+            @"dom_apex_count",
+            @"dom_corr_margin",
         };
 
-        public const int NUM_PIN_FEATURES = 85;
+        public const int NUM_PIN_FEATURES = 89;
 
         /// <summary>
         /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after

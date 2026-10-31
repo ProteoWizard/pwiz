@@ -57,6 +57,9 @@ namespace pwiz.Osprey.Scoring
         /// <summary><see cref="ResidualSum"/> per fragment beyond the top ranks, 0 when there are none.</summary>
         public double ResidualMean { get; private set; }
 
+        /// <summary>The window half-width S in scans, 0 when no window could be set up.</summary>
+        public int HalfScans { get; private set; }
+
         /// <summary>First XIC scan index of the window (apex - S, clipped to the XICs).</summary>
         public int WindowStart { get; private set; }
 
@@ -97,6 +100,7 @@ namespace pwiz.Osprey.Scoring
             var elution = Smooth(xics[ChooseReference(xics, start, end)].Intensities, start, end);
             int[] ranked = FragmentMath.TopIndicesByIntensity(fragments, Math.Min(RANK_COUNT, fragments.Count));
             result.WindowStart = start;
+            result.HalfScans = halfScans;
             result.Elution = elution;
             result.RankedFragments = ranked;
             int nResidual = 0;
@@ -158,7 +162,7 @@ namespace pwiz.Osprey.Scoring
         }
 
         // DIA-NN's smooth(): weights 1/4, 1/2, 1/4 inside, 2/3 and 1/3 at the ends.
-        private static double[] Smooth(double[] values, int start, int end)
+        internal static double[] Smooth(double[] values, int start, int end)
         {
             int n = end - start + 1;
             var smoothed = new double[n];

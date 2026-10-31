@@ -804,5 +804,41 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation minus best apex correlation sum.
+        /// </summary>
+        public static string DominanceBestCorrDeltaCalc_DisplayName_Time_correlation_minus_best_apex_correlation_sum {
+            get {
+                return ResourceManager.GetString("DominanceBestCorrDeltaCalc_DisplayName_Time_correlation_minus_best_apex_correlation_sum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation over total apex correlation sum (log).
+        /// </summary>
+        public static string DominanceTotalCorrSumCalc_DisplayName_Time_correlation_over_total_apex_correlation_sum__log_ {
+            get {
+                return ResourceManager.GetString("DominanceTotalCorrSumCalc_DisplayName_Time_correlation_over_total_apex_correlation_sum__log_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Correlated apexes in XIC range.
+        /// </summary>
+        public static string DominanceApexCountCalc_DisplayName_Correlated_apexes_in_XIC_range {
+            get {
+                return ResourceManager.GetString("DominanceApexCountCalc_DisplayName_Correlated_apexes_in_XIC_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex correlation margin over best other apex.
+        /// </summary>
+        public static string DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex {
+            get {
+                return ResourceManager.GetString("DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex", resourceCulture);
+            }
+        }
     }
 }

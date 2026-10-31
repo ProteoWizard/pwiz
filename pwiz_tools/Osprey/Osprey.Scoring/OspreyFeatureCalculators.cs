@@ -35,8 +35,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-84 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation and re-extracted-correlation families,
+    /// never returns null. Slots 21-88 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation and peak-dominance families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 85;
+        public const int FeatureCount = 89;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -156,6 +156,13 @@ namespace pwiz.Osprey.Scoring
             calculators[82] = new TightToleranceSumCalc(false);
             calculators[83] = new TightToleranceSumCalc(true);
             calculators[84] = new TimeCorrelationBestSumCalc();
+
+            // Peak-dominance family: the chosen peak against the other apexes DIA-NN's peak search accepts in the
+            // XIC range (after DIA-NN pBestCorrDelta / pTotCorrSum).
+            calculators[85] = new DominanceBestCorrDeltaCalc();
+            calculators[86] = new DominanceTotalCorrSumCalc();
+            calculators[87] = new DominanceApexCountCalc();
+            calculators[88] = new DominanceCorrMarginCalc();
 
             return calculators;
         }

@@ -681,6 +681,63 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Peak-dominance family over two apexes: all six fragments co-elute at scan 30, only the top three
+        /// at scan 90, the rest absent there. Each is accepted once, scoring about 5 and 2. Choosing the full
+        /// peak gives a positive best-delta and margin; choosing the partial one makes both negative.
+        /// </summary>
+        [TestMethod]
+        public void TestPeakDominance()
+        {
+            const int n = 121;
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+            var xics = new List<XicData>();
+            for (int f = 0; f < library.Length; f++)
+            {
+                double scale = 1.0 - 0.05 * f;
+                var intensities = rts.Select(rt =>
+                    1000.0 * scale * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2)) +
+                    (f < 3 ? 500.0 * scale * Math.Exp(-Math.Pow((rt - 10.9) / 0.04, 2)) : 0.0)).ToArray();
+                xics.Add(new XicData(f, rts, intensities));
+            }
+
+            var fullPeak = new FakePeakData(xics, new XICPeakBounds { StartIndex = 25, EndIndex = 35, ApexIndex = 30 }, candidate: candidate);
+            var full = PeakDominance.Compute(fullPeak, TimeCorrelations.Compute(fullPeak, TimeCorrelations.HALF_WINDOW_MINUTES));
+            Assert.AreEqual(2, full.ApexCount);
+            Assert.IsTrue(full.BestCorrSum > 4.9 && full.BestCorrSum <= 5.0 + TOLERANCE,
+                string.Format("Five partners co-elute at the full apex, got {0:F4}", full.BestCorrSum));
+            Assert.IsTrue(full.TotalCorrSum > 6.8 && full.TotalCorrSum <= 7.0 + TOLERANCE,
+                string.Format("The partial apex adds about 2, got {0:F4}", full.TotalCorrSum));
+            Assert.IsTrue(full.BestCorrDelta > 0.8, string.Format("Six time correlations over five partners, got {0:F4}", full.BestCorrDelta));
+            Assert.AreEqual(Math.Log(full.TimeCorrSum / (full.TotalCorrSum + 1.0)), full.TotCorrSum, TOLERANCE);
+            Assert.IsTrue(full.CorrMargin > 2.8, string.Format("The full apex dominates, got {0:F4}", full.CorrMargin));
+
+            var partialPeak = new FakePeakData(xics, new XICPeakBounds { StartIndex = 85, EndIndex = 95, ApexIndex = 90 }, candidate: candidate);
+            var partial = PeakDominance.Compute(partialPeak, TimeCorrelations.Compute(partialPeak, TimeCorrelations.HALF_WINDOW_MINUTES));
+            Assert.AreEqual(2, partial.ApexCount);
+            Assert.AreEqual(full.BestCorrSum, partial.BestCorrSum, TOLERANCE);
+            Assert.IsTrue(partial.BestCorrDelta < -1.8, string.Format("Three time correlations under the full apex, got {0:F4}", partial.BestCorrDelta));
+            Assert.IsTrue(partial.CorrMargin < -2.8, string.Format("The full apex elsewhere dominates, got {0:F4}", partial.CorrMargin));
+
+            var lonePeak = new FakePeakData(xics.Take(1).ToList(), fullPeak.PeakBounds, candidate: candidate);
+            var lone = PeakDominance.Compute(lonePeak, TimeCorrelations.Compute(lonePeak, TimeCorrelations.HALF_WINDOW_MINUTES));
+            Assert.AreEqual(0, lone.ApexCount);
+            Assert.AreEqual(0.0, lone.CorrMargin, TOLERANCE);
+
+            var context = new OspreyScoringContext(new OspreyConfig());
+            var dominance = PeakDominance.GetOrCompute(context, fullPeak);
+            Assert.AreSame(dominance, PeakDominance.GetOrCompute(context, fullPeak), "Computed once per candidate");
+            Assert.AreEqual(dominance.BestCorrDelta, OspreyFeatureCalculators.Get(85).Calculate(context, fullPeak), TOLERANCE);
+            Assert.AreEqual(dominance.TotCorrSum, OspreyFeatureCalculators.Get(86).Calculate(context, fullPeak), TOLERANCE);
+            Assert.AreEqual(dominance.ApexCount, OspreyFeatureCalculators.Get(87).Calculate(context, fullPeak), TOLERANCE);
+            Assert.AreEqual(dominance.CorrMargin, OspreyFeatureCalculators.Get(88).Calculate(context, fullPeak), TOLERANCE);
+        }
+
+        /// <summary>
         /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
         /// each new feature adds to both, so a calculator whose name differs from its column
         /// would write one feature under another's name. The default FDR mask resolves names

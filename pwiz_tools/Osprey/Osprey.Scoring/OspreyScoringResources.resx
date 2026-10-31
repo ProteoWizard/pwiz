@@ -340,4 +340,16 @@
   <data name="TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_" xml:space="preserve">
     <value>Time correlation, best tolerance (top 6 sum)</value>
   </data>
+  <data name="DominanceBestCorrDeltaCalc_DisplayName_Time_correlation_minus_best_apex_correlation_sum" xml:space="preserve">
+    <value>Time correlation minus best apex correlation sum</value>
+  </data>
+  <data name="DominanceTotalCorrSumCalc_DisplayName_Time_correlation_over_total_apex_correlation_sum__log_" xml:space="preserve">
+    <value>Time correlation over total apex correlation sum (log)</value>
+  </data>
+  <data name="DominanceApexCountCalc_DisplayName_Correlated_apexes_in_XIC_range" xml:space="preserve">
+    <value>Correlated apexes in XIC range</value>
+  </data>
+  <data name="DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex" xml:space="preserve">
+    <value>Apex correlation margin over best other apex</value>
+  </data>
 </root>
