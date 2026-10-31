@@ -73,6 +73,11 @@ namespace pwiz.Skyline.Controls.Graphs
             _startBackgroundRender.Set();
         }
 
+        /// <summary>
+        /// True while a render is running on the background thread or waiting to start.
+        /// </summary>
+        public bool IsRenderPending => _rendering != 0 || !_pendingRect.IsEmpty;
+
         public void StartRender()
         {
             _pendingRect = new Rectangle(0, 0, Width, Height);

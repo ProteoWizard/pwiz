@@ -927,7 +927,8 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting() ||
+                       LabelLayoutRunner.AnyPending;
             }
         }
 
@@ -960,6 +961,8 @@ namespace pwiz.Skyline
                     pending.Add(@"spectrum graph still updating");
                 if (ProductionFacility.DEFAULT.IsWaiting())
                     pending.Add(@"production facility still waiting");
+                if (LabelLayoutRunner.AnyPending)
+                    pending.Add(@"label layout still running");
                 return pending.Count == 0 ? @"nothing pending" : string.Join(@", ", pending);
             }
         }

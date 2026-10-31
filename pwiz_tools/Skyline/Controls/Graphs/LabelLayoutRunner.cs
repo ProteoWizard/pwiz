@@ -38,6 +38,24 @@ namespace pwiz.Skyline.Controls.Graphs
         private const double MAX_LABELS_PER_CELL = 4.0;
         private const double MAX_LABEL_AREA_RATIO = 0.3;
 
+        private static readonly List<WeakReference<LabelLayoutRunner>> RUNNERS = new List<WeakReference<LabelLayoutRunner>>();
+
+        /// <summary>
+        /// True if any runner has a layout waiting or running. Used by tests to wait for labels to be
+        /// placed before checking or capturing a graph. Must be called on the event thread.
+        /// </summary>
+        public static bool AnyPending
+        {
+            get
+            {
+                lock (RUNNERS)
+                {
+                    RUNNERS.RemoveAll(r => !r.TryGetTarget(out _));
+                    return RUNNERS.Any(r => r.TryGetTarget(out var runner) && runner.IsPending);
+                }
+            }
+        }
+
         private Thread _labelLayoutWorkerThread;
         private CancellationTokenSource _labelLayoutCts;
         private IProgressStatus _labelLayoutStatus;
@@ -201,6 +219,27 @@ namespace pwiz.Skyline.Controls.Graphs
                     result.Add(point);
             }
             return result;
+        }
+
+        public LabelLayoutRunner()
+        {
+            lock (RUNNERS)
+            {
+                RUNNERS.RemoveAll(r => !r.TryGetTarget(out _));
+                RUNNERS.Add(new WeakReference<LabelLayoutRunner>(this));
+            }
+        }
+
+        /// <summary>
+        /// True while a requested layout is waiting for the debounce timer or running on the worker
+        /// thread, until its result has been applied on the event thread. A layout for a graph that
+        /// has been disposed is not pending, since its result will never be applied.
+        /// </summary>
+        public bool IsPending => IsLive(_pendingRequest) || (_labelLayoutWorkerThread != null && IsLive(_currentRequest));
+
+        private static bool IsLive(LabelLayoutRequest request)
+        {
+            return request != null && !request.GraphControl.IsDisposed;
         }
 
         public void Start(ZedGraphControl graphControl, IList<LabeledPoint> labeledPoints,

@@ -18,10 +18,13 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -103,8 +106,17 @@ namespace pwiz.SkylineTestUtil
             public abstract Bitmap Take();
         }
 
+        private const int MAX_PAINT_PASSES = 20;
+
         private class ActiveWindowShot : SkylineScreenshot
         {
+            private const int MAX_CAPTURE_RETRIES = 10;
+
+            /// <summary>
+            /// Captures that differed from the capture after them, so had to be taken again.
+            /// </summary>
+            public int CaptureRetries { get; private set; }
+
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
 
@@ -117,6 +129,30 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override Bitmap Take()
             {
+                CaptureRetries = 0;
+                var shot = Capture();
+                if (!ScreenshotWaits.PaintFlush)
+                    return shot;
+
+                // A control can start painting again after the wait for painting, so capture until two
+                // captures in a row are the same
+                for (; CaptureRetries < MAX_CAPTURE_RETRIES; CaptureRetries++)
+                {
+                    WaitForPaint(_activeWindow);
+                    var nextShot = Capture();
+                    if (IsSameImage(shot, nextShot))
+                    {
+                        nextShot.Dispose();
+                        return shot;
+                    }
+                    shot.Dispose();
+                    shot = nextShot;
+                }
+                return shot;
+            }
+
+            private Bitmap Capture()
+            {
                 var shotRect = ScreenCapture.GetWindowRectangle(_activeWindow, _fullscreen);
                 var bmpCapture = new Bitmap(shotRect.Width, shotRect.Height, PixelFormat.Format32bppArgb);
                 using var g = Graphics.FromImage(bmpCapture);
@@ -125,6 +161,29 @@ namespace pwiz.SkylineTestUtil
                     Thread.Sleep(1000); // Try again in one second - remote desktop may be minimized
                 }
                 return bmpCapture;
+            }
+
+            private static bool IsSameImage(Bitmap bmp1, Bitmap bmp2)
+            {
+                if (bmp1.Size != bmp2.Size)
+                    return false;
+                return GetPixelBytes(bmp1).SequenceEqual(GetPixelBytes(bmp2));
+            }
+
+            private static byte[] GetPixelBytes(Bitmap bmp)
+            {
+                var data = bmp.LockBits(new Rectangle(Point.Empty, bmp.Size), ImageLockMode.ReadOnly,
+                    PixelFormat.Format32bppArgb);
+                try
+                {
+                    var bytes = new byte[Math.Abs(data.Stride) * data.Height];
+                    Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
+                    return bytes;
+                }
+                finally
+                {
+                    bmp.UnlockBits(data);
+                }
             }
 
             private static bool CaptureFromScreen(Graphics g, Rectangle shotRect)
@@ -171,7 +230,8 @@ namespace pwiz.SkylineTestUtil
             }
             public override Bitmap Take()
             {
-                var emf = _zedGraphControl.MasterPane.GetMetafile();
+                // Draw on the UI thread, which may still be painting the same panes
+                var emf = (Metafile)_zedGraphControl.Invoke(new Func<Metafile>(() => _zedGraphControl.MasterPane.GetMetafile()));
                 var bmp = new Bitmap(emf.Width, emf.Height);
                 bmp.SetResolution(emf.HorizontalResolution, emf.VerticalResolution);
                 using (var g = Graphics.FromImage(bmp))
@@ -327,12 +387,63 @@ namespace pwiz.SkylineTestUtil
                 RunUI(screenshotControl,() => screenshotControl.Focus());
             }
 
-            Thread.Sleep(500);  // Allow activation message processing on the UI thread
+            var stopwatch = Stopwatch.StartNew();
+            Thread.Sleep(ScreenshotWaits.ActivateMillis);  // Allow activation message processing on the UI thread
+            if (ScreenshotWaits.PaintFlush)
+                WaitForPaint(screenshotControl);    // Activation repaints must finish before the adjustments below
+            LastActivateMillis = stopwatch.ElapsedMilliseconds;
 
+            stopwatch.Restart();
             RunUI(screenshotControl, () => AdjustControlsForConsistentScreenshots(screenshotControl));
 
-            Thread.Sleep(500);  // Allow the adjusted controls to repaint on the UI thread
+            Thread.Sleep(ScreenshotWaits.RepaintMillis);  // Allow the adjusted controls to repaint on the UI thread
+            if (ScreenshotWaits.PaintFlush)
+                WaitForPaint(screenshotControl);
+            LastRepaintMillis = stopwatch.ElapsedMilliseconds;
         }
+
+        /// <summary>
+        /// Waits for the UI thread of a control to run the work posted to it, and the work that work
+        /// posts in turn, then paints every window on that thread with a pending update, and waits for
+        /// the desktop compositor to put the result on screen.
+        /// </summary>
+        public static void WaitForPaint(Control control)
+        {
+            for (int i = 0; i < MAX_PAINT_PASSES; i++)
+            {
+                bool idle = false;
+                RunUI(control, () =>
+                {
+                    foreach (var hWnd in User32.EnumThreadWindows((uint)Kernel32.GetCurrentThreadId()))
+                    {
+                        User32Test.RedrawWindow(hWnd, IntPtr.Zero, IntPtr.Zero,
+                            User32Test.RDW_UPDATENOW | User32Test.RDW_ALLCHILDREN);
+                    }
+                    // The high word says what is in the queue now; timer messages are not counted
+                    idle = User32Test.GetQueueStatus(User32Test.QS_POSTMESSAGE | User32Test.QS_SENDMESSAGE |
+                                                      User32Test.QS_PAINT) >> 16 == 0;
+                });
+                if (idle)
+                    break;
+            }
+            DwmapiTest.DwmFlush();
+        }
+
+        /// <summary>
+        /// Milliseconds the last <see cref="ActivateScreenshotForm"/> spent waiting for activation.
+        /// </summary>
+        public long LastActivateMillis { get; private set; }
+
+        /// <summary>
+        /// Milliseconds the last <see cref="ActivateScreenshotForm"/> spent adjusting controls and waiting for them to repaint.
+        /// </summary>
+        public long LastRepaintMillis { get; private set; }
+
+        /// <summary>
+        /// Captures of the last screen screenshot that differed from the capture after them, so had to be
+        /// taken again (<see cref="ActiveWindowShot"/>).
+        /// </summary>
+        public int LastCaptureRetries { get; private set; }
 
         /// <summary>
         /// Turns off the Windows "Animation effects" setting (client-area animation) until the returned
@@ -477,6 +588,7 @@ namespace pwiz.SkylineTestUtil
             var newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
 
             var shotPic = newShot.Take();
+            LastCaptureRetries = (newShot as ActiveWindowShot)?.CaptureRetries ?? 0;
             if (processShot != null)
             {
                 // Processing must include border cleanup if necessary, since

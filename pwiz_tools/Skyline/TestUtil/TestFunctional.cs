@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -2136,7 +2137,9 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingScreenshot, Program.PauseStartingScreenshot) <= ScreenshotCounter)
             {
+                var graphsStopwatch = Stopwatch.StartNew();
                 WaitForGraphs();    // Screenshots always need graphs to be fully updated
+                long graphsMillis = graphsStopwatch.ElapsedMilliseconds;
                 screenshotForm = ResolveScreenShotForm(screenshotForm, formType, fullScreen);
 
                 var formSeen = new FormSeen();
@@ -2145,7 +2148,7 @@ namespace pwiz.SkylineTestUtil
                 if (IsAutoScreenShotMode)
                 {
                     CaptureScreenShot(screenshotForm, fullScreen,
-                        _shotManager.ScreenshotDestFile(ScreenshotCounter), processShot);
+                        _shotManager.ScreenshotDestFile(ScreenshotCounter), processShot, graphsMillis);
                 }
                 else
                 {
@@ -2204,11 +2207,26 @@ namespace pwiz.SkylineTestUtil
         }
 
         private void CaptureScreenShot(Control screenshotForm, bool fullScreen,
-            string filePath, Func<Bitmap, Bitmap> processShot)
+            string filePath, Func<Bitmap, Bitmap> processShot, long graphsMillis = 0)
         {
-            Thread.Sleep(1500); // Wait for UI to settle down
+            var stopwatch = Stopwatch.StartNew();
+            Thread.Sleep(ScreenshotWaits.SettleMillis); // Wait for UI to settle down
+            if (ScreenshotWaits.PaintFlush)
+                ScreenshotManager.WaitForPaint(screenshotForm);
+            long settleMillis = stopwatch.ElapsedMilliseconds;
             _shotManager.ActivateScreenshotForm(screenshotForm);
+            stopwatch.Restart();
+            if (ScreenshotWaits.PaintFlush)
+            {
+                // Activating and painting can start more graph work, like a new label layout
+                WaitForGraphs();
+                ScreenshotManager.WaitForPaint(screenshotForm);
+            }
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
+            ScreenshotWaits.CopyShot(TestContext.TestName, CultureInfo.CurrentCulture.Name, filePath);
+            ScreenshotWaits.LogTiming(TestContext.TestName, CultureInfo.CurrentCulture.Name, ScreenshotCounter,
+                graphsMillis, settleMillis, _shotManager.LastActivateMillis, _shotManager.LastRepaintMillis,
+                stopwatch.ElapsedMilliseconds, _shotManager.LastCaptureRetries);
         }
 
         /// <summary>
