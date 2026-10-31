@@ -100,6 +100,18 @@
   <data name="_cache_dir" xml:space="preserve">
     <value>Where Osprey keeps the files it builds once and reuses in later searches: each run's {0} (its spectra, faster to read than the data file) and, for a {2} library, the {5} it is converted to (e.g. hela{2}{5}). By default each goes beside the file it comes from, or under {4} or {1} when that folder is read-only. Give it to put them elsewhere, for example when the data and the library are on a read-only share, or to let several analyses share one cache. An HPC run ({3}) that writes to an {4} away from the data should give every node the same one.</value>
   </data>
+  <data name="_centrix_sigma_ms1" xml:space="preserve">
+    <value>With {0} centrix: the MS1 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species' peak width measured from the run)</value>
+  </data>
+  <data name="_centrix_sigma_ms2" xml:space="preserve">
+    <value>With {0} centrix: the MS2 profile peak sigma in Th (default: 1.1 point spacings on a linear ion trap, otherwise one species' peak width measured from the run)</value>
+  </data>
+  <data name="_centrix_solver" xml:space="preserve">
+    <value>With {0} centrix: how each region of a spectrum is fitted. descent: Centrix's own coordinate descent; active-set: the exact optimum of the same fit, several times faster (default: {1})</value>
+  </data>
+  <data name="_centroid" xml:space="preserve">
+    <value>Who centroids profile spectra: the vendor library, or Centrix, a lasso centroider for ion trap (unit resolution) profile data that separates peaks closer than 1 Th. Centrix reads the profile even from a vendor file, and its spectra are cached apart from the vendor-centroided ones (default: {0})</value>
+  </data>
   <data name="_decoy_pairing_manifest" xml:space="preserve">
     <value>With {0} and a {1} library: the FDRBench pairing manifest (a 5-column TSV) that pairs each decoy, and each entrapment peptide, with its target. A {2} library carries its pairing in its own table and needs none.</value>
   </data>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.Centroid</RootNamespace>
+    <AssemblyName>Osprey.Centroid</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <!-- Centrix, the non-negative lasso centroider for linear ion trap profile spectra, ported from
+       maccoss/centrix (CentrixCentroider), with its peak-width calibration (CentrixCalibration). See
+       docs/25-profile-centroiding.md.
+       Deliberately depends on nothing: the centroider takes a profile spectrum's points in and hands
+       centroids back, so the reader, the demultiplexers and later pwiz-sharp can all share it. -->
+
+</Project>

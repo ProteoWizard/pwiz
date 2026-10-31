@@ -87,7 +87,9 @@ namespace pwiz.Osprey.Core
             @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
             @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
-            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DEMUX_BLOCK", @"OSPREY_DEMUX_COUNTS_PER_ION",
+            @"OSPREY_DEMUX_ENGINE", @"OSPREY_DEMUX_INTERPOLATION", @"OSPREY_DEMUX_MIN_CHANNEL_IONS",
+            @"OSPREY_DEMUX_OUTPUT", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
             @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
@@ -373,6 +375,46 @@ namespace pwiz.Osprey.Core
         /// in production.
         /// </summary>
         public static readonly string CrossImplReconciliationOut = GetVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
+
+        /// <summary>
+        /// OSPREY_DEMUX_ENGINE: developer override of the <c>--demux</c> engine, weighted (the
+        /// default) | msconvert | pwiz. msconvert runs the overlap demultiplexer, kept to compare against
+        /// msconvert until it is removed; the three variables below apply to it only. pwiz reads a
+        /// multiplexed run through ProteoWizard's own demultiplexer (SpectrumListDemux, msconvert's
+        /// demultiplex filter), for comparing against it. Read each time, so a test can set it
+        /// (<see cref="OverrideVariables"/>).
+        /// </summary>
+        public static string DemuxEngine => GetVariable(@"OSPREY_DEMUX_ENGINE");
+
+        /// <summary>
+        /// OSPREY_DEMUX_BLOCK / OSPREY_DEMUX_INTERPOLATION / OSPREY_DEMUX_OUTPUT: developer
+        /// overrides of the msconvert engine's block mode (covered_bins | truncated_slice),
+        /// RT interpolant (makima | pchip | natural_three_point | linear) and output mode
+        /// (apportioned | solution). Setting block and interpolation to truncated_slice and
+        /// natural_three_point reproduces msconvert's overlap demultiplexer, so a difference
+        /// from msconvert can be attributed setting by setting. Deliberately not flags: the
+        /// defaults are the supported configuration. Each value is part of the demux cache
+        /// descriptor, so a cache written under an override is rebuilt without it.
+        /// </summary>
+        public static readonly string DemuxBlockMode = GetVariable(@"OSPREY_DEMUX_BLOCK");
+
+        /// <summary>See <see cref="DemuxBlockMode"/>.</summary>
+        public static readonly string DemuxInterpolation = GetVariable(@"OSPREY_DEMUX_INTERPOLATION");
+
+        /// <summary>See <see cref="DemuxBlockMode"/>.</summary>
+        public static readonly string DemuxOutputMode = GetVariable(@"OSPREY_DEMUX_OUTPUT");
+
+        /// <summary>
+        /// OSPREY_DEMUX_MIN_CHANNEL_IONS / OSPREY_DEMUX_COUNTS_PER_ION: developer overrides of the
+        /// weighted engine's channel threshold (the ions a fragment channel needs over its block to
+        /// be demultiplexed rather than split evenly among its bins; 8 by default) and of how it
+        /// counts ions (a fixed intensity per ion instead of each spectrum's fill time and analyzer).
+        /// For measuring their effect on a search; each is part of the demux cache descriptor.
+        /// </summary>
+        public static readonly string DemuxMinChannelIons = GetVariable(@"OSPREY_DEMUX_MIN_CHANNEL_IONS");
+
+        /// <summary>See <see cref="DemuxMinChannelIons"/>.</summary>
+        public static readonly string DemuxCountsPerIon = GetVariable(@"OSPREY_DEMUX_COUNTS_PER_ION");
 
         /// <summary>
         /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct

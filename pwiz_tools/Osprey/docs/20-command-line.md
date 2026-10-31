@@ -213,7 +213,11 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 | `--fragment-tolerance` | `<number>` | `10` ppm; `0.5` m/z at `unit` | Fragment m/z tolerance, in the `--fragment-unit` unit. |
 | `--fragment-unit` | `ppm \| mz` | `ppm`; `mz` at `unit` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
-| `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) or MSX DIA with ProteoWizard's demultiplexer while the source is read, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` reads a run that is not multiplexed as acquired. With `off`, a multiplexed run is searched as acquired, with a warning suggesting `--demux auto`. Give every task of an HPC chain the same value. Osprey-only. |
+| `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` leaves a non-overlapping run as acquired. With `off`, a run whose windows overlap is refused, since searching it as acquired scores every precursor in more than one window. Give every task of an HPC chain the same value. Osprey-only. |
+| `--centroid` | `vendor \| centrix` | `vendor` | Who centroids profile spectra. `centrix` reads the profile, from a vendor file too, and centroids it with Centrix, a non-negative lasso for ion trap (unit resolution) profile data that separates peaks closer than 1 Th; its spectra are cached as `<stem>.centrix-<hash>.spectra.bin`, beside the vendor-centroided cache (see [25-profile-centroiding.md](25-profile-centroiding.md)). Osprey-only. |
+| `--centrix-sigma-ms1` | `<Th>` | from the run | With `--centroid centrix`: the MS1 profile peak sigma. Absent or 0: 1.1 point spacings on a linear ion trap (the point spacing identifies the scan rate), otherwise one species' peak width measured from the run. |
+| `--centrix-sigma-ms2` | `<Th>` | from the run | The same for MS2. |
+| `--centrix-solver` | `descent \| active-set` | `descent` | With `--centroid centrix`: Centrix's own coordinate descent, or the exact active-set solve of the same fit, several times faster. |
 
 ### FDR & Protein Inference
 

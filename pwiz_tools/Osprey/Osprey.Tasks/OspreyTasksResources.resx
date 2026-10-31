@@ -247,6 +247,15 @@
   <data name="CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__" xml:space="preserve">
     <value>{0} (unreadable: {1})</value>
   </data>
+  <data name="DemuxCacheBuilder_Resolve_Could_not_index_the_demultiplexed_spectra_cache___0___just_written___1__" xml:space="preserve">
+    <value>Could not index the demultiplexed spectra cache '{0}' just written: {1}.</value>
+  </data>
+  <data name="DemuxCacheBuilder_Resolve_Could_not_read___0___to_demultiplex_it_" xml:space="preserve">
+    <value>Could not read '{0}' to demultiplex it.</value>
+  </data>
+  <data name="DemuxCacheBuilder_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_" xml:space="preserve">
+    <value>'{0}' is demultiplexed, but its demultiplexed spectra cache '{1}' is missing or stale. Re-run {2} with {3} auto to rebuild it.</value>
+  </data>
   <data name="EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
     <value>Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics.</value>
   </data>
@@ -1024,6 +1033,9 @@
   <data name="ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_" xml:space="preserve">
     <value>Spectra cache stale or invalid; re-parsing the input.</value>
   </data>
+  <data name="ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2" xml:space="preserve">
+    <value>Centroided the profile spectra with Centrix: peak sigma {0:F3} Th for MS1, {1:F3} Th for MS2</value>
+  </data>
   <data name="ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_" xml:space="preserve">
     <value>Streaming spectra from cache: {0}</value>
   </data>
@@ -1282,23 +1294,41 @@
   <data name="TrainingExportWriter_ExportRun_Exporting_isolation_windows" xml:space="preserve">
     <value>Exporting isolation windows</value>
   </data>
-  <data name="DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_" xml:space="preserve">
+  <data name="DemuxCacheBuilder_TryOpenDemuxCache_Streaming_demultiplexed_spectra_from_cache___0_" xml:space="preserve">
     <value>Streaming demultiplexed spectra from cache: {0}</value>
   </data>
-  <data name="DemuxCache_TryOpen_Demultiplexed_spectra_cache__0__is_not_usable___1__" xml:space="preserve">
+  <data name="DemuxCacheBuilder_TryOpenDemuxCache_Demultiplexed_spectra_cache__0__is_not_usable___1__" xml:space="preserve">
     <value>Demultiplexed spectra cache {0} is not usable: {1}.</value>
   </data>
-  <data name="DemuxCache_TryOpen_Failed_to_index_demultiplexed_spectra_cache__0____1_" xml:space="preserve">
+  <data name="DemuxCacheBuilder_TryOpenDemuxCache_Failed_to_index_demultiplexed_spectra_cache__0____1_" xml:space="preserve">
     <value>Failed to index demultiplexed spectra cache {0}: {1}</value>
   </data>
-  <data name="DemuxCache_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_" xml:space="preserve">
-    <value>'{0}' is demultiplexed, but its demultiplexed spectra cache '{1}' is missing or stale. Re-run {2} with {3} auto to rebuild it.</value>
+  <data name="DemuxCacheBuilder_Resolve_Isolation_windows_of__0__do_not_overlap__searching_as_acquired_" xml:space="preserve">
+    <value>Isolation windows of {0} do not overlap; searching as acquired.</value>
   </data>
-  <data name="ScoringTaskShared_EnsureSpectraCache_Demultiplexed__0____1__isolation_windows_per_cycle_into__2__narrower_windows___3__MS_MS_spectra" xml:space="preserve">
-    <value>Demultiplexed {0}: {1:N0} isolation windows per cycle into {2:N0} narrower windows, {3:N0} MS/MS spectra</value>
+  <data name="DemuxCacheBuilder_AcquisitionsOf_No_fill_times_for__0____1__is_missing_and_so_is_its_source__Counting_ions_at__2__per_ion_" xml:space="preserve">
+    <value>No fill times for {0}: {1} is missing and so is its source. Counting ions at {2} per ion.</value>
   </data>
-  <data name="ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired" xml:space="preserve">
-    <value>{0} was acquired with overlapping isolation windows and is searched as acquired, so a precursor can be scored in more than one window. Use {1} auto to demultiplex it.</value>
+  <data name="DemuxCacheBuilder_AcquisitionsOf_Reading_the_fill_times_of__0__" xml:space="preserve">
+    <value>Reading the fill times of {0}.</value>
+  </data>
+  <data name="DemuxCacheBuilder_SaveAcquisition_Failed_to_save__0____1_" xml:space="preserve">
+    <value>Failed to save {0}: {1}</value>
+  </data>
+  <data name="DemuxCacheBuilder_ThrowIfOverlapping___0___was_acquired_with_overlapping_isolation_windows___1__fold___2__windows_over__3__bins___Searche" xml:space="preserve">
+    <value>'{0}' was acquired with overlapping isolation windows ({1}-fold, {2} windows over {3} bins). Searched as acquired, every precursor would be scored in {1} windows. Re-run with {4} auto to demultiplex it first.</value>
+  </data>
+  <data name="DemuxCacheBuilder_LogSummary_Demultiplexing__0____1__fold_overlap___2__windows_into__3__bins_of__4_F3___5_F3__Th" xml:space="preserve">
+    <value>Demultiplexing {0}: {1}-fold overlap, {2} windows into {3} bins of {4:F3}-{5:F3} Th</value>
+  </data>
+  <data name="DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__fragment_channels___3_N0__solved___4_P2__of__5_E3__ions_passe" xml:space="preserve">
+    <value>  {0:N0} MS2 spectra -&gt; {1:N0}; {2:N0} fragment channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through unsolved</value>
+  </data>
+  <data name="DemuxCacheBuilder_LogSummary____0_N0__MS2_spectra_____1_N0____2_N0__channel_solves___3_P1__zero___4_P1__unconstrained___5_P1__act" xml:space="preserve">
+    <value>  {0:N0} MS2 spectra -&gt; {1:N0}; {2:N0} channel solves ({3:P1} zero, {4:P1} unconstrained, {5:P1} active set, {6:N0} at the iteration cap) over {7} block geometries</value>
+  </data>
+  <data name="DemuxCacheBuilder_LogSummary___Demultiplexed_in__0_F1_s_with__1__threads___2____3_" xml:space="preserve">
+    <value>  Demultiplexed in {0:F1}s with {1} threads; {2}; {3}</value>
   </data>
   <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0____1_" xml:space="preserve">
     <value>Could not save the precursor candidates from proteins with 2 or more detections to {0}: {1}</value>
@@ -1338,5 +1368,8 @@
   </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_" xml:space="preserve">
     <value>No precursor passed the second pass against {0}: none has an experiment-level q-value at or below {1} ({2}), so no {3} was written. Check that the library suits these runs and that the threshold is intended.</value>
+  </data>
+  <data name="ScoringTaskShared_EnsureSpectraCache_Demultiplexed__0____1__isolation_windows_per_cycle_into__2__narrower_windows___3__MS_MS_spectra" xml:space="preserve">
+    <value>Demultiplexed {0}: {1:N0} isolation windows per cycle into {2:N0} narrower windows, {3:N0} MS/MS spectra</value>
   </data>
 </root>

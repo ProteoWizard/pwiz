@@ -23,14 +23,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using PwizSpectra = Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Centroid;
 using pwiz.Osprey.Core;
 using pwiz.ProteowizardWrapper;
 
@@ -76,25 +78,54 @@ namespace pwiz.Osprey.IO
         private const string CMD_MSCONVERT = @"msconvert";
         private const string CMD_MSCONVERT_PEAK_PICKING = CMD_MSCONVERT + @" --filter ""peakPicking vendor msLevel=1-""";
 
+        // Centrix: spectra read, then centroided in parallel, this many at a time. Reading stays sequential (the
+        // reader's forward walk); centroiding costs several times the read.
+        private const int CENTROID_BATCH = 512;
+
         private static int _vendorFailuresReported;
 
         /// <summary>
         /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file.
         /// </summary>
+        public static SpectrumFileResult LoadAllSpectra(string path)
+        {
+            return LoadAllSpectra(path, null);
+        }
+
+        /// <summary>
+        /// Load all MS1 and MS2 spectra from an mzML or vendor instrument file. With
+        /// <paramref name="centroiding"/> (<c>--centroid centrix</c>), Osprey centroids profile spectra itself:
+        /// <list type="bullet">
+        /// <item>A vendor file is opened without vendor peak picking, so its profile is what is read.</item>
+        /// <item>Any peak sigma not given is first measured from profile spectra sampled across the file
+        /// (<see cref="CreateCentroiders"/>).</item>
+        /// <item>Spectra are read in file order and centroided by Centrix in parallel, <see cref="CENTROID_BATCH"/> at a
+        /// time, each on its own, so the result does not depend on the thread count.</item>
+        /// <item>Spectra the file holds centroided pass through unchanged.</item>
+        /// </list>
+        /// The sigmas used are returned on the result, for the log. The caller (<c>ScoringTaskShared</c>) caches the
+        /// spectra under a name tagged with the settings (<see cref="ArtifactPaths.SpectraCacheTag"/>), never in place of
+        /// the vendor-centroided cache.
+        /// </summary>
         /// <param name="path">The mzML or vendor instrument file.</param>
-        /// <param name="demultiplex">Demultiplexing settings: a run whose isolation windows
-        /// overlap (or that is MSX) is then read demultiplexed, by ProteoWizard, as msconvert's
-        /// demultiplex filter writes it. Null reads every run as acquired.</param>
-        public static SpectrumFileResult LoadAllSpectra(string path, SpectrumListDemux.Params demultiplex = null)
+        /// <param name="centroiding">Centrix settings, or null for the vendor's centroids.</param>
+        /// <param name="demultiplex">ProteoWizard demultiplexing settings (<c>OSPREY_DEMUX_ENGINE=pwiz</c>): a run
+        /// whose isolation windows overlap (or that is MSX) is then read demultiplexed, by ProteoWizard, as
+        /// msconvert's demultiplex filter writes it. Null reads every run as acquired.</param>
+        public static SpectrumFileResult LoadAllSpectra(string path, CentroidingOptions centroiding,
+            SpectrumListDemux.Params demultiplex = null)
         {
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
+            var acquisition = new AcquisitionInfo();
             int unsortedCount = 0;
+            double sigmaMs1 = double.NaN, sigmaMs2 = double.NaN;
             SpectrumListDemux.Scheme demultiplexed = null;
-            SpectrumListDemux.Scheme notDemultiplexed = null;
 
             ReportVendorRegistrationFailures();
 
+            // Centroiding the profile ourselves means asking the vendor library for none.
+            bool vendorFormat = IsVendorFormat(path) && centroiding == null;
             try
             {
                 // Every argument that differs from the wrapper's default is Osprey's read
@@ -134,17 +165,16 @@ namespace pwiz.Osprey.IO
                 // demultiplex: ProteoWizard's own demultiplexer, applied after centroiding, so
                 // the spectra are those of msconvert --filter "demultiplex optimization=
                 // overlap_only" without the mzML in between.
-                using (var msData = OpenForSearch(path, demultiplex))
+                using (var msData = new MsDataFileImpl(path,
+                           simAsSpectra: true,
+                           requireVendorCentroidedMS1: vendorFormat,
+                           requireVendorCentroidedMS2: vendorFormat,
+                           combineIonMobilitySpectra: false,
+                           mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads,
+                           demultiplex: demultiplex))
                 {
-                    // Which of the two this run is. Without demultiplex settings, a multiplexed
-                    // run is still detected (from the metadata of its first cycles), so the
-                    // caller can say that it was searched as acquired. That is only for a
-                    // warning, so a read it cannot finish leaves the run as it was before
-                    // detection existed; the read below reports a real reader error itself.
                     if (demultiplex != null)
                         demultiplexed = msData.DemultiplexScheme;
-                    else
-                        notDemultiplexed = TryDetectDemultiplexScheme(msData);
 
                     // A chromatogram-only file has no spectrum list, so SpectrumCount is 0
                     // and this reads nothing. Osprey has no use for such a file, but an
@@ -157,11 +187,36 @@ namespace pwiz.Osprey.IO
                                string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count,
                                string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
-                        for (int i = 0; i < count; i++)
+                        if (centroiding == null)
                         {
-                            AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
-                                ref unsortedCount);
-                            progress.Report(i + 1);
+                            for (int i = 0; i < count; i++)
+                            {
+                                AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra, acquisition,
+                                    ref unsortedCount);
+                                progress.Report(i + 1);
+                            }
+                        }
+                        else
+                        {
+                            var centroiders = CreateCentroiders(msData, centroiding, out sigmaMs1, out sigmaMs2);
+                            // Read in order, centroided in parallel a batch at a time: Centrix costs several
+                            // times the read, and each spectrum is centroided on its own.
+                            var batch = new MsDataSpectrum[CENTROID_BATCH];
+                            var parallel = new ParallelOptions { MaxDegreeOfParallelism = centroiding.Threads };
+                            for (int start = 0; start < count; start += CENTROID_BATCH)
+                            {
+                                int size = Math.Min(CENTROID_BATCH, count - start);
+                                for (int k = 0; k < size; k++)
+                                    batch[k] = msData.GetSpectrum(start + k);
+                                Parallel.For(0, size, parallel, k => CentroidProfile(batch[k], centroiders));
+                                for (int k = 0; k < size; k++)
+                                {
+                                    AddSpectrum(batch[k], start + k, ms2Spectra, ms1Spectra, acquisition,
+                                        ref unsortedCount);
+                                    batch[k] = null;
+                                }
+                                progress.Report(start + size);
+                            }
                         }
                     }
                 }
@@ -204,99 +259,25 @@ namespace pwiz.Osprey.IO
 
             return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount)
             {
+                CentroidSigmaMs1 = sigmaMs1,
+                CentroidSigmaMs2 = sigmaMs2,
+                Acquisition = acquisition,
                 DemultiplexScheme = demultiplexed,
-                MultiplexedSchemeNotDemultiplexed = notDemultiplexed,
             };
-        }
-
-        /// <summary>
-        /// The multiplexing scheme of the run, or null when it is not multiplexed, from the
-        /// metadata of its first acquisition cycles. Opens the file without reading any spectra.
-        /// </summary>
-        public static SpectrumListDemux.Scheme DetectDemultiplexScheme(string path)
-        {
-            using (var msData = OpenForSearch(path, null))
-                return msData.DetectDemultiplexScheme();
         }
 
         /// <summary>
         /// The multiplexing scheme of a run from the isolation window of every MS2 spectrum in
         /// acquisition order, as a spectra cache records them, or null when it is not multiplexed.
-        /// The same ProteoWizard detection as <see cref="DetectDemultiplexScheme(string)"/>, over
-        /// the same spectra (the head, middle and end of the run), for a run whose source file is
-        /// not at hand. A cache records one window per spectrum, so an MSX run, whose spectra
-        /// each isolate several, cannot be told from ordinary DIA this way.
+        /// The same ProteoWizard detection a demultiplexed read uses, over the same spectra (the head,
+        /// middle and end of the run), for a run whose source file is not at hand. A cache records one
+        /// window per spectrum, so an MSX run, whose spectra each isolate several, cannot be told from
+        /// ordinary DIA this way.
         /// </summary>
         public static SpectrumListDemux.Scheme DetectDemultiplexScheme(double[] centers, double[] lowerOffsets,
             double[] upperOffsets)
         {
             return SpectrumListDemux.DetectScheme(new RecordedWindowSpectrumList(centers, lowerOffsets, upperOffsets));
-        }
-
-        private static SpectrumListDemux.Scheme TryDetectDemultiplexScheme(MsDataFileImpl msData)
-        {
-            try
-            {
-                return msData.DetectDemultiplexScheme();
-            }
-            catch (Exception ex) when (!(ex is OutOfMemoryException))
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// MS2 spectra with only an isolation window, built when asked for: detection reads a few
-        /// thousand of a run's spectra, not all of them.
-        /// </summary>
-        private sealed class RecordedWindowSpectrumList : PwizSpectra.SpectrumListBase
-        {
-            private readonly double[] _centers;
-            private readonly double[] _lowerOffsets;
-            private readonly double[] _upperOffsets;
-
-            public RecordedWindowSpectrumList(double[] centers, double[] lowerOffsets, double[] upperOffsets)
-            {
-                _centers = centers;
-                _lowerOffsets = lowerOffsets;
-                _upperOffsets = upperOffsets;
-            }
-
-            public override int Count => _centers.Length;
-
-            public override PwizSpectra.SpectrumIdentity SpectrumIdentity(int index)
-            {
-                return new PwizSpectra.SpectrumIdentity { Index = index, Id = GetId(index) };
-            }
-
-            public override PwizSpectra.Spectrum GetSpectrum(int index, bool getBinaryData = false)
-            {
-                var spectrum = new PwizSpectra.Spectrum { Index = index, Id = GetId(index) };
-                spectrum.Params.Set(CVID.MS_ms_level, 2);
-                var precursor = new PwizSpectra.Precursor();
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, _centers[index], CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, _lowerOffsets[index], CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, _upperOffsets[index], CVID.MS_m_z);
-                spectrum.Precursors.Add(precursor);
-                return spectrum;
-            }
-
-            private static string GetId(int index)
-            {
-                return string.Format(CultureInfo.InvariantCulture, @"scan={0}", index + 1);
-            }
-        }
-
-        private static MsDataFileImpl OpenForSearch(string path, SpectrumListDemux.Params demultiplex)
-        {
-            bool vendorFormat = IsVendorFormat(path);
-            return new MsDataFileImpl(path,
-                simAsSpectra: true,
-                requireVendorCentroidedMS1: vendorFormat,
-                requireVendorCentroidedMS2: vendorFormat,
-                combineIonMobilitySpectra: false,
-                mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads,
-                demultiplex: demultiplex);
         }
 
         /// <summary>
@@ -331,6 +312,28 @@ namespace pwiz.Osprey.IO
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Each MS2 spectrum's fill time and analyzer, read from the source's metadata without its peaks: for a
+        /// spectra cache written before they were saved beside it (<see cref="AcquisitionSidecar"/>). The spectrum
+        /// list is opened as <see cref="LoadAllSpectra(string, CentroidingOptions, SpectrumListDemux.Params)"/> opens it (SIM scans as
+        /// spectra, ion mobility uncombined), so the scan numbers are the cache's.
+        /// </summary>
+        public static AcquisitionInfo ReadAcquisition(string path)
+        {
+            var acquisition = new AcquisitionInfo();
+            using (var msData = new MsDataFileImpl(path, simAsSpectra: true, combineIonMobilitySpectra: false))
+            {
+                int count = msData.SpectrumCount;
+                for (int i = 0; i < count; i++)
+                {
+                    var metadata = msData.GetSpectrumMetadata(i);
+                    if (metadata.MsLevel == 2)
+                        acquisition.Add((uint)i, metadata.InjectionTime ?? double.NaN, metadata.Analyzer);
+                }
+            }
+            return acquisition;
         }
 
         /// <summary>
@@ -375,8 +378,68 @@ namespace pwiz.Osprey.IO
             return string.Equals(ext, EXT_MZML, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// The Centrix centroider of each MS level, index 1 for MS1 and 2 for every MS2 and above: a linear ion trap
+        /// scans the two at their own rates, so each has its own peak sigma. A sigma not given (0) is measured from
+        /// profile spectra sampled evenly across the run, up to <see cref="CentrixSigmaCalibrator.SAMPLE_SPECTRA"/> of
+        /// them read before the main pass (<see cref="CentrixSigmaCalibrator"/>, <see cref="CentrixCalibration"/>).
+        /// </summary>
+        private static CentrixCentroider[] CreateCentroiders(MsDataFileImpl msData, CentroidingOptions centroiding,
+            out double sigmaMs1, out double sigmaMs2)
+        {
+            var ms1 = centroiding.Ms1.Copy();
+            var ms2 = centroiding.Ms2.Copy();
+            if (!(ms1.SigmaTh > 0) || !(ms2.SigmaTh > 0))
+            {
+                var calibrator = new CentrixSigmaCalibrator();
+                calibrator.Sample(msData.SpectrumCount, !(ms1.SigmaTh > 0), !(ms2.SigmaTh > 0), i =>
+                {
+                    var spectrum = msData.GetSpectrum(i);
+                    if (spectrum != null && !spectrum.Centroided && spectrum.Level >= 1 && spectrum.Mzs != null &&
+                        spectrum.Intensities != null)
+                    {
+                        calibrator.Add(spectrum.Level, spectrum.Mzs, spectrum.Intensities);
+                    }
+                });
+                if (!(ms1.SigmaTh > 0))
+                    ms1.SigmaTh = calibrator.Sigma(1);
+                if (!(ms2.SigmaTh > 0))
+                    ms2.SigmaTh = calibrator.Sigma(2);
+            }
+            sigmaMs1 = ms1.SigmaTh;
+            sigmaMs2 = ms2.SigmaTh;
+            return new[] { null, new CentrixCentroider(ms1), new CentrixCentroider(ms2) };
+        }
+
+        /// <summary>
+        /// A profile spectrum's peaks replaced by its Centrix centroids, and the spectrum marked centroided; any other
+        /// spectrum unchanged. The centroids' intensities are their peaks' summed intensities, about 3.4 times the
+        /// height a Stellar vendor centroid reports, so absolute intensities differ between the two modes.
+        /// </summary>
+        private static void CentroidProfile(MsDataSpectrum spectrum, CentrixCentroider[] centroiders)
+        {
+            // A spectrum with a non-finite m/z is left as read, for AddSpectrum to refuse (EnsureSorted).
+            if (spectrum == null || spectrum.Centroided || spectrum.Level < 1 || spectrum.Mzs == null ||
+                spectrum.Intensities == null || spectrum.Intensities.Length != spectrum.Mzs.Length ||
+                !Array.TrueForAll(spectrum.Mzs, double.IsFinite))
+            {
+                return;
+            }
+            var centroids = centroiders[Math.Min(spectrum.Level, 2)].Centroid(spectrum.Mzs, spectrum.Intensities);
+            var mzs = new double[centroids.Count];
+            var intensities = new double[centroids.Count];
+            for (int i = 0; i < centroids.Count; i++)
+            {
+                mzs[i] = centroids[i].Mz;
+                intensities[i] = centroids[i].Intensity;
+            }
+            spectrum.SetArrays(mzs, intensities);
+            spectrum.Centroided = true;
+        }
+
         private static void AddSpectrum(MsDataSpectrum spectrum, int spectrumIndex,
-            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, ref int unsortedCount)
+            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, AcquisitionInfo acquisition,
+            ref int unsortedCount)
         {
             if (spectrum == null)
                 return;
@@ -433,7 +496,10 @@ namespace pwiz.Osprey.IO
                 isolationTarget?.Value ?? 0.0, precursor.IsolationWindowLower ?? 0.0,
                 precursor.IsolationWindowUpper ?? 0.0, mzs, intensities);
             if (ms2 != null)
+            {
                 ms2Spectra.Add(ms2);
+                acquisition.Add(index, spectrum.Metadata?.InjectionTime ?? double.NaN, spectrum.Metadata?.Analyzer);
+            }
         }
 
         /// <summary>
@@ -453,6 +519,48 @@ namespace pwiz.Osprey.IO
             foreach (string failure in VendorReaderRegistration.Failures)
                 CommandOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
         }
+
+        /// <summary>
+        /// MS2 spectra with only an isolation window, built when asked for: detection reads a few
+        /// thousand of a run's spectra, not all of them.
+        /// </summary>
+        private sealed class RecordedWindowSpectrumList : PwizSpectra.SpectrumListBase
+        {
+            private readonly double[] _centers;
+            private readonly double[] _lowerOffsets;
+            private readonly double[] _upperOffsets;
+
+            public RecordedWindowSpectrumList(double[] centers, double[] lowerOffsets, double[] upperOffsets)
+            {
+                _centers = centers;
+                _lowerOffsets = lowerOffsets;
+                _upperOffsets = upperOffsets;
+            }
+
+            public override int Count => _centers.Length;
+
+            public override PwizSpectra.SpectrumIdentity SpectrumIdentity(int index)
+            {
+                return new PwizSpectra.SpectrumIdentity { Index = index, Id = GetId(index) };
+            }
+
+            public override PwizSpectra.Spectrum GetSpectrum(int index, bool getBinaryData = false)
+            {
+                var spectrum = new PwizSpectra.Spectrum { Index = index, Id = GetId(index) };
+                spectrum.Params.Set(CVID.MS_ms_level, 2);
+                var precursor = new PwizSpectra.Precursor();
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, _centers[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, _lowerOffsets[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, _upperOffsets[index], CVID.MS_m_z);
+                spectrum.Precursors.Add(precursor);
+                return spectrum;
+            }
+
+            private static string GetId(int index)
+            {
+                return string.Format(CultureInfo.InvariantCulture, @"scan={0}", index + 1);
+            }
+        }
     }
 
     /// <summary>
@@ -464,19 +572,24 @@ namespace pwiz.Osprey.IO
         public List<MS1Spectrum> Ms1Spectra { get; private set; }
         public int UnsortedSpectrumCount { get; private set; }
 
+        /// <summary>The peak sigma, Th, Centrix centroided MS1 with; NaN when it did not centroid.</summary>
+        public double CentroidSigmaMs1 { get; set; } = double.NaN;
+
+        /// <summary>The peak sigma, Th, Centrix centroided MS2 with; NaN when it did not centroid.</summary>
+        public double CentroidSigmaMs2 { get; set; } = double.NaN;
+
+        /// <summary>Each MS2 spectrum's fill time and analyzer, as the file reports them.</summary>
+        public AcquisitionInfo Acquisition { get; set; }
+
+        /// <summary>The multiplexing scheme ProteoWizard demultiplexed the MS2 spectra from, or null
+        /// when they were read as acquired.</summary>
+        public SpectrumListDemux.Scheme DemultiplexScheme { get; set; }
+
         public SpectrumFileResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
         {
             Ms2Spectra = ms2;
             Ms1Spectra = ms1;
             UnsortedSpectrumCount = unsortedSpectrumCount;
         }
-
-        /// <summary>The multiplexing scheme the MS2 spectra were demultiplexed from, or null
-        /// when they were read as acquired.</summary>
-        public SpectrumListDemux.Scheme DemultiplexScheme { get; init; }
-
-        /// <summary>A multiplexing scheme the run has but was read without demultiplexing,
-        /// because no demultiplex settings were given; null otherwise.</summary>
-        public SpectrumListDemux.Scheme MultiplexedSchemeNotDemultiplexed { get; init; }
     }
 }

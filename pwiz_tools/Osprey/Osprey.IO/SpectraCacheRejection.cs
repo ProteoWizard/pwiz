@@ -71,7 +71,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// A demultiplexed cache was written with different demux settings or a different demux
         /// algorithm version, or a plain cache was found where a demultiplexed one was expected
-        /// (or the reverse). The cache must be rebuilt from its source file.
+        /// (or the reverse). The cache must be rebuilt from its <c>.spectra.bin</c>.
         /// </summary>
         DemuxSettingsChanged
     }

@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <!-- Centrix, for profile spectra Osprey centroids itself (CentroidingOptions). -->
+    <ProjectReference Include="..\Osprey.Centroid\Osprey.Centroid.csproj" />
     <!-- The Osprey-CarafeSharp contracts: the training export's record, schema, writer and
          reader, and the parquet blob codec both files share. Osprey links CarafeSharp's
          assemblies and not the reverse, so the contract lives in the CarafeSharp tree. Out of
