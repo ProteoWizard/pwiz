@@ -28,8 +28,8 @@ namespace pwiz.SkylineTestUtil
     /// How long each tutorial screenshot waits for the UI to be ready. Instead of fixed sleeps, which
     /// added up to over an hour of a full screenshot run, a screenshot waits for the UI thread to finish
     /// its pending work and painting, and for the result to reach the screen (<see cref="PaintFlush"/>).
-    /// The fixed waits remain, at 0 by default, and each setting can be overridden for a run with an
-    /// environment variable, to measure their effect. Each screenshot's timing can be logged, and each
+    /// The fixed waits remain, at 0 by default; turning the flush off restores the old waits. Each
+    /// setting can be overridden for a run with an environment variable, to measure its effect. Each screenshot's timing can be logged, and each
     /// saved screenshot copied per test, to compare runs.
     /// </summary>
     public static class ScreenshotWaits
@@ -42,19 +42,20 @@ namespace pwiz.SkylineTestUtil
         public const string COPY_DIR_VARIABLE = @"SKYLINE_SCREENSHOT_COPY_DIR";
 
         /// <summary>
-        /// Fixed wait before activating the screenshot form (default 0, formerly 1500 ms).
+        /// Fixed wait before activating the screenshot form (default 0, or 1500 ms without <see cref="PaintFlush"/>).
         /// </summary>
-        public static int SettleMillis => GetMillis(SETTLE_MS_VARIABLE, 0);
+        public static int SettleMillis => GetMillis(SETTLE_MS_VARIABLE, PaintFlush ? 0 : 1500);
 
         /// <summary>
-        /// Fixed wait after activating the form (default 0, formerly 500 ms).
+        /// Fixed wait after activating the form (default 0, or 500 ms without <see cref="PaintFlush"/>).
         /// </summary>
-        public static int ActivateMillis => GetMillis(ACTIVATE_MS_VARIABLE, 0);
+        public static int ActivateMillis => GetMillis(ACTIVATE_MS_VARIABLE, PaintFlush ? 0 : 500);
 
         /// <summary>
-        /// Fixed wait after adjusting controls for consistent screenshots (default 0, formerly 500 ms).
+        /// Fixed wait after adjusting controls for consistent screenshots (default 0, or 500 ms without
+        /// <see cref="PaintFlush"/>).
         /// </summary>
-        public static int RepaintMillis => GetMillis(REPAINT_MS_VARIABLE, 0);
+        public static int RepaintMillis => GetMillis(REPAINT_MS_VARIABLE, PaintFlush ? 0 : 500);
 
         /// <summary>
         /// True to wait for pending UI work and painting to reach the screen before activating the form,

@@ -225,15 +225,22 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             lock (RUNNERS)
             {
+                RUNNERS.RemoveAll(r => !r.TryGetTarget(out _));
                 RUNNERS.Add(new WeakReference<LabelLayoutRunner>(this));
             }
         }
 
         /// <summary>
         /// True while a requested layout is waiting for the debounce timer or running on the worker
-        /// thread, until its result has been applied on the event thread.
+        /// thread, until its result has been applied on the event thread. A layout for a graph that
+        /// has been disposed is not pending, since its result will never be applied.
         /// </summary>
-        public bool IsPending => _pendingRequest != null || _labelLayoutWorkerThread != null;
+        public bool IsPending => IsLive(_pendingRequest) || (_labelLayoutWorkerThread != null && IsLive(_currentRequest));
+
+        private static bool IsLive(LabelLayoutRequest request)
+        {
+            return request != null && !request.GraphControl.IsDisposed;
+        }
 
         public void Start(ZedGraphControl graphControl, IList<LabeledPoint> labeledPoints,
             IList<LabeledPoint.PointLayout> savedLayout, Action<List<LabeledPoint.PointLayout>> saveLayout)

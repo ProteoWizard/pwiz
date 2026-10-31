@@ -52,9 +52,6 @@ namespace TestRunnerLib.PInvoke
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        public static extern bool EnumThreadWindows(int threadId, EnumWindowsProc enumProc, IntPtr lParam);
-
-        [DllImport("user32.dll")]
         public static extern uint GetQueueStatus(uint flags);
 
         [DllImport("user32.dll")]

@@ -711,7 +711,7 @@ namespace pwiz.SkylineTest
                 { typeof(Kernel32Test), 5 },
                 { typeof(Ole32Test), 1 },
                 { typeof(Shell32Test), 1 },
-                { typeof(User32Test), 14 }
+                { typeof(User32Test), 13 }
             };
 
             // add types from production code. The pwiz.Common.SystemUtil.PInvoke namespace

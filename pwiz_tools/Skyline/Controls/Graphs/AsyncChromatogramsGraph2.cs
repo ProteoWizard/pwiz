@@ -366,7 +366,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // The frozen graph time ensures consistent progress line position
             _frozenGraphTime = graphTime;
             _frozenIntensityMax = intensityMax;
-            _renderedSinceFreeze = false;
             // Note: X-axis max is captured separately via CaptureXAxisMax() when called
             // at an earlier point in the import process
         }
@@ -404,8 +403,18 @@ namespace pwiz.Skyline.Controls.Graphs
         /// drawn it since. Incremental renders are at least a second apart, so without this a
         /// screenshot taken soon after freezing can miss peaks that arrived just before.
         /// </summary>
-        public bool IsRenderComplete => !_xAxisAnimation.IsActive && !_yAxisAnimation.IsActive && !IsRenderPending &&
-                                        (_renderedSinceFreeze || _renderMin == double.MaxValue);
+        public bool IsRenderComplete => Width <= 0 || Height <= 0 ||
+                                        (!_xAxisAnimation.IsActive && !_yAxisAnimation.IsActive && !IsRenderPending &&
+                                         (_renderedSinceFreeze || _renderMin == double.MaxValue));
+
+        /// <summary>
+        /// Called when the import progress freezes for a screenshot, so <see cref="IsRenderComplete"/> waits
+        /// for a render of the data that arrived up to that point.
+        /// </summary>
+        public void OnProgressFrozen()
+        {
+            _renderedSinceFreeze = false;
+        }
 
         /// <summary>
         /// Resume normal graph animation after screenshot capture.

@@ -112,6 +112,11 @@ namespace pwiz.SkylineTestUtil
         {
             private const int MAX_CAPTURE_RETRIES = 10;
 
+            /// <summary>
+            /// Captures that differed from the capture after them, so had to be taken again.
+            /// </summary>
+            public int CaptureRetries { get; private set; }
+
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
 
@@ -124,14 +129,14 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override Bitmap Take()
             {
-                LastCaptureRetries = 0;
+                CaptureRetries = 0;
                 var shot = Capture();
                 if (!ScreenshotWaits.PaintFlush)
                     return shot;
 
                 // A control can start painting again after the wait for painting, so capture until two
                 // captures in a row are the same
-                for (; LastCaptureRetries < MAX_CAPTURE_RETRIES; LastCaptureRetries++)
+                for (; CaptureRetries < MAX_CAPTURE_RETRIES; CaptureRetries++)
                 {
                     WaitForPaint(_activeWindow);
                     var nextShot = Capture();
@@ -392,6 +397,8 @@ namespace pwiz.SkylineTestUtil
             RunUI(screenshotControl, () => AdjustControlsForConsistentScreenshots(screenshotControl));
 
             Thread.Sleep(ScreenshotWaits.RepaintMillis);  // Allow the adjusted controls to repaint on the UI thread
+            if (ScreenshotWaits.PaintFlush)
+                WaitForPaint(screenshotControl);
             LastRepaintMillis = stopwatch.ElapsedMilliseconds;
         }
 
@@ -407,12 +414,11 @@ namespace pwiz.SkylineTestUtil
                 bool idle = false;
                 RunUI(control, () =>
                 {
-                    User32Test.EnumThreadWindows(Kernel32.GetCurrentThreadId(), (hWnd, lParam) =>
+                    foreach (var hWnd in User32.EnumThreadWindows((uint)Kernel32.GetCurrentThreadId()))
                     {
                         User32Test.RedrawWindow(hWnd, IntPtr.Zero, IntPtr.Zero,
                             User32Test.RDW_UPDATENOW | User32Test.RDW_ALLCHILDREN);
-                        return true;
-                    }, IntPtr.Zero);
+                    }
                     // The high word says what is in the queue now; timer messages are not counted
                     idle = User32Test.GetQueueStatus(User32Test.QS_POSTMESSAGE | User32Test.QS_SENDMESSAGE |
                                                       User32Test.QS_PAINT) >> 16 == 0;
@@ -437,7 +443,7 @@ namespace pwiz.SkylineTestUtil
         /// Captures of the last screen screenshot that differed from the capture after them, so had to be
         /// taken again (<see cref="ActiveWindowShot"/>).
         /// </summary>
-        public static int LastCaptureRetries { get; private set; }
+        public int LastCaptureRetries { get; private set; }
 
         /// <summary>
         /// Turns off the Windows "Animation effects" setting (client-area animation) until the returned
@@ -577,12 +583,12 @@ namespace pwiz.SkylineTestUtil
         public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
         {
             activeWindow ??= _skylineWindow;
-            LastCaptureRetries = 0;
 
             // Check UI and create a blank shot according to the user selection
             var newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
 
             var shotPic = newShot.Take();
+            LastCaptureRetries = (newShot as ActiveWindowShot)?.CaptureRetries ?? 0;
             if (processShot != null)
             {
                 // Processing must include border cleanup if necessary, since

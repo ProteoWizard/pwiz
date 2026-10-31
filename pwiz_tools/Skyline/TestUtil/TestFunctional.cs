@@ -2219,7 +2219,6 @@ namespace pwiz.SkylineTestUtil
             if (ScreenshotWaits.PaintFlush)
             {
                 // Activating and painting can start more graph work, like a new label layout
-                ScreenshotManager.WaitForPaint(screenshotForm);
                 WaitForGraphs();
                 ScreenshotManager.WaitForPaint(screenshotForm);
             }
@@ -2227,7 +2226,7 @@ namespace pwiz.SkylineTestUtil
             ScreenshotWaits.CopyShot(TestContext.TestName, CultureInfo.CurrentCulture.Name, filePath);
             ScreenshotWaits.LogTiming(TestContext.TestName, CultureInfo.CurrentCulture.Name, ScreenshotCounter,
                 graphsMillis, settleMillis, _shotManager.LastActivateMillis, _shotManager.LastRepaintMillis,
-                stopwatch.ElapsedMilliseconds, ScreenshotManager.LastCaptureRetries);
+                stopwatch.ElapsedMilliseconds, _shotManager.LastCaptureRetries);
         }
 
         /// <summary>
