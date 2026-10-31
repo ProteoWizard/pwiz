@@ -35,8 +35,11 @@
   <!-- The .wiff2 plugin's own SQLite and Unity assemblies, and SQLite's native interop, go to a
        wiff2 subfolder the plugin's load context searches, as msconvert-sharp's
        StageWiff2NativeAssemblies does. Osprey does not import the repository root's Directory.Build.props,
-       so the paths are spelled out here. -->
-  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+       so the paths are spelled out here. Gated on a Windows target as well as the agreement, as
+       that target is gated on NativeVendorsAvailable: Sciex.csproj extracts SQLite.Interop.dll for
+       a Windows target only, and the Linux CI builds with the agreement. -->
+  <Import Project="..\..\Shared\Lib\PwizTargetPlatform.props" Condition="'$(PwizTargetPlatformPropsImported)' != 'true'" />
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true' AND '$(PwizTargetIsWindows)' == 'true'">
     <PropertyGroup>
       <_PwizRepoRoot>$(MSBuildThisFileDirectory)..\..\..\</_PwizRepoRoot>
       <_Wiff2OutDir>$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))wiff2</_Wiff2OutDir>
