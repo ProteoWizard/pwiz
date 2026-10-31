@@ -557,6 +557,54 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Time-correlation family: over apex +/- 0.15 min (15 scans at 0.01 min), fragments that
+        /// follow one Gaussian profile correlate near 1 with the smoothed reference, a fragment that
+        /// is a flat level with one spike does not, and fragments beyond the top six library ranks
+        /// are summed apart from them.
+        /// </summary>
+        [TestMethod]
+        public void TestTimeCorrelations()
+        {
+            const int n = 61;
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var profile = rts.Select(rt => 1000.0 * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2))).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f, 40f, 30f };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+            var xics = new List<XicData>();
+            for (int f = 0; f < library.Length; f++)
+            {
+                double[] intensities;
+                if (f == 2)
+                {
+                    // Library rank 3: a flat interference level with a one-scan spike far from the apex.
+                    intensities = Enumerable.Repeat(500.0, n).ToArray();
+                    intensities[20] = 900.0;
+                }
+                else
+                    intensities = profile.Select(v => v * (1.0 - 0.05 * f) + 5.0).ToArray();
+                xics.Add(new XicData(f, rts, intensities));
+            }
+            var bounds = new XICPeakBounds { StartIndex = 27, EndIndex = 33, ApexIndex = 30 };
+            var timeCorr = TimeCorrelations.Compute(new FakePeakData(xics, bounds, candidate: candidate),
+                TimeCorrelations.HALF_WINDOW_MINUTES);
+
+            for (int r = 1; r <= TimeCorrelations.RANK_COUNT; r++)
+            {
+                double corr = timeCorr.RankCorrelations[r - 1];
+                if (r == 3)
+                    Assert.IsTrue(corr < 0.3, string.Format("The flat fragment does not follow the reference, got {0:F4}", corr));
+                else
+                    Assert.IsTrue(corr > 0.98, string.Format("Rank {0} follows the reference, got {1:F4}", r, corr));
+            }
+            Assert.AreEqual(timeCorr.RankCorrelations.Sum(), timeCorr.TopSum, TOLERANCE);
+            Assert.IsTrue(timeCorr.ResidualSum > 1.96, string.Format("Two clean residual fragments, got {0:F4}", timeCorr.ResidualSum));
+            Assert.AreEqual(timeCorr.ResidualSum / 2, timeCorr.ResidualMean, TOLERANCE);
+        }
+
+        /// <summary>
         /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
         /// each new feature adds to both, so a calculator whose name differs from its column
         /// would write one feature under another's name. The default FDR mask resolves names

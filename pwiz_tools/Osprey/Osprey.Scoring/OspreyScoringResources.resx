@@ -313,4 +313,16 @@
   <data name="WindowShareCalc_DisplayName_Fragment__0__share_across_peak" xml:space="preserve">
     <value>Fragment {0} share across peak</value>
   </data>
+  <data name="TimeCorrelationSumCalc_DisplayName_Time_correlation_with_reference__top_6_sum_" xml:space="preserve">
+    <value>Time correlation with reference (top 6 sum)</value>
+  </data>
+  <data name="TimeCorrelationRankCalc_DisplayName_Time_correlation_of_fragment__0_" xml:space="preserve">
+    <value>Time correlation of fragment {0}</value>
+  </data>
+  <data name="TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__sum_" xml:space="preserve">
+    <value>Time correlation beyond top 6 (sum)</value>
+  </data>
+  <data name="TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_" xml:space="preserve">
+    <value>Time correlation beyond top 6 (mean)</value>
+  </data>
 </root>

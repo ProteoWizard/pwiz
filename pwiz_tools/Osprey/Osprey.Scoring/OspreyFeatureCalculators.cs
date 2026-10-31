@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-70 are C#-only: the runner-up, context, per-fragment-rank,
+    /// never returns null. Slots 21-79 are C#-only: the runner-up, context, per-fragment-rank,
     /// spectrum-across-peak, median-polish top-k, reference-correlation and peak-profile families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 71;
+        public const int FeatureCount = 80;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -140,6 +140,14 @@ namespace pwiz.Osprey.Scoring
                 calculators[58 + r] = new LibraryRelativeIntensityCalc(r);
             for (int r = 1; r <= PeakProfile.RANK_COUNT; r++)
                 calculators[64 + r] = new WindowShareCalc(r);
+
+            // Time-correlation family: fragments against the smoothed best-correlated fragment over apex
+            // +/- 0.15 min rather than the peak bounds (after DIA-NN pTimeCorr / pCorr / pResCorr).
+            calculators[71] = new TimeCorrelationSumCalc();
+            for (int r = 1; r <= TimeCorrelations.RANK_COUNT; r++)
+                calculators[71 + r] = new TimeCorrelationRankCalc(r);
+            calculators[78] = new TimeCorrelationResidualCalc(false);
+            calculators[79] = new TimeCorrelationResidualCalc(true);
 
             return calculators;
         }

@@ -723,5 +723,41 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("WindowShareCalc_DisplayName_Fragment__0__share_across_peak", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation with reference (top 6 sum).
+        /// </summary>
+        public static string TimeCorrelationSumCalc_DisplayName_Time_correlation_with_reference__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationSumCalc_DisplayName_Time_correlation_with_reference__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation of fragment {0}.
+        /// </summary>
+        public static string TimeCorrelationRankCalc_DisplayName_Time_correlation_of_fragment__0_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationRankCalc_DisplayName_Time_correlation_of_fragment__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation beyond top 6 (sum).
+        /// </summary>
+        public static string TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__sum_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation beyond top 6 (mean).
+        /// </summary>
+        public static string TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_", resourceCulture);
+            }
+        }
     }
 }

@@ -143,9 +143,19 @@ namespace pwiz.Osprey.IO
             @"window_share_rank4",
             @"window_share_rank5",
             @"window_share_rank6",
+            // Time correlation: against the smoothed reference over apex +/- 0.15 min (9)
+            @"tc_sum6",
+            @"tc_corr_rank1",
+            @"tc_corr_rank2",
+            @"tc_corr_rank3",
+            @"tc_corr_rank4",
+            @"tc_corr_rank5",
+            @"tc_corr_rank6",
+            @"tc_res_sum",
+            @"tc_res_mean",
         };
 
-        public const int NUM_PIN_FEATURES = 71;
+        public const int NUM_PIN_FEATURES = 80;
 
         /// <summary>
         /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after
