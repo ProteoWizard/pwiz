@@ -88,25 +88,35 @@
        The page is replaced only when its text changes. msconvert writes LF, while a Windows
        checkout holds CRLF, and git status reports an LF copy of a CRLF checkout as modified
        even though git diff shows nothing; overwriting it every time failed the CI check for
-       files a build leaves modified. Incrementality is tracked against the copy in obj, so an
-       unchanged page is never touched. -->
+       files a build leaves modified. The comparison is case-sensitive, so a change only in case
+       still reaches the page. Incrementality is tracked by a stamp touched only after the page
+       is up to date, so a failed run is retried by the next build, and an unchanged page is
+       never touched. -->
   <PropertyGroup>
     <MsConvertHelpFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\msconvert-help.txt'))</MsConvertHelpFile>
   </PropertyGroup>
   <Target Name="WriteMsConvertHelp" AfterTargets="Build"
           Condition="'$(IAgreeToVendorLicenses)' == 'true' AND ('$(RuntimeIdentifier)' == '' OR '$(RuntimeIdentifier)' == '$(NETCoreSdkRuntimeIdentifier)')"
-          Inputs="$(TargetPath);@(ReferenceCopyLocalPaths)" Outputs="$(IntermediateOutputPath)msconvert-help.txt">
+          Inputs="$(TargetPath);@(ReferenceCopyLocalPaths);$(MsConvertHelpFile)" Outputs="$(IntermediateOutputPath)msconvert-help.stamp">
     <PropertyGroup>
       <!-- Written beside the build first, so a failed run cannot leave a truncated page. -->
       <_MsConvertHelpTemp>$(IntermediateOutputPath)msconvert-help.txt</_MsConvertHelpTemp>
+      <_MsConvertHelpStamp>$(IntermediateOutputPath)msconvert-help.stamp</_MsConvertHelpStamp>
     </PropertyGroup>
+    <!-- cmd reports success when it cannot open the redirect's file, so check the file was written. -->
+    <Delete Files="$(_MsConvertHelpTemp)" />
     <Exec Command="&quot;$(TargetDir)$(TargetName)$(_NativeExecutableExtension)&quot; --doc &gt; &quot;$(_MsConvertHelpTemp)&quot;" />
+    <Error Condition="!Exists('$(_MsConvertHelpTemp)')" Text="msconvert --doc did not write $(_MsConvertHelpTemp)." />
     <PropertyGroup>
       <_MsConvertHelpNew>$([System.IO.File]::ReadAllText('$(_MsConvertHelpTemp)').Replace('&#13;', ''))</_MsConvertHelpNew>
       <_MsConvertHelpOld Condition="Exists('$(MsConvertHelpFile)')">$([System.IO.File]::ReadAllText('$(MsConvertHelpFile)').Replace('&#13;', ''))</_MsConvertHelpOld>
     </PropertyGroup>
-    <Copy Condition="'$(_MsConvertHelpNew)' != '$(_MsConvertHelpOld)'"
+    <Copy Condition="!$([System.String]::Equals($(_MsConvertHelpNew), $(_MsConvertHelpOld)))"
           SourceFiles="$(_MsConvertHelpTemp)" DestinationFiles="$(MsConvertHelpFile)" />
+    <Touch Files="$(_MsConvertHelpStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_MsConvertHelpTemp);$(_MsConvertHelpStamp)" />
+    </ItemGroup>
   </Target>
 
   <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->

@@ -908,15 +908,6 @@ Please consider using the fine-tuning method provided by Carafe for building thi
   <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>Importing spectral library</value>
   </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
-    <value>BlibBuild completed successfully.</value>
-  </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
-    <value>BlibBuild failed to complete.</value>
-  </data>
-  <data name="CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_" xml:space="preserve">
-    <value>Predicted the library in {0} minutes {1} seconds.</value>
-  </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>Detailed Log</value>
   </data>
@@ -998,5 +989,17 @@ Please consider using the fine-tuning method provided by Carafe for building thi
   </data>
   <data name="TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime" xml:space="preserve">
     <value>Installing the NVIDIA CUDA runtime</value>
+  </data>
+  <data name="OspreyProperties_Parse_Osprey_at__0__did_not_report_its_settings___1_" xml:space="preserve">
+    <value>Osprey at {0} did not report its settings: {1}</value>
+  </data>
+  <data name="OspreyProperties_Run_Osprey_at__0__could_not_be_run_" xml:space="preserve">
+    <value>Osprey at {0} could not be run.</value>
+  </data>
+  <data name="OspreyProperty_Tooltip_Enter__0__to_give_the_argument_without_a_value_" xml:space="preserve">
+    <value>Enter '{0}' to give the argument without a value.</value>
+  </data>
+  <data name="OspreyProperty_Validate_The_value___0___is_not_valid_for__1___which_must_be_a_whole_number__blank__or___2__" xml:space="preserve">
+    <value>The value '{0}' is not valid for {1}, which must be a whole number, blank, or '{2}'.</value>
   </data>
 </root>

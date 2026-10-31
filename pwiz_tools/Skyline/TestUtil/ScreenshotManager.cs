@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -328,62 +329,138 @@ namespace pwiz.SkylineTestUtil
 
             Thread.Sleep(500);  // Allow activation message processing on the UI thread
 
-            RunUI(screenshotControl, () => HideSensitiveFocusDisplay(screenshotControl));
+            RunUI(screenshotControl, () => AdjustControlsForConsistentScreenshots(screenshotControl));
 
-            Thread.Sleep(10);   // Allow selection to repaint on the UI thread
+            Thread.Sleep(500);  // Allow the adjusted controls to repaint on the UI thread
         }
 
         /// <summary>
-        /// Attempt to get more consistent screenshots by hiding sensitive
-        /// display elements indicating a control has the focus, like blinking
-        /// cursors and dotted rectangles on tab controls.
+        /// Turns off the Windows "Animation effects" setting (client-area animation) until the returned
+        /// object is disposed. Themed controls fade between visual states when a message like
+        /// WM_CHANGEUISTATE makes them repaint, so a screenshot taken during the fade catches a frame
+        /// that depends on timing. The change applies to the current session only, not the user profile.
         /// </summary>
-        private void HideSensitiveFocusDisplay(Control screenshotControl)
+        public static IDisposable DisableControlAnimations()
         {
-            // Hide focus rectangles and mnemonic underscores by sending WM_CHANGEUISTATE
-            // to the top-level form. Windows tracks keyboard vs mouse mode and shows these
-            // UI cues when in keyboard mode. This can happen even when tests are started
-            // with a mouse click if any key is pressed on the machine.
-            HideKeyboardCues(screenshotControl);
+            bool enabled = false;
+            if (!User32Test.SystemParametersInfo(User32Test.SPI_GETCLIENTAREAANIMATION, 0, ref enabled, 0) || !enabled)
+                return new ScopedAction(() => { });
 
-            var focusControl = screenshotControl.GetFocus();
-            if (focusControl is TextBox focusText)
-            {
-                focusText.Select(focusText.Text.Length, 0);
-                focusText.HideCaret();
-            }
-            else if (focusControl is ComboBox { DropDownStyle: ComboBoxStyle.DropDown } focusCombo)
-            {
-                focusCombo.Select(0, 0);
-                focusCombo.HideCaret();
-            }
-            else if (focusControl is TabControl focusTabControl)
-            {
-                focusTabControl.SelectedTab.Focus();
-            }
+            SetControlAnimations(false);
+            return new ScopedAction(() => SetControlAnimations(true));
+        }
+
+        private static void SetControlAnimations(bool enable)
+        {
+            User32Test.SystemParametersInfo(User32Test.SPI_SETCLIENTAREAANIMATION, 0,
+                new IntPtr(enable ? 1 : 0), User32Test.SPIF_SENDCHANGE);
         }
 
         /// <summary>
-        /// Hides keyboard-triggered UI cues (focus rectangles and mnemonic underscores)
-        /// by sending WM_CHANGEUISTATE to the form and all descendant controls.
-        /// Some controls (like TabControl/WizardPages) don't properly propagate
-        /// WM_CHANGEUISTATE to their children, so we send it recursively.
+        /// Adjustments applied to every control in the screenshot's form, in order, parents
+        /// before children. Each one removes a display difference that depends on what happened
+        /// before the screenshot rather than on what it shows, like blinking cursors, focus
+        /// rectangles, and checkbox antialiasing left by earlier partial repaints.
         /// </summary>
-        private static void HideKeyboardCues(Control control)
+        private static readonly ControlAdjuster[] CONTROL_ADJUSTERS =
+        {
+            new ControlAdjuster<Control>(HideKeyboardCues),
+            new ControlAdjuster<CheckedListBox>(RepaintWithErase),
+            new ControlAdjuster<TextBox>(HideTextCursor),
+            new ControlAdjuster<ComboBox>(HideComboTextCursor),
+            new ControlAdjuster<TabControl>(MoveFocusToSelectedTab)
+        };
+
+        private static void AdjustControlsForConsistentScreenshots(Control control)
         {
             var form = control.FindForm();
             if (form != null)
             {
-                HideKeyboardCuesRecursive(form);
+                AdjustControlsRecursive(form);
             }
         }
 
-        private static void HideKeyboardCuesRecursive(Control control)
+        private static void AdjustControlsRecursive(Control control)
         {
-            User32.SendMessage(control.Handle, User32.WinMessageType.WM_CHANGEUISTATE, User32.UISF_HIDEALL, IntPtr.Zero);
+            foreach (var adjuster in CONTROL_ADJUSTERS)
+            {
+                adjuster.Adjust(control);
+            }
             foreach (Control child in control.Controls)
             {
-                HideKeyboardCuesRecursive(child);
+                AdjustControlsRecursive(child);
+            }
+        }
+
+        /// <summary>
+        /// Hides focus rectangles and mnemonic underscores. Windows shows these in keyboard mode,
+        /// which can start even when tests are started with a mouse click if any key is pressed
+        /// on the machine. Sent to every control because some (like TabControl/WizardPages) don't
+        /// propagate WM_CHANGEUISTATE to their children.
+        /// </summary>
+        private static void HideKeyboardCues(Control control)
+        {
+            User32.SendMessage(control.Handle, User32.WinMessageType.WM_CHANGEUISTATE, User32.UISF_HIDEALL, IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// A CheckedListBox repaints a single item without erasing its background when its check,
+        /// selection or focus changes, so the antialiased corners of a checked box blend over
+        /// whatever was painted there before, and their color depends on how many such repaints
+        /// happened. Repainting the whole list, with its background erased, draws every checked
+        /// box the same way.
+        /// </summary>
+        private static void RepaintWithErase(CheckedListBox checkedListBox)
+        {
+            checkedListBox.Invalidate();
+            checkedListBox.Update();
+        }
+
+        // Only the control with the focus shows a blinking caret or a text selection.
+
+        private static void HideTextCursor(TextBox textBox)
+        {
+            if (!textBox.Focused)
+                return;
+            textBox.Select(textBox.Text.Length, 0);
+            textBox.HideCaret();
+        }
+
+        private static void HideComboTextCursor(ComboBox comboBox)
+        {
+            if (!comboBox.Focused || comboBox.DropDownStyle != ComboBoxStyle.DropDown)
+                return;
+            comboBox.Select(0, 0);
+            comboBox.HideCaret();
+        }
+
+        /// <summary>
+        /// A focused TabControl draws a dotted focus rectangle on its selected tab.
+        /// </summary>
+        private static void MoveFocusToSelectedTab(TabControl tabControl)
+        {
+            if (tabControl.Focused)
+                tabControl.SelectedTab.Focus();
+        }
+
+        private abstract class ControlAdjuster
+        {
+            public abstract void Adjust(Control control);
+        }
+
+        private class ControlAdjuster<TControl> : ControlAdjuster where TControl : Control
+        {
+            private readonly Action<TControl> _adjust;
+
+            public ControlAdjuster(Action<TControl> adjust)
+            {
+                _adjust = adjust;
+            }
+
+            public override void Adjust(Control control)
+            {
+                if (control is TControl typedControl)
+                    _adjust(typedControl);
             }
         }
 

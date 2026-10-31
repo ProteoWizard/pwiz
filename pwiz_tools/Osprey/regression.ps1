@@ -19,10 +19,10 @@
         straight-through, at full size).
       * A check that reads output a leg here already produces (a log line, a
         cache hit) is fine. A new leg that exists to exercise pipeline behavior
-        is not: write it as a subset test. The one exception is opt-in and off in
-        every gate: mode 13 (-StepwiseOneCommand), the demonstration at real scale
-        that a run stopped after any task resumes after it. Its subset twin,
-        SubsetPipelineTest.TestSubsetLibraryBuildTunedStepwise, is the gate.
+        is not: write it as a subset test. The tuned one command (--fasta
+        --training-input) is tested that way: the subset tunes on one run, and
+        SubsetPipelineTest's TunedStepwise and TunedHpcChain stop it after every task
+        and run it node by node.
 
     Acquires real DIA test data the way Skyline perf tests do (download a
     panorama zip into the shared <Downloads>\Perftests folder, extract,
@@ -100,24 +100,6 @@
               2026-09-12 (SHA-256 identical on StellarLibDecoy and Stellar, per-precursor
               and per-run) and would cost a full resident run per dataset to repeat.
 
-      mode 13 (opt-in, -StepwiseOneCommand, Stellar only) the one command with tuning
-              (--fasta hela-filtered.fasta --training-input <_21>) straight through, then
-              the same command with OSPREY_STOP_AFTER_TASKS=1 run again and again until it
-              completes: each run must skip every task finished before it and run exactly
-              the next, in the straight-through order (PredictTrainingLibrary, the tuning
-              search's four stages, TrainModel, PredictLibrary, the search's four), and the
-              stepwise result must equal the straight-through one at -Tolerance. CPU
-              prediction and a full fine-tune, twice: about 35 minutes.
-
-      mode 14 (opt-in, -HpcOneCommand, Stellar only) the tuned one command as a cluster
-              runs it: one process per --task node (PredictTrainingLibrary; the tuning
-              search's stages with --training-search, the per-file ones one node per run;
-              TrainModel; PredictLibrary; the search's stages, one node per run for the
-              per-file ones), every node the same command line. Before each node its
-              declared inputs (--task-files) must exist; after it, exactly its task ran and
-              its declared outputs exist; the result must equal the straight-through one
-              (mode 13's, run here if mode 13 is not) at -Tolerance. About 25 minutes.
-
     Which mode emits which summary line on which dataset, with what gates it and the
     seconds each leg cost on the last full run, is rendered as regression.html beside
     this script by Regression\Write-RegressionMatrix.ps1 (read it before adding a leg
@@ -192,16 +174,6 @@
     Skip the mode-3 HPC 4-task worker-chain leg. The overnight gate leaves it on
     (the chain is part of the standing cadence); this switch is for fast local
     iteration when only the straight-through correctness matters.
-
-.PARAMETER StepwiseOneCommand
-    Run mode 13 on Stellar: the tuned one command straight through and stepwise
-    (OSPREY_STOP_AFTER_TASKS=1), proving at real scale that a run stopped after any task
-    resumes after it, re-running nothing. Opt-in; TeamCity does not pass it.
-
-.PARAMETER HpcOneCommand
-    Run mode 14 on Stellar: the tuned one command node by node (--task, --training-search),
-    each node checked against its declared files, against a straight-through run. Opt-in;
-    TeamCity does not pass it.
 
 .PARAMETER DownloadsPath
     Override the downloads folder (default: Windows Downloads, honoring
@@ -312,8 +284,6 @@ param(
     [switch]$SkipResume,
     [switch]$SkipWarmRerun,
     [switch]$SkipHpcChain,
-    [switch]$StepwiseOneCommand,
-    [switch]$HpcOneCommand,
     [string]$DownloadsPath,
     [int]$Threads = 16,
     [switch]$TeamCity,
@@ -895,47 +865,6 @@ function Invoke-OspreyRun {
     Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
     if ($exit -ne 0) { throw "Osprey exited $exit (see $logPath)" }
     return @{ Wall = $sw.Elapsed; Log = $logPath; ExitCode = $exit }
-}
-
-# --- mode 13: the one command (--fasta --training-input), optionally stopped per task ---
-function Get-OneCommandArgs {
-    param([string[]]$Mzmls, [string]$Fasta, [string[]]$TuningRuns, [string]$Resolution, [string]$WorkDir)
-    $cliArgs = @()
-    foreach ($m in $Mzmls) { $cliArgs += @('-i', $m) }
-    $cliArgs += @('--fasta', $Fasta, '--training-input') + $TuningRuns
-    $cliArgs += @('-o', (Join-Path $WorkDir 'output.blib'),
-                  '--device', 'cpu', '--resolution', $Resolution, '--protein-fdr', '0.01',
-                  '--threads', $Threads.ToString(), '--work-dir', $WorkDir,
-                  # The lab's digest and prediction (Run-CarafeSharpWorkflow.ps1 stages 1a and 2).
-                  '--enzyme', '2', '--miss-c', '1', '--min-length', '7', '--max-length', '35',
-                  '--fix-mod', '1', '--var-mod', '0', '--max-var', '1',
-                  '--min-pep-charge', '2', '--max-pep-charge', '3', '--min-pep-mz', '400', '--max-pep-mz', '900',
-                  '--lf-frag-mz-min', '200', '--lf-frag-mz-max', '1960', '--lf-top-n-frag', '20',
-                  '--lf-min-n-frag', '2', '--lf-frag-n-min', '2')
-    $cliArgs += $memStampArgs
-    return $cliArgs
-}
-
-function Invoke-OneCommandRun {
-    param([string[]]$Mzmls, [string]$Fasta, [string]$TuningRun, [string]$Resolution, [string]$WorkDir,
-          [string]$LogName, [int]$StopAfterTasks = 0)
-    New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
-    $logPath = Join-Path $WorkDir $LogName
-    $cliArgs = Get-OneCommandArgs -Mzmls $Mzmls -Fasta $Fasta -TuningRuns @($TuningRun) -Resolution $Resolution -WorkDir $WorkDir
-    if ($StopAfterTasks -gt 0) { $env:OSPREY_STOP_AFTER_TASKS = $StopAfterTasks.ToString() }
-    Push-Location $WorkDir
-    try {
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-        & $ospreyExe @cliArgs 2>&1 | Tee-Object -FilePath $logPath | Out-Null
-        $exit = $LASTEXITCODE
-        $sw.Stop()
-    } finally {
-        Pop-Location
-        if ($StopAfterTasks -gt 0) { Remove-Item Env:OSPREY_STOP_AFTER_TASKS -ErrorAction SilentlyContinue }
-    }
-    Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
-    if ($exit -ne 0) { throw "Osprey exited $exit (see $logPath)" }
-    return @{ Wall = $sw.Elapsed; Log = $logPath }
 }
 
 # Resolve a dataset's inputs from the extracted read-only data folder.
@@ -2979,137 +2908,6 @@ foreach ($name in $selected) {
         Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
         $m6Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
         $summaryLines.Add("$name mode6 (library-fragment release engaged): FAIL ($($m6Issues.Count) issues)")
-    }
-
-    # ---- mode 13 (opt-in): the tuned one command, stopped after every task ----
-    if ($StepwiseOneCommand -and $name -eq 'Stellar') {
-        Write-Progress-Tc "${name}: mode13 tuned one command, straight through"
-        $m13Fasta = Join-Path $inputs.Dir 'hela-filtered.fasta'
-        $m13Tuning = @($inputs.Mzmls | Where-Object { [IO.Path]::GetFileNameWithoutExtension($_) -like '*_21' })[0]
-        if (-not (Test-Path $m13Fasta) -or -not $m13Tuning) { throw "mode 13 needs $m13Fasta and the _21 run in $($inputs.Dir)" }
-        $m13StraightDir = Join-Path $runRoot "$name\onecommand-straight"
-        $m13StepDir = Join-Path $runRoot "$name\onecommand-stepwise"
-        $r13 = Invoke-OneCommandRun -Mzmls $inputs.Mzmls -Fasta $m13Fasta -TuningRun $m13Tuning -Resolution $cfg.Resolution `
-            -WorkDir $m13StraightDir -LogName 'straight.log'
-        Write-Host ("  one command straight through: wall {0:hh\:mm\:ss}" -f $r13.Wall)
-
-        $m13Issues = [System.Collections.Generic.List[string]]::new()
-        $m13Expected = @('PredictTrainingLibrary', 'PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR',
-                         'TrainModel', 'PredictLibrary', 'PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
-        $m13Ran = [System.Collections.Generic.List[string]]::new()
-        $m13Wall = [TimeSpan]::Zero
-        for ($step = 0; $step -le $m13Expected.Count; $step++) {
-            Write-Progress-Tc "${name}: mode13 stepwise run $($step + 1)"
-            $rs = Invoke-OneCommandRun -Mzmls $inputs.Mzmls -Fasta $m13Fasta -TuningRun $m13Tuning -Resolution $cfg.Resolution `
-                -WorkDir $m13StepDir -LogName ('step{0:D2}.log' -f $step) -StopAfterTasks 1
-            $m13Wall += $rs.Wall
-            $text = Get-Content -Raw -LiteralPath $rs.Log
-            $started = @([regex]::Matches($text, '\[TASK\] (\w+):starting') | ForEach-Object { $_.Groups[1].Value })
-            $skipped = ([regex]::Matches($text, '\[TASK\] \w+:skipping')).Count
-            $stopped = $text.Contains('[TASK] stop:')
-            if ($skipped -ne $step) { $m13Issues.Add("run $($step + 1): $skipped task(s) skipped, expected $step ($($rs.Log))") }
-            if (-not $stopped) {
-                if ($started.Count -ne 0) { $m13Issues.Add("run $($step + 1): completed but ran $($started -join ', ') ($($rs.Log))") }
-                break
-            }
-            if ($started.Count -ne 1) { $m13Issues.Add("run $($step + 1): ran $($started.Count) task(s) ($($started -join ', ')), expected 1 ($($rs.Log))") }
-            $m13Ran.AddRange([string[]]$started)
-        }
-        if (($m13Ran -join ',') -ne ($m13Expected -join ',')) {
-            $m13Issues.Add("tasks ran in the order $($m13Ran -join ', '); expected $($m13Expected -join ', ')")
-        }
-        $m13 = Compare-BlibFull -BlibExpected (Join-Path $m13StraightDir 'output.blib') -BlibActual (Join-Path $m13StepDir 'output.blib') -Tolerance $Tolerance
-        foreach ($issue in $m13.Issues) { $m13Issues.Add($issue) }
-        Write-Host ("  one command stepwise: {0} runs, wall {1:hh\:mm\:ss}" -f ($m13Ran.Count + 1), $m13Wall)
-        if ($m13Issues.Count -eq 0) {
-            $summaryLines.Add("$name mode13 (stepwise one command==straight): PASS ($($m13Ran.Count) tasks, one per run)")
-        } else {
-            $overallFail = $true
-            Write-Problem-Tc "$name mode13 (stepwise one command==straight): FAIL - $($m13Issues.Count) issue(s)"
-            $m13Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-            $summaryLines.Add("$name mode13 (stepwise one command==straight): FAIL ($($m13Issues.Count) issues)")
-        }
-    }
-
-    # ---- mode 14 (opt-in): the tuned one command node by node, as a cluster runs it ----
-    if ($HpcOneCommand -and $name -eq 'Stellar') {
-        $m14Fasta = Join-Path $inputs.Dir 'hela-filtered.fasta'
-        $m14Tuning = @($inputs.Mzmls | Where-Object { [IO.Path]::GetFileNameWithoutExtension($_) -like '*_21' })[0]
-        if (-not (Test-Path $m14Fasta) -or -not $m14Tuning) { throw "mode 14 needs $m14Fasta and the _21 run in $($inputs.Dir)" }
-        $m14StraightDir = Join-Path $runRoot "$name\onecommand-straight"
-        if (-not (Test-Path (Join-Path $m14StraightDir 'output.blib'))) {
-            Write-Progress-Tc "${name}: mode14 tuned one command, straight through"
-            $r14 = Invoke-OneCommandRun -Mzmls $inputs.Mzmls -Fasta $m14Fasta -TuningRun $m14Tuning -Resolution $cfg.Resolution `
-                -WorkDir $m14StraightDir -LogName 'straight.log'
-            Write-Host ("  one command straight through: wall {0:hh\:mm\:ss}" -f $r14.Wall)
-        }
-        $m14Dir = Join-Path $runRoot "$name\onecommand-hpc"
-        New-Item -ItemType Directory -Path $m14Dir -Force | Out-Null
-        $m14Issues = [System.Collections.Generic.List[string]]::new()
-        # The nodes, in order: the task, its -i runs, its tuning runs, and whether it is a stage of
-        # the tuning runs' search. A per-file stage is one node per run.
-        $m14Nodes = [System.Collections.Generic.List[object]]::new()
-        $m14Nodes.Add(@('PredictTrainingLibrary', $inputs.Mzmls, @($m14Tuning), $false))
-        foreach ($training in @($true, $false)) {
-            if (-not $training) {
-                $m14Nodes.Add(@('TrainModel', $inputs.Mzmls, @($m14Tuning), $false))
-                $m14Nodes.Add(@('PredictLibrary', $inputs.Mzmls, @($m14Tuning), $false))
-            }
-            $runs = if ($training) { @($m14Tuning) } else { $inputs.Mzmls }
-            # The same four stages for any number of runs: Stellar tunes on one, whose FirstPassFDR
-            # has no other run to reconcile against.
-            foreach ($stage in @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')) {
-                $perFile = $stage -eq 'PerFileScoring' -or $stage -eq 'PerFileRescoring'
-                # A list, not a pipeline: PowerShell unrolls a one-element array of arrays.
-                $groups = [System.Collections.Generic.List[object]]::new()
-                if ($perFile) { foreach ($run in $runs) { $groups.Add([string[]]@($run)) } }
-                else { $groups.Add([string[]]$runs) }
-                foreach ($group in $groups) {
-                    if ($training) { $m14Nodes.Add(@($stage, $inputs.Mzmls, $group, $true)) }
-                    else { $m14Nodes.Add(@($stage, $group, @($m14Tuning), $false)) }
-                }
-            }
-        }
-        $m14Wall = [TimeSpan]::Zero
-        $nodeIndex = 0
-        foreach ($node in $m14Nodes) {
-            $nodeIndex++
-            $task = $node[0]
-            Write-Progress-Tc "${name}: mode14 node $nodeIndex/$($m14Nodes.Count) $task$(if ($node[3]) { ' (training search)' })"
-            $nodeArgs = @('--task', $task) + (Get-OneCommandArgs -Mzmls $node[1] -Fasta $m14Fasta -TuningRuns $node[2] `
-                -Resolution $cfg.Resolution -WorkDir $m14Dir)
-            if ($node[3]) { $nodeArgs += '--training-search' }
-            $declared = Get-DeclaredTaskFiles -WorkDir $m14Dir -CliArgs $nodeArgs
-            # A declared data file is satisfied by its spectra cache, as on a staged node.
-            foreach ($f in @($declared | Where-Object { $_.Kind -eq 'input' })) {
-                $cache = Join-Path $m14Dir ([IO.Path]::GetFileNameWithoutExtension($f.Path) + '.spectra.bin')
-                if (-not (Test-Path -LiteralPath $f.Path) -and -not (Test-Path -LiteralPath $cache)) {
-                    $m14Issues.Add("node $nodeIndex ${task}: declared input missing before it ran: $($f.Path)")
-                }
-            }
-            $logName = 'node{0:D2}_{1}.log' -f $nodeIndex, $task
-            $sw = [Diagnostics.Stopwatch]::StartNew()
-            Invoke-OspreyTaskRun -WorkDir $m14Dir -CliArgs $nodeArgs -LogName $logName
-            $sw.Stop()
-            $m14Wall += $sw.Elapsed
-            $text = Get-Content -Raw -LiteralPath (Join-Path $m14Dir $logName)
-            $started = @([regex]::Matches($text, '\[TASK\] (\w+):starting') | ForEach-Object { $_.Groups[1].Value })
-            if (($started -join ',') -ne $task) { $m14Issues.Add("node $nodeIndex ${task}: ran [$($started -join ', ')] ($logName)") }
-            foreach ($f in @($declared | Where-Object { $_.Kind -eq 'output' })) {
-                if (-not (Test-Path -LiteralPath $f.Path)) { $m14Issues.Add("node $nodeIndex ${task}: declared output not written: $($f.Path)") }
-            }
-        }
-        $m14 = Compare-BlibFull -BlibExpected (Join-Path $m14StraightDir 'output.blib') -BlibActual (Join-Path $m14Dir 'output.blib') -Tolerance $Tolerance
-        foreach ($issue in $m14.Issues) { $m14Issues.Add($issue) }
-        Write-Host ("  one command node by node: {0} nodes, wall {1:hh\:mm\:ss}" -f $m14Nodes.Count, $m14Wall)
-        if ($m14Issues.Count -eq 0) {
-            $summaryLines.Add("$name mode14 (one command node by node==straight): PASS ($($m14Nodes.Count) nodes)")
-        } else {
-            $overallFail = $true
-            Write-Problem-Tc "$name mode14 (one command node by node==straight): FAIL - $($m14Issues.Count) issue(s)"
-            $m14Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-            $summaryLines.Add("$name mode14 (one command node by node==straight): FAIL ($($m14Issues.Count) issues)")
-        }
     }
 
     # All legs for this dataset are done. When not retaining output, free its scratch

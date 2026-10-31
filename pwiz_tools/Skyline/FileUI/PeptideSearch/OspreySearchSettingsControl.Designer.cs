@@ -29,6 +29,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OspreySearchSettingsControl));
+            this.lblSettingsPreset = new System.Windows.Forms.Label();
+            this.comboSettingsPreset = new System.Windows.Forms.ComboBox();
+            this.btnSavePreset = new System.Windows.Forms.Button();
             this.lblResolution = new System.Windows.Forms.Label();
             this.comboResolution = new System.Windows.Forms.ComboBox();
             this.lblFragmentTolerance = new System.Windows.Forms.Label();
@@ -42,9 +45,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.txtProteinFdr = new System.Windows.Forms.TextBox();
             this.lblThreads = new System.Windows.Forms.Label();
             this.numThreads = new System.Windows.Forms.NumericUpDown();
+            this.btnAdditionalSettings = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numFragmentTolerance)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).BeginInit();
             this.SuspendLayout();
+            //
+            // lblSettingsPreset
+            //
+            resources.ApplyResources(this.lblSettingsPreset, "lblSettingsPreset");
+            this.lblSettingsPreset.Name = "lblSettingsPreset";
+            //
+            // comboSettingsPreset
+            //
+            resources.ApplyResources(this.comboSettingsPreset, "comboSettingsPreset");
+            this.comboSettingsPreset.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSettingsPreset.FormattingEnabled = true;
+            this.comboSettingsPreset.Name = "comboSettingsPreset";
+            this.comboSettingsPreset.SelectedIndexChanged += new System.EventHandler(this.comboSettingsPreset_SelectedIndexChanged);
+            //
+            // btnSavePreset
+            //
+            resources.ApplyResources(this.btnSavePreset, "btnSavePreset");
+            this.btnSavePreset.Name = "btnSavePreset";
+            this.btnSavePreset.UseVisualStyleBackColor = true;
+            this.btnSavePreset.Click += new System.EventHandler(this.btnSavePreset_Click);
             //
             // lblResolution
             //
@@ -123,10 +147,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.numThreads.Value = new decimal(new int[] { 1, 0, 0, 0 });
             this.numThreads.Name = "numThreads";
             //
+            // btnAdditionalSettings
+            //
+            resources.ApplyResources(this.btnAdditionalSettings, "btnAdditionalSettings");
+            this.btnAdditionalSettings.Name = "btnAdditionalSettings";
+            this.btnAdditionalSettings.UseVisualStyleBackColor = true;
+            this.btnAdditionalSettings.Click += new System.EventHandler(this.btnAdditionalSettings_Click);
+            //
             // OspreySearchSettingsControl
             //
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnAdditionalSettings);
             this.Controls.Add(this.numThreads);
             this.Controls.Add(this.lblThreads);
             this.Controls.Add(this.txtProteinFdr);
@@ -140,6 +172,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.lblFragmentTolerance);
             this.Controls.Add(this.comboResolution);
             this.Controls.Add(this.lblResolution);
+            this.Controls.Add(this.btnSavePreset);
+            this.Controls.Add(this.comboSettingsPreset);
+            this.Controls.Add(this.lblSettingsPreset);
             this.Name = "OspreySearchSettingsControl";
             ((System.ComponentModel.ISupportInitialize)(this.numFragmentTolerance)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreads)).EndInit();
@@ -150,6 +185,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         #endregion
 
+        private System.Windows.Forms.Label lblSettingsPreset;
+        private System.Windows.Forms.ComboBox comboSettingsPreset;
+        private System.Windows.Forms.Button btnSavePreset;
         private System.Windows.Forms.Label lblResolution;
         private System.Windows.Forms.ComboBox comboResolution;
         private System.Windows.Forms.Label lblFragmentTolerance;
@@ -163,5 +201,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox txtProteinFdr;
         private System.Windows.Forms.Label lblThreads;
         private System.Windows.Forms.NumericUpDown numThreads;
+        private System.Windows.Forms.Button btnAdditionalSettings;
     }
 }
