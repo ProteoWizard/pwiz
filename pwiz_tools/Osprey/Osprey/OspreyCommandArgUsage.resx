@@ -109,9 +109,6 @@
   <data name="_demux" xml:space="preserve">
     <value>Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0})</value>
   </data>
-  <data name="_diagnostics" xml:space="preserve">
-    <value>Write developer diagnostic dump files, for comparison with the Rust implementation</value>
-  </data>
   <data name="_experiment_fdr" xml:space="preserve">
     <value>The experiment-level FDR threshold (default: 0.01): a precursor is reported when its q-value across all the runs is at most this. {0} says which q-value.</value>
   </data>
@@ -140,7 +137,7 @@
     <value>Show this help message ({0})</value>
   </data>
   <data name="_input" xml:space="preserve">
-    <value>Mass spectrometry data files to search: mzML, or any format ProteoWizard reads, including vendor files (.raw, .d, .wiff, .lcd) where the vendor readers are installed</value>
+    <value>Mass spectrometry data files to search: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read; convert those to mzML first.</value>
   </data>
   <data name="_input_list" xml:space="preserve">
     <value>File of input paths, one per line (# comments ignored). Bounded alternative to a long {0} list.</value>
@@ -155,7 +152,7 @@
     <value>Write all output to this file instead of the console</value>
   </data>
   <data name="_memstamp" xml:space="preserve">
-    <value>Prefix each output line with managed and private memory in MB (pair with {0} for perfviz)</value>
+    <value>Prefix each output line with two memory usage values, managed and process private bytes in MB, for monitoring memory use during long runs</value>
   </data>
   <data name="_model_diagnostics" xml:space="preserve">
     <value>Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment</value>
