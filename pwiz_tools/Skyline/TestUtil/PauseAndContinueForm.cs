@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
@@ -30,7 +31,7 @@ using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {
-    public partial class PauseAndContinueForm : Form, IPauseTestController
+    public partial class PauseAndContinueForm : Form, IPauseTestController, IDetailedMessage
     {
         private readonly Form _ownerForm;
         private readonly object _pauseLock = new object();
@@ -344,6 +345,9 @@ namespace pwiz.SkylineTestUtil
 
         public int ScreenshotNum => _screenshotNum;
         public string Description => _description;
+
+        /// <summary>The pause's description, so a connector's form listing says which pause is up.</summary>
+        public string DetailedMessage => _description;
         public string LinkUrl => _linkUrl;
         public string ImageUrl => _imageUrl;
         public string FileToShow => _fileToShow;

@@ -186,15 +186,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write developer diagnostic dump files, for comparison with the Rust implementation.
-        /// </summary>
-        public static string _diagnostics {
-            get {
-                return ResourceManager.GetString("_diagnostics", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1 [rest of string was truncated]";.
         /// </summary>
         public static string _entrapment {
@@ -411,7 +402,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prefix each output line with managed and private memory in MB (pair with {0} for perfviz).
+        ///   Looks up a localized string similar to Prefix each output line with two memory usage values, managed and process private bytes in MB, for monitoring memory use during long runs.
         /// </summary>
         public static string _memstamp {
             get {

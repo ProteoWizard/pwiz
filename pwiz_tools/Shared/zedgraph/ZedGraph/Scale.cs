@@ -1926,7 +1926,9 @@ namespace ZedGraph
         internal static double AddSteps( double baseVal, double stepSize, double stepCount )
 		{
 			double result = baseVal + stepSize * stepCount;
-            if (FitsDecimal(baseVal) && FitsDecimal(stepSize) && FitsDecimal(stepCount) && FitsDecimal(result))
+            // The result is only bounded above: a result near zero is often just the noise this removes.
+            if (FitsDecimal(baseVal) && FitsDecimal(stepSize) && FitsDecimal(stepCount) &&
+                Math.Abs(stepSize * stepCount) <= MAX_DECIMAL_TERM && Math.Abs(result) <= MAX_DECIMAL_TERM)
             {
                 // If every term could fit in a decimal, do the math in decimal to avoid binary floating point noise.
                 double decimalResult = (double)((decimal)baseVal + (decimal)stepSize * (decimal)stepCount);
@@ -1936,11 +1938,13 @@ namespace ZedGraph
             return result;
 		}
 
+		private const double MAX_DECIMAL_TERM = 1e27;
+
 		private static bool FitsDecimal( double value )
 		{
 			// Outside this range decimal either overflows or cannot hold 15 significant digits
 			double abs = Math.Abs( value );
-			return abs == 0 || ( abs >= 1e-13 && abs <= 1e27 );
+			return abs == 0 || ( abs >= 1e-13 && abs <= MAX_DECIMAL_TERM );
 		}
 
 		/// <summary>

@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
             @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DEMUX_BLOCK", @"OSPREY_DEMUX_COUNTS_PER_ION",
             @"OSPREY_DEMUX_ENGINE", @"OSPREY_DEMUX_INTERPOLATION", @"OSPREY_DEMUX_MIN_CHANNEL_IONS",
-            @"OSPREY_DEMUX_OUTPUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_DEMUX_OUTPUT", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
             @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
@@ -307,6 +307,22 @@ namespace pwiz.Osprey.Core
         /// phase whose flatness is the claim. Timings taken through a runner include that cost.</para>
         /// </summary>
         public static readonly bool LogMemory = IsSetAndNotZero(@"OSPREY_LOG_MEMORY");
+
+        /// <summary>
+        /// The name of <see cref="Diagnostics"/>, for a test that turns it on.
+        /// </summary>
+        public const string DIAGNOSTICS = @"OSPREY_DIAGNOSTICS";
+
+        /// <summary>
+        /// OSPREY_DIAGNOSTICS=1: the master switch that turns on the bundle of cross-implementation
+        /// bisection dumps (see <c>OspreyDiagnostics.Initialize</c>), each of which can also be
+        /// turned on alone with its own OSPREY_DUMP_* variable. It was the <c>-d</c> /
+        /// <c>--diagnostics</c> argument, and moved here with the other developer switches so the
+        /// command-line help holds only what a user can use. A runtime toggle only: it is not part
+        /// of any identity hash. Read on each access, so a test can set it with
+        /// <see cref="OverrideVariables"/>.
+        /// </summary>
+        public static bool Diagnostics => IsSetAndNotZero(DIAGNOSTICS);
 
         /// <summary>
         /// OSPREY_CAL_MEDIANPOLISH=1: add median-polish cosine (the dominant full-search

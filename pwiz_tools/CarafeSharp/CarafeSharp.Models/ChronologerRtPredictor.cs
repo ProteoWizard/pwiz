@@ -57,11 +57,19 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>Peptide forms predicted so far by the fallback model.</summary>
         public int FallbackCount { get; private set; }
 
+        /// <summary>
+        /// The indices, in the last <see cref="Predict"/> call's input, of the peptide forms the
+        /// fallback model predicted because Chronologer could not encode them; what the fallback
+        /// was trained for (<see cref="ModelSupport"/>) applies to those alone.
+        /// </summary>
+        public IReadOnlyList<int> LastFallback { get; private set; } = Array.Empty<int>();
+
         /// <summary>Predictions in input order; normalized RT, the fallback's too, is clipped at 0.</summary>
         public double[] Predict(IReadOnlyList<PeptideForm> peptides)
         {
             double[] predicted = _chronologer.Predict(peptides);
             int[] rejected = Enumerable.Range(0, predicted.Length).Where(i => double.IsNaN(predicted[i])).ToArray();
+            LastFallback = rejected;
             if (rejected.Length > 0)
             {
                 double floor = PredictsNormalizedRt ? 0 : double.NegativeInfinity;

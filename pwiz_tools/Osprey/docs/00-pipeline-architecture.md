@@ -527,7 +527,7 @@ previous run's report or none, never a half-written one. Because nothing downstr
 them and the blib has not been written yet when they run, a report that cannot be written
 - the previous run's copy still open in Excel is the common case, which makes the
 commit's replace throw - is logged as a warning naming the path and skipped, not turned
-into a pipeline failure. Most `-d` diagnostic dumps
+into a pipeline failure. Most `OSPREY_DIAGNOSTICS` dumps
 (`OspreyFileDiagnostics`'s one-shot dumps, `FdrDiagnostics.WriteCutoffs`,
 `PercolatorDiagnosticsDump`, `PickCandidateDump`, `PeakDataExtractor`'s search-XIC dump)
 commit the same way: nothing in the pipeline reads any of them back, but a bisection

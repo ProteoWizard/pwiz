@@ -570,12 +570,12 @@ namespace pwiz.Osprey
                             ? string.Format(OspreyResources.Program_Run_the_saved_model__0_, config.LibraryBuild.ModelPath)
                             : OspreyResources.Program_Run_the_pretrained_models));
                     // A precursor table's prediction alone has no working folder: the Output line
-                    // names its TSV. With the tuning, the folder holds the training library and the model.
+                    // names its library. With the tuning, the folder holds the training library and the model.
                     if (config.LibraryBuild.PrecursorTablePath == null || config.LibraryBuild.Tuning)
                     {
                         LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
                             config.LibraryBuild.PrecursorTablePath != null
-                                ? LibraryBuildWorkflow.PredictedTablePath(config)
+                                ? LibraryBuildWorkflow.TableLibraryPath(config)
                                 : LibraryBuildWorkflow.LibraryPath(config),
                             LibraryBuildWorkflow.WorkDirectory(config)));
                     }

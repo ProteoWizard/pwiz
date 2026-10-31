@@ -178,7 +178,7 @@ REM # readers, no internet) that TestRunner auto-skips for perf tests, so it app
 REM # on the tutorial suite -- matching net472, which runs the tutorials in en (Pass 2) + fr
 REM # (Pass 0). Perf tests still run English-only above.
 echo ##teamcity[progressMessage 'TestRunner tutorial suite ^(TestTutorial, perftests=on, Pass0 fr + Pass2 en^)']
-call :run_tests %RUNNER_MODE% loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=on pass0=on test=TestTutorial.dll skip=@%SKIPLIST% log=TestTutorial.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
+call :run_tests %RUNNER_MODE% loop=1 language=%SKYLINE_PERF_LANGUAGE% offscreen=on perftests=on pass0=on runsmallmoleculeversions=on test=TestTutorial.dll skip=@%SKIPLIST% log=TestTutorial.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
 if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_SUITES=%FAILED_SUITES% TestTutorial")
 
 popd

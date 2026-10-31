@@ -66,6 +66,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ImageList = new ImageList
                 {
                     TransparentColor = Color.Magenta,
+                    ColorDepth = ColorDepth.Depth32Bit
                 };
             ImageList.Images.AddRange(ImagelistImages);
             DrawMode = TreeViewDrawMode.OwnerDrawText;

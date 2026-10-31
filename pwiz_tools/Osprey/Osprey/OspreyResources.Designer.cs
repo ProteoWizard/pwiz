@@ -356,7 +356,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or vendor files where the vendor readers are installed) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
+        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or instrument vendor files such as Thermo .raw) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
         /// </summary>
         public static string OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab {
             get {

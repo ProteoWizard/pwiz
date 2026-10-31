@@ -92,7 +92,7 @@ There is no separate validity-record writer. Each pipeline product in this table
 validity stamp (section 8) in the same commit as its content, so the stamp is exactly as
 atomic as the file.
 
-Most `-d` diagnostic dumps commit the same way as a durable artifact, though nothing in
+Most `OSPREY_DIAGNOSTICS` dumps commit the same way as a durable artifact, though nothing in
 the pipeline reads any of them back - see P8 in
 [00-pipeline-architecture](00-pipeline-architecture.md) for why that does not exempt them.
 The exceptions are the log-shaped dumps marked below, which write directly to their final

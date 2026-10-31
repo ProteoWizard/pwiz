@@ -182,7 +182,7 @@
     <value>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: {0}. The argument tables below are generated from the command-line declarations, so they always match the build; run {1} for the same reference as text.</value>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
-    <value>Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or vendor files where the vendor readers are installed) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</value>
+    <value>Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or instrument vendor files such as Thermo .raw) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</value>
   </data>
   <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
     <value>No help section matching '{0}' found. Use {1} to list available sections.</value>
