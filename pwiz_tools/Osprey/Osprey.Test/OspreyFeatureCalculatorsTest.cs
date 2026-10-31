@@ -605,6 +605,82 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Re-extracted-correlation family over synthetic window spectra: the M+1 isotopes of the top
+        /// three fragments (one of them doubly charged) co-elute and score near 1, the absent ones 0;
+        /// rank 6 is missing at its own m/z but has a co-eluting interferer 0.6 x tolerance away, which
+        /// the full-tolerance XIC picks up and the 0.45 x and 0.2 x re-extractions do not.
+        /// </summary>
+        [TestMethod]
+        public void TestReextractedCorrelations()
+        {
+            const int n = 61;
+            const int apex = 30;
+            var tolerance = FragmentToleranceConfig.Hram(10.0);
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var profile = rts.Select(rt => 1000.0 * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2)) + 5.0).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            var charges = new byte[] { 1, 2, 1, 1, 1, 1 };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment
+                {
+                    Mz = 300 + 100 * i,
+                    RelativeIntensity = v,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = (byte) (3 + i), Charge = charges[i] },
+                }).ToList(),
+            };
+            const int interfered = 5;
+            double interfererMz = candidate.Fragments[interfered].Mz + 0.6 * tolerance.ToleranceDa(candidate.Fragments[interfered].Mz);
+
+            var spectra = new List<Spectrum>();
+            var xicIntensities = library.Select(_ => new double[n]).ToArray();
+            for (int i = 0; i < n; i++)
+            {
+                var peaks = new List<KeyValuePair<double, double>>();
+                for (int f = 0; f < library.Length; f++)
+                {
+                    var fragment = candidate.Fragments[f];
+                    double intensity = profile[i] * (1.0 - 0.1 * f);
+                    xicIntensities[f][i] = intensity;
+                    peaks.Add(new KeyValuePair<double, double>(f == interfered ? interfererMz : fragment.Mz, intensity));
+                    if (f < 3)
+                        peaks.Add(new KeyValuePair<double, double>(fragment.Mz + ReextractedCorrelations.C13_DELTA / charges[f], 0.3 * intensity));
+                }
+                var sorted = peaks.OrderBy(p => p.Key).ToArray();
+                spectra.Add(new Spectrum
+                {
+                    RetentionTime = rts[i],
+                    Mzs = sorted.Select(p => p.Key).ToArray(),
+                    Intensities = sorted.Select(p => (float) p.Value).ToArray(),
+                });
+            }
+            var xics = xicIntensities.Select((v, f) => new XicData(f, rts, v)).ToList();
+            var bounds = new XICPeakBounds { StartIndex = 25, EndIndex = 35, ApexIndex = apex };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate, apexSpectrum: spectra[apex],
+                apexGlobalIndex: apex, apexLocalIndex: apex, windowStartIndex: 0, windowLength: n, windowSpectra: spectra);
+
+            var context = new OspreyScoringContext(new OspreyConfig { FragmentTolerance = tolerance });
+            var timeCorr = TimeCorrelations.GetOrCompute(context, peakData);
+            Assert.IsTrue(timeCorr.RankCorrelations[interfered] > 0.98,
+                string.Format("The full-tolerance XIC holds the interferer, got {0:F4}", timeCorr.RankCorrelations[interfered]));
+            var reextracted = ReextractedCorrelations.GetOrCompute(context, peakData);
+            Assert.AreEqual(3, reextracted.HeavyGoodCount);
+            Assert.IsTrue(reextracted.HeavySum > 2.94 && reextracted.HeavySum <= 3.0 + TOLERANCE,
+                string.Format("Three co-eluting isotopes and three absent ones, got {0:F4}", reextracted.HeavySum));
+            Assert.IsTrue(reextracted.TightWideSum > 4.9 && reextracted.TightWideSum <= 5.0 + TOLERANCE,
+                string.Format("The interferer drops out at 0.45x, got {0:F4}", reextracted.TightWideSum));
+            Assert.IsTrue(reextracted.TightNarrowSum > 4.9 && reextracted.TightNarrowSum <= 5.0 + TOLERANCE,
+                string.Format("The interferer drops out at 0.2x, got {0:F4}", reextracted.TightNarrowSum));
+            Assert.IsTrue(reextracted.BestSum > 5.9, string.Format("The best of each keeps the full XIC, got {0:F4}", reextracted.BestSum));
+            Assert.AreSame(reextracted, ReextractedCorrelations.GetOrCompute(context, peakData), "Computed once per candidate");
+            Assert.AreEqual(reextracted.HeavySum, OspreyFeatureCalculators.Get(80).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(3.0, OspreyFeatureCalculators.Get(81).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(reextracted.TightWideSum, OspreyFeatureCalculators.Get(82).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(reextracted.TightNarrowSum, OspreyFeatureCalculators.Get(83).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(reextracted.BestSum, OspreyFeatureCalculators.Get(84).Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
         /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
         /// each new feature adds to both, so a calculator whose name differs from its column
         /// would write one feature under another's name. The default FDR mask resolves names

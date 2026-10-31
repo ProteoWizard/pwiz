@@ -57,6 +57,18 @@ namespace pwiz.Osprey.Scoring
         /// <summary><see cref="ResidualSum"/> per fragment beyond the top ranks, 0 when there are none.</summary>
         public double ResidualMean { get; private set; }
 
+        /// <summary>First XIC scan index of the window (apex - S, clipped to the XICs).</summary>
+        public int WindowStart { get; private set; }
+
+        /// <summary>
+        /// The smoothed reference elution over the window, one value per scan from
+        /// <see cref="WindowStart"/>; null when no window could be set up (all correlations 0).
+        /// </summary>
+        public double[] Elution { get; private set; }
+
+        /// <summary>Library fragment indices of the top ranks (index r - 1 is rank r), null with <see cref="Elution"/>.</summary>
+        public int[] RankedFragments { get; private set; }
+
         public static TimeCorrelations GetOrCompute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             if (context.TryGetInfo(out TimeCorrelations timeCorr))
@@ -84,6 +96,9 @@ namespace pwiz.Osprey.Scoring
 
             var elution = Smooth(xics[ChooseReference(xics, start, end)].Intensities, start, end);
             int[] ranked = FragmentMath.TopIndicesByIntensity(fragments, Math.Min(RANK_COUNT, fragments.Count));
+            result.WindowStart = start;
+            result.Elution = elution;
+            result.RankedFragments = ranked;
             int nResidual = 0;
             foreach (var xic in xics)
             {

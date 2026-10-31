@@ -759,5 +759,50 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment M+1 isotope correlation (top 6 sum).
+        /// </summary>
+        public static string HeavyIsotopeSumCalc_DisplayName_Fragment_M_1_isotope_correlation__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("HeavyIsotopeSumCalc_DisplayName_Fragment_M_1_isotope_correlation__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment M+1 isotopes co-eluting.
+        /// </summary>
+        public static string HeavyIsotopeGoodCountCalc_DisplayName_Fragment_M_1_isotopes_co_eluting {
+            get {
+                return ResourceManager.GetString("HeavyIsotopeGoodCountCalc_DisplayName_Fragment_M_1_isotopes_co_eluting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation at 0.45x tolerance (top 6 sum).
+        /// </summary>
+        public static string TightToleranceSumCalc_DisplayName_Time_correlation_at_0_45x_tolerance__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TightToleranceSumCalc_DisplayName_Time_correlation_at_0_45x_tolerance__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation at 0.2x tolerance (top 6 sum).
+        /// </summary>
+        public static string TightToleranceSumCalc_DisplayName_Time_correlation_at_0_2x_tolerance__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TightToleranceSumCalc_DisplayName_Time_correlation_at_0_2x_tolerance__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation, best tolerance (top 6 sum).
+        /// </summary>
+        public static string TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_", resourceCulture);
+            }
+        }
     }
 }

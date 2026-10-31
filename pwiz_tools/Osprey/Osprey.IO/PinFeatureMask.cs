@@ -62,6 +62,7 @@ namespace pwiz.Osprey.IO
             @"window_share_rank4", @"window_share_rank5", @"window_share_rank6",
             @"tc_sum6", @"tc_corr_rank1", @"tc_corr_rank2", @"tc_corr_rank3", @"tc_corr_rank4",
             @"tc_corr_rank5", @"tc_corr_rank6", @"tc_res_sum", @"tc_res_mean",
+            @"heavy_sum6", @"heavy_n_good", @"tight45_sum6", @"tight20_sum6", @"tc_best_sum6",
         };
 
         // Lazy so an unknown name surfaces as its own exception at first use rather than as a

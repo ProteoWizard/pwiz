@@ -325,4 +325,19 @@
   <data name="TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_" xml:space="preserve">
     <value>Time correlation beyond top 6 (mean)</value>
   </data>
+  <data name="HeavyIsotopeSumCalc_DisplayName_Fragment_M_1_isotope_correlation__top_6_sum_" xml:space="preserve">
+    <value>Fragment M+1 isotope correlation (top 6 sum)</value>
+  </data>
+  <data name="HeavyIsotopeGoodCountCalc_DisplayName_Fragment_M_1_isotopes_co_eluting" xml:space="preserve">
+    <value>Fragment M+1 isotopes co-eluting</value>
+  </data>
+  <data name="TightToleranceSumCalc_DisplayName_Time_correlation_at_0_45x_tolerance__top_6_sum_" xml:space="preserve">
+    <value>Time correlation at 0.45x tolerance (top 6 sum)</value>
+  </data>
+  <data name="TightToleranceSumCalc_DisplayName_Time_correlation_at_0_2x_tolerance__top_6_sum_" xml:space="preserve">
+    <value>Time correlation at 0.2x tolerance (top 6 sum)</value>
+  </data>
+  <data name="TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_" xml:space="preserve">
+    <value>Time correlation, best tolerance (top 6 sum)</value>
+  </data>
 </root>

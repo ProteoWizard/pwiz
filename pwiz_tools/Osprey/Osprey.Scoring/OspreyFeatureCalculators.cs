@@ -35,8 +35,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-79 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak, median-polish top-k, reference-correlation and peak-profile families,
+    /// never returns null. Slots 21-84 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation and re-extracted-correlation families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 80;
+        public const int FeatureCount = 85;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -148,6 +148,14 @@ namespace pwiz.Osprey.Scoring
                 calculators[71 + r] = new TimeCorrelationRankCalc(r);
             calculators[78] = new TimeCorrelationResidualCalc(false);
             calculators[79] = new TimeCorrelationResidualCalc(true);
+
+            // Re-extracted-correlation family: the top 6 fragments' M+1 isotopes and the fragments at 0.45 x and
+            // 0.2 x tolerance against the same smoothed reference (after DIA-NN pHeavy / pTightCorr / pTimeCorr).
+            calculators[80] = new HeavyIsotopeSumCalc();
+            calculators[81] = new HeavyIsotopeGoodCountCalc();
+            calculators[82] = new TightToleranceSumCalc(false);
+            calculators[83] = new TightToleranceSumCalc(true);
+            calculators[84] = new TimeCorrelationBestSumCalc();
 
             return calculators;
         }

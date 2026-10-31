@@ -153,9 +153,15 @@ namespace pwiz.Osprey.IO
             @"tc_corr_rank6",
             @"tc_res_sum",
             @"tc_res_mean",
+            // Re-extracted correlation: M+1 isotopes and tight tolerances against the same reference (5)
+            @"heavy_sum6",
+            @"heavy_n_good",
+            @"tight45_sum6",
+            @"tight20_sum6",
+            @"tc_best_sum6",
         };
 
-        public const int NUM_PIN_FEATURES = 80;
+        public const int NUM_PIN_FEATURES = 85;
 
         /// <summary>
         /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after
