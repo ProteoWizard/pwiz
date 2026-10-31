@@ -908,15 +908,6 @@ Please consider using the fine-tuning method provided by Carafe for building thi
   <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>Importing spectral library</value>
   </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
-    <value>BlibBuild completed successfully.</value>
-  </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
-    <value>BlibBuild failed to complete.</value>
-  </data>
-  <data name="CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_" xml:space="preserve">
-    <value>Predicted the library in {0} minutes {1} seconds.</value>
-  </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>Detailed Log</value>
   </data>

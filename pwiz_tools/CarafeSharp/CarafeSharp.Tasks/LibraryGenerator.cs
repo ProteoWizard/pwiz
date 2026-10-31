@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
@@ -44,10 +45,12 @@ namespace pwiz.CarafeSharp.Tasks
     /// Carafe's library prediction (<c>-db</c> without <c>-ms</c>): digests the FASTA, lists
     /// every peptidoform and precursor, predicts MS2 and RT (and with <c>-ccs</c> each
     /// precursor's ion mobility), and writes the library as Carafe's
-    /// TSV and/or a BiblioSpec .blib. Work proceeds in Carafe's batches of 200,000 peptidoforms,
-    /// each predicted in chunks that a <see cref="LibraryChunkWriter"/> thread writes while the
-    /// next chunk is predicted, so memory is bounded by a few chunks plus the peptide list;
-    /// spectra are written in peptidoform mass order, charges ascending.
+    /// TSV and/or a BiblioSpec .blib. Or, with <see cref="PrecursorTablePath"/>, predicts exactly
+    /// the precursors of a table (Skyline's Build Library) as a .blib alone. Work proceeds in
+    /// Carafe's batches of 200,000 peptidoforms, each predicted in chunks that a
+    /// <see cref="LibraryChunkWriter"/> thread writes while the next chunk is predicted, so memory
+    /// is bounded by a few chunks plus the peptide list; spectra are written in peptidoform mass
+    /// order, charges ascending (a table's in its own order).
     /// </summary>
     public sealed class LibraryGenerator
     {
@@ -66,6 +69,11 @@ namespace pwiz.CarafeSharp.Tasks
         private readonly Stopwatch _buildClock = new Stopwatch();
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
+        // What the models were trained to predict per modification: the pretrained models', extended
+        // by a saved model's training modifications; precursors withheld a value are counted for the log
+        private ModelSupport _support = ModelSupport.PRETRAINED;
+        private int _withheldRt;
+        private int _withheldCcs;
         private DecoyPairGate _pairGate;
         private List<PairingManifestRow> _contractManifest;
         // The pairing the DecoyPairs table is planned from: the in-memory digest's, or the manifest file's.
@@ -94,6 +102,15 @@ namespace pwiz.CarafeSharp.Tasks
         /// <see cref="LibrarySettings.PairingManifest"/>. Osprey's one-command library build sets it.
         /// </summary>
         public Func<LibraryPeptides> PeptideSource { get; set; }
+
+        /// <summary>
+        /// A precursor table (<see cref="PrecursorTable"/>, the one Skyline's Build Library writes):
+        /// exactly these precursors, in alphabase's notation with their charges, are predicted in
+        /// place of a digest, and the library is a .blib alone at
+        /// <see cref="LibrarySettings.OutputFile"/>, every precursor with its CCS. Null digests
+        /// <see cref="LibrarySettings.Database"/>.
+        /// </summary>
+        public string PrecursorTablePath { get; set; }
 
         /// <summary>The .blib written, or null.</summary>
         public string BlibPath { get; private set; }
@@ -150,53 +167,66 @@ namespace pwiz.CarafeSharp.Tasks
             string outputFileDirectory = _settings.OutputFile != null ? Path.GetDirectoryName(Path.GetFullPath(_settings.OutputFile)) : null;
             if (!string.IsNullOrEmpty(outputFileDirectory))
                 Directory.CreateDirectory(outputFileDirectory);
-            CheckOutputsReplaceable(_settings, _settings.OutputDirectory);
+            var outputs = Outputs();
+            CheckOutputsReplaceable(_settings, outputs, _settings.OutputDirectory);
             var modelDirectory = OpenModelDirectory();
-            var outputs = LibraryOutputs.FromFormat(_settings.LibraryFormat, _settings.Fast);
             if (outputs.Warning != null)
                 Log(outputs.Warning);
             // The command line refuses this too; a caller setting the settings directly gets the
             // same answer here, before the models load, rather than a null list after prediction.
             if (_settings.LibraryContract && (!outputs.WritesBlib || string.IsNullOrEmpty(_settings.PairingManifest)))
                 throw new ArgumentException(@"The library contract needs a .blib output and the pairing manifest to check it against");
+            if (_settings.LibraryContract && PrecursorTablePath != null)
+                throw new ArgumentException(@"A precursor table's library cannot claim the library contract: it has no pairing");
 
             // The models first: a missing or wrong pretrained archive fails before the digest.
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
             if (fallback != null)
                 Log(fallback);
+            // A precursor table's library always carries the CCS: Skyline's Build Library, which
+            // writes the table, reads it back for the document's ion mobility settings.
             using (var ms2 = LoadMs2Model(modelDirectory, device))
             using (var rt = LoadRtModel(modelDirectory, device))
-            using (var ccs = _settings.PredictIonMobility ? LoadCcsModel(modelDirectory, device) : null)
+            using (var ccs = _settings.PredictIonMobility || PrecursorTablePath != null ? LoadCcsModel(modelDirectory, device) : null)
             {
-                HashSet<string> peptides;
+                IReadOnlyList<LibraryForm> forms;
                 IReadOnlyDictionary<string, string> peptideToProteins = null;
-                ISet<string> proteinNTermPeptides;
-                if (PeptideSource != null)
+                if (PrecursorTablePath != null)
                 {
-                    // One digest, in memory, with the proteins and the pairing: nothing is read back.
-                    var libraryPeptides = PeptideSource();
-                    peptides = libraryPeptides.Peptides;
-                    peptideToProteins = libraryPeptides.PeptideToProteins;
-                    proteinNTermPeptides = libraryPeptides.ProteinNTermPeptides;
-                    _pairing = libraryPeptides.Pairing;
-                    Log(string.Format(CultureInfo.InvariantCulture, @"Predicting {0} peptides digested from {1}", peptides.Count, _settings.Database));
+                    forms = ReadPrecursorTable();
                 }
                 else
                 {
-                    var digester = new Digester(_settings.Digest);
-                    peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
-                    proteinNTermPeptides = digester.ProteinNTermPeptides;
+                    HashSet<string> peptides;
+                    ISet<string> proteinNTermPeptides;
+                    if (PeptideSource != null)
+                    {
+                        // One digest, in memory, with the proteins and the pairing: nothing is read back.
+                        var libraryPeptides = PeptideSource();
+                        peptides = libraryPeptides.Peptides;
+                        peptideToProteins = libraryPeptides.PeptideToProteins;
+                        proteinNTermPeptides = libraryPeptides.ProteinNTermPeptides;
+                        _pairing = libraryPeptides.Pairing;
+                        Log(string.Format(CultureInfo.InvariantCulture, @"Predicting {0} peptides digested from {1}", peptides.Count, _settings.Database));
+                    }
+                    else
+                    {
+                        var digester = new Digester(_settings.Digest);
+                        peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
+                        proteinNTermPeptides = digester.ProteinNTermPeptides;
+                    }
+                    var generator = new PeptideIsoformGenerator(_settings.Modifications, proteinNTermPeptides);
+                    var isoforms = LibraryPeptideForms.Enumerate(peptides, generator);
+                    Log(string.Format(CultureInfo.InvariantCulture, @"Generating peptide forms: {0}", isoforms.Count));
+                    if (PeptideSource == null)
+                    {
+                        peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
+                        Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
+                    }
+                    if (_settings.LibraryContract)
+                        CheckContractBeforePrediction(peptides, peptideToProteins);
+                    forms = new IsoformForms(isoforms);
                 }
-                var generator = new PeptideIsoformGenerator(_settings.Modifications, proteinNTermPeptides);
-                var forms = LibraryPeptideForms.Enumerate(peptides, generator);
-                Log(string.Format(CultureInfo.InvariantCulture, @"Generating peptide forms: {0}", forms.Count));
-                if (PeptideSource == null)
-                {
-                    peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
-                    Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
-                }
-                if (_settings.LibraryContract)
-                    CheckContractBeforePrediction(peptides, peptideToProteins);
 
                 _libraryRtMax = rt.PredictsNormalizedRt ? _settings.RtMax : 0;
                 if (_libraryRtMax <= 0 && _settings.RtMax > 0)
@@ -216,11 +246,17 @@ namespace pwiz.CarafeSharp.Tasks
                     Log(string.Format(CultureInfo.InvariantCulture,
                         @"Chronologer could not encode {0} peptide forms; AlphaPeptDeep's pretrained model predicted their RT", chronologer.FallbackCount));
                 }
+                if (_withheldRt > 0 || _withheldCcs > 0)
+                {
+                    Log(string.Format(CultureInfo.InvariantCulture,
+                        @"Withheld the RT of {0} precursors and the CCS of {1}, whose modifications the models were not trained for",
+                        _withheldRt, _withheldCcs));
+                }
             }
             Log(string.Format(CultureInfo.InvariantCulture, @"Wrote {0} precursors in {1:F1} s", SpectrumCount, _clock.Elapsed.TotalSeconds));
         }
 
-        private void WriteLibrary(List<PeptideIsoform> forms, LibraryOutputs outputs, LibrarySpectrumBuilder builder,
+        private void WriteLibrary(IReadOnlyList<LibraryForm> forms, LibraryOutputs outputs, LibrarySpectrumBuilder builder,
             Ms2Model ms2, IRtPredictor rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
             TsvPath = outputs.WritesTsv ? Path.Combine(_settings.OutputDirectory, CarafeLibraryTsvWriter.FILE_NAME) : null;
@@ -330,7 +366,12 @@ namespace pwiz.CarafeSharp.Tasks
         /// </summary>
         public static void CheckOutputsReplaceable(LibrarySettings settings, string outputDirectory)
         {
-            var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            CheckOutputsReplaceable(settings, LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast), outputDirectory);
+        }
+
+        /// <summary>The same for the files of <paramref name="outputs"/>, which a precursor table decides over the settings' format.</summary>
+        public static void CheckOutputsReplaceable(LibrarySettings settings, LibraryOutputs outputs, string outputDirectory)
+        {
             var paths = new[]
             {
                 outputs.WritesBlib ? BlibOutput(settings, outputDirectory) : null,
@@ -383,7 +424,7 @@ namespace pwiz.CarafeSharp.Tasks
         /// be offered counted, or null without a manifest or when the manifest cannot be read;
         /// the DecoyPairs step then reports the failure, as Carafe's does.
         /// </summary>
-        private DecoyPairGate CreatePairGate(List<PeptideIsoform> forms)
+        private DecoyPairGate CreatePairGate(IReadOnlyList<LibraryForm> forms)
         {
             if (_pairing == null && string.IsNullOrEmpty(_settings.PairingManifest))
                 return null;
@@ -402,10 +443,10 @@ namespace pwiz.CarafeSharp.Tasks
             {
                 if (!gate.IsMember(form.Sequence))
                     continue;
-                var charges = LibraryPeptideForms.GetCharges(form, _settings.Charges, _settings.MinPrecursorMz, _settings.MaxPrecursorMz);
+                var charges = form.GetCharges(_settings);
                 if (charges.Count == 0)
                     continue;
-                var peptide = form.ToAlphabase();
+                var peptide = form.GetPeptide();
                 string modKey = DecoyPairPlanner.ModKey(peptide.ModNames);
                 foreach (int charge in charges)
                     gate.Expect(peptide.Sequence, charge, modKey);
@@ -418,7 +459,7 @@ namespace pwiz.CarafeSharp.Tasks
         /// writer thread, which writes it while the next is predicted. Stops with the writer's
         /// exception as soon as writing fails.
         /// </summary>
-        private void PredictChunks(List<PeptideIsoform> forms, LibrarySpectrumBuilder builder, Ms2Model ms2, IRtPredictor rt,
+        private void PredictChunks(IReadOnlyList<LibraryForm> forms, LibrarySpectrumBuilder builder, Ms2Model ms2, IRtPredictor rt,
             CcsModel ccs, (double Slope, double Intercept) irt, LibraryChunkWriter writer)
         {
             int batchCount = (forms.Count + _settings.PeptidesPerBatch - 1) / Math.Max(1, _settings.PeptidesPerBatch);
@@ -461,26 +502,29 @@ namespace pwiz.CarafeSharp.Tasks
         /// Predicts and builds the spectra of peptidoforms [start, end): MS2 (and with a CCS model
         /// the ion mobility) for every precursor in the m/z window, RT once per peptidoform.
         /// </summary>
-        private List<LibrarySpectrum> PredictChunk(List<PeptideIsoform> forms, int start, int end, LibrarySpectrumBuilder builder,
+        private List<LibrarySpectrum> PredictChunk(IReadOnlyList<LibraryForm> forms, int start, int end, LibrarySpectrumBuilder builder,
             Ms2Model ms2, IRtPredictor rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
+            // A digest's forms are resolved here, for this chunk alone, so only a few chunks' alphabase
+            // forms are alive at once
             var isoforms = new List<PeptideIsoform>();
             var peptides = new List<PeptideForm>();
             var requests = new List<Ms2Request>();
             var formIndex = new List<int>();
             for (int i = start; i < end; i++)
             {
-                var charges = LibraryPeptideForms.GetCharges(forms[i], _settings.Charges, _settings.MinPrecursorMz, _settings.MaxPrecursorMz);
+                var form = forms[i];
+                var charges = form.GetCharges(_settings);
                 if (charges.Count == 0)
                     continue;
-                var peptide = forms[i].ToAlphabase();
+                var peptide = form.GetPeptide();
                 foreach (int charge in charges)
                 {
                     requests.Add(new Ms2Request(new PrecursorForm(peptide, charge), _settings.Nce, _settings.Instrument, _settings.Activation,
                         _settings.Analyzer));
                     formIndex.Add(isoforms.Count);
                 }
-                isoforms.Add(forms[i]);
+                isoforms.Add(form.Isoform);
                 peptides.Add(peptide);
             }
             if (requests.Count == 0)
@@ -498,14 +542,24 @@ namespace pwiz.CarafeSharp.Tasks
                 ccsPredictions = ccs.Predict(requests.Select(r => r.Precursor).ToArray());
                 _ccsClock.Stop();
             }
+            // Chronologer predicts the RT of any peptide form it encodes; the forms it handed to the
+            // fallback AlphaPeptDeep model, like every form of another RT model, get the table's verdict
+            var chronologer = ((rt as AlignedRtPredictor)?.Inner ?? rt) as ChronologerRtPredictor;
+            var fallbackForms = chronologer != null ? new HashSet<int>(chronologer.LastFallback) : null;
             _buildClock.Start();
             var spectra = new LibrarySpectrum[requests.Count];
             Parallel.For(0, requests.Count, i =>
             {
                 int form = formIndex[i];
                 double retentionTime = LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[form], _libraryRtMax, irt.Slope, irt.Intercept);
-                spectra[i] = builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime,
-                    ccsPredictions?[i]);
+                var spectrum = isoforms[form] != null
+                    ? builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime, ccsPredictions?[i])
+                    : builder.Build(requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime, ccsPredictions?[i]);
+                // A precursor table's library (Skyline's) carries nothing a model was not trained for;
+                // a digest's library is written as Carafe writes it, which its parity tests hold it to
+                if (PrecursorTablePath != null && spectrum != null && peptides[form].ModNames.Count > 0)
+                    WithholdUnsupported(spectrum, peptides[form], fallbackForms != null && !fallbackForms.Contains(form));
+                spectra[i] = spectrum;
             });
             List<LibrarySpectrum> built;
             if (_pairGate == null)
@@ -523,6 +577,59 @@ namespace pwiz.CarafeSharp.Tasks
             }
             _buildClock.Stop();
             return built;
+        }
+
+        /// <summary>
+        /// Takes back what the models were not trained to predict for a modified peptide
+        /// (<see cref="ModelSupport"/>): its RT, unless Chronologer predicted it itself, and its CCS.
+        /// </summary>
+        private void WithholdUnsupported(LibrarySpectrum spectrum, PeptideForm peptide, bool chronologerPredicted)
+        {
+            var predictions = _support.Get(peptide);
+            bool withholdRt = !chronologerPredicted && (predictions & ModelPredictions.rt) == 0;
+            bool withholdCcs = spectrum.CollisionalCrossSection.HasValue && (predictions & ModelPredictions.ccs) == 0;
+            if (!withholdRt && !withholdCcs)
+                return;
+            spectrum.Withhold(withholdRt, withholdCcs);
+            if (withholdRt)
+                Interlocked.Increment(ref _withheldRt);
+            if (withholdCcs)
+                Interlocked.Increment(ref _withheldCcs);
+        }
+
+        /// <summary>
+        /// The library files to write: those of <c>-lf_type</c>, or for a precursor table a .blib
+        /// alone, whatever the format says (Skyline's Build Library reads nothing else).
+        /// </summary>
+        private LibraryOutputs Outputs()
+        {
+            return LibraryOutputs.FromFormat(PrecursorTablePath != null ? LibraryOutputs.BLIB_FORMAT : _settings.LibraryFormat, _settings.Fast);
+        }
+
+        /// <summary>
+        /// The table's precursors as forms with their charges, in the table's order, a form's
+        /// charges in theirs; a repeated precursor is predicted once.
+        /// </summary>
+        private IReadOnlyList<LibraryForm> ReadPrecursorTable()
+        {
+            var precursors = PrecursorTable.Read(PrecursorTablePath);
+            var forms = new List<LibraryForm>();
+            var chargesByPeptide = new Dictionary<string, List<int>>();
+            foreach (var precursor in precursors)
+            {
+                string key = precursor.Peptide.ToString();
+                if (!chargesByPeptide.TryGetValue(key, out var charges))
+                {
+                    charges = new List<int>();
+                    chargesByPeptide.Add(key, charges);
+                    forms.Add(new LibraryForm(precursor.Peptide, charges));
+                }
+                if (!charges.Contains(precursor.Charge))
+                    charges.Add(precursor.Charge);
+            }
+            Log(string.Format(CultureInfo.InvariantCulture, @"Predicting {0} precursors ({1} peptide forms) from {2}",
+                precursors.Count, forms.Count, PrecursorTablePath));
+            return forms;
         }
 
         /// <summary>
@@ -608,7 +715,10 @@ namespace pwiz.CarafeSharp.Tasks
         {
             if (_settings.ModelFile != null)
                 return OpenModelFile();
-            string folder = _settings.ModelDirectory ?? _settings.OutputDirectory;
+            // A precursor table's models are looked for beside the table, in its host's working
+            // folder, never beside the library, where a user's own files may sit
+            string folder = _settings.ModelDirectory ??
+                            (PrecursorTablePath != null ? Path.GetDirectoryName(Path.GetFullPath(PrecursorTablePath)) : _settings.OutputDirectory);
             var modelDirectory = CarafeModelDirectory.Open(folder, _settings.PreferSafetensors);
             if (_settings.ModelDirectory != null)
                 Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
@@ -624,7 +734,12 @@ namespace pwiz.CarafeSharp.Tasks
         /// </summary>
         private CarafeModelDirectory OpenModelFile()
         {
-            return LibraryModels.OpenModelFile(_settings, Log, out _modelFileFolder);
+            var modelDirectory = LibraryModels.OpenModelFile(_settings, Log, out _modelFileFolder);
+            // The saved model predicts the modifications it was trained on
+            var training = CarafeModelFile.ReadDescription(_settings.ModelFile).Training;
+            if (training?.Modifications != null)
+                _support = ModelSupport.PRETRAINED.WithTrainingModifications(training.Modifications.Keys);
+            return modelDirectory;
         }
 
         private Ms2Model LoadMs2Model(CarafeModelDirectory modelDirectory, Device device)
@@ -652,6 +767,86 @@ namespace pwiz.CarafeSharp.Tasks
         {
             _log.WriteLine(message);
             _log.Flush();
+        }
+
+        /// <summary>
+        /// One peptide form to predict: a digest's peptidoform (its compomics mass and
+        /// modifications name the spectrum), whose alphabase form and charges are computed when
+        /// asked, as the chunk that predicts it does; or a precursor table's alphabase form with
+        /// its charges as given. A struct, so a digest's forms cost nothing beyond its peptidoforms.
+        /// </summary>
+        private readonly struct LibraryForm
+        {
+            private readonly PeptideForm _peptide;
+            private readonly List<int> _charges;
+
+            public LibraryForm(PeptideIsoform isoform)
+            {
+                Isoform = isoform;
+                _peptide = null;
+                _charges = null;
+            }
+
+            public LibraryForm(PeptideForm peptide, List<int> charges)
+            {
+                Isoform = null;
+                _peptide = peptide;
+                _charges = charges;
+            }
+
+            /// <summary>The digest's peptidoform, or null for a precursor table's form.</summary>
+            public PeptideIsoform Isoform { get; }
+
+            public string Sequence
+            {
+                get { return Isoform?.Sequence ?? _peptide.Sequence; }
+            }
+
+            /// <summary>
+            /// The charges to predict: a table's as given; a digest's from <c>-lf_charge</c>, those
+            /// whose m/z is in the precursor window.
+            /// </summary>
+            public List<int> GetCharges(LibrarySettings settings)
+            {
+                return _charges ?? LibraryPeptideForms.GetCharges(Isoform, settings.Charges, settings.MinPrecursorMz, settings.MaxPrecursorMz);
+            }
+
+            /// <summary>The alphabase form the models take (a modification Carafe cannot name for them is refused here).</summary>
+            public PeptideForm GetPeptide()
+            {
+                return _peptide ?? Isoform.ToAlphabase();
+            }
+        }
+
+        /// <summary>A digest's peptidoforms as forms, made as they are indexed, so the list holds nothing of its own.</summary>
+        private sealed class IsoformForms : IReadOnlyList<LibraryForm>
+        {
+            private readonly List<PeptideIsoform> _isoforms;
+
+            public IsoformForms(List<PeptideIsoform> isoforms)
+            {
+                _isoforms = isoforms;
+            }
+
+            public int Count
+            {
+                get { return _isoforms.Count; }
+            }
+
+            public LibraryForm this[int index]
+            {
+                get { return new LibraryForm(_isoforms[index]); }
+            }
+
+            public IEnumerator<LibraryForm> GetEnumerator()
+            {
+                return _isoforms.Select(isoform => new LibraryForm(isoform)).GetEnumerator();
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
     }
 }
