@@ -312,7 +312,7 @@ namespace pwiz.Osprey.Scoring
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the
             // byproduct published above; gated by ShouldDumpMpFor as before. The
-            // standard parity gate compares Stage 7 + blib, not the -d dumps.
+            // standard parity gate compares Stage 7 + blib, not the OSPREY_DIAGNOSTICS dumps.
             if (peakLen >= 3
                 && ospreyContext.TryGetInfo(out MedianPolishByproduct mpByproduct)
                 && mpByproduct.Polish != null

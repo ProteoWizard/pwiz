@@ -29,6 +29,12 @@
 #   * pwiz_tools/Osprey/dist/Osprey-<ver>-linux-x64.zip             (publishArtifacts)
 #   The publishArtifacts service messages are emitted by package.ps1 -TeamCity, so no
 #   server-side artifact-path configuration is required.
+#
+# Usage:
+#   ./tcbuild.sh [--i-agree-to-the-vendor-licenses] [--require-vendor-support]
+# As for tcbuild.bat, which documents both: the agreement is an argument of the TeamCity
+# build step, never a default here. On Linux it brings the cross-platform vendor readers
+# only, as it does for Core Linux x86_64; the native Windows SDKs are not available.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,6 +43,24 @@ fail() {
     echo "##teamcity[message text='$1' status='ERROR']"
     exit "${2:-1}"
 }
+
+VENDOR=()
+REQUIRE_VENDOR=0
+for arg in "$@"; do
+    case "$arg" in
+        --i-agree-to-the-vendor-licenses) VENDOR=(-IAgreeToVendorLicenses) ;;
+        --require-vendor-support)         REQUIRE_VENDOR=1 ;;
+        *) fail "tcbuild.sh: unknown argument $arg" 2 ;;
+    esac
+done
+if [ "$REQUIRE_VENDOR" = 1 ] && [ ${#VENDOR[@]} -eq 0 ]; then
+    fail "--require-vendor-support was given without --i-agree-to-the-vendor-licenses: refusing to publish a package that cannot read vendor files" 2
+fi
+if [ ${#VENDOR[@]} -eq 0 ]; then
+    echo "##teamcity[message text='Vendor support: DISABLED (no --i-agree-to-the-vendor-licenses); the package reads mzML only' status='WARNING']"
+else
+    echo "Vendor support: ENABLED (cross-platform SDKs only; native Windows vendors are excluded on Linux)"
+fi
 
 # shellcheck source=../../scripts/ensure-dotnet.sh
 . "$SCRIPT_DIR/../../scripts/ensure-dotnet.sh"
@@ -66,7 +90,7 @@ if ! command -v pwsh >/dev/null 2>&1; then
 fi
 
 echo "##teamcity[progressMessage 'Osprey build.ps1']"
-pwsh -NoProfile -File "$SCRIPT_DIR/build.ps1" -TeamCity -Coverage -Configuration Release \
+pwsh -NoProfile -File "$SCRIPT_DIR/build.ps1" -TeamCity -Coverage -Configuration Release ${VENDOR[@]+"${VENDOR[@]}"} \
     || fail "build.ps1 failed" $?
 
 # CarafeSharp has no config of its own; see tcbuild.bat. Its build.sh would repeat the
@@ -76,7 +100,7 @@ pwsh -NoProfile -File "$SCRIPT_DIR/../CarafeSharp/build.ps1" -TeamCity \
     || fail "CarafeSharp build.ps1 failed" $?
 
 echo "##teamcity[progressMessage 'Osprey package.ps1 (linux-x64)']"
-pwsh -NoProfile -File "$SCRIPT_DIR/package.ps1" -TeamCity -Rid linux-x64 \
+pwsh -NoProfile -File "$SCRIPT_DIR/package.ps1" -TeamCity -Rid linux-x64 ${VENDOR[@]+"${VENDOR[@]}"} \
     || fail "package.ps1 failed" $?
 
 exit 0

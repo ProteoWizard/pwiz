@@ -1102,12 +1102,12 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: this build of Osprey has no vendor instrument support. Rebuild with {1} on {2}, or with &apos;{3}&apos;. Otherwise convert the file to mzML with {4} and read that instead..
+        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: this copy of Osprey has no reader for this instrument vendor format. Convert the file to mzML with {1} and search that instead..
         /// </summary>
-        public static string SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_ {
+        public static string SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_reader_for_this_instrument_vendor_format_ {
             get {
-                return ResourceManager.GetString("SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_" +
-                        "vendor_instrument_support__Rebuild_with__p_", resourceCulture);
+                return ResourceManager.GetString("SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_r" +
+                        "eader_for_this_instrument_vendor_format_", resourceCulture);
             }
         }
         

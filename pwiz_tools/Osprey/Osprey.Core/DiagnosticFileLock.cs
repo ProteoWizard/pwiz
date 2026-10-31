@@ -26,7 +26,7 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// A per-path lock for coordinating IN-PROCESS writers that share one
-    /// diagnostic dump file. Two `-d` dumps can target the same real path from
+    /// diagnostic dump file. Two OSPREY_DIAGNOSTICS dumps can target the same real path from
     /// different call sites (e.g. a per-entry search-XIC dump written once early
     /// in scoring and appended to later in the same method), and under
     /// <c>--parallel-files</c> the same library entry can be scored on more than
@@ -36,7 +36,7 @@ namespace pwiz.Osprey.Core
     ///
     /// Deliberately process-local only. True multi-node HPC fan-out sharing one
     /// output directory is NOT protected (a second process holds its own lock
-    /// object) -- acceptable here because every dump this guards is a `-d` /
+    /// object) -- acceptable here because every dump this guards is an OSPREY_DIAGNOSTICS /
     /// <c>OSPREY_DUMP_*</c> opt-in for an interactive bisection session, not
     /// something turned on during a real production fan-out run.
     /// </summary>
