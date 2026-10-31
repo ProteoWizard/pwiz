@@ -93,7 +93,7 @@ keep the first language it saw. `DecoyMethod`, `ResolutionMode` and
 
 - **Default**: what the researcher reads. Everything above applies.
 - **`--verbose`**: code-path narration, per-file detail, the feature table.
-- **`-d` diagnostics**: developer output; may use any vocabulary, and lives off the
+- **`OSPREY_DIAGNOSTICS` dumps**: developer output; may use any vocabulary, and lives off the
   mainline path (see `00-pipeline-architecture.md`).
 
 ## Resources

@@ -164,8 +164,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedSpectrum.IsBest);
+                // The best spectra come first and then those in each replicate, each with the exact precursor
+                // followed by the peptide's other charge, which is also evidence for this precursor
                 var availableSpectra = SkylineWindow.GraphSpectrum.AvailableSpectra.ToArray();
-                Assert.AreEqual(2, availableSpectra.Length);
+                string spectraText = string.Join(@", ", availableSpectra.Select(spectrum => spectrum.ToString()));
+                AssertEx.AreEqualDeep(new[] { true, true, false, false }, availableSpectra.Select(spectrum => spectrum.IsBest).ToArray(), spectraText);
+                AssertEx.AreEqualDeep(new[] { false, true, false, true }, availableSpectra.Select(spectrum => spectrum.IsOtherCharge).ToArray(), spectraText);
+                AssertEx.IsFalse(availableSpectra.Any(spectrum => spectrum.IsOtherLabelType), spectraText);
 
                 var graphChrom = SkylineWindow.GraphChromatograms.First();
                 double idTime = availableSpectra[0].RetentionTime ?? 0;

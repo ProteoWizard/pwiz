@@ -2570,6 +2570,50 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double RetentionTimeFilterLength { get; private set; }
 
+        /// <summary>
+        /// Removes MS/MS ID times not connected to their median by gaps of at most
+        /// <see cref="RetentionTimeFilterLength"/> when filtering around MS/MS IDs, and otherwise
+        /// returns the times unchanged.
+        /// </summary>
+        public double[] RemoveOutlierIdTimes(double[] times)
+        {
+            if (RetentionTimeFilterType != RetentionTimeFilterType.ms2_ids)
+                return times;
+            return RemoveOutlierIdTimes(times, RetentionTimeFilterLength);
+        }
+
+        /// <summary>
+        /// Keeps the ID times connected to the median of all of them by gaps no wider than a tolerance,
+        /// so that a single wrong ID cannot stretch an extraction window to reach it, while IDs spread
+        /// densely across a broad elution are all kept. Unless those times are a majority of all the
+        /// times, there is no majority to judge by, and all times are kept.
+        /// </summary>
+        public static double[] RemoveOutlierIdTimes(double[] times, double tolerance)
+        {
+            if (times.Length == 0)
+                return times;
+            double median = new Statistics(times).Median();
+            var sortedTimes = times.OrderBy(time => time).ToArray();
+            int iCenter = 0;
+            for (int i = 1; i < sortedTimes.Length; i++)
+            {
+                if (Math.Abs(sortedTimes[i] - median) < Math.Abs(sortedTimes[iCenter] - median))
+                    iCenter = i;
+            }
+
+            int iStart = iCenter;
+            while (iStart > 0 && sortedTimes[iStart] - sortedTimes[iStart - 1] <= tolerance)
+                iStart--;
+            int iEnd = iCenter;
+            while (iEnd < sortedTimes.Length - 1 && sortedTimes[iEnd + 1] - sortedTimes[iEnd] <= tolerance)
+                iEnd++;
+            int keptCount = iEnd - iStart + 1;
+            if (keptCount == sortedTimes.Length || keptCount * 2 <= sortedTimes.Length)
+                return times;
+            double minTime = sortedTimes[iStart], maxTime = sortedTimes[iEnd];
+            return times.Where(time => minTime <= time && time <= maxTime).ToArray();
+        }
+
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
         [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]

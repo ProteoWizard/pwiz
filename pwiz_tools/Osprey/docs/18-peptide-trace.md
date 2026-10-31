@@ -46,12 +46,12 @@ It reads every `OSPREY_DUMP_*` / `OSPREY_DIAG_*` gate once at process start
 (`IsOne(...)`, `ParseNullableUint(...)`, etc.) into readonly properties, and owns
 the byte-stable file writers.
 
-### Bootstrap and the `-d` master switch
+### Bootstrap and the `OSPREY_DIAGNOSTICS` master switch
 
 `Osprey/OspreyDiagnostics.cs:39` is the exe-only bootstrap. `Initialize(bool forceDumps)`
 (`OspreyDiagnostics.cs:84`) is called once at pipeline entry:
 
-- If `forceDumps` is true (the `-d`/`--diagnostics` CLI flag), it turns on a bundle
+- If `forceDumps` is true (`OSPREY_DIAGNOSTICS=1`, formerly the `-d` argument), it turns on a bundle
   of `OSPREY_DUMP_*` env vars in-process first (`s_forcedDumpBundle`,
   `OspreyDiagnostics.cs:51`), so the sink picks them up exactly as an external env
   var would.
@@ -205,7 +205,7 @@ default **off** (unset), so a production run carries no diagnostic state.
 
 | Flag / env var | Default | Effect on this stage |
 |---|---|---|
-| `-d` / `--diagnostics` (`OspreyCommandArgs.cs:283`) | off | Master switch: forces on the `OSPREY_DUMP_*` bundle (`OspreyDiagnostics.cs:51,84`) so the structured dumps are written. Sets `config.Diagnostics = true`. |
+| `OSPREY_DIAGNOSTICS` (`OspreyEnvironment.Diagnostics`) | off | Master switch: forces on the `OSPREY_DUMP_*` bundle (`OspreyDiagnostics.cs:51,84`) so the structured dumps are written. Was the `-d` / `--diagnostics` argument. |
 | `--model-diagnostics` (`OspreyCommandArgs.cs:285`) | off | Writes a self-contained interactive HTML report of the trained scoring model and FDR calibration. Unrelated to per-peptide tracing. |
 | `OSPREY_DUMP_CWT_PATH` (`OspreyFileDiagnostics.cs:248`) | off | `cs_stage6_cwt_path.tsv` — per-(file, entry) CWT path counts (Rust trace stage 1 analog). |
 | `OSPREY_DIAG_SEARCH_ENTRY_IDS=<ids>` (`OspreyFileDiagnostics.cs:393`) | unset | `cs_search_xic_entry_<ID>.txt` per selected entry during main search (deepest per-entry XIC view). Non-exiting. |
@@ -245,8 +245,8 @@ is tabulated here. The README documents the bisection env vars at
   (gates + per-entry XIC/consensus/reconciliation/FDR dump methods),
   `Osprey.Core/Diagnostics.cs`, `Osprey.Core/OspreyEnvironment.cs`, and
   `Osprey.Test/DiagnosticsTest.cs`.
-- Confirmed the CLI exposes only `-d`/`--diagnostics` and `--model-diagnostics` for
-  this area (`OspreyCommandArgs.cs:283-285`); no trace flag.
+- Confirmed the CLI exposes only `--model-diagnostics` for this area; the dump bundle is
+  the `OSPREY_DIAGNOSTICS` variable (formerly `-d`/`--diagnostics`). No trace flag.
 
 See also: `14-intermediate-files.md` (caches and sidecars whose fast paths shortcut
 past traced/dumped producers), `10-cross-run-reconciliation.md` and
