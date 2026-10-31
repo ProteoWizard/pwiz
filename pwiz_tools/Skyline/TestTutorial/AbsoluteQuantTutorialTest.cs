@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestTutorial
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(pasteDlg.PastePeptides);
                 WaitForProteinMetadataBackgroundLoaderCompletedUI();
-                RunUI(() => pasteDlg.Size = ScaledSize(700, 210));
+                RunUI(() => pasteDlg.Size = ScaledSize(pasteDlg, 700, 210));
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List");
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
-            RunUI( () => SkylineWindow.Size = ScaledSize(840, 410));
+            RunUI( () => SkylineWindow.Size = ScaledSize(SkylineWindow, 840, 410));
 
             PauseForScreenShot("Main window with Targets view");
 
@@ -189,7 +189,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI( () => 
                         {   //resize the window and activate the first standard chromatogram pane.
-                            RunUI(() => SkylineWindow.Size = ScaledSize(1330, 720));
+                            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1330, 720));
                             var chrom = SkylineWindow.GraphChromatograms.First();
                             chrom.Select();
                         });
@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.PeptideTransitionGroups.First().TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
-            RunUI(() => SkylineWindow.Size = ScaledSize(1470, 656));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1470, 656));
             RestoreViewOnScreen(14);
             FocusDocument();
             PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light");
@@ -314,9 +314,9 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
-                    SkylineWindow.Width = Scaled(500);
+                    SkylineWindow.Width = ScaledWidth(SkylineWindow, 500);
                     var gridFloatingWindow = documentGridForm.Parent.Parent;
-                    gridFloatingWindow.Size = ScaledSize(370, 315);
+                    gridFloatingWindow.Size = ScaledSize(gridFloatingWindow, 370, 315);
                     gridFloatingWindow.Top = SkylineWindow.Top;
                     gridFloatingWindow.Left = SkylineWindow.Right + Scaled(20);
                 });
@@ -356,7 +356,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     var calibrationFloatingWindow = calibrationForm.Parent.Parent;
-                    calibrationFloatingWindow.Width = Scaled(565);
+                    calibrationFloatingWindow.Width = ScaledWidth(calibrationFloatingWindow, 565);
                     calibrationFloatingWindow.Top = SkylineWindow.Top;
                     calibrationFloatingWindow.Left = SkylineWindow.Right + Scaled(20);
                 });

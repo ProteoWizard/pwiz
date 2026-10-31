@@ -191,19 +191,62 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Scales a window size written for 100% display scale, as tests set sizes for tutorial
-        /// screenshots, to the display scale the test runs at. Unchanged at 100%.
+        /// screenshots, to the display scale the test runs at, the way the window's own contents
+        /// scale: the client area by the font-based layout ratio (WinForms AutoScaleMode.Font, about
+        /// 1.67 x 1.54 at 150%) and the title bar and borders as Windows draws them at the current
+        /// DPI. A window the test sizes then keeps the proportions of one sized by its designer.
+        /// Unchanged at 100%.
         /// </summary>
-        public static Size ScaledSize(int width, int height)
+        public static Size ScaledSize(Control window, int width, int height)
         {
-            return DpiScale.ScaleSize(SkylineWindow, new Size(width, height));
+            if (!DpiScale.IsScaled(window))
+                return new Size(width, height);
+            var ratio = GetLayoutScale(window);
+            float dpiFactor = DpiScale.Factor(window);
+            return new Size(ScaleWindowLength(width, window.Width - window.ClientSize.Width, dpiFactor, ratio.Width),
+                ScaleWindowLength(height, window.Height - window.ClientSize.Height, dpiFactor, ratio.Height));
         }
 
         /// <summary>
-        /// Scales a length in pixels written for 100% display scale to the display scale the test runs at.
+        /// Scales a window width written for 100% display scale, as <see cref="ScaledSize"/> does.
+        /// </summary>
+        public static int ScaledWidth(Control window, int width)
+        {
+            if (!DpiScale.IsScaled(window))
+                return width;
+            return ScaleWindowLength(width, window.Width - window.ClientSize.Width, DpiScale.Factor(window),
+                GetLayoutScale(window).Width);
+        }
+
+        /// <summary>
+        /// Scales a distance in pixels written for 100% display scale, like a gap between windows,
+        /// by the display scale.
         /// </summary>
         public static int Scaled(int pixels)
         {
             return DpiScale.Scale(SkylineWindow, pixels);
+        }
+
+        // Skyline forms are laid out at 96 DPI with this AutoScaleDimensions. WinForms replaces a form's
+        // AutoScaleDimensions with the current dimensions once it has scaled, so a live form cannot say.
+        private static readonly SizeF DESIGN_AUTOSCALE_DIMENSIONS = new SizeF(6, 13);
+
+        private static SizeF GetLayoutScale(Control window)
+        {
+            // A window that does not scale by font, like a floating docking window, holds forms that do
+            var form = window as ContainerControl;
+            if (form == null || form.AutoScaleMode != AutoScaleMode.Font)
+                form = SkylineWindow;
+            var current = form.CurrentAutoScaleDimensions;
+            return new SizeF(current.Width / DESIGN_AUTOSCALE_DIMENSIONS.Width,
+                current.Height / DESIGN_AUTOSCALE_DIMENSIONS.Height);
+        }
+
+        private static int ScaleWindowLength(int length, int nonClient, float dpiFactor, float layoutScale)
+        {
+            // The client part of the 100% length, without the 100% title bar or border
+            double client = length - nonClient / dpiFactor;
+            return (int) Math.Round(client * layoutScale) + nonClient;
         }
 
         private bool _forceMzml;
