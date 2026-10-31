@@ -252,7 +252,7 @@ namespace pwiz.Skyline.SettingsUI
                     NeutralFormula = defaultFormula,
                     AverageMass = averageMass,
                     MonoMass = monoMass,
-                    Location = new Point(textName.Left, textName.Bottom + 12)
+                    Location = new Point(textName.Left, textName.Bottom + DpiUtil.Scale(this, 12))
                 };
             _formulaBox.ChargeChange += (sender, args) =>
             {

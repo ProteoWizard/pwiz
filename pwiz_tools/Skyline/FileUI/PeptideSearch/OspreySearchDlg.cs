@@ -100,7 +100,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
             // Leave the bottom of the FASTA page to the existing-library alternative.
-            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60, fastaPage.Height - cbUseExistingLibrary.Top + 6);
+            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60,
+                DpiUtil.ScaleToLogical(fastaPage, fastaPage.Height - cbUseExistingLibrary.Top) + 6);
 
             LibraryModelControl = new OspreyLibraryModelControl
             {

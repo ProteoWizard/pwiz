@@ -3344,7 +3344,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (graphPane != null && showPoint)
             {
                 // Find the closest curve point to the cursor.
-                graphPane.FindClosestCurve(GetCurves(graphPane), pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
+                graphPane.FindClosestCurve(GetCurves(graphPane), pt, DpiUtil.Scale(this, 20), out _closestCurve, out _fullScanTrackingPointLocation);
 
                 // Display the highlight point.
                 if (_closestCurve != null && graphPane.CurveList.Count > FULLSCAN_TRACKING_INDEX)
@@ -3791,7 +3791,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);
             if (!selectionDot.IsVisible)
                 return @"selection dot is not visible";
-            const int pixelTolerance = 10;
+            int pixelTolerance = DpiUtil.Scale(this, 10);
             if (Math.Abs(mouse.X - dot.X) > pixelTolerance || Math.Abs(mouse.Y - dot.Y) > pixelTolerance)
                 return $@"mouse coordinates ({x}->{mouse.X}, {y}->{mouse.Y}) and selection dot coordinates ({selectionDot[0].X}->{dot.X}, {selectionDot[0].Y}->{dot.Y}) are too far apart";
             return string.Empty;

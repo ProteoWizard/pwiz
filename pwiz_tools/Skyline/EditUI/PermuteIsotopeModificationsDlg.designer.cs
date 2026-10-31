@@ -77,6 +77,7 @@ namespace pwiz.Skyline.EditUI
             // PermuteIsotopeModificationsDlg
             // 
             resources.ApplyResources(this, "$this");
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.groupBoxPermutationStyle);

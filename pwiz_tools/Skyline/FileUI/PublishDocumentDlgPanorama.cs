@@ -31,6 +31,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System.Linq;
 using System.Drawing;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.FileUI
@@ -65,6 +66,7 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList.Images.Add(Resources.LabKey);     // 8bpp
             treeViewFolders.ImageList.Images.Add(Resources.ChromLib);   // 8bpp
             treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
+            ImageListScaler.ScaleToDpi(this, treeViewFolders.ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
 
             cbAnonymousServers.Visible = _anonymousServers.Count > 0;
         }
