@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
-            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TC_HALF_WINDOW", @"OSPREY_TRAIN_PICK_RUN",
             @"OSPREY_VERSION_OVERRIDE", @"OSPREY_XIC_FRAGMENTS"
         };
 
@@ -774,6 +774,14 @@ namespace pwiz.Osprey.Core
             NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) ? seed : null;
 
         /// <summary>
+        /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
+        /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? TcHalfWindowMinutes = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_TC_HALF_WINDOW"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double halfWindow) ? halfWindow : null;
+
+        /// <summary>
         /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
         /// only from its picks in the runs where its paired target's peptide qualified, as the
         /// target's consensus is built only from its qualifying runs. Unset, the decoy's consensus
@@ -1254,7 +1262,8 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string PickValidityKeySuffix()
         {
-            return PickValidityKeySuffix(PickLda, PickLdaModelPath);
+            return PickValidityKeySuffix(PickLda, PickLdaModelPath)
+                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
