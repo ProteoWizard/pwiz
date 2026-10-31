@@ -143,6 +143,7 @@ namespace pwiz.Skyline
         public SkylineWindow(string[] args = null)
         {
             InitializeComponent();
+            statusStrip.Renderer = new ClassicSizingGripRenderer();
             InitializeMenus();
             // Osprey is unreleased: the wizard and its test are complete, but the menu item shows only
             // in a developer build until Osprey's release is decided.

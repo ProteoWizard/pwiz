@@ -418,6 +418,13 @@ namespace pwiz.Common.SystemUtil
                 catch (Exception ex)
                 {
                     var mapped = MapHttpException(ex, uri);
+                    // Any other I/O failure reading the response means the connection dropped mid-download
+                    if (mapped is IOException && !(mapped is NetworkRequestException))
+                    {
+                        mapped = new NetworkRequestException(
+                            MessageResources.HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_,
+                            NetworkFailureType.ConnectionLost, uri, mapped);
+                    }
                     TestBehavior?.OnException(uri, mapped);
                     throw mapped;
                 }
@@ -1458,6 +1465,26 @@ namespace pwiz.Common.SystemUtil
         public bool IsDnsFailure()
         {
             return FailureType == NetworkFailureType.DnsResolution;
+        }
+
+        /// <summary>
+        /// Returns true if repeating the request may succeed: a failed, refused or lost connection, a DNS
+        /// failure, a timeout, or a server error, request timeout or rate limit (HTTP 5xx, 408, 429).
+        /// Having no network at all, and any other HTTP error (e.g. 404), are not transient.
+        /// </summary>
+        public bool IsTransient()
+        {
+            switch (FailureType)
+            {
+                case NetworkFailureType.NoConnection:
+                    return false;
+                case NetworkFailureType.HttpError:
+                    return (int?) StatusCode >= 500 ||
+                           StatusCode == HttpStatusCode.RequestTimeout ||
+                           StatusCode == HttpStatusCode.TooManyRequests;
+                default:
+                    return true;
+            }
         }
 
         public static HttpStatusCode? GetHttpStatusCode(Exception e)

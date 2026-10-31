@@ -26,7 +26,7 @@ namespace pwiz.Osprey
     /// Bootstrap for the cross-implementation bisection diagnostics sink. The
     /// driver calls <see cref="Initialize"/> once at pipeline entry to select the
     /// live <see cref="OspreyFileDiagnostics"/> sink (created only when a
-    /// OSPREY_DUMP_* / OSPREY_DIAG_* env var is set, or <c>-d</c> was passed);
+    /// OSPREY_DUMP_* / OSPREY_DIAG_* env var is set, or OSPREY_DIAGNOSTICS is set);
     /// otherwise <see cref="s_sink"/> is <c>null</c> and <see cref="Active"/> is
     /// <c>null</c>, so a production run carries no diagnostic state.
     ///
@@ -42,7 +42,7 @@ namespace pwiz.Osprey
         private static OspreyFileDiagnostics s_sink;
 
         /// <summary>
-        /// OSPREY_DUMP_* env vars turned on by the <c>-d</c> master switch.
+        /// OSPREY_DUMP_* env vars turned on by the OSPREY_DIAGNOSTICS master switch.
         /// Excludes the per-call firehose (OSPREY_DUMP_MP_INPUTS), the disabled
         /// predict-rt dump, the *_ONLY early-exit gates, and the OSPREY_DIAG_*
         /// per-entry selectors (which need specific IDs). Fine-grained control
@@ -69,7 +69,7 @@ namespace pwiz.Osprey
         /// Select the live diagnostics sink. Call once at pipeline entry, before
         /// constructing the <c>PipelineContext</c> that <see cref="Active"/> is
         /// injected into. When <paramref name="forceDumps"/> is <c>true</c> (the
-        /// <c>-d</c> flag) the structured-dump env vars are turned on in-process
+        /// OSPREY_DIAGNOSTICS variable) the structured-dump env vars are turned on in-process
         /// first, so the sink picks them up the same way an external env var
         /// would. Otherwise the sink is created only if a diagnostic env var is
         /// already set, preserving existing env-var-driven bisection workflows.

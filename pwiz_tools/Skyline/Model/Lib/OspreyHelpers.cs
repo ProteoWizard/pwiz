@@ -148,12 +148,43 @@ namespace pwiz.Skyline.Model.Lib
             string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},branch:{TEAMCITY_BRANCH},status:SUCCESS,count:1";
             // A locator in the path answers with the one build as the document root
             var build = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/{buildLocator}")).Root;
-            string buildId = build?.Name.LocalName == @"build" ? build.Attribute(@"id")?.Value : null;
-            if (string.IsNullOrEmpty(buildId))
+            if (build?.Name.LocalName != @"build")
             {
                 throw new IOException(string.Format(@"No successful {0} build on branch {1} at {2}",
                     TEAMCITY_BUILD_TYPE, TEAMCITY_BRANCH, TEAMCITY_SERVER));
             }
+            return GetBuildDownloadInfo(client, build);
+        }
+
+        /// <summary>
+        /// The download of the finished, successful Osprey build of one commit, on whatever branch
+        /// (every push of a pull request builds Osprey too), or false when that commit has none. A
+        /// test on TeamCity takes this before the latest master build, so that a change to Osprey and
+        /// Skyline together is tested against its own Osprey rather than master's. The package is
+        /// cached under a name carrying the revision, since every build of a day shares the version
+        /// in the zip's name and a cached master zip would otherwise pass for it.
+        /// </summary>
+        public static bool TryGetRevisionBuildDownloadInfo(string revision, out FileDownloadInfo downloadInfo)
+        {
+            downloadInfo = default;
+            using var client = new HttpClientWithProgress();
+            string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},revision:{revision},branch:default:any,status:SUCCESS,state:finished,count:1";
+            // A locator in the query answers with a list, empty when nothing matches
+            var builds = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds?locator={buildLocator}")).Root;
+            var build = builds?.Elements(@"build").FirstOrDefault();
+            if (build == null)
+                return false;
+            downloadInfo = GetBuildDownloadInfo(client, build);
+            string zipName = downloadInfo.DownloadUrl.Segments.Last();
+            string shortRevision = revision.Length > 8 ? revision.Substring(0, 8) : revision;
+            downloadInfo.MirrorFilename = zipName.Substring(0, zipName.Length - OSPREY_ZIP_SUFFIX.Length) + @"-" + shortRevision + OSPREY_ZIP_SUFFIX;
+            return true;
+        }
+
+        /// <summary>The download of <paramref name="build"/>'s package, named from its artifact list and addressed by build id, so a build finishing meanwhile cannot change what is downloaded.</summary>
+        private static FileDownloadInfo GetBuildDownloadInfo(HttpClientWithProgress client, XElement build)
+        {
+            string buildId = build.Attribute(@"id")?.Value;
             var artifacts = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/id:{buildId}/artifacts/children/"));
             string zipName = artifacts.Root?.Elements(@"file").Select(f => f.Attribute(@"name")?.Value)
                 .FirstOrDefault(n => n != null && n.StartsWith(@"Osprey-") && n.EndsWith(OSPREY_ZIP_SUFFIX));
@@ -198,6 +229,8 @@ namespace pwiz.Skyline.Model.Lib
 
         // Osprey's command-line vocabulary. The library-build options are CarafeSharp's, whose
         // declarations Skyline references directly (CarafeCommandLine.ARG_*); these are Osprey's own.
+        public const string ARG_PREFIX = @"--";
+        public const string ARG_HELP = @"--help";
         public const string ARG_INPUT = @"-i";
         public const string ARG_FASTA = @"--fasta";
         public const string ARG_MODEL = @"--model";
@@ -221,8 +254,27 @@ namespace pwiz.Skyline.Model.Lib
         public const string ARG_PRECURSORS = @"--precursors";
         public const string ARG_TASK = @"--task";
 
-        /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>
-        public const string PREDICTED_TABLE_SUFFIX = @".predicted.speclib.tsv";
+        /// <summary>
+        /// The names of the arguments the wizards' pages set, which <see cref="BuildCommandLine"/>
+        /// writes from <see cref="OspreyConfig"/>: left out of the Additional settings grid, and
+        /// refused as a persisted additional setting (<see cref="OspreyAdditionalSettings"/>).
+        /// Bare names, as the properties are named, whatever prefix a grammar spells.
+        /// </summary>
+        public static readonly string[] FORM_BOUND_ARGUMENTS =
+        {
+            ArgName(ARG_RESOLUTION), ArgName(ARG_FRAGMENT_TOLERANCE), ArgName(ARG_FRAGMENT_UNIT), ArgName(ARG_RUN_FDR),
+            ArgName(ARG_EXPERIMENT_FDR), ArgName(ARG_PROTEIN_FDR), ArgName(ARG_THREADS), ArgName(ARG_DEVICE),
+            ArgName(ARG_DECOYS_IN_LIBRARY),
+            CarafeCommandLine.ARG_ENZYME.Name, CarafeCommandLine.ARG_MISS_C.Name, CarafeCommandLine.ARG_MIN_LENGTH.Name,
+            CarafeCommandLine.ARG_MAX_LENGTH.Name, CarafeCommandLine.ARG_MIN_PEP_CHARGE.Name, CarafeCommandLine.ARG_MAX_PEP_CHARGE.Name,
+            CarafeCommandLine.ARG_FIX_MOD.Name, CarafeCommandLine.ARG_VAR_MOD.Name, CarafeCommandLine.ARG_MAX_VAR.Name,
+        };
+
+        /// <summary>The name of one of the <c>--name</c> constants above.</summary>
+        private static string ArgName(string argumentText)
+        {
+            return argumentText.Substring(ARG_PREFIX.Length);
+        }
 
         // Osprey's --device: gpu and cpu are requirements (a run that cannot predict on the GPU
         // fails); auto takes the GPU when the CUDA runtime is installed, else the CPU.
@@ -475,6 +527,9 @@ namespace pwiz.Skyline.Model.Lib
                 AppendNumber(sb, ARG_PROTEIN_FDR, config.ProteinFdr);
                 AppendNumber(sb, ARG_THREADS, config.Threads);
             }
+            // The additional settings after the pages' arguments: the grid's values that are not
+            // Osprey's defaults, for the scopes this run has
+            config.AdditionalSettings?.AppendArguments(sb, OspreyAdditionalSettings.ScopesFor(config));
             // A child process starts in the OS culture, not Skyline's UI language, so Osprey is told
             // which to write its messages in; the numbers above are invariant either way.
             if (!string.IsNullOrEmpty(config.CultureName))
@@ -550,8 +605,8 @@ namespace pwiz.Skyline.Model.Lib
         /// The command line of the precursor-table prediction Build Library runs: Osprey's
         /// PredictLibrary phase alone over <paramref name="tablePath"/>, with the pretrained models or
         /// the saved <paramref name="modelPath"/>, on the GPU (a requirement, with the CUDA runtime in
-        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
-        /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
+        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the library to
+        /// <paramref name="outputBlib"/>, every precursor with its CCS, and writes its messages in
         /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
         /// </summary>
         public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
@@ -571,13 +626,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(cultureName))
                 sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
             return sb.ToString();
-        }
-
-        /// <summary>The TSV a precursor-table prediction with the output <paramref name="outputBlib"/> writes.</summary>
-        public static string GetPredictedTablePath(string outputBlib)
-        {
-            return Path.Combine(Path.GetDirectoryName(outputBlib) ?? string.Empty,
-                Path.GetFileNameWithoutExtension(outputBlib) + PREDICTED_TABLE_SUFFIX);
         }
 
         /// <summary>
@@ -724,6 +772,12 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>The culture Osprey writes its messages in: Skyline's UI language, which the child would not inherit.</summary>
         public string CultureName { get; set; }
+
+        /// <summary>
+        /// The settings beyond the pages', from the Additional settings grid, which the command line
+        /// carries where they are not Osprey's defaults and apply to this run; null for none.
+        /// </summary>
+        public OspreyAdditionalSettings AdditionalSettings { get; set; }
 
         /// <summary>A copy to fill in further without changing this one; the lists are shared.</summary>
         public OspreyConfig Clone()

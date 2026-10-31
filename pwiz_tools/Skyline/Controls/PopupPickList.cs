@@ -524,6 +524,11 @@ namespace pwiz.Skyline.Controls
             var bounds = e.Bounds;
             var choice = GetVisibleChoice(e.Index);
 
+            // Erase the item first. The checkbox and images below have antialiased edges, and a redraw of
+            // one item (for selection or focus) would otherwise blend them over the previous drawing.
+            using (var backBrush = new SolidBrush(pickListMulti.BackColor))
+                g.FillRectangle(backBrush, bounds);
+
             // Draw checkbox
             var checkState = (choice.Chosen ? CheckBoxState.CheckedNormal : CheckBoxState.UncheckedNormal);
             var checkSize = CheckBoxRenderer.GetGlyphSize(g, checkState);

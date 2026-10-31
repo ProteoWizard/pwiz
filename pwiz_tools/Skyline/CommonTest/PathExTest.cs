@@ -57,5 +57,45 @@ namespace CommonTest
             AssertEx.AreEqual(PathEx.GetTestDirectoryName(@"TestDdaSearch", @"en-US"),
                 PathEx.GetTestDirectoryName(@"TestDiaSearch", @"en-US"));
         }
+
+        /// <summary>
+        /// Paths shown to a user lose long-path syntax, and a test can show one folder as another.
+        /// </summary>
+        [TestMethod]
+        public void TestDisplayPath()
+        {
+            Assert.IsNull(PathEx.DisplayPath(null));
+            AssertEx.AreEqual(@"C:\proj\pwiz-work3\a.sky", PathEx.DisplayPathsInText(@"C:\proj\pwiz-work3\a.sky"));
+            AssertEx.AreEqual(@"C:\Data\File.raw", PathEx.DisplayPath(@"C:\Data\File.raw"));
+            AssertEx.AreEqual(@"C:\Data\File.raw", PathEx.DisplayPath(@"C:\Data\File.raw".ToLongPath()));
+            AssertEx.AreEqual(@"\\server\share\File.raw", PathEx.DisplayPath(@"\\?\UNC\server\share\File.raw"));
+
+            var root = PathEx.DisplayPathRoot;
+            var rootShown = PathEx.DisplayPathRootShown;
+            try
+            {
+                PathEx.DisplayPathRoot = @"C:\proj\pwiz-work3\";
+                PathEx.DisplayPathRootShown = @"C:\proj\pwiz";
+                AssertEx.AreEqual(@"C:\proj\pwiz\pwiz_tools\File.raw",
+                    PathEx.DisplayPath(@"C:\proj\pwiz-work3\pwiz_tools\File.raw"));
+                AssertEx.AreEqual(@"C:\proj\pwiz\pwiz_tools\File.raw",
+                    PathEx.DisplayPath(@"c:\PROJ\pwiz-work3\pwiz_tools\File.raw".ToLongPath()));
+                AssertEx.AreEqual(@"C:\proj\pwiz", PathEx.DisplayPath(@"C:\proj\pwiz-work3"));
+                // Only whole folder names match.
+                AssertEx.AreEqual(@"C:\proj\pwiz-work30\File.raw", PathEx.DisplayPath(@"C:\proj\pwiz-work30\File.raw"));
+                AssertEx.AreEqual(@"D:\pwiz-work3\File.raw", PathEx.DisplayPath(@"D:\pwiz-work3\File.raw"));
+
+                // Paths inside message text.
+                AssertEx.AreEqual(@"Failed to open C:\proj\pwiz\a.sky and 'C:\proj\pwiz\b.sky'.",
+                    PathEx.DisplayPathsInText(@"Failed to open C:\proj\pwiz-work3\a.sky and 'c:\PROJ\pwiz-work3\b.sky'."));
+                AssertEx.AreEqual(@"Kept C:\proj\pwiz-work30\a.sky",
+                    PathEx.DisplayPathsInText(@"Kept C:\proj\pwiz-work30\a.sky"));
+            }
+            finally
+            {
+                PathEx.DisplayPathRoot = root;
+                PathEx.DisplayPathRootShown = rootShown;
+            }
+        }
     }
 }

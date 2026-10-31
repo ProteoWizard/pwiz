@@ -146,6 +146,7 @@ namespace pwiz.Osprey.Test
             string straightLog = RunAnalysis(straightDir, DataInputs(), Verifier(true));
             string log = straightLog;
             ValidateStraightThrough(straightDir, log);
+            AssertNoZeroApexUnderArea(straightDir);
             // The DIA-NN-shaped reports are written only under OSPREY_DIANN_REPORTS.
             Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS))));
             Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_STATS))));
@@ -580,16 +581,20 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
 
-            // --diagnostics writes its dumps to the current directory.
+            // OSPREY_DIAGNOSTICS writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn
             // the dumps on for every later command line in this test host, so restore them.
+            var diagnosticsOn = new Dictionary<string, string>(Verifier(false))
+            {
+                [OspreyEnvironment.DIAGNOSTICS] = @"1"
+            };
             string savedDirectory = Directory.GetCurrentDirectory();
             var savedVariables = SnapshotOspreyVariables();
             try
             {
                 Directory.SetCurrentDirectory(diagnosticsDir);
-                RunAnalysis(diagnosticsDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_DIAGNOSTICS.ArgumentText);
+                RunAnalysis(diagnosticsDir, DataInputs(), diagnosticsOn);
             }
             finally
             {
@@ -825,11 +830,16 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(strayDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, strayDir
             }).Concat(CommonArgs()).ToArray(), Verifier(false));
+            // Every stray peak is reported outside the model, every other peak is typed as the library
+            // states it or as the other ion of an isobaric pair, and none is an ion Osprey disagrees with.
             int strayPeaks = CountLibraryPeaks(strays, strayPeptides.Contains);
             int otherPeaks = CountLibraryPeaks(strays, peptide => !strayPeptides.Contains(peptide));
-            StringAssert.Contains(log, string.Format(
-                OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
-                Path.GetFileName(strays), otherPeaks, otherPeaks, 0, strayPeaks, 0));
+            var strayCheck = new DiannTsvLoader(FragmentToleranceConfig.UnitResolution(0.5));
+            strayCheck.Load(strays);
+            Assert.AreEqual(strayPeaks, strayCheck.TypeCheck.Outside);
+            Assert.AreEqual(otherPeaks, strayCheck.TypeCheck.StatedPrimary);
+            Assert.AreEqual(0, strayCheck.TypeCheck.Differ);
+            StringAssert.Contains(log, strayCheck.TypeCheck.Summary(Path.GetFileName(strays)));
             Assert.IsFalse(log.Contains(OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_.Split('{')[0]), log);
             Assert.AreEqual(noNumbersPrecursors, BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra"));
         }
@@ -876,16 +886,17 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(File.Exists(Path.Combine(secondPassDir, BLIB_FILE)));
 
             // One protein per peptide: no protein has 2 detected peptides, so the stratum is
-            // empty. The second pass competes only the peaks reconciliation changed, and on the
-            // subset none of them passes.
+            // empty, and the run goes on through rescoring to the second pass, where a threshold
+            // of 0 passes nothing whatever the first pass found.
             string singleHits = WriteLibraryCopy(@"one-protein-per-peptide.tsv", @"ProteinID", (fields, column) =>
             {
                 fields[column] = @"sp|" + fields[1] + @"|" + fields[1] + @"_SUBSET";
                 return fields;
             });
             string singleHitsDir = CreateDir(@"one-protein-per-peptide");
-            string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits), Verifier(false),
-                Program.EXIT_CODE_FAILURE_TO_START);
+            string singleHitsLog = RunOspreyExpecting(SearchArgs(singleHitsDir, singleHits,
+                    OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"0"),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
             // The detected-peptide count varies with the search, so the line is matched on either
             // side of it (a string argument ignores the N0 format).
             var stratumLine = string.Format(
@@ -895,7 +906,8 @@ namespace pwiz.Osprey.Test
                 singleHitsLog);
             StringAssert.Contains(singleHitsLog, string.Format(
                 OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_,
-                singleHits, 0.01, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
+                singleHits, 0.0, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, LibrarySource.EXT_BLIB));
+            StringAssert.Contains(singleHitsLog, TaskLine(PerFileRescoreTask.TASK_NAME, @"starting"));
             Assert.IsFalse(File.Exists(Path.Combine(singleHitsDir, BLIB_FILE)));
         }
 
@@ -1102,13 +1114,13 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(exported, @"RefSpectraPeakAnnotations", @"1"));
             AssertExportOverLibraryRefused(library);
 
-            // Osprey's own typing reproduces every type the subset library states - the isobars
-            // too: b2 and b4^2 of IQQLTEEIGR share one m/z, and the library lists both as two
-            // peaks, which the lower-charge preference and one peak per ion type as it does.
+            // Osprey's own typing explains every type the subset library states: each is the ion
+            // Osprey chooses for the peak, or one of an isobaric pair within the tolerance that the
+            // library chose (YDSIDSYLSK's b8^2 where the lower-charge preference gives b4), never
+            // an ion Osprey does not agree could have produced the peak.
             var tsvLoader = new DiannTsvLoader(FragmentToleranceConfig.UnitResolution(0.5));
             tsvLoader.Load(library);
-            Assert.AreEqual(tsvLoader.TypeCheck.StatedPrimary, tsvLoader.TypeCheck.Agree,
-                string.Join(Environment.NewLine, tsvLoader.TypeCheck.Examples));
+            Assert.AreEqual(0, tsvLoader.TypeCheck.Differ, string.Join(Environment.NewLine, tsvLoader.TypeCheck.Examples));
 
             // So searching the .blib, which states no types, reports what the .tsv search does.
             string blibDir = CreateDir(@"blib-library");
@@ -1155,6 +1167,32 @@ namespace pwiz.Osprey.Test
         {
             var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE, @"SpectrumSourceFiles");
             Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences.Take(20)));
+        }
+
+        /// <summary>
+        /// No re-scored peak has a zero apex under a peak with area. A first-pass apex is the
+        /// reference XIC's maximum within the peak, so a zero apex there means a zero area; a
+        /// re-scored peak whose apex stayed at the consensus scan could read 0 at that scan while
+        /// the rest of the peak had signal - a row the model never trains on, which a model that
+        /// weights peak_apex scores far out of range (before the fix, run _20 of the subset re-scored
+        /// YQFSLSSTEK and a decoy that way).
+        /// </summary>
+        private void AssertNoZeroApexUnderArea(string workDir)
+        {
+            int apex = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_apex");
+            int area = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_area");
+            foreach (string input in DataInputs())
+            {
+                string reconciledName = Path.GetFileName(ParquetScoreCache.GetReconciledScoresPath(input));
+                Assert.IsNotNull(reconciledName);
+                string reconciled = Path.Combine(workDir, reconciledName);
+                Assert.IsTrue(File.Exists(reconciled), reconciled);
+                var rows = ParquetScoreCache.LoadFullFdrEntries(reconciled);
+                var zeroApex = rows.Where(e => e.Features[apex] == 0 && e.Features[area] > 0)
+                    .Select(e => string.Format(@"{0}{1} (entry {2})", e.ModifiedSequence, e.IsDecoy ? @" decoy" : string.Empty, e.EntryId))
+                    .ToList();
+                Assert.AreEqual(0, zeroApex.Count, Path.GetFileName(reconciled) + @": " + string.Join(@", ", zeroApex));
+            }
         }
 
         private void ValidateStraightThrough(string workDir, string log)

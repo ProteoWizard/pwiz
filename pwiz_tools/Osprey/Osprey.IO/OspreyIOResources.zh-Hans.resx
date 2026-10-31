@@ -385,10 +385,6 @@
     <value>无法读取“{0}”：ProteoWizard 没有针对此格式的供应商峰拣选，而 Osprey 对质心化峰评分。请使用 {1} 将该文件转换为 mzML 并读取转换后的文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_" xml:space="preserve">
-    <value>无法读取“{0}”：此 Osprey 构建版本不支持供应商仪器。请在 {2} 上使用 {1} 重新构建，或使用“{3}”重新构建。否则，请使用 {4} 将该文件转换为 mzML 并读取转换后的文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
     <value>正在读取 {0}</value>
     <comment>Needs Review:New resource</comment>
