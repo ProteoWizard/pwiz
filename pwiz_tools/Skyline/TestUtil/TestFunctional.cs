@@ -2211,13 +2211,23 @@ namespace pwiz.SkylineTestUtil
         {
             var stopwatch = Stopwatch.StartNew();
             Thread.Sleep(ScreenshotWaits.SettleMillis); // Wait for UI to settle down
+            if (ScreenshotWaits.PaintFlush)
+                ScreenshotManager.WaitForPaint(screenshotForm);
             long settleMillis = stopwatch.ElapsedMilliseconds;
             _shotManager.ActivateScreenshotForm(screenshotForm);
             stopwatch.Restart();
+            if (ScreenshotWaits.PaintFlush)
+            {
+                // Activating and painting can start more graph work, like a new label layout
+                ScreenshotManager.WaitForPaint(screenshotForm);
+                WaitForGraphs();
+                ScreenshotManager.WaitForPaint(screenshotForm);
+            }
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
+            ScreenshotWaits.CopyShot(TestContext.TestName, CultureInfo.CurrentCulture.Name, filePath);
             ScreenshotWaits.LogTiming(TestContext.TestName, CultureInfo.CurrentCulture.Name, ScreenshotCounter,
                 graphsMillis, settleMillis, _shotManager.LastActivateMillis, _shotManager.LastRepaintMillis,
-                stopwatch.ElapsedMilliseconds);
+                stopwatch.ElapsedMilliseconds, ScreenshotManager.LastCaptureRetries);
         }
 
         /// <summary>

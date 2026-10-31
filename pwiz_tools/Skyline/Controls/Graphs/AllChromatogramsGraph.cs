@@ -975,7 +975,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!graphChromatograms.HasGraphData)
                     return false;
 
-                return true;
+                // Graph must have drawn its data
+                return graphChromatograms.IsRenderComplete;
             }
         }
 

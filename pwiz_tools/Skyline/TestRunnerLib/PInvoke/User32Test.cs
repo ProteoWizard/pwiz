@@ -33,6 +33,13 @@ namespace TestRunnerLib.PInvoke
         public const uint SPI_SETCLIENTAREAANIMATION = 0x1043;
         public const uint SPIF_SENDCHANGE = 0x02;
 
+        public const uint RDW_UPDATENOW = 0x0100;
+        public const uint RDW_ALLCHILDREN = 0x0080;
+
+        public const uint QS_PAINT = 0x0020;
+        public const uint QS_POSTMESSAGE = 0x0008;
+        public const uint QS_SENDMESSAGE = 0x0040;
+
         public enum HandleType
         {
             total = -1,
@@ -43,6 +50,15 @@ namespace TestRunnerLib.PInvoke
         [DllImport("user32.dll")]
         public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool EnumThreadWindows(int threadId, EnumWindowsProc enumProc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern uint GetQueueStatus(uint flags);
+
+        [DllImport("user32.dll")]
+        public static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, uint flags);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

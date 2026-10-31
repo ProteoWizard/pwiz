@@ -73,6 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private float? _frozenGraphTime;  // For screenshot consistency - exact RT for progress line
         private float? _frozenIntensityMax;  // For screenshot consistency - lock Y-axis maximum
         private float? _frozenTimeMax;  // For screenshot consistency - lock X-axis maximum
+        private bool _renderedSinceFreeze;
 
         public AsyncChromatogramsGraph2()
             : base(@"AllChromatograms background render")
@@ -223,6 +224,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 info.GraphPane.YAxis.Scale.Max = _yAxisAnimation.Step();
                 info.GraphPane.AxisChange();
                 StartRender();
+                _renderedSinceFreeze = true;
             }
             else if (millisElapsed < MIN_INCREMENTAL_RENDER)
             {
@@ -239,6 +241,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 IncrementalRender(info, minTime, maxTime);
                 _lastRender = DateTime.UtcNow;
+                _renderedSinceFreeze = true;
             }
 
             _lastTime = nextTime;
@@ -363,6 +366,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // The frozen graph time ensures consistent progress line position
             _frozenGraphTime = graphTime;
             _frozenIntensityMax = intensityMax;
+            _renderedSinceFreeze = false;
             // Note: X-axis max is captured separately via CaptureXAxisMax() when called
             // at an earlier point in the import process
         }
@@ -393,6 +397,15 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Whether the graph has data loaded and ready to display.
         /// </summary>
         public bool HasGraphData => Key != null && GetInfo(Key) != null;
+
+        /// <summary>
+        /// Whether the graph shows what it had been given when it was frozen: no axis animation is in
+        /// progress, no render is running, and either nothing was waiting to be drawn or the timer has
+        /// drawn it since. Incremental renders are at least a second apart, so without this a
+        /// screenshot taken soon after freezing can miss peaks that arrived just before.
+        /// </summary>
+        public bool IsRenderComplete => !_xAxisAnimation.IsActive && !_yAxisAnimation.IsActive && !IsRenderPending &&
+                                        (_renderedSinceFreeze || _renderMin == double.MaxValue);
 
         /// <summary>
         /// Resume normal graph animation after screenshot capture.
