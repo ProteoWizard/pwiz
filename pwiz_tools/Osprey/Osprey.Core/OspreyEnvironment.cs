@@ -108,7 +108,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
-            @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_NO_PREFILTER", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
             @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
@@ -780,6 +780,12 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly double? FdrTrainFdr = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_TRAIN_FDR"),
             NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ? trainFdr : null;
+
+        /// <summary>
+        /// OSPREY_NO_PREFILTER=1 (experiment): turns off the coelution signal pre-filter, as --no-prefilter does, for
+        /// runners that cannot pass Osprey arguments. It enters the search identity, so every task keys on it.
+        /// </summary>
+        public static readonly bool NoPrefilter = ParseIntOrNull(@"OSPREY_NO_PREFILTER") == 1;
 
         /// <summary>
         /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the configured
