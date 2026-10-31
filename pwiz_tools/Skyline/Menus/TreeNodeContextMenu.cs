@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
@@ -39,6 +40,8 @@ namespace pwiz.Skyline.Menus
         public TreeNodeContextMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
             InitializeComponent();
+            // Shown by code rather than attached to the tree, so no form's load reaches it
+            DpiIcons.PrepareIcons(contextMenuTreeNode, typeof(Resources));
         }
 
         public new ContextMenuStrip ContextMenuStrip => contextMenuTreeNode;

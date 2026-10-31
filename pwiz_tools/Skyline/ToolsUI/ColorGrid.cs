@@ -35,10 +35,35 @@ namespace pwiz.Skyline.ToolsUI
         public ColorGrid()
         {
             InitializeComponent();
+            // A UserControl with its own AutoScaleMode.Font nested in a Font-autoscaling
+            // form does not get its bounds scaled by the parent; Inherit lets the parent
+            // form scale this control once, correctly (issue #4599).
+            AutoScaleMode = AutoScaleMode.Inherit;
 
             colorPickerDlg.FullOpen = true;
             colBtn.UseColumnTextForButtonValue = true;
             comboColorType.SelectedIndex = 0;
+            // The designer's column widths and minimum widths are scaled by the grid when
+            // its handle is created. Row height is NOT scaled anywhere - WinForms derives it
+            // from the font, so scaling it again makes these rows half again as tall as
+            // every other grid's (issue #4599).
+            colBtn.Width = colBtn.MinimumWidth;
+            if (DpiUtil.IsScaled(this))
+            {
+                // Inherit scales this control's bounds with the parent, but its anchored
+                // children still do not follow when the parent dialog resizes it at high
+                // DPI, so lay them out explicitly: the grid fills the width and leaves the
+                // designer's 35 px strip below it for the color-type combo pinned at the
+                // bottom (21 px up). The literals are the designer's: by the time this runs,
+                // InitializeComponent has already font-scaled the geometry, so reading the
+                // gaps off the controls would scale them twice (issue #4599).
+                SizeChanged += (sender, args) =>
+                {
+                    dataGridViewColors.Size = new Size(ClientSize.Width,
+                        ClientSize.Height - DpiUtil.Scale(this, 35));
+                    comboColorType.Top = ClientSize.Height - DpiUtil.Scale(this, 21);
+                };
+            }
         }
 
         public DataGridView DataGridView

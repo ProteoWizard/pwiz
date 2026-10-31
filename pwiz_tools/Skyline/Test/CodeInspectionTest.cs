@@ -706,7 +706,7 @@ namespace pwiz.SkylineTest
                 { typeof(Shlwapi), 1 },
                 { typeof(User32), 50 },
 
-                { typeof(DwmapiTest), 4 },
+                { typeof(DwmapiTest), 5 },
                 { typeof(Gdi32Test), 1 },
                 { typeof(Kernel32Test), 5 },
                 { typeof(Ole32Test), 1 },

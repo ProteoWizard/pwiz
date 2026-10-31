@@ -25,6 +25,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -40,16 +41,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private IViewEditor _viewEditor;
         private bool _showHiddenFields;
         private bool _alphabetical;
-        private static readonly Image[] ImagelistImages =
-        {
-            Resources.DataColumn,
-            Resources.TextColumn,
-            Resources.NumberColumn,
-            Resources.BoolColumn,
-            Resources.LinkColumn,
-            Resources.SublistColumn,
-            Resources.PivotColumn,
-        };
         private enum ImageIndexes
         {
             Unknown,
@@ -68,10 +59,24 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     TransparentColor = Color.Magenta,
                     ColorDepth = ColorDepth.Depth32Bit
                 };
-            ImageList.Images.AddRange(ImagelistImages);
+            // One icon per ImageIndexes value, rendered for the display DPI (issue #4599)
+            ImageListScaler.PrepareForDpi(this, ImageList);
+            AddImage(nameof(Resources.DataColumn), Resources.DataColumn);
+            AddImage(nameof(Resources.TextColumn), Resources.TextColumn);
+            AddImage(nameof(Resources.NumberColumn), Resources.NumberColumn);
+            AddImage(nameof(Resources.BoolColumn), Resources.BoolColumn);
+            AddImage(nameof(Resources.LinkColumn), Resources.LinkColumn);
+            AddImage(nameof(Resources.SublistColumn), Resources.SublistColumn);
+            AddImage(nameof(Resources.PivotColumn), Resources.PivotColumn);
             DrawMode = TreeViewDrawMode.OwnerDrawText;
             ShowNodeToolTips = true;
         }
+
+        private void AddImage(string name, Image image)
+        {
+            ImageList.Images.Add(DpiIcons.GetIcon(typeof(Resources), this, name, image, Color.Magenta));
+        }
+
         [Browsable(false)]
         [DefaultValue(null)]
         public ColumnDescriptor RootColumn
