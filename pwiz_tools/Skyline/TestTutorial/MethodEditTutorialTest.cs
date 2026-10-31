@@ -167,7 +167,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[3].Nodes[0];
-                SkylineWindow.Size = new Size(1035, 511);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1035, 511);
             });
             RestoreViewOnScreen(07);
             PauseForScreenShot("Main window"); // Not L10N
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     pastePeptidesDlg.SelectCell(12, 0);
-                    pastePeptidesDlg.Height = 437;
+                    pastePeptidesDlg.Height = ScaledHeight(pastePeptidesDlg, 437);
                 });
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List -  For screenshot, select last (empty) line in list"); // Not L10N
                 OkDialog(pastePeptidesDlg, pastePeptidesDlg.OkDialog);
@@ -376,7 +376,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(7, uniquePeptidesDlg.GetDataGridView().ColumnCount);
 
                         uniquePeptidesDlg.SplitHeight = 58;
-                        uniquePeptidesDlg.Height = 292;
+                        uniquePeptidesDlg.Height = ScaledHeight(uniquePeptidesDlg, 292);
                     });
                 PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form"); // Not L10N
                 var oldDoc = SkylineWindow.Document;

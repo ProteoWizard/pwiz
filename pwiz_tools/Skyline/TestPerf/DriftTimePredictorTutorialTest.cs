@@ -106,7 +106,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             var document = WaitForDocumentChangeLoaded(oldDoc,240*1000); // 4 minutes
-            RunUI(() => SkylineWindow.Size = new Size(880, 560));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 880, 560));
             RestoreViewOnScreen(2);
             PauseForScreenShot("Document open - full window");
             AssertEx.IsDocumentState(document, null, 1, 34, 38, 404);
@@ -173,7 +173,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             });
             FindNode("R.FKDLGEEHFK.G");
 
-            RunUI(() => SkylineWindow.Size = new Size(1075, 799));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 1075, 799));
             RestoreViewOnScreen(7);
             PauseForScreenShot("Zoomed split graph panes only", null, ClipChromatograms);
 
@@ -190,7 +190,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 SkylineWindow.ShowPeakAreaLegend(false);
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.SynchronizeZooming(true);
-                SkylineWindow.Size = new Size(wideWidth, 855);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, wideWidth, 855);
             });
             RestoreViewOnScreen(9);
             PauseForScreenShot("Full window");
@@ -205,7 +205,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             FindNode("NECFLSHKDDSPDLPK");
             RestoreViewOnScreen(11);
             const int narrowWidth = 1350;
-            RunUI(() => SkylineWindow.Width = narrowWidth);
+            RunUI(() => SkylineWindow.Width = ScaledWidth(SkylineWindow, narrowWidth));
             PauseForScreenShot("Yeast chromatograms and RT only - prtsc-paste-edit", null, bmp =>
             {
                 bmp = ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
@@ -230,7 +230,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 ClipBitmap(DrawHandCursorOnChromBitmap(bmp, graphChrom, true, clickTime1, clickIntensity, PaneKey.PRECURSORS), 
                     new Rectangle(0, 0, bmp.Width, (int)(bmp.Height * 0.515))));
 
-            RunUI(() => SkylineWindow.Width = wideWidth);
+            RunUI(() => SkylineWindow.Width = ScaledWidth(SkylineWindow, wideWidth));
             RestoreViewOnScreen(13);
             {
                 ClickChromatogram(BSAFragName, clickTime1, clickIntensity, PaneKey.PRECURSORS);
@@ -276,7 +276,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     RunUI(() =>
                     {
                         var frame = fullScanGraph.Parent.Parent;
-                        frame.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - frame.Height - 10);
+                        frame.Location = new Point(SkylineWindow.Left + Scaled(10), SkylineWindow.Bottom - frame.Height - Scaled(10));
                     });
                     FocusDocument();
 
@@ -385,7 +385,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 TestReports();
 
             RestoreViewOnScreen(11);
-            RunUI(() => SkylineWindow.Width = narrowWidth);
+            RunUI(() => SkylineWindow.Width = ScaledWidth(SkylineWindow, narrowWidth));
             if (IsPauseForScreenShots)
             {
                 RunUI(() =>
@@ -403,14 +403,18 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     SkylineWindow.GetGraphChrom(Path.GetFileNameWithoutExtension(Yeast_BSA)),
                     SkylineWindow.GraphRetentionTime
                 }));
-            RunUI(() => SkylineWindow.Width = wideWidth);
+            RunUI(() => SkylineWindow.Width = ScaledWidth(SkylineWindow, wideWidth));
             RestoreViewOnScreen(13);
             {
                 const double clickTime = 42.20;
                 ClickChromatogram(yeastReplicateName, clickTime, 2.904E+4, PaneKey.PRODUCTS);
                 var fullScanGraph = FindOpenForm<GraphFullScan>();
                 RunUI(() => fullScanGraph.SetZoom(true));
-                RunUI(() => fullScanGraph.Parent.Parent.Size = new Size(671, 332));
+                RunUI(() =>
+                {
+                    var fullScanFloatingWindow = fullScanGraph.Parent.Parent;
+                    fullScanFloatingWindow.Size = ScaledSize(fullScanFloatingWindow, 671, 332);
+                });
                 PauseForFullScanGraphScreenShot("Full-scan graph zoomed");
                 RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime.ToString(CultureInfo.CurrentCulture))));
                 RunUI(SkylineWindow.HideFullScanGraph);
@@ -420,7 +424,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(1547, 689);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 1547, 689);
                 SkylineWindow.ShowProductTransitions();
                 SkylineWindow.ShowPeakAreaLegend(true);
             });

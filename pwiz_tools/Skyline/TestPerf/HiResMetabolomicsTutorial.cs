@@ -125,7 +125,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
 
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, 600, 300));
+                RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, ScaledWidth(importDialog, 600), ScaledHeight(importDialog, 300)));
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list");
 
                 var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
@@ -142,7 +142,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker");
 
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
-                RunUI(() => errDlg.Size = new Size(680, 250));
+                RunUI(() => errDlg.Size = ScaledSize(errDlg, 680, 250));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem");
                 OkDialog(errDlg, errDlg.OkDialog);
 
@@ -164,7 +164,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 RunUI(() =>
                 {
                     SkylineWindow.ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
-                    SkylineWindow.Size = new Size(957, SHORT_HEIGHT);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 957, SHORT_HEIGHT);
                     SkylineWindow.ExpandPrecursors();
                 });
                 RestoreViewOnScreen(5);
@@ -176,7 +176,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 if (IsPauseForScreenShots)
                 {
-                    RunUI(() => SkylineWindow.Height = 730);    // Taller for context menu
+                    RunUI(() => SkylineWindow.Height = ScaledHeight(SkylineWindow, 730));    // Taller for context menu
 
                     var sequenceTree = SkylineWindow.SequenceTree;
                     ToolStripDropDown menuStrip = null, subMenuStrip = null;
@@ -208,7 +208,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         subMenuStrip.Closing -= DenyMenuClosing;
                         menuStrip.Close();
 
-                        SkylineWindow.Height = SHORT_HEIGHT;
+                        SkylineWindow.Height = ScaledHeight(SkylineWindow, SHORT_HEIGHT);
                     });
                 }
 

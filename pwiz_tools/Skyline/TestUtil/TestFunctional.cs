@@ -219,6 +219,17 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Scales a window height written for 100% display scale, as <see cref="ScaledSize"/> does.
+        /// </summary>
+        public static int ScaledHeight(Control window, int height)
+        {
+            if (!DpiScale.IsScaled(window))
+                return height;
+            return ScaleWindowLength(height, window.Height - window.ClientSize.Height, DpiScale.Factor(window),
+                GetLayoutScale(window).Height);
+        }
+
+        /// <summary>
         /// Scales a distance in pixels written for 100% display scale, like a gap between windows,
         /// by the display scale.
         /// </summary>

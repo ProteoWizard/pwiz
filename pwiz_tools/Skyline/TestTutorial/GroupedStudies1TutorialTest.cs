@@ -219,7 +219,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SkylineWindow.ShowGraphSpectrum(false);
                 SkylineWindow.ShowGraphRetentionTime(true);
-                SkylineWindow.Size = new Size(898, 615);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 898, 615);
             });
 
             RestoreViewOnScreen(6);
@@ -307,11 +307,11 @@ namespace pwiz.SkylineTestTutorial
             {
                 var floatingWindow = FindFloatingWindow(SkylineWindow.SequenceTree);
                 var chromGraph = SkylineWindow.GraphChromatograms.First();
-                floatingWindow.Location = chromGraph.PointToScreen(new Point(0, 0)) + new Size(25, 15);
+                floatingWindow.Location = chromGraph.PointToScreen(new Point(0, 0)) + new Size(Scaled(25), Scaled(15));
                 if (graphForm != null)
                 {
                     floatingWindow = FindFloatingWindow(graphForm);
-                    floatingWindow.Location = SkylineWindow.Location + new Size(SkylineWindow.Width + 10, 0);
+                    floatingWindow.Location = SkylineWindow.Location + new Size(SkylineWindow.Width + Scaled(10), 0);
                 }
                 floatingWindow.Activate();
             });
@@ -590,7 +590,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.ChooseColumnsTab.ExpandPropertyPath(
                     PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*"), true);
                 // Make the view editor bigger so that these expanded nodes can be seen in the next screenshot
-                viewEditor.Height = Math.Max(viewEditor.Height, 529);
+                viewEditor.Height = Math.Max(viewEditor.Height, ScaledHeight(viewEditor, 529));
                 Assert.IsTrue(
                     viewEditor.ChooseColumnsTab.TrySelect(
                         PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CountTruncated")));
@@ -642,7 +642,8 @@ namespace pwiz.SkylineTestTutorial
                 var columnTruncated = documentGrid.FindColumn(pathTruncated);
                 documentGrid.DataGridView.Sort(columnTruncated, ListSortDirection.Descending);
 
-                FormEx.GetParentForm(documentGrid).Size = new Size(514, 315);
+                var gridForm = FormEx.GetParentForm(documentGrid);
+                gridForm.Size = ScaledSize(gridForm, 514, 315);
             });
 
             if (initialTestExecution)
@@ -816,7 +817,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     SkylineWindow.SynchronizeZooming(true);
-                    SkylineWindow.Size = new Size(1385, 744);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 1385, 744);
                 });
                 WaitForGraphs();
                 var chromGraphs = new DockableForm[]
@@ -834,7 +835,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", null,
                     bmp => ClipSkylineWindowShotWithForms(bmp, chromGraphs));
 
-                RunUI(() => SkylineWindow.Size = new Size(974, 640));
+                RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 974, 640));
                 RestoreViewOnScreen(12); // Same layout for Peak Areas graph as on page 12
                 SelectNode(SrmDocument.Level.Molecules, i);
 
@@ -855,7 +856,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
-                    SkylineWindow.Size = new Size(1380, 744);
+                    SkylineWindow.Size = ScaledSize(SkylineWindow, 1380, 744);
                 });
                 
                 ActivateReplicate("H_148_REP1");
@@ -869,7 +870,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.GetGraphChrom("H_148_REP3"),
                 }));
 
-                RunUI(() => SkylineWindow.Size = new Size(898, 615));
+                RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 898, 615));
 
                 RestoreViewOnScreen(10); // Same layout for RT graph as on page 10
 
@@ -1088,7 +1089,8 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
-                    FormEx.GetParentForm(documentGrid).Size = new Size(591, 283);
+                    var gridForm = FormEx.GetParentForm(documentGrid);
+                    gridForm.Size = ScaledSize(gridForm, 591, 283);
                 });
                 var pathSubjectId = PropertyPath.Root.Property(AnnotationDef.GetColumnName("SubjectId"));
                 WaitForConditionUI(() => (documentGrid.RowCount > 0 &&
@@ -1145,7 +1147,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var pathPeptides = PropertyPath.Parse("Proteins!*.Peptides!*");
                     viewEditor.ChooseColumnsTab.ExpandPropertyPath(pathPeptides, true);
-                    viewEditor.Height = 452;
+                    viewEditor.Height = ScaledHeight(viewEditor, 452);
                     Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(pathPeptides.Property(_missingDataName)));
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 });
@@ -1154,7 +1156,11 @@ namespace pwiz.SkylineTestTutorial
 
                 OkDialog(viewEditor, viewEditor.OkDialog);
 
-                RunUI(() => FormEx.GetParentForm(documentGrid).Size = new Size(591, 296));
+                RunUI(() =>
+                {
+                    var gridForm = FormEx.GetParentForm(documentGrid);
+                    gridForm.Size = ScaledSize(gridForm, 591, 296);
+                });
 
                 var pathMissingData = PropertyPath.Parse("Peptide").Property(_missingDataName);
                 WaitForConditionUI(() => (documentGrid.IsComplete && documentGrid.RowCount > 0 &&
@@ -1235,7 +1241,7 @@ namespace pwiz.SkylineTestTutorial
                     viewEditor.ChooseColumnsTab.RemoveColumn(pathPrecursors);
                     viewEditor.ChooseColumnsTab.RemoveColumn(pathCountTruncated);
                     PivotReplicateAndIsotopeLabelWidget.SetPivotReplicate(viewEditor, true);
-                    viewEditor.Height = 410;
+                    viewEditor.Height = ScaledHeight(viewEditor, 410);
                 });
 
                 PauseForScreenShot<ViewEditor.ChooseColumnsView>("Missing Peaks report");
@@ -1307,7 +1313,8 @@ namespace pwiz.SkylineTestTutorial
 
                         var columnPeptide = documentGrid.FindColumn(pathPeptide);
                         gridView.CurrentCell = gridView.Rows[0].Cells[columnPeptide.Index];
-                        FormEx.GetParentForm(documentGrid).Size = new Size(756, 352);
+                        var gridForm = FormEx.GetParentForm(documentGrid);
+                        gridForm.Size = ScaledSize(gridForm, 756, 352);
                     });
 
                     PauseForScreenShot<DocumentGridForm>("Missing Peaks view in document grid");
@@ -1367,7 +1374,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForPeakAreaGraphScreenShot("SVVDIGLIK mean peak area ratio to global standard by condition");
 
             if (IsPauseForScreenShots)
-                RunUI(() => FindFloatingWindow(SkylineWindow.GraphPeakArea).Width += 50);
+                RunUI(() => FindFloatingWindow(SkylineWindow.GraphPeakArea).Width += Scaled(50));
 
             FindNode("LQTEGDGIYTLNSEK");
 
@@ -1478,7 +1485,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<EditGroupComparisonDlg>("Edit Group Comparison");
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
-            RunUI(() => documentSettingsDlg.Height = 310);
+            RunUI(() => documentSettingsDlg.Height = ScaledHeight(documentSettingsDlg, 310));
             PauseForScreenShot<DocumentSettingsDlg>("Document Settings");
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             var docAfterComparison = WaitForDocumentChange(docBeforeComparison);
@@ -1501,7 +1508,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 var foldChangeResultColumn = foldChangeGridControl.FindColumn(foldChangePath);
                 foldChangeGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
-                foldChangeGrid.Parent.Parent.Height = 278;
+                var foldChangeFloatingWindow = foldChangeGrid.Parent.Parent;
+                foldChangeFloatingWindow.Height = ScaledHeight(foldChangeFloatingWindow, 278);
             });
             WaitForConditionUI(() => 0 != foldChangeGridControl.RowCount,
                 "0 != foldChangeGrid.DataboundGridControl.RowCount");
@@ -1511,7 +1519,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 foldChangeGrid.ShowGraph();
-                foldChangeGrid.Parent.Parent.Size = new Size(837, 476);
+                var foldChangeFloatingWindow = foldChangeGrid.Parent.Parent;
+                foldChangeFloatingWindow.Size = ScaledSize(foldChangeFloatingWindow, 837, 476);
             });
             PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph");
             if (!IsCoverShotMode)
@@ -1583,9 +1592,9 @@ namespace pwiz.SkylineTestTutorial
                 {
                     ZoomYAxis(foldChangeGraph.ZedGraphControl, -6, 6);
                     var gcFloatingWindow = FindFloatingWindow(foldChangeGraph);
-                    gcFloatingWindow.Top = SkylineWindow.Top + 5;
-                    gcFloatingWindow.Height = SkylineWindow.Height - 10;
-                    gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
+                    gcFloatingWindow.Top = SkylineWindow.Top + Scaled(5);
+                    gcFloatingWindow.Height = SkylineWindow.Height - Scaled(10);
+                    gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - Scaled(5);
                 });
                 TakeCoverShot();
                 return;

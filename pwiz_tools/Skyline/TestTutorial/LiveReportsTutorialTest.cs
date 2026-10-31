@@ -101,7 +101,8 @@ namespace pwiz.SkylineTestTutorial
             HideReportsDropdown();
             RunUI(()=>
             {
-                documentGrid.Parent.Parent.Height = 405; // Use 25.1 height which had a smaller menu
+                var gridFloatingWindow = documentGrid.Parent.Parent;
+                gridFloatingWindow.Height = ScaledHeight(gridFloatingWindow, 405); // Use 25.1 height which had a smaller menu
                 documentGrid.DataboundGridControl.ChooseView(
                     ViewGroup.BUILT_IN.Id.ViewName(Resources
                         .SkylineViewContext_GetDocumentGridRowSources_Proteins));
@@ -340,7 +341,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(()=>viewEditor.ViewName = "Peptide Areas");
             }, viewEditor=>viewEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
-            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width += 100);    // Widen document grid
+            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width += Scaled(100));    // Widen document grid
             PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas");
             RunLongDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
             {
@@ -355,7 +356,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => documentGrid.IsComplete);
             RunUIForScreenShot(() =>
             {
-                documentGrid.FloatingPane.FloatingWindow.Width = 1074;
+                documentGrid.FloatingPane.FloatingWindow.Width = ScaledWidth(documentGrid.FloatingPane.FloatingWindow, 1074);
             });
             PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas with Pivot Replicate Name");
             RunUI(() =>
@@ -447,7 +448,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUIForScreenShot(() =>
             {
-                documentGrid.FloatingPane.FloatingWindow.Width = 1500;
+                documentGrid.FloatingPane.FloatingWindow.Width = ScaledWidth(documentGrid.FloatingPane.FloatingWindow, 1500);
             });
             PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas with more Normalized Areas fields");
             RunDlg<ViewEditor>(documentGrid.DataboundGridControl.NavBar.CustomizeView, viewEditor =>
@@ -458,7 +459,7 @@ namespace pwiz.SkylineTestTutorial
                 pivotWidget.SetPivotReplicate(false);
                 viewEditor.OkDialog();
             });
-            RunUI(()=>documentGrid.FloatingPane.FloatingWindow.Size = new Size(450, 200));
+            RunUI(()=>documentGrid.FloatingPane.FloatingWindow.Size = ScaledSize(documentGrid.FloatingPane.FloatingWindow, 450, 200));
             WaitForCondition(() => documentGrid.IsComplete);
             PauseForScreenShot<DocumentGridForm>("Document Grid toolbar Pivot button",
                 processShot: ClipToolStripItem(documentGrid.DataboundGridControl.NavBar.GroupButton));
@@ -499,7 +500,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(()=>
             {
-                documentGrid.FloatingPane.FloatingWindow.Size = new Size(1100, 500);
+                documentGrid.FloatingPane.FloatingWindow.Size = ScaledSize(documentGrid.FloatingPane.FloatingWindow, 1100, 500);
                 documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0];
             });
             PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas without pivot");
@@ -514,7 +515,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForScreenShot<ViewEditor>("Customize Report with SubjectID checked");
             }, viewEditor=>viewEditor.OkDialog());
-            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width = 1200);
+            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width = ScaledWidth(documentGrid.FloatingPane.FloatingWindow, 1200));
             WaitForCondition(() => documentGrid.IsComplete);
             PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas without pivot and SubjectID added");
             RunLongDlg<PivotEditor>(()=>documentGrid.NavBar.ShowPivotDialog(true), pivotEditor =>
@@ -534,7 +535,7 @@ namespace pwiz.SkylineTestTutorial
             }, pivotEditor=>pivotEditor.OkDialog());
             WaitForCondition(() => documentGrid.IsComplete);
             RunUI(()=>documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[0].Cells[0]);
-            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width = 800);
+            RunUIForScreenShot(() => documentGrid.FloatingPane.FloatingWindow.Width = ScaledWidth(documentGrid.FloatingPane.FloatingWindow, 800));
             PauseForScreenShot<DocumentGridForm>("Document Grid: Peptide Areas pivoted on SubjectID");
             var captionDrizzleNormalizedArea =
                 TextUtil.SpaceSeparate("Drizzle", AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption(ColumnCaptions.NormalizedAreaRaw)).GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer()));
@@ -618,7 +619,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 groupComparisonGrid.ShowGraph();
-                groupComparisonGrid.FloatingPane.FloatingWindow.Width = 1000;
+                groupComparisonGrid.FloatingPane.FloatingWindow.Width = ScaledWidth(groupComparisonGrid.FloatingPane.FloatingWindow, 1000);
             });
             SetSortDirection(groupComparisonGrid.DataboundGridControl, ColumnCaptions.FoldChangeResult, ListSortDirection.Ascending);
             PauseForScreenShot(groupComparisonGrid.FloatingPane, "Peptide Group Comparison Grid and Bar Graph");

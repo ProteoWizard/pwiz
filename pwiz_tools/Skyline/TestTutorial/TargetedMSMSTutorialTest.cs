@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
 
             // p. 3 Select first peptide
             RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
-            RunUI(() => SkylineWindow.Size = new Size(820, 554));
+            RunUI(() => SkylineWindow.Size = ScaledSize(SkylineWindow, 820, 554));
             RestoreViewOnScreen(3);
             PauseForScreenShot("Main window");
 
@@ -260,7 +260,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var messageDlg = ShowDialog<MessageDlg>(
                     () => exportMethodDlg.OkDialog(GetTestPath(@"Low Res\TargetedMSMS_BSA_Protea.meth")));
-                RunUI(() => messageDlg.Height = 210);
+                RunUI(() => messageDlg.Height = ScaledHeight(messageDlg, 210));
                 PauseForScreenShot<MessageDlg>("Error message (expected)");
 
                 OkDialog(messageDlg, messageDlg.OkDialog);
@@ -310,8 +310,8 @@ namespace pwiz.SkylineTestTutorial
                     var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
                     Assert.IsNotNull(precursorMzCol);
                     previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
-                    previewReportDlg.Size = new Size(460, 330);
-                    previewReportDlg.Left = SkylineWindow.Right + 20;
+                    previewReportDlg.Size = ScaledSize(previewReportDlg, 460, 330);
+                    previewReportDlg.Left = SkylineWindow.Right + Scaled(20);
                 });
                 PauseForScreenShot<DocumentGridForm>("Preview New Report window");
 
@@ -466,7 +466,7 @@ namespace pwiz.SkylineTestTutorial
             // Add FASTA also skipped because filter for document peptides was chosen.
 
             WaitForClosedForm(importPeptideSearchDlg);
-            RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
+            RunUI(() => allChromGraph.Left = SkylineWindow.Right + Scaled(20));
 
             if (!PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 32, "00:00:01", 50f, 2.14e7f,
                 new Dictionary<string, int>
@@ -511,8 +511,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() =>
             {
-                SkylineWindow.Width = 1050;
-                SkylineWindow.Height += 15; // Account for Targets and Files tabs
+                SkylineWindow.Width = ScaledWidth(SkylineWindow, 1050);
+                SkylineWindow.Height += Scaled(15); // Account for Targets and Files tabs
             });
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported");
@@ -520,7 +520,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 TestPropertySheet();
             }
-            RunUI(() => SkylineWindow.Height -= 15);    // Subsequent screenshots are graphs only
+            RunUI(() => SkylineWindow.Height -= Scaled(15));    // Subsequent screenshots are graphs only
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
@@ -664,7 +664,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.Size = new Size(970, 740);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 970, 740);
                 Settings.Default.ChromatogramFontSize = 14;
                 SkylineWindow.ShowGraphPeakArea(false);
             });
@@ -906,10 +906,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // Resize and center window on screen
-                SkylineWindow.Size = windowSize;
+                SkylineWindow.Size = ScaledSize(SkylineWindow, windowSize.Width, windowSize.Height);
                 var screenRect = Screen.FromControl(SkylineWindow).WorkingArea;
-                SkylineWindow.Location = new Point(screenRect.X + screenRect.Width/2 - windowSize.Width/2,
-                    screenRect.Y + screenRect.Height/2 - windowSize.Height/2);
+                SkylineWindow.Location = new Point(screenRect.X + screenRect.Width/2 - SkylineWindow.Width/2,
+                    screenRect.Y + screenRect.Height/2 - SkylineWindow.Height/2);
             });
             RestoreViewOnScreen(31);
             RunUI(() =>
@@ -1004,7 +1004,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowSplitChromatogramGraph(false);
                 SkylineWindow.ArrangeGraphsTabbed();
                 SkylineWindow.ActivateReplicate("6-BSA-500fmol");
-                SkylineWindow.Size = new Size(855, 545);
+                SkylineWindow.Size = ScaledSize(SkylineWindow, 855, 545);
                 SkylineWindow.ShowGraphPeakArea(false);
             });
             PauseForChromGraphScreenShot("Chromatogram graph metafile for 500 fmol", "6-BSA-500fmol");
@@ -1028,7 +1028,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ActivateReplicate("6-BSA-500fmol");
                 SkylineWindow.ShowGraphPeakArea(false);
-                SkylineWindow.Size = windowSize;
+                SkylineWindow.Size = ScaledSize(SkylineWindow, windowSize.Width, windowSize.Height);
                 SkylineWindow.FocusDocument();
             });
             PauseForScreenShot("Main window");
