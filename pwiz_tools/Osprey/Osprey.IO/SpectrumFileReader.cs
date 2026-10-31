@@ -75,9 +75,6 @@ namespace pwiz.Osprey.IO
         // into the messages as arguments, never inside translated text.
         private const string CMD_MSCONVERT = @"msconvert";
         private const string CMD_MSCONVERT_PEAK_PICKING = CMD_MSCONVERT + @" --filter ""peakPicking vendor msLevel=1-""";
-        private const string MSBUILD_VENDOR_LICENSES = @"/p:IAgreeToVendorLicenses=true";
-        private const string OSPREY_SOLUTION = @"Osprey.sln";
-        private const string BJAM_VENDOR_LICENSES = @"bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses";
 
         private static int _vendorFailuresReported;
 
@@ -185,20 +182,24 @@ namespace pwiz.Osprey.IO
                 // while every other vendor Osprey lists does. Note MsDataFileImpl's
                 // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
                 // "is this a vendor reader" (true for Agilent), not "does it centroid".
-                throw new NotSupportedException(string.Format(
+                //
+                // A UserMessageException, like the one below, so the user is shown this
+                // message alone: any other type reads as a defect at the top level
+                // (CommonExceptionUtil.IsProgrammingDefect) and prints with its stack.
+                throw new UserMessageException(string.Format(
                     OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_,
                     path, CMD_MSCONVERT_PEAK_PICKING), ex);
             }
             catch (VendorSupportNotEnabledException ex)
             {
-                // ProteoWizard's own message is right for ProteoWizard and wrong for an
-                // Osprey user twice over: it names no file, and it says to rebuild
-                // pwiz-sharp with --i-agree-to-the-vendor-licenses, which is that
-                // project's build flag rather than how Osprey is built. Restate it in
-                // terms the reader can act on, and keep the original as InnerException.
-                throw new NotSupportedException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_,
-                    path, MSBUILD_VENDOR_LICENSES, OSPREY_SOLUTION, BJAM_VENDOR_LICENSES, CMD_MSCONVERT), ex);
+                // Reached by a copy built without the vendor licenses (a developer build, or
+                // a reader whose SDK is native and so absent from the Linux package).
+                // ProteoWizard's own message names no file and tells the reader to rebuild
+                // with a build flag. Osprey users do not build Osprey, so the one action
+                // offered is converting the file. The original stays as InnerException.
+                throw new UserMessageException(string.Format(
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_reader_for_this_instrument_vendor_format_,
+                    path, CMD_MSCONVERT), ex);
             }
 
             return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount)

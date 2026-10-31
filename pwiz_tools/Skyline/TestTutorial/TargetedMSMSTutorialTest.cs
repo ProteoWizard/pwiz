@@ -481,7 +481,8 @@ namespace pwiz.SkylineTestTutorial
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
             var expected20TransitionCount = AsSmallMoleculeMasses  ? 87 : 88; // Expect this many with results (note no library match possible for "as masses" version)
-            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 87;
+            // Stray DRVYIHPF IDs no longer widen its extraction, and its precursor ion no longer coelutes in the narrower range
+            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 86;
 
             // TODO: figure out why these assertions fail when taking screenshots. During screenshots, the expected / actual values:
             //      expected20TransitionCount = 88. Actual = 87

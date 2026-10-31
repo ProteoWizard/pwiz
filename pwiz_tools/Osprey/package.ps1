@@ -59,6 +59,14 @@
     tool or cert is unavailable this script HARD-FAILS rather than shipping an
     unsigned artifact that looks signed.
 
+.PARAMETER IAgreeToVendorLicenses
+    Publish with the instrument vendor readers (-p:IAgreeToVendorLicenses=true), so the
+    package reads .raw, .d, .wiff and the other vendor formats as well as mzML. Their SDKs
+    are published beside Osprey.exe and their license terms (EULA.<Vendor>.txt) beside
+    LICENSE, as the ProteoWizard installer ships them. Linux packages get the
+    cross-platform readers only. Without it the package reads mzML only, which is what a
+    user is told when they give it a vendor file.
+
 .PARAMETER TeamCity
     Emit TeamCity service messages (progress + publishArtifacts) so a CI config
     can collect the artifacts.
@@ -84,6 +92,7 @@ param(
     [switch]$NoZip,
     [switch]$IncludePdb,
     [switch]$Sign,
+    [switch]$IAgreeToVendorLicenses,
     [switch]$TeamCity
 )
 
@@ -199,6 +208,9 @@ function New-OspreyStage {
         '-o', $stageDir,
         '-v', 'minimal', '--nologo'
     )
+    if ($IAgreeToVendorLicenses) {
+        $publishArgs += '-p:IAgreeToVendorLicenses=true'
+    }
     # Out-Host keeps publish output visible/logged without it leaking into this
     # function's return value (PowerShell returns the whole success stream).
     & dotnet @publishArgs | Out-Host
@@ -214,11 +226,33 @@ function New-OspreyStage {
         exit 3
     }
 
+    # The agreement reaches the vendor projects only as a property, and a publish that did not
+    # receive it still succeeds, with every reader in its no-vendor-support mode. The Thermo
+    # SDK is managed and cross-platform, so its absence from either RID means the vendor
+    # readers were not built in.
+    # The native SDKs follow a second property (NativeVendorsAvailable, agreement AND a Windows
+    # target), so a Windows package is also checked for one of them: Bruker's timsdata.dll.
+    if ($IAgreeToVendorLicenses) {
+        $vendorSdks = @('ThermoFisher.CommonCore.RawFileReader.dll')
+        if ($Rid -like 'win-*') {
+            $vendorSdks += 'timsdata.dll'
+        }
+        foreach ($sdk in $vendorSdks) {
+            if (-not (Test-Path (Join-Path $stageDir $sdk))) {
+                Write-Error "Published $Rid without the vendor SDKs ($sdk is missing) although -IAgreeToVendorLicenses was given"
+                exit 3
+            }
+        }
+    }
+
     if (-not $IncludePdb) {
         Get-ChildItem -Path $stageDir -Filter *.pdb -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
     }
 
     Add-OspreyDocs -StageDir $stageDir
+    if ($IAgreeToVendorLicenses) {
+        Add-VendorEulas -StageDir $stageDir
+    }
 
     # Sign the Windows exe inside the stage before zipping/Setup packaging.
     if ($Rid -like 'win-*') {
@@ -275,6 +309,21 @@ function Add-OspreyDocs {
     [System.IO.File]::WriteAllText($readmeStaged, $readme, (New-Object System.Text.UTF8Encoding $false))
 
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force
+}
+
+# --- Vendor EULAs ---------------------------------------------------------
+# A package published with the vendor SDKs carries their license terms beside LICENSE, as the
+# ProteoWizard installer does (scripts/installer/build.ps1). Every EULA goes into every package:
+# which SDKs a RID can use is the vendor projects' decision, and a superfluous license file is
+# harmless where a missing one is not.
+function Add-VendorEulas {
+    param([string]$StageDir)
+    $eulas = Get-ChildItem (Join-Path $repoRoot 'pwiz\data\vendor_readers') -Filter 'EULA.*.txt' -Recurse -File
+    if (-not $eulas) {
+        Write-Error "No vendor EULAs found under pwiz/data/vendor_readers"
+        exit 3
+    }
+    $eulas | ForEach-Object { Copy-Item $_.FullName (Join-Path $StageDir $_.Name) -Force }
 }
 
 # --- Zip (single versioned top-level folder) ----------------------------
