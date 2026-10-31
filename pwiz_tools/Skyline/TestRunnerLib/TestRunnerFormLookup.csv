@@ -223,6 +223,7 @@ RTGraphController,TestEditDialogs
 RInstaller,TestRInstaller
 RTChartPropertyDlg,TestEditDialogs
 RTDetails,IrtFunctionalTest
+RunningJobsDlg,TestLongWaitDlgBackground
 SaveSettingsDlg,TestShareSettings
 SchedulingGraphPropertyDlg,TestIrtTutorial
 ScreenCapturePermissionDlg,TestJsonToolServer

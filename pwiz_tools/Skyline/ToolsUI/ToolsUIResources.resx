@@ -252,6 +252,9 @@
   <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
     <value>Verifying server information.</value>
   </data>
+  <data name="JsonToolServer_ExportReport_Exporting_report___0__" xml:space="preserve">
+    <value>Exporting report '{0}'</value>
+  </data>
   <data name="LibrarySpec_Add_spectral_library" xml:space="preserve">
     <value>Add spectral library</value>
   </data>
