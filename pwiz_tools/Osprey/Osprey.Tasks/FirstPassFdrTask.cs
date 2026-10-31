@@ -535,6 +535,8 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                + PinFeatureMask.ValidityKeySuffix()
+                + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.

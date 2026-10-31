@@ -30,19 +30,20 @@ namespace pwiz.Osprey.Scoring
     /// The ordered set of Osprey scoring feature calculators, mirroring
     /// Skyline's <c>PeakFeatureCalculator.CALCULATORS</c>. The array index IS the
     /// parity-critical PIN feature index -- the position written into the
-    /// <c>double[21]</c> feature vector and the feature column order in
+    /// <c>double[FeatureCount]</c> feature vector and the feature column order in
     /// <c>.scores.parquet</c>. This is the single place that order lives as
     /// data.
     ///
-    /// All 21 PIN features are now extracted, so every slot is populated and
-    /// <see cref="Get"/> never returns null; this array is the canonical ordered
-    /// calculator set. (Scores the Rust engine computes but excludes from the 21 PIN
-    /// features are intentionally NOT here -- see the non-PIN-scores backlog.)
+    /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
+    /// never returns null. Slots 21-40 are C#-only: the runner-up, context, per-fragment-rank and spectrum-across-peak families,
+    /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
+    /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
+    /// are intentionally NOT here - see the non-PIN-scores backlog.)
     /// </summary>
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 21;
+        public const int FeatureCount = 41;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -88,11 +89,33 @@ namespace pwiz.Osprey.Scoring
             calculators[19] = new MedianPolishMinFragmentR2Calc();
             calculators[20] = new MedianPolishResidualCorrelationCalc();
 
+            // Runner-up family: the chosen peak against the other candidates in its window.
+            calculators[21] = new PeakCoelutionMarginCalc();
+            calculators[22] = new PeakRankMarginCalc();
+            calculators[23] = new PeakCandidateCountCalc();
+
+            // Context family: what is being matched, shared by a target and its decoy.
+            calculators[24] = new PeptideLengthCalc();
+            calculators[25] = new PrecursorChargeCalc();
+            calculators[26] = new PrecursorMzCalc();
+
+            // Per-fragment-rank family: the top library fragments matched at the apex, one feature
+            // per rank, so the classifier can weigh each rank separately.
+            for (int r = 1; r <= FragmentRankApexMatch.RANK_COUNT; r++)
+            {
+                calculators[26 + r] = new FragmentRankMassErrorCalc(r);
+                calculators[26 + FragmentRankApexMatch.RANK_COUNT + r] = new FragmentRankIntensityShareCalc(r);
+            }
+
+            // Spectrum-across-peak family: the library cosine at every scan of the peak.
+            calculators[39] = new PeakSpectrumCosineMeanCalc();
+            calculators[40] = new PeakSpectrumCosineSdCalc();
+
             return calculators;
         }
 
         /// <summary>
-        /// The calculator for the given PIN feature index (0..20). All 21 are
+        /// The calculator for the given PIN feature index (0 to FeatureCount - 1). All are
         /// populated, so this never returns null.
         /// </summary>
         public static IOspreyFeatureCalculator Get(int featureIndex)
@@ -101,7 +124,7 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Projects the 21 calculators into a single <see cref="OspreyFeatureInfo"/>
+        /// Projects the calculators into a single <see cref="OspreyFeatureInfo"/>
         /// vector in parity-critical PIN-index order, pairing each supplied machine
         /// <paramref name="featureNames"/> entry with that calculator's
         /// <see cref="IOspreyFeatureCalculator.DisplayName"/> label and

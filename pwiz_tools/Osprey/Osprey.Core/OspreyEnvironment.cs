@@ -95,10 +95,10 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
             @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
             @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
-            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
@@ -108,14 +108,14 @@ namespace pwiz.Osprey.Core
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
             @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
             @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
-            @"OSPREY_VERSION_OVERRIDE"
+            @"OSPREY_VERSION_OVERRIDE", @"OSPREY_XIC_FRAGMENTS"
         };
 
         /// <summary>
@@ -737,6 +737,103 @@ namespace pwiz.Osprey.Core
         public static readonly double SvmCSelectionTolerance =
             ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
 
+        /// <summary>
+        /// OSPREY_XIC_FRAGMENTS (experiment): how many of a
+        /// candidate's most intense library fragments the search extracts XICs for - the input of the
+        /// CWT peak detection and of the coelution, peak-shape and median-polish features. Null when
+        /// unset (the top 6, <c>TopFragmentExtractor.CAL_TOP_N_FRAGMENTS</c>). Calibration and the
+        /// 2-of-top-6 prefilter keep 6 either way. A value that is not a whole number from 2 to 20
+        /// throws, so an arm can never run under the default while named for another count.
+        /// </summary>
+        public static readonly int? XicFragments = ParseXicFragments(
+            Environment.GetEnvironmentVariable(@"OSPREY_XIC_FRAGMENTS"));
+
+        /// <summary>
+        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (read as 0 when the
+        /// FDR stage loads features, so the classifier cannot use them), as comma-separated feature
+        /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
+        /// under evaluation, is masked. Scoring writes every feature either way, so arms that differ
+        /// only in the mask share their per-file scores. An unknown name stops the search at startup.
+        /// </summary>
+        public static readonly string[] FeatureMask = ParseFeatureMask(
+            Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
+
+        /// <summary>
+        /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
+        /// only from its picks in the runs where its paired target's peptide qualified, as the
+        /// target's consensus is built only from its qualifying runs. Unset, the decoy's consensus
+        /// pools every pick. Any other value throws. (There is no <c>off</c>: with reconciliation
+        /// disabled the first pass writes no reconciliation data and per-file rescoring cannot run.)
+        /// </summary>
+        public static readonly string ReconciliationMode = ParseReconciliationMode(
+            Environment.GetEnvironmentVariable(@"OSPREY_RECONCILIATION"));
+
+        /// <summary>True under OSPREY_RECONCILIATION=symmetric-decoys.</summary>
+        public static bool ReconciliationSymmetricDecoys => ReconciliationMode == RECONCILIATION_SYMMETRIC_DECOYS;
+
+        private const string RECONCILIATION_SYMMETRIC_DECOYS = @"symmetric-decoys";
+
+        private static string ParseReconciliationMode(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            string mode = value.Trim().ToLowerInvariant();
+            if (mode == RECONCILIATION_SYMMETRIC_DECOYS)
+                return mode;
+            throw new InvalidOperationException(@"OSPREY_RECONCILIATION must be symmetric-decoys: " + value);
+        }
+
+        /// <summary>
+        /// OSPREY_DUMP_RUN_PEP (experiment): a folder. When set, the transfer second pass fits each
+        /// run's posterior error probability from that run's first-pass target-vs-paired-decoy
+        /// winners and writes, per run, every survivor's class (unchanged, moved, gap-fill), score,
+        /// run q and run PEP to <c>&lt;run&gt;.run_pep.tsv</c> there. Null when unset: nothing is fitted.
+        /// </summary>
+        public static readonly string RunPepDumpDir = ParseRunPepDumpDir(
+            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_RUN_PEP"));
+
+        /// <summary>
+        /// OSPREY_PEP_FORMULA=ratio (experiment): <c>PepEstimator</c> estimates PEP as
+        /// (D/T) fD(s) / fT(s) - with paired competition the expected false target winners at a score
+        /// equal the decoy winners there - instead of pi0 fD / (pi0 fD + (1 - pi0) fT), which treats the
+        /// density of ALL target winners (false and true) as the true-match density and so overstates PEP
+        /// by about 1 / (1 - pi0). Unset keeps the current formula; any other value throws.
+        /// </summary>
+        public static readonly bool PepRatioForm = ParsePepFormula(Environment.GetEnvironmentVariable(@"OSPREY_PEP_FORMULA"));
+
+        private static bool ParsePepFormula(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            if (string.Equals(value.Trim(), @"ratio", StringComparison.OrdinalIgnoreCase))
+                return true;
+            throw new InvalidOperationException(@"OSPREY_PEP_FORMULA must be ratio: " + value);
+        }
+
+        private static string[] ParseFeatureMask(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            if (string.Equals(value.Trim(), @"none", StringComparison.OrdinalIgnoreCase))
+                return Array.Empty<string>();
+            return value.Split(',').Select(name => name.Trim()).Where(name => name.Length > 0).ToArray();
+        }
+
+        private static string ParseRunPepDumpDir(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private static int? ParseXicFragments(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+            if (int.TryParse(value.Trim(), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 2 && n <= 20)
+                return n;
+            throw new InvalidOperationException(@"OSPREY_XIC_FRAGMENTS must be a whole number from 2 to 20: " + value);
+        }
+
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
         /// instead of by its best observation across all runs. ON by default; setting the variable
@@ -1178,6 +1275,30 @@ namespace pwiz.Osprey.Core
         public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
         {
             return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
+        /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
+        /// every FDR output after it. Empty when both are unset, so default outputs keep their key.
+        /// </summary>
+        public static string FdrExperimentValidityKeySuffix()
+        {
+            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm);
+        }
+
+        /// <summary>
+        /// <see cref="FdrExperimentValidityKeySuffix()"/> for explicitly supplied settings, in the
+        /// normalized form <see cref="ReconciliationMode"/> holds.
+        /// </summary>
+        public static string FdrExperimentValidityKeySuffix(string reconciliationMode, bool pepRatioForm)
+        {
+            string suffix = string.Empty;
+            if (reconciliationMode != null)
+                suffix += @";recon=" + reconciliationMode;
+            if (pepRatioForm)
+                suffix += @";pep=ratio";
+            return suffix;
         }
 
         /// <summary>
