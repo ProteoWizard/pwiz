@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
@@ -327,12 +328,26 @@ namespace pwiz.SkylineTestUtil
                 RunUI(screenshotControl,() => screenshotControl.Focus());
             }
 
-            Thread.Sleep(500);  // Allow activation message processing on the UI thread
+            var stopwatch = Stopwatch.StartNew();
+            Thread.Sleep(ScreenshotWaits.ActivateMillis);  // Allow activation message processing on the UI thread
+            LastActivateMillis = stopwatch.ElapsedMilliseconds;
 
+            stopwatch.Restart();
             RunUI(screenshotControl, () => AdjustControlsForConsistentScreenshots(screenshotControl));
 
-            Thread.Sleep(500);  // Allow the adjusted controls to repaint on the UI thread
+            Thread.Sleep(ScreenshotWaits.RepaintMillis);  // Allow the adjusted controls to repaint on the UI thread
+            LastRepaintMillis = stopwatch.ElapsedMilliseconds;
         }
+
+        /// <summary>
+        /// Milliseconds the last <see cref="ActivateScreenshotForm"/> spent waiting for activation.
+        /// </summary>
+        public long LastActivateMillis { get; private set; }
+
+        /// <summary>
+        /// Milliseconds the last <see cref="ActivateScreenshotForm"/> spent adjusting controls and waiting for them to repaint.
+        /// </summary>
+        public long LastRepaintMillis { get; private set; }
 
         /// <summary>
         /// Turns off the Windows "Animation effects" setting (client-area animation) until the returned
