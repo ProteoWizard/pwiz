@@ -97,7 +97,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads (vendor files where the vendor readers are installed). Variadic; also accepts positional paths. |
+| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read. Variadic; also accepts positional paths. |
 | `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
 | `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
 | `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
@@ -273,7 +273,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 | Option | Effect |
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
-| `--memstamp` | Prefix each line with managed + private memory in MB (pair with `--timestamp` for perf visualization). |
+| `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
@@ -282,7 +282,6 @@ None of these counts enters a validity key or changes an output byte; one lane i
 
 | Option | Effect |
 |--------|--------|
-| `-d`, `--diagnostics` | Write the cross-impl bisection dump bundle (`OSPREY_DUMP_*`). See [18-peptide-trace.md](18-peptide-trace.md). |
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
 | `-v`, `--version` | Show version. |
@@ -307,7 +306,7 @@ translated, and it is the only part of the log a script or test may read.
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
 Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,
-`-d`, an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
+an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
 `[TRAIN-EXPORT]`, `[BISECT]`, ...). The tag labels the line and stays ASCII; the text after
 it is prose. In a plain default run `[TASK]` is the only tag.
 
@@ -362,7 +361,7 @@ the user's culture, as Skyline's does:
   A run under any culture writes byte-identical files.
 - `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
   argument and environment variable names, internal-invariant exceptions, and diagnostics reached
-  only through `-d` or an `OSPREY_*` setting.
+  only through an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
   choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
@@ -461,7 +460,8 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
-| `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps (also via `-d`) | [18](18-peptide-trace.md) |
+| `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
+| `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 
 The full set is enumerated in the relevant algorithm docs; there is no single flat
 listing on the CLI by design (these are not user-facing knobs).

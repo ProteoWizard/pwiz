@@ -977,6 +977,14 @@ namespace pwiz.Skyline.Model.Lib
         public abstract IEnumerable<LibKey> Keys { get; }
 
         /// <summary>
+        /// Returns the keys of the library entries for a peptide sequence, at any charge.
+        /// </summary>
+        public virtual IEnumerable<LibKey> GetKeysWithSequence(Target target)
+        {
+            return Array.Empty<LibKey>();
+        }
+
+        /// <summary>
         /// Returns a list of <see cref="RetentionTimeSource"/> objects representing
         /// the data files that this Library can provide peptide retention time
         /// values for.
@@ -1456,6 +1464,11 @@ namespace pwiz.Skyline.Model.Lib
                     foreach (var entry in _libraryEntries)
                         yield return entry.Key;
             }
+        }
+
+        public override IEnumerable<LibKey> GetKeysWithSequence(Target target)
+        {
+            return IsLoaded ? LibraryEntriesWithSequence(target).Select(entry => entry.Key) : Array.Empty<LibKey>();
         }
 
         protected IEnumerable<TInfo> LibraryEntriesWithSequences(IEnumerable<Target> peptideSequences)

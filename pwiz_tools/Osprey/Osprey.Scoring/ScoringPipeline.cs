@@ -241,7 +241,7 @@ namespace pwiz.Osprey.Scoring
             object lockObj = new object();
 
             // Construct the per-window coelution scorer once. It captures the
-            // log sink + the scoring-diagnostics sink (null when -d is off; the
+            // log sink + the scoring-diagnostics sink (null when OSPREY_DIAGNOSTICS is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
             var coelutionScorer = new CoelutionScorer(_diagnostics);
 
