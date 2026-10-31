@@ -46,6 +46,9 @@ namespace pwiz.Osprey.Scoring
         /// <summary>The same after a 3-scan running minimum of every XIC, highest first.</summary>
         public double[] SortedMinFilteredCorrelations { get; private set; }
 
+        /// <summary>Index into the XICs of the reference fragment; 0 with under two XICs.</summary>
+        public int ReferenceIndex { get; private set; }
+
         /// <summary>log10(1 + summed apex intensity of every fragment but the most intense one).</summary>
         public double ApexLogIntensityExcludingTop { get; private set; }
 
@@ -101,6 +104,7 @@ namespace pwiz.Osprey.Scoring
                 return result;
 
             int reference = ChooseReference(xics, peak);
+            result.ReferenceIndex = reference;
             result.SortedCorrelations = SortedCorrelationsWith(xics, reference, peak, x => x);
             result.SortedMinFilteredCorrelations = SortedCorrelationsWith(xics, reference, peak, RunningMinimum);
             return result;

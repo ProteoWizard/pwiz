@@ -298,4 +298,19 @@
   <data name="XcorrCalc_DisplayName_Cross_correlation__xcorr_" xml:space="preserve">
     <value>Cross-correlation (xcorr)</value>
   </data>
+  <data name="PeakWidthCalc_DisplayName_Peak_width" xml:space="preserve">
+    <value>Peak width</value>
+  </data>
+  <data name="ElutionShapeBinCalc_DisplayName_Elution_shape__bin__0__of_5_" xml:space="preserve">
+    <value>Elution shape (bin {0} of 5)</value>
+  </data>
+  <data name="LocalCorrelationTop3Calc_DisplayName_Apex_local_reference_correlation__top_3_mean_" xml:space="preserve">
+    <value>Apex-local reference correlation (top 3 mean)</value>
+  </data>
+  <data name="LibraryRelativeIntensityCalc_DisplayName_Library_intensity_of_fragment__0__relative_to_fragment_1" xml:space="preserve">
+    <value>Library intensity of fragment {0} relative to fragment 1</value>
+  </data>
+  <data name="WindowShareCalc_DisplayName_Fragment__0__share_across_peak" xml:space="preserve">
+    <value>Fragment {0} share across peak</value>
+  </data>
 </root>

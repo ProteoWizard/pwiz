@@ -35,8 +35,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-52 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak, median-polish top-k and reference-correlation families,
+    /// never returns null. Slots 21-70 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation and peak-profile families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, but always computed and written. (Scores the Rust engine computes but excludes from its PIN features
     /// are intentionally NOT here - see the non-PIN-scores backlog.)
@@ -44,7 +44,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 53;
+        public const int FeatureCount = 71;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
 
@@ -129,6 +129,17 @@ namespace pwiz.Osprey.Scoring
             calculators[50] = new ReferenceGoodCountCalc();
             calculators[51] = new ReferenceMinFilteredTop3Calc();
             calculators[52] = new ApexIntensityExcludingTopCalc();
+
+            // Peak-profile family: width, 5-bin elution shape, apex-local correlation, library relative
+            // intensities and per-rank shares across the peak (after DIA-NN pShape/pLocCorr/pRef/pSig).
+            calculators[53] = new PeakWidthCalc();
+            for (int b = 1; b <= PeakProfile.SHAPE_BINS; b++)
+                calculators[53 + b] = new ElutionShapeBinCalc(b);
+            calculators[59] = new LocalCorrelationTop3Calc();
+            for (int r = 2; r <= PeakProfile.RANK_COUNT; r++)
+                calculators[58 + r] = new LibraryRelativeIntensityCalc(r);
+            for (int r = 1; r <= PeakProfile.RANK_COUNT; r++)
+                calculators[64 + r] = new WindowShareCalc(r);
 
             return calculators;
         }

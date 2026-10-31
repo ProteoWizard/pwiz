@@ -679,5 +679,49 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("XcorrCalc_DisplayName_Cross_correlation__xcorr_", resourceCulture);
             }
         }
+        /// <summary>
+        ///   Looks up a localized string similar to Peak width.
+        /// </summary>
+        public static string PeakWidthCalc_DisplayName_Peak_width {
+            get {
+                return ResourceManager.GetString("PeakWidthCalc_DisplayName_Peak_width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Elution shape (bin {0} of 5).
+        /// </summary>
+        public static string ElutionShapeBinCalc_DisplayName_Elution_shape__bin__0__of_5_ {
+            get {
+                return ResourceManager.GetString("ElutionShapeBinCalc_DisplayName_Elution_shape__bin__0__of_5_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex-local reference correlation (top 3 mean).
+        /// </summary>
+        public static string LocalCorrelationTop3Calc_DisplayName_Apex_local_reference_correlation__top_3_mean_ {
+            get {
+                return ResourceManager.GetString("LocalCorrelationTop3Calc_DisplayName_Apex_local_reference_correlation__top_3_mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library intensity of fragment {0} relative to fragment 1.
+        /// </summary>
+        public static string LibraryRelativeIntensityCalc_DisplayName_Library_intensity_of_fragment__0__relative_to_fragment_1 {
+            get {
+                return ResourceManager.GetString("LibraryRelativeIntensityCalc_DisplayName_Library_intensity_of_fragment__0__relative_to_fragment_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment {0} share across peak.
+        /// </summary>
+        public static string WindowShareCalc_DisplayName_Fragment__0__share_across_peak {
+            get {
+                return ResourceManager.GetString("WindowShareCalc_DisplayName_Fragment__0__share_across_peak", resourceCulture);
+            }
+        }
     }
 }

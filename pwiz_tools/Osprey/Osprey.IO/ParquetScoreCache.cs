@@ -124,9 +124,28 @@ namespace pwiz.Osprey.IO
             @"ref_n_corr_good",
             @"ref_minfilt_corr_top3_mean",
             @"apex_log_intensity_excl_top",
+            // Peak profile: width, shape, local correlation, library context, shares (18)
+            @"peak_width",
+            @"shape_bin1",
+            @"shape_bin2",
+            @"shape_bin3",
+            @"shape_bin4",
+            @"shape_bin5",
+            @"local_corr_top3_mean",
+            @"lib_rel_rank2",
+            @"lib_rel_rank3",
+            @"lib_rel_rank4",
+            @"lib_rel_rank5",
+            @"lib_rel_rank6",
+            @"window_share_rank1",
+            @"window_share_rank2",
+            @"window_share_rank3",
+            @"window_share_rank4",
+            @"window_share_rank5",
+            @"window_share_rank6",
         };
 
-        public const int NUM_PIN_FEATURES = 53;
+        public const int NUM_PIN_FEATURES = 71;
 
         /// <summary>
         /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after
@@ -1131,8 +1150,9 @@ namespace pwiz.Osprey.IO
             return values;
         }
 
-        // Read PIN feature column f for the FDR stages, with the OSPREY_FDR_FEATURE_LOG transform applied
-        // when it names the feature, or null if the column is absent like any other column.
+        // Read PIN feature column f for the FDR stages, with the OSPREY_FDR_FEATURE_LOG, OSPREY_FDR_FEATURE_CLIP
+        // and OSPREY_FDR_SHARPNESS transforms applied when they name the feature, or null if the column is
+        // absent like any other column.
         private static double[] ReadFeatureColumn(ParquetRowGroupReader groupReader,
             IReadOnlyDictionary<string, DataField> fieldsByName, int f)
         {
@@ -1142,7 +1162,56 @@ namespace pwiz.Osprey.IO
                 for (int i = 0; i < values.Length; i++)
                     values[i] = LogCompress(values[i]);
             }
+            if (values != null && !double.IsNaN(FDR_CLIP_FEATURES[f]))
+            {
+                for (int i = 0; i < values.Length; i++)
+                    values[i] = Math.Min(values[i], FDR_CLIP_FEATURES[f]);
+            }
+            if (values != null && f == PEAK_SHARPNESS_FEATURE && OspreyEnvironment.FdrSharpness != null)
+                ReplaceSharpness(groupReader, fieldsByName, values);
             return values;
+        }
+
+        private const int PEAK_APEX_FEATURE = 3;
+        private const int PEAK_SHARPNESS_FEATURE = 5;
+
+        // OSPREY_FDR_SHARPNESS: width = end_rt - start_rt; scalefree = edge slope / apex, recovered from the stored
+        // log10(x + 1) of both, so a sharp weak peak and a sharp strong peak read the same.
+        private static void ReplaceSharpness(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, double[] values)
+        {
+            if (OspreyEnvironment.FdrSharpness == @"width")
+            {
+                var start = ReadColumnByName<double>(groupReader, fieldsByName, @"start_rt");
+                var end = ReadColumnByName<double>(groupReader, fieldsByName, @"end_rt");
+                for (int i = 0; i < values.Length; i++)
+                    values[i] = end[i] - start[i];
+                return;
+            }
+            var apex = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[PEAK_APEX_FEATURE]);
+            for (int i = 0; i < values.Length; i++)
+            {
+                double apexLinear = Math.Pow(10, apex[i]) - 1;
+                values[i] = apexLinear > 0 ? (Math.Pow(10, values[i]) - 1) / apexLinear : 0;
+            }
+        }
+
+        private static readonly double[] FDR_CLIP_FEATURES = CreateFdrClip(OspreyEnvironment.FdrFeatureClip);
+
+        private static double[] CreateFdrClip(string[] clips)
+        {
+            var limits = Enumerable.Repeat(double.NaN, NUM_PIN_FEATURES).ToArray();
+            if (clips == null)
+                return limits;
+            foreach (string clip in clips)
+            {
+                var parts = clip.Split(':');
+                int index = Array.IndexOf(PIN_FEATURE_NAMES, parts[0]);
+                if (parts.Length != 2 || index < 0)
+                    throw new InvalidOperationException(string.Format(@"OSPREY_FDR_FEATURE_CLIP: bad entry {0}", clip));
+                limits[index] = double.Parse(parts[1], CultureInfo.InvariantCulture);
+            }
+            return limits;
         }
 
         // sign(v) * ln(1 + 1000|v|): monotone, so feature order is kept, but a 20-SD tail becomes a few SD.

@@ -521,6 +521,42 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Peak-profile family: width, a symmetric 5-bin shape that sums to 1, perfect apex-local
+        /// correlation for fragments that share one profile, library intensities relative to the
+        /// top fragment, and per-rank shares across the peak that follow the XIC scales.
+        /// </summary>
+        [TestMethod]
+        public void TestPeakProfile()
+        {
+            var rts = new[] { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 };
+            var profile = new[] { 1.0, 5.0, 20.0, 40.0, 60.0, 60.0, 40.0, 20.0, 5.0, 1.0 };
+            var scales = new[] { 2.0, 8.0, 4.0, 6.0 };   // XIC order differs from library rank order
+            var library = new[] { 25f, 100f, 50f, 75f };  // so rank 1 is fragment 1, rank 2 fragment 3, ...
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+            var xics = scales.Select((s, i) => new XicData(i, rts, profile.Select(v => v * s).ToArray())).ToList();
+            var bounds = new XICPeakBounds { StartIndex = 0, EndIndex = 9, ApexIndex = 4, StartRt = 1.0, EndRt = 1.9 };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate);
+
+            var context = new OspreyScoringContext(null);
+            var peak = PeakProfile.GetOrCompute(context, peakData);
+            Assert.AreEqual(0.9, peak.Width, TOLERANCE);
+            Assert.AreEqual(1.0, peak.Shape.Sum(), TOLERANCE);
+            Assert.AreEqual(peak.Shape[0], peak.Shape[4], TOLERANCE);
+            Assert.AreEqual(peak.Shape[1], peak.Shape[3], TOLERANCE);
+            Assert.IsTrue(peak.Shape[2] > peak.Shape[0]);
+            Assert.AreEqual(1.0, peak.LocalCorrelationTop3Mean, TOLERANCE);
+            CollectionAssert.AreEqual(new[] { 1.0, 0.75, 0.5, 0.25, 0.0, 0.0 }, peak.LibraryRelative);
+            // Shares follow the XIC scales of fragments 1, 3, 2, 0: 8, 6, 4, 2 of 20.
+            var expectedShares = new[] { 0.4, 0.3, 0.2, 0.1, 0.0, 0.0 };
+            for (int r = 0; r < expectedShares.Length; r++)
+                Assert.AreEqual(expectedShares[r], peak.WindowShares[r], TOLERANCE, string.Format("Rank {0}", r + 1));
+            Assert.AreSame(peak, PeakProfile.GetOrCompute(context, peakData), "Computed once per candidate");
+        }
+
+        /// <summary>
         /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
         /// each new feature adds to both, so a calculator whose name differs from its column
         /// would write one feature under another's name. The default FDR mask resolves names
