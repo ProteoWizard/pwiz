@@ -104,7 +104,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
-            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_BANDWIDTH", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
@@ -786,6 +786,14 @@ namespace pwiz.Osprey.Core
         /// runners that cannot pass Osprey arguments. It enters the search identity, so every task keys on it.
         /// </summary>
         public static readonly bool NoPrefilter = ParseIntOrNull(@"OSPREY_NO_PREFILTER") == 1;
+
+        /// <summary>
+        /// OSPREY_LOESS_BANDWIDTH (experiment): the RT calibration LOESS bandwidth (fraction of points per local fit)
+        /// in place of 0.3, to let the curve follow a library whose RTs bend at the gradient end, as DIA-NN 1.7.12's
+        /// 20-segment spline does. It enters the search identity, so every task keys on it. Null when unset.
+        /// </summary>
+        public static readonly double? LoessBandwidth = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_LOESS_BANDWIDTH"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double loessBandwidth) ? loessBandwidth : null;
 
         /// <summary>
         /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the configured

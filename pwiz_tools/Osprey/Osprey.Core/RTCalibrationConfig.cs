@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Core
         public bool Enabled { get; set; } = true;
 
         /// <summary>LOESS bandwidth (0.0-1.0, fraction of data to use for local fits).</summary>
-        public double LoessBandwidth { get; set; } = 0.3;
+        public double LoessBandwidth { get; set; } = OspreyEnvironment.LoessBandwidth ?? 0.3;
 
         /// <summary>Minimum detections required for calibration.</summary>
         public int MinCalibrationPoints { get; set; } = 200;
