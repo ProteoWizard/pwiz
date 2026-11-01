@@ -50,6 +50,15 @@ public sealed class SerializerMSn
     /// <summary>Optional progress listener registry.</summary>
     public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
+    /// <summary>When true, a spectrum that fails to load is logged to <see cref="SkipLog"/> and
+    /// skipped; when false, the failure stops the write as an
+    /// <see cref="EnumerationException"/>. See <see cref="Mzml.MzmlWriter.ContinueOnError"/>.</summary>
+    public bool ContinueOnError { get; set; }
+
+    /// <summary>Sink for skipped-spectrum diagnostics under <see cref="ContinueOnError"/>.
+    /// Defaults to <see cref="Console.Error"/>.</summary>
+    public TextWriter SkipLog { get; set; } = Console.Error;
+
     /// <summary>Creates a serializer bound to a specific file type.</summary>
     public SerializerMSn(MSnType fileType)
     {
@@ -92,13 +101,15 @@ public sealed class SerializerMSn
         int count = msd.Run.SpectrumList.Count;
         for (int i = 0; i < count; i++)
         {
-            var spec = msd.Run.SpectrumList.GetSpectrum(i, getBinaryData: true);
+            // Before the fetch, so a skipped or filtered-out spectrum still reports progress
+            IterationListenerRegistry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
+            var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(msd.Run.SpectrumList, i, ContinueOnError, SkipLog);
+            if (spec is null) continue;
             int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
             if (ms1 && msLevel != 1) continue;
             if (!ms1 && (msLevel != 2 || spec.Precursors.Count == 0 || spec.Precursors[0].SelectedIons.Count == 0))
                 continue;
             WriteTextSpectrum(spec, w, ms1, msd.Run.SpectrumList);
-            IterationListenerRegistry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }
 
@@ -225,13 +236,15 @@ public sealed class SerializerMSn
         int count = msd.Run.SpectrumList.Count;
         for (int i = 0; i < count; i++)
         {
-            var spec = msd.Run.SpectrumList.GetSpectrum(i, getBinaryData: true);
+            // Before the fetch, so a skipped or filtered-out spectrum still reports progress
+            IterationListenerRegistry?.BroadcastOrCancel(new IterationUpdate(i, count, "writing spectra"));
+            var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(msd.Run.SpectrumList, i, ContinueOnError, SkipLog);
+            if (spec is null) continue;
             int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
             if (ms1 && msLevel != 1) continue;
             if (!ms1 && (msLevel != 2 || spec.Precursors.Count == 0 || spec.Precursors[0].SelectedIons.Count == 0))
                 continue;
             WriteBinarySpectrum(spec, w, ms1, compress);
-            IterationListenerRegistry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }
 

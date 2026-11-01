@@ -213,6 +213,7 @@ namespace MSConvertGUI
 
         private void ProgressForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Program.StderrCaptured -= ShowStderr;
             lock (_cancelMutex)
             {
                 MainLogic.ClearQueue();
