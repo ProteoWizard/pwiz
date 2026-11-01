@@ -289,6 +289,12 @@
   <data name="ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_" xml:space="preserve">
     <value>Finished running configuration.</value>
   </data>
+  <data name="ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found__Stopping_configuration__Restart_AutoQC_" xml:space="preserve">
+    <value>Skyline could not be found. It may have been upgraded or uninstalled. Stopping configuration. Restart AutoQC, and then start the configuration again.</value>
+  </data>
+  <data name="ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found_in__0___Stopping_configuration__Edit_the_configuration_" xml:space="preserve">
+    <value>Skyline could not be found in {0}. It may have been moved or uninstalled. Stopping configuration. Edit the configuration to select a folder with an installed Skyline.</value>
+  </data>
   <data name="ConfigRunner_ProcessExistingFiles_Importing_existing_files___" xml:space="preserve">
     <value>Importing existing files...</value>
   </data>
