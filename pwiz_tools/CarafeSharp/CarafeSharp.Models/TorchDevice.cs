@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Runtime.InteropServices;
 using TorchSharp;
 using static TorchSharp.torch;
 
@@ -32,6 +33,21 @@ namespace pwiz.CarafeSharp.Models
     {
         public const string CPU = @"cpu";
         public const string GPU = @"gpu";
+
+        /// <summary>The variable CarafeSharp sets libtorch's CUDA allocator with.</summary>
+        internal const string CUDA_ALLOC_CONF_VARIABLE = @"PYTORCH_CUDA_ALLOC_CONF";
+
+        /// <summary>
+        /// The variables libtorch 2.10 reads its allocator settings from, in its order: the first one set is used, so a
+        /// setting in any of them is the user's.
+        /// </summary>
+        internal static readonly string[] ALLOC_CONF_VARIABLES = { CUDA_ALLOC_CONF_VARIABLE, @"PYTORCH_HIP_ALLOC_CONF", @"PYTORCH_ALLOC_CONF" };
+
+        /// <summary>
+        /// The allocator settings CarafeSharp uses on Windows when the user has set none: each block rounded to one of four
+        /// sizes per power of two, and the cache held to three quarters of the card.
+        /// </summary>
+        internal const string CUDA_ALLOC_CONF = @"roundup_power2_divisions:4,per_process_memory_fraction:0.75";
 
         private static readonly Device CPU_DEVICE = torch.CPU;
 
@@ -49,12 +65,46 @@ namespace pwiz.CarafeSharp.Models
             {
                 throw new ArgumentException(string.Format(@"Unknown device '{0}' (expected cpu or gpu).", requested), nameof(requested));
             }
+            ConfigureCudaAllocator();
             // torch.CUDA initializes the CUDA backend, which throws on a CPU-only build, so it
             // is only touched once CUDA is known to be there.
             if (IsCudaAvailable())
                 return torch.CUDA;
             fallbackMessage = @"No CUDA device is available to this build; running on the CPU.";
             return CPU_DEVICE;
+        }
+
+        /// <summary>
+        /// On Windows, gives libtorch <see cref="CUDA_ALLOC_CONF"/> before CUDA starts, unless the user set allocator settings.
+        /// </summary>
+        /// <remarks>
+        /// libtorch keeps the GPU memory of freed tensors to reuse it. The MS2 model's activations change size with peptide
+        /// length, so freed blocks are split for requests they no longer fit and the cache grows while the process predicts:
+        /// 400-470 MB a minute on a ZT Scan library, with every tensor disposed. Where a full card makes allocation fail,
+        /// libtorch empties its cache and goes on (Linux); on Windows the driver backs the allocation with system memory
+        /// instead, and prediction slowed 5-15 fold once a 4 GB card was full. Rounding the blocks lets freed ones be reused,
+        /// and the cap makes libtorch empty its cache at three quarters of the card, as a full card does on Linux.
+        /// libtorch reads the C runtime's environment (<see cref="CrtEnvironment"/>), which a setting made through .NET
+        /// after the process started does not reach: such a setting is passed on to it. The default is kept out of the
+        /// process's own environment, which child processes inherit.
+        /// </remarks>
+        internal static void ConfigureCudaAllocator()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return;
+            foreach (string variable in ALLOC_CONF_VARIABLES)
+            {
+                if (!string.IsNullOrEmpty(CrtEnvironment.Get(variable)))
+                    return;
+                string setThroughDotNet = Environment.GetEnvironmentVariable(variable);
+                if (!string.IsNullOrEmpty(setThroughDotNet))
+                {
+                    CrtEnvironment.Set(variable, setThroughDotNet);
+                    return;
+                }
+            }
+            if (CrtEnvironment.Set(CUDA_ALLOC_CONF_VARIABLE, CUDA_ALLOC_CONF))
+                Environment.SetEnvironmentVariable(CUDA_ALLOC_CONF_VARIABLE, null);
         }
 
         private static bool IsCudaAvailable()
