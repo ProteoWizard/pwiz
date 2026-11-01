@@ -585,6 +585,19 @@ namespace pwiz.Osprey.FDR
             // no-op (null) on every default run, so this projection first pass stays byte-identical.
             captureModel?.Invoke(trainResults);
 
+            Dictionary<int, int> heldOutFoldByRow = null;
+            if (trainResults.TrainEntryFolds != null)
+            {
+                heldOutFoldByRow = new Dictionary<int, int>(trainSubsetGlobalIdx.Length);
+                for (int k = 0; k < trainSubsetGlobalIdx.Length; k++)
+                {
+                    if (trainResults.TrainEntryFolds[k] >= 0)
+                        heldOutFoldByRow[trainSubsetGlobalIdx[k]] = trainResults.TrainEntryFolds[k];
+                }
+                log.LogInfo(LogTag.COUNT, @"{0} out-of-fold tree scoring for {1} training rows",
+                    passLabel, heldOutFoldByRow.Count);
+            }
+
             // Release the subset-only working sets before the score pass so only the
             // flat per-observation arrays + the projection remain resident across the
             // peak (bestIdx can be O(N/2) on a 1:1 target/decoy population).
@@ -607,7 +620,8 @@ namespace pwiz.Osprey.FDR
             PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
                 loadFileFeatures, loadFileApexRts, sink, captureContributions,
-                applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
+                applyExperimentAgg: passLabel == FIRST_PASS_LABEL,
+                heldOutFoldByRow: heldOutFoldByRow);
             return false;
         }
 

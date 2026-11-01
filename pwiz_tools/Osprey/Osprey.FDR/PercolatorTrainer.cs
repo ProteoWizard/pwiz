@@ -287,7 +287,10 @@ namespace pwiz.Osprey.FDR
                         ? new List<GradientBoostedTrees>(foldGbtModels)
                         : null,
                     Standardizer = standardizer,
-                    IterationsPerFold = trainIterations
+                    IterationsPerFold = trainIterations,
+                    TrainEntryFolds = foldGbtModels != null && OspreyEnvironment.GbtOutOfFold
+                        ? BuildEntryFolds(n, trainSubset, foldAssignments)
+                        : null
                 };
             }
 
@@ -492,6 +495,17 @@ namespace pwiz.Osprey.FDR
             }
         }
 
+        /// <summary>The fold each of the <paramref name="n"/> input entries was held out of, or -1
+        /// for an entry outside the training subset.</summary>
+        private static int[] BuildEntryFolds(int n, int[] trainSubset, int[] foldAssignments)
+        {
+            var folds = new int[n];
+            for (int i = 0; i < n; i++)
+                folds[i] = -1;
+            for (int i = 0; i < trainSubset.Length; i++)
+                folds[trainSubset[i]] = foldAssignments[i];
+            return folds;
+        }
 
         /// <summary>
         /// Cross-validated per-fold model training: precompute each fold's training

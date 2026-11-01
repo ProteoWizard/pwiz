@@ -101,7 +101,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
-            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
+            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_OOF", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
             @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
@@ -736,6 +736,13 @@ namespace pwiz.Osprey.Core
         /// <summary>The first-pass SVM C-selection tolerance in effect.</summary>
         public static readonly double SvmCSelectionTolerance =
             ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
+
+        /// <summary>
+        /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
+        /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
+        /// of every fold model (two of which trained on it). Not keyed: run it into its own output directory.
+        /// </summary>
+        public static readonly bool GbtOutOfFold = ParseIntOrNull(@"OSPREY_GBT_OOF") == 1;
 
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --

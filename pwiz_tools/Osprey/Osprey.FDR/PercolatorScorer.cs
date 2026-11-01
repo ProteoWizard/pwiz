@@ -104,7 +104,8 @@ namespace pwiz.Osprey.FDR
             Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
-            bool applyExperimentAgg = true)
+            bool applyExperimentAgg = true,
+            Dictionary<int, int> heldOutFoldByRow = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -188,7 +189,8 @@ namespace pwiz.Osprey.FDR
                         // scoring dominates the run.
                         ScoreRowsGbt(projRows.Count,
                             r => ResolveFeatureRow(rows, projRows[r].ParquetIndex, projRows[r].CoelutionSum, nFeatures),
-                            gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads);
+                            gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads,
+                            heldOutFoldByRow);
                         // The per-feature report IS a cross-row accumulation, so it stays serial and
                         // in row order, after the parallel pass.
                         if (share != null)
@@ -2002,7 +2004,8 @@ namespace pwiz.Osprey.FDR
             int nFeatures,
             double[] scores,
             int baseIndex,
-            int nThreads)
+            int nThreads,
+            IReadOnlyDictionary<int, int> heldOutFoldByRow = null)
         {
             if (count == 0)
                 return;
@@ -2017,7 +2020,12 @@ namespace pwiz.Osprey.FDR
                 {
                     Array.Copy(rawRowAt(r), 0, featureBuf, 0, nFeatures);
                     standardizer.TransformSlice(featureBuf);
-                    scores[baseIndex + r] = AverageGbtScore(gbtModels, featureBuf);
+                    // A training row is scored by the one fold model that held it out
+                    // (OSPREY_GBT_OOF); the others trained on it.
+                    int fold;
+                    scores[baseIndex + r] = heldOutFoldByRow != null && heldOutFoldByRow.TryGetValue(baseIndex + r, out fold)
+                        ? gbtModels[fold].ScoreSingle(featureBuf)
+                        : AverageGbtScore(gbtModels, featureBuf);
                 }
             });
         }
