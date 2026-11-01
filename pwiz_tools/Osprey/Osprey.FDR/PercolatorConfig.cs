@@ -127,8 +127,9 @@ namespace pwiz.Osprey.FDR
         public GbtParams GbtParams { get; set; }
 
         /// <summary>
-        /// Worker threads for the gradient-boosted-trees full-population score pass
-        /// (from <c>--threads</c>). Used ONLY there: the linear score pass stays serial
+        /// Worker threads for the gradient-boosted trees (from <c>--threads</c>): the full-population
+        /// score pass, and tree training, where each concurrently training fold gets
+        /// <c>NThreads / NFolds</c> of them. The linear score pass stays serial
         /// because its feature-contribution accumulator is a running float sum whose
         /// order is byte-parity-locked, whereas a tree score is a pure per-row function
         /// that accumulates nothing. Defaults to the machine's processor count.

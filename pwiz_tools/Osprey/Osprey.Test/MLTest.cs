@@ -517,6 +517,8 @@ namespace pwiz.Osprey.Test
             // path is what that promise protects. Asserting it only under squared error
             // would leave the logistic path unverified against the parallel branch.
             AssertLogisticGoldenUnchanged(4);
+            AssertLogisticGoldenUnchangedAtScale(1);
+            AssertLogisticGoldenUnchangedAtScale(4);
 
             AssertRegressionFitsContinuousTarget();
             AssertRegressionThreadInvariant();
@@ -656,6 +658,68 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < x.Length; i++)
                 x[i] = new[] { (i % 7) * 0.5, (i % 3) * 1.3, i * 0.1, ((i * 13) % 11) * 0.4 };
             return x;
+        }
+
+        /// <summary>
+        /// The golden above is far too small to reach any of the threaded or chunked
+        /// training paths, which only engage on tens of thousands of rows. This one is big
+        /// enough to take every one of them (binning, gradients, the per-tree gather,
+        /// chunked and subtracted histograms, partitioning and margin updates). Its scores
+        /// were captured from the single-threaded implementation that predates them, which
+        /// summed every histogram row by row; chunking and subtraction change only the last
+        /// bits of a histogram, so this pins that they did not move a split here, and that
+        /// the result does not depend on the thread count. Exact equality, for the reason
+        /// given on <see cref="AssertLogisticGoldenUnchanged"/>.
+        /// </summary>
+        private static void AssertLogisticGoldenUnchangedAtScale(int threads)
+        {
+            var isDecoy = new bool[SCALE_ROWS];
+            double[][] x = ScaleFeatures(isDecoy);
+            var parameters = new GbtParams { NTrees = 8, MaxDepth = 6, Seed = 42, MaxDegreeOfParallelism = threads };
+            var model = GradientBoostedTrees.Train(x, isDecoy, parameters);
+
+            var expected = new[]
+            {
+                -0.6454043439669905,
+                -1.269109625741499,
+                -0.9601137810120767,
+                -0.16330779863319206,
+                0.4031808297692782,
+                -1.1287905194111332,
+                -0.03899105982350992,
+                0.28802524333844753
+            };
+            for (int k = 0; k < expected.Length; k++)
+            {
+                Assert.AreEqual(expected[k], model.ScoreSingle(x[k * (SCALE_ROWS / expected.Length)]), string.Format(
+                    @"logistic score for row {0} at {1} thread(s) moved from the pre-parallel implementation",
+                    k * (SCALE_ROWS / expected.Length), threads));
+            }
+        }
+
+        private const int SCALE_ROWS = 40000;
+
+        // A noisy non-linear boundary over six uniform features, from the bit-exact PRNG so
+        // the fixture is identical on every framework.
+        private static double[][] ScaleFeatures(bool[] isDecoy)
+        {
+            var rng = new XorShift64(12345);
+            var x = new double[isDecoy.Length][];
+            for (int i = 0; i < x.Length; i++)
+            {
+                var row = new double[6];
+                for (int j = 0; j < row.Length; j++)
+                    row[j] = 4 * UnitDouble(rng) - 2;
+                x[i] = row;
+                double noise = UnitDouble(rng) - 0.5;
+                isDecoy[i] = row[0] * row[1] + Math.Sin(row[2]) + 0.5 * row[3] + noise < 0.3;
+            }
+            return x;
+        }
+
+        private static double UnitDouble(XorShift64 rng)
+        {
+            return (rng.Next() >> 11) * (1.0 / (1UL << 53));
         }
 
         /// <summary>

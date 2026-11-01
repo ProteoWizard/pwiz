@@ -315,7 +315,7 @@ namespace pwiz.Osprey.FDR
                 // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum,
                 // the pre-#4703 rule).
                 CSelectionTolerance = OspreyEnvironment.SvmCSelectionTolerance,
-                // Honors --threads; drives only the tree score pass (see NThreads).
+                // Honors --threads; drives tree training and the tree score pass (see NThreads).
                 NThreads = config.NThreads,
                 // The training-time feature report's histograms, for --model-diagnostics
                 // (#4377). The score passes collect theirs on every run: each run's share is
