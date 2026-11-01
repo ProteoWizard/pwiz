@@ -1212,17 +1212,59 @@ namespace pwiz.Skyline.Model.DocSettings
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
             var targets = GetTargets(nodePep).ToList();
-            
+
             if (filePath != null)
             {
+                // IDs from this file, or aligned to it, share its time scale, where a stray ID can be judged.
+                // Unaligned IDs from other files do not, so they are not filtered.
                 var times = GetRetentionTimes(filePath, targets);
+                if (times.Length == 0)
+                    times = GetAlignedRetentionTimes(chromatogramSet, filePath, targets);
                 if (times.Length > 0)
-                    return times;
-                times = GetAlignedRetentionTimes(chromatogramSet, filePath, targets);
-                if (times.Length > 0)
-                    return times;
+                    return TransitionSettings.FullScan.RemoveOutlierIdTimes(times);
             }
             return GetUnalignedRetentionTimes(targets);
+        }
+
+        /// <summary>
+        /// Returns the MS/MS ID times in a file for each library precursor of a peptide, at every charge
+        /// and label type, all of which are pooled as retention time evidence for each of its precursors.
+        /// </summary>
+        public IEnumerable<PrecursorIdTimes> GetPrecursorIdTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
+        {
+            var libraries = PeptideSettings.Libraries;
+            foreach (var precursor in GetLibraryPrecursors(nodePep.SourceUnmodifiedTarget, nodePep.SourceExplicitMods,
+                         Adduct.EMPTY, nodePep.IsProteomic))
+            {
+                if (libraries.TryGetRetentionTimes(precursor.Key, filePath, out var times) && times.Length > 0)
+                    yield return new PrecursorIdTimes(precursor, times);
+            }
+        }
+
+        /// <summary>
+        /// Returns the library precursors of a peptide, at every charge and label type. Those at the
+        /// charge of a given precursor adduct come first, whether or not any library holds them.
+        /// </summary>
+        public IList<LibraryPrecursor> GetLibraryPrecursors(Target sequence, ExplicitMods mods,
+            Adduct precursorAdduct, bool isProteomic)
+        {
+            var precursors = new List<LibraryPrecursor>();
+            if (!precursorAdduct.IsEmpty)
+            {
+                precursors.AddRange(GetTypedSequences(sequence, mods, precursorAdduct).Select(typedSequence =>
+                    new LibraryPrecursor(typedSequence.LabelType, typedSequence.ModifiedSequence.GetLibKey(typedSequence.Adduct))));
+            }
+            var libraries = PeptideSettings.Libraries.Libraries.Where(lib => true == lib?.IsLoaded).ToList();
+            foreach (var typedSequence in GetTypedSequences(sequence, mods, Adduct.EMPTY, isProteomic))
+            {
+                var keys = libraries.SelectMany(lib => lib.GetKeysWithSequence(typedSequence.ModifiedSequence)).Distinct();
+                foreach (var precursor in keys.Select(key => new LibraryPrecursor(typedSequence.LabelType, key)))
+                {
+                    if (!precursors.Any(p => p.IsSameForm(precursor)))
+                        precursors.Add(precursor);
+                }
+            }
+            return precursors;
         }
 
         /// <summary>
@@ -2496,6 +2538,48 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         public IEnumerable<PeptideDocNode> PeptideDocNodesPrecalculatedForUniquenessCheck { get; private set; }
         public Dictionary<Target, bool> UniquenessDict { get; private set; }
+    }
+
+    /// <summary>
+    /// A precursor of a peptide as a library may hold it: a label type and a library key,
+    /// whose adduct gives the charge.
+    /// </summary>
+    public class LibraryPrecursor
+    {
+        public LibraryPrecursor(IsotopeLabelType labelType, LibKey key)
+        {
+            LabelType = labelType;
+            Key = key;
+        }
+
+        public IsotopeLabelType LabelType { get; }
+        public LibKey Key { get; }
+        public Adduct Adduct { get { return Key.Adduct; } }
+
+        public bool IsPrecursor(TransitionGroupDocNode nodeGroup)
+        {
+            return Equals(LabelType, nodeGroup.LabelType) && Adduct.AdductCharge == nodeGroup.PrecursorCharge;
+        }
+
+        public bool IsSameForm(LibraryPrecursor other)
+        {
+            return Equals(LabelType, other.LabelType) && Adduct.AdductCharge == other.Adduct.AdductCharge;
+        }
+    }
+
+    /// <summary>
+    /// The MS/MS ID times in one file for one library precursor of a peptide.
+    /// </summary>
+    public class PrecursorIdTimes
+    {
+        public PrecursorIdTimes(LibraryPrecursor precursor, double[] times)
+        {
+            Precursor = precursor;
+            Times = times;
+        }
+
+        public LibraryPrecursor Precursor { get; }
+        public double[] Times { get; }
     }
 
     /// <summary>

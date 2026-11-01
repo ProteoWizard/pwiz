@@ -204,12 +204,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
-        // Skyline's Build Library: the document's precursors as they are, no digest, the TSV
-        // peptdeep wrote. A phase of its own and nothing else, so the search options never apply.
+        // Skyline's Build Library: the document's precursors as they are, no digest, the output
+        // .blib itself. A phase of its own and nothing else, so the search options never apply.
         public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
             { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
-                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText,
+                string.Join(@", ", PrecursorTable.COLUMNS), LibrarySource.EXT_BLIB, ARG_MODEL.ArgumentText,
                 ARG_TRAINING_INPUT.ArgumentText, ARG_FASTA.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
@@ -588,7 +588,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_TIMESTAMP = new OspreyArgument(@"timestamp",
             (c, p) => c._config.IsTimeStamped = true) { DescriptionArgs = () => new object[] { @"[yyyy/MM/dd HH:mm:ss]" } };
         public static readonly OspreyArgument ARG_MEMSTAMP = new OspreyArgument(@"memstamp",
-            (c, p) => c._config.IsMemStamped = true) { DescriptionArgs = () => new object[] { ARG_TIMESTAMP.ArgumentText } };
+            (c, p) => c._config.IsMemStamped = true);
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => GetPathToFile(string.Empty), (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
@@ -604,8 +604,8 @@ namespace pwiz.Osprey
         // -h/--help and -v/--version are terminal: their handlers render help / print the
         // version and exit 0. --help accepts an optional format/section value
         // (ascii | unicode | sections | html | <Section>); the description names the values.
-        public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
-            (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        // The developer dump bundle that -d / --diagnostics used to turn on is the
+        // OSPREY_DIAGNOSTICS variable (OspreyEnvironment.Diagnostics): the help is for users.
         // One flag, everything we know how to show. An opt-in token per expensive panel was built
         // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
         // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
@@ -638,7 +638,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
-                ARG_DIAGNOSTICS, ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
+                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {

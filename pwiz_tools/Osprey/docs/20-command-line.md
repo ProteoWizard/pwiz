@@ -97,7 +97,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads (vendor files where the vendor readers are installed). Variadic; also accepts positional paths. |
+| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read. Variadic; also accepts positional paths. |
 | `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
 | `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
 | `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
@@ -126,14 +126,14 @@ the library. A tuning run may be one of the `-i` runs (the lab's "search the mid
 with `--training-input` tunes the saved model further.
 
 A fourth entry point predicts and does not search: `--precursors` with `--task PredictLibrary`
-predicts a library for exactly the precursors of a table, with no digest, and writes the TSV
-peptdeep writes. Skyline's Build Library runs it (its AlphaPeptDeep source) with the document's
+predicts a library for exactly the precursors of a table, with no digest, and writes it as the
+output `.blib` itself. Skyline's Build Library runs it (its Carafe source) with the document's
 precursors, so the one download of Osprey serves both the wizard and the dialog.
 
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--fasta` | `path/to/file.fasta` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library` and `--decoy-pairing-manifest`. On a cluster each phase is a `--task` of its own (see "The library build on a cluster" below). |
-| `--precursors` | `path/to/file.tsv` | With `--task PredictLibrary` and `-o`: predict a library for exactly the precursors of this tab-separated table (columns `sequence`, `mods`, `mod_sites`, `charge`, in alphabase's notation, as Skyline writes it) and write it beside the output as `<out>.predicted.speclib.tsv`, the TSV peptdeep writes, with its fragment rules (b and y of charge 1 and 2, m/z 200-2000, the 12 most intense). No digest and no search: the pretrained models or `--model` predict, the **Library Prediction** options apply, and `--fasta`, the tuning and the entrapment options are refused. Never current: every run predicts. |
+| `--precursors` | `path/to/file.tsv` | With `--task PredictLibrary` and `-o`: predict a library for exactly the precursors of this tab-separated table (columns `sequence`, `mods`, `mod_sites`, `charge`, in alphabase's notation, as Skyline writes it) and write it as the output `.blib` itself, with Carafe's fragment rules and every precursor's CCS beside its 1/K0 (Skyline converts the CCS with each data file's calibration). No digest and no search: the pretrained models or `--model` predict, the **Library Prediction** options apply, and `--fasta`, the tuning and the entrapment options are refused. Never current: every run predicts. |
 | `--training-input` | `path/to/file ...` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.model.zip`. The options of the **Library Tuning** section apply. |
 | `--training-input-list` | `path/to/file.txt` | A file of `--training-input` runs, one path per line (`#` comments ignored), as `--input-list` is for `-i`: a long run list can pass the Windows command-line limit and hides the other arguments. |
 | `--model` | `path/to/file.model.zip` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
@@ -273,7 +273,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 | Option | Effect |
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
-| `--memstamp` | Prefix each line with managed + private memory in MB (pair with `--timestamp` for perf visualization). |
+| `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
@@ -282,7 +282,6 @@ None of these counts enters a validity key or changes an output byte; one lane i
 
 | Option | Effect |
 |--------|--------|
-| `-d`, `--diagnostics` | Write the cross-impl bisection dump bundle (`OSPREY_DUMP_*`). See [18-peptide-trace.md](18-peptide-trace.md). |
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
 | `-v`, `--version` | Show version. |
@@ -307,7 +306,7 @@ translated, and it is the only part of the log a script or test may read.
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
 Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,
-`-d`, an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
+an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
 `[TRAIN-EXPORT]`, `[BISECT]`, ...). The tag labels the line and stays ASCII; the text after
 it is prose. In a plain default run `[TASK]` is the only tag.
 
@@ -362,7 +361,7 @@ the user's culture, as Skyline's does:
   A run under any culture writes byte-identical files.
 - `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
   argument and environment variable names, internal-invariant exceptions, and diagnostics reached
-  only through `-d` or an `OSPREY_*` setting.
+  only through an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
   choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
@@ -461,7 +460,8 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
-| `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps (also via `-d`) | [18](18-peptide-trace.md) |
+| `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
+| `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 
 The full set is enumerated in the relevant algorithm docs; there is no single flat
 listing on the CLI by design (these are not user-facing knobs).

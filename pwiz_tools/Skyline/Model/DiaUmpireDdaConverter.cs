@@ -35,11 +35,6 @@ namespace pwiz.Skyline.Model
 {
     public class DiaUmpireDdaConverter : AbstractDdaConverter, IProgressMonitor
     {
-        private const string MSCONVERT_EXE = "msconvert";
-        // The managed msconvert reports verbose progress per iteration; over a multi-file DIA-Umpire
-        // search that floods Skyline's search log and back-pressures the converter, so ask it to
-        // report far less often. Native net472 msconvert has no such option.
-        private const int MSCONVERT_VERBOSE_PROGRESS_PERIOD = 2500;
         private const string DIAUMPIRE_OUTPUT_SUFFIX = "-diaumpire";
 
         private readonly DiaUmpire.Config _diaUmpireConfig;
@@ -156,13 +151,12 @@ namespace pwiz.Skyline.Model
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
+                    var psi = new ProcessStartInfo(MsconvertExe.Path)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         Arguments =
-                            $"-v --32 -z {MsConvertOutputFormatParam} " +
-                            $"--verboseProgressPeriod {MSCONVERT_VERBOSE_PROGRESS_PERIOD} " +
+                            $"{MsconvertExe.VERBOSE_PROGRESS_ARGS} --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +

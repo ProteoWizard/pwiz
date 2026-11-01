@@ -31,7 +31,6 @@ namespace pwiz.Skyline.Model.DdaSearch
 {
     public class MsconvertDdaConverter : AbstractDdaConverter, IProgressMonitor
     {
-        private const string MSCONVERT_EXE = "msconvert";
         public const string OUTPUT_SUBDIRECTORY = "converted";
 
         private IProgressMonitor _parentProgressMonitor;
@@ -102,12 +101,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
 
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
+                    var psi = new ProcessStartInfo(MsconvertExe.Path)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         Arguments =
-                            $"-v -z {MsConvertOutputFormatParam} " +
+                            $"{MsconvertExe.VERBOSE_PROGRESS_ARGS} -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
