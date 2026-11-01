@@ -177,6 +177,8 @@ namespace pwiz.SkylineTest
             }
 
             // Verify that the adduct is read from "PRECURSORTYPE:" as well as NIST's "Precursor_type:"
+            // The iodide adduct [M+I]- is not among the adducts tried when inferring from formula and m/z,
+            // so unlike a common adduct such as [M-H]-, it can only come from the PRECURSORTYPE line
             key = lib2Keys.First(k => Equals("OUYCCCASQSFEME-QMMMGPOBSA-N", k.SmallMoleculeLibraryAttributes.InChiKey));
             AssertEx.AreEqual("[M+I]-", key.Adduct.AdductFormula);
 
