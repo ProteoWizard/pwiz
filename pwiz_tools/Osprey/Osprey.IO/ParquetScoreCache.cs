@@ -52,7 +52,8 @@ namespace pwiz.Osprey.IO
         #region PIN Feature Names
 
         /// <summary>
-        /// The 21 PIN feature column names, matching the Rust get_pin_feature_names().
+        /// The PIN feature column names: the 21 of the Rust get_pin_feature_names(), then the
+        /// C#-only runner-up, context, per-fragment-rank and spectrum-across-peak features (masked by default).
         /// </summary>
         public static readonly string[] PIN_FEATURE_NAMES =
         {
@@ -85,9 +86,33 @@ namespace pwiz.Osprey.IO
             @"sg_weighted_cosine",
             @"median_polish_min_fragment_r2",
             @"median_polish_residual_correlation",
+            // Runner-up: the chosen peak against the other candidates in its window (3)
+            @"peak_coelution_margin",
+            @"peak_rank_margin",
+            @"peak_candidate_count",
+            // Context, shared by a target and its decoy (3)
+            @"context_peptide_length",
+            @"context_precursor_charge",
+            @"context_precursor_mz",
+            // Per-fragment-rank: the top 6 library fragments matched at the apex (12)
+            @"frag_rank1_abs_mass_error",
+            @"frag_rank2_abs_mass_error",
+            @"frag_rank3_abs_mass_error",
+            @"frag_rank4_abs_mass_error",
+            @"frag_rank5_abs_mass_error",
+            @"frag_rank6_abs_mass_error",
+            @"frag_rank1_intensity_share",
+            @"frag_rank2_intensity_share",
+            @"frag_rank3_intensity_share",
+            @"frag_rank4_intensity_share",
+            @"frag_rank5_intensity_share",
+            @"frag_rank6_intensity_share",
+            // Spectrum across the peak: library cosine at every scan (2)
+            @"peak_spectrum_cosine_mean",
+            @"peak_spectrum_cosine_sd",
         };
 
-        public const int NUM_PIN_FEATURES = 21;
+        public const int NUM_PIN_FEATURES = 41;
 
         #endregion
 
@@ -2166,8 +2191,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load only the 21 PIN feature columns from a Parquet cache.
-        /// Returns a list of feature vectors (one double[] per row).
+        /// Load only the PIN feature columns from a Parquet cache, for the FDR stage.
+        /// Returns a list of feature vectors (one double[] per row). A feature masked by
+        /// <see cref="PinFeatureMask"/> reads as 0: this is where the mask is applied, so the
+        /// parquet itself always holds every feature.
         /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
@@ -2198,7 +2225,7 @@ namespace pwiz.Osprey.IO
                             for (int f = 0; f < NUM_PIN_FEATURES; f++)
                             {
                                 double v = featureCols[f][row];
-                                features[f] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                                features[f] = PinFeatureMask.IsMasked(f) || double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                             }
                             allFeatures.Add(features);
                         }

@@ -53,7 +53,7 @@ fails in seconds rather than after Stage 1-5.
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
 | `protein-compact` (default) | no (frozen model) | competition constrained to the protein stratum | precursor |
-| `transfer` | no | pass-1 q carried through; only moved peaks re-mapped | precursor + peptide |
+| `transfer` | no | none: pass-1 experiment q kept; moved and gap-filled peaks mapped through the pass-1 score-to-q table (first-pass calibration) | precursor + peptide |
 
 These two are the whole list. `percolator` was removed for retraining against a
 decoy-depleted null (above), and the `OSPREY_PROTEIN_COMPACT_RETRAIN` A/B toggle went with
@@ -84,16 +84,81 @@ rewrite the reported experiment q from a MAX-aggregated competition. `transfer` 
 compatible mode. See
 [Experiment-wide aggregation](07-fdr-control.md#experiment-wide-aggregation-osprey_experiment_agg).
 
-### `transfer`
+### `transfer` - first-pass calibration
 
-No retrain. Pass-1 q-values are carried through unchanged, and **only the per-run
-q-value of reconciliation-moved peaks** is re-mapped through each file's own
-score→run-q table (`TransferOneFile` → `BuildScoreToQTable`, equal-count quantile
-bins + PAVA isotonic; `LookupQForScore`), in the rescore worker. The experiment q is frozen by
-the best-peak anchor: the join carries each precursor's pass-1 experiment values
-(`ComputePass2TransferFold`) and raises them to the best-of-runs floors like every mode. Each
-survivor is classified Unchanged / Moved / GapFill, with bit-exact score equality as the
-"Moved" discriminator.
+**In one sentence:** the second pass maps each re-scored peak through the first pass's calibrated
+score-to-q relationship, and keeps the first pass's experiment-level q. Precursors are *identified*
+on the first pass; reconciliation decides which peak is *quantified* in each run. "First-pass
+calibration" describes it better than the token does; the token stays `transfer`.
+
+No retrain and no new competition. For every compaction survivor, in the rescore worker
+(`TransferOneFile`):
+
+| Peak (classified by bit-exact score equality with pass 1) | Run-level q | Experiment-level q |
+|---|---|---|
+| **Unchanged** - reconciliation left it where the first pass picked it | its pass-1 run q | pass-1 value |
+| **Moved** - re-picked or force-integrated at the consensus RT, re-scored with the frozen model | its NEW score looked up in this run's pass-1 score-to-q table | pass-1 value |
+| **GapFill** - integrated in a run where the first pass had not scored it | its score looked up in the same table | pass-1 value |
+
+The table is the run's own pass-1 (score, run q) pairs - precursor and peptide q separately - smoothed
+into equal-count quantile bins and made monotone by PAVA isotonic regression (`BuildScoreToQTable`,
+`LookupQForScore`). The join then carries each precursor's pass-1 experiment values
+(`ComputePass2TransferFold`) and raises them to the best-of-runs floors, as in every mode.
+
+**Why the q-values are legitimate.** A peak moved to a worse-scoring location gets a worse run q,
+because its new score is looked up in the same calibrated table; and if that was the precursor's
+best run, the best-of-runs floor raises its experiment q too. Nothing in this mode can lower a
+q-value below what the evidence at the reported peak supports. The table itself comes from the
+first pass's competition over every precursor and every decoy, before compaction - the competition
+whose q-values entrapment shows to be calibrated. A reconciled peak is placed by the other runs'
+consensus rather than chosen as the best of its own RT window, so a false one tends to score below
+the best-of-window null the table was built from, which makes the lookup, if anything, conservative.
+
+**What it gives up.** Reconciliation cannot rescue a precursor the first pass rejected: experiment q
+is a pass-1 property. On the Astral and Stellar test runs that rescue was worth nothing measurable
+once it was measured on a library where entrapment can reach every competition (below).
+
+**PEP.** The experiment-level PEP (`FdrEntry.Pep`, one per precursor for the whole analysis) is
+carried from pass 1 for unchanged and moved peaks; there is no run-level PEP, and a gap-filled
+peak's PEP is not set by this mode. A per-run score-to-PEP map from the first pass, applied to
+re-scored peaks the same way as q, is planned.
+
+**Measured** (2026-10-28; the three Astral and the three Stellar test runs, natural Arabidopsis
+entrapment at 1:1, entrapment filed under its paired target's protein - see "Measuring the second
+pass with entrapment" below):
+
+| | reported q <= 1% | measured FDP (combined / lower bound) |
+|---|---|---|
+| Astral, experiment level, default scoring | 93,528 precursors | 1.03% / 0.51% |
+| Stellar, experiment level, default scoring | 31,693 precursors | 0.71% / 0.35% |
+| Astral, run level, unchanged peaks | 301,219 rows | 0.90% / 0.45% |
+| Astral, run level, moved peaks | 2,619 rows | 0.76% / 0.38% |
+| Astral, run level, gap-filled peaks | 728 rows | **11.6% / 5.8%** |
+
+The gap-filled row is the known weak spot: a gap fill happens only where the precursor is missing
+from the run, and false identifications are disproportionately the ones seen in a single run, so
+the run-wide q does not fit that population. Most gap fills (96% on Astral) correctly get run q
+above 1% - "not present in this sample"; per-run filtering for quantification should not yet trust
+the few that pass. The planned run-level PEP is the fix to evaluate.
+
+**Compared with `protein-compact`.** `transfer` gives every precursor the same competition. It has
+no protein stratum, so a protein identified by a single peptide is not at a disadvantage - a
+requirement for proteomics, where small proteins (under ~100 residues) often yield one tryptic
+peptide. On the same data the `protein-compact` default reported more precursors at q <= 1%, but
+measured 1.29-1.59% at a reported 1% (Astral), and its extra identifications came from the easier
+competition it gives peptides of proteins with >= 2 first-pass peptides.
+
+### Measuring the second pass with entrapment
+
+`--entrapment` files each entrapment peptide under its own protein (the paired target's accession
+with FDRBench's `_p_target` marker). That is right for protein-level FDP, but it means entrapment
+almost never enters the `protein-compact` stratum (proteins with >= 2 first-pass peptides): on
+Astral, 13 of 7,451 stratum proteins were entrapment, so 99% of what `protein-compact` reports came
+from a competition entrapment could not see, and its measured FDP (0.54%) was meaningless. To
+measure `protein-compact` at the precursor level, file each entrapment row under its paired
+target's real accession (a copy of the library; label entrapment by sequence afterwards); measured
+that way it was 1.36%. `transfer` and pass 1 use no protein information, so either library gives
+the same answer for them.
 
 ### `protein-compact` (frozen model)
 

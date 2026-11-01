@@ -59,6 +59,15 @@ namespace pwiz.Osprey.Scoring
         public IReadOnlyDictionary<uint, (double Apex, double Start, double End)> BoundaryOverrides { get; set; }
 
         /// <summary>
+        /// True when a peak scored at <see cref="BoundaryOverrides"/> bounds is compared, for the
+        /// runner-up features, with the candidates first-pass detection finds over the normal
+        /// search window. That takes a second CWT detection per peak, so the rescoring task sets
+        /// it only when the classifier sees a runner-up feature; when false the override path
+        /// reports a lone candidate and skips the detection.
+        /// </summary>
+        public bool OverrideRunnerUpCandidates { get; set; }
+
+        /// <summary>
         /// The first-pass RT MAD (median absolute deviation of residuals)
         /// from the per-file <c>.calibration.json</c>, kept separate from
         /// any refined calibration's <c>abs_residuals</c>. The Stage 6

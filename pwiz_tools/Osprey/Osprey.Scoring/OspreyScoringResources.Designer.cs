@@ -306,6 +306,24 @@ namespace pwiz.Osprey.Scoring {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragment {0} intensity share.
+        /// </summary>
+        public static string FragmentRankIntensityShareCalc_DisplayName_Fragment__0__intensity_share {
+            get {
+                return ResourceManager.GetString("FragmentRankIntensityShareCalc_DisplayName_Fragment__0__intensity_share", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment {0} mass error (abs).
+        /// </summary>
+        public static string FragmentRankMassErrorCalc_DisplayName_Fragment__0__mass_error__abs_ {
+            get {
+                return ResourceManager.GetString("FragmentRankMassErrorCalc_DisplayName_Fragment__0__mass_error__abs_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mass error (signed mean).
         /// </summary>
         public static string MassAccuracyMeanCalc_DisplayName_Mass_error__signed_mean_ {
@@ -397,11 +415,83 @@ namespace pwiz.Osprey.Scoring {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Candidate peaks in window.
+        /// </summary>
+        public static string PeakCandidateCountCalc_DisplayName_Candidate_peaks_in_window {
+            get {
+                return ResourceManager.GetString("PeakCandidateCountCalc_DisplayName_Candidate_peaks_in_window", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coelution margin over runner-up peak.
+        /// </summary>
+        public static string PeakCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak {
+            get {
+                return ResourceManager.GetString("PeakCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pick score margin over runner-up peak.
+        /// </summary>
+        public static string PeakRankMarginCalc_DisplayName_Pick_score_margin_over_runner_up_peak {
+            get {
+                return ResourceManager.GetString("PeakRankMarginCalc_DisplayName_Pick_score_margin_over_runner_up_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak sharpness (log10).
         /// </summary>
         public static string PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_ {
             get {
                 return ResourceManager.GetString("PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library cosine across peak (mean).
+        /// </summary>
+        public static string PeakSpectrumCosineMeanCalc_DisplayName_Library_cosine_across_peak__mean_ {
+            get {
+                return ResourceManager.GetString("PeakSpectrumCosineMeanCalc_DisplayName_Library_cosine_across_peak__mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library cosine across peak (SD).
+        /// </summary>
+        public static string PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_ {
+            get {
+                return ResourceManager.GetString("PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide length.
+        /// </summary>
+        public static string PeptideLengthCalc_DisplayName_Peptide_length {
+            get {
+                return ResourceManager.GetString("PeptideLengthCalc_DisplayName_Peptide_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor charge.
+        /// </summary>
+        public static string PrecursorChargeCalc_DisplayName_Precursor_charge {
+            get {
+                return ResourceManager.GetString("PrecursorChargeCalc_DisplayName_Precursor_charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor m/z.
+        /// </summary>
+        public static string PrecursorMzCalc_DisplayName_Precursor_m_z {
+            get {
+                return ResourceManager.GetString("PrecursorMzCalc_DisplayName_Precursor_m_z", resourceCulture);
             }
         }
         

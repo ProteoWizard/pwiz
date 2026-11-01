@@ -2612,6 +2612,49 @@ namespace pwiz.Osprey.Test
         #region FdrScoresSidecar Tests
 
         /// <summary>
+        /// The feature mask is applied where the FDR stage loads features, not where scoring writes
+        /// them: the scores parquet holds every feature, and only
+        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> reads a masked one as 0. That
+        /// split is what lets a mask arm adopt another arm's per-file scores and run the FDR stage
+        /// alone. The test process leaves OSPREY_FEATURE_MASK unset, so the default set is masked.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureMaskAppliesAtFdrLoad()
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = f + 1.0;
+            var entries = new List<FdrEntry>
+            {
+                new FdrEntry { EntryId = 1, Charge = 2, ScanNumber = 10, ModifiedSequence = "PEPTIDE", Features = features },
+            };
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_featmask_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, null, null, "f.mzML");
+
+                double[] stored = ParquetScoreCache.LoadFullFdrEntries(saver.SafeName).Single().Features;
+                double[] loaded = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName).Single();
+                int maskedCount = 0;
+                for (int f = 0; f < features.Length; f++)
+                {
+                    string name = ParquetScoreCache.PIN_FEATURE_NAMES[f];
+                    Assert.AreEqual(f + 1.0, stored[f], name + " must be written unmasked");
+                    bool masked = PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(name);
+                    Assert.AreEqual(masked, PinFeatureMask.IsMasked(f), name);
+                    Assert.AreEqual(masked ? 0.0 : f + 1.0, loaded[f], name + " as the FDR stage loads it");
+                    if (masked)
+                        maskedCount++;
+                }
+                Assert.AreEqual(PinFeatureMask.DEFAULT_MASKED_FEATURES.Length, maskedCount,
+                    "every default-masked name must be a PIN feature");
+            }
+            Assert.IsNull(PinFeatureMask.UnknownFeatureName());
+            Assert.AreEqual(@";featmask=default", PinFeatureMask.ValidityKeySuffix());
+        }
+
+        /// <summary>
         /// Bounded row-group write: a parquet written as several row groups (forced via the
         /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
         /// logically identical -- same rows in the same global (entry_id, charge, scan_number)

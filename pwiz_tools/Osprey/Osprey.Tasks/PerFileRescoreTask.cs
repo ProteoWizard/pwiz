@@ -333,6 +333,9 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                + PinFeatureMask.ValidityKeySuffix()
+                + PinFeatureMask.RescoreValidityKeySuffix()
+                + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
@@ -1491,6 +1494,7 @@ namespace pwiz.Osprey.Tasks
             // peak-construction path.
             var context = new ScoringContext(fileConfig, fileName);
             context.BoundaryOverrides = boundaryOverrides;
+            context.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
             context.OriginalRtMad = rtMadFromCalJson;
 
             // Isolation windows come straight from the streaming index, the same list
@@ -2970,6 +2974,7 @@ namespace pwiz.Osprey.Tasks
 
                 var forcedContext = new ScoringContext(fileConfig, fileName);
                 forcedContext.BoundaryOverrides = forcedOverrides;
+                forcedContext.OverrideRunnerUpCandidates = PinFeatureMask.UsesRunnerUpFeatures();
                 forcedContext.OriginalRtMad = rtMadFromCalJson;
 
                 var swForced = Stopwatch.StartNew();

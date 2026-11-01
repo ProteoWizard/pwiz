@@ -33,6 +33,7 @@ using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
+using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -59,6 +60,7 @@ namespace pwiz.Osprey.Test
             AssertSuffixesAreUnconditional();
             AssertEachArmKeysDifferently();
             AssertTrainingSampleLeversKeyDifferently();
+            AssertFdrExperimentSwitchesKeyDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
@@ -95,7 +97,7 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM + XicTerm(), tsvKeys[PerFileScoringTask.TASK_NAME],
                     @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
@@ -103,7 +105,7 @@ namespace pwiz.Osprey.Test
 
                 var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM,
+                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM + XicTerm(),
                     blibKeys[PerFileScoringTask.TASK_NAME]);
                 foreach (var key in blibKeys)
                     StringAssert.Contains(key.Value, OspreyTask.BLIB_READER_TERM, key.Key + @" must key on the blib reader");
@@ -352,6 +354,12 @@ namespace pwiz.Osprey.Test
             return task.OutputValidityKey(ctx, taskKey, export);
         }
 
+        /// <summary>The XIC fragment-count term every task's key ends with.</summary>
+        private static string XicTerm()
+        {
+            return @";xic=" + TopFragmentExtractor.SearchTopNFragments.ToString(CultureInfo.InvariantCulture);
+        }
+
         /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
         private static string PreUpgradeBaseKey(OspreyConfig config)
         {
@@ -577,6 +585,37 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// OSPREY_RECONCILIATION and OSPREY_PEP_FORMULA change the first-pass consensus and PEP, so
+        /// each setting keys the FDR tasks differently. Unset they emit nothing, so default output
+        /// directories keep their key.
+        /// </summary>
+        private static void AssertFdrExperimentSwitchesKeyDifferently()
+        {
+            string none = OspreyEnvironment.FdrExperimentValidityKeySuffix(null, false);
+            string recon = OspreyEnvironment.FdrExperimentValidityKeySuffix(@"symmetric-decoys", false);
+            string pep = OspreyEnvironment.FdrExperimentValidityKeySuffix(null, true);
+            string both = OspreyEnvironment.FdrExperimentValidityKeySuffix(@"symmetric-decoys", true);
+            Assert.AreEqual(string.Empty, none, @"the default must not change existing keys");
+            var distinct = new HashSet<string> { none, recon, pep, both };
+            Assert.AreEqual(4, distinct.Count, @"every combination must key differently");
+
+            // The override-path runner-up change keys the rescoring tasks only when the classifier
+            // sees a runner-up feature: empty under the default mask, present with every feature on.
+            Assert.AreEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(PinFeatureMask.IsMasked),
+                @"the default mask hides the runner-up features, so default keys must not change");
+            Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => false),
+                @"with the runner-up features on, the rescoring tasks must key on the change");
+            int margin = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"peak_rank_margin");
+            Assert.AreNotEqual(string.Empty, PinFeatureMask.RescoreValidityKeySuffix(f => f != margin),
+                @"any one runner-up feature unmasked must key the change");
+            // The key term and the second detection it records must switch together.
+            Assert.IsFalse(PinFeatureMask.UsesRunnerUpFeatures(PinFeatureMask.IsMasked),
+                @"the default mask must skip the override-path detection");
+            Assert.IsTrue(PinFeatureMask.UsesRunnerUpFeatures(f => f != margin),
+                @"any one runner-up feature unmasked must run the override-path detection");
+        }
+
+        /// <summary>
         /// Two configurations that produce different output must not share a
         /// key. Both pick levers count: the model PATH overrides the
         /// resolution-keyed default outright, so two runs can differ in nothing
@@ -616,6 +655,12 @@ namespace pwiz.Osprey.Test
         /// output is written before pass 2 exists, and keying it on the mode
         /// would re-run Stages 1-4 (hours at 82 files) to reproduce parquets
         /// that cannot have changed.
+        ///
+        /// The XIC fragment count follows the pick: it decides the peaks and
+        /// features Stage 4 writes, so every task carries it. The feature mask
+        /// follows the training selection: scoring writes every feature and the
+        /// mask is applied when the FDR stage loads them, so per-file scoring must
+        /// NOT key on it - that is what lets a mask arm adopt another arm's scores.
         /// </summary>
         private static void AssertEveryTaskCarriesTheSuffixesItNeeds()
         {
@@ -630,6 +675,7 @@ namespace pwiz.Osprey.Test
             // exists to prevent. Same exemption shape: the tasks that run before a model is
             // trained cannot key on how it was trained.
             string train = OspreyEnvironment.TrainSampleValidityKeySuffix();
+            string mask = PinFeatureMask.ValidityKeySuffix();
 
             foreach (var task in tasks)
             {
@@ -645,6 +691,11 @@ namespace pwiz.Osprey.Test
                                    task.Name == SecondPassFdrTask.TASK_NAME;
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
+                    task.Name, expectTrain ? @"" : @"NOT "));
+                StringAssert.Contains(key, XicTerm(), string.Format(
+                    @"{0} must key on the XIC fragment count", task.Name));
+                Assert.AreEqual(expectTrain, key.Contains(mask), string.Format(
+                    @"{0} must {1} key on the feature mask",
                     task.Name, expectTrain ? @"" : @"NOT "));
             }
         }

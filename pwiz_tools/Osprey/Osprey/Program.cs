@@ -668,6 +668,16 @@ namespace pwiz.Osprey
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
                 }
+                // Abort for the same reason: the mask is resolved when the FDR stage first loads
+                // features, so a mistyped name would otherwise surface only after Stages 1-4.
+                string unknownMaskedFeature = PinFeatureMask.UnknownFeatureName();
+                if (unknownMaskedFeature != null)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_FEATURE_MASK names an unknown feature: '{0}'. Use PIN feature names separated by " +
+                        @"commas, or 'none' to mask nothing.", unknownMaskedFeature));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
                     LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
