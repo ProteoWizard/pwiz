@@ -101,7 +101,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
-            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_OOF", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
+            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_OOF", @"OSPREY_GBT_PREFILTER_SIZE", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
             @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
@@ -743,6 +743,14 @@ namespace pwiz.Osprey.Core
         /// of every fold model (two of which trained on it). Not keyed: run it into its own output directory.
         /// </summary>
         public static readonly bool GbtOutOfFold = ParseIntOrNull(@"OSPREY_GBT_OOF") == 1;
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass tree training. Round 1 trains as usual
+        /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
+        /// round 2 retrains on the N rows of the peptide groups that score best. Tree model only; 0 when unset.
+        /// Keyed through the gbdt validity-key term, so a run with it never adopts outputs trained without it.
+        /// </summary>
+        public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(@"OSPREY_GBT_PREFILTER_SIZE"));
 
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --

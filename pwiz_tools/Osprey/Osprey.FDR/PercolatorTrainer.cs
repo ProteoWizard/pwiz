@@ -55,9 +55,16 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Run the Percolator algorithm on a collection of entries.
         /// </summary>
+        /// <param name="entries">The entries to train on and, unless train-only, to score.</param>
+        /// <param name="config">The training configuration.</param>
+        /// <param name="initialEntryScores">Optional per-entry scores the first positive-set
+        /// selection starts from, in place of the best single feature. Round 2 of
+        /// <see cref="TrainWithScorePrefilter"/> passes the round-1 model's scores. Null (every
+        /// other caller) keeps the best-initial-feature start.</param>
         public static PercolatorResults RunPercolator(
             IList<PercolatorEntry> entries,
-            PercolatorConfig config)
+            PercolatorConfig config,
+            double[] initialEntryScores = null)
         {
             if (entries.Count == 0)
                 return new PercolatorResults();
@@ -192,33 +199,57 @@ namespace pwiz.Osprey.FDR
                     return new PercolatorResults { DiagnosticAbort = true };
             }
 
-            // 5. Find best initial feature
+            // 5. Find best initial feature - or, when the caller supplies initial scores (round 2
+            //    of the two-round tree training), start from those instead.
             double trainFdr = config.TrainFdr;
-            int bestFeatIdx;
-            int bestFeatPassing;
-            FindBestInitialFeature(subFeatures, subLabels, subEntryIds, trainFdr,
-                out bestFeatIdx, out bestFeatPassing);
-
-            if (bestFeatPassing == 0)
+            double[] initialScores;
+            if (initialEntryScores != null)
             {
-                double relaxedFdr = 0.05;
-                FindBestInitialFeature(subFeatures, subLabels, subEntryIds, relaxedFdr,
-                    out bestFeatIdx, out bestFeatPassing);
-                if (bestFeatPassing > 0)
-                    trainFdr = relaxedFdr;
+                initialScores = new double[subN];
+                for (int i = 0; i < subN; i++)
+                    initialScores[i] = initialEntryScores[trainSubset[i]];
+                int seedPassing = PercolatorQValues.CountPassing(initialScores, subLabels, subEntryIds, trainFdr);
+                if (seedPassing == 0)
+                {
+                    double relaxedFdr = 0.05;
+                    int relaxedPassing = PercolatorQValues.CountPassing(initialScores, subLabels, subEntryIds, relaxedFdr);
+                    if (relaxedPassing > 0)
+                    {
+                        trainFdr = relaxedFdr;
+                        seedPassing = relaxedPassing;
+                    }
+                }
+                OspreyLog.Out.LogInfo(LogTag.COUNT, @"Initial score: supplied scores ({0} targets at {1:F0}% FDR)",
+                    seedPassing, trainFdr * 100.0);
             }
+            else
+            {
+                int bestFeatIdx;
+                int bestFeatPassing;
+                FindBestInitialFeature(subFeatures, subLabels, subEntryIds, trainFdr,
+                    out bestFeatIdx, out bestFeatPassing);
 
-            string bestFeatName = (config.FeatureInfos != null &&
-                                   bestFeatIdx >= 0 &&
-                                   bestFeatIdx < config.FeatureInfos.Length)
-                ? config.FeatureInfos[bestFeatIdx].Name
-                : string.Format(@"feature_{0}", bestFeatIdx);
-            OspreyLog.Out.LogInfo(LogTag.COUNT, @"Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
-                bestFeatName, bestFeatPassing, trainFdr * 100.0);
+                if (bestFeatPassing == 0)
+                {
+                    double relaxedFdr = 0.05;
+                    FindBestInitialFeature(subFeatures, subLabels, subEntryIds, relaxedFdr,
+                        out bestFeatIdx, out bestFeatPassing);
+                    if (bestFeatPassing > 0)
+                        trainFdr = relaxedFdr;
+                }
 
-            var initialScores = new double[subN];
-            for (int i = 0; i < subN; i++)
-                initialScores[i] = subFeatures[i, bestFeatIdx];
+                string bestFeatName = (config.FeatureInfos != null &&
+                                       bestFeatIdx >= 0 &&
+                                       bestFeatIdx < config.FeatureInfos.Length)
+                    ? config.FeatureInfos[bestFeatIdx].Name
+                    : string.Format(@"feature_{0}", bestFeatIdx);
+                OspreyLog.Out.LogInfo(LogTag.COUNT, @"Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
+                    bestFeatName, bestFeatPassing, trainFdr * 100.0);
+
+                initialScores = new double[subN];
+                for (int i = 0; i < subN; i++)
+                    initialScores[i] = subFeatures[i, bestFeatIdx];
+            }
 
             // 6. Train per-fold models via cross-validation
             var finalScores = new double[n];
@@ -288,7 +319,8 @@ namespace pwiz.Osprey.FDR
                         : null,
                     Standardizer = standardizer,
                     IterationsPerFold = trainIterations,
-                    TrainEntryFolds = foldGbtModels != null && OspreyEnvironment.GbtOutOfFold
+                    TrainEntryFolds = foldGbtModels != null &&
+                                      (OspreyEnvironment.GbtOutOfFold || config.ReportTrainEntryFolds)
                         ? BuildEntryFolds(n, trainSubset, foldAssignments)
                         : null
                 };
@@ -424,6 +456,116 @@ namespace pwiz.Osprey.FDR
                 IterationsPerFold = iterationsPerFold,
                 FeatureContributions = contributions
             };
+        }
+
+        /// <summary>
+        /// Two-round tree training (<see cref="PercolatorConfig.PrefilterTrainSize"/>,
+        /// <c>OSPREY_GBT_PREFILTER_SIZE</c>). Round 1 is the usual train-only
+        /// <see cref="RunPercolator"/> on the <paramref name="round1Subset"/> rows of
+        /// <paramref name="candidates"/> - the random peptide-grouped subsample. Its fold models
+        /// then score EVERY candidate: a round-1 training row by the one fold model that held it
+        /// out, any other row by the mean of the fold models, which is how the score pass scores a
+        /// row the models never saw. Round 2 is the same train-only training on the
+        /// best-scoring peptide groups (<see cref="PercolatorSampling.SelectTopScoringGroups"/>),
+        /// up to <see cref="PercolatorConfig.PrefilterTrainSize"/> rows, and replaces round 1.
+        ///
+        /// <para>Round 2's first positive set is chosen by the same round-1 scores the subset was
+        /// selected by, not by the best single feature. Within a subset of rows that already score
+        /// well, no single feature separates targets from decoys well, so a feature start picks a
+        /// poor first positive set; a fold whose first model wins its held-out selection then stops
+        /// on that model, and on SEA-AD that collapsed the result for some seeds. Selecting the
+        /// subset itself by a single feature fails the same way, which is why round 1 is
+        /// required. Otherwise round 2 is the unchanged <see cref="RunPercolator"/>, with only the
+        /// subsample turned off (the subset is already the selection).</para>
+        ///
+        /// <para>Every candidate must carry its feature vector. Deterministic and independent of
+        /// <see cref="PercolatorConfig.NThreads"/>: a tree score depends only on its own row, and
+        /// the selection orders groups by a total order.</para>
+        /// </summary>
+        /// <param name="candidates">The best-per-precursor rows the subsampler chose from, at
+        /// most one per (base_id, isDecoy).</param>
+        /// <param name="round1Subset">Ascending indices into <paramref name="candidates"/>: the
+        /// round-1 training rows.</param>
+        /// <param name="trainConfig">The train-only tree config.</param>
+        /// <param name="log">Where the round-2 subset is reported.</param>
+        /// <param name="passLabel">The pass label for the log lines.</param>
+        /// <param name="round2Entries">The round-2 training rows, which the caller treats as the
+        /// training rows from here on (the held-out folds of <c>OSPREY_GBT_OOF</c> are keyed by
+        /// them).</param>
+        internal static PercolatorResults TrainWithScorePrefilter(
+            IList<PercolatorEntry> candidates,
+            int[] round1Subset,
+            PercolatorConfig trainConfig,
+            IOspreyLog log,
+            string passLabel,
+            out List<PercolatorEntry> round2Entries)
+        {
+            if (!trainConfig.UseGradientBoostedTrees)
+                throw new InvalidOperationException(@"TrainWithScorePrefilter trains the tree model only.");
+            int prefilterSize = trainConfig.PrefilterTrainSize;
+            if (prefilterSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(trainConfig), @"PrefilterTrainSize must be positive.");
+
+            // Round 1: exactly the single-round training, plus each training row's held-out fold.
+            var round1Entries = new List<PercolatorEntry>(round1Subset.Length);
+            foreach (int k in round1Subset)
+                round1Entries.Add(candidates[k]);
+            var round1Config = trainConfig.CloneForTrainOnly();
+            round1Config.ReportTrainEntryFolds = true;
+            var round1 = RunPercolator(round1Entries, round1Config);
+            if (round1.DiagnosticAbort)
+            {
+                round2Entries = round1Entries;
+                return round1;
+            }
+
+            // Score every candidate with the round-1 models, out of fold where it trained.
+            int m = candidates.Count;
+            var heldOutFold = new Dictionary<int, int>(round1Subset.Length);
+            for (int s = 0; s < round1Subset.Length; s++)
+            {
+                int fold = round1.TrainEntryFolds[s];
+                if (fold >= 0)
+                    heldOutFold[round1Subset[s]] = fold;
+            }
+            int nFeatures = candidates.Count > 0 ? candidates[0].Features.Length : 0;
+            var round1Scores = new double[m];
+            PercolatorScorer.ScoreRowsGbt(m, k => candidates[k].Features, round1.FoldGbtModels,
+                round1.Standardizer, nFeatures, round1Scores, 0, trainConfig.NThreads, heldOutFold);
+
+            // Round 2's subset: the best-scoring peptide groups, kept whole.
+            var labels = new bool[m];
+            var entryIds = new uint[m];
+            var peptides = new string[m];
+            for (int k = 0; k < m; k++)
+            {
+                labels[k] = candidates[k].IsDecoy;
+                entryIds[k] = candidates[k].EntryId;
+                peptides[k] = candidates[k].Peptide;
+            }
+            int[] selected = PercolatorSampling.SelectTopScoringGroups(
+                labels, entryIds, peptides, round1Scores, prefilterSize);
+            round2Entries = new List<PercolatorEntry>(selected.Length);
+            var round2InitialScores = new double[selected.Length];
+            int round2Targets = 0;
+            foreach (int k in selected)
+            {
+                round2InitialScores[round2Entries.Count] = round1Scores[k];
+                round2Entries.Add(candidates[k]);
+                if (!labels[k])
+                    round2Targets++;
+            }
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter subsample (round 2): {1} precursors ({2} targets, {3} decoys) from {4} candidates by round-1 score",
+                passLabel, round2Entries.Count, round2Targets, round2Entries.Count - round2Targets, m);
+
+            // Round 2: the same training on that subset, its first positive set chosen by the
+            // round-1 scores the subset was selected by. MaxTrainSize 0 turns the subsample off:
+            // the rows are already one per precursor, so the dedup keeps them all.
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter round 2 initial score: round-1 model (out of fold for round-1 training rows, fold mean otherwise)",
+                passLabel);
+            var round2Config = trainConfig.CloneForTrainOnly();
+            round2Config.MaxTrainSize = 0;
+            return RunPercolator(round2Entries, round2Config, round2InitialScores);
         }
 
         /// <summary>

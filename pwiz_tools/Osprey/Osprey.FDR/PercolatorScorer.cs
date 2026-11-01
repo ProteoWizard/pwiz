@@ -772,23 +772,26 @@ namespace pwiz.Osprey.FDR
                     dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
             }
 
+            // OSPREY_GBT_PREFILTER_SIZE: two-round tree training scores EVERY deduped candidate with
+            // the round-1 models, so every candidate becomes an entry and has its features loaded;
+            // the round-1 subset is the same entry objects. Off (the default), only the subset is
+            // built and loaded, as always. A resume trains nothing, so it never needs the candidates.
+            bool prefilter = percConfig.UseGradientBoostedTrees && percConfig.PrefilterTrainSize > 0 &&
+                             pretrainedModel == null;
+            List<PercolatorEntry> candidateEntries = null;
+            if (prefilter)
+            {
+                candidateEntries = new List<PercolatorEntry>(m);
+                foreach (var d in dedup)
+                    candidateEntries.Add(NewStreamedEntry(d));
+            }
             int subTargets = 0;
             var subsetEntries = new List<PercolatorEntry>(localSelected.Length);
             foreach (int li in localSelected)
             {
                 var d = dedup[li];
                 if (!d.IsDecoy) subTargets++;
-                subsetEntries.Add(new PercolatorEntry
-                {
-                    FileName = d.FileName,
-                    Peptide = d.Peptide,
-                    Charge = d.Charge,
-                    IsDecoy = d.IsDecoy,
-                    EntryId = d.EntryId,
-                    ParquetIndex = d.ParquetIndex,
-                    CoelutionSum = d.CoelutionSum,
-                    Features = null
-                });
+                subsetEntries.Add(candidateEntries != null ? candidateEntries[li] : NewStreamedEntry(d));
             }
             log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
                 passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets);
@@ -823,7 +826,8 @@ namespace pwiz.Osprey.FDR
 
             // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
             // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
-            var subsetByFile = GroupIndicesByFileName(subsetEntries);
+            var loadEntries = candidateEntries ?? subsetEntries;
+            var subsetByFile = GroupIndicesByFileName(loadEntries);
             // Both skipped when the caller supplied the model this pass would have trained.
             // Training exists to score entries; when every entry's score is already on disk
             // there is nothing for a model to do, and loading the training subset's feature
@@ -834,7 +838,7 @@ namespace pwiz.Osprey.FDR
                 // Each file fills only its own subset entries, so the files need no ordering. The
                 // lanes read a copy of the list reference, because the method drops its own below.
                 var subsetFiles = new List<KeyValuePair<string, List<int>>>(subsetByFile);
-                var laneEntries = subsetEntries;
+                var laneEntries = loadEntries;
                 int subsetFilesLoaded = 0;
                 using (var loadProgress = new ProgressReporter(CountText.Format(subsetFiles.Count,
                            OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file,
@@ -864,8 +868,17 @@ namespace pwiz.Osprey.FDR
             // gbdt it trained the linear SVM, at the tree iteration cap, and the
             // default gbdt run never trained a tree.
             var trainConfig = percConfig.CloneForTrainOnly();
-            PercolatorResults trainResults =
-                pretrainedModel ?? PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
+            PercolatorResults trainResults;
+            if (pretrainedModel != null)
+                trainResults = pretrainedModel;
+            else if (candidateEntries != null)
+            {
+                // Round 2's subset replaces the random one as this pass's training rows.
+                trainResults = PercolatorTrainer.TrainWithScorePrefilter(candidateEntries, localSelected,
+                    trainConfig, log, passLabel, out subsetEntries);
+            }
+            else
+                trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
                 return true;
 
@@ -908,6 +921,8 @@ namespace pwiz.Osprey.FDR
             dedup = null;
             localSelected = null;
             subsetEntries = null;
+            candidateEntries = null;
+            loadEntries = null;
             subsetByFile = null;
 
             // Trees or linear weights - whichever this run trained, exactly as on the projection
@@ -1866,6 +1881,22 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
             return byFile;
+        }
+
+        /// <summary>A training entry for one streamed dedup row, its features not yet loaded.</summary>
+        private static PercolatorEntry NewStreamedEntry(FirstPassDedupRow d)
+        {
+            return new PercolatorEntry
+            {
+                FileName = d.FileName,
+                Peptide = d.Peptide,
+                Charge = d.Charge,
+                IsDecoy = d.IsDecoy,
+                EntryId = d.EntryId,
+                ParquetIndex = d.ParquetIndex,
+                CoelutionSum = d.CoelutionSum,
+                Features = null
+            };
         }
 
         /// <summary>

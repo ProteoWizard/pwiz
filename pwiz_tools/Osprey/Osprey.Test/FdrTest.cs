@@ -1550,6 +1550,131 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Two-round tree training (<c>OSPREY_GBT_PREFILTER_SIZE</c>): the round-2 subset
+        /// selection keeps peptide groups whole, takes them by descending best score and stops at
+        /// the first group that would pass the cap; and the streamed first pass with it on trains
+        /// a tree model on that subset - reported on the [COUNT] channel, different from the
+        /// single-round model, and identical at any thread count.
+        /// </summary>
+        [TestMethod]
+        public void TestGbdtPrefilterTraining()
+        {
+            AssertTopScoringGroupSelection();
+
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_monotone", "Monotone feature", false),
+                new OspreyFeatureInfo("feat_nonmonotone", "Non-monotone feature", false)
+            };
+            PercolatorConfig MakeConfig(int prefilterSize, int threads)
+            {
+                return new PercolatorConfig
+                {
+                    MaxIterations = 3,
+                    FeatureInfos = featureInfos,
+                    UseGradientBoostedTrees = true,
+                    MaxTrainSize = 120,
+                    PrefilterTrainSize = prefilterSize,
+                    NThreads = threads
+                };
+            }
+
+            var fixture = BuildNonMonotoneFirstPassFixture(out var features);
+            var fileNames = fixture.ConvertAll(kv => kv.Key);
+            var streamRows = StreamRowsFrom(fixture);
+            CapturingSink RunArm(PercolatorConfig config, IOspreyLog log, out PercolatorResults model)
+            {
+                PercolatorResults captured = null;
+                var sink = new CapturingSink();
+                Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                    fileNames, streamRows, f => features[f], config, log, "First-pass",
+                    sink, captureModel: m => captured = m));
+                model = captured;
+                return sink;
+            }
+
+            var log = new CapturingLog();
+            var sinkPrefilter = RunArm(MakeConfig(100, 4), log, out var prefilterModel);
+            AssertTreeModel(prefilterModel, 3);
+            AssertScoresVary(fixture, sinkPrefilter);
+            // 300 best-per-precursor candidates; the target-decoy pairs make groups of 2, so
+            // round 2 takes exactly 50 of them.
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter subsample (round 2): 100 precursors (50 targets, 50 decoys) from 300 candidates");
+            // Round 2 starts from the round-1 scores, not from a single feature.
+            StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: round-1 model");
+
+            // Thread-count invariant: the round-1 candidate scoring and the selection depend on
+            // no thread count.
+            var sinkSerial = RunArm(MakeConfig(100, 1), OspreyLog.None, out _);
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkPrefilter, sinkSerial));
+
+            // Round 2 replaced round 1: off, the same pass scores differently.
+            var sinkSingle = RunArm(MakeConfig(0, 4), OspreyLog.None, out _);
+            bool anyDiffers = false;
+            for (int f = 0; f < fixture.Count && !anyDiffers; f++)
+            {
+                for (int r = 0; r < fixture[f].Value.Count; r++)
+                {
+                    if (sinkSingle.ScoreAt(f, r) != sinkPrefilter.ScoreAt(f, r))
+                    {
+                        anyDiffers = true;
+                        break;
+                    }
+                }
+            }
+            Assert.IsTrue(anyDiffers, "the round-2 model must replace the round-1 model");
+        }
+
+        /// <summary>
+        /// <see cref="PercolatorSampling.SelectTopScoringGroups"/> on a hand-built population:
+        /// groups whole (a target, its decoy and a second charge state), descending best score,
+        /// a tie taken in key order, and a stop - not a skip - at the first group that does not fit.
+        /// </summary>
+        private static void AssertTopScoringGroupSelection()
+        {
+            // Index: 0-1 group A, 2-3 group B, 4-6 group C (two charges + decoy), 7-8 group D,
+            // 9-10 group E. Best scores: A 0.5, B 0.9 (on its decoy), C 0.8, D 0.5, E 0.95.
+            var labels = new[] { false, true, false, true, false, false, true, false, true, false, true };
+            var entryIds = new uint[] { 1, 1 | 0x80000000, 2, 2 | 0x80000000, 3, 4, 3 | 0x80000000,
+                5, 5 | 0x80000000, 6, 6 | 0x80000000 };
+            var peptides = new[] { "AAA", "AAAd", "BBB", "BBBd", "CCC", "CCC", "CCCd", "DDD", "DDDd",
+                "EEE", "EEEd" };
+            // Entry 5 is a second charge of CCC with its own base_id and no decoy here: it joins
+            // the CCC group through its own peptide key.
+            var scores = new[] { 0.5, 0.1, 0.2, 0.9, 0.8, 0.3, 0.0, 0.5, 0.4, 0.95, 0.0 };
+
+            // Cap 5: E (2) + B (2) fit; C (3) would pass 5, so the selection stops there even
+            // though a 2-row group would still fit.
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 5));
+            // Cap 9: E, B, C, then A and D tie at 0.5 and A is first in key order.
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 5, 6, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 9));
+            // At or above the population: everything, in order.
+            CollectionAssert.AreEqual(Enumerable.Range(0, 11).ToArray(),
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 11));
+        }
+
+        /// <summary>An <see cref="IOspreyLog"/> that keeps every line it is given.</summary>
+        private sealed class CapturingLog : IOspreyLog
+        {
+            private readonly List<string> _lines = new List<string>();
+
+            public string Text => string.Join(Environment.NewLine, _lines);
+
+            public void LogInfo(string message)
+            {
+                _lines.Add(message);
+            }
+
+            public void LogInfo(LogTag tag, string text)
+            {
+                _lines.Add(text);
+            }
+        }
+
+        /// <summary>
         /// A pretrained model of the other classifier must be refused, and refused before the
         /// Pass 0 ingest: nothing that pass reads can change the answer, and it streams every
         /// file of the join.

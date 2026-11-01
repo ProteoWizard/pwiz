@@ -242,8 +242,16 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static string GbdtValidityKeySuffix(OspreyConfig config)
         {
-            return GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
+            string suffix = GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
                 OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
+            // The two-round training (OSPREY_GBT_PREFILTER_SIZE) trains a different model, so it
+            // is keyed when set - and only then, so every existing key is unchanged without it.
+            if (suffix.Length > 0 && OspreyEnvironment.GbtPrefilterSize > 0)
+            {
+                suffix += string.Format(CultureInfo.InvariantCulture, @";gbtprefilter={0}",
+                    OspreyEnvironment.GbtPrefilterSize);
+            }
+            return suffix;
         }
 
         /// <summary>
@@ -311,6 +319,11 @@ namespace pwiz.Osprey.FDR
                 // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
                 MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
+                // OSPREY_GBT_PREFILTER_SIZE: two-round tree training on the streamed first pass
+                // (0, the default, trains one round). The tree model only.
+                PrefilterTrainSize = config.FdrClassifier == FdrClassifier.Gbdt
+                    ? OspreyEnvironment.GbtPrefilterSize
+                    : 0,
                 // The most regularized C within this fraction of the best inner-CV count
                 // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum,
                 // the pre-#4703 rule).

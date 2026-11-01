@@ -66,6 +66,24 @@ namespace pwiz.Osprey.FDR
         public int MaxTrainSize { get; set; }
 
         /// <summary>
+        /// Rows in the round-2 training subset of the two-round tree training
+        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c>), or 0 (the default) for the usual single round.
+        /// Read only by the streamed first pass, and only for the tree model: there round 1
+        /// trains on the random <see cref="MaxTrainSize"/> subsample as usual, its fold models
+        /// score every best-per-precursor candidate, and round 2 retrains on the best-scoring
+        /// peptide groups up to this many rows. See <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>.
+        /// </summary>
+        public int PrefilterTrainSize { get; set; }
+
+        /// <summary>
+        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run
+        /// even without <c>OSPREY_GBT_OOF</c>: round 1 of the two-round training needs each
+        /// training row's held-out fold to score it out of fold. Not copied by
+        /// <see cref="CloneForTrainOnly"/>.
+        /// </summary>
+        public bool ReportTrainEntryFolds { get; set; }
+
+        /// <summary>
         /// Optional per-feature metadata (machine name, display label, expected
         /// direction) in PIN-index order -- a single vector of
         /// <see cref="OspreyFeatureInfo"/> populated by the Tasks layer from the
@@ -180,6 +198,7 @@ namespace pwiz.Osprey.FDR
                 CValues = CValues,
                 CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
+                PrefilterTrainSize = PrefilterTrainSize,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
                 GbtParams = GbtParams,
