@@ -37,6 +37,12 @@ order, floating-point accumulation order, RNG). The C# port faces the direct
    holds these within the `1e-9` cross-impl gate (see "Float stability").
 4. **Random number generation** — all sampling/shuffling uses a fixed-seed
    deterministic PRNG (`XorShift64`, seed 42).
+5. **The operating system's math library** — `Math.Exp`, `Math.Log` and `Math.Pow` call the C
+   library: the UCRT on Windows, glibc on Linux. The two differ in the last bit or two for about
+   0.5% of arguments, so a result is the same on every run on one operating system but not
+   necessarily across them. `regression.ps1` runs on Windows only. `Osprey.Demux`, whose fixture
+   goldens the Linux build checks too, takes exp and log from `PortableMath` (IEEE arithmetic
+   alone) instead; see [23-demultiplexing.md](23-demultiplexing.md).
 
 ## Step 1 — Total ordering of doubles (`TotalOrder`)
 

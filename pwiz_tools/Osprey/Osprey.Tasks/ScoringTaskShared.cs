@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -111,17 +112,21 @@ namespace pwiz.Osprey.Tasks
             out int unsortedCount, PipelineContext ctx, int concurrentReads = 1)
         {
             unsortedCount = 0;
-            // With --demux auto, a valid demultiplexed cache is all the search needs, so a run
-            // staged demultiplexed can be searched after its source and .spectra.bin are gone.
+            // With --demux, a valid demultiplexed cache is all the search needs, so a run
+            // staged with demux can be searched after its .spectra.bin is gone.
             // concurrentReads: files read at once on other lanes, which share the solve threads.
-            var demultiplex = DemuxCache.CreateParams(ctx.Config, serializeMzmlRead ? 1 : concurrentReads);
-            var demuxHit = DemuxCache.TryOpen(inputFile, ctx);
+            int demuxReads = serializeMzmlRead ? 1 : concurrentReads;
+            var demuxHit = DemuxCacheBuilder.TryOpenDemuxCache(inputFile, ctx);
             if (demuxHit != null)
                 return demuxHit;
+            // With OSPREY_DEMUX_ENGINE=pwiz, ProteoWizard demultiplexes a multiplexed run as it is
+            // read; null otherwise, and Osprey demultiplexes the .spectra.bin (DemuxCacheBuilder).
+            var demultiplex = PwizDemuxCache.CreateParams(ctx.Config, demuxReads);
 
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
+            SpectraWindowIndex hit = null;
             if (File.Exists(cachePath))
             {
                 try
@@ -129,15 +134,7 @@ namespace pwiz.Osprey.Tasks
                     // Cache hit: index the file directly (header pass only) -- never build the
                     // full MS2 list. Returns null when stale/invalid (bad magic/version or the
                     // source fingerprint changed), which falls through to a re-parse below.
-                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
-                    // With --demux auto, the .spectra.bin of a multiplexed run (written by an
-                    // earlier run without it) is not what this search reads: fall through and
-                    // read the run demultiplexed.
-                    if (hit != null && !DemuxCache.IsDemultiplexedRun(hit, ctx.Config))
-                    {
-                        ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_, cachePath));
-                        return hit;
-                    }
+                    hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
                     if (hit == null)
                         ctx.LogInfo(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_);
                 }
@@ -151,6 +148,16 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_index_spectra_cache___0___Re_parsing_the_input_, ex.Message));
                 }
+            }
+            // Outside the try above on purpose: that catch treats every exception as a corrupt
+            // cache and re-parses, which would swallow the demux-off refusal of an overlapping
+            // run and any real demultiplexing error. With ProteoWizard's demultiplexer, the
+            // .spectra.bin of a multiplexed run (written by an earlier run without it) is not what
+            // this search reads: fall through and read the run demultiplexed.
+            if (hit != null && (demultiplex == null || !PwizDemuxCache.IsDemultiplexedRun(hit, ctx.Config)))
+            {
+                ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_, cachePath));
+                return demultiplex == null ? DemuxCacheBuilder.Resolve(inputFile, hit, null, double.NaN, ctx, demuxReads) : hit;
             }
 
             // Miss/stale/absent: parse the input once (materialized only transiently here),
@@ -175,41 +182,48 @@ namespace pwiz.Osprey.Tasks
             SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
+            var parseStopwatch = Stopwatch.StartNew();
             try
             {
-                mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile, demultiplex);
+                mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile, ProfileCentroiding.CreateOptions(ctx.Config), demultiplex);
             }
             finally
             {
                 if (serializeMzmlRead)
                     s_mzmlReadGate.Release();
             }
+            double parseSeconds = parseStopwatch.Elapsed.TotalSeconds;
+            if (!double.IsNaN(mzmlResult.CentroidSigmaMs2))
+            {
+                ctx.LogInfo(string.Format(
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Centroided_the_profile_spectra_with_Centrix__peak_sigma__0_F3__Th_for_MS1__1_F3__Th_for_MS2,
+                    mzmlResult.CentroidSigmaMs1, mzmlResult.CentroidSigmaMs2));
+            }
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
-            // A multiplexed run is written to its own cache, carrying the settings it was
-            // demultiplexed with; any other run to the .spectra.bin as before.
+            // A run ProteoWizard demultiplexed is written to the demultiplexed cache, carrying the
+            // settings it was demultiplexed with; any other run to the .spectra.bin as before.
             string demuxDescriptor = null;
             var scheme = mzmlResult.DemultiplexScheme;
             if (scheme != null)
             {
                 cachePath = SpectraCache.GetDemuxCachePath(inputFile);
-                demuxDescriptor = DemuxCache.Descriptor(demultiplex);
+                demuxDescriptor = PwizDemuxCache.Descriptor(demultiplex);
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Demultiplexed__0____1__isolation_windows_per_cycle_into__2__narrower_windows___3__MS_MS_spectra,
                     Path.GetFileName(inputFile), scheme.SpectraPerCycle * scheme.PrecursorsPerSpectrum,
                     scheme.DemuxWindows, mzmlResult.Ms2Spectra.Count));
-            }
-            else if (mzmlResult.MultiplexedSchemeNotDemultiplexed != null)
-            {
-                ctx.LogWarning(string.Format(
-                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired,
-                    Path.GetFileName(inputFile), OspreyArgNames.Text(OspreyArgNames.DEMUX)));
             }
 
             try
             {
                 SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile,
                     demuxDescriptor);
+                if (demuxDescriptor == null)
+                {
+                    DemuxCacheBuilder.SaveAcquisition(AcquisitionSidecar.PathFor(cachePath), mzmlResult.Acquisition,
+                        inputFile, ctx);
+                }
                 // Name the file that was just written, the way the library cache does. Without
                 // this the only evidence a multi-GB cache was produced is a silent gap in the
                 // log, and nothing says WHERE it landed - which matters because --work-dir
@@ -255,7 +269,10 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath,
                     ParquetScoreCache.EXT_SCORES, CalibrationIO.EXT), indexError);
             }
-            return index;
+            if (demultiplex != null)
+                return index;
+            // The spectra just parsed are still resident, so demultiplexing needs no re-read.
+            return DemuxCacheBuilder.Resolve(inputFile, index, mzmlResult, parseSeconds, ctx, demuxReads);
         }
 
         /// <summary>
@@ -277,7 +294,7 @@ namespace pwiz.Osprey.Tasks
         {
             // A demultiplexed run is rescored from the same demultiplexed cache Stages 1-4
             // searched.
-            var demuxIndex = DemuxCache.TryOpen(inputFile, ctx, loadMs1);
+            var demuxIndex = DemuxCacheBuilder.TryOpenDemuxCache(inputFile, ctx, loadMs1);
             if (demuxIndex != null)
                 return demuxIndex;
 
@@ -316,9 +333,9 @@ namespace pwiz.Osprey.Tasks
                     consumer, cachePath, SpectraCacheException.Describe(reason), remedy, PerFileScoringTask.TASK_NAME),
                     reason, cachePath);
             }
-            // Only the .spectra.bin was found: right for a run that is not multiplexed, wrong
+            // Only the .spectra.bin was found: right for a run that does not overlap, wrong
             // for one that Stages 1-4 searched demultiplexed.
-            DemuxCache.ThrowIfDemuxCacheMissing(inputFile, index, ctx);
+            DemuxCacheBuilder.ThrowIfDemuxCacheMissing(inputFile, index, ctx);
             return index;
         }
 

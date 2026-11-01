@@ -34,6 +34,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.Demux\Osprey.Demux.csproj" />
     <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
     <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
