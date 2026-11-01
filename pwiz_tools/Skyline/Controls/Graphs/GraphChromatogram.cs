@@ -2463,13 +2463,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
-                    for (int iGroup = 0; iGroup < nodeGroups.Count;iGroup++)
+                    var listLabels = new List<string>();
+                    foreach (var nodePep in nodePeps.Distinct())
                     {
-                        double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(nodePeps[iGroup], nodeGroups[iGroup].PrecursorAdduct, FilePath, out _, out retentionTimes))
-                        {
-                            listTimes.AddRange(retentionTimes);
-                        }
+                        var nodeGroupsPep = nodeGroups.Where((_, iGroup) => ReferenceEquals(nodePeps[iGroup], nodePep)).ToList();
+                        AddIdTimes(settings, nodePep, nodeGroupsPep, listTimes, listLabels);
                     }
                     var selectedSpectrum = _stateProvider.SelectedSpectrum;
                     if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
@@ -2477,7 +2475,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
                     }
                     if (listTimes.Count > 0)
+                    {
                         chromGraphPrimary.RetentionMsMs = listTimes.ToArray();
+                        chromGraphPrimary.RetentionMsMsLabels = listLabels.ToArray();
+                    }
 
                     if (settings.PeptideSettings.Libraries.HasMidasLibrary && _stateProvider.SelectedNode != null)
                     {
@@ -2529,6 +2530,53 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds the IDs of every library precursor of a peptide, since all are pooled as evidence for each
+        /// of its precursors, labeling those that are not one of its displayed precursors. Small molecules
+        /// show only the IDs of the displayed precursors, whose adducts may share a charge.
+        /// </summary>
+        private void AddIdTimes(SrmSettings settings, PeptideDocNode nodePep, IList<TransitionGroupDocNode> nodeGroups,
+            List<double> listTimes, List<string> listLabels)
+        {
+            if (!nodePep.IsProteomic)
+            {
+                foreach (var nodeGroup in nodeGroups)
+                {
+                    if (settings.TryGetRetentionTimes(nodePep, nodeGroup.PrecursorAdduct, FilePath, out _, out var retentionTimes))
+                    {
+                        listTimes.AddRange(retentionTimes);
+                        listLabels.AddRange(retentionTimes.Select(_ => GraphsResources.ChromGraphItem_AddAnnotations_ID));
+                    }
+                }
+                return;
+            }
+
+            foreach (var precursorIdTimes in settings.GetPrecursorIdTimes(nodePep, FilePath))
+            {
+                string label = GetIdLabel(precursorIdTimes.Precursor, nodeGroups);
+                listTimes.AddRange(precursorIdTimes.Times);
+                listLabels.AddRange(precursorIdTimes.Times.Select(_ => label));
+            }
+        }
+
+        /// <summary>
+        /// Returns "ID" for the IDs of a displayed precursor, and otherwise adds the charge and,
+        /// when it is not displayed, the label type of the precursor that was identified,
+        /// e.g. "ID +++" or "ID ++ (light)".
+        /// </summary>
+        private static string GetIdLabel(LibraryPrecursor precursor, IList<TransitionGroupDocNode> nodeGroups)
+        {
+            string idText = GraphsResources.ChromGraphItem_AddAnnotations_ID;
+            if (nodeGroups.Any(precursor.IsPrecursor))
+                return idText;
+
+            string chargeText = Transition.GetChargeIndicator(precursor.Adduct);
+            var labelType = precursor.LabelType;
+            if (nodeGroups.Any(nodeGroup => Equals(labelType, nodeGroup.LabelType)))
+                return TextUtil.SpaceSeparate(idText, chargeText);
+            return TextUtil.SpaceSeparate(idText, chargeText, string.Format(@"({0})", labelType));
         }
 
         private static bool IntersectPeaks(ChromPeak peak, TransitionChromInfo chromInfo)

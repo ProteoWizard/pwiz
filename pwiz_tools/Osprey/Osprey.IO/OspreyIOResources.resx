@@ -391,8 +391,8 @@
   <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_" xml:space="preserve">
     <value>Cannot read '{0}': ProteoWizard has no vendor peak picking for this format, and Osprey scores centroided peaks. Convert the file to mzML with {1} and read that instead.</value>
   </data>
-  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_" xml:space="preserve">
-    <value>Cannot read '{0}': this build of Osprey has no vendor instrument support. Rebuild with {1} on {2}, or with '{3}'. Otherwise convert the file to mzML with {4} and read that instead.</value>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_reader_for_this_instrument_vendor_format_" xml:space="preserve">
+    <value>Cannot read '{0}': this copy of Osprey has no reader for this instrument vendor format. Convert the file to mzML with {1} and search that instead.</value>
   </data>
   <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
     <value>Reading {0}</value>

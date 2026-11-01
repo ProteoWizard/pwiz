@@ -884,12 +884,6 @@
   <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>スペクトルライブラリをインポート中</value>
   </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
-    <value>BlibBuildが完了しました。</value>
-  </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
-    <value>BlibBuildを完了できませんでした。</value>
-  </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>詳細ログ</value>
   </data>

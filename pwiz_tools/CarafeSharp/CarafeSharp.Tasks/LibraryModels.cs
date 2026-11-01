@@ -30,9 +30,8 @@ using static TorchSharp.torch;
 namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
-    /// The models a library is predicted with, opened the one way for both predictions: Carafe's
-    /// from a digest (<see cref="LibraryGenerator"/>) and the one from a precursor table
-    /// (<see cref="PrecursorTablePredictor"/>). A saved model file is unpacked into a folder of its
+    /// The models a library is predicted with (<see cref="LibraryGenerator"/>, from a digest or a
+    /// precursor table). A saved model file is unpacked into a folder of its
     /// own, which the caller deletes; the MS2, RT and CCS models come from the model folder's
     /// fine-tuned files where it has them, else from the pretrained archive.
     /// </summary>

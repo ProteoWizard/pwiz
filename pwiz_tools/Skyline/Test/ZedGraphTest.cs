@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
@@ -42,6 +43,28 @@ namespace pwiz.SkylineTest
                 fontSpec.Size = 100;
                 Assert.AreEqual(100, fontSpec.Size);
             }
+        }
+
+        /// <summary>
+        /// Tic values must not carry binary floating point noise, which .NET Core formats in full
+        /// (e.g. "1.1102230246251565e-16" for the zero tic of a -0.6 to 0.8 axis by 0.2).
+        /// </summary>
+        [TestMethod]
+        public void TestScaleTicValuesWithoutNoise()
+        {
+            Assert.AreEqual(0.0, AddSteps(-0.6, 0.2, 3));
+            Assert.AreEqual(0.0, AddSteps(0.6, -0.2, 3));
+            Assert.AreEqual(8.7, AddSteps(0, 0.05, 174));
+            Assert.AreEqual(-0.2, AddSteps(-0.6, 0.2, 2));
+            // Beyond the range of decimal, the double result is returned.
+            Assert.AreEqual(1.2e30, AddSteps(1e30, 1e29, 2), 1e16);
+        }
+
+        private static double AddSteps(double baseVal, double stepSize, double stepCount)
+        {
+            var addSteps = typeof(Scale).GetMethod(@"AddSteps", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.IsNotNull(addSteps);
+            return (double) addSteps.Invoke(null, new object[] { baseVal, stepSize, stepCount });
         }
     }
 }
