@@ -875,6 +875,27 @@ namespace pwiz.Osprey.FDR
             captureModel?.Invoke(trainResults);
             LogBlockReads(log, passLabel, @"training load");
 
+            // OSPREY_GBT_OOF: each training row's held-out fold, by run and parquet row index.
+            Dictionary<string, Dictionary<int, int>> heldOutFolds = null;
+            if (trainResults.TrainEntryFolds != null)
+            {
+                heldOutFolds = new Dictionary<string, Dictionary<int, int>>();
+                int heldOutRows = 0;
+                for (int k = 0; k < subsetEntries.Count; k++)
+                {
+                    int fold = trainResults.TrainEntryFolds[k];
+                    if (fold < 0)
+                        continue;
+                    var entry = subsetEntries[k];
+                    if (!heldOutFolds.TryGetValue(entry.FileName, out var byRow))
+                        heldOutFolds[entry.FileName] = byRow = new Dictionary<int, int>();
+                    byRow[(int)entry.ParquetIndex] = fold;
+                    heldOutRows++;
+                }
+                log.LogInfo(LogTag.COUNT, @"{0} out-of-fold tree scoring for {1} training rows",
+                    passLabel, heldOutRows);
+            }
+
             // Release the pass-0 working sets before the score passes so only the bounded lookups
             // remain resident across the peak. The dedup maps are emptied, not dropped: pass 0's
             // file walk captured them, so they live as long as this method does.
@@ -992,7 +1013,7 @@ namespace pwiz.Osprey.FDR
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
-                            percConfig.NThreads);
+                            percConfig.NThreads, HeldOutFoldsOf(heldOutFolds, fileName));
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
                     // The competition's share of this file, reduced here when it is a first-seen
@@ -1154,7 +1175,7 @@ namespace pwiz.Osprey.FDR
             {
                 FoldRowExperimentValues(fileNames, streamFileRows, loadFileFeatures, rowCounts, sink,
                     experimentScope, tryStreamCompletedScores, gbtModels, avgWeights, avgBias, standardizer,
-                    nFeatures, percConfig.NThreads, fileLanes, log, passLabel, n);
+                    nFeatures, percConfig.NThreads, fileLanes, log, passLabel, n, heldOutFolds);
             }
             sink.Finish(log);
             return false;
@@ -1176,7 +1197,7 @@ namespace pwiz.Osprey.FDR
             ExperimentScope experimentScope, CompletedScoreStreamer tryStreamCompletedScores,
             IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
             FeatureStandardizer standardizer, int nFeatures, int nThreads, int fileLanes, IOspreyLog log,
-            string passLabel, int n)
+            string passLabel, int n, Dictionary<string, Dictionary<int, int>> heldOutFolds)
         {
             int nFiles = fileNames.Count;
             var lane = new LaneCost(FOLD_LANE_BUCKETS);
@@ -1209,7 +1230,7 @@ namespace pwiz.Osprey.FDR
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         scores = new double[count];
                         if (ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
-                                standardizer, nFeatures, nThreads, scores) == null)
+                                standardizer, nFeatures, nThreads, scores, HeldOutFoldsOf(heldOutFolds, fileName)) == null)
                         {
                             var featureBuf = new double[nFeatures];
                             for (int r = 0; r < count; r++)
@@ -1349,15 +1370,22 @@ namespace pwiz.Osprey.FDR
         private static double[] ScoresBeforeRowLoop(
             double[] completedScores, IReadOnlyList<double[]> rows, IReadOnlyList<double> coelutionSums,
             IReadOnlyList<GradientBoostedTrees> gbtModels, FeatureStandardizer standardizer,
-            int nFeatures, int nThreads, double[] destination)
+            int nFeatures, int nThreads, double[] destination, IReadOnlyDictionary<int, int> heldOutFoldByRow = null)
         {
             if (completedScores != null || gbtModels == null)
                 return completedScores;
             // The running row ordinal IS the parquet row index here, exactly as it is for
             // ComputeStreamedScore: the rows arrive in parquet order.
             ScoreRowsGbt(destination.Length, r => ResolveFeatureRow(rows, (uint)r, coelutionSums[r], nFeatures),
-                gbtModels, standardizer, nFeatures, destination, 0, nThreads);
+                gbtModels, standardizer, nFeatures, destination, 0, nThreads, heldOutFoldByRow);
             return destination;
+        }
+
+        /// <summary>One run's held-out folds by parquet row index, or <c>null</c> when there are none.</summary>
+        private static IReadOnlyDictionary<int, int> HeldOutFoldsOf(
+            Dictionary<string, Dictionary<int, int>> heldOutFolds, string fileName)
+        {
+            return heldOutFolds != null && heldOutFolds.TryGetValue(fileName, out var byRow) ? byRow : null;
         }
 
         /// <summary>
@@ -1500,13 +1528,14 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         private static double[] ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
             IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
-            FeatureStandardizer standardizer, int nFeatures, int nThreads)
+            FeatureStandardizer standardizer, int nFeatures, int nThreads,
+            IReadOnlyDictionary<int, int> heldOutFoldByRow)
         {
             RowBuffer rows = file.Rows;
             int count = rows.Count;
             var scores = new double[count];
             bool linear = ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
-                standardizer, nFeatures, nThreads, scores) == null;
+                standardizer, nFeatures, nThreads, scores, heldOutFoldByRow) == null;
             file.Scores = scores;
             var share = new FeatureContributions.Accumulator(nFeatures, true);
             var featureBuf = new double[nFeatures];
