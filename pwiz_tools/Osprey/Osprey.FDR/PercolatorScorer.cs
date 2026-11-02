@@ -772,30 +772,6 @@ namespace pwiz.Osprey.FDR
                     dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
             }
 
-            // OSPREY_GBT_PREFILTER_SIZE: two-round tree training scores EVERY deduped candidate with
-            // the round-1 models, so every candidate becomes an entry and has its features loaded;
-            // the round-1 subset is the same entry objects. Off (the default), only the subset is
-            // built and loaded, as always. A resume trains nothing, so it never needs the candidates.
-            bool prefilter = percConfig.UseGradientBoostedTrees && percConfig.PrefilterTrainSize > 0 &&
-                             pretrainedModel == null;
-            List<PercolatorEntry> candidateEntries = null;
-            if (prefilter)
-            {
-                candidateEntries = new List<PercolatorEntry>(m);
-                foreach (var d in dedup)
-                    candidateEntries.Add(NewStreamedEntry(d));
-            }
-            int subTargets = 0;
-            var subsetEntries = new List<PercolatorEntry>(localSelected.Length);
-            foreach (int li in localSelected)
-            {
-                var d = dedup[li];
-                if (!d.IsDecoy) subTargets++;
-                subsetEntries.Add(candidateEntries != null ? candidateEntries[li] : NewStreamedEntry(d));
-            }
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
-                passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets);
-
             // A persisted model is only usable if it was trained on THIS run's feature set, and
             // nothing upstream can establish that: the validity key the caller checks carries no
             // feature-set or build term, so a model from a build with a different feature list
@@ -803,9 +779,11 @@ namespace pwiz.Osprey.FDR
             // vector mid-score-pass or, when it is wider, silently truncate it and apply the
             // standardizer at the wrong width - scores that look plausible and are wrong.
             //
-            // Checked HERE, above the subset load, because rejecting it after that branch would
-            // leave the subset unloaded and then train on entries with no features. (The
-            // classifier, which needs no ingest to judge, is checked on entry.)
+            // Checked HERE, above the training-entry build and the subset load, because both
+            // depend on whether a model is trained: rejecting it after them would leave the
+            // subset unloaded and then train on entries with no features, or train a single round
+            // where the two-round training was asked for. (The classifier, which needs no ingest
+            // to judge, is checked on entry.)
             if (pretrainedModel != null)
             {
                 var pretrainedTrees = ResolveGbtModels(pretrainedModel);
@@ -822,10 +800,52 @@ namespace pwiz.Osprey.FDR
                         OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Ignoring_the_saved_first_pass_model__it_has__0__features_and_this_run_scores__1___, modelFeatures, nFeatures));
                     pretrainedModel = null;
                 }
+                else if (percConfig.ReportTrainEntryFolds && percConfig.UseGradientBoostedTrees &&
+                         (pretrainedModel.TrainEntryFolds == null || percConfig.PrefilterTrainSize > 0))
+                {
+                    // OSPREY_GBT_OOF needs each training row's held-out fold. A saved model does
+                    // not carry them (they are not persisted), and under the two-round training
+                    // they index round 2's rows, which this pass cannot rebuild without training.
+                    // Adopted, the model would score the training rows of the files left to score
+                    // with the fold mean. Retraining is deterministic, so it reproduces the model
+                    // the saved scores came from, folds included.
+                    log.LogInfo(@"OSPREY_GBT_OOF=1 is set: retraining the first-pass model, because " +
+                                @"the saved one cannot supply its training rows' held-out folds.");
+                    pretrainedModel = null;
+                }
             }
 
-            // Load ONLY the subset's feature vectors, one file at a time (bounded by MaxTrainSize),
-            // cloning each row so the subset entry owns it -- mirrors RunStreamingIntoProjection.
+            // OSPREY_GBT_PREFILTER_SIZE: two-round tree training scores EVERY deduped candidate with
+            // the round-1 models, so every candidate becomes an entry and has its features loaded;
+            // the round-1 subset is the same entry objects. Off (the default), only the subset is
+            // built and loaded, as always. A resume trains nothing, so it never needs the candidates.
+            bool prefilter = percConfig.UseGradientBoostedTrees && percConfig.PrefilterTrainSize > 0 &&
+                             pretrainedModel == null;
+            List<PercolatorEntry> candidateEntries = null;
+            if (prefilter)
+            {
+                candidateEntries = new List<PercolatorEntry>(m);
+                foreach (var d in dedup)
+                    candidateEntries.Add(NewStreamedEntry(d));
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter candidates: loading features for all {1} best-per-precursor precursors",
+                    passLabel, candidateEntries.Count);
+            }
+            int subTargets = 0;
+            var subsetEntries = new List<PercolatorEntry>(localSelected.Length);
+            foreach (int li in localSelected)
+            {
+                var d = dedup[li];
+                if (!d.IsDecoy) subTargets++;
+                subsetEntries.Add(candidateEntries != null ? candidateEntries[li] : NewStreamedEntry(d));
+            }
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
+                passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets);
+
+            // Load the training entries' feature vectors, one file at a time, cloning each row so
+            // the entry owns it -- mirrors RunStreamingIntoProjection. By default that is ONLY the
+            // subset, bounded by MaxTrainSize. With the two-round training it is every deduped
+            // candidate, so the resident features grow from MaxTrainSize rows to the candidate
+            // count (about candidates x features doubles).
             var loadEntries = candidateEntries ?? subsetEntries;
             var subsetByFile = GroupIndicesByFileName(loadEntries);
             // Both skipped when the caller supplied the model this pass would have trained.

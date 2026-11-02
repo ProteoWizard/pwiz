@@ -741,6 +741,9 @@ namespace pwiz.Osprey.Core
         /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
         /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
         /// of every fold model (two of which trained on it). Not keyed: run it into its own output directory.
+        /// The held-out folds are not persisted with the first-pass model, so a resumed first pass retrains
+        /// rather than adopt the saved model. Known limitation: the second-pass rescoring and transfer
+        /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
         /// </summary>
         public static readonly bool GbtOutOfFold = ParseIntOrNull(@"OSPREY_GBT_OOF") == 1;
 
@@ -749,6 +752,9 @@ namespace pwiz.Osprey.Core
         /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
         /// round 2 retrains on the N rows of the peptide groups that score best. Tree model only; 0 when unset.
         /// Keyed through the gbdt validity-key term, so a run with it never adopts outputs trained without it.
+        /// Memory: the first pass then loads the features of every best-per-precursor candidate, not only the
+        /// MaxTrainSize subsample - about candidates x features doubles resident during training. Read only
+        /// by the streamed first pass; the projection path ignores it and logs a warning.
         /// </summary>
         public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(@"OSPREY_GBT_PREFILTER_SIZE"));
 

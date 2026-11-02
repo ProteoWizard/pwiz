@@ -76,9 +76,11 @@ namespace pwiz.Osprey.FDR
         public int PrefilterTrainSize { get; set; }
 
         /// <summary>
-        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run
-        /// even without <c>OSPREY_GBT_OOF</c>: round 1 of the two-round training needs each
-        /// training row's held-out fold to score it out of fold. Not copied by
+        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run, so
+        /// the caller can score each training row with only the fold model that held it out.
+        /// Set from <c>OSPREY_GBT_OOF</c> by the Tasks-layer config build, so the trainer reads no
+        /// environment; round 1 of the two-round training also sets it on its own copy, because
+        /// it scores its training rows out of fold either way. Copied by
         /// <see cref="CloneForTrainOnly"/>.
         /// </summary>
         public bool ReportTrainEntryFolds { get; set; }
@@ -199,6 +201,7 @@ namespace pwiz.Osprey.FDR
                 CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
                 PrefilterTrainSize = PrefilterTrainSize,
+                ReportTrainEntryFolds = ReportTrainEntryFolds,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
                 GbtParams = GbtParams,

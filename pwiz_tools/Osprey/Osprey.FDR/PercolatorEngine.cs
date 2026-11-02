@@ -324,6 +324,10 @@ namespace pwiz.Osprey.FDR
                 PrefilterTrainSize = config.FdrClassifier == FdrClassifier.Gbdt
                     ? OspreyEnvironment.GbtPrefilterSize
                     : 0,
+                // OSPREY_GBT_OOF: the trainer reports each training row's held-out fold, so the
+                // score pass scores that row out of fold. The tree model only.
+                ReportTrainEntryFolds = config.FdrClassifier == FdrClassifier.Gbdt &&
+                                        OspreyEnvironment.GbtOutOfFold,
                 // The most regularized C within this fraction of the best inner-CV count
                 // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum,
                 // the pre-#4703 rule).
@@ -474,6 +478,14 @@ namespace pwiz.Osprey.FDR
             // scale (the direct-vs-streaming dispatch is gone).
             log.LogInfo(LogTag.PATH, @"{0} projection streaming ingest (RunStreamingIntoProjection): {1} rows",
                 passLabel, n);
+            // OSPREY_GBT_PREFILTER_SIZE is keyed for every task, but only the streamed first pass
+            // (RunStreamingFirstPass) trains two rounds; say so where it is ignored.
+            if (percConfig.UseGradientBoostedTrees && percConfig.PrefilterTrainSize > 0)
+            {
+                log.LogInfo(string.Format(CultureInfo.InvariantCulture,
+                    @"Warning: OSPREY_GBT_PREFILTER_SIZE={0} is ignored by the {1} projection path, which trains one round.",
+                    percConfig.PrefilterTrainSize, passLabel));
+            }
 
             int maxTrain = percConfig.MaxTrainSize;
 

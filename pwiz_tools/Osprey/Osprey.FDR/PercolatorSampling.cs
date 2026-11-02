@@ -424,10 +424,10 @@ namespace pwiz.Osprey.FDR
                 return all;
             }
 
-            var groups = new List<KeyValuePair<string, List<int>>>(
-                BuildPeptideGroups(labels, entryIds, peptides));
-            var bestScores = new Dictionary<string, double>(groups.Count);
-            foreach (var group in groups)
+            // Each group carries its best score, so the sort compares fields, not lookups.
+            var peptideGroups = BuildPeptideGroups(labels, entryIds, peptides);
+            var groups = new List<ScoredGroup>(peptideGroups.Count);
+            foreach (var group in peptideGroups)
             {
                 double best = double.NegativeInfinity;
                 foreach (int i in group.Value)
@@ -435,20 +435,20 @@ namespace pwiz.Osprey.FDR
                     if (scores[i] > best)
                         best = scores[i];
                 }
-                bestScores[group.Key] = best;
+                groups.Add(new ScoredGroup(group.Key, group.Value, best));
             }
             groups.Sort((a, b) => // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the ordinal key tie-break makes this a total order
             {
-                int c = bestScores[b.Key].CompareTo(bestScores[a.Key]);
+                int c = b.BestScore.CompareTo(a.BestScore);
                 return c != 0 ? c : string.Compare(a.Key, b.Key, StringComparison.Ordinal);
             });
 
             var selected = new List<int>(maxEntries);
             foreach (var group in groups)
             {
-                if (selected.Count + group.Value.Count > maxEntries && selected.Count > 0)
+                if (selected.Count + group.Rows.Count > maxEntries && selected.Count > 0)
                     break;
-                selected.AddRange(group.Value);
+                selected.AddRange(group.Rows);
             }
 
             selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
@@ -491,6 +491,21 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
             return peptideGroups;
+        }
+
+        /// <summary>A peptide group's key and rows, with the best row score it is ranked by.</summary>
+        private readonly struct ScoredGroup
+        {
+            public ScoredGroup(string key, List<int> rows, double bestScore)
+            {
+                Key = key;
+                Rows = rows;
+                BestScore = bestScore;
+            }
+
+            public string Key { get; }
+            public List<int> Rows { get; }
+            public double BestScore { get; }
         }
     }
 }

@@ -1582,13 +1582,14 @@ namespace pwiz.Osprey.Test
             var fixture = BuildNonMonotoneFirstPassFixture(out var features);
             var fileNames = fixture.ConvertAll(kv => kv.Key);
             var streamRows = StreamRowsFrom(fixture);
-            CapturingSink RunArm(PercolatorConfig config, IOspreyLog log, out PercolatorResults model)
+            CapturingSink RunArm(PercolatorConfig config, IOspreyLog log, out PercolatorResults model,
+                PercolatorResults pretrained = null)
             {
                 PercolatorResults captured = null;
                 var sink = new CapturingSink();
                 Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
                     fileNames, streamRows, f => features[f], config, log, "First-pass",
-                    sink, captureModel: m => captured = m));
+                    sink, captureModel: m => captured = m, pretrainedModel: pretrained));
                 model = captured;
                 return sink;
             }
@@ -1603,6 +1604,12 @@ namespace pwiz.Osprey.Test
                 "First-pass Percolator prefilter subsample (round 2): 100 precursors (50 targets, 50 decoys) from 300 candidates");
             // Round 2 starts from the round-1 scores, not from a single feature.
             StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: round-1 model");
+            // Every candidate's features are loaded, and the count is reported.
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter candidates: loading features for all 300 best-per-precursor precursors");
+            // Without OSPREY_GBT_OOF the model used reports no held-out folds, even though round 1
+            // scored its own training rows out of fold.
+            Assert.IsNull(prefilterModel.TrainEntryFolds);
 
             // Thread-count invariant: the round-1 candidate scoring and the selection depend on
             // no thread count.
@@ -1624,6 +1631,43 @@ namespace pwiz.Osprey.Test
                 }
             }
             Assert.IsTrue(anyDiffers, "the round-2 model must replace the round-1 model");
+
+            AssertOutOfFoldConfigAndResume(MakeConfig(100, 4), featureInfos, fixture, RunArm);
+        }
+
+        private delegate CapturingSink FirstPassArm(PercolatorConfig config, IOspreyLog log,
+            out PercolatorResults model, PercolatorResults pretrained = null);
+
+        /// <summary>
+        /// <c>OSPREY_GBT_OOF</c> travels in the config, not the environment: the config build sets
+        /// it from the variable (unset here), the train-only copy keeps it, and the trainer then
+        /// reports the held-out folds of the model it uses. A saved model cannot supply them, so a
+        /// resume under it retrains - before the two-round decision, so the retrain is still two
+        /// rounds - and, training being deterministic, scores exactly as the fresh run did.
+        /// </summary>
+        private static void AssertOutOfFoldConfigAndResume(PercolatorConfig oofConfig,
+            OspreyFeatureInfo[] featureInfos, List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            FirstPassArm runArm)
+        {
+            var built = PercolatorEngine.BuildProjectionPercolatorConfig(
+                new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, featureInfos, null);
+            Assert.AreEqual(OspreyEnvironment.GbtOutOfFold, built.ReportTrainEntryFolds);
+            oofConfig.ReportTrainEntryFolds = true;
+            Assert.IsTrue(oofConfig.CloneForTrainOnly().ReportTrainEntryFolds);
+
+            var log = new CapturingLog();
+            var sinkFresh = runArm(oofConfig, log, out var oofModel);
+            Assert.IsNotNull(oofModel.TrainEntryFolds);
+            StringAssert.Contains(log.Text, "First-pass out-of-fold tree scoring for 100 training rows");
+
+            // The persisted model carries no folds; adopting it would score the training rows
+            // with the fold mean, so it is retrained instead.
+            oofModel.TrainEntryFolds = null;
+            var resumeLog = new CapturingLog();
+            var sinkResumed = runArm(oofConfig, resumeLog, out _, oofModel);
+            StringAssert.Contains(resumeLog.Text, "OSPREY_GBT_OOF=1 is set: retraining the first-pass model");
+            StringAssert.Contains(resumeLog.Text, "First-pass Percolator prefilter subsample (round 2)");
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkFresh, sinkResumed));
         }
 
         /// <summary>

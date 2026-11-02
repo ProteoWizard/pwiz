@@ -319,8 +319,7 @@ namespace pwiz.Osprey.FDR
                         : null,
                     Standardizer = standardizer,
                     IterationsPerFold = trainIterations,
-                    TrainEntryFolds = foldGbtModels != null &&
-                                      (OspreyEnvironment.GbtOutOfFold || config.ReportTrainEntryFolds)
+                    TrainEntryFolds = foldGbtModels != null && config.ReportTrainEntryFolds
                         ? BuildEntryFolds(n, trainSubset, foldAssignments)
                         : null
                 };
@@ -507,17 +506,15 @@ namespace pwiz.Osprey.FDR
                 throw new ArgumentOutOfRangeException(nameof(trainConfig), @"PrefilterTrainSize must be positive.");
 
             // Round 1: exactly the single-round training, plus each training row's held-out fold.
+            // No diagnostic dumps: they describe the model that is used, which is round 2's, so a
+            // dump-only request aborts on round 2's state (and round 1 never aborts).
             var round1Entries = new List<PercolatorEntry>(round1Subset.Length);
             foreach (int k in round1Subset)
                 round1Entries.Add(candidates[k]);
             var round1Config = trainConfig.CloneForTrainOnly();
             round1Config.ReportTrainEntryFolds = true;
+            round1Config.Diagnostics = null;
             var round1 = RunPercolator(round1Entries, round1Config);
-            if (round1.DiagnosticAbort)
-            {
-                round2Entries = round1Entries;
-                return round1;
-            }
 
             // Score every candidate with the round-1 models, out of fold where it trained.
             int m = candidates.Count;
