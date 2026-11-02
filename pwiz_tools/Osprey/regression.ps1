@@ -730,6 +730,61 @@ function Remove-Staging([string]$Path) {
     Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# An Osprey.exe left running by an earlier or an aborted phase holds the build output locked,
+# so the next build fails, and keeps its memory, so the next run can fail too (issue #4503).
+function Stop-LaunchedOsprey {
+    <#
+    Kill every Osprey.exe this script started that is still running, with its process tree,
+    and wait for it to exit (issue #4503). Called from the finally of every launch and from
+    the script's own finally.
+
+    A launch returns only after its Osprey.exe has exited, so on the normal path this finds
+    nothing; it is the guarantee that no abort path - present or future - returns from a phase
+    with the worker still running. Children of THIS pwsh only: regression-parallel.ps1 runs
+    other lanes on the same exe at the same time.
+    #>
+    $exeName = Split-Path -Leaf $ospreyExe
+    $running = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$PID AND Name='$exeName'" `
+        -ErrorAction SilentlyContinue)
+    Stop-OspreyTree $running 'left running by an aborted phase'
+}
+
+function Stop-OrphanedOsprey {
+    <#
+    Kill any Osprey.exe running from THIS build tree whose parent process is gone (issue #4503).
+
+    Stop-LaunchedOsprey cannot cover a run whose pwsh was itself killed - a TeamCity timeout, an
+    OOM kill, a reaped session - because no finally runs then, and Windows does not end a
+    child with its parent. The orphan keeps the build output locked, so the next run fails to
+    build, and keeps its memory, so the run after that can fail too. A run with a live parent
+    is left alone: that is another lane or a developer's own run, not an orphan. A parent PID
+    since reused by a NEWER process is still a dead parent, hence the creation-time test.
+    #>
+    $exeName = Split-Path -Leaf $ospreyExe
+    $all = @(Get-CimInstance Win32_Process -Filter "Name='$exeName'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.ExecutablePath -and
+            [string]::Equals($_.ExecutablePath, $ospreyExe, [StringComparison]::OrdinalIgnoreCase) })
+    $orphans = @(foreach ($p in $all) {
+        $parent = Get-CimInstance Win32_Process -Filter "ProcessId=$($p.ParentProcessId)" `
+            -ErrorAction SilentlyContinue
+        if ($null -eq $parent -or $parent.CreationDate -gt $p.CreationDate) { $p }
+    })
+    Stop-OspreyTree $orphans 'orphaned by an earlier run'
+}
+
+function Stop-OspreyTree([object[]]$Processes, [string]$Why) {
+    foreach ($o in $Processes) {
+        Write-Host ("  WARN: stopping {0} (pid {1}) {2}" -f $o.Name, $o.ProcessId, $Why) -ForegroundColor Yellow
+        & taskkill.exe /T /F /PID $o.ProcessId 2>&1 | Out-Null
+        # taskkill returns before the process is gone, and its handles - the locks on the build
+        # output - are released only at exit.
+        Wait-Process -Id $o.ProcessId -Timeout 60 -ErrorAction SilentlyContinue
+    }
+}
+
+# Before the build, because the build is what an orphan's lock breaks.
+Stop-OrphanedOsprey
+
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
     # Refuse -Source raw without the licence rather than building a reader that cannot
@@ -859,6 +914,7 @@ function Invoke-OspreyRun {
         $exit = $LASTEXITCODE
         $sw.Stop()
     } finally {
+        Stop-LaunchedOsprey
         Pop-Location
         if ($DumpProteinFdr) { Remove-Item Env:OSPREY_DUMP_STAGE7_PROTEIN_FDR -ErrorAction SilentlyContinue }
     }
@@ -1105,9 +1161,14 @@ function Resolve-DatasetInputs {
         if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
         if ($manifest) { $exportArgs += @('--decoy-pairing-manifest', $manifest) }
         Write-Host "  exporting the library as a .blib for the legs to search..."
-        & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $blibTmp)) {
-            throw "Exporting $library as a .blib failed (exit $LASTEXITCODE); see $exportLog"
+        try {
+            & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
+            $exportExit = $LASTEXITCODE
+        } finally {
+            Stop-LaunchedOsprey
+        }
+        if ($exportExit -ne 0 -or -not (Test-Path $blibTmp)) {
+            throw "Exporting $library as a .blib failed (exit $exportExit); see $exportLog"
         }
         Move-Item $blibTmp $blib -Force
         $saved = Select-String -Path $exportLog -Pattern 'Saved [\d,]+ library precursors? to' | Select-Object -Last 1
@@ -1712,6 +1773,7 @@ function Invoke-OspreyTaskRun {
         & $ospreyExe @CliArgs 2>&1 | Tee-Object -FilePath $logPath | Out-Null
         $exit = $LASTEXITCODE
     } finally {
+        Stop-LaunchedOsprey
         Pop-Location
     }
     Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
@@ -1799,6 +1861,7 @@ function Get-DeclaredTaskFiles {
         $lines = @(& $ospreyExe @CliArgs '--task-files' 2>&1 | ForEach-Object { "$_" })
         $exit = $LASTEXITCODE
     } finally {
+        Stop-LaunchedOsprey
         Pop-Location
     }
     if ($exit -ne 0) {
@@ -2933,6 +2996,8 @@ catch {
     Write-Host ($_.ScriptStackTrace) -ForegroundColor DarkGray
 }
 finally {
+    # No Osprey.exe outlives the run that started it, whatever happened above.
+    Stop-LaunchedOsprey
     # Restore the operator's environment, whatever happened above.
     if (-not [string]::IsNullOrEmpty($script:priorSvmCTolerance)) {
         $env:OSPREY_SVM_C_TOLERANCE = $script:priorSvmCTolerance
