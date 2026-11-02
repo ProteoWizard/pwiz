@@ -389,6 +389,7 @@ namespace pwiz.Osprey.Test
                 File.Copy(product, Path.Combine(referenceDir, Path.GetFileName(product)));
             }
             string ReferenceOf(string product) => Path.Combine(referenceDir, Path.GetFileName(product));
+            AssertRunCutoffSeries(pass1, DataInputs().Count());
 
             // Mode 5: the rehydrated second pass re-emits the pass-2 product and the report,
             // unchanged. Deleted first: a product left in place would be adopted as current and
@@ -475,6 +476,23 @@ namespace pwiz.Osprey.Test
             AssertBlibsEqual(ReferenceOf(blib), blib);
             Assert.IsFalse(File.Exists(pass1), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) +
                 @" wrote the pass-1 product, which only FirstPassFDR owns");
+        }
+
+        /// <summary>
+        /// The per-run co-assignment boundary is a series in the diagnostics product, one value per
+        /// input run, rather than a log line per run (issue #4672).
+        /// </summary>
+        private static void AssertRunCutoffSeries(string pass1Product, int nRuns)
+        {
+            var coAssignment = JObject.Parse(File.ReadAllText(pass1Product))[@"coAssignment"];
+            Assert.IsNotNull(coAssignment, @"the pass-1 product has no peak co-assignment panel");
+            var runNames = coAssignment[@"runNames"]?.ToObject<string[]>();
+            var runCutoffs = coAssignment[@"runCutoffs"]?.ToObject<double[]>();
+            Assert.IsNotNull(runNames, @"the co-assignment panel names no runs");
+            Assert.IsNotNull(runCutoffs, @"the co-assignment panel has no per-run boundaries");
+            Assert.AreEqual(nRuns, runNames.Length, @"one run name per input");
+            Assert.AreEqual(nRuns, runCutoffs.Length, @"one boundary per run");
+            Assert.IsTrue(runCutoffs.All(c => !double.IsNaN(c)), @"every subset run accepts precursors, so has a boundary");
         }
 
         /// <summary>

@@ -244,23 +244,21 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // on this panel gated by score rather than by its own q, so it is the only one with no
             // independent check on the page - a boundary that drifts produces a plausible-looking
             // number instead of an obvious failure. Printing the boundary, the accepted count
-            // behind it, and how many precursors clear it makes the panel self-diagnosing.
+            // behind it, and how many precursors clear it makes the panel self-diagnosing. The
+            // per-RUN boundaries are in the report (CoAssignmentData.RunCutoffs), plotted over the
+            // run axis: as one log line per run they were 446 lines on a 446-run cohort, and the
+            // outlier they were meant to expose was unreadable among them (issue #4672).
             builder.CountAboveExperimentCutoff(out int aboveDecoys, out int aboveNonDecoys);
             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_COASSIGN_BOUNDARY,
                 @"pass=1 experiment={0:F4} accepted={1} decoys-above={2} non-decoys-above={3}",
                 builder.ExperimentCutoff, builder.AcceptedForCutoff, aboveDecoys, aboveNonDecoys));
-            for (int f = 0; f < fileNames.Count; f++)
-            {
-                log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_COASSIGN_BOUNDARY,
-                    @"pass=1 run={0} cutoff={1:F4}", fileNames[f], builder.RunCutoff(f)));
-            }
 
             int totalDetected = 0, totalUnresolved = 0;
             // Reported because this loop is the panel's whole cost and it used to run SILENT. On
-            // the 82-file SEA-AD run it went 101 s between the last per-run boundary line and the
-            // completion summary with nothing in between, which reads as a hung run - the same
-            // shape as the unreported spectra-cache write. The per-run boundary lines above are
-            // one-per-file and cheap; this pass is where the time actually goes.
+            // the 82-file SEA-AD run it went 101 s between the boundary lines that used to stand
+            // above and the completion summary with nothing in between, which reads as a hung run -
+            // the same shape as the unreported spectra-cache write. This pass is where the time
+            // actually goes.
             // Attribution for this pass's allocation, off unless asked for. It is what found the
             // parquet column read the v7 sidecar removed - two 58-minute cohort runs looking at
             // memory curves found nothing, and ten seconds of this on three files named the call
