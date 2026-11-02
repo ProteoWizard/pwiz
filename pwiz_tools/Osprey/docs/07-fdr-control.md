@@ -174,7 +174,7 @@ for `percolator` and 1.27% for `gbdt` in the second pass (1.24% and 1.65% in the
 is a baseline for feature work, not a verdict on either classifier.
 
 **Every first-pass path trains and scores the trees.** A default run takes the lean
-counts-only first pass (`PercolatorScorer.RunStreamingFirstPass`) for `gbdt` exactly as for
+counts-only first pass (`PercolatorEngine.RunStreamingFirstPass`) for `gbdt` exactly as for
 the SVM, since both are the Percolator framework; the projection buffer takes the resident
 path. Both hand the trainer the same
 `PercolatorConfig.CloneForTrainOnly()` copy and score through the same per-classifier code:
@@ -215,7 +215,7 @@ re-run as gbdt, a gbdt directory written before the lean first pass trained tree
 `OSPREY_GBT_*` sweep point re-run as the next all recompute instead of reusing the other arm's
 results. A current model of the other classifier can therefore only reach a resume through a
 defect, and the refusals that remain are the backstop: the lean first pass throws before its
-ingest when handed one (`PercolatorScorer.RunStreamingFirstPass`), and the all-sidecars-current
+ingest when handed one (`PercolatorEngine.RunStreamingFirstPass`), and the all-sidecars-current
 resume declines to enter at the compaction gate with one and recomputes
 (`FirstPassFdrTask.CompactionGateRefusals`).
 
@@ -235,7 +235,7 @@ upstream competition. The C# port is **streaming-only**: the former sub-threshol
 change, so C# and Rust fit the standardizer on subsets built by the same selection code at
 every scale — though **no longer on the same subset by default**, since the training
 selection below is C#-only (`PercolatorEngine.RunStreamingIntoProjection`,
-`PercolatorScorer.RunStreamingFirstPass`).
+`PercolatorEngine.RunStreamingFirstPass`).
 
 ### 3a. Standardize features
 
@@ -361,7 +361,7 @@ before that step (`PercolatorTrainer.cs:264-289`). The streaming score passes -
 `ScoreProjectionAndComputeFdrInPlace` and `RunStreamingFirstPass` - then apply `standardizer` + the fold average (the averaged weights +
 bias for the SVM, the fold margins averaged per row for trees) to **every** entry, the
 training-subset entries included, reloading features one file at a time
-(`PercolatorScorer.cs:63`, `PercolatorScorer.cs:272`). See "GBDT" above for what that
+(`PercolatorScorer.ScoreProjectionAndComputeFdrInPlace`, `PercolatorEngine.RunStreamingFirstPass`). See "GBDT" above for what that
 in-sample scoring means for trees.
 
 #### Reading the feature-contribution table
