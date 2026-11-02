@@ -306,6 +306,27 @@
     </ItemGroup>
   </Target>
 
+  <!-- Content can carry its own copy of an assembly Skyline also references: the Shimadzu reader
+       ships its SDK's Google.Protobuf 3.7.0 as Content, which reaches Skyline both through the
+       ProjectReference chain and through the msconvert and bullseye-sharp folders deployed above,
+       while Skyline uses the 3.27.3 package. Content is copied after references and skips the
+       package conflict resolution, so the older copy replaced Skyline's and Skyline failed to load
+       it. Skyline's own reference wins: drop any file to copy that lands on a copy-local
+       reference's path. The lists are filtered after GetCopyToOutputDirectoryItems because it
+       collects the transitive Content inside its own body. -->
+  <Target Name="_DropContentShadowingReferences"
+          AfterTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup>
+      <_CopyLocalTargetPath Include="@(ReferenceCopyLocalPaths->'%(DestinationSubDirectory)%(Filename)%(Extension)')" />
+      <_CopyLocalTargetPath>
+        <TargetPath>%(Identity)</TargetPath>
+      </_CopyLocalTargetPath>
+      <_SourceItemsToCopyToOutputDirectoryAlways Remove="@(_CopyLocalTargetPath)" MatchOnMetadata="TargetPath" MatchOnMetadataOptions="PathLike" />
+      <_SourceItemsToCopyToOutputDirectory Remove="@(_CopyLocalTargetPath)" MatchOnMetadata="TargetPath" MatchOnMetadataOptions="PathLike" />
+      <_SourceItemsToCopyToOutputDirectoryIfDifferent Remove="@(_CopyLocalTargetPath)" MatchOnMetadata="TargetPath" MatchOnMetadataOptions="PathLike" />
+    </ItemGroup>
+  </Target>
+
   <!-- AlphaPeptDeep library prediction runs in Osprey (pwiz_tools\Osprey), downloaded to the Tools
        folder at first use, whose package carries CarafeSharp's TorchSharp port of the peptdeep models,
        the pretrained models and the CPU libtorch; Skyline ships none of them and loads no torch
