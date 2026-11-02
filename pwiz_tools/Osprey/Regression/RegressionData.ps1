@@ -240,9 +240,11 @@ function Get-RegressionData {
     each run's '*.reconciliation.json', which it writes - so those tasks must
     report cache hits while the two joins re-run.
 
-    Deleting nothing is treated as a hard failure: if the artifact names ever
-    drift, this throws instead of yielding a green "resume" leg that resumed
-    nothing.
+    Deleting nothing of EITHER kind is treated as a hard failure: if the
+    artifact names ever drift, this throws instead of yielding a "resume" leg
+    that resumed only half of what it claims. Checked per kind rather than on
+    the combined match, which a drift in just one of the two names would still
+    satisfy.
 
 .PARAMETER WorkDir
     The straight-through run directory to invalidate in place.
@@ -250,15 +252,19 @@ function Get-RegressionData {
 function Invoke-ResumeInvalidation {
     param([Parameter(Mandatory=$true)][string]$WorkDir)
 
-    $targets = Get-ChildItem -Path $WorkDir -File | Where-Object {
-        $_.Name -like '*.1st-pass.*' -or $_.Name -eq 'output.blib'
+    $files = @(Get-ChildItem -Path $WorkDir -File)
+    $kinds = [ordered]@{
+        "FirstPassFDR's '*.1st-pass.*' products" = @($files | Where-Object { $_.Name -like '*.1st-pass.*' })
+        "SecondPassFDR's 'output.blib'"          = @($files | Where-Object { $_.Name -eq 'output.blib' })
     }
-    if (-not $targets) {
-        throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
-                "would not have resumed. Expected FirstPassFDR's '*.1st-pass.*' " +
-                "products and SecondPassFDR's 'output.blib'; " +
-                "check those artifact names have not changed.") -f $WorkDir)
+    foreach ($kind in $kinds.Keys) {
+        if ($kinds[$kind].Count -eq 0) {
+            throw (("Invoke-ResumeInvalidation matched none of {0} in '{1}'. The resume leg " +
+                    "would not have resumed that task; check the artifact name has not " +
+                    "changed.") -f $kind, $WorkDir)
+        }
     }
+    $targets = @($kinds.Values | ForEach-Object { $_ })
     $targets | Remove-Item -Force
 }
 

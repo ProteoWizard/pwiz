@@ -365,17 +365,6 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # chain's output against the straight leg's.
 $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 
-# The goldens are captured under the shipped first-pass SVM C selection, so an inherited
-# OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
-# under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
-# golden. Cleared, announced, and restored in the finally block.
-$script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
-if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
-    Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
-        "first-pass C selection.") -f $env:OSPREY_SVM_C_TOLERANCE) -ForegroundColor Yellow
-    Remove-Item Env:OSPREY_SVM_C_TOLERANCE -ErrorAction SilentlyContinue
-}
-
 # Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
 # doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
 # That makes a red-or-slow gate diagnosable after the fact - the log shows whether the
@@ -2094,6 +2083,24 @@ if ($StageOnly) {
     Write-Host ("==> staged {0}; -StageOnly stops here" -f ($selected -join ', '))
     Remove-Item $runRoot -Recurse -Force -ErrorAction SilentlyContinue
     exit 0
+}
+
+# The goldens are captured under the shipped first-pass SVM C selection, so an inherited
+# OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
+# under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
+# golden. Cleared, announced, and restored in the finally block.
+#
+# Cleared HERE, immediately before the try, and not at the top of the script: nothing before
+# this point trains an SVM (the only Osprey launch above is Resolve-DatasetInputs'
+# --export-library, which returns before the variable is read), and every exit above it (a failed build, a staging error, the golden
+# folder check, -StageOnly - which regression-parallel.ps1 calls in its own session with &)
+# would otherwise leave the caller's session without the variable, since only the finally
+# below restores it (issue #4542).
+$script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
+if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
+    Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
+        "first-pass C selection.") -f $env:OSPREY_SVM_C_TOLERANCE) -ForegroundColor Yellow
+    Remove-Item Env:OSPREY_SVM_C_TOLERANCE -ErrorAction SilentlyContinue
 }
 
 # Per-dataset and run-root cleanup below go through Remove-Scratch, i.e. they happen
