@@ -108,7 +108,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
-            @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_NO_PREFILTER", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_MIN_FRAGMENT_TOLERANCE", @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_NO_PREFILTER", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
             @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RECORD_ALL_FEATURES", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
@@ -817,6 +817,15 @@ namespace pwiz.Osprey.Core
             NumberStyles.Float, CultureInfo.InvariantCulture, out double minRtTolerance) ? minRtTolerance : null;
 
         /// <summary>
+        /// OSPREY_MIN_FRAGMENT_TOLERANCE (experiment): a floor in ppm on the calibrated fragment tolerance
+        /// the main search extracts XICs with (|mean| + 3 SD of confident matches, which is too tight for
+        /// weak fragment ions). Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? MinFragmentTolerancePpm = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_MIN_FRAGMENT_TOLERANCE"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double minFragTol) ? minFragTol : null;
+
+        /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
         /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// Null when unset.
@@ -1306,7 +1315,8 @@ namespace pwiz.Osprey.Core
         public static string PickValidityKeySuffix()
         {
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
-                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
+                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>

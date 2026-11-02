@@ -183,12 +183,16 @@ namespace pwiz.Osprey.Scoring
                 MzCalibration.CalibratedTolerance(ms2Calibration,
                     config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
                     out calTol, out calUnit);
+                if (calUnit == ToleranceUnit.Ppm && OspreyEnvironment.MinFragmentTolerancePpm.HasValue)
+                    calTol = Math.Max(calTol, OspreyEnvironment.MinFragmentTolerancePpm.Value);
                 searchFragTol = new FragmentToleranceConfig
                 {
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                if (logSettings)
+                // At default log level: the search tolerance replaces the configured one, so a
+                // log that shows only the configured value misreports what was searched.
+                if (logSearchSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
