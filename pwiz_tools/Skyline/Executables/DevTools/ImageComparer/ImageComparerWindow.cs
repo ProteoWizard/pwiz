@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -41,6 +42,15 @@ namespace ImageComparer
         #region synchronized members
         private readonly object _lock = new object();
         private ScreenshotFile _fileToShow;
+        private volatile bool _compareAtSameSize;
+
+        // Resampling changes every anti-aliased edge a little, so a scaled comparison allows some
+        // color difference, and Win11 rounded window corners never line up after scaling
+        private static readonly DiffOptions SAME_SIZE_DIFF_OPTIONS = new DiffOptions
+        {
+            ColorTolerance = 48,
+            ExcludeCorners = true
+        };
         private int _imageCount;    // All screenshots in the open folder, changed or not
         private OldScreenshot _oldScreenshot;
         private OldScreenshot _newScreenshot;
@@ -98,6 +108,37 @@ namespace ImageComparer
             Settings.Default.Save();
 
             base.OnFormClosed(e);
+        }
+
+        private bool IsScaledDiff
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _compareAtSameSize && !_oldScreenshot.IsPlaceholder && !_newScreenshot.IsPlaceholder &&
+                           _oldScreenshot.ImageSize != _newScreenshot.ImageSize;
+                }
+            }
+        }
+
+        /// <summary>
+        /// For a diff scaled to the same size, the size ratio of the original images, which the scaled
+        /// diff no longer knows, followed by the pixels that still differ after scaling.
+        /// </summary>
+        private string ScaledDiffText
+        {
+            get
+            {
+                Size sizeOld, sizeNew;
+                lock (_lock)
+                {
+                    sizeOld = _oldScreenshot.ImageSize;
+                    sizeNew = _newScreenshot.ImageSize;
+                }
+                var pixels = _diff.PixelsDiffer ? $@"{_diff.PixelCount} pixels after scaling" : @"same after scaling";
+                return $@" ({ScreenshotDiff.SizeRatioText(sizeOld, sizeNew)}; {pixels})";
+            }
         }
 
         private bool HasBackgroundWork { get { lock(_lock) { return !IsOldLoaded || !IsNewLoaded; } } }
@@ -241,8 +282,9 @@ namespace ImageComparer
                 else
                 {
                     labelOldSize.ForeColor = Color.Red;
-                    labelOldSize.Text += _diff.DiffText;
-                    bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer;
+                    labelOldSize.Text += IsScaledDiff ? ScaledDiffText : _diff.DiffText;
+                    // A diff scaled to the same size has no meaningful byte comparison
+                    bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer && !IsScaledDiff;
                     if (imagesMatch)
                     {
                         _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
@@ -374,6 +416,12 @@ namespace ImageComparer
         {
             try
             {
+                if (_compareAtSameSize && !oldScreenshot.IsPlaceholder && !newScreenshot.IsPlaceholder &&
+                    oldScreenshot.ImageSize != newScreenshot.ImageSize)
+                {
+                    return new ScreenshotDiff(ScaleScreenshot(oldScreenshot, newScreenshot.ImageSize), newScreenshot,
+                        highlightColor, SAME_SIZE_DIFF_OPTIONS);
+                }
                 return new ScreenshotDiff(oldScreenshot, newScreenshot, highlightColor);
             }
             catch (Exception e)
@@ -382,6 +430,25 @@ namespace ImageComparer
                     "Failed to diff bitmaps.", e)));
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Resamples a screenshot to another size, for comparing screenshots taken at different
+        /// display scales. Only used for the diff and its display, never saved.
+        /// </summary>
+        private static ScreenshotInfo ScaleScreenshot(ScreenshotInfo screenshot, Size size)
+        {
+            var scaled = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
+            lock (screenshot.Image)
+            {
+                using var g = Graphics.FromImage(scaled);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(screenshot.Image, new Rectangle(Point.Empty, size));
+            }
+            var ms = new MemoryStream();
+            scaled.Save(ms, ImageFormat.Png);
+            return new ScreenshotInfo(ms, scaled);
         }
 
         private ScreenshotInfo LoadScreenshot(ScreenshotFile file, ImageSource source)
@@ -846,6 +913,9 @@ namespace ImageComparer
                 case Keys.A:
                     toolStripAmplify.Checked = !toolStripAmplify.Checked;
                     return true;
+                case Keys.S:
+                    toolStripSameSize.Checked = !toolStripSameSize.Checked;
+                    return true;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -1019,6 +1089,12 @@ namespace ImageComparer
         private void toolStripAmplify_CheckedChanged(object sender, EventArgs e)
         {
             UpdatePreviewImages();
+        }
+
+        private void toolStripSameSize_CheckedChanged(object sender, EventArgs e)
+        {
+            _compareAtSameSize = toolStripSameSize.Checked;
+            UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
         }
 
         private void Paste()
