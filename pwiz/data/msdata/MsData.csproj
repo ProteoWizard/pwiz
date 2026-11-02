@@ -26,6 +26,9 @@
          to read/write HDF5-backed mass-spec files. The 1.10 stream tracks
          HDF5 1.10.x — the same major version pwiz cpp builds against. -->
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
+    <!-- Managed Zstandard for the mzML zstd compressions (MS:1003780-1003785). The same
+         version Parquet.Net 6.1.0 depends on, so builds that pull in both resolve one copy. -->
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
   </ItemGroup>
 
 </Project>

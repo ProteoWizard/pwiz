@@ -28,7 +28,7 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// Single source of truth for the logical "osprey version" -- the value
-    /// stamped into the blib (<c>osprey_version</c>), the parquet/sidecar score
+    /// stamped into the blib (<c>LibMetadata</c> key <c>osprey.version</c>), the parquet/sidecar score
     /// caches (<c>osprey.version</c>), and read back by
     /// <c>ParquetScoreCache.CheckParquetMetadata</c> to decide whether a cache is
     /// still compatible with the current binary. It follows the Skyline scheme
@@ -43,7 +43,7 @@ namespace pwiz.Osprey.Core
     ///
     /// Bit-parity override: the regression harness needs the stamped version to be
     /// deterministic so the committed blib golden (which compares the
-    /// <c>osprey_version</c> metadata cell exactly) does not go red on the
+    /// <c>osprey.version</c> metadata cell exactly) does not go red on the
     /// daily-changing build version. Setting <c>OSPREY_VERSION_OVERRIDE</c> pins
     /// <see cref="Current"/> to a canonical constant for every invocation in the
     /// run. This is a diagnostic seam (mirroring the OSPREY_* env vars in

@@ -230,19 +230,23 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void LadderDropsOnlyTheIonsSpanningAnUnknownResidue()
         {
-            // Selenocysteine (U) is absent from the standard residue table and is real in
-            // UniProt-derived libraries (GPX1, GPX4, SELENOP, TXNRD1). A LEADING unknown
-            // is the case that matters: deriving y ions as (total - prefix) makes total
-            // NaN and empties the whole ladder, and an empty ladder is read as "accept",
-            // which silently switches the gate off for exactly those peptides.
-            double[] leading = DecoyGenerator.TheoreticalLadder(@"UPEPTIDEK");
+            // X, any residue, has no mass in the residue table. (Selenocysteine, U, did not
+            // either until 2026-10-16, and is real in UniProt-derived libraries - GPX1, GPX4,
+            // SELENOP, TXNRD1 - which is why it has one now.) A LEADING unknown is the case
+            // that matters: deriving y ions as (total - prefix) makes total NaN and empties
+            // the whole ladder, and an empty ladder is read as "accept", which silently
+            // switches the gate off for exactly those peptides.
+            double[] leading = DecoyGenerator.TheoreticalLadder(@"XPEPTIDEK");
             Assert.AreEqual(8, leading.Length,
-                @"Every b ion spans the leading U, but all eight y ions survive");
+                @"Every b ion spans the leading X, but all eight y ions survive");
 
             // An interior unknown drops the ions that span it from both series, and only
-            // those: b1-b3 and y1-y4 of PEPUIDEK never cross position 4.
-            double[] interior = DecoyGenerator.TheoreticalLadder(@"PEPUIDEK");
+            // those: b1-b3 and y1-y4 of PEPXIDEK never cross position 4.
+            double[] interior = DecoyGenerator.TheoreticalLadder(@"PEPXIDEK");
             Assert.AreEqual(7, interior.Length);
+
+            // Selenocysteine has its mass, so a U peptide keeps its full 2*(n-1) ladder.
+            Assert.AreEqual(16, DecoyGenerator.TheoreticalLadder(@"UPEPTIDEK").Length);
 
             // Control: a clean sequence yields the full 2*(n-1) ladder.
             Assert.AreEqual(14, DecoyGenerator.TheoreticalLadder(@"PEPTIDEK").Length);

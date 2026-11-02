@@ -107,9 +107,10 @@ namespace SkylineAiConnector
 
             if (new System.Version(version.Major, version.Minor, version.Build, version.Revision) < MIN_SKYLINE_VERSION)
             {
-                labelStatus.Text = string.Format("Skyline {0}.{1}.{2}.{3} does not support AI connections.",
+                labelStatus.Text = string.Format("Skyline {0}.{1}.{2}.{3:000} does not support AI connections.",
                     version.Major, version.Minor, version.Build, version.Revision);
-                labelVersion.Text = string.Format("This tool requires Skyline {0} or later.", MIN_SKYLINE_VERSION);
+                labelVersion.Text = string.Format("This tool requires Skyline-daily {0}.{1}.{2}.{3:000} or later.",
+                    MIN_SKYLINE_VERSION.Major, MIN_SKYLINE_VERSION.Minor, MIN_SKYLINE_VERSION.Build, MIN_SKYLINE_VERSION.Revision);
                 labelDocument.Visible = false;
                 buttonSetup.Enabled = false;
 
@@ -554,7 +555,7 @@ namespace SkylineAiConnector
                 if (codexInstalled)
                     checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
                 else
-                    checkCodex.Text = "Codex (not installed)";
+                    checkCodex.Text = "Codex (ChatGPT) (not installed)";
             }
             finally
             {

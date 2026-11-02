@@ -65,6 +65,8 @@ public static class Program
         {
             filter.ParseCommandArgs(argv);
             filter.Init();
+            // The library carries how it was made, as every library a tool of ours writes does.
+            filter.RecordCommandLine("BlibFilter", BlibFilterLib.CommandMetadataKey, args);
 
             filter.BeginTransaction();
             Verbosity.Debug("About to begin filtering.");

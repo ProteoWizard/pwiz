@@ -138,6 +138,27 @@ public class MzxmlRoundTripTests
     }
 
     [TestMethod]
+    public void RoundTrip_ZstdCompressionFallsBackToZlib()
+    {
+        // mzXML's compressionType has no zstd value, so every zstd mode is written as zlib.
+        var original = BuildSynthetic();
+        foreach (var compression in new[] { BinaryCompression.Zstd, BinaryCompression.ByteShuffleZstd, BinaryCompression.DictZstd })
+        {
+            var xml = new MzxmlWriter(new BinaryEncoderConfig
+            {
+                Precision = BinaryPrecision.Bits64,
+                Compression = compression,
+            }).Write(original);
+            StringAssert.Contains(xml, "compressionType=\"zlib\"", compression.ToString(), StringComparison.Ordinal);
+            Assert.IsFalse(xml.Contains("zstd", StringComparison.OrdinalIgnoreCase), compression.ToString());
+
+            var spec = ReparseMzxml(xml).Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0, 400.0 }, spec.GetMZArray()!.Data, compression.ToString());
+            CollectionAssert.AreEqual(new[] { 50.0, 100.0, 150.0, 200.0 }, spec.GetIntensityArray()!.Data, compression.ToString());
+        }
+    }
+
+    [TestMethod]
     public void RoundTrip_DerivesRunIdFromParentFile()
     {
         // FillInMetadata derives the run id from the parentFile name ("data.raw" → "data").

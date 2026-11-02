@@ -198,7 +198,7 @@ public static class Unimod
         var obo = ObOntology.Parse(reader);
 
         var list = new List<UnimodModification>(obo.Terms.Count);
-        foreach (var term in obo.Terms.Values)
+        foreach (var term in obo.Terms)
         {
             if (term.Prefix != "UNIMOD") continue;
 

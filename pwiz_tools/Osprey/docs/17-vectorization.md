@@ -177,7 +177,7 @@ indirectly affect this stage:
 | --- | --- | --- |
 | `--threads <count>` | all cores | INNER parallelism (per-window scoring, FDR). Vectorization is per-thread; more threads multiply the SIMD hot paths but do not change per-call arithmetic. |
 | `--parallel-files [N]` | off (sequential; no value = auto) | OUTER parallelism across files. Independent of vectorization. |
-| `--resolution {unit\|hram\|auto}` | auto | Selects the XCorr cache dtype: Unit reads the f64 `Doubles` cache, HRAM reads the f32-narrowed `SparseXcorrSpectrum` value (XcorrCalculators.cs:42-45). Determines whether step 2/3 run in f64 or f32, mirroring the Rust f32 batch choice. |
+| `--resolution {hram\|unit}` | hram | Selects the XCorr cache dtype: Unit reads the f64 `Doubles` cache, HRAM reads the f32-narrowed `SparseXcorrSpectrum` value (XcorrCalculators.cs:42-45). Determines whether step 2/3 run in f64 or f32, mirroring the Rust f32 batch choice. |
 | `--fragment-tolerance` / `--fragment-unit` | ppm (unit-resolution forces mz 0.5) | Governs bin/match tolerance in the scalar kernels above; not a vectorization control. |
 
 Environment variables: none specific to vectorization. (`OSPREY_DUMP_*` diagnostics touch

@@ -36,6 +36,7 @@ using ExcelDataReader;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
@@ -57,7 +58,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -1353,7 +1353,7 @@ namespace pwiz.SkylineTestUtil
             WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => pane.IsComplete);
         }
 
-        private static void WaitForBackgroundLoaders()
+        protected static void WaitForBackgroundLoaders()
         {
             if (!WaitForCondition(WAIT_TIME, () => !SkylineWindow.BackgroundLoaders.Any(bgl => bgl.AnyProcessing()), null, false))
             {
@@ -2049,20 +2049,28 @@ namespace pwiz.SkylineTestUtil
 
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             allChromGraph.SetFrozenProgress(totalProgress, elapsedTime, graphTime, graphIntensityMax, fileProgress);
-            WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
-
-            // Output the current intensity max to help determine what value to use
-            if (!graphIntensityMax.HasValue)
+            try
             {
-                var currentMax = allChromGraph.CurrentIntensityMax;
-                Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
-            }
+                WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
 
-            PauseForScreenShot(allChromGraph, description,
-                processShot: bmp => bmp.CleanupBorder()
-                    .FillProgressBar(allChromGraph.ProgressBarTotal)
-                    .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
-            allChromGraph.ReleaseFrozenProgress();
+                // Output the current intensity max to help determine what value to use
+                if (!graphIntensityMax.HasValue)
+                {
+                    var currentMax = allChromGraph.CurrentIntensityMax;
+                    Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
+                }
+
+                PauseForScreenShot(allChromGraph, description,
+                    processShot: bmp => bmp.CleanupBorder()
+                        .FillProgressBar(allChromGraph.ProgressBarTotal)
+                        .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
+            }
+            finally
+            {
+                // Otherwise a failure leaves the import blocked behind the freeze, and every later test
+                // in the same process fails waiting for its own import
+                allChromGraph.ReleaseFrozenProgress();
+            }
 
             if (IsTestingResultsProgressOnly)
             {
@@ -2478,6 +2486,13 @@ namespace pwiz.SkylineTestUtil
             {
                 ForceMzml = false;
             }
+            if (Program.AiConnector)
+            {
+                // The MCP client driving this test captures its forms: pre-approve the one-time
+                // permission in this process (never saved - NoSaveSettings), as McpConnectorTest does.
+                // Program.Main registers the instance when it starts the tool service.
+                Settings.Default.AllowMcpScreenCapture = true;
+            }
 
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
@@ -2831,6 +2846,8 @@ namespace pwiz.SkylineTestUtil
             using var restoreTracking = new ScopedAction(
                 FileStreamManager.Default.StartTrackingHistory,
                 FileStreamManager.Default.EndTrackingHistory);
+            using var restoreAnimations = IsRecordingScreenShots ? ScreenshotManager.DisableControlAnimations() : null;
+            using var restoreDisplayPaths = IsRecordingScreenShots ? ShowCheckoutAsScreenshotRoot() : null;
 
             try
             {
@@ -2869,6 +2886,35 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
+        }
+
+        /// <summary>
+        /// The checkout folder a screenshot shows, whichever checkout the test actually runs in.
+        /// </summary>
+        public const string SCREENSHOT_CHECKOUT_ROOT = @"C:\proj\pwiz";
+
+        /// <summary>
+        /// Shows paths in this checkout as under <see cref="SCREENSHOT_CHECKOUT_ROOT"/> wherever the
+        /// code uses <see cref="PathEx.DisplayPath"/>, so screenshots do not depend on the checkout.
+        /// </summary>
+        private static IDisposable ShowCheckoutAsScreenshotRoot()
+        {
+            // The project directory is <checkout>\pwiz_tools\Skyline
+            var projectDir = ExtensionTestContext.GetProjectDirectory();
+            var checkoutRoot = Path.GetDirectoryName(Path.GetDirectoryName(projectDir ?? string.Empty));
+            if (string.IsNullOrEmpty(checkoutRoot) || !File.Exists(Path.Combine(projectDir, @"Skyline.sln")))
+                return null;
+            return new ScopedAction(
+                initAction: () =>
+                {
+                    PathEx.DisplayPathRoot = checkoutRoot;
+                    PathEx.DisplayPathRootShown = SCREENSHOT_CHECKOUT_ROOT;
+                },
+                disposeAction: () =>
+                {
+                    PathEx.DisplayPathRoot = null;
+                    PathEx.DisplayPathRootShown = null;
+                });
         }
 
         /// <summary>
@@ -3919,17 +3965,17 @@ namespace pwiz.SkylineTestUtil
 
         #region Spectral library test helpers
 
-        public static IList<DbRefSpectra> GetRefSpectra(string filename)
+        public static IList<BlibSpectrumRecord> GetRefSpectra(string filename)
         {
             return SpectralLibraryTestUtil.GetRefSpectraFromPath(filename);
         }
 
-        public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
+        public static IList<BlibSpectrumRecord> GetRefSpectra(SQLiteConnection connection)
         {
             return SpectralLibraryTestUtil.GetRefSpectra(connection);
         }
 
-        public static void CheckRefSpectra(IList<DbRefSpectra> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, ushort numPeaks, double rT, IonMobilityAndCCS im = null)
+        public static void CheckRefSpectra(IList<BlibSpectrumRecord> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, int numPeaks, double rT, IonMobilityAndCCS im = null)
         {
             SpectralLibraryTestUtil.CheckRefSpectra(spectra, peptideSeq, peptideModSeq, precursorCharge, precursorMz, numPeaks, rT, im);
         }

@@ -136,7 +136,7 @@
     <value>Both</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 179</value>
+    <value>462, 179</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -166,7 +166,7 @@
     <value>Top, Right</value>
   </data>
   <data name="browseFastaBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>303, 80</value>
+    <value>483, 80</value>
   </data>
   <data name="browseFastaBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -205,7 +205,7 @@
     <value>Vertical</value>
   </data>
   <data name="tbxError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 35</value>
+    <value>462, 35</value>
   </data>
   <data name="tbxError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -226,7 +226,7 @@
     <value>14, 316</value>
   </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 35</value>
+    <value>462, 35</value>
   </data>
   <data name="panelError.TabIndex" type="System.Int32, mscorlib">
     <value>22</value>
@@ -281,7 +281,7 @@
     <value>Top, Right</value>
   </data>
   <data name="clearBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>303, 109</value>
+    <value>483, 109</value>
   </data>
   <data name="clearBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -311,7 +311,7 @@
     <value>11, 48</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 29</value>
+    <value>543, 29</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -632,7 +632,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxFastaTargets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 20</value>
+    <value>462, 20</value>
   </data>
   <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -659,7 +659,7 @@
     <value>NoControl</value>
   </data>
   <data name="browseFastaTargetsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>303, 22</value>
+    <value>483, 22</value>
   </data>
   <data name="browseFastaTargetsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -698,7 +698,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="targetFastaPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 45</value>
+    <value>561, 45</value>
   </data>
   <data name="targetFastaPanel.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -722,7 +722,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>392, 425</value>
+    <value>572, 425</value>
   </data>
   <data name="&gt;&gt;helpTipFasta.Name" xml:space="preserve">
     <value>helpTipFasta</value>

@@ -172,8 +172,15 @@ foreach ($f in $staleAsmInfo) {
 # the same versioning the Boost build does (rather than the Directory.Build.props
 # placeholder). The stamped version becomes OspreyVersion.Current at runtime. The
 # regression harness pins OSPREY_VERSION_OVERRIDE on top of this for bit parity.
-# The formula lives in version.ps1 so build.ps1 (stamps the binary) and
-# package.ps1 (names the redistributable) can never disagree.
+# The formula lives in version.ps1, which Directory.Build.targets also runs to stamp
+# the binary, so build.ps1, package.ps1 and the stamp can never disagree.
+#
+# Not passed as /p:Version: a global property flows into every project the build
+# references, including the ones Osprey shares with Skyline (BiblioSpec.IO, whose
+# assembly version is $(Version)). Each Osprey build then restamped the shared
+# bin\x64\<Config> tree with Osprey's version, and the next Skyline build restamped it
+# back, recompiling both chains on every switch. The stamp target sets Version in the
+# Osprey projects only; the check after the build makes sure it ran.
 . (Join-Path $scriptRoot 'version.ps1')
 $ospreyVersion = Get-OspreyVersion -RepoPath $scriptRoot
 
@@ -185,19 +192,35 @@ $buildArgs = @(
     '/restore',
     "/p:Configuration=$Configuration",
     "/p:Platform=$platform",
-    "/p:Version=$ospreyVersion",
+    # One node per core, as `dotnet build` does by default. MSBuild.exe defaults to one,
+    # which visits all ~36 projects in turn even when nothing needs compiling.
+    '/m',
     '/nologo',
     "/verbosity:$Verbosity"
 )
 if ($IAgreeToVendorLicenses) {
     $buildArgs += '/p:IAgreeToVendorLicenses=true'
 }
+# The terminal logger `dotnet build` uses by default (one line per project with its
+# framework, result and time), so this reads like Skyline's build.bat. MSBuild.exe and
+# `dotnet msbuild` only use it when asked. `auto` falls back to the classic logger when
+# output is redirected; TeamCity's log turns it off outright.
+$buildArgs += if ($TeamCity) { '-tl:off' } else { '-tl:auto' }
 if ($isWin) { & $msbuild @buildArgs } else { & dotnet msbuild @buildArgs }
 $buildExit = $LASTEXITCODE
 $buildSec = ((Get-Date) - $buildStart).TotalSeconds
 if ($buildExit -ne 0) {
     Write-Problem-Tc ("MSBuild failed in {0:F1}s (exit {1})" -f $buildSec, $buildExit)
     exit $buildExit
+}
+# The stamp target is ContinueOnError (a missing git or pwsh must not fail a developer
+# build), so a build it did not stamp still succeeds, carrying the 26.1.1.0 placeholder.
+# Fail here instead, where the version is known.
+$ospreyDll = Join-Path $scriptRoot "Osprey/bin/$platform/$Configuration/net10.0/Osprey.dll"
+$builtVersion = [System.Reflection.AssemblyName]::GetAssemblyName($ospreyDll).Version.ToString()
+if ($builtVersion -ne $ospreyVersion) {
+    Write-Problem-Tc "Osprey.dll is version $builtVersion, expected $ospreyVersion; the version stamp in Directory.Build.targets did not run"
+    exit 3
 }
 Write-Host ("Build succeeded in {0:F1}s" -f $buildSec) -ForegroundColor Green
 

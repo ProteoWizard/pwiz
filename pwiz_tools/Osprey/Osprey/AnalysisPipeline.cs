@@ -71,10 +71,10 @@ namespace pwiz.Osprey
             {
                 // Select the diagnostics sink before any task runs -- the single
                 // chokepoint every invocation reaches the pipeline through
-                // (Program.Main, whatever --task it selected). -d forces the dump
-                // bundle on; otherwise the sink self-enables only if an
+                // (Program.Main, whatever --task it selected). OSPREY_DIAGNOSTICS forces
+                // the dump bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
-                OspreyDiagnostics.Initialize(config.Diagnostics);
+                OspreyDiagnostics.Initialize(OspreyEnvironment.Diagnostics);
                 // An ambient/forgotten OSPREY_KEEP_FAILED_WRITES silently stops EVERY
                 // SimpleFileSaver in the process from cleaning up an abandoned temp, in every
                 // run that inherits it, not just the diagnostic session someone meant to
@@ -118,6 +118,11 @@ namespace pwiz.Osprey
                     stopwatch.Elapsed.TotalSeconds);
                 LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
+            }
+            catch (TaskBudgetSpentException)
+            {
+                // The developer stop (OSPREY_STOP_AFTER_TASKS), not a failure: Program ends the run.
+                throw;
             }
             catch (RehydrateFailedException ex)
             {
@@ -200,6 +205,8 @@ namespace pwiz.Osprey
                     ospreyCtx.LogInfo(LogTag.STAGE_WALL, @"{0}: {1:F1}s",
                         stageName, elapsed.TotalSeconds);
                 }
+                // Last: the developer stop ends the run between this task and the next.
+                TaskBudget.TaskDone(task.Name, ctx.ExitCode);
             }
         }
 

@@ -54,6 +54,9 @@ public sealed class MzxmlWriter
     {
         _encoderConfig = (encoderConfig ?? new BinaryEncoderConfig()).Clone();
         _encoderConfig.ByteOrder = BinaryByteOrder.BigEndian;
+        // mzXML's compressionType knows only zlib; a zstd request still means "compress".
+        if (_encoderConfig.Compression is not BinaryCompression.None)
+            _encoderConfig.Compression = BinaryCompression.Zlib;
         // Numpress doesn't apply to mzXML's interleaved <peaks> stream.
         _encoderConfig.Numpress = BinaryNumpress.None;
     }

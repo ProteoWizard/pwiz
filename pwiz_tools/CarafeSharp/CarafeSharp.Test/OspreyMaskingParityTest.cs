@@ -24,8 +24,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 
@@ -89,13 +89,13 @@ namespace pwiz.CarafeSharp.Test
         private void CompareMasking(string exportPath, string carafeFolder, LibrarySettings carafeSettings)
         {
             TestContext.WriteLine(@"{0} against {1}", exportPath, carafeFolder);
-            var export = OspreyTrainingExport.Read(exportPath);
+            var export = TrainingExport.Read(exportPath);
             TestContext.WriteLine(@"{0} rows, rt_max {1}, NCE {2}, instrument {3}", export.Records.Count, export.RtMax,
                 export.DominantCollisionEnergy, export.InstrumentModel);
             var options = new OspreyTrainingSetOptions();
             Assert.AreEqual(carafeSettings.RtMax, export.RtMax + options.RtMaxPadding, 1e-9);
             Assert.AreEqual(carafeSettings.Nce, export.DominantCollisionEnergy);
-            Assert.IsTrue(export.Records.All(r => r.SlotCount == 4 * (r.Sequence.Length - 1)));
+            Assert.IsTrue(export.Records.All(r => r.NSlots == 4 * (r.Sequence.Length - 1)));
 
             var trainingSet = OspreyTrainingSet.Build(new[] { export }, options);
             TestContext.WriteLine(trainingSet.Stats.ToString());
@@ -153,7 +153,7 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>The key of a record's mapped form, or null when its modifications do not map.</summary>
-        private static string RecordKey(OspreyTrainingRecord record)
+        private static string RecordKey(TrainingRecord record)
         {
             return OspreyModificationMapper.TryMap(record.Sequence, record.ModifiedSequence, record.ModPositions, record.ModMasses,
                 record.ModUnimodIds, out var peptide, out _)

@@ -291,7 +291,7 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 
 | Flag / field | Default | Effect on scoring |
 |--------------|---------|-------------------|
-| `--resolution {unit\|hram\|auto}` | `auto` | Selects `UnitStrategy` vs `HramStrategy` (`ResolutionStrategy.cs:118`). Unit = 2000 f64 bins, no MS1 features; HRAM = ~100K sparse bins, MS1 features 13/14 active. **Calibration always uses unit bins regardless.** |
+| `--resolution {hram\|unit}` | `hram` | Selects `UnitStrategy` vs `HramStrategy` (`ResolutionStrategy.cs:118`). Unit = 2000 f64 bins, no MS1 features; HRAM = ~100K sparse bins, MS1 features 13/14 active. **Calibration always uses unit bins regardless.** |
 | `--fragment-tolerance <v>` | resolution-dependent | Fragment match window for apex-match, cosine, prefilter, LibCosine. |
 | `--fragment-unit {ppm\|mz}` | `ppm` (unit-res forces `mz` 0.5) | Tolerance unit; also the reporting unit for mass-error features 9/10. |
 | `--no-prefilter` (`PrefilterEnabled`) | `true` (prefilter ON) | When set, disables the 2-of-top-6-in-3-of-4-scans signal prefilter (`PeakDataExtractor.cs:117`). Prefilter is always skipped for boundary-override rescoring. |

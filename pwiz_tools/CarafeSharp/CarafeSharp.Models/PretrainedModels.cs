@@ -67,7 +67,7 @@ namespace pwiz.CarafeSharp.Models
             if (!File.Exists(zipPath))
             {
                 throw new FileNotFoundException(string.Format(
-                    @"AlphaPeptDeep pretrained models not found at {0}. CarafeSharp ships them as {1} beside the executable; {2} or -pretrained can name another copy of the pinned archive (SHA-256 {3}).",
+                    @"AlphaPeptDeep pretrained models not found at {0}. CarafeSharp ships them as {1} beside the executable; {2} or --pretrained can name another copy of the pinned archive (SHA-256 {3}).",
                     zipPath, BUNDLED_RELATIVE_PATH, PATH_VARIABLE, PINNED_SHA256), zipPath);
             }
             string sha256 = ComputeSha256(zipPath);

@@ -48,6 +48,7 @@ namespace ImageComparer
             this.toolStripPrevious = new System.Windows.Forms.ToolStripButton();
             this.toolStripNext = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripAccept = new System.Windows.Forms.ToolStripButton();
             this.toolStripRevert = new System.Windows.Forms.ToolStripButton();
             this.toolStripFileList = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripAutoSize = new System.Windows.Forms.ToolStripButton();
@@ -200,9 +201,9 @@ namespace ImageComparer
             // labelChangeCount
             //
             this.labelChangeCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelChangeCount.Location = new System.Drawing.Point(387, 9);
+            this.labelChangeCount.Location = new System.Drawing.Point(297, 9);
             this.labelChangeCount.Name = "labelChangeCount";
-            this.labelChangeCount.Size = new System.Drawing.Size(95, 13);
+            this.labelChangeCount.Size = new System.Drawing.Size(185, 13);
             this.labelChangeCount.TabIndex = 3;
             this.labelChangeCount.Text = "0/0 changes";
             this.labelChangeCount.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -229,6 +230,7 @@ namespace ImageComparer
             this.toolStripPrevious,
             this.toolStripNext,
             this.toolStripSeparator2,
+            this.toolStripAccept,
             this.toolStripRevert,
             this.toolStripFileList,
             this.toolStripAutoSize,
@@ -281,9 +283,19 @@ namespace ImageComparer
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            // 
+            //
+            // toolStripAccept
+            //
+            this.toolStripAccept.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripAccept.Image = global::ImageComparer.Properties.Resources.GreenCheck;
+            this.toolStripAccept.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripAccept.Name = "toolStripAccept";
+            this.toolStripAccept.Size = new System.Drawing.Size(23, 22);
+            this.toolStripAccept.ToolTipText = "Accept (F10)";
+            this.toolStripAccept.Click += new System.EventHandler(this.toolStripAccept_Click);
+            //
             // toolStripRevert
-            // 
+            //
             this.toolStripRevert.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripRevert.Image = global::ImageComparer.Properties.Resources.undo;
             this.toolStripRevert.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -345,7 +357,7 @@ namespace ImageComparer
             this.menuItemGit.Image = global::ImageComparer.Properties.Resources.gitsource;
             this.menuItemGit.Name = "menuItemGit";
             this.menuItemGit.Size = new System.Drawing.Size(119, 22);
-            this.menuItemGit.Text = "Git HEAD";
+            this.menuItemGit.Text = "Git (staged or HEAD)";
             this.menuItemGit.Click += new System.EventHandler(this.menuItemGit_Click);
             //
             // menuItemWeb
@@ -424,6 +436,7 @@ namespace ImageComparer
         private System.Windows.Forms.ToolStripButton toolStripOpenFolder;
         private System.Windows.Forms.ToolStripButton toolStripPrevious;
         private System.Windows.Forms.ToolStripButton toolStripNext;
+        private System.Windows.Forms.ToolStripButton toolStripAccept;
         private System.Windows.Forms.ToolStripButton toolStripRevert;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripGotoWeb;

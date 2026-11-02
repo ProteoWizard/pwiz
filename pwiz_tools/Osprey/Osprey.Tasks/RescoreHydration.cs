@@ -66,6 +66,10 @@ namespace pwiz.Osprey.Tasks
         /// <summary>The run's stem, as every per-file artifact path is derived from it.</summary>
         public string FileName { get; set; }
 
+        /// <summary>A path with the run's input name, for deriving its per-run artifact paths
+        /// (its <c>.reconciliation.json</c>).</summary>
+        public string InputPath { get; set; }
+
         /// <summary>
         /// This run's POST-compaction survivors, already overlaid with its
         /// <c>.1st-pass.fdr_scores.bin</c> and filtered to the analysis-wide retained set.
@@ -79,24 +83,11 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public Dictionary<(string FileName, int Index), ReconcileAction> ReconciliationActions { get; set; }
 
-        /// <summary>This run's gap-fill targets; null when its envelope carried none.</summary>
+        /// <summary>This run's gap-fill targets; null when its plan has none.</summary>
         public List<GapFillTarget> GapFill { get; set; }
 
-        /// <summary>This run's refined RT calibration; null when its envelope carried none.</summary>
+        /// <summary>This run's refined RT calibration; null when its refit failed.</summary>
         public RTCalibration RefinedCalibration { get; set; }
-
-        /// <summary>
-        /// The planner's full join file-stem set, carried in every run's envelope, for the
-        /// reconciled parquet's join-wide metadata hash. Analysis-wide by content, per-run by
-        /// storage - so reading it here costs no other run's file.
-        /// </summary>
-        public IReadOnlyList<string> JoinFileStems { get; set; }
-
-        /// <summary>
-        /// The join-wide first-pass passing base_ids off this run's envelope. Also analysis-wide
-        /// by content and identical in every envelope.
-        /// </summary>
-        public HashSet<uint> GlobalFirstPassBaseIds { get; set; }
 
         /// <summary>This run's PRE-compaction tally, reduced while its full pool was resident.</summary>
         public PreCompactionTally Tally { get; set; }
@@ -209,8 +200,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>What makes this correct rather than merely cheaper: every input a rescore needs
         /// is a per-run slice. <c>MultiChargeConsensus.SelectRescoreTargets</c> reads one run's
-        /// entries; the reconciliation actions, gap-fill targets and refined calibration all come
-        /// out of that run's own <c>reconciliation.json</c>; and the compaction predicate is the
+        /// entries; the reconciliation actions, gap-fill targets and refined calibration are
+        /// planned from that run's survivors and the analysis-wide consensus; and the compaction predicate is the
         /// analysis-wide retained base_id set, which is library-bounded and passed in. The
         /// regression gate's mode 3 has always proved this by handing a node ONE run and getting
         /// byte-identical output - this method is that path, used as the loop body.</para>
@@ -218,17 +209,19 @@ namespace pwiz.Osprey.Tasks
         /// <para><paramref name="loadStubs"/> must return the run's FULL pre-compaction stub
         /// list; <paramref name="onStubsHydrated"/> is the caller's one look at it (per-run
         /// tallies, the <c>--model-diagnostics</c> fold) before compaction drops the
-        /// non-survivors. Cross-run envelope agreement is not checked: a node holding one run
-        /// has no sibling to compare against, and the all-runs hydrate that did hold several,
-        /// and checked them, was removed with the last route that reached it.</para>
+        /// non-survivors.</para>
+        ///
+        /// <para>Returns the run with its survivors and no plan yet: the caller plans the run
+        /// from them and hands the plan to <see cref="ApplyPlan"/>. Two steps, because this one
+        /// holds the run's full pre-compaction stub list and the caller serializes it, while
+        /// planning holds only the survivors and runs on the file lanes.</para>
         /// </summary>
         public static RunRescoreInputs HydrateOneRun(
             string parquetPath,
             HashSet<uint> retainedBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Func<string, string, List<FdrEntry>> loadStubs,
-            Action<string, List<FdrEntry>, PreCompactionTally> onStubsHydrated = null,
-            LibraryStringInterner sequencePool = null)
+            Action<string, List<FdrEntry>, PreCompactionTally> onStubsHydrated = null)
         {
             if (parquetPath == null)
                 throw new ArgumentNullException(nameof(parquetPath));
@@ -245,15 +238,6 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
                     parquetPath));
             }
-
-            string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-            var envelope = LoadEnvelope(reconPath);
-            var planned = PlanActions(envelope);
-
-            var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
-            CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
-                sequencePool);
 
             var stubs = loadStubs(fileName, parquetPath);
             if (stubs == null)
@@ -276,25 +260,47 @@ namespace pwiz.Osprey.Tasks
             stubs.RemoveAll(e => !retainedBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
             stubs.TrimExcess();
 
-            var idToIdx = new Dictionary<uint, int>(stubs.Count);
-            for (int idx = 0; idx < stubs.Count; idx++)
-                idToIdx[stubs[idx].EntryId] = idx;
-            var actions = new Dictionary<(string, int), ReconcileAction>();
-            MapPlannedActions(planned, fileName, reconPath, idToIdx, actions);
-
-            perFileGapFill.TryGetValue(fileName, out var gapFill);
-            refinedCalibrations.TryGetValue(fileName, out var refinedCalibration);
             return new RunRescoreInputs
             {
                 FileName = fileName,
+                InputPath = syntheticInput,
                 Survivors = stubs,
-                ReconciliationActions = actions,
-                GapFill = gapFill,
-                RefinedCalibration = refinedCalibration,
-                JoinFileStems = NormalizeStems(envelope.FileStems),
-                GlobalFirstPassBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds),
+                ReconciliationActions = new Dictionary<(string FileName, int Index), ReconcileAction>(),
                 Tally = tally,
             };
+        }
+
+        /// <summary>
+        /// Apply <paramref name="plan"/>, the run's Stage 6 plan, to <paramref name="run"/>: its
+        /// actions keyed against <see cref="RunRescoreInputs.Survivors"/>, its gap-fill targets
+        /// and its refined calibration. The plan goes through the same conversions a plan read
+        /// back from the run's <c>.reconciliation.json</c> would, so the rescore consumes exactly
+        /// what that file says. Touches only <paramref name="run"/>, so runs on different lanes
+        /// may apply plans at once.
+        /// </summary>
+        public static void ApplyPlan(RunRescoreInputs run, ReconciliationFile plan,
+            LibraryStringInterner sequencePool = null)
+        {
+            if (run == null)
+                throw new ArgumentNullException(nameof(run));
+            if (plan == null)
+                throw new ArgumentNullException(nameof(plan));
+            string fileName = run.FileName;
+            var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
+            CaptureCalibrationAndGapFill(plan, fileName, refinedCalibrations, perFileGapFill,
+                sequencePool);
+
+            var idToIdx = new Dictionary<uint, int>(run.Survivors.Count);
+            for (int idx = 0; idx < run.Survivors.Count; idx++)
+                idToIdx[run.Survivors[idx].EntryId] = idx;
+            MapPlannedActions(PlanActions(plan), fileName, ReconciliationFile.PathForInput(run.InputPath),
+                idToIdx, run.ReconciliationActions);
+
+            perFileGapFill.TryGetValue(fileName, out var gapFill);
+            refinedCalibrations.TryGetValue(fileName, out var refinedCalibration);
+            run.GapFill = gapFill;
+            run.RefinedCalibration = refinedCalibration;
         }
 
         /// <summary>
@@ -303,11 +309,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>The same three steps <see cref="HydrateOneRun"/> takes - load the run's stubs,
         /// overlay its 1st-pass sidecar, compact to the analysis-wide retained set - and NOT the
-        /// fourth. Stage 7 runs no rescore, so it needs neither the planned actions nor the
-        /// <c>reconciliation.json</c> they come from, and reading that envelope per run would put
-        /// ~6 MB of join-wide <c>first_pass_base_ids</c> through this call 446 times to answer a
-        /// question nobody asks. Sharing the whole of <c>HydrateOneRun</c> would have been the
-        /// tidier-looking choice and the more expensive one.</para>
+        /// fourth. Stage 7 runs no rescore, so it needs no plan, and planning a run here would
+        /// re-read its CWT candidates to answer a question nobody asks.</para>
         ///
         /// <para><b>Refills the caller's list rather than returning a new one.</b> That list is
         /// the shared backing store every <c>PerFileEntries</c> milestone wraps, so replacing the
@@ -421,22 +424,6 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        /// <summary>
-        /// Read one <c>reconciliation.json</c> envelope, wrapping any reader failure in
-        /// <see cref="InvalidDataException"/> with the offending path named.
-        /// </summary>
-        private static ReconciliationFile LoadEnvelope(string reconPath)
-        {
-            try
-            {
-                return ReconciliationFile.Load(reconPath);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.RescoreHydration_LoadEnvelope_Failed_to_read__0____1_, reconPath, ex.Message), ex);
-            }
-        }
         /// <summary>
         /// The planner's non-Keep actions for one file, flattened out of the envelope's two
         /// homogeneous arrays in the order the hydrators consume them (<c>use_cwt_peak</c>
@@ -560,32 +547,6 @@ namespace pwiz.Osprey.Tasks
                 Kind = kind;
                 Action = action;
             }
-        }
-
-        /// <summary>
-        /// Sort + dedup a list of file stems (Ordinal). Returns a new list;
-        /// the input is not mutated. Empty / null input becomes an empty
-        /// list. Used to canonicalize the <c>file_stems</c> field from
-        /// each <c>reconciliation.json</c> envelope before consistency
-        /// checks across siblings.
-        /// </summary>
-        private static List<string> NormalizeStems(IList<string> stems)
-        {
-            if (stems == null || stems.Count == 0)
-                return new List<string>();
-            var result = new List<string>(stems.Count);
-            foreach (var s in stems)
-            {
-                if (!string.IsNullOrEmpty(s))
-                    result.Add(s);
-            }
-            result.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to dedup adjacent identical stems immediately below; equal keys are byte-identical so tie order is irrelevant
-            for (int i = result.Count - 1; i > 0; i--)
-            {
-                if (string.Equals(result[i], result[i - 1], StringComparison.Ordinal))
-                    result.RemoveAt(i);
-            }
-            return result;
         }
 
         /// <summary>

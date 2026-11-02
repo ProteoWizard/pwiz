@@ -38,7 +38,7 @@ namespace pwiz.Osprey.Tasks
     ///
     /// <para>One file's run-level competition is computable from that file alone: its own
     /// 1st-pass sidecar, its own reconciled parquet, and three whole-run constants that already
-    /// ride the per-file <c>.1st-pass.model.json</c> relay. Stage 7 was doing it only because
+    /// ride the analysis-wide <c>.1st-pass.model.json</c> relay. Stage 7 was doing it only because
     /// that is where the code happened to live, and paying for it by holding every file's
     /// survivors resident and re-opening 52.3 GB of 1st-pass sidecars at 257 files.</para>
     ///
@@ -356,11 +356,12 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para><b>This artifact's population is not this writer's to choose.</b> The per-run
         /// 2nd-pass sidecar describes the file's Stage 6 pool, and that pool is already defined
-        /// for every node by the join: <c>FirstPassFdrTask</c> writes each file's
-        /// <c>.reconciliation.json</c> from the node that traversed the whole population, and
-        /// <c>ReconciledParquetWriter</c> stamps the resulting parquet with the JOIN-wide
-        /// reconciliation hash and <c>osprey.reconciled=survivors</c>. Stage 6 abides by that
-        /// envelope, which is what makes any number of nodes emit the same rows. Writing this
+        /// for every node by the join: <c>FirstPassFdrTask</c> writes the cross-run consensus
+        /// from the node that traversed the whole population, each run's plan is a function of
+        /// that consensus and the run alone, and <c>ReconciledParquetWriter</c> stamps the
+        /// resulting parquet with the JOIN-wide reconciliation hash and
+        /// <c>osprey.reconciled=survivors</c>. That is what makes any number of nodes emit the
+        /// same rows. Writing this
         /// file from a set assembled some other way opts out of a contract the rest of the
         /// pipeline is already keyed to.</para>
         ///
@@ -368,7 +369,7 @@ namespace pwiz.Osprey.Tasks
         /// of this method iterated the 1st-pass sidecar's entry ids and emitted a record only for
         /// per-file survivors, plus non-survivor decoys. A GAP-FILLED peak has no 1st-pass record
         /// in its file by definition, so it was unreachable: 594 gap-fill observations across 3
-        /// Stellar files (208 / 185 / 201, exactly the <c>gap_fill_targets</c> the envelope
+        /// Stellar files (208 / 185 / 201, exactly the <c>gap_fill_targets</c> the run's plan
         /// declares) lost their record. Those pool entries then never received experiment-scope
         /// values from the fold and kept <c>ResetScores</c>' defaults - experiment q 1.0 and
         /// aggregate 0.0 - for precursors whose analysis-wide q was as low as 6.6e-05, while the

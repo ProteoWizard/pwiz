@@ -19,8 +19,10 @@
  */
 
 using System;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -36,11 +38,12 @@ namespace pwiz.Osprey.Test
     public class FragmentLadderTest
     {
         private const double PROTON = PeptideFragmentMass.PROTON_MASS;
-        private const double WATER = PeptideFragmentMass.H2O_MASS;
+        private static readonly double WATER = PeptideFragmentMass.H2O_MASS;
 
         [TestMethod]
         public void TestFragmentLadder()
         {
+            AssertResidueMassesAgreeWithCommonChemistry();
             AssertSlotLayout();
             AssertMzValues();
             AssertApplicabilityFollowsPrecursorCharge();
@@ -51,6 +54,34 @@ namespace pwiz.Osprey.Test
             // A null or one-residue sequence has no cleavage and no slots.
             Assert.AreEqual(0, FragmentLadder.Build(null, null, 2).Length);
             Assert.AreEqual(0, FragmentLadder.Build(@"K", Array.Empty<Modification>(), 2).Length);
+        }
+
+        /// <summary>
+        /// Osprey's residue, water and ammonia masses are the ones Skyline calculates from the
+        /// formulas and the isotope table in <see cref="pwiz.Common.Chemistry"/>, to the last
+        /// digit, and its proton is the one Skyline's m/z use (<c>BioMassCalc.MassProton</c>);
+        /// the tools that compute peptide and fragment masses must agree. Pinned as the values
+        /// those tables give today (Skyline's traditional C, H, N, O and S, NIST's Se), so a
+        /// change to the shared chemistry shows up here as a deliberate change rather than as a
+        /// moved golden. Osprey's former six-decimal table was these rounded.
+        /// </summary>
+        private static void AssertResidueMassesAgreeWithCommonChemistry()
+        {
+            var formulas = AminoAcidFormulas.Default;
+            double water = formulas.GetMonoisotopicMass(string.Empty);
+            foreach (char aa in @"ACDEFGHIKLMNPQRSTVWYU")
+            {
+                double skyline = formulas.GetMonoisotopicMass(aa.ToString()) - water;
+                Assert.AreEqual(skyline, Residue(aa), 0.0,
+                    string.Format(CultureInfo.InvariantCulture, @"{0}: Skyline {1:R}", aa, skyline));
+            }
+            Assert.AreEqual(103.009184505, Residue('C'), 1e-9);
+            Assert.AreEqual(101.047678505, Residue('T'), 1e-9);
+            Assert.AreEqual(150.953635605, Residue('U'), 1e-9);
+            Assert.AreEqual(18.0105647, NeutralLoss.H2OMass, 1e-9);
+            Assert.AreEqual(17.026549105, NeutralLoss.NH3Mass, 1e-9);
+            Assert.AreEqual(1.007276, PeptideFragmentMass.PROTON_MASS, 0.0);
+            Assert.IsFalse(PeptideFragmentMass.TryGetResidueMass('X', out _));
         }
 
         /// <summary>

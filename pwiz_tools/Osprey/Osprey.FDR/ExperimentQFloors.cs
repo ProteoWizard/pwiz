@@ -118,7 +118,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public void Observe(uint entryId, double runPrecursorQvalue, double runPeptideQvalue)
         {
-            // FdrLevel.Both: the combined run q the blib ID line and OspreyRunScores.RunQValue
+            // FdrLevel.Both: the combined run q the blib ID line and RetentionTimes.score
             // both use, so "reported => some run passes at BOTH granularities" is the invariant
             // this floor enforces. See PercolatorEngine.AccumulateExperimentQFloors.
             double runBoth = runPrecursorQvalue > runPeptideQvalue

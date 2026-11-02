@@ -140,15 +140,14 @@ disk. Three experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
-| `<stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model sidecar in #4633, because first-pass protein FDR computes it and training does not |
+| `<blib-stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
+| `<blib-stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model file in #4633, because first-pass protein FDR computes it and training does not |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 
 **They must relay together.** A node holding one without the others cannot proceed:
 the model without the stratum cannot constrain a `protein-compact` competition, and
-the stratum without the model has nothing to score with. The model sidecar is written
-beside **every** run's other Stage-5 artifacts, identical each time, so any one copy
-serves.
+the stratum without the model has nothing to score with. Each is written once, under the
+analysis name; they were once copied beside every run, which doc 00 (P1) now forbids.
 
 See [00-pipeline-architecture.md](00-pipeline-architecture.md) for the full contract
 and the per-boundary relay checklist.
@@ -171,13 +170,14 @@ plus the first-pass detected peptides), so both the model and the stratum are
 reloaded from disk.
 
 They are **two files, not one**, because two different phases produce them:
-`<stem>.1st-pass.model.json` is written the moment first-pass training returns a
-model, and `<stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
+`<blib-stem>.1st-pass.model.json` is written the moment first-pass training returns a
+model, and `<blib-stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
 446-file cohort those two moments are hours apart, and bundling them meant the
 model - a few hundred KB for the linear SVM, about 3.4 MB for a tree model under
 `OSPREY_FDR_MODEL=gbdt`, fully computed at minute ~21 - existed only in RAM
-until the end of the task, so any interruption threw it away. `LoadFromAny`
-merges the two on read, so a consumer still sees one sidecar. **Both must ride
+until the end of the task, so any interruption threw it away.
+`FirstPassModelIO.LoadForAnalysis` merges the two on read, pairing them by their
+stamps, so a consumer still sees one sidecar. **Both must ride
 the HPC relay**: an orchestrator that copies the model between phase directories
 and not the stratum reaches this fail-fast under the default mode.
 

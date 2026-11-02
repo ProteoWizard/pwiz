@@ -168,7 +168,7 @@ namespace pwiz.CarafeSharp.Training
             if (rows != null && rows.Count == 0)
             {
                 throw new InvalidOperationException(string.Format(
-                    @"No {0} training rows: no identification passed the filters for the {0} model -tf asks to fine-tune.", model));
+                    @"No {0} training rows: no identification passed the filters for the {0} model --tf asks to fine-tune.", model));
             }
         }
 

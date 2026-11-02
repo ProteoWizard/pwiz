@@ -1,0 +1,5 @@
+key	value
+osprey.experiment_fdr	0.01
+osprey.run_fdr	0.01
+osprey.search_mode	coelution
+osprey.version	26.1.1.0

@@ -1625,11 +1625,11 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(new[] { 0, 1 }, data.Model.Select(m => m.Index).ToArray(), "feature order");
             Assert.IsTrue(data.Model.All(m => m.TargetHist != null && double.IsNaN(m.Coefficient) && !m.Unexpected));
             Assert.AreEqual(3.0, data.Model[0].DeltaMu, 1e-12);
-            Assert.AreEqual(ModelDiagnosticsReport.TREE_MODEL_NOTE, ModelDiagnosticsReport.ModelTabNote(trees));
+            Assert.AreEqual(ModelDiagnosticsReport.TREE_MODEL_NOTE, ModelDiagnosticsReport.ModelTabNote(ModelDiagnosticsData.ModelView.From(trees)));
 
             var linear = acc.Build(new List<double[]> { new[] { 1.0, 1.0 } }, infos);
             Assert.IsFalse(linear.IsTreeEnsemble);
-            Assert.IsNull(ModelDiagnosticsReport.ModelTabNote(linear), "a linear Model tab is complete");
+            Assert.IsNull(ModelDiagnosticsReport.ModelTabNote(ModelDiagnosticsData.ModelView.From(linear)), "a linear Model tab is complete");
             Assert.AreEqual(ModelDiagnosticsReport.MODEL_NOT_RETRAINED_NOTE, ModelDiagnosticsReport.ModelTabNote(null));
             var settings = new JsonSerializerSettings
             {

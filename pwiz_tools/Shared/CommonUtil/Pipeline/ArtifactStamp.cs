@@ -53,23 +53,15 @@ namespace pwiz.Common.Pipeline
         /// <summary>Leading token of the serialized form; the trailing digit is its layout version.</summary>
         public const string PREFIX = @"osprey-validity/1";
 
-        /// <summary>Key of the footer key/value entry that holds the stamp in a parquet artifact.</summary>
+        /// <summary>
+        /// Key of the footer key/value entry that holds the stamp in a parquet artifact, and of
+        /// the <c>LibMetadata</c> row that holds it in a blib (the one blib writer's
+        /// <c>BlibMetadata</c>, in BiblioSpec.IO, owns that table).
+        /// </summary>
         public const string PARQUET_KEY = @"osprey.validity";
 
         /// <summary>Name of the property that holds the stamp, written FIRST in a JSON artifact.</summary>
         public const string JSON_PROPERTY = @"osprey_validity";
-        /// <summary>
-        /// The key/value table a SQLite (blib) artifact records the stamp in, under
-        /// <see cref="PARQUET_KEY"/>. One definition for every writer and reader (Osprey's blib
-        /// writer, CarafeSharp's library writer), so the slot cannot drift between the tools.
-        /// </summary>
-        public const string BLIB_TABLE = @"OspreyMetadata";
-        /// <summary>DDL for <see cref="BLIB_TABLE"/>.</summary>
-        public const string BLIB_TABLE_DDL = @"CREATE TABLE OspreyMetadata (Key TEXT PRIMARY KEY, Value TEXT)";
-        /// <summary>Reads a value from <see cref="BLIB_TABLE"/>; bind <c>@key</c> (the stamp is under <see cref="PARQUET_KEY"/>).</summary>
-        public const string BLIB_SELECT_SQL = @"SELECT Value FROM OspreyMetadata WHERE Key = @key";
-        /// <summary>Records a key and value in <see cref="BLIB_TABLE"/>; bind <c>@key</c> and <c>@value</c>.</summary>
-        public const string BLIB_INSERT_SQL = @"INSERT OR REPLACE INTO OspreyMetadata (Key, Value) VALUES (@key, @value)";
 
         private const string TASK_FIELD = @"task=";
         private const string VERSION_FIELD = @"version=";

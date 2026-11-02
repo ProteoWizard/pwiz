@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using pwiz.Osprey.Core;
 
@@ -49,10 +50,13 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public sealed class FragmentTypeCheck
     {
-        /// <summary>The differing peaks kept as examples for <c>--verbose</c>.</summary>
+        /// <summary>The differing peaks kept as examples for <c>--verbose</c>, and as many library-choice peaks after them.</summary>
         public const int MAX_EXAMPLES = 10;
 
+        // Differing peaks first, the library's choices after: a library of many isobaric pairs
+        // must not crowd out the peaks that actually disagree.
         private readonly List<string> _examples = new List<string>();
+        private readonly List<string> _libraryChoiceExamples = new List<string>();
         private long _agree;
         private long _libraryChoice;
         private long _differ;
@@ -89,31 +93,34 @@ namespace pwiz.Osprey.IO
                 Interlocked.Increment(ref _agree);
                 return;
             }
-            if (candidates.IsPossible(stated, peakMz, tolerance))
-            {
+            // The library's choices are kept as examples too: these are the peaks a library
+            // without stated types (a .blib) types otherwise, so they say what a .blib search
+            // changes; in their own list, so they never crowd out the peaks that disagree.
+            bool libraryChoice = candidates.IsPossible(stated, peakMz, tolerance);
+            if (libraryChoice)
                 Interlocked.Increment(ref _libraryChoice);
-                return;
-            }
-            Interlocked.Increment(ref _differ);
+            else
+                Interlocked.Increment(ref _differ);
             lock (_examples)
             {
-                if (_examples.Count < MAX_EXAMPLES)
+                var examples = libraryChoice ? _libraryChoiceExamples : _examples;
+                if (examples.Count < MAX_EXAMPLES)
                 {
-                    _examples.Add(string.Format(OspreyIOResources.FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_,
+                    examples.Add(string.Format(OspreyIOResources.FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_,
                         sequence, precursorCharge, peakMz, FormatIon(stated),
                         ospreyChoice.HasValue ? FormatIon(ospreyChoice.Value) : OspreyIOResources.FragmentTypeCheck_AddPeak_no_ion));
                 }
             }
         }
 
-        /// <summary>The first <see cref="MAX_EXAMPLES"/> differing peaks, for <c>--verbose</c>.</summary>
+        /// <summary>The first <see cref="MAX_EXAMPLES"/> differing peaks, then the first as many library-choice peaks, for <c>--verbose</c>.</summary>
         public IReadOnlyList<string> Examples
         {
             get
             {
                 lock (_examples)
                 {
-                    return _examples.ToArray();
+                    return _examples.Concat(_libraryChoiceExamples).ToArray();
                 }
             }
         }

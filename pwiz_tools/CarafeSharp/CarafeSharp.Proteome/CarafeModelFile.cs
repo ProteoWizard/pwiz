@@ -34,8 +34,10 @@ using pwiz.Common.SystemUtil;
 namespace pwiz.CarafeSharp.Proteome
 {
     /// <summary>
-    /// A fine-tuned model saved as one file (<c>.carafemodel</c>), to predict libraries of any
-    /// peptides from later with <c>-model</c>, without training again. It is a zip holding:
+    /// A fine-tuned model saved as one file (<c>.model.zip</c>), to predict libraries of any
+    /// peptides from later with <c>-model</c>, without training again. A file is recognized by its
+    /// manifest's format, not its name, so one saved as <c>.carafemodel</c> (the name before
+    /// 2026-10) still opens. It is a ZIP archive holding:
     /// <list type="bullet">
     /// <item><c>manifest.json</c>: the format, what wrote it and when, which models were
     /// fine-tuned and which are used, the pretrained archive the training started from, what the
@@ -53,8 +55,10 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public sealed class CarafeModelFile
     {
-        public const string EXTENSION = @".carafemodel";
-        public const string DEFAULT_FILE_NAME = @"carafe_fine_tuned_model" + EXTENSION;
+        public const string EXTENSION = @".model.zip";
+        /// <summary>The name model files had before 2026-10. They still open, and a folder of them still lists.</summary>
+        public const string LEGACY_EXTENSION = @".carafemodel";
+        public const string DEFAULT_FILE_NAME = @"carafe_fine_tuned" + EXTENSION;
         public const string MANIFEST_ENTRY = @"manifest.json";
         /// <summary>
         /// The format written: carafemodel-1 with each model's network, release and start named
@@ -66,6 +70,25 @@ namespace pwiz.CarafeSharp.Proteome
         /// which is the one its <c>rt.safetensors</c> holds, else AlphaPeptDeep's.
         /// </summary>
         public const string FORMAT_1 = @"carafemodel-1";
+
+        /// <summary>
+        /// The search patterns that list a folder's model files, under either name: a reader that
+        /// offers the models in a folder lists both, so files saved before the rename stay listed.
+        /// </summary>
+        public static IEnumerable<string> FilePatterns
+        {
+            get { return new[] { @"*" + EXTENSION, @"*" + LEGACY_EXTENSION }; }
+        }
+
+        /// <summary>
+        /// True when <paramref name="path"/> is named as a model file, under either name. The name
+        /// is only a hint: <see cref="Open"/> recognizes a model file by its manifest.
+        /// </summary>
+        public static bool IsModelFileName(string path)
+        {
+            return path.EndsWith(EXTENSION, StringComparison.OrdinalIgnoreCase) ||
+                   path.EndsWith(LEGACY_EXTENSION, StringComparison.OrdinalIgnoreCase);
+        }
 
         /// <summary>
         /// Saves the models <paramref name="trained"/> predicts with for <paramref name="trainingType"/>
@@ -170,8 +193,22 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public static CarafeModelFile Open(string path)
         {
+            return Read(path, true);
+        }
+
+        /// <summary>
+        /// Reads what a saved model says about itself, its manifest and training runs, without
+        /// checking its models, for a user choosing among model files. Predict only from <see cref="Open"/>.
+        /// </summary>
+        public static CarafeModelFile ReadDescription(string path)
+        {
+            return Read(path, false);
+        }
+
+        private static CarafeModelFile Read(string path, bool verify)
+        {
             if (!File.Exists(path))
-                throw new FileNotFoundException(@"Model file (-model) not found: " + path, path);
+                throw new FileNotFoundException(@"Model file (" + CarafeCommandLine.ARG_MODEL.ArgumentText + @") not found: " + path, path);
             try
             {
                 using (var zip = ZipFile.OpenRead(path))
@@ -181,17 +218,20 @@ namespace pwiz.CarafeSharp.Proteome
                     CarafeModelFile model;
                     using (var stream = manifestEntry.Open())
                         model = ReadManifest(path, stream);
-                    foreach (var pair in model.Entries)
+                    if (verify)
                     {
-                        // Extract unpacks each entry beside the others: a folder or path in its name would write outside.
-                        if (!IsEntryName(pair.Key))
-                            throw new InvalidDataException(string.Format(@"{0} lists {1}, which is not a file name.", path, pair.Key));
-                        var entry = zip.GetEntry(pair.Key) ??
-                                    throw new InvalidDataException(string.Format(@"{0} lists {1}, which it does not hold.", path, pair.Key));
-                        if (!string.Equals(Sha256(ReadAll(entry)), pair.Value, StringComparison.OrdinalIgnoreCase))
-                            throw new InvalidDataException(string.Format(@"{0} is damaged: {1} does not match its SHA-256.", path, pair.Key));
+                        foreach (var pair in model.Entries)
+                        {
+                            // Extract unpacks each entry beside the others: a folder or path in its name would write outside.
+                            if (!IsEntryName(pair.Key))
+                                throw new InvalidDataException(string.Format(@"{0} lists {1}, which is not a file name.", path, pair.Key));
+                            var entry = zip.GetEntry(pair.Key) ??
+                                        throw new InvalidDataException(string.Format(@"{0} lists {1}, which it does not hold.", path, pair.Key));
+                            if (!string.Equals(Sha256(ReadAll(entry)), pair.Value, StringComparison.OrdinalIgnoreCase))
+                                throw new InvalidDataException(string.Format(@"{0} is damaged: {1} does not match its SHA-256.", path, pair.Key));
+                        }
+                        model.FileSha256 = Sha256(File.ReadAllBytes(path));
                     }
-                    model.FileSha256 = Sha256(File.ReadAllBytes(path));
                     var metaEntry = model.Entries.ContainsKey(ModelFiles.META) ? zip.GetEntry(ModelFiles.META) : null;
                     if (metaEntry != null)
                     {
@@ -408,8 +448,9 @@ namespace pwiz.CarafeSharp.Proteome
                     Line(@"    its MS2: {0}; its RT: {1}", baseModel.Ms2Origin, baseModel.RtOrigin);
             }
             Line(@"  A library takes: NCE {0}, instrument {1}, activation {2}, analyzer {3}, rt_max {4}" +
-                 @" (unless -nce, -ms_instrument, -activation, -analyzer, -rt_max are given)",
-                Nce, Instrument ?? @"(the command line's)", Activation ?? @"(none)", Analyzer ?? @"(none)", RtMax);
+                 @" (unless {5}, {6}, {7}, {8}, {9} are given)",
+                Nce, Instrument ?? @"(the command line's)", Activation ?? @"(none)", Analyzer ?? @"(none)", RtMax,
+                CarafeCommandLine.ARG_NCE.ArgumentText, CarafeCommandLine.ARG_MS_INSTRUMENT.ArgumentText, CarafeCommandLine.ARG_ACTIVATION.ArgumentText, CarafeCommandLine.ARG_ANALYZER.ArgumentText, CarafeCommandLine.ARG_RT_MAX.ArgumentText);
             if (Acquisition != null)
                 Line(@"  MS2 acquisition columns: {0}", Acquisition);
             if (Training == null)
@@ -633,7 +674,7 @@ namespace pwiz.CarafeSharp.Proteome
 
         private static string SafetensorsOrNull(string modelPath)
         {
-            return modelPath != null && CarafeModelDirectory.IsSafetensors(modelPath) ? modelPath : null;
+            return modelPath != null && ModelFiles.IsSafetensors(modelPath) ? modelPath : null;
         }
 
         /// <summary>model_evaluation_metrics.json's scores, as "ms2.pretrained.cos" and the like.</summary>

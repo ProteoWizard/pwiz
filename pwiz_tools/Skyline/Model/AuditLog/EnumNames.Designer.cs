@@ -511,6 +511,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide q-value.
+        /// </summary>
+        public static string GlobalQValueLevel_peptide {
+            get {
+                return ResourceManager.GetString("GlobalQValueLevel_peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor q-value.
+        /// </summary>
+        public static string GlobalQValueLevel_precursor {
+            get {
+                return ResourceManager.GetString("GlobalQValueLevel_precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein q-value.
+        /// </summary>
+        public static string GlobalQValueLevel_protein {
+            get {
+                return ResourceManager.GetString("GlobalQValueLevel_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Small.
         /// </summary>
         public static string GraphFontSize_10 {

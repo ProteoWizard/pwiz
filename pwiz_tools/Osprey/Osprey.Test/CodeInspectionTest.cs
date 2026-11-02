@@ -491,7 +491,7 @@ namespace pwiz.Osprey.Test
             // Flags (long or short) and file extensions, the tokens a user types or matches. A
             // hyphen after a format hole is a compound word ("{0}-fold"), not a flag.
             var resxToken = new Regex(@"(?<![\w}-])--?[a-z][a-z0-9-]*|(?<![\w{}])\.(?:[\w-]+\.)*" +
-                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|libcache|html|sln)\b");
+                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|html|sln)\b");
             foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
             {
                 var resxRoot = XDocument.Load(file).Root;
@@ -565,7 +565,10 @@ namespace pwiz.Osprey.Test
             ".py", ".jam"
         };
 
-        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs" };
+        // Build output, not source. dist is package.ps1's output, which a TeamCity agent keeps
+        // between builds; a package with the vendor readers stages vendor .config files that carry
+        // a BOM, and this test would fail on them and rewrite them.
+        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs", "dist" };
 
         /// <summary>
         /// Strips a leading UTF-8 BOM from <paramref name="path"/>, preserving its timestamps, and

@@ -22,7 +22,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Training;
 using static pwiz.CarafeSharp.Test.OspreyTestRecords;
 
@@ -221,7 +221,7 @@ namespace pwiz.CarafeSharp.Test
             masked = Apply(settings, record);
             Assert.AreEqual(3L, masked.MaskedBy[OspreyMaskingPolicy.RULE_SELF_SHARED]);
             // An unmatched ion on the same m/z shares nothing.
-            record.IonFlags[b5] &= unchecked((byte)~OspreyIonFlags.MATCHED_AT_APEX);
+            record.IonFlags[b5] &= unchecked((byte)~TrainingIonFlags.MATCHED_AT_APEX);
             record.IonMz[b4] = record.IonMz[b3] + 0.5;
             record.IonMz[b5] = record.IonMz[b3];
             masked = Apply(settings, record);
@@ -229,12 +229,12 @@ namespace pwiz.CarafeSharp.Test
 
             // Another confident precursor at the same apex peak: a count of 0 is no claimant.
             record = CleanRecord(PEPTIDE, 2);
-            record.SharedApexCount[b4] = 1;
+            record.SharedApexN[b4] = 1;
             Assert.AreEqual(1.0, Apply(settings, record).Invalid[b4]);
             Assert.AreEqual(0.0, Apply(new OspreyMaskingSettings { MaskSharedApex = false }, record).Invalid[b4]);
             // Co-elution sharing masks only when asked, and then only for the better claimant if asked.
-            record.SharedApexCount[b4] = 0;
-            record.SharedCoeluteCount[b4] = 2;
+            record.SharedApexN[b4] = 0;
+            record.SharedCoeluteN[b4] = 2;
             Assert.AreEqual(0.0, Apply(settings, record).Invalid[b4]);
             var coelution = new OspreyMaskingSettings { MaskSharedCoelution = true };
             masked = Apply(coelution, record);
@@ -242,15 +242,15 @@ namespace pwiz.CarafeSharp.Test
             coelution.SharedOnlyWhenBetterClaimant = true;
             Assert.AreEqual(0.0, Apply(coelution, record).Invalid[b4]);
             // The apex claimant flag does not stand for the co-elution one.
-            record.IonFlags[b4] |= OspreyIonFlags.BETTER_CLAIMANT_APEX;
+            record.IonFlags[b4] |= TrainingIonFlags.BETTER_CLAIMANT_APEX;
             Assert.AreEqual(0.0, Apply(coelution, record).Invalid[b4]);
-            record.IonFlags[b4] |= OspreyIonFlags.BETTER_CLAIMANT_COELUTE;
+            record.IonFlags[b4] |= TrainingIonFlags.BETTER_CLAIMANT_COELUTE;
             Assert.AreEqual(1.0, Apply(coelution, record).Invalid[b4]);
 
             // One ion broken every way at once counts once under each rule.
             record = CleanRecord(PEPTIDE, 2);
-            record.SharedApexCount[b4] = 1;
-            record.SharedCoeluteCount[b4] = 1;
+            record.SharedApexN[b4] = 1;
+            record.SharedCoeluteN[b4] = 1;
             record.CorrPolish[b4] = 0.1f;
             record.XicStart[b4] = record.XicEnd[b4] = record.ApexIntensity[b4];
             record.PolishOutlierZ[b4] = 10;
@@ -307,14 +307,14 @@ namespace pwiz.CarafeSharp.Test
             // With the other ions at 10 on both boundaries the limits are 15, which an elevation
             // of 15 does not exceed, whatever its fraction of the apex.
             record = CleanRecord(PEPTIDE, 2);
-            for (int slot = 0; slot < record.SlotCount; slot++)
+            for (int slot = 0; slot < record.NSlots; slot++)
                 record.XicStart[slot] = record.XicEnd[slot] = 10;
             record.ApexIntensity[b4] = 40;
             AssertSkew(settings, record, b4, 15f, false);
             AssertSkew(settings, record, b4, MathF.BitIncrement(15f), true);
             // Only ions with an intensity to keep enter the medians: unmatched ions high at the
             // boundaries do not raise the limits.
-            var unmatched = Enumerable.Range(0, record.SlotCount).Where(s => !record.Has(s, OspreyIonFlags.MATCHED_AT_APEX)).ToArray();
+            var unmatched = Enumerable.Range(0, record.NSlots).Where(s => !record.Has(s, TrainingIonFlags.MATCHED_AT_APEX)).ToArray();
             Assert.AreEqual(14, unmatched.Length);
             foreach (int slot in unmatched)
                 record.XicStart[slot] = record.XicEnd[slot] = 1e6f;
@@ -368,7 +368,7 @@ namespace pwiz.CarafeSharp.Test
             // keep, so the matched-ion rules (here a bad correlation) do not see it.
             doubly = CleanRecord(PEPTIDE, 2);
             int b5 = BSlot(5);
-            doubly.IonFlags[b5] &= unchecked((byte)~OspreyIonFlags.IN_SCAN_RANGE);
+            doubly.IonFlags[b5] &= unchecked((byte)~TrainingIonFlags.IN_SCAN_RANGE);
             doubly.CorrPolish[b5] = 0.1f;
             masked = Apply(new OspreyMaskingSettings(), doubly);
             Assert.AreEqual(14, masked.MatchedCount);
@@ -391,7 +391,7 @@ namespace pwiz.CarafeSharp.Test
         private static void TestPolishIntensities()
         {
             var record = CleanRecord(PEPTIDE, 2);
-            for (int slot = 0; slot < record.SlotCount; slot++)
+            for (int slot = 0; slot < record.NSlots; slot++)
                 record.PolishRowEffect[slot] = (float)Math.Log(2.0);
             int b4 = BSlot(4);
             record.PolishRowEffect[b4] = (float)Math.Log(1.0);
@@ -400,7 +400,7 @@ namespace pwiz.CarafeSharp.Test
             var masked = Apply(polish, record);
             Assert.AreEqual(record.ApexIntensity[b4] / (double)record.ApexIntensity[masked.TopSlot], masked.Intensities[b4], 1e-12);
             // With one, exp(row effect) relative to the top ion's.
-            record.MedianPolishFitted = true;
+            record.MpFitted = true;
             masked = Apply(polish, record);
             Assert.AreEqual(0.5, masked.Intensities[b4], 1e-6);
             // A matched ion the polish left without a row effect trains as 0 and so is not a
@@ -435,7 +435,7 @@ namespace pwiz.CarafeSharp.Test
 
             // A dipeptide's ladder is b1 and y1 only, all below the floor.
             var dipeptide = NewRecord(@"GK", 2);
-            for (int slot = 0; slot < dipeptide.SlotCount; slot++)
+            for (int slot = 0; slot < dipeptide.NSlots; slot++)
                 Match(dipeptide, slot, 100 + slot, 0.95f);
             masked = Apply(noMinimum, dipeptide);
             Assert.AreEqual(4, masked.SlotCount);
@@ -458,7 +458,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(expectMasked, masked.MaskedBy.ContainsKey(OspreyMaskingPolicy.RULE_CORRELATION), Text(correlation));
         }
 
-        private static void AssertSkew(OspreyMaskingSettings settings, OspreyTrainingRecord record, int slot, float elevation, bool expectSkew)
+        private static void AssertSkew(OspreyMaskingSettings settings, TrainingRecord record, int slot, float elevation, bool expectSkew)
         {
             record.XicStart[slot] = record.XicEnd[slot] = elevation;
             var masked = Apply(settings, record);
@@ -476,7 +476,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.IsTrue(masked.MaskedBy.ContainsKey(rule), rule);
         }
 
-        private static MaskedSpectrum Apply(OspreyMaskingSettings settings, OspreyTrainingRecord record)
+        private static MaskedSpectrum Apply(OspreyMaskingSettings settings, TrainingRecord record)
         {
             return new OspreyMaskingPolicy(settings).Apply(record);
         }

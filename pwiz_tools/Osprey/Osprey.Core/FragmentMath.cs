@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace pwiz.Osprey.Core
@@ -87,16 +88,32 @@ namespace pwiz.Osprey.Core
                     return mzs;
                 }
 
-                // Find top 6 by intensity, stable on ties to match
-                // Rust slice::sort_by. Array.Sort with Comparison<T>
-                // is introsort and unstable.
-                var result = Enumerable.Range(0, frags.Count)
-                    .OrderByDescending(i => frags[i].RelativeIntensity)
-                    .Take(nTop)
-                    .Select(i => frags[i].Mz)
-                    .ToArray();
-                return result;
+                // The same six the extraction takes (TopIndicesByIntensity).
+                return TopIndicesByIntensity(frags, nTop).Select(i => frags[i].Mz).ToArray();
             }, entry);
+        }
+
+        /// <summary>
+        /// Indices of the <paramref name="count"/> most intense of <paramref name="fragments"/>,
+        /// most intense first. Ties on intensity are broken by the fragments themselves - lower
+        /// m/z first, then ion type, ordinal and charge - never by their position in the
+        /// library, so the choice does not depend on the order a library lists its peaks in.
+        /// Libraries print intensities to a few decimals, so ties are common, and a different
+        /// pick cascades through XIC extraction -> peak detection -> rankScore -> bestPeak;
+        /// breaking them by library order made the identification count swing by about 2%
+        /// with nothing but row order. The one ranking every top-N selection uses; the Rust
+        /// reference ranks the same way (<c>osprey_core::fragment_typing::top_fragment_indices</c>).
+        /// </summary>
+        public static int[] TopIndicesByIntensity(IReadOnlyList<LibraryFragment> fragments, int count)
+        {
+            return Enumerable.Range(0, fragments.Count)
+                .OrderByDescending(i => fragments[i].RelativeIntensity)
+                .ThenBy(i => fragments[i].Mz)
+                .ThenBy(i => fragments[i].Annotation.IonType)
+                .ThenBy(i => fragments[i].Annotation.Ordinal)
+                .ThenBy(i => fragments[i].Annotation.Charge)
+                .Take(count)
+                .ToArray();
         }
 
         /// <summary>

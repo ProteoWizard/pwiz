@@ -134,13 +134,12 @@ namespace pwiz.Skyline.Util
             var settings = Settings.Default;
             string ownInstallationId = settings.InstallationId;
             string configFile = settings.SettingsFilePath;
-            var configFolder = Path.GetDirectoryName(configFile);
-            if (!string.IsNullOrEmpty(configFolder))
-                Directory.CreateDirectory(configFolder);
             // Saved first, so that what a revert puts back includes this session's changes.
             settings.Save();
             _originalConfigBytes = File.Exists(configFile) ? File.ReadAllBytes(configFile) : null;
-            File.Copy(SourceConfigFile, configFile, true);
+            using var saver = new FileSaver(configFile);
+            saver.CopyFile(SourceConfigFile);
+            saver.Commit();
             _settingsFileReplaced = true;
             settings.Reload();
 
@@ -218,7 +217,11 @@ namespace pwiz.Skyline.Util
             if (_originalConfigBytes == null)
                 FileEx.SafeDelete(configFile, true);
             else
-                File.WriteAllBytes(configFile, _originalConfigBytes);
+            {
+                using var saver = new FileSaver(configFile);
+                File.WriteAllBytes(saver.SafeName, _originalConfigBytes);
+                saver.Commit();
+            }
             _settingsFileReplaced = false;
             settings.Reload();
         }

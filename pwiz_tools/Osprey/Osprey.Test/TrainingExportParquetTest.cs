@@ -24,8 +24,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -65,7 +67,7 @@ namespace pwiz.Osprey.Test
             var read = TrainingExportParquet.Read(path, out var metadata);
 
             Assert.AreEqual(TrainingExportParquet.FORMAT_VERSION.ToString(CultureInfo.InvariantCulture),
-                metadata[TrainingExportParquet.KEY_FORMAT_VERSION]);
+                metadata[TrainingExportKeys.FORMAT_VERSION]);
             Assert.AreEqual(@"run1", metadata[@"osprey.file_name"]);
             Assert.AreEqual(records.Count, read.Count);
             for (int i = 0; i < records.Count; i++)
@@ -111,7 +113,7 @@ namespace pwiz.Osprey.Test
             var read = TrainingExportParquet.Read(path, out var metadata);
             Assert.AreEqual(0, read.Count);
             Assert.AreEqual(@"0", metadata[@"osprey.training_export.rows"]);
-            Assert.IsTrue(metadata.ContainsKey(TrainingExportParquet.KEY_FORMAT_VERSION));
+            Assert.IsTrue(metadata.ContainsKey(TrainingExportKeys.FORMAT_VERSION));
         }
 
         private static void AssertPathBesideTheRunsProducts(string dir)
@@ -121,7 +123,7 @@ namespace pwiz.Osprey.Test
             {
                 ArtifactPaths.OutputDir = dir;
                 Assert.AreEqual(Path.Combine(dir, @"run1.training.parquet"),
-                    TrainingExportParquet.PathFor(Path.Combine(dir, @"data", @"run1.mzML")));
+                    TrainingExportWriter.PathFor(Path.Combine(dir, @"data", @"run1.mzML")));
             }
             finally
             {
@@ -149,7 +151,7 @@ namespace pwiz.Osprey.Test
                 EntryId = entryId,
                 IsDecoy = false,
                 IsEntrapment = entryId % 2 == 1,
-                PeptideKind = entryId % 2 == 1 ? @"p_target" : @"target",
+                PeptideKind = entryId % 2 == 1 ? PairingManifest.KIND_P_TARGET : PairingManifest.KIND_TARGET,
                 Sequence = new string('A', length - 1) + @"K",
                 ModifiedSequence = new string('A', length - 1) + @"K",
                 ModPositions = entryId % 2 == 1 ? new[] { 2 } : Array.Empty<int>(),

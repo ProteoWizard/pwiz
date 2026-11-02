@@ -36,6 +36,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -159,7 +160,8 @@ namespace pwiz.Osprey.Tasks
         // Per-file CAL-view calibration diagnostics for the --model-diagnostics HTML
         // report, keyed by file name in input order (mirrors _perFileCalibrations).
         // Empty on a normal run: only populated on the compute path when
-        // config.ModelDiagnostics is on. Published as PerFileCalibrationDiagnostics.
+        // config.ModelDiagnostics is on (every run saves the rows to disk regardless).
+        // Published as PerFileCalibrationDiagnostics.
         private ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow> _perFileCalibrationDiagnostics
             = new ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow>();
         // The per-run mass-error unit ("ppm" / "Th") for the CAL view, recorded from the
@@ -195,10 +197,14 @@ namespace pwiz.Osprey.Tasks
         // stage - it chooses which candidate peak each precursor's row
         // describes - so a re-run under a different pick model must not
         // adopt these parquets.
+        //
+        // The data file is declared as the input it is, and a node that holds only its
+        // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
+        // "HPC relay checklist"), so a harness ships the cache in its place.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
-            if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
-                yield return ctx.Config.LibrarySource.Path;
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
             if (ctx.Config.InputFiles != null)
                 foreach (var input in ctx.Config.InputFiles)
                     yield return input;
@@ -827,9 +833,9 @@ namespace pwiz.Osprey.Tasks
             // CAL-view per-file diagnostics for --model-diagnostics. Harvested directly
             // onto the instance field by ProcessFile (compute path only), so it is
             // published from the field rather than a Finalize local. Empty on a normal
-            // run and on the rehydrate/resume paths (no calibration matches to shape) --
-            // FirstPassFdrTask reads it only under config.ModelDiagnostics and tolerates
-            // empty. See TODO-20260712 for the HPC-split persistence caveat.
+            // run and on the rehydrate/resume paths (no calibration matches to shape) -
+            // FirstPassFdrTask reads it only under config.ModelDiagnostics and reads any run
+            // missing here from its .calibration.json.
             ctx.Publish(new PerFileCalibrationDiagnostics(_perFileCalibrationDiagnostics, _calibrationMassUnit));
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
@@ -967,7 +973,7 @@ namespace pwiz.Osprey.Tasks
 
             var swLibrary = Stopwatch.StartNew();
             // Load AND finish: marking and pairing a supplied-decoy library moved inside the
-            // loader (issue #4650) so the .libcache holds the finished library rather than a
+            // loader (issue #4650) so the derived library holds the finished library rather than a
             // half-built one the caller completes. The pairing faults still stop the run
             // here, with the same messages and the same exit code - they arrive as `loadError`
             // instead of being raised in this method.
@@ -1196,24 +1202,15 @@ namespace pwiz.Osprey.Tasks
             string library = config.LibrarySource?.Path;
             if (fraction > MAX_UNUSABLE_DECOY_FRACTION)
             {
-                // A .blib's peaks are typed from m/z, so what it lacks is peaks within the
-                // fragment tolerance of the peptide's b and y ions, not annotations.
-                if (config.LibrarySource?.Format == LibraryFormat.Blib)
-                {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance,
-                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
-                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY),
-                        config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit.GetLocalizedString(),
-                        OspreyArgNames.Text(OspreyArgNames.FRAGMENT_TOLERANCE), OspreyArgNames.Text(OspreyArgNames.RESOLUTION)));
-                }
-                else
-                {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
-                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
-                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
-                }
+                // Every library's peaks are typed from m/z, a .tsv's as a .blib's, so what the
+                // library lacks is peaks within the fragment tolerance of the peptide's b and y
+                // ions, not annotations.
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance,
+                    nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY),
+                    config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit.GetLocalizedString(),
+                    OspreyArgNames.Text(OspreyArgNames.FRAGMENT_TOLERANCE), OspreyArgNames.Text(OspreyArgNames.RESOLUTION)));
                 return false;
             }
             ctx.LogWarning(string.Format(
@@ -1827,12 +1824,14 @@ namespace pwiz.Osprey.Tasks
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
                 out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
 
-            // Harvest the CAL-view per-file diagnostics for the --model-diagnostics
-            // HTML report. Only non-null on the compute path under config.ModelDiagnostics;
-            // FirstPassFdrTask assembles these into ModelDiagnosticsData.Cal. Keyed by file
-            // name in input order, mirroring the per-file calibration harvest below. The
-            // ConcurrentDictionary field tolerates the parallel per-file fan-out.
-            if (calDiagnostics != null)
+            // Harvest the CAL-view per-file diagnostics for this process's --model-diagnostics
+            // HTML report. Non-null on every compute path, and always saved beside the
+            // calibration (ResolveCalibration); held in memory only when this process writes
+            // the report, which otherwise reads them back from disk. FirstPassFdrTask assembles
+            // these into ModelDiagnosticsData.Cal. Keyed by file name in input order, mirroring
+            // the per-file calibration harvest below. The ConcurrentDictionary field tolerates
+            // the parallel per-file fan-out.
+            if (calDiagnostics != null && config.ModelDiagnostics)
             {
                 _perFileCalibrationDiagnostics[fileName] = calDiagnostics;
                 // Record the per-run mass-error unit from the mass calibration (the
@@ -1925,12 +1924,6 @@ namespace pwiz.Osprey.Tasks
             // Profile-Osprey.ps1 -MemoryProfile, and dotMemory forces its own GC so the
             // captured live set is the true retained peak (arrays are live here, so kept).
             ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
-
-            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
-            if (config.WritePin)
-            {
-                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
-            }
 
             // Persist the full FdrEntry results (with features) to
             // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
@@ -2206,7 +2199,12 @@ namespace pwiz.Osprey.Tasks
                     RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration,
                         config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                         config.RtCalibration.MinCalibrationPoints),
-                    SecondPassRt = null
+                    SecondPassRt = null,
+                    // The calibration view's row for this run. Only this phase holds the matches it
+                    // is binned from, so a report built by any later process - a resume, an HPC
+                    // join, --model-diagnostics added afterwards - reads it from here (P16).
+                    ModelDiagnostics = ModelDiagnosticsReport.CalibrationDiagnosticsToJson(calDiagnostics,
+                        !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit)
                 };
                 // ArtifactPaths.ResolveOutputDir routes the calibration JSON to
                 // the configured output dir (or the input's own directory by
@@ -2363,77 +2361,6 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__correction__1___2___SD__3___2___tolerance_____4___2___n__5___6__matches_,
                 level, cal.Mean, MzCalibration.GetUnitText(cal.Unit), cal.SD, tolerance, cal.Count, matchNoun));
-        }
-
-        /// <summary>
-        /// Write a TSV dump of per-entry feature values for direct comparison with
-        /// the Rust implementation's PIN output. Format matches Rust's PIN columns:
-        /// psm_id, label, scan, + 21 features. Sorted by (modified_sequence, charge,
-        /// scan_number) for stable diffing against Rust's output.
-        /// </summary>
-        private void WriteFeatureDump(
-            string inputFile, string fileName,
-            List<FdrEntry> scoredEntries, PipelineContext ctx)
-        {
-            string dumpPath = Path.Combine(
-                Path.GetDirectoryName(inputFile) ?? @".",
-                fileName + @".cs_features.tsv");
-
-            var header = new[]
-            {
-                @"SpecId", @"Label", @"ScanNr", @"Charge",
-                @"fragment_coelution_sum", @"fragment_coelution_max", @"n_coeluting_fragments",
-                @"peak_apex", @"peak_area", @"peak_sharpness",
-                @"xcorr", @"consecutive_ions", @"explained_intensity",
-                @"mass_accuracy_deviation_mean", @"abs_mass_accuracy_deviation_mean",
-                @"rt_deviation", @"abs_rt_deviation",
-                @"ms1_precursor_coelution", @"ms1_isotope_cosine",
-                @"median_polish_cosine", @"median_polish_residual_ratio",
-                @"sg_weighted_xcorr", @"sg_weighted_cosine",
-                @"median_polish_min_fragment_r2", @"median_polish_residual_correlation",
-                @"Peptide"
-            };
-
-            var sorted = scoredEntries
-                .Where(e => e.Features != null && e.Features.Length == ScoringTaskShared.NUM_PIN_FEATURES)
-                .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
-                .ThenBy(e => e.Charge)
-                .ThenBy(e => e.ScanNumber)
-                .ToList();
-
-            using (var saver = new SimpleFileSaver(dumpPath))
-            {
-                using (var writer = new StreamWriter(saver.SafeName))
-                {
-                    // LF newlines so the dump is byte-stable across Windows and
-                    // Linux for cross-impl diffing against Rust's PIN output;
-                    // matches the convention used by OspreyDiagnosticsLog.
-                    var inv = CultureInfo.InvariantCulture;
-                    writer.NewLine = TextUtil.LF;
-                    writer.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var e in sorted)
-                    {
-                        string psmId = string.Format(inv, @"{0}_{1}_{2}_{3}",
-                            fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
-                        int label = e.IsDecoy ? -1 : 1;
-                        var cols = new List<string>(26)
-                        {
-                            psmId,
-                            label.ToString(inv),
-                            e.ScanNumber.ToString(inv),
-                            e.Charge.ToString(inv)
-                        };
-                        for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
-                            cols.Add(e.Features[i].ToString(@"G17", inv));
-                        cols.Add(e.ModifiedSequence ?? string.Empty);
-                        writer.WriteLine(cols.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    }
-                }
-                saver.Commit();
-            }
-
-            ctx.LogInfo(LogTag.COUNT, @"Wrote feature dump: {0} ({1} peaks)",
-                dumpPath, sorted.Count);
         }
 
     }

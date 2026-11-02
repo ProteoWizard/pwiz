@@ -24,16 +24,17 @@ namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
     /// One row of the <c>DecoyPairs</c> table Carafe adds to a .blib: a target or decoy
-    /// precursor and the pair it belongs to.
+    /// precursor, the pairing it belongs to, and, for a decoy, its target.
     /// </summary>
     public sealed class DecoyPairRow
     {
-        public DecoyPairRow(int refSpectraId, bool isDecoy, bool isEntrapment, int pairId, string method)
+        public DecoyPairRow(int refSpectraId, bool isDecoy, bool isEntrapment, int pairingId, int? targetRefSpectraId, string method)
         {
             RefSpectraId = refSpectraId;
             IsDecoy = isDecoy;
             IsEntrapment = isEntrapment;
-            PairId = pairId;
+            PairingId = pairingId;
+            TargetRefSpectraId = targetRefSpectraId;
             Method = method;
         }
 
@@ -44,8 +45,11 @@ namespace pwiz.CarafeSharp.Core
         /// <summary>True for an FDRBench entrapment pair (<c>p_target</c> / <c>p_decoy</c>).</summary>
         public bool IsEntrapment { get; }
 
-        /// <summary>Shared by a target and its paired decoy.</summary>
-        public int PairId { get; }
+        /// <summary>The manifest's <c>peptide_pair_index</c>: shared by a target, its entrapment target and both their decoys.</summary>
+        public int PairingId { get; }
+
+        /// <summary>A decoy's target precursor, at the same charge; null on a target.</summary>
+        public int? TargetRefSpectraId { get; }
 
         /// <summary><c>reverse</c> or <c>cycle</c> on decoy rows; null on targets.</summary>
         public string Method { get; }

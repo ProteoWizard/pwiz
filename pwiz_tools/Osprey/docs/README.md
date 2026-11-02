@@ -45,7 +45,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 10 | [cross-run-reconciliation](10-cross-run-reconciliation.md) | Consensus RT, per-file LOESS refit, and the per-entry reconciliation plan (Keep / UseCwtPeak / ForcedIntegration). |
 | 11 | [boundary-overrides](11-boundary-overrides.md) | How the search accepts override boundaries so consensus and reconciliation targets re-score on the same window / XCorr path as the first pass. |
 | 12 | [second-pass-fdr](12-second-pass-fdr.md) | Stage-7 second-pass FDR and the frozen-model q-value modes — transfer-compete and protein-compact — selected by `OSPREY_PASS2_QVALUE`. |
-| 13 | [blib-output-schema](13-blib-output-schema.md) | BiblioSpec SQLite schema plus Osprey extension tables and the nullable `retentionTime` convention for Skyline ID lines. |
+| 13 | [blib-output-schema](13-blib-output-schema.md) | BiblioSpec SQLite schema plus the `LibMetadata` table and the nullable `retentionTime` convention for Skyline ID lines. |
 | 14 | [intermediate-files](14-intermediate-files.md) | On-disk caches / sidecars (calibration JSON, spectra cache, `.scores.parquet`, FDR sidecars), SHA-256 footer hashing, and the tiered memory architecture. |
 | 15 | [hpc-scoring-split](15-hpc-scoring-split.md) | The four `--task` workers, their input/output files, the ordering rules a chain must observe, and the embedded validity stamps that drive resume under HPC / NextFlow orchestration. |
 | 16 | [determinism](16-determinism.md) | Patterns that keep results bit-identical across runs: thread-order independence, float stability, cross-validation fold assignment. |
@@ -56,6 +56,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 21 | [user-facing-text](21-user-facing-text.md) | Vocabulary for the log, warnings and errors - the only UI Osprey has: which developer terms never appear in user text and what replaces them. |
 | 22 | [training-export](22-training-export.md) | The `--training-export` product of `PerFileRescoring` and the schema of `<stem>.training.parquet` - the contract CarafeSharp reads: every identified target's full b/y ladder with per-ion interference evidence from Osprey's own boundaries, median polish and shared-peak logic. |
 | 23 | [demultiplexing](23-demultiplexing.md) | `--demux auto`: overlapping-window (staggered) DIA read through ProteoWizard's demultiplexer straight from the vendor file into `<stem>.demux.spectra.bin` - detection, settings descriptor, rescoring and staging rules, performance, and what was ported from #4710. |
+| 24 | [library-contract](24-library-contract.md) | What a correct Osprey spectral library is - one row per precursor, clean accessions, decoys and entrapment marked, the pairing manifest authoritative, pairs whole - checked by one validator (`LibraryContract` in CarafeSharp.Contracts) that CarafeSharp runs in `--library_contract` mode before it keeps a library and Osprey runs at load on a library that claims it, failing with every violation by class. |
 
 ## Supplementary
 

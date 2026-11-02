@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -75,22 +76,6 @@ namespace pwiz.Osprey.IO
     }
 
     /// <summary>
-    /// One of the four peptide kinds in an FDRBench manifest row.
-    /// Maps to Rust <c>osprey_io::pairing::PeptideKind</c>.
-    /// </summary>
-    public enum PeptideKind
-    {
-        /// <summary>Original target peptide from a real protein.</summary>
-        Target,
-        /// <summary>Decoy of a real-protein target (randomized sequence).</summary>
-        Decoy,
-        /// <summary>Entrapment target peptide (a synthetic target).</summary>
-        PTarget,
-        /// <summary>Decoy of an entrapment target.</summary>
-        PDecoy,
-    }
-
-    /// <summary>
     /// In-memory representation of a FDRBench pairing manifest. FDRBench
     /// emits a 5-column TSV (<c>sequence, decoy, proteins, peptide_type,
     /// peptide_pair_index</c>) when it generates an entrapment library.
@@ -102,11 +87,6 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class DecoyPairingManifest
     {
-        // Required column headings, named in the error a manifest without them gets.
-        private const string COLUMN_SEQUENCE = @"sequence";
-        private const string COLUMN_PEPTIDE_TYPE = @"peptide_type";
-        private const string COLUMN_PEPTIDE_PAIR_INDEX = @"peptide_pair_index";
-
         private readonly Dictionary<string, ManifestEntryInfo> _seqToInfo;
 
         private DecoyPairingManifest(Dictionary<string, ManifestEntryInfo> seqToInfo)
@@ -161,92 +141,17 @@ namespace pwiz.Osprey.IO
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(@"path is required", nameof(path));
-            using (var reader = new StreamReader(path))
+            // The lenient read: a row the loader cannot use is skipped, as Rust 0c3a73e skips it
+            // (strict about a row truncated short of its proteins, for cross-impl parity). An
+            // empty `proteins` cell leaves the library's own protein_ids in place.
+            var map = new Dictionary<string, ManifestEntryInfo>(StringComparer.Ordinal);
+            foreach (var row in PairingManifest.Read(path, false, out _))
             {
-                string header = reader.ReadLine();
-                if (header == null)
-                    throw new InvalidDataException(OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_);
-                var cols = header.Split(TextUtil.SEPARATOR_TSV);
-                int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
-                for (int i = 0; i < cols.Length; i++)
-                {
-                    if (cols[i] == COLUMN_SEQUENCE)
-                        iSeq = i;
-                    else if (cols[i] == COLUMN_PEPTIDE_TYPE)
-                        iType = i;
-                    else if (cols[i] == COLUMN_PEPTIDE_PAIR_INDEX)
-                        iPair = i;
-                    else if (cols[i] == @"proteins")
-                        iProteins = i;
-                }
-                if (iSeq < 0 || iType < 0 || iPair < 0)
-                {
-                    throw new InvalidDataException(string.Format(
-                        OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_,
-                        header, COLUMN_SEQUENCE, COLUMN_PEPTIDE_TYPE, COLUMN_PEPTIDE_PAIR_INDEX));
-                }
-                // `proteins` is optional -- older manifests without it still
-                // parse fine; ApplyToLibrary simply won't replace
-                // protein_ids when this column is absent.
-                // When the proteins column IS present in the header, rows
-                // truncated to drop it are treated as malformed (skipped
-                // and counted in nSkipped). This matches Rust 0c3a73e
-                // `max_needed = i_proteins.unwrap_or(0).max(...)`:
-                // strict for cross-impl byte parity. The body's
-                // `iProteins < fields.Length` guard is belt-and-suspenders
-                // against the early skip, not a design intent for lenient
-                // parsing of short rows.
-                int maxNeeded = Math.Max(iSeq, Math.Max(iType, iPair));
-                if (iProteins >= 0 && iProteins > maxNeeded)
-                    maxNeeded = iProteins;
-                int minRequiredCols = maxNeeded + 1;
-                var map = new Dictionary<string, ManifestEntryInfo>(StringComparer.Ordinal);
-                int nSkipped = 0;
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.Length == 0)
-                        continue;
-                    var fields = line.Split(TextUtil.SEPARATOR_TSV);
-                    if (fields.Length < minRequiredCols)
-                    {
-                        nSkipped++;
-                        continue;
-                    }
-                    if (!TryParsePeptideKind(fields[iType], out var kind))
-                    {
-                        nSkipped++;
-                        continue;
-                    }
-                    if (!uint.TryParse(fields[iPair],
-                        System.Globalization.NumberStyles.None,
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        out uint pairIndex))
-                    {
-                        nSkipped++;
-                        continue;
-                    }
-                    // Parse the optional semicolon-separated proteins
-                    // column. Empty / "-" / single-dash -> empty list,
-                    // signalling "don't override library protein_ids."
-                    var proteins = new List<string>();
-                    if (iProteins >= 0 && iProteins < fields.Length)
-                    {
-                        string raw = fields[iProteins].Trim();
-                        if (raw.Length > 0 && raw != @"-")
-                        {
-                            foreach (var p in raw.Split(';'))
-                            {
-                                string pt = p.Trim();
-                                if (pt.Length > 0)
-                                    proteins.Add(pt);
-                            }
-                        }
-                    }
-                    map[fields[iSeq]] = new ManifestEntryInfo(kind, pairIndex, proteins);
-                }
-                return new DecoyPairingManifest(map);
+                // Indexed by sequence alone: a repeated sequence keeps its last row.
+                map[row.Sequence] = new ManifestEntryInfo(row.Kind.GetValueOrDefault(), (uint)row.PairIndex,
+                    new List<string>(row.Proteins));
             }
+            return new DecoyPairingManifest(map);
         }
 
         /// <summary>
@@ -434,29 +339,17 @@ namespace pwiz.Osprey.IO
             return stats;
         }
 
-        private static bool TryParsePeptideKind(string s, out PeptideKind kind)
-        {
-            switch (s)
-            {
-                case @"target":   kind = PeptideKind.Target;   return true;
-                case @"decoy":    kind = PeptideKind.Decoy;    return true;
-                case @"p_target": kind = PeptideKind.PTarget;  return true;
-                case @"p_decoy":  kind = PeptideKind.PDecoy;   return true;
-                default:          kind = PeptideKind.Target;   return false;
-            }
-        }
-
         // Which "side" of a pair this kind sits on (true = target-like).
         private static bool IsTargetSideOf(PeptideKind k)
         {
-            return k == PeptideKind.Target || k == PeptideKind.PTarget;
+            return !PeptideKinds.IsDecoySide(k);
         }
 
         // Partition: target<->decoy and p_target<->p_decoy are independent
         // pairings within the same peptide_pair_index.
         private static byte PartitionOf(PeptideKind k)
         {
-            return (byte)(k == PeptideKind.Target || k == PeptideKind.Decoy ? 0 : 1);
+            return (byte)(PeptideKinds.IsEntrapment(k) ? 1 : 0);
         }
 
         // Cheap ordinal equality on two protein-ID lists. Used to decide

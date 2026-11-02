@@ -24,6 +24,7 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Pipeline;
 
 namespace pwiz.Osprey.Chromatography
@@ -76,6 +77,17 @@ namespace pwiz.Osprey.Chromatography
         /// <summary>Second-pass RT calibration (optional).</summary>
         [JsonProperty(@"second_pass_rt", NullValueHandling = NullValueHandling.Ignore)]
         public RTCalibrationJson SecondPassRt { get; set; }
+
+        /// <summary>
+        /// This calibration's view in the model diagnostics report, reduced from the calibration
+        /// matches while they are still live. Written on every calibrated run, with or without
+        /// <c>--model-diagnostics</c>, because nothing after this phase holds the matches it is
+        /// binned from, so a report asked for later reads it from here (doc 00, P16). Opaque to
+        /// this project: the report's row type lives in a project above it, which writes and
+        /// reads the member. Null when the run did not calibrate.
+        /// </summary>
+        [JsonProperty(@"model_diagnostics", NullValueHandling = NullValueHandling.Ignore)]
+        public JObject ModelDiagnostics { get; set; }
 
         /// <summary>Create default uncalibrated parameters.</summary>
         public static CalibrationParams Uncalibrated()

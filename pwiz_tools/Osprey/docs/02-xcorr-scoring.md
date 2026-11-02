@@ -42,8 +42,8 @@ offset))`, identical to the Rust `BIN` macro.
 
 `BinConfig.ForResolution(ResolutionMode)` (`BinConfig.cs:65`) selects HRAM vs
 unit; everything else in this stage is resolution-agnostic once the `BinConfig`
-is chosen. See `04-calibration.md` for how `--resolution auto` resolves to a
-`ResolutionMode`.
+is chosen. `--resolution` is `hram` unless the command line gives `unit`; it is not detected from
+the data.
 
 ---
 
@@ -305,7 +305,7 @@ The flags that change XCorr behavior for this stage:
 
 | Flag / env var | Default | Effect on XCorr |
 |----------------|---------|-----------------|
-| `--resolution {unit\|hram\|auto}` | `auto` | Selects `BinConfig` for the **feature-extraction** XCorr: unit (`1.0005079` Da, offset `0.4`, ~2000 bins) or HRAM (`0.02` Da, offset `0.0`, ~100002 bins). `auto` is resolved during calibration. Calibration XCorr ignores this and always uses unit bins (`Calibrator.cs:72`). |
+| `--resolution {hram\|unit}` | `hram` | Selects `BinConfig` for the **feature-extraction** XCorr: unit (`1.0005079` Da, offset `0.4`, ~2000 bins) or HRAM (`0.02` Da, offset `0.0`, ~100002 bins). `auto` is resolved during calibration. Calibration XCorr ignores this and always uses unit bins (`Calibrator.cs:72`). |
 | `--fragment-tolerance <v>` / `--fragment-unit {ppm\|mz}` | `ppm`; unit-res forces `mz 0.5` | **Does not affect XCorr.** XCorr matches by bin index, not ppm tolerance. Tolerance only affects the sibling cosine kernels (`ComputeCosineAtScan`, `LibCosine`) and XIC extraction. |
 | `--no-prefilter` | prefilter enabled (`PrefilterEnabled = true`) | Does not change the XCorr math; only affects which candidates reach scoring. |
 | `OSPREY_DIAG_XCORR_SCAN` (env var) | unset | When set to a scan number, `XcorrAtScan` (`SpectralScorer.cs:453`) appends a per-scan diagnostic dump (`cs_xcorr_diag.txt`) with `binned`/`windowed`/`preprocessed` sums and per-fragment bin lookups, for cross-impl bisection. Zero overhead when unset. |

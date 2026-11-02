@@ -27,6 +27,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
@@ -59,8 +60,15 @@ namespace pwiz.Osprey.Tasks
         /// <summary>The name the reconciled-parquet footer check gives the export.</summary>
         private static readonly string RECONCILED_CONSUMER = OspreyArgNames.Text(OspreyArgNames.TRAINING_EXPORT);
 
-        /// <summary>Footer key naming the pass whose run q-values the export selected on.</summary>
-        public const string KEY_RUN_Q_PASS = @"osprey.training_export.run_q_pass";
+        /// <summary>
+        /// <c>&lt;stem&gt;.training.parquet</c> in the run's output directory
+        /// (<see cref="ArtifactPaths.ResolveOutputDir"/>), beside its other products.
+        /// </summary>
+        public static string PathFor(string inputFile)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + TrainingExportParquet.EXT;
+            return Path.Combine(ArtifactPaths.ResolveOutputDir(inputFile), fileName);
+        }
 
         /// <summary>
         /// One run: read its reconciled rows, run q-values, calibration and spectra; compute every
@@ -339,7 +347,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The library's targets by entry id. The in-process map when an earlier stage of this
         /// run still holds it - the same artifact, already loaded - and a load from the library
-        /// (its <c>.libcache</c>) otherwise, which is every export written from disk.
+        /// (its derived <c>.blib</c>) otherwise, which is every export written from disk.
         ///
         /// <para>The load retains fragments only for the base_ids the first pass kept (the
         /// retained summary), as <c>--task SecondPassFDR</c> loads it: every row the export
@@ -472,24 +480,8 @@ namespace pwiz.Osprey.Tasks
         {
             record.FileName = stem;
             var kind = EntrapmentLibraryClassifier.Classify(entry.ProteinIds);
-            record.IsEntrapment = kind == PeptideKind.PTarget || kind == PeptideKind.PDecoy;
-            record.PeptideKind = PeptideKindName(kind);
-        }
-
-        /// <summary>The FDRBench manifest spelling of a peptide kind.</summary>
-        private static string PeptideKindName(PeptideKind kind)
-        {
-            switch (kind)
-            {
-                case PeptideKind.PTarget:
-                    return @"p_target";
-                case PeptideKind.Decoy:
-                    return @"decoy";
-                case PeptideKind.PDecoy:
-                    return @"p_decoy";
-                default:
-                    return @"target";
-            }
+            record.IsEntrapment = PeptideKinds.IsEntrapment(kind);
+            record.PeptideKind = PeptideKinds.Name(kind);
         }
 
         private static Dictionary<string, string> BuildMetadata(OspreyConfig config, string stem,
@@ -505,40 +497,40 @@ namespace pwiz.Osprey.Tasks
             var measured = observedMzRanges.Where(r => r != null).ToList();
             var metadata = new Dictionary<string, string>
             {
-                [@"osprey.version"] = OspreyVersion.Current,
-                [@"osprey.search_hash"] = config.Identity.SearchParameterHash(),
-                [@"osprey.library_hash"] = config.Identity.LibraryIdentityHash(),
-                [@"osprey.file_name"] = stem,
-                [@"osprey.training_export.rows"] = nRows.ToString(ic),
-                [@"osprey.training_export.max_q"] = R(maxQ),
-                [@"osprey.training_export.claimant_q"] = R(claimantQ),
-                [KEY_RUN_Q_PASS] = runQPass == FdrScoresSidecar.Pass.SecondPass ? @"2" : @"1",
-                [@"osprey.training_export.xics"] = config.TrainingExport.WriteXics ? @"true" : @"false",
-                [@"osprey.training_export.slot_order"] = @"slot = p*4 + t; t: 0 b z1, 1 b z2, 2 y z1, 3 y z2; position p holds b(p+1) and y(L-1-p)",
-                [@"osprey.training_export.mp_cosine_parity"] = string.Format(ic, @"{0}/{1}", nParity, nRows),
-                [@"osprey.training_export.mp_cosine_parity_fitted"] = string.Format(ic, @"{0}/{1}", nFittedParity, nFitted),
-                [@"osprey.rt_min"] = rts.Count > 0 ? R(rts.Min()) : string.Empty,
-                [@"osprey.rt_max"] = rts.Count > 0 ? R(rts.Max()) : string.Empty,
-                [@"osprey.isolation_mz_min"] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Min(w => w.LowerBound)) : string.Empty,
-                [@"osprey.isolation_mz_max"] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Max(w => w.UpperBound)) : string.Empty,
-                [@"osprey.ms2_scan_window"] = measured.Count > 0
+                [TrainingExportKeys.VERSION] = OspreyVersion.Current,
+                [TrainingExportKeys.SEARCH_HASH] = config.Identity.SearchParameterHash(),
+                [TrainingExportKeys.LIBRARY_HASH] = config.Identity.LibraryIdentityHash(),
+                [TrainingExportKeys.FILE_NAME] = stem,
+                [TrainingExportKeys.ROWS] = nRows.ToString(ic),
+                [TrainingExportKeys.MAX_Q] = R(maxQ),
+                [TrainingExportKeys.CLAIMANT_Q] = R(claimantQ),
+                [TrainingExportKeys.RUN_Q_PASS] = runQPass == FdrScoresSidecar.Pass.SecondPass ? @"2" : @"1",
+                [TrainingExportKeys.XICS] = config.TrainingExport.WriteXics ? @"true" : @"false",
+                [TrainingExportKeys.SLOT_ORDER] = @"slot = p*4 + t; t: 0 b z1, 1 b z2, 2 y z1, 3 y z2; position p holds b(p+1) and y(L-1-p)",
+                [TrainingExportKeys.MP_COSINE_PARITY] = string.Format(ic, @"{0}/{1}", nParity, nRows),
+                [TrainingExportKeys.MP_COSINE_PARITY_FITTED] = string.Format(ic, @"{0}/{1}", nFittedParity, nFitted),
+                [TrainingExportKeys.RT_MIN] = rts.Count > 0 ? R(rts.Min()) : string.Empty,
+                [TrainingExportKeys.RT_MAX] = rts.Count > 0 ? R(rts.Max()) : string.Empty,
+                [TrainingExportKeys.ISOLATION_MZ_MIN] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Min(w => w.LowerBound)) : string.Empty,
+                [TrainingExportKeys.ISOLATION_MZ_MAX] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Max(w => w.UpperBound)) : string.Empty,
+                [TrainingExportKeys.MS2_SCAN_WINDOW] = measured.Count > 0
                     ? string.Format(ic, @"{0},{1}", R(measured.Min(r => r[0])), R(measured.Max(r => r[1])))
                     : string.Empty,
-                [@"osprey.fragment_tolerance"] = R(tolerance),
-                [@"osprey.fragment_tolerance_unit"] = Unit(toleranceUnit),
-                [@"osprey.ms2_calibration.calibrated"] = ms2Cal.Calibrated ? @"true" : @"false",
-                [@"osprey.ms2_calibration.mean"] = R(ms2Cal.Mean),
-                [@"osprey.ms2_calibration.sd"] = R(ms2Cal.SD),
-                [@"osprey.ms2_calibration.unit"] = ms2Cal.Unit ?? string.Empty,
-                [@"osprey.ddc.tolerance"] = R(ddcTolerance),
-                [@"osprey.ddc.tolerance_unit"] = Unit(ddcUnit),
-                [@"osprey.ddc.rt_neighborhood"] = R(rtNeighborhood),
-                [@"osprey.instrument_vendor"] = source?.InstrumentVendor ?? string.Empty,
-                [@"osprey.instrument_model"] = source?.InstrumentModel ?? string.Empty,
-                [@"osprey.source_ms2_sampled"] = (source?.NMs2Sampled ?? 0).ToString(ic),
-                [@"osprey.dissociation_methods"] = source != null ? JsonConvert.SerializeObject(source.DissociationMethods) : string.Empty,
-                [@"osprey.collision_energies"] = source != null ? JsonConvert.SerializeObject(source.CollisionEnergies) : string.Empty,
-                [@"osprey.ms2_mass_analyzers"] = source != null ? JsonConvert.SerializeObject(source.MassAnalyzers) : string.Empty,
+                [TrainingExportKeys.FRAGMENT_TOLERANCE] = R(tolerance),
+                [TrainingExportKeys.FRAGMENT_TOLERANCE_UNIT] = Unit(toleranceUnit),
+                [TrainingExportKeys.MS2_CALIBRATION_CALIBRATED] = ms2Cal.Calibrated ? @"true" : @"false",
+                [TrainingExportKeys.MS2_CALIBRATION_MEAN] = R(ms2Cal.Mean),
+                [TrainingExportKeys.MS2_CALIBRATION_SD] = R(ms2Cal.SD),
+                [TrainingExportKeys.MS2_CALIBRATION_UNIT] = ms2Cal.Unit ?? string.Empty,
+                [TrainingExportKeys.DDC_TOLERANCE] = R(ddcTolerance),
+                [TrainingExportKeys.DDC_TOLERANCE_UNIT] = Unit(ddcUnit),
+                [TrainingExportKeys.DDC_RT_NEIGHBORHOOD] = R(rtNeighborhood),
+                [TrainingExportKeys.INSTRUMENT_VENDOR] = source?.InstrumentVendor ?? string.Empty,
+                [TrainingExportKeys.INSTRUMENT_MODEL] = source?.InstrumentModel ?? string.Empty,
+                [TrainingExportKeys.SOURCE_MS2_SAMPLED] = (source?.NMs2Sampled ?? 0).ToString(ic),
+                [TrainingExportKeys.DISSOCIATION_METHODS] = source != null ? JsonConvert.SerializeObject(source.DissociationMethods) : string.Empty,
+                [TrainingExportKeys.COLLISION_ENERGIES] = source != null ? JsonConvert.SerializeObject(source.CollisionEnergies) : string.Empty,
+                [TrainingExportKeys.MS2_MASS_ANALYZERS] = source != null ? JsonConvert.SerializeObject(source.MassAnalyzers) : string.Empty,
             };
             return metadata;
         }

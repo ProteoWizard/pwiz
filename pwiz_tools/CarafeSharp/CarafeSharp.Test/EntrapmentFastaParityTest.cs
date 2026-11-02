@@ -166,6 +166,9 @@ namespace pwiz.CarafeSharp.Test
             var result = new EntrapmentFastaBuilder(settings).Run();
             stopwatch.Stop();
             string fastaSha = Sha256File(actualFasta);
+            // Carafe wrote FDRBench's five columns; the entrapment_method column CarafeSharp adds
+            // is cut before the comparison.
+            actualManifest = TestData.FdrBenchColumnsOf(actualManifest);
             string manifestSha = Sha256File(actualManifest);
             bool fastaMatches = fastaSha == expectedFastaSha;
             bool manifestMatches = manifestSha == expectedManifestSha;

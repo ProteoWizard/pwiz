@@ -111,26 +111,98 @@ namespace pwiz.Osprey.Core
         /// m/z of every slot for <paramref name="sequence"/> carrying
         /// <paramref name="modifications"/> at <paramref name="precursorCharge"/>, NaN where a
         /// slot is not applicable. Empty for a sequence shorter than two residues.
+        ///
+        /// <para>Every value is bit-identical to
+        /// <see cref="PeptideFragmentMass.CalculateFragmentMz"/>'s for the slot, which sums an
+        /// ion's residues from the N-terminal end, each residue's mass and then its modification
+        /// mass: the b ions are the running sum of that series, and each y ion is summed afresh
+        /// from its first residue in the same order (y ions of neighboring ordinals share no
+        /// partial sum under floating point). Computing the ladder here rather than one ion at a
+        /// time is what makes typing a library's peaks cheap - a 242,841-precursor library spent
+        /// over two seconds in the per-ion form - and <c>FragmentTypingTest</c> pins the two
+        /// equal.</para>
         /// </summary>
         public static double[] Build(string sequence, IEnumerable<Modification> modifications,
             int precursorCharge)
         {
             int length = sequence?.Length ?? 0;
             var mzs = new double[SlotCount(length)];
-            if (mzs.Length == 0)
+            if (string.IsNullOrEmpty(sequence) || mzs.Length == 0)
                 return mzs;
-            var modMasses = PeptideFragmentMass.ModMassesByPosition(modifications);
-            int maxCharge = Math.Min(Math.Max(precursorCharge, 1), MAX_FRAGMENT_CHARGE);
             for (int slot = 0; slot < mzs.Length; slot++)
+                mzs[slot] = double.NaN;
+            int maxCharge = Math.Min(Math.Max(precursorCharge, 1), MAX_FRAGMENT_CHARGE);
+
+            // The terms CalculateFragmentMz adds, in its order: each residue's mass, then the
+            // modification mass at that residue when there is one. An ion spanning a residue
+            // with no standard mass has no m/z.
+            var residueMasses = new double[length];
+            int firstUnknown = length;
+            int lastUnknown = -1;
+            for (int i = 0; i < length; i++)
             {
-                int charge = ChargeOf(slot);
-                double? mz = charge > maxCharge
-                    ? null
-                    : PeptideFragmentMass.CalculateFragmentMz(IonTypeOf(slot), OrdinalOf(slot, length),
-                        (byte)charge, sequence, modMasses, null);
-                mzs[slot] = mz ?? double.NaN;
+                if (PeptideFragmentMass.TryGetResidueMass(sequence[i], out residueMasses[i]))
+                    continue;
+                firstUnknown = Math.Min(firstUnknown, i);
+                lastUnknown = i;
+            }
+            var modMasses = new double[length];
+            var hasMod = new bool[length];
+            if (modifications != null)
+            {
+                foreach (var m in modifications)
+                {
+                    if (m.Position < 0 || m.Position >= length)
+                        continue;
+                    modMasses[m.Position] += m.MassDelta;
+                    hasMod[m.Position] = true;
+                }
+            }
+
+            // b(ordinal) spans residues 0 .. ordinal-1: the running sum. Position ordinal-1 holds it.
+            double bMass = 0.0;
+            for (int ordinal = 1; ordinal < length; ordinal++)
+            {
+                int i = ordinal - 1;
+                bMass += residueMasses[i];
+                if (hasMod[i])
+                    bMass += modMasses[i];
+                if (firstUnknown < ordinal)
+                    continue;
+                double ionMass = bMass;
+                ionMass += PeptideFragmentMass.PROTON_MASS;
+                SetSlots(mzs, ordinal - 1, IonType.B, ionMass, maxCharge);
+            }
+            // y(ordinal) spans residues length-ordinal .. length-1, summed from its first residue.
+            // Position length-1-ordinal holds it.
+            for (int ordinal = 1; ordinal < length; ordinal++)
+            {
+                int start = length - ordinal;
+                if (lastUnknown >= start)
+                    continue;
+                double yMass = 0.0;
+                for (int i = start; i < length; i++)
+                {
+                    yMass += residueMasses[i];
+                    if (hasMod[i])
+                        yMass += modMasses[i];
+                }
+                yMass += PeptideFragmentMass.H2O_MASS + PeptideFragmentMass.PROTON_MASS;
+                SetSlots(mzs, length - 1 - ordinal, IonType.Y, yMass, maxCharge);
             }
             return mzs;
+        }
+
+        /// <summary>
+        /// The m/z of an ion of mass <paramref name="ionMass"/> (its residues and terminal
+        /// group, protonated once) at each fragment charge up to <paramref name="maxCharge"/>,
+        /// in the slots of <paramref name="position"/>, as <see cref="PeptideFragmentMass.CalculateFragmentMz"/>
+        /// computes it from the same mass.
+        /// </summary>
+        private static void SetSlots(double[] mzs, int position, IonType ionType, double ionMass, int maxCharge)
+        {
+            for (int charge = 1; charge <= maxCharge; charge++)
+                mzs[SlotOf(position, ionType, charge)] = (ionMass + (charge - 1.0) * PeptideFragmentMass.PROTON_MASS) / charge;
         }
 
         private static int TypeIndex(IonType ionType, int fragmentCharge)

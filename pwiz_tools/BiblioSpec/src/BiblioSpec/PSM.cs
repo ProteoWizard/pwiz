@@ -16,18 +16,32 @@ public readonly record struct SeqMod(int Position, double DeltaMass)
 }
 
 /// <summary>
-/// A protein record carrying just an accession. Used as the element of <see cref="PSM.Proteins"/>.
+/// A protein record keyed by accession. Used as the element of <see cref="PSM.Proteins"/>.
+/// For a reader that reports protein groups, the accession is the group's accessions joined by <c>;</c>.
 /// </summary>
 /// <remarks>
 /// cpp parity: PSM.h:57 <c>Protein</c> struct. The cpp code uses <c>set&lt;const Protein*&gt;</c>
-/// for pointer-uniqueness; this C# port uses <see cref="HashSet{T}"/> with record-value-equality
-/// on <see cref="Accession"/>, which preserves "one protein per accession" without depending on
+/// for pointer-uniqueness; this C# port uses <see cref="HashSet{T}"/> with equality on
+/// <see cref="Accession"/> only, which preserves "one protein per accession" without depending on
 /// pointer identity.
 /// </remarks>
 public sealed record Protein(string Accession)
 {
     /// <summary>cpp default ctor: empty accession.</summary>
     public Protein() : this(string.Empty) { }
+
+    /// <summary>Global protein-group q-value, written to <c>Proteins.QValue</c> when that column is enabled.</summary>
+    public double? QValue { get; init; }
+
+    /// <summary>Global protein-group PEP, written to <c>Proteins.Pep</c> when that column is enabled.</summary>
+    public double? Pep { get; init; }
+
+    // A protein's statistics describe it rather than identify it, so they stay out of equality.
+    /// <inheritdoc/>
+    public bool Equals(Protein? other) => other is not null && string.Equals(Accession, other.Accession, StringComparison.Ordinal);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => Accession.GetHashCode(StringComparison.Ordinal);
 }
 
 /// <summary>
@@ -97,6 +111,22 @@ public class PSM
     /// <summary>Small-molecule metadata (only populated for small-molecule library entries).</summary>
     public SmallMolMetadata SmallMolMetadata { get; } = new();
 
+    // The global statistics describe the precursor or peptide, so a reader that builds a
+    // redundant library sets the same values on every PSM of it, and BlibFilter keeps the
+    // values of whichever spectrum it picks.
+
+    /// <summary>Global precursor q-value, written to <c>RefSpectra.PrecursorQValue</c> when that column is enabled.</summary>
+    public double? PrecursorQValue { get; set; }
+
+    /// <summary>Global precursor PEP, written to <c>RefSpectra.PrecursorPep</c> when that column is enabled.</summary>
+    public double? PrecursorPep { get; set; }
+
+    /// <summary>Global peptide q-value, written to <c>RefSpectra.PeptideQValue</c> when that column is enabled.</summary>
+    public double? PeptideQValue { get; set; }
+
+    /// <summary>Global peptide PEP, written to <c>RefSpectra.PeptidePep</c> when that column is enabled.</summary>
+    public double? PeptidePep { get; set; }
+
     /// <summary>
     /// Reset all fields to their default empty / zero values. Mirrors cpp PSM.h:94 <c>clear()</c>.
     /// </summary>
@@ -115,6 +145,10 @@ public class PSM
         SpecName = string.Empty;
         SmallMolMetadata.Clear();
         Proteins.Clear();
+        PrecursorQValue = null;
+        PrecursorPep = null;
+        PeptideQValue = null;
+        PeptidePep = null;
     }
 
     /// <summary>

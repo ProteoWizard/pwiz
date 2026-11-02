@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Osprey.Core
 {
@@ -32,26 +33,46 @@ namespace pwiz.Osprey.Core
     /// anything else that needs a peptide's fragment m/z share one set of residue masses
     /// and one order of floating-point additions. The one addition is that an ordinal the
     /// sequence cannot hold returns null instead of indexing past either end.
+    ///
+    /// <para>The residue masses and the water are those of <see cref="pwiz.Common.Chemistry"/>:
+    /// each residue's formula (<see cref="AminoAcidFormulas"/>) summed over the isotope table
+    /// Skyline calculates with (<see cref="IsotopeAbundances.Default"/>). Until 2026-10-16 this
+    /// was a table of the same values rounded to six decimals, ported from osprey-core; the
+    /// tools that compute peptide and fragment masses must agree to the last digit, so now it
+    /// is the calculation. The proton is the one Skyline's own m/z use today
+    /// (<c>BioMassCalc.MassProton</c>, 1.007276), not yet the higher-precision
+    /// <see cref="AminoAcidFormulas.ProtonMass"/> its isotope distributions use; moving both
+    /// tools to that constant is a sprint of its own.</para>
     /// </summary>
     public static class PeptideFragmentMass
     {
         public const double PROTON_MASS = 1.007276;
-        public const double H2O_MASS = NeutralLoss.H2OMass;
-
-        private static readonly Dictionary<char, double> STANDARD_AA_MASSES = new Dictionary<char, double>
-        {
-            { 'A', 71.037114 }, { 'R', 156.101111 }, { 'N', 114.042927 },
-            { 'D', 115.026943 }, { 'C', 103.009185 }, { 'E', 129.042593 },
-            { 'Q', 128.058578 }, { 'G', 57.021464 }, { 'H', 137.058912 },
-            { 'I', 113.084064 }, { 'L', 113.084064 }, { 'K', 128.094963 },
-            { 'M', 131.040485 }, { 'F', 147.068414 }, { 'P', 97.052764 },
-            { 'S', 87.032028 }, { 'T', 101.047679 }, { 'W', 186.079313 },
-            { 'Y', 163.063329 }, { 'V', 99.068414 }
-        };
+        public static readonly double H2O_MASS = NeutralLoss.H2OMass;
 
         /// <summary>
-        /// Monoisotopic residue mass for one of the 20 standard amino acids. False for
-        /// selenocysteine and the ambiguity codes (B, J, O, U, X, Z).
+        /// The 20 standard amino acids and selenocysteine (U, C3H5NOSe: Carafe predicts spectra
+        /// for it, so a library carries it, and without a mass its fragments could not be typed
+        /// and its decoys had no fragments).
+        /// </summary>
+        private const string RESIDUES = @"ACDEFGHIKLMNPQRSTVWYU";
+
+        private static readonly Dictionary<char, double> STANDARD_AA_MASSES = ResidueMasses();
+
+        private static Dictionary<char, double> ResidueMasses()
+        {
+            var formulas = AminoAcidFormulas.Default;
+            // A peptide's mass is its residues' plus water, so one residue's is that of the
+            // one-residue peptide less the water of the empty one.
+            double water = formulas.GetMonoisotopicMass(string.Empty);
+            var masses = new Dictionary<char, double>(RESIDUES.Length);
+            foreach (char aa in RESIDUES)
+                masses.Add(aa, formulas.GetMonoisotopicMass(aa.ToString()) - water);
+            return masses;
+        }
+
+        /// <summary>
+        /// Monoisotopic residue mass for one of the 20 standard amino acids or selenocysteine.
+        /// False for the ambiguity codes (B, J, O, X, Z).
         /// </summary>
         public static bool TryGetResidueMass(char aa, out double mass)
         {

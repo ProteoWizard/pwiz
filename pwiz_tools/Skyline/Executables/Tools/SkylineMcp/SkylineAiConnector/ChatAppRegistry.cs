@@ -171,7 +171,8 @@ namespace SkylineAiConnector
         public static void AddToClaudeCode()
         {
             string exePath = McpServerDeployer.DeployedExePath.Replace('\\', '/');
-            RunClaudeCli($@"mcp add -s user {MCP_SERVER_NAME} -- {exePath}");
+            // Quoted so a user profile path with a space stays one argument
+            RunClaudeCli($@"mcp add -s user {MCP_SERVER_NAME} -- ""{exePath}""");
         }
 
         public static void RemoveFromClaudeCode()

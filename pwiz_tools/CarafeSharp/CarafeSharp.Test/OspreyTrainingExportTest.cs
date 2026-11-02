@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Training;
 using static pwiz.CarafeSharp.Test.OspreyTestRecords;
@@ -31,10 +32,10 @@ using static pwiz.CarafeSharp.Test.OspreyTestRecords;
 namespace pwiz.CarafeSharp.Test
 {
     /// <summary>
-    /// Osprey training exports as parquet files built in the test, column by column with the
-    /// types of Osprey's writer: reading them back field for field (across row groups, with
-    /// NULL cells, and with every footer key), the reader's errors, and the training set built
-    /// from two runs, down to the Carafe training tables written from it.
+    /// Osprey training exports written through the shared writer: reading them back field for
+    /// field (across row groups, with NULL cells, and with every footer key), the reader's
+    /// refusals on files rewritten column by column, and the training set built from two
+    /// runs, down to the Carafe training tables written from it.
     /// </summary>
     [TestClass]
     public class OspreyTrainingExportTest
@@ -70,10 +71,10 @@ namespace pwiz.CarafeSharp.Test
             modified.ModUnimodIds = new[] { 35, 4 };
             modified.ModifiedSequence = @"AM(UniMod:35)C(UniMod:4)PEPTK";
             modified.IsEntrapment = true;
-            modified.MedianPolishFitted = true;
-            modified.MedianPolishResidualMad = 0.25;
-            modified.SharedApexCount[4] = 3;
-            modified.FiniteScanCount[5] = 65535;
+            modified.MpFitted = true;
+            modified.MpResidualMad = 0.25;
+            modified.SharedApexN[4] = 3;
+            modified.NFiniteScans[5] = 65535;
             var nullBlobs = CleanRecord(@"PEPTIDEK", 3);
             nullBlobs.LibraryRelIntensity = Array.Empty<float>();
             nullBlobs.MinClaimantQ = Array.Empty<float>();
@@ -81,7 +82,7 @@ namespace pwiz.CarafeSharp.Test
             var records = Number(modified, nullBlobs, noLadder);
             string path = WriteExport(@"run_a", records, Footer(@"a"), 2);
 
-            var export = OspreyTrainingExport.Read(path);
+            var export = TrainingExport.Read(path);
             Assert.AreEqual(path, export.Path);
             Assert.AreEqual(3, export.Records.Count);
             for (int i = 0; i < records.Length; i++)
@@ -109,38 +110,46 @@ namespace pwiz.CarafeSharp.Test
             AssertFooter(@"osprey.isolation_mz_min", null, e => Assert.ThrowsException<InvalidDataException>(() => e.IsolationRange));
 
             // The footer alone, without the rows.
-            var footer = OspreyTrainingExport.ReadFooter(path);
-            Assert.AreEqual(@"search_a", footer[OspreyTrainingExport.SEARCH_HASH_KEY]);
+            var footer = TrainingExport.ReadFooter(path);
+            Assert.AreEqual(@"search_a", footer[TrainingExportKeys.SEARCH_HASH]);
 
             // A header-only export has no records.
-            Assert.AreEqual(0, OspreyTrainingExport.Read(WriteExport(@"empty", Array.Empty<OspreyTrainingRecord>(), Footer(@"a"), 1)).Records.Count);
+            Assert.AreEqual(0, TrainingExport.Read(WriteExport(@"empty", Array.Empty<TrainingRecord>(), Footer(@"a"), 1)).Records.Count);
 
-            // Format 1, which also carried the experiment q-value and PEP, reads the same.
+            // Format 1, which also carried the experiment q-value and PEP, reads the same. The
+            // shared writer always stamps the current format, so the file is rewritten column by
+            // column with the old footer and the old columns.
             var footerV1 = Footer(@"a");
             footerV1[FORMAT_VERSION_KEY] = @"1";
-            string v1 = Path.Combine(_folder, @"v1" + OspreyTrainingExport.FILE_SUFFIX);
-            ParquetColumns.Write(v1, Columns(records).Concat(new[]
+            string v1 = Rewrite(path, @"v1", footerV1, columns => columns.Concat(new[]
             {
                 Column(@"experiment_precursor_q", records.Select(x => x.RunPrecursorQ).ToArray()),
                 Column(@"pep", records.Select(x => 0.01).ToArray()),
-            }).ToArray(), footerV1, 2);
+            }).ToList());
             CollectionAssert.AreEqual(records.Select(x => x.ModifiedSequence).ToArray(),
-                OspreyTrainingExport.Read(v1).Records.Select(x => x.ModifiedSequence).ToArray());
+                TrainingExport.Read(v1).Records.Select(x => x.ModifiedSequence).ToArray());
 
             // What the reader refuses: another format version or none, a record whose ladder has
             // the wrong number of slots, and a missing column.
             var footerV3 = Footer(@"a");
             footerV3[FORMAT_VERSION_KEY] = @"3";
-            AssertInvalid(WriteExport(@"v3", records, footerV3, 2), null);
+            AssertInvalid(Rewrite(path, @"v3", footerV3, columns => columns), null);
             var noVersion = Footer(@"a");
             noVersion.Remove(FORMAT_VERSION_KEY);
-            AssertInvalid(WriteExport(@"v0", records, noVersion, 2), @"(none)");
+            AssertInvalid(Rewrite(path, @"v0", noVersion, columns => columns), ContractsResources.TrainingExportParquet_Read_none);
             var truncated = CleanRecord(@"PEPTIDEK", 2);
             truncated.IonFlags = truncated.IonFlags.Take(20).ToArray();
             AssertInvalid(WriteExport(@"short", Number(truncated), Footer(@"a"), 1), truncated.ModifiedSequence);
-            string noColumn = Path.Combine(_folder, @"nocolumn" + OspreyTrainingExport.FILE_SUFFIX);
-            ParquetColumns.Write(noColumn, Columns(records).Where(c => c.Key != @"polish_r2").ToArray(), Footer(@"a"), 2);
-            AssertInvalid(noColumn, @"polish_r2");
+            AssertInvalid(Rewrite(path, @"nocolumn", Footer(@"a"), columns => columns.Where(c => c.Key != @"polish_r2").ToList()), @"polish_r2");
+        }
+
+        /// <summary>The export at <paramref name="source"/> rewritten column by column as run <paramref name="stem"/>'s, with <paramref name="footer"/> as given.</summary>
+        private string Rewrite(string source, string stem, IReadOnlyDictionary<string, string> footer,
+            Func<List<KeyValuePair<string, Array>>, List<KeyValuePair<string, Array>>> edit)
+        {
+            string path = Path.Combine(_folder, stem + TrainingExportParquet.EXT);
+            OspreyTestRecords.Rewrite(source, path, footer, edit);
+            return path;
         }
 
         [TestMethod]
@@ -199,7 +208,7 @@ namespace pwiz.CarafeSharp.Test
             var b2 = Clean(@"SAMPLERK", 2, 0.01, 16.0);
             b2.Score = 2;
             var b3 = Clean(@"SAMPLERK", 3, 0.001, 16.5);
-            for (int slot = 0; slot < b3.SlotCount; slot++)
+            for (int slot = 0; slot < b3.NSlots; slot++)
                 b3.CorrPolish[slot] = 0.1f;
             var footerA = Footer(@"a");
             footerA[@"osprey.collision_energies"] = @"{""30"":100,""27"":100}";
@@ -207,8 +216,8 @@ namespace pwiz.CarafeSharp.Test
             footerB[@"osprey.rt_max"] = @"20";
             footerB[@"osprey.instrument_model"] = @"Orbitrap Ascend";
             footerB.Remove(@"osprey.collision_energies");
-            var exportA = OspreyTrainingExport.Read(WriteExport(@"a", Number(a1, a2, a3, a4, a5, a6, a7, a8, a9), footerA, 4));
-            var exportB = OspreyTrainingExport.Read(WriteExport(@"b", Number(b1, b2, b3), footerB, 4));
+            var exportA = TrainingExport.Read(WriteExport(@"a", Number(a1, a2, a3, a4, a5, a6, a7, a8, a9), footerA, 4));
+            var exportB = TrainingExport.Read(WriteExport(@"b", Number(b1, b2, b3), footerB, 4));
             var exports = new[] { exportA, exportB };
 
             var trainingSet = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions());
@@ -370,7 +379,7 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>The exports' own footers decide whether the runs come from one Osprey search.</summary>
-        private void TestTrainingExportFooters(IReadOnlyList<OspreyTrainingExport> exports)
+        private void TestTrainingExportFooters(IReadOnlyList<TrainingExport> exports)
         {
             var selection = TrainingExportLocator.Find(_folder, null);
             CollectionAssert.AreEqual(exports.Select(e => e.Path).ToArray(), selection.Exports.ToArray());
@@ -383,7 +392,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.ThrowsException<InvalidDataException>(() => TrainingExportLocator.Find(_folder, null));
         }
 
-        private static OspreyTrainingRecord Clean(string sequence, int charge, double runQ, double apexRt)
+        private static TrainingRecord Clean(string sequence, int charge, double runQ, double apexRt)
         {
             var record = CleanRecord(sequence, charge);
             record.RunPrecursorQ = runQ;
@@ -393,7 +402,7 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>The records numbered 1, 2, ... as entries, each with its own protein, precursor m/z, peak bounds and scan count.</summary>
-        private static OspreyTrainingRecord[] Number(params OspreyTrainingRecord[] records)
+        private static TrainingRecord[] Number(params TrainingRecord[] records)
         {
             for (int i = 0; i < records.Length; i++)
             {
@@ -402,7 +411,7 @@ namespace pwiz.CarafeSharp.Test
                 records[i].PrecursorMz = 400 + i;
                 records[i].StartRt = records[i].ApexRt - 0.1;
                 records[i].EndRt = records[i].ApexRt + 0.1;
-                records[i].PeakScanCount = 7 + i;
+                records[i].NPeakScans = 7 + i;
             }
             return records;
         }
@@ -411,9 +420,9 @@ namespace pwiz.CarafeSharp.Test
         {
             return new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                { FORMAT_VERSION_KEY, OspreyTrainingExport.FORMAT_VERSION },
-                { OspreyTrainingExport.SEARCH_HASH_KEY, @"search_" + search },
-                { OspreyTrainingExport.LIBRARY_HASH_KEY, @"library" },
+                { FORMAT_VERSION_KEY, TrainingExportParquet.FORMAT_VERSION_TEXT },
+                { TrainingExportKeys.SEARCH_HASH, @"search_" + search },
+                { TrainingExportKeys.LIBRARY_HASH, @"library" },
                 { @"osprey.rt_max", @"10" },
                 { @"osprey.instrument_model", @"Q Exactive HF" },
                 { @"osprey.isolation_mz_min", @"400.5" },
@@ -424,20 +433,20 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>Writes the records as run <paramref name="stem"/>'s export, each record's file name the stem.</summary>
-        private string WriteExport(string stem, IReadOnlyList<OspreyTrainingRecord> records, IReadOnlyDictionary<string, string> footer,
+        private string WriteExport(string stem, IReadOnlyList<TrainingRecord> records, IReadOnlyDictionary<string, string> footer,
             int rowsPerGroup)
         {
             foreach (var record in records)
                 record.FileName = stem;
-            string path = Path.Combine(_folder, stem + OspreyTrainingExport.FILE_SUFFIX);
+            string path = Path.Combine(_folder, stem + TrainingExportParquet.EXT);
             OspreyTestRecords.WriteExport(path, records, footer, rowsPerGroup);
             return path;
         }
 
         /// <summary>Every property read back equal, arrays element by element (NaN equal to NaN).</summary>
-        private static void AssertSameRecord(OspreyTrainingRecord expected, OspreyTrainingRecord actual)
+        private static void AssertSameRecord(TrainingRecord expected, TrainingRecord actual)
         {
-            foreach (var property in typeof(OspreyTrainingRecord).GetProperties())
+            foreach (var property in typeof(TrainingRecord).GetProperties())
             {
                 object expectedValue = property.GetValue(expected);
                 object actualValue = property.GetValue(actual);
@@ -449,19 +458,19 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>An export of one clean record with footer <paramref name="key"/> set to <paramref name="value"/> (null removes it).</summary>
-        private void AssertFooter(string key, string value, Action<OspreyTrainingExport> check)
+        private void AssertFooter(string key, string value, Action<TrainingExport> check)
         {
             var footer = Footer(@"a");
             if (value == null)
                 footer.Remove(key);
             else
                 footer[key] = value;
-            check(OspreyTrainingExport.Read(WriteExport(@"footer", Number(CleanRecord(@"PEPTIDEK", 2)), footer, 1)));
+            check(TrainingExport.Read(WriteExport(@"footer", Number(CleanRecord(@"PEPTIDEK", 2)), footer, 1)));
         }
 
         private static void AssertInvalid(string path, string expectedText)
         {
-            var e = Assert.ThrowsException<InvalidDataException>(() => OspreyTrainingExport.Read(path));
+            var e = Assert.ThrowsException<InvalidDataException>(() => TrainingExport.Read(path));
             if (expectedText != null)
                 StringAssert.Contains(e.Message, expectedText);
         }

@@ -862,7 +862,7 @@ function renderModelTab(b){
   }else{
     buildFeatureTable(host,rows,{onRowClick:rowClick});
     if(b.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
-    if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable \u2014 the first-pass model was not retrained on this run (resumed / rehydrated).");
+    if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable \u2014 the first-pass model or a run's first-pass FDR file is missing or from another analysis.");
   }
 
   // Collapse/expand: best-fit height so the score plot below stays visible; toggle

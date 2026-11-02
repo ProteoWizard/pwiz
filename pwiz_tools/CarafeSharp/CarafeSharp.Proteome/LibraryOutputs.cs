@@ -47,7 +47,7 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 outputs.SetTsv(libraryFormat);
                 if (ContainsSkyline(libraryFormat))
-                    outputs.Warning = @"WARNING: without -fast Carafe writes -lf_type " + libraryFormat + @" as a generic TSV, not a .blib.";
+                    outputs.Warning = @"WARNING: without " + CarafeCommandLine.ARG_FAST.ArgumentText + @" Carafe writes " + CarafeCommandLine.ARG_LF_TYPE.ArgumentText + @" " + libraryFormat + @" as a generic TSV, not a .blib.";
                 return outputs;
             }
             if (blib || ContainsSkyline(libraryFormat))

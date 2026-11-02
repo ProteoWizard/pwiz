@@ -54,12 +54,13 @@
 //   - Modifications are resolved via the C# Unimod port (Pwiz.Data.Common.Unimod)
 //     for "(UniMod:N)" tags; non-UniMod bracketed deltas are parsed as numbers.
 
-using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Unimod;
 using Pwiz.Util.Chemistry;
+
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -80,6 +81,9 @@ public sealed class DiaNNSpecLibReader : BuildParser
     // Lower (more negative) values are NEWER. The cpp logic supports up to and including -3.
     private const int LatestSupportedVersion = -3;
 
+    // Optional report column: the global protein-group q-value, written to Proteins.QValue.
+    private const string GlobalPgQValueColumn = "Global.PG.Q.Value";
+
     // cpp parity: DiaNNSpecLibReader.cpp:274 — entry flag bits. Only fFromFasta is referenced by
     // the cpp parseFile but we keep all three names for parity with the cpp source.
     [Flags]
@@ -94,7 +98,8 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private readonly string _specLibFile;
     private readonly Library _specLib = new();
-    private SQLiteCommand? _insertRtCmd;
+    // The RefSpectra id each speclib entry's spectrum was written under, by its index.
+    private readonly Dictionary<int, int> _refSpectraIdBySpecIndex = new();
     private IonMobilityType _ionMobilityType = IonMobilityType.None;
     private int _missingFromSpeclibCount;
 
@@ -131,48 +136,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         // Impl ctor does this in score-lookup mode too (bailing out earlier); we follow the
         // cpp guard exactly.
         if (!maker.IsScoreLookupMode)
-        {
-            const string createRetentionTimes =
-                "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, " +
-                "RedundantRefSpectraID INTEGER, " +
-                "SpectrumSourceID INTEGER, " +
-                "ionMobility REAL, " +
-                "collisionalCrossSectionSqA REAL, " +
-                "ionMobilityHighEnergyOffset REAL, " +
-                "ionMobilityType TINYINT, " +
-                "retentionTime REAL, " +
-                "startTime REAL, " +
-                "endTime REAL, " +
-                "score REAL, " +
-                "bestSpectrum INTEGER, " +
-                "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )";
-            maker.SqlStmt(createRetentionTimes);
-
-            _insertRtCmd = maker.Db.CreateCommand();
-            _insertRtCmd.CommandText =
-                "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, " +
-                "SpectrumSourceID, ionMobility, collisionalCrossSectionSqA, " +
-                "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, " +
-                "startTime, endTime, score, bestSpectrum) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            for (int i = 0; i < 12; i++)
-                _insertRtCmd.Parameters.Add(_insertRtCmd.CreateParameter());
-            _insertRtCmd.Prepare();
-        }
-
-        // cpp parity: DiaNNSpecLibReader.cpp:967 — must re-prepare after adding RetentionTimes.
-        PrepareInsertSpectrumStatement();
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _insertRtCmd?.Dispose();
-            _insertRtCmd = null;
-        }
-        base.Dispose(disposing);
+            maker.Writer.EnsureRetentionTimes();
     }
 
     /// <summary>Score types this reader produces. cpp parity: DiaNNSpecLibReader.cpp:1297.</summary>
@@ -268,6 +232,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         long redundantPsmCount = 0;
         string firstRun = string.Empty;
         double scoreThreshold = GetScoreThreshold(BuildInput.GenericQValueInput);
+        bool hasProteinQValues = false;
 
         foreach (var row in ReadDiannReport(diannReportFilepath))
         {
@@ -341,6 +306,14 @@ public sealed class DiaNNSpecLibReader : BuildParser
                         _ionMobilityType = IonMobilityType.InverseReducedVsecPerCm2;
                 }
 
+                // A Proteins row is the DIA-NN protein group, accessions already joined by ';'.
+                if (rowPassesFilter && proteinGrp.Length > 0)
+                {
+                    double? groupQValue = row.GlobalPgQValue is { } q && !float.IsNaN(q) ? q : null;
+                    hasProteinQValues |= groupQValue.HasValue;
+                    psm.Proteins.Add(new Protein(proteinGrp) { QValue = groupQValue });
+                }
+
                 if (rowPassesFilter && globalQValue < psm.Score)
                 {
                     // cpp parity: DiaNNSpecLibReader.cpp:1418-1420 — a precursor present in
@@ -353,6 +326,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                             $"'{Path.GetFileName(diannReportFilepath)}' the correct report TSV file?");
 
                     psm.Score = globalQValue;
+                    psm.PrecursorQValue = globalQValue;
                     psm.FileId = rtList[rtList.Count - 1].FileId;
 
                     entry.BestQValue = globalQValue;
@@ -372,7 +346,29 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
         FilteredOutPsmCount = _specLib.Entries.Count - Psms.Count;
 
-        // cpp parity: DiaNNSpecLibReader.cpp:1242 — populate the RetentionTimes table.
+        // cpp parity: DiaNNSpecLibReader.cpp:1242 — each entry's copy count is the number of
+        // runs that observed it; written with its RefSpectra row below.
+        foreach (var kvp in retentionTimesByPrecursorId)
+        {
+            if (psmByPrecursorId.TryGetValue(kvp.Key, out var nrpsm))
+                nrpsm.Copies = kvp.Value.Count;
+        }
+
+        // Global.Q.Value is DIA-NN's experiment-wide precursor q-value.
+        EnableOptionalColumn(BlibSchema.PrecursorQValue);
+        if (hasProteinQValues)
+            EnableOptionalColumn(BlibSchema.ProteinQValue);
+
+        Verbosity.Status($"Reading {Psms.Count.ToString(CultureInfo.InvariantCulture)} spectra from speclib.");
+        SetSpecFileName(firstRun, checkFile: false);
+        _refSpectraIdBySpecIndex.Clear();
+        BuildTables(PsmScoreType.GenericQValue);
+
+        // cpp parity: DiaNNSpecLibReader.cpp:1242 and 1289 — the RetentionTimes rows, one per
+        // run that observed the entry. cpp wrote them before the spectra under the speclib index
+        // and remapped them by SQL once the duplicate filtering had decided which spectra were
+        // written; here they are written after, under the id each spectrum got
+        // (<see cref="OnSpectrumInserted"/>), in the same order.
         Verbosity.Status($"Building retention time table with {redundantPsmCount.ToString(CultureInfo.InvariantCulture)} entries.");
         BlibMaker.BeginTransaction();
         foreach (var kvp in retentionTimesByPrecursorId)
@@ -380,31 +376,27 @@ public sealed class DiaNNSpecLibReader : BuildParser
             var precursorIdStr = kvp.Key;
             var redundantPsms = kvp.Value;
             if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry)) continue;
+            if (!_refSpectraIdBySpecIndex.TryGetValue(entry.Target.Index, out var refSpectraId))
+            {
+                Verbosity.Debug($"No spectrum was written for speclib entry {entry.Target.Index}; its retention times are left out.");
+                continue;
+            }
 
             foreach (var psm in redundantPsms)
             {
                 int bestSpectrum = entry.BestPsm != null && entry.BestPsm.FileId == psm.FileId ? 1 : 0;
-                BindAndExecRtInsert(entry.Target.Index, psm, bestSpectrum);
+                BindAndExecRtInsert(refSpectraId, psm, bestSpectrum);
             }
-
-            if (psmByPrecursorId.TryGetValue(precursorIdStr, out var nrpsm))
-                nrpsm.Copies = redundantPsms.Count;
         }
         BlibMaker.EndTransaction();
 
-        Verbosity.Status($"Reading {Psms.Count.ToString(CultureInfo.InvariantCulture)} spectra from speclib.");
-        SetSpecFileName(firstRun, checkFile: false);
-        BuildTables(PsmScoreType.GenericQValue);
-
-        // cpp parity: DiaNNSpecLibReader.cpp:1289 — remap RetentionTimes.RefSpectraID after
-        // duplicate filtering reorders RefSpectra rows.
-        BlibMaker.SqlStmt(
-            "UPDATE RetentionTimes SET RefSpectraID = newId " +
-            "FROM (SELECT DISTINCT t.[RefSpectraID] as oldId, s.[id] as newId " +
-            "FROM RefSpectra s, RetentionTimes t WHERE s.[SpecIdInFile] = t.[RefSpectraID]) AS IdMapping " +
-            "WHERE RefSpectraID == IdMapping.oldId");
-
         return true;
+    }
+
+    /// <summary>Records the RefSpectra id each speclib entry's spectrum was written under, for the retention times.</summary>
+    protected override void OnSpectrumInserted(PSM psm, int refSpectraId)
+    {
+        _refSpectraIdBySpecIndex[psm.SpecIndex] = refSpectraId;
     }
 
     // --- sibling-report discovery -------------------------------------------------------
@@ -414,11 +406,12 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// DiaNNSpecLibReader.cpp:1014.
     /// </summary>
     /// <summary>One row of the DIA-NN report — the subset of columns the speclib builder needs.</summary>
-    private readonly record struct DiannReportRow(
+    internal readonly record struct DiannReportRow(
         string FileName,
         string ProteinGroup,
         string PrecursorId,
         float GlobalQValue,
+        float? GlobalPgQValue,
         float QValue,
         float Rt,
         float RtStart,
@@ -434,7 +427,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// BuildLibrary loop is reader-agnostic. cpp parity: DiaNNSpecLibReader.cpp:667
     /// (Reader::open_file dispatches on <c>ParquetReader::is_parquet</c>).
     /// </summary>
-    private static IEnumerable<DiannReportRow> ReadDiannReport(string reportPath)
+    internal static IEnumerable<DiannReportRow> ReadDiannReport(string reportPath)
     {
         return IsParquet(reportPath)
             ? ReadDiannReportParquet(reportPath)
@@ -457,12 +450,13 @@ public sealed class DiaNNSpecLibReader : BuildParser
         int colProteinGroup = MustFindColumn(hdrCols, "Protein.Group", reportPath);
         int colPrecursorId = MustFindColumn(hdrCols, "Precursor.Id", reportPath);
         int colGlobalQValue = MustFindColumn(hdrCols, "Global.Q.Value", reportPath);
+        int colGlobalPgQValue = Array.IndexOf(hdrCols, GlobalPgQValueColumn);
         int colQValue = MustFindColumn(hdrCols, "Q.Value", reportPath);
         int colRt = MustFindColumn(hdrCols, "RT", reportPath);
         int colRtStart = MustFindColumn(hdrCols, "RT.Start", reportPath);
         int colRtStop = MustFindColumn(hdrCols, "RT.Stop", reportPath);
         int colIm = MustFindColumn(hdrCols, "IM", reportPath);
-        int minCols = Math.Max(colIm, Math.Max(colRtStop, colGlobalQValue));
+        int minCols = Math.Max(Math.Max(colIm, colGlobalPgQValue), Math.Max(colRtStop, colGlobalQValue));
 
         string? line;
         while ((line = sr.ReadLine()) != null)
@@ -476,6 +470,10 @@ public sealed class DiaNNSpecLibReader : BuildParser
                 ProteinGroup: cols[colProteinGroup],
                 PrecursorId: cols[colPrecursorId],
                 GlobalQValue: ParseFloat(cols[colGlobalQValue]),
+                // An empty cell is a missing value, which ParseFloat would read as 0
+                GlobalPgQValue: colGlobalPgQValue >= 0 && !string.IsNullOrEmpty(cols[colGlobalPgQValue])
+                    ? ParseFloat(cols[colGlobalPgQValue])
+                    : null,
                 QValue: ParseFloat(cols[colQValue]),
                 Rt: ParseFloat(cols[colRt]),
                 RtStart: ParseFloat(cols[colRtStart]),
@@ -511,6 +509,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         var proteinGroupField = MustFindParquetField(schema, "Protein.Group", reportPath);
         var precursorIdField = MustFindParquetField(schema, "Precursor.Id", reportPath);
         var globalQValueField = MustFindParquetField(schema, "Global.Q.Value", reportPath);
+        var globalPgQValueField = FindDataField(schema, GlobalPgQValueColumn);
         var qValueField = MustFindParquetField(schema, "Q.Value", reportPath);
         var rtField = MustFindParquetField(schema, "RT", reportPath);
         var rtStartField = MustFindParquetField(schema, "RT.Start", reportPath);
@@ -525,6 +524,9 @@ public sealed class DiaNNSpecLibReader : BuildParser
             string[] proteinGroup = await ReadStringColumn(rgReader, proteinGroupField).ConfigureAwait(false);
             string[] precursorId = await ReadStringColumn(rgReader, precursorIdField).ConfigureAwait(false);
             float[] globalQValue = await ReadFloatColumn(rgReader, globalQValueField).ConfigureAwait(false);
+            float[]? globalPgQValue = globalPgQValueField is null
+                ? null
+                : await ReadFloatColumn(rgReader, globalPgQValueField, float.NaN).ConfigureAwait(false);
             float[] qValue = await ReadFloatColumn(rgReader, qValueField).ConfigureAwait(false);
             float[] rt = await ReadFloatColumn(rgReader, rtField).ConfigureAwait(false);
             float[] rtStart = await ReadFloatColumn(rgReader, rtStartField).ConfigureAwait(false);
@@ -539,6 +541,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                     ProteinGroup: proteinGroup[i] ?? string.Empty,
                     PrecursorId: precursorId[i] ?? string.Empty,
                     GlobalQValue: globalQValue[i],
+                    GlobalPgQValue: globalPgQValue?[i],
                     QValue: qValue[i],
                     Rt: rt[i],
                     RtStart: rtStart[i],
@@ -626,7 +629,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return boxed;
     }
 
-    private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+    /// <summary>
+    /// Reads a numeric parquet column as floats, with <paramref name="nullValue"/> for a null.
+    /// </summary>
+    private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field,
+        float nullValue = 0f)
     {
         var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
         var result = new float[arr.Length];
@@ -639,7 +646,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                 double d => (float)d,
                 int n => n,
                 long n => n,
-                null => 0f,
+                null => nullValue,
                 _ => Convert.ToSingle(v, CultureInfo.InvariantCulture),
             };
         }
@@ -1310,25 +1317,12 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private void BindAndExecRtInsert(int refSpectraId, RtPsm psm, int bestSpectrum)
     {
-        if (_insertRtCmd is null)
-            throw new InvalidOperationException("RetentionTimes INSERT statement not prepared.");
-        var p = _insertRtCmd.Parameters;
-        // Column order: RefSpectraID, RedundantRefSpectraID, SpectrumSourceID, ionMobility,
-        // collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType,
-        // retentionTime, startTime, endTime, score, bestSpectrum.
-        p[0].Value = refSpectraId;
-        p[1].Value = 0;
-        p[2].Value = psm.FileId;
-        p[3].Value = (double)psm.IonMobility;
-        p[4].Value = 0.0;
-        p[5].Value = 0.0;
-        p[6].Value = (int)(psm.IonMobility > 0 ? _ionMobilityType : IonMobilityType.None);
-        p[7].Value = (double)psm.Rt;
-        p[8].Value = (double)psm.RtStart;
-        p[9].Value = (double)psm.RtEnd;
-        p[10].Value = (double)psm.Score;
-        p[11].Value = bestSpectrum;
-        _insertRtCmd.ExecuteNonQuery();
+        // cpp parity: every time is written, zero included, and the CCS and high-energy
+        // offset are 0 rather than NULL.
+        BlibMaker.Writer.AddRetentionTime(refSpectraId, psm.FileId, (double)psm.Rt, (double)psm.RtStart, (double)psm.RtEnd,
+            psm.Score, bestSpectrum != 0,
+            (double)psm.IonMobility, 0.0, 0.0,
+            (int)(psm.IonMobility > 0 ? _ionMobilityType : IonMobilityType.None));
     }
 
     // --- internal types -----------------------------------------------------------------

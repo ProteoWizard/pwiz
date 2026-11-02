@@ -21,6 +21,7 @@
 using System;
 using System.IO;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 
@@ -53,6 +54,9 @@ namespace pwiz.CarafeSharp
 
         private static int Main(string[] args)
         {
+            // CarafeSharp.exe owns its process, so Carafe's grammar and text are installed here and
+            // nowhere else; hosted in Skyline or Osprey, the declarations run under the host's.
+            CarafeCommandLine.InstallGrammar();
             return Run(args, Console.Out, Console.Error);
         }
 

@@ -25,8 +25,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Training;
 
@@ -270,7 +270,7 @@ namespace pwiz.CarafeSharp.Test
                 double MinutesA(string s) => 2 + 0.5 * hiOf[s];
                 string exportA = WriteExport(folder, @"run_a", sequences, MinutesA, (s, i) => i % 2 == 0);
                 string exportB = WriteExport(folder, @"run_b", sequences, s => 1.05 * MinutesA(s) + 0.3, (s, i) => i % 2 == 1);
-                var exports = new[] { OspreyTrainingExport.Read(exportA), OspreyTrainingExport.Read(exportB) };
+                var exports = new[] { TrainingExport.Read(exportA), TrainingExport.Read(exportB) };
 
                 var unaligned = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions());
                 Assert.IsNull(unaligned.Alignment);
@@ -309,7 +309,7 @@ namespace pwiz.CarafeSharp.Test
 
                 // A third run too sparse to map gives no RT rows; the other two stay aligned.
                 string exportC = WriteExport(folder, @"run_c", sequences.Take(10).ToArray(), MinutesA, (s, i) => true);
-                var withSparse = OspreyTrainingSet.Build(exports.Append(OspreyTrainingExport.Read(exportC)).ToArray(), options);
+                var withSparse = OspreyTrainingSet.Build(exports.Append(TrainingExport.Read(exportC)).ToArray(), options);
                 CollectionAssert.AreEqual(new[] { @"run_a", @"run_b" }, withSparse.Alignment.Runs.Select(r => r.Run).ToArray());
                 Assert.AreEqual(1, withSparse.UnalignedRuns.Count);
                 StringAssert.Contains(withSparse.UnalignedRuns[0], @"run run_c has 10 peptide forms");
@@ -322,8 +322,8 @@ namespace pwiz.CarafeSharp.Test
                 Directory.CreateDirectory(dayB);
                 var sameName = new[]
                 {
-                    OspreyTrainingExport.Read(WriteExport(dayA, @"run_q", sequences, MinutesA, (s, i) => i % 2 == 0)),
-                    OspreyTrainingExport.Read(WriteExport(dayB, @"run_q", sequences, s => 1.05 * MinutesA(s) + 0.3, (s, i) => i % 2 == 1)),
+                    TrainingExport.Read(WriteExport(dayA, @"run_q", sequences, MinutesA, (s, i) => i % 2 == 0)),
+                    TrainingExport.Read(WriteExport(dayB, @"run_q", sequences, s => 1.05 * MinutesA(s) + 0.3, (s, i) => i % 2 == 1)),
                 };
                 var twoFolders = OspreyTrainingSet.Build(sameName, options);
                 CollectionAssert.AreEqual(new[] { @"dayA/run_q", @"dayB/run_q" }, twoFolders.Alignment.Runs.Select(r => r.Run).ToArray());
@@ -358,7 +358,7 @@ namespace pwiz.CarafeSharp.Test
         private static string WriteExport(string folder, string run, IReadOnlyList<string> sequences, Func<string, double> minutes,
             Func<string, int, bool> wins)
         {
-            var records = new List<OspreyTrainingRecord>();
+            var records = new List<TrainingRecord>();
             for (int i = 0; i < sequences.Count; i++)
             {
                 var record = OspreyTestRecords.CleanRecord(sequences[i], 2);
@@ -370,14 +370,14 @@ namespace pwiz.CarafeSharp.Test
             }
             var footer = new Dictionary<string, string>
             {
-                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.training_export.format_version", TrainingExportParquet.FORMAT_VERSION_TEXT },
                 { @"osprey.rt_max", @"24" },
                 { @"osprey.instrument_model", @"Orbitrap Astral" },
                 { @"osprey.isolation_mz_min", @"380" },
                 { @"osprey.isolation_mz_max", @"980" },
                 { @"osprey.ms2_scan_window", @"150,2000" },
             };
-            string path = Path.Combine(folder, run + OspreyTrainingExport.FILE_SUFFIX);
+            string path = Path.Combine(folder, run + TrainingExportParquet.EXT);
             OspreyTestRecords.WriteExport(path, records, footer, 16);
             return path;
         }

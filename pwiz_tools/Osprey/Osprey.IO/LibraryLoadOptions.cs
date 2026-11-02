@@ -47,12 +47,13 @@ namespace pwiz.Osprey.IO
         /// FDR stages consume only the scalars). Set ONLY for a run that stops
         /// after Stage 5; a run that later writes the .blib needs the fragments.
         ///
-        /// Byte-identity note: the loader still reads the fragment blocks (to
+        /// Byte-identity note: a source parse still reads the fragment blocks (to
         /// count them for the min-fragment filter and to tie-break duplicates in
-        /// <see cref="LibraryDeduplicator"/>) and writes them to the shared
-        /// .libcache; only the RETAINED per-entry arrays are dropped, after all
-        /// count-dependent work is done. Decoy generation is told about the
-        /// omission separately so it skips its own fragment-count gate.
+        /// <see cref="LibraryDeduplicator"/>) and writes them to the derived
+        /// library; only the RETAINED per-entry arrays are dropped, after all
+        /// count-dependent work is done. A read of the derived library never
+        /// materializes them. Decoy generation is told
+        /// about the omission separately so it skips its own fragment-count gate.
         /// </summary>
         public bool OmitFragments { get; set; }
 
@@ -68,14 +69,15 @@ namespace pwiz.Osprey.IO
         /// every scorer's <c>Fragments == null || Fragments.Count == 0</c> guard absorbs it as
         /// "this entry has no spectrum" and scores a degenerate zero, where a released one
         /// throws. Skipping the allocation must not also skip the tripwire that says the skip
-        /// was wrong. <c>IOTest.TestLibraryCacheRetainMatchesRelease</c> pins the two states equal
-        /// entry by entry.</para>
+        /// was wrong. <c>SubsetPipelineTest.TestLibraryLoadsIdenticallyFromTsvAndBlib</c> pins the
+        /// two states equal entry by entry.</para>
         ///
-        /// <para>Honoured on the CACHE arm only, where the skip costs exactly what
-        /// <c>SkipFragment</c> already pays to advance the stream and nothing is allocated. The
-        /// source-parse arm ignores it, for two reasons that point the same way: it has already
-        /// built every fragment by the time it could act, and the ids are not final there -
-        /// pairing rewrites a supplied decoy's Id AFTER the load returns, so filtering on
+        /// <para>Honoured on the arm that reads a FINISHED library: the derived <c>.blib</c>,
+        /// where <see cref="BlibLoader.RetainFragmentsFor"/> resolves the set to RefSpectra ids
+        /// before the scan and never decodes a skipped spectrum's blobs. The source-parse arm
+        /// ignores it, for two reasons that point the same
+        /// way: it has already built every fragment by the time it could act, and the ids are
+        /// not final there - pairing rewrites a supplied decoy's Id, so filtering on
         /// <c>entry.Id</c> would test a parse-order id against a set of final base_ids. A
         /// source-parsed library stays fat until the Stage 7 release drops the same set.</para>
         ///

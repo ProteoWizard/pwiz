@@ -74,6 +74,16 @@ public sealed class MsConvertConfig
     /// <summary>When true, apply linear prediction to intensity arrays. Unimplemented.</summary>
     public bool IntenLinear { get; set; }
 
+    /// <summary><c>--zstd</c>: Zstandard in place of zlib for every array, including under numpress.</summary>
+    public bool Zstd { get; set; }
+
+    /// <summary><c>--mzShuffleZstd</c>: byte-shuffled Zstandard for m/z and retention-time arrays.</summary>
+    public bool MzShuffleZstd { get; set; }
+
+    /// <summary><c>--dictZstd</c>: dictionary-encoded Zstandard for m/z and ion-mobility arrays,
+    /// byte-shuffled Zstandard for retention time. Overrides <see cref="MzShuffleZstd"/>.</summary>
+    public bool DictZstd { get; set; }
+
     /// <summary>Optional path to a contact-info file to attach to the output's FileDescription.</summary>
     public string? ContactInfo { get; set; }
 
