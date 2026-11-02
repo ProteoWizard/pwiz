@@ -291,12 +291,10 @@ namespace pwiz.Skyline.Model.Localization
         {
             if (a == 0 || b == 0)
                 return 0;
-            if (a >= MAX_COUNT || b >= MAX_COUNT)
+            // Compare before multiplying: a * b could overflow long even when both are below MAX_COUNT.
+            if (a >= MAX_COUNT || b >= MAX_COUNT || a > MAX_COUNT / b)
                 return MAX_COUNT;
-            long result = a * b;
-            if (result >= MAX_COUNT || result < 0)
-                return MAX_COUNT;
-            return result;
+            return a * b;
         }
 
         /// <summary>

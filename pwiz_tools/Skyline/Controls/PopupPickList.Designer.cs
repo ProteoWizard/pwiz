@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Controls
             //
             // lblSiteDeterminingEmpty
             //
+            this.lblSiteDeterminingEmpty.AutoSize = false;
             this.lblSiteDeterminingEmpty.BackColor = System.Drawing.SystemColors.Window;
             this.lblSiteDeterminingEmpty.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblSiteDeterminingEmpty.Visible = false;
