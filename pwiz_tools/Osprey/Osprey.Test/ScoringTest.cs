@@ -46,9 +46,10 @@ namespace pwiz.Osprey.Test
         // disjoint: a reused Id returns another test's fragment m/z values and fails (or passes)
         // for the wrong reason. FragmentSelectionTest.FRAG_ID_BASE = 900000,
         // MZ_INDEX_ID_BASE = 910000, SCAN_MAJOR_ID_BASE = 920000 (scan-major prefilter test),
-        // CalibrationTest.SCAN_MAJOR_CAL_ID_BASE = 930000.
+        // CalibrationTest.SCAN_MAJOR_CAL_ID_BASE = 930000, CORR_TOLERANCE_ID_BASE = 940000.
         private const uint MZ_INDEX_ID_BASE = 910000u;
         private const uint SCAN_MAJOR_ID_BASE = 920000u;
+        private const uint CORR_TOLERANCE_ID_BASE = 940000u;
 
         #region DecoyGenerator Tests
 
@@ -1977,6 +1978,124 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[i]), BitConverter.DoubleToInt64Bits(actual[i]),
                     string.Format(@"candidate {0} fragment {1} scan {2}", candidate, fragment, i));
             }
+        }
+
+        #endregion
+
+        #region Correlation fragment tolerance (OSPREY_CORR_FRAGMENT_TOLERANCE)
+
+        /// <summary>
+        /// The correlation-shape features under OSPREY_CORR_FRAGMENT_TOLERANCE: a fragment whose ions
+        /// sit 6 ppm off its library m/z is all zeros at the 5 ppm search tolerance and elutes with the
+        /// others at 8 ppm. With the 8 ppm correlation tolerance, every feature outside the correlation
+        /// set is bit-identical to the 5 ppm search's, and every feature inside it is bit-identical to
+        /// a whole search at 8 ppm (which, on this clean peak, finds the same peak and apex); the
+        /// coelution sum gains the recovered fragment's pairs. A setting no wider than the search
+        /// tolerance, or a search tolerance in m/z, re-extracts nothing.
+        /// </summary>
+        [TestMethod]
+        public void TestCorrelationToleranceScoresOnlyCorrelationFeatures()
+        {
+            var tight = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.Hram(5.0) };
+            Assert.IsNull(ScoringPipeline.CorrelationConfigFor(tight, null));
+            Assert.IsNull(ScoringPipeline.CorrelationConfigFor(tight, 5.0), @"no wider than the search tolerance");
+            Assert.IsNull(ScoringPipeline.CorrelationConfigFor(
+                new OspreyConfig { FragmentTolerance = new FragmentToleranceConfig { Tolerance = 0.5, Unit = ToleranceUnit.Mz } }, 8.0),
+                @"an m/z search tolerance");
+            var corrConfig = ScoringPipeline.CorrelationConfigFor(tight, 8.0);
+            Assert.IsNotNull(corrConfig);
+            Assert.AreEqual(8.0, corrConfig.FragmentTolerance.Tolerance);
+            Assert.AreEqual(ToleranceUnit.Ppm, corrConfig.FragmentTolerance.Unit);
+            Assert.AreEqual(5.0, tight.FragmentTolerance.Tolerance, @"the search configuration is not changed");
+
+            var entry = CorrToleranceEntry();
+            var spectra = CorrToleranceSpectra(entry);
+            var searched = ScoreCorrToleranceWindow(entry, spectra, tight, null);
+            var corrScored = ScoreCorrToleranceWindow(entry, spectra, tight, corrConfig);
+            var wide = ScoreCorrToleranceWindow(entry, spectra,
+                new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.Hram(8.0) }, null);
+            foreach (var other in new[] { corrScored, wide })
+            {
+                Assert.AreEqual(searched.ScanNumber, other.ScanNumber, @"the same apex");
+                Assert.AreEqual(searched.StartRt, other.StartRt, @"the same start");
+                Assert.AreEqual(searched.EndRt, other.EndRt, @"the same end");
+            }
+
+            int nCorrelation = 0;
+            for (int f = 0; f < OspreyFeatureCalculators.FeatureCount; f++)
+            {
+                bool readsCorr = OspreyFeatureCalculators.ReadsCorrelationXics(f);
+                var expected = readsCorr ? wide.Features[f] : searched.Features[f];
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(corrScored.Features[f]),
+                    string.Format(@"feature {0} ({1})", f, OspreyFeatureCalculators.Get(f).Name));
+                if (readsCorr)
+                    nCorrelation++;
+            }
+            Assert.AreEqual(40, nCorrelation);
+            Assert.IsTrue(corrScored.Features[0] > searched.Features[0] + 1.0,
+                @"the recovered fragment adds its pairs to the coelution sum");
+        }
+
+        private const double CORR_RT0 = 10.0;
+        private const double CORR_RT_STEP = 0.02;
+        private const int CORR_SCANS = 41;
+        private const int CORR_APEX = 20;
+
+        private static LibraryEntry CorrToleranceEntry()
+        {
+            var entry = new LibraryEntry(CORR_TOLERANCE_ID_BASE, "PEPTIDEK", "PEPTIDEK", 2, 500.0,
+                CORR_RT0 + CORR_RT_STEP * CORR_APEX);
+            var rel = new[] { 1.0f, 0.8f, 0.6f, 0.45f, 0.3f, 0.2f };
+            entry.Fragments = Enumerable.Range(0, rel.Length).Select(f => new LibraryFragment
+            {
+                Mz = 300.0 + 100.0 * f,
+                RelativeIntensity = rel[f],
+                Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = (byte)(2 + f), Charge = 1 },
+            }).ToList();
+            return entry;
+        }
+
+        // One Gaussian elution for every fragment, with a few percent of deterministic noise; fragment
+        // 4's ions sit 6 ppm above its library m/z. Two unrelated peaks in every scan.
+        private static List<Spectrum> CorrToleranceSpectra(LibraryEntry entry)
+        {
+            var random = new Random(4242);
+            var spectra = new List<Spectrum>(CORR_SCANS);
+            for (int s = 0; s < CORR_SCANS; s++)
+            {
+                double profile = Math.Exp(-0.5 * Math.Pow((s - CORR_APEX) / 3.0, 2));
+                var peaks = new List<(double Mz, float Intensity)> { (250.25, 500f), (950.75, 800f) };
+                for (int f = 0; f < entry.Fragments.Count; f++)
+                {
+                    var fragment = entry.Fragments[f];
+                    double mz = f == 4 ? fragment.Mz * (1.0 + 6e-6) : fragment.Mz;
+                    double intensity = 1e5 * fragment.RelativeIntensity * profile * (0.95 + 0.1 * random.NextDouble());
+                    if (intensity >= 10.0)
+                        peaks.Add((mz, (float)intensity));
+                }
+                peaks.Sort((a, b) => a.Mz.CompareTo(b.Mz)); // Array.Sort OK: distinct fixture m/z values, so no ties
+                spectra.Add(new Spectrum
+                {
+                    ScanNumber = 1000 + (uint)s,
+                    RetentionTime = CORR_RT0 + CORR_RT_STEP * s,
+                    PrecursorMz = 500.0,
+                    IsolationWindow = new IsolationWindow(500.0, 2.0, 2.0),
+                    Mzs = peaks.Select(p => p.Mz).ToArray(),
+                    Intensities = peaks.Select(p => p.Intensity).ToArray(),
+                });
+            }
+            return spectra;
+        }
+
+        private static FdrEntry ScoreCorrToleranceWindow(LibraryEntry entry, List<Spectrum> spectra,
+            OspreyConfig config, OspreyConfig corrConfig)
+        {
+            var context = new ScoringContext(config, @"synthetic") { CorrelationConfig = corrConfig };
+            var scorer = context.Resolution.CreateScorer();
+            context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
+            return new CoelutionScorer(null).ScoreWindow(new IsolationWindow(500.0, 2.0, 2.0),
+                new List<LibraryEntry> { entry }, new List<Spectrum>(spectra), new List<MS1Spectrum>(),
+                null, MzCalibrationResult.Uncalibrated(), 0.3, 0.2, scorer, context).Single();
         }
 
         #endregion

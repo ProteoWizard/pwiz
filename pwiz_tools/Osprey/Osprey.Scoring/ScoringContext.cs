@@ -104,6 +104,15 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public PickCandidateDump PickDump { get; set; }
 
+        /// <summary>
+        /// The configuration the correlation-shape features score with when OSPREY_CORR_FRAGMENT_TOLERANCE
+        /// widens their fragment XICs past the search tolerance: a copy of <see cref="Config"/> whose
+        /// <see cref="OspreyConfig.FragmentTolerance"/> is the wider tolerance. Set by
+        /// <c>ScoringPipeline.RunCoelutionScoring</c> once the search tolerance is known; null when the
+        /// setting is off or no wider than the search tolerance, so every feature scores the one XIC set.
+        /// </summary>
+        public OspreyConfig CorrelationConfig { get; set; }
+
         public ScoringContext(OspreyConfig config, string fileName)
         {
             Config = config;

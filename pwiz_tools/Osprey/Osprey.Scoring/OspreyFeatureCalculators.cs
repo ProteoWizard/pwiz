@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using pwiz.Osprey.Core;
 
@@ -54,6 +56,9 @@ namespace pwiz.Osprey.Scoring
         public const int CORE_FEATURE_COUNT = 21;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
+
+        // After _calculators, which it reads.
+        private static readonly bool[] _readsCorrelationXics = CreateCorrelationMask();
 
         private static IOspreyFeatureCalculator[] CreateCalculators()
         {
@@ -198,6 +203,50 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
+        /// Whether the feature at <paramref name="featureIndex"/> is a correlation-shape feature,
+        /// scored from the XICs re-extracted at the wider OSPREY_CORR_FRAGMENT_TOLERANCE when that is
+        /// set. Peak detection, the apex, and the intensity-pattern, spectral and mass-error features
+        /// stay on the XICs at the search tolerance: a wider window lets interference into the apex
+        /// and the intensity pattern, while the elution shape of a weak fragment gains the points the
+        /// search tolerance loses.
+        /// </summary>
+        public static bool ReadsCorrelationXics(int featureIndex)
+        {
+            return _readsCorrelationXics[featureIndex];
+        }
+
+        private static bool[] CreateCorrelationMask()
+        {
+            var names = new HashSet<string>
+            {
+                // Pairwise coelution over the bounds, and the chosen peak's margin by it.
+                @"fragment_coelution_sum", @"fragment_coelution_max", @"n_coeluting_fragments",
+                @"peak_coelution_margin",
+                // Per-fragment fit to the median-polish elution profile.
+                @"mp_fragment_r2_rank2", @"mp_fragment_r2_rank3", @"mp_fragment_r2_rank4",
+                @"mp_fragment_r2_top3_mean", @"mp_fragment_r2_median", @"mp_n_fragments_good_fit",
+                // Correlation with the best-correlated fragment.
+                @"ref_corr_rank2", @"ref_corr_rank3", @"ref_corr_rank5", @"ref_n_corr_good",
+                @"ref_minfilt_corr_top3_mean",
+                // Time correlation, and the re-extractions against its reference.
+                @"tc_sum6", @"tc_corr_rank1", @"tc_corr_rank2", @"tc_corr_rank3", @"tc_corr_rank4",
+                @"tc_corr_rank5", @"tc_corr_rank6", @"tc_res_sum", @"tc_res_mean",
+                @"heavy_sum6", @"heavy_n_good", @"tight45_sum6", @"tight20_sum6", @"tc_best_sum6",
+                // Peak dominance, except the apex intensity-weighted total.
+                @"dom_best_corr_delta", @"dom_apex_count", @"dom_corr_margin",
+                // The top-3 and wide-span agreement families.
+                @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
+                @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
+            };
+            var mask = new bool[FeatureCount];
+            for (int i = 0; i < FeatureCount; i++)
+                mask[i] = names.Remove(_calculators[i].Name);
+            if (names.Count > 0)
+                throw new InvalidOperationException(string.Format(@"Unknown correlation feature names: {0}", string.Join(@", ", names)));
+            return mask;
+        }
+
+        /// <summary>
         /// Projects the calculators into a single <see cref="OspreyFeatureInfo"/>
         /// vector in parity-critical PIN-index order, pairing each supplied machine
         /// <paramref name="featureNames"/> entry with that calculator's
@@ -218,7 +267,7 @@ namespace pwiz.Osprey.Scoring
         public static OspreyFeatureInfo[] BuildFeatureInfos(string[] featureNames)
         {
             if (featureNames == null || featureNames.Length != FeatureCount)
-                throw new System.ArgumentException(
+                throw new ArgumentException(
                     string.Format(@"BuildFeatureInfos expects {0} feature names", FeatureCount),
                     nameof(featureNames));
             // The report label is read in the invariant UI culture, switched on this thread only.

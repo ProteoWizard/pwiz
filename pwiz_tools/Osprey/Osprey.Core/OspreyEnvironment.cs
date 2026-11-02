@@ -87,7 +87,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
             @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
             @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
-            @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
+            @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CORR_FRAGMENT_TOLERANCE", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
             @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
             @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
@@ -826,6 +826,16 @@ namespace pwiz.Osprey.Core
             NumberStyles.Float, CultureInfo.InvariantCulture, out double minFragTol) ? minFragTol : null;
 
         /// <summary>
+        /// OSPREY_CORR_FRAGMENT_TOLERANCE (experiment): a tolerance in ppm the correlation-shape features
+        /// re-extract their fragment XICs with, as max(calibrated, setting), over the same scans. Peak
+        /// detection, the apex, the intensity-pattern and the mass-error features stay on the XICs at the
+        /// calibrated tolerance. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? CorrFragmentTolerancePpm = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_CORR_FRAGMENT_TOLERANCE"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
+
+        /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
         /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// Null when unset.
@@ -1316,7 +1326,8 @@ namespace pwiz.Osprey.Core
         {
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
                    + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
-                   + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
+                   + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
