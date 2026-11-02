@@ -234,6 +234,9 @@
   <data name="MassType_Monoisotopic" xml:space="preserve">
     <value>Monoisotopic</value>
   </data>
+  <data name="SearchEngine_Osprey" xml:space="preserve">
+    <value>Osprey</value>
+  </data>
   <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
     <value>Equalize Medians</value>
   </data>

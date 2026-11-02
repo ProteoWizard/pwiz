@@ -1502,6 +1502,33 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed copying the fine-tuned model to {0}..
+        /// </summary>
+        public static string OspreySearchEngine_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchEngine_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey did not write the fine-tuned model {0}..
+        /// </summary>
+        public static string OspreySearchEngine_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__ {
+            get {
+                return ResourceManager.GetString("OspreySearchEngine_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey did not produce a spectral library..
+        /// </summary>
+        public static string OspreySearchEngine_Run_Osprey_did_not_produce_a_spectral_library_ {
+            get {
+                return ResourceManager.GetString("OspreySearchEngine_Run_Osprey_did_not_produce_a_spectral_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The precursor m/z {0} is not measureable with your current instrument settings..
         /// </summary>
         public static string PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_ {

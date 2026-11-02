@@ -48,10 +48,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             _diaUmpireAdditionalSettings = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
 
-            // Searching the DIA spectra directly (without DIA-Umpire) needs an engine that can, and for
-            // MSFragger, whether they are gas phase fractions: a row of its own between the description and
-            // the DIA-Umpire settings, which move down to make room for it
+            // Searching the DIA spectra directly (without DIA-Umpire) needs an engine that can, for
+            // MSFragger whether they are gas phase fractions, and for Osprey the library it searches: rows
+            // of their own between the description and the DIA-Umpire settings, which move down for them
             const int rowHeight = 30;
+            const int panelHeight = rowHeight * 3;
             _lblDirectDiaSearchEngine = new Label
             {
                 AutoSize = true,
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Name = @"comboDirectDiaSearchEngine",
                 Width = 100
             };
-            _comboDirectDiaSearchEngine.Items.AddRange(new object[] { @"MSFragger", @"DIA-NN" });
+            _comboDirectDiaSearchEngine.Items.AddRange(new object[] { @"MSFragger", @"DIA-NN", @"Osprey" });
             _comboDirectDiaSearchEngine.SelectedIndex = 0;
             _cbGpf = new CheckBox
             {
@@ -79,15 +80,56 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             var directDiaPanel = new Panel
             {
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(diaUmpireDescriptionPanel.Left, diaUmpireDescriptionPanel.Bottom),
-                Size = new Size(diaUmpireDescriptionPanel.Width, rowHeight),
+                Size = new Size(diaUmpireDescriptionPanel.Width, panelHeight),
                 Name = @"directDiaPanel"
             };
-            directDiaPanel.Controls.AddRange(new Control[] { _lblDirectDiaSearchEngine, _comboDirectDiaSearchEngine, _cbGpf });
+            _rbPredictLibrary = new RadioButton
+            {
+                AutoSize = true,
+                Checked = true,
+                Location = new Point(20, rowHeight + 5),
+                Name = @"rbPredictLibrary",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Predict_the_spectral_library_from_the_FASTA,
+                UseVisualStyleBackColor = true
+            };
+            _rbExistingLibrary = new RadioButton
+            {
+                AutoSize = true,
+                Location = new Point(20, rowHeight * 2 + 5),
+                Name = @"rbExistingLibrary",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Search_an_existing_spectral_library_,
+                UseVisualStyleBackColor = true
+            };
+            _btnBrowseLibrary = new Button
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Size = new Size(75, 23),
+                Location = new Point(directDiaPanel.Width - 78, rowHeight * 2 + 1),
+                Name = @"btnBrowseLibrary",
+                Text = PeptideSearchResources.ConverterSettingsControl_ConverterSettingsControl_Browse,
+                UseVisualStyleBackColor = true
+            };
+            int pathLeft = _rbExistingLibrary.Left + _rbExistingLibrary.PreferredSize.Width + 6;
+            _tbxLibraryPath = new TextBox
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Location = new Point(pathLeft, rowHeight * 2 + 3),
+                Width = _btnBrowseLibrary.Left - 6 - pathLeft,
+                Name = @"tbxLibraryPath"
+            };
+            directDiaPanel.Controls.AddRange(new Control[]
+            {
+                _lblDirectDiaSearchEngine, _comboDirectDiaSearchEngine, _cbGpf,
+                _rbPredictLibrary, _rbExistingLibrary, _tbxLibraryPath, _btnBrowseLibrary
+            });
             diaUmpireTabPage.Controls.Add(directDiaPanel);
-            diaUmpireSettingsPanel.Top += rowHeight;
-            btnAdditionalSettings.Top -= rowHeight;
+            diaUmpireSettingsPanel.Top += panelHeight;
+            btnAdditionalSettings.Top -= panelHeight;
             _comboDirectDiaSearchEngine.SelectedIndexChanged += (sender, args) => UpdateDirectDiaControls();
+            _rbPredictLibrary.CheckedChanged += (sender, args) => UpdateDirectDiaControls();
+            _btnBrowseLibrary.Click += (sender, args) => BrowseExistingLibrary();
             UpdateDirectDiaControls();
 
             LoadComboboxEntries();
@@ -96,11 +138,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <summary>
         /// The engines that can search DIA spectra directly, in the order the list shows them.
         /// </summary>
-        private static readonly SearchEngine[] DIRECT_DIA_SEARCH_ENGINES = { SearchEngine.MSFragger, SearchEngine.DIANN };
+        private static readonly SearchEngine[] DIRECT_DIA_SEARCH_ENGINES = { SearchEngine.MSFragger, SearchEngine.DIANN, SearchEngine.Osprey };
 
         private readonly Label _lblDirectDiaSearchEngine;
         private readonly ComboBox _comboDirectDiaSearchEngine;
         private readonly CheckBox _cbGpf;
+        private readonly RadioButton _rbPredictLibrary;
+        private readonly RadioButton _rbExistingLibrary;
+        private readonly TextBox _tbxLibraryPath;
+        private readonly Button _btnBrowseLibrary;
 
         /// <summary>
         /// The engine that searches the DIA spectra when they do not go through DIA-Umpire.
@@ -126,10 +172,42 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set => _cbGpf.Checked = value;
         }
 
+        /// <summary>
+        /// For Osprey, true predicts the library from the FASTA; false searches <see cref="ExistingLibraryPath"/>.
+        /// </summary>
+        public bool PredictLibrary
+        {
+            get => _rbPredictLibrary.Checked;
+            set
+            {
+                _rbPredictLibrary.Checked = value;
+                _rbExistingLibrary.Checked = !value;
+            }
+        }
+
+        /// <summary>
+        /// The library Osprey searches when it does not predict one.
+        /// </summary>
+        public string ExistingLibraryPath
+        {
+            get => _tbxLibraryPath.Text;
+            set => _tbxLibraryPath.Text = value;
+        }
+
+        private void BrowseExistingLibrary()
+        {
+            string newPath = EditLibraryDlg.GetLibraryPath(this, ExistingLibraryPath);
+            if (newPath != null)
+                ExistingLibraryPath = newPath;
+        }
+
         private void UpdateDirectDiaControls()
         {
             _lblDirectDiaSearchEngine.Enabled = _comboDirectDiaSearchEngine.Enabled = !UseDiaUmpire;
             _cbGpf.Enabled = !UseDiaUmpire && DirectDiaSearchEngine == SearchEngine.MSFragger;
+            bool isOsprey = !UseDiaUmpire && DirectDiaSearchEngine == SearchEngine.Osprey;
+            _rbPredictLibrary.Enabled = _rbExistingLibrary.Enabled = isOsprey;
+            _tbxLibraryPath.Enabled = _btnBrowseLibrary.Enabled = isOsprey && !PredictLibrary;
         }
 
         public enum Protocol

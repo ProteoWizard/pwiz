@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DdaSearch
@@ -39,7 +40,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         Comet,
         Tide,
         Hardklor,
-        DIANN
+        DIANN,
+        Osprey
     }
 
     public enum SearchWorkflowType
@@ -65,6 +67,12 @@ namespace pwiz.Skyline.Model.DdaSearch
         public string Ms2Analyzer { get; private set; }
         public double CutoffScore { get; private set; }
         public string AdditionalSettingsXml { get; private set; }
+
+        /// <summary>
+        /// For Osprey, the values of its own settings page (resolution, fragment tolerance, FDRs and the
+        /// additional settings), in place of the tolerances and cutoff above; null for other engines.
+        /// </summary>
+        public OspreySettingsPreset OspreySettings { get; private set; }
 
         // FASTA settings
         public string FastaFilePath { get; private set; }
@@ -153,6 +161,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             HasExplicitModifications = hasExplicitModifications;
             Workflow = workflowType;
             IrtStandardName = irtStandardName;
+        }
+
+        public SearchSettingsPreset ChangeOspreySettings(OspreySettingsPreset ospreySettings)
+        {
+            return ChangeProp(ImClone(this), im => im.OspreySettings = ospreySettings);
         }
 
         public MzTolerance PrecursorTolerance => new MzTolerance(PrecursorToleranceValue, PrecursorToleranceUnit);
@@ -350,6 +363,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                             heavyMods.Add(StaticMod.Deserialize(reader));
                         reader.ReadEndElement();
                     }
+                    else if (reader.IsStartElement(OSPREY_SETTINGS_ELEMENT))
+                    {
+                        OspreySettings = OspreySettingsPreset.Deserialize(reader);
+                    }
                     else
                     {
                         reader.Skip();
@@ -410,7 +427,13 @@ namespace pwiz.Skyline.Model.DdaSearch
                     writer.WriteElement(mod);
                 writer.WriteEndElement();
             }
+
+            if (OspreySettings != null)
+                writer.WriteElement(OspreySettings);
         }
+
+        // The element an OspreySettingsPreset writes itself as
+        private const string OSPREY_SETTINGS_ELEMENT = @"osprey_settings_preset";
 
         #endregion
 
@@ -429,6 +452,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                    Ms2Analyzer == other.Ms2Analyzer &&
                    CutoffScore.Equals(other.CutoffScore) &&
                    AdditionalSettingsXml == other.AdditionalSettingsXml &&
+                   Equals(OspreySettings, other.OspreySettings) &&
                    FastaFilePath == other.FastaFilePath &&
                    EnzymeName == other.EnzymeName &&
                    MaxMissedCleavages == other.MaxMissedCleavages &&
@@ -464,6 +488,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 hashCode = (hashCode * 397) ^ (Ms2Analyzer?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ CutoffScore.GetHashCode();
                 hashCode = (hashCode * 397) ^ (AdditionalSettingsXml?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (OspreySettings?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (FastaFilePath?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (EnzymeName?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ MaxMissedCleavages;

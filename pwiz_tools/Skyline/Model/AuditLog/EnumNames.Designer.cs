@@ -1519,6 +1519,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Osprey.
+        /// </summary>
+        public static string SearchEngine_Osprey {
+            get {
+                return ResourceManager.GetString("SearchEngine_Osprey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tide.
         /// </summary>
         public static string SearchEngine_Tide {

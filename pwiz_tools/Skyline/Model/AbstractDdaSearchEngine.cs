@@ -65,6 +65,12 @@ namespace pwiz.Skyline.Model
         /// Whether the document's isotope label modifications are searched along with its structural ones.
         /// </summary>
         public virtual bool SearchesIsotopeLabels => true;
+
+        /// <summary>
+        /// Whether the search result is a finished spectral library, which becomes the document library
+        /// as it is, rather than results BiblioSpec builds a library from (and can add to one).
+        /// </summary>
+        public virtual bool SearchResultIsLibrary => false;
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
 

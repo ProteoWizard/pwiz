@@ -202,8 +202,17 @@
   <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
     <value>&amp;Result files:</value>
   </data>
+  <data name="ConverterSettingsControl_ConverterSettingsControl_Browse" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
   <data name="ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation" xml:space="preserve">
     <value>&amp;Gas phase fractionation</value>
+  </data>
+  <data name="ConverterSettingsControl_ConverterSettingsControl_Predict_the_spectral_library_from_the_FASTA" xml:space="preserve">
+    <value>Predict the spectral library from the FASTA</value>
+  </data>
+  <data name="ConverterSettingsControl_ConverterSettingsControl_Search_an_existing_spectral_library_" xml:space="preserve">
+    <value>Search an existing spectral library:</value>
   </data>
   <data name="ConverterSettingsControl_ConverterSettingsControl_Search_engine_for_the_DIA_spectra_" xml:space="preserve">
     <value>Search engine for the DIA spectra:</value>
@@ -398,11 +407,17 @@
 
 Overwrite it, or append the new search results to it?</value>
   </data>
+  <data name="RunPeptideSearchDlg_RunPeptideSearchDlg_Library_Model" xml:space="preserve">
+    <value>Library Model</value>
+  </data>
   <data name="RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_" xml:space="preserve">
     <value>The search settings and files have not changed since the last search; using its results.</value>
   </data>
   <data name="RunPeptideSearchDlg_UpdateButtons_Run" xml:space="preserve">
     <value>&amp;Run</value>
+  </data>
+  <data name="RunPeptideSearchDlg_ValidateExistingLibraryPath_The_library__0__cannot_be_searched__the_run_replaces_it_with_the_library_Osprey_writes_" xml:space="preserve">
+    <value>The library {0} cannot be searched: the run replaces it with the library Osprey writes.</value>
   </data>
   <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
     <value>Additional Settings</value>
@@ -451,32 +466,20 @@ Click 'Retry' to try building again after placing the original spectrum files in
       <value>No features were detected.
 Check your settings and try again.</value>
   </data>
-  <data name="DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_" xml:space="preserve">
-    <value>Please add at least one DIA data file.</value>
-  </data>
   <data name="DiannSearchDlg_ImportDiannLibrary_Overwrite" xml:space="preserve">
     <value>&amp;Overwrite</value>
   </data>
   <data name="DiannSearchDlg_ImportDiannLibrary_Append" xml:space="preserve">
     <value>&amp;Append</value>
   </data>
-  <data name="OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_" xml:space="preserve">
-    <value>Osprey did not produce a spectral library.</value>
-  </data>
   <data name="SearchControl_OpenLog_The_log_file__0__has_not_been_written_yet_" xml:space="preserve">
     <value>The log file {0} has not been written yet.</value>
-  </data>
-  <data name="OspreySearchDlg_AddSearchModificationsToDocument_Added_the_modifications_of_an_Osprey_search" xml:space="preserve">
-    <value>Added the modifications of an Osprey search</value>
   </data>
   <data name="OspreySearchDlg_FragmentUnit_m_z" xml:space="preserve">
     <value>m/z</value>
   </data>
   <data name="OspreySearchDlg_FragmentUnit_ppm" xml:space="preserve">
     <value>ppm</value>
-  </data>
-  <data name="OspreySearchDlg_ImportOspreyLibrary_Osprey_did_not_write_the_spectral_library__0__" xml:space="preserve">
-    <value>Osprey did not write the spectral library {0}.</value>
   </data>
   <data name="OspreySearchDlg_Resolution_High_resolution__Orbitrap__TOF_" xml:space="preserve">
     <value>High resolution (Orbitrap, TOF)</value>
@@ -499,17 +502,8 @@ Check your settings and try again.</value>
   <data name="OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__" xml:space="preserve">
     <value>Osprey searches {0} and {1} libraries, not {2}.</value>
   </data>
-  <data name="OspreySearchDlg_ValidateExistingLibraryPath_The_existing_library_cannot_be_the_document_library__0___which_the_search_writes_" xml:space="preserve">
-    <value>The existing library cannot be the document library {0}, which the search writes.</value>
-  </data>
   <data name="OspreySearchDlg_BrowseTuningFiles_Browse_for_Runs_to_Fine_Tune_On" xml:space="preserve">
     <value>Browse for Runs to Fine-Tune On</value>
-  </data>
-  <data name="OspreySearchDlg_CopyTunedModel_Failed_copying_the_fine_tuned_model_to__0__" xml:space="preserve">
-    <value>Failed copying the fine-tuned model to {0}.</value>
-  </data>
-  <data name="OspreySearchDlg_CopyTunedModel_Osprey_did_not_write_the_fine_tuned_model__0__" xml:space="preserve">
-    <value>Osprey did not write the fine-tuned model {0}.</value>
   </data>
   <data name="OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_" xml:space="preserve">
     <value>The document's fine-tuned model {0} already exists. Continuing will overwrite it with the model this search fine-tunes.</value>

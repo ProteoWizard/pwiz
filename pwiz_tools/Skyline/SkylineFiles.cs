@@ -62,7 +62,6 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -3790,28 +3789,12 @@ namespace pwiz.Skyline
             ShowRunPeptideSearchDlg(SearchEngine.DIANN);
         }
 
+        /// <summary>
+        /// Opens Run Peptide Search set up to search DIA spectra with Osprey.
+        /// </summary>
         public void ShowOspreySearchDlg()
         {
-            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
-            {
-                return;
-            }
-            else if (!Document.IsLoaded)
-            {
-                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
-                return;
-            }
-
-            if (!OspreyInstaller.EnsureInstalled(this))
-                return;
-
-            using (var dlg = new OspreySearchDlg(this, _libraryManager))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    // Nothing to do; the dialog does all the work.
-                }
-            }
+            ShowRunPeptideSearchDlg(SearchEngine.Osprey);
         }
 
         public void ShowFeatureDetectionDlg()

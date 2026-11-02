@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -67,6 +68,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             for (int i = 0; i < searchEngineComboBox.Items.Count; i++)
                 _engineNames[(SearchEngine) i] = (string) searchEngineComboBox.Items[i];
             _engineNames[SearchEngine.DIANN] = @"DIA-NN";
+            _engineNames[SearchEngine.Osprey] = @"Osprey";
 
             if (ImportPeptideSearch.IsFeatureDetection)
             {
@@ -85,10 +87,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _hardklorInstrumentSettingsControl = new FullScanSettingsControl(_documentContainer, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 _hardklorInstrumentSettingsControl.ModifyOptionsForImportPeptideSearchWizard(PeptideSearchWizardDlg.Workflow.feature_detection, false, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 Controls.Add(_hardklorInstrumentSettingsControl);
-                _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, 0);
+                _hardklorInstrumentSettingsControl.Location = new Point(0, 0);
                 // And adjust location of the other settings controls
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = true;
-                groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Bottom + 10);
+                groupBoxHardklor.Location = new Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Bottom + 10);
                 groupBoxHardklor.Width = _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Width;
                 toolTip1.SetToolTip(labelHardklorMinIdotP, toolTip1.GetToolTip(textHardklorMinIdotP));
                 toolTip1.SetToolTip(lblHardklorSignalToNoise, toolTip1.GetToolTip(textHardklorSignalToNoise));
@@ -310,6 +312,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(MSAmandaSearchWrapper.FilesToDownload);
                 case SearchEngine.DIANN:
                     return DiannDownloadDlg.EnsureDiannInstalled(TopLevelControl, ShowSearchToolsDlg);
+                case SearchEngine.Osprey:
+                    return OspreyInstaller.EnsureInstalled(TopLevelControl);
                 case SearchEngine.Hardklor:
                     return true;
                 default:
@@ -335,6 +339,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return TideSearchEngine.FilesToDownload;
                 case SearchEngine.DIANN:
                     return DiannHelpers.FilesToDownload;
+                case SearchEngine.Osprey:
+                    return Array.Empty<FileDownloadInfo>(); // Installed as the DIA search method page is left
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -369,6 +375,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 case SearchEngine.DIANN:
                     return new DiannSearchEngine(Path.GetDirectoryName(_documentContainer.DocumentFilePath));
+                case SearchEngine.Osprey:
+                    return new OspreySearchEngine(_documentContainer.DocumentFilePath);
                 default:
                     throw new NotImplementedException();
             }
@@ -483,6 +491,51 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 txtMS2Tolerance.Text = string.Empty;
 
             ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
+            UpdateEngineSettingsControls();
+        }
+
+        private OspreySearchSettingsControl _ospreySettingsControl;
+
+        /// <summary>
+        /// Osprey's own settings, which the page shows in place of the other engines' settings while
+        /// Osprey is chosen: the control Build Library's Osprey route shows, without its presets, since
+        /// this wizard's presets carry them. Null until Osprey is first chosen.
+        /// </summary>
+        public OspreySearchSettingsControl OspreySettingsControl => _ospreySettingsControl;
+
+        /// <summary>The settings of every engine but Osprey, which has its own control.</summary>
+        private IEnumerable<Control> EngineSettingsControls => new Control[]
+        {
+            lblMs1Tolerance, txtMS1Tolerance, cbMS1TolUnit, label1,
+            lblMs2Tolerance, txtMS2Tolerance, cbMS2TolUnit, label3,
+            lblFragmentIons, cbFragmentIons, lblMs2Analyzer, cbMs2Analyzer,
+            lblMaxVariableMods, cbMaxVariableMods, labelCutoff, textCutoff, btnAdditionalSettings
+        };
+
+        private void UpdateEngineSettingsControls()
+        {
+            if (ImportPeptideSearch.IsFeatureDetection)
+                return;
+            bool isOsprey = SelectedSearchEngine == SearchEngine.Osprey;
+            if (isOsprey && _ospreySettingsControl == null)
+            {
+                _ospreySettingsControl = new OspreySearchSettingsControl
+                {
+                    // The grid shows the settings of the search the pages before it set up
+                    GetScopes = () => OspreyAdditionalSettings.ScopesFor(_documentContainer.GetOspreyConfig())
+                };
+                _ospreySettingsControl.HidePresets();
+                _ospreySettingsControl.Location = new Point(lblMs1Tolerance.Left, lblMs1Tolerance.Top);
+                _ospreySettingsControl.Width = Width - _ospreySettingsControl.Left;
+                _ospreySettingsControl.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+                Controls.Add(_ospreySettingsControl);
+            }
+            foreach (var control in EngineSettingsControls)
+                control.Visible = !isOsprey;
+            if (isOsprey)
+                btnImportSettings.Visible = false;
+            if (_ospreySettingsControl != null)
+                _ospreySettingsControl.Visible = isOsprey;
         }
 
         // Arrange and populate the search engine blurb, if any, below the search engine logo
@@ -600,7 +653,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var allMods = ImportPeptideSearch.SearchEngine.SearchesIsotopeLabels
                 ? modSettings.StaticModifications.Union(modSettings.AllHeavyModifications)
                 : modSettings.StaticModifications;
-            ImportPeptideSearch.SearchEngine.SetModifications(allMods, Convert.ToInt32(cbMaxVariableMods.SelectedItem));
+            // Osprey's page has no variable modification limit of its own: its library is for the document's peptides
+            int maxVariableMods = SelectedSearchEngine == SearchEngine.Osprey
+                ? modSettings.MaxVariableMods
+                : Convert.ToInt32(cbMaxVariableMods.SelectedItem);
+            ImportPeptideSearch.SearchEngine.SetModifications(allMods, maxVariableMods);
 
             if (ImportPeptideSearch.IsFeatureDetection)
             {
@@ -644,6 +701,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     HardklorMinIntensityPPM,
                     _documentContainer.FullScanSettingsControl.FullScan.RetentionTimeFilterLength);
                 CutoffScore = minIdotP;
+                return true;
+            }
+
+            if (SelectedSearchEngine == SearchEngine.Osprey)
+            {
+                if (!_ospreySettingsControl.ValidatePage())
+                    return false;
+                CutoffScore = _ospreySettingsControl.RunFdr;
                 return true;
             }
 
@@ -912,6 +977,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void ApplyPresetSettings(SearchSettingsPreset preset)
         {
+            if (preset.SearchEngine == SearchEngine.Osprey)
+            {
+                if (preset.OspreySettings != null)
+                    _ospreySettingsControl?.ApplyPreset(preset.OspreySettings);
+                return;
+            }
+
             // Set tolerances: zero means clear the fields (use engine defaults), except for DIA-NN,
             // which chooses them itself when they are 0
             if (preset.PrecursorToleranceValue > 0 || preset.SearchEngine == SearchEngine.DIANN)

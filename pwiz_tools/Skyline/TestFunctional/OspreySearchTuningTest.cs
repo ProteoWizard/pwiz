@@ -30,6 +30,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -39,7 +40,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// The Osprey Search wizard's Library Model page on Osprey's Stellar subset: a model fine-tuned
+    /// Run Peptide Search's Library Model page for Osprey on Osprey's Stellar subset: a model fine-tuned
     /// on the searched runs (chosen from the searched files), a model fine-tuned on browsed runs
     /// with one held out of the search, and a search that predicts with the saved model. On the
     /// subset a single run searched alone keeps no precursor at 1% in the first pass, so both
@@ -111,36 +112,36 @@ namespace pwiz.SkylineTestFunctional
             {
                 // The defaults: the pretrained models, used as they are, no tuning runs, and the CPU
                 // (a test's Tools folder has no CUDA runtime)
-                AssertEx.IsTrue(searchDlg.UseExistingModel);
-                AssertEx.IsTrue(searchDlg.Model.IsDefault);
-                AssertEx.AreEqual(0, searchDlg.TuningFileItems.Count);
-                AssertEx.IsFalse(searchDlg.UseGpu);
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.UseExistingModel);
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.Model.IsDefault);
+                AssertEx.AreEqual(0, searchDlg.LibraryModelControl.TuningFileItems.Count);
+                AssertEx.IsFalse(searchDlg.LibraryModelControl.UseGpu);
             });
             VerifyUseGpu(searchDlg);
-            RunUI(() => searchDlg.UseExistingModel = false);
+            RunUI(() => searchDlg.LibraryModelControl.UseExistingModel = false);
             ShowAndDismissMessage(searchDlg, PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Choose_at_least_one_run_to_fine_tune_the_model_on_);
 
             RunUI(() =>
             {
-                searchDlg.ChooseFromSearchedFiles = true;
-                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFileItems);
-                AssertEx.AreEqual(0, searchDlg.TuningFiles.Count);
+                searchDlg.LibraryModelControl.ChooseFromSearchedFiles = true;
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.LibraryModelControl.TuningFileItems);
+                AssertEx.AreEqual(0, searchDlg.LibraryModelControl.TuningFiles.Count);
                 foreach (var path in diaFilePaths)
-                    searchDlg.SetTuningFileChecked(path, true);
-                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
+                    searchDlg.LibraryModelControl.SetTuningFileChecked(path, true);
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.LibraryModelControl.TuningFiles);
             });
 
             // A browsed run that does not exist
             string missingRun = TestFilesDir.GetTestPath("missing.mzML");
-            RunUI(() => searchDlg.AddTuningFiles(new[] { missingRun }));
+            RunUI(() => searchDlg.LibraryModelControl.AddTuningFiles(new[] { missingRun }));
             ShowAndDismissMessage(searchDlg, string.Format(
                 PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_, missingRun));
             RunUI(() =>
             {
-                AssertEx.AreEqual(missingRun, searchDlg.TuningFileItems[0]);
-                AssertEx.IsTrue(searchDlg.TuningFiles.Contains(missingRun));
-                searchDlg.SetTuningFileChecked(missingRun, false);
-                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
+                AssertEx.AreEqual(missingRun, searchDlg.LibraryModelControl.TuningFileItems[0]);
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.TuningFiles.Contains(missingRun));
+                searchDlg.LibraryModelControl.SetTuningFileChecked(missingRun, false);
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.LibraryModelControl.TuningFiles);
             });
 
             // A copy of a searched run in another folder: Osprey keeps one spectra cache per file name
@@ -148,20 +149,20 @@ namespace pwiz.SkylineTestFunctional
             Directory.CreateDirectory(copyDir);
             string copiedRun = Path.Combine(copyDir, Path.GetFileName(diaFilePaths[0]));
             File.Copy(diaFilePaths[0], copiedRun);
-            RunUI(() => searchDlg.AddTuningFiles(new[] { copiedRun }));
+            RunUI(() => searchDlg.LibraryModelControl.AddTuningFiles(new[] { copiedRun }));
             ShowAndDismissMessage(searchDlg, string.Format(
                 PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_The_runs__0__and__1__have_the_same_file_name__Osprey_keeps_one_spectra_cache_per_name__so_rename_one_of_them_,
                 diaFilePaths[0], copiedRun));
             RunUI(() =>
             {
-                searchDlg.SetTuningFileChecked(copiedRun, false);
-                AssertEx.AreEqual(diaFilePaths.Length + 2, searchDlg.TuningFileItems.Count);
-                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFiles);
+                searchDlg.LibraryModelControl.SetTuningFileChecked(copiedRun, false);
+                AssertEx.AreEqual(diaFilePaths.Length + 2, searchDlg.LibraryModelControl.TuningFileItems.Count);
+                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.LibraryModelControl.TuningFiles);
             });
 
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            VerifyCommandLine(searchDlg, diaFilePaths, diaFilePaths, null);
-            string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"));
+            string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), out var engine);
+            VerifyCommandLine(engine.RunConfig, diaFilePaths, diaFilePaths, null);
             // The model is the document's, like its library: nothing joins the model list
             RunUI(() => AssertEx.AreEqual(1, Settings.Default.CarafeModelList.Count));
             OspreySearchTest.FinishImport(searchDlg, diaFilePaths, BiblioSpecLiteSpec.GetLibraryFileName(docPath));
@@ -183,7 +184,7 @@ namespace pwiz.SkylineTestFunctional
             var searchDlg = OpenWizardOnLibraryModelPage(searchedRuns, fastaFilepath);
             // Scenario 1's model, added to the list by name as a user adds a model worth keeping;
             // Add... selects it
-            RunDlg<EditCarafeModelDlg>(searchDlg.AddModel, dlg =>
+            RunDlg<EditCarafeModelDlg>(searchDlg.LibraryModelControl.AddModel, dlg =>
             {
                 dlg.ModelName = SAVED_MODEL_NAME;
                 dlg.ModelPath = existingModelPath;
@@ -192,43 +193,43 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 AssertEx.AreEqual(2, Settings.Default.CarafeModelList.Count);
-                var savedModel = searchDlg.Model;
+                var savedModel = searchDlg.LibraryModelControl.Model;
                 AssertEx.AreEqual(SAVED_MODEL_NAME, savedModel.Name);
                 AssertEx.AreEqual(existingModelPath, savedModel.FilePath);
                 // Fine-tuning starts from the pretrained models whatever the combo held, which
                 // comes back with "Use this model"
-                searchDlg.UseExistingModel = false;
-                AssertEx.IsTrue(searchDlg.Model.IsDefault);
-                searchDlg.UseExistingModel = true;
-                AssertEx.AreEqual(savedModel, searchDlg.Model);
-                searchDlg.UseExistingModel = false;
-                AssertEx.IsTrue(searchDlg.Model.IsDefault);
-                searchDlg.AddTuningFiles(tuningRuns);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFileItems);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
-                searchDlg.ChooseFromSearchedFiles = true;
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFileItems);
-                searchDlg.ChooseFromSearchedFiles = false;
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFileItems);
-                AssertEx.AreEqualDeep(tuningRuns, searchDlg.TuningFiles);
+                searchDlg.LibraryModelControl.UseExistingModel = false;
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.Model.IsDefault);
+                searchDlg.LibraryModelControl.UseExistingModel = true;
+                AssertEx.AreEqual(savedModel, searchDlg.LibraryModelControl.Model);
+                searchDlg.LibraryModelControl.UseExistingModel = false;
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.Model.IsDefault);
+                searchDlg.LibraryModelControl.AddTuningFiles(tuningRuns);
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.LibraryModelControl.TuningFileItems);
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.LibraryModelControl.TuningFiles);
+                searchDlg.LibraryModelControl.ChooseFromSearchedFiles = true;
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.LibraryModelControl.TuningFileItems);
+                searchDlg.LibraryModelControl.ChooseFromSearchedFiles = false;
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.LibraryModelControl.TuningFileItems);
+                AssertEx.AreEqualDeep(tuningRuns, searchDlg.LibraryModelControl.TuningFiles);
             });
 
             // A fine-tuned model already beside this document: Next asks, and Cancel stays on the page
             string documentModelPath = OspreyHelpers.GetDocumentModelPath(docPath);
             File.Copy(existingModelPath, documentModelPath);
-            var overwritePrompt = ShowDialog<MultiButtonMsgDlg>(searchDlg.NextPage);
+            var overwritePrompt = ShowDialog<MultiButtonMsgDlg>(() => searchDlg.ClickNextButton());
             AssertEx.AreEqual(string.Format(
                 PeptideSearchResources.OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_,
                 documentModelPath), overwritePrompt.Message);
             OkDialog(overwritePrompt, overwritePrompt.BtnCancelClick);
-            RunUI(() => AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage));
-            overwritePrompt = ShowDialog<MultiButtonMsgDlg>(searchDlg.NextPage);
+            RunUI(() => AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.library_model_page, searchDlg.CurrentPage));
+            overwritePrompt = ShowDialog<MultiButtonMsgDlg>(() => searchDlg.ClickNextButton());
             OkDialog(overwritePrompt, overwritePrompt.ClickOk);
-            RunUI(() => AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage));
+            RunUI(() => AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.dda_search_settings_page, searchDlg.CurrentPage));
 
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            VerifyCommandLine(searchDlg, searchedRuns, tuningRuns, null);
-            string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-heldout.txt"));
+            string modelPath = RunTuningSearch(searchDlg, TestFilesDir.GetTestPath("OspreySearchControlLog-heldout.txt"), out var engine);
+            VerifyCommandLine(engine.RunConfig, searchedRuns, tuningRuns, null);
             // Overwritten: the new training's manifest carries its own save time
             AssertEx.IsFalse(File.ReadAllBytes(modelPath).SequenceEqual(File.ReadAllBytes(existingModelPath)),
                 @"the document's fine-tuned model was not overwritten");
@@ -250,16 +251,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 var models = Settings.Default.CarafeModelList;
                 AssertEx.AreEqual(2, models.Count);
-                searchDlg.Model = models.First(m => Equals(m.Name, SAVED_MODEL_NAME));
-                AssertEx.AreEqual(savedModelPath, searchDlg.Model.FilePath);
-                AssertEx.IsTrue(searchDlg.UseExistingModel);
+                searchDlg.LibraryModelControl.Model = models.First(m => Equals(m.Name, SAVED_MODEL_NAME));
+                AssertEx.AreEqual(savedModelPath, searchDlg.LibraryModelControl.Model.FilePath);
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.UseExistingModel);
             });
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            VerifyCommandLine(searchDlg, diaFilePaths, null, savedModelPath);
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
             string workDir = OspreyHelpers.GetWorkDirectory(docPath);
-            OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath("OspreySearchControlLog-saved.txt"));
-            AssertEx.IsFalse(File.Exists(OspreyHelpers.GetTunedModelPath(docBlibPath, workDir)), @"a search with a saved model wrote a model");
+            var engine = OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir, TestFilesDir.GetTestPath("OspreySearchControlLog-saved.txt"));
+            VerifyCommandLine(engine.RunConfig, diaFilePaths, null, savedModelPath);
+            AssertEx.IsFalse(File.Exists(OspreyHelpers.GetTunedModelPath(engine.OutputPath, workDir)), @"a search with a saved model wrote a model");
             AssertEx.IsFalse(File.Exists(OspreyHelpers.GetDocumentModelPath(docPath)), @"a search with a saved model copied a model beside the document");
 
             string predictedLibraryPath = Path.Combine(workDir,
@@ -276,16 +277,17 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Opens the wizard on the data files, sets the FASTA and moves to the Library Model page.
+        /// Opens Run Peptide Search for Osprey on the runs and the FASTA, and moves from the DIA search
+        /// method page, which predicts the library, to the Library Model page.
         /// </summary>
-        public static OspreySearchDlg OpenWizardOnLibraryModelPage(string[] diaFilePaths, string fastaFilepath)
+        public static RunPeptideSearchDlg OpenWizardOnLibraryModelPage(string[] diaFilePaths, string fastaFilepath)
         {
-            var searchDlg = OspreySearchTest.OpenWizardOnFastaPage(diaFilePaths);
+            var searchDlg = OspreySearchTest.OpenWizardOnDiaMethodPage(diaFilePaths, fastaFilepath);
             RunUI(() =>
             {
-                searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
-                searchDlg.NextPage();
-                AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
+                AssertEx.IsTrue(searchDlg.ConverterSettingsControl.PredictLibrary);
+                AssertEx.IsTrue(searchDlg.ClickNextButton());
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.library_model_page, searchDlg.CurrentPage);
             });
             return searchDlg;
         }
@@ -296,49 +298,47 @@ namespace pwiz.SkylineTestFunctional
         /// download first and stays unchecked when that is declined. Ends with the wizard's own
         /// runtimes back in place.
         /// </summary>
-        private void VerifyUseGpu(OspreySearchDlg searchDlg)
+        private void VerifyUseGpu(RunPeptideSearchDlg searchDlg)
         {
-            RunUI(() => searchDlg.TorchRuntimes = new TorchRuntimes { CudaDriver = null });
-            var noGpuDlg = ShowDialog<MessageDlg>(() => searchDlg.UseGpu = true);
+            RunUI(() => searchDlg.LibraryModelControl.TorchRuntimes = new TorchRuntimes { CudaDriver = null });
+            var noGpuDlg = ShowDialog<MessageDlg>(() => searchDlg.LibraryModelControl.UseGpu = true);
             AssertEx.AreEqual(ModelResources.TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver_,
                 noGpuDlg.Message);
             OkDialog(noGpuDlg, noGpuDlg.OkDialog);
             RunUI(() =>
             {
-                AssertEx.IsFalse(searchDlg.UseGpu);
-                searchDlg.TorchRuntimes = new TorchRuntimes
+                AssertEx.IsFalse(searchDlg.LibraryModelControl.UseGpu);
+                searchDlg.LibraryModelControl.TorchRuntimes = new TorchRuntimes
                 {
                     CudaDriver = new CudaDriver(12080, 89, @"Test GPU"),
                     RuntimesDirectory = TestFilesDir.GetTestPath(@"libtorch")
                 };
             });
-            var downloadDlg = ShowDialog<MultiButtonMsgDlg>(() => searchDlg.UseGpu = true);
+            var downloadDlg = ShowDialog<MultiButtonMsgDlg>(() => searchDlg.LibraryModelControl.UseGpu = true);
             OkDialog(downloadDlg, downloadDlg.BtnCancelClick);
             RunUI(() =>
             {
-                AssertEx.IsFalse(searchDlg.UseGpu);
-                searchDlg.TorchRuntimes = new TorchRuntimes();
+                AssertEx.IsFalse(searchDlg.LibraryModelControl.UseGpu);
+                searchDlg.LibraryModelControl.TorchRuntimes = new TorchRuntimes();
             });
         }
 
         /// <summary>Next refuses with <paramref name="message"/> and stays on the Library Model page.</summary>
-        private static void ShowAndDismissMessage(OspreySearchDlg searchDlg, string message)
+        private static void ShowAndDismissMessage(RunPeptideSearchDlg searchDlg, string message)
         {
-            var messageDlg = ShowDialog<MessageDlg>(searchDlg.NextPage);
+            var messageDlg = ShowDialog<MessageDlg>(() => searchDlg.ClickNextButton());
             AssertEx.AreEqual(message, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
-            RunUI(() => AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage));
+            RunUI(() => AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.library_model_page, searchDlg.CurrentPage));
         }
 
         /// <summary>
-        /// The command line: the searched runs as the inputs, the tuning runs after --training-input
-        /// (or no --training-input), the saved model after --model (or no --model), and never an
-        /// existing library.
+        /// The command line the run used: the searched runs as the inputs, the tuning runs after
+        /// --training-input (or no --training-input), the saved model after --model (or no --model),
+        /// and never an existing library.
         /// </summary>
-        public static void VerifyCommandLine(OspreySearchDlg searchDlg, string[] searchedRuns, string[] tuningRuns, string modelPath)
+        public static void VerifyCommandLine(OspreyConfig config, string[] searchedRuns, string[] tuningRuns, string modelPath)
         {
-            OspreyConfig config = null;
-            RunUI(() => config = searchDlg.GetSearchConfig());
             string commandLine = OspreyHelpers.BuildCommandLine(config);
             AssertEx.Contains(commandLine, OspreyHelpers.ARG_INPUT + @" " + QuoteAll(searchedRuns) + @" " + OspreyHelpers.ARG_FASTA + @" ");
             if (tuningRuns != null)
@@ -359,29 +359,24 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Runs a tuning search from the search settings page: Osprey writes the model in the
-        /// working folder and the wizard copies it beside the document as the document's fine-tuned
-        /// model, which records the runs it was tuned on. The wizard's log is saved to
-        /// <paramref name="logPath"/>. Returns the document's model.
+        /// working folder and the run copies it beside the document as the document's fine-tuned
+        /// model, which records the runs it was tuned on. The run page's log is saved to
+        /// <paramref name="logPath"/>. Returns the document's model, and the engine that searched.
         /// </summary>
-        public static string RunTuningSearch(OspreySearchDlg searchDlg, string logPath,
+        public static string RunTuningSearch(RunPeptideSearchDlg searchDlg, string logPath, out OspreySearchEngine engine,
             int searchTimeoutMillis = OspreySearchTest.SEARCH_TIMEOUT_MILLIS)
         {
             string docPath = SkylineWindow.DocumentFilePath;
             string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(docPath);
             string workDir = OspreyHelpers.GetWorkDirectory(docPath);
             int tuningRunCount = 0;
-            string tunedModelPath = null;
-            string documentModelPath = null;
-            RunUI(() =>
-            {
-                tuningRunCount = searchDlg.TuningFiles.Count;
-                tunedModelPath = searchDlg.TunedModelPath;
-                documentModelPath = searchDlg.DocumentModelPath;
-            });
-            AssertEx.AreEqual(OspreyHelpers.GetTunedModelPath(docBlibPath, workDir), tunedModelPath);
-            AssertEx.AreEqual(OspreyHelpers.GetDocumentModelPath(docPath), documentModelPath);
+            RunUI(() => tuningRunCount = searchDlg.LibraryModelControl.TuningFiles.Count);
 
-            OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir, logPath, searchTimeoutMillis);
+            engine = OspreySearchTest.RunSearch(searchDlg, docBlibPath, workDir, logPath, searchTimeoutMillis);
+            AssertEx.IsTrue(engine.IsTuningSearch);
+            string tunedModelPath = OspreyHelpers.GetTunedModelPath(engine.OutputPath, workDir);
+            string documentModelPath = engine.DocumentModelPath;
+            AssertEx.AreEqual(OspreyHelpers.GetDocumentModelPath(docPath), documentModelPath);
 
             // Osprey's model in the working folder, and the document's copy beside the document
             AssertEx.FileExists(tunedModelPath, @"Osprey did not write the fine-tuned model");

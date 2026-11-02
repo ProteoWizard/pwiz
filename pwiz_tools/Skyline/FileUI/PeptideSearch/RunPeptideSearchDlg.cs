@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
@@ -38,6 +39,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -73,6 +75,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
             AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, isFeatureDetection ? buildSpectralLibraryTitlePanel.Bottom : 50);
+
+            if (!isFeatureDetection)
+            {
+                // The model Osprey predicts its library with, when it predicts one
+                var libraryModelPage = AddWizardTabPage(Pages.library_model_page, @"libraryModelPage",
+                    PeptideSearchResources.RunPeptideSearchDlg_RunPeptideSearchDlg_Library_Model, Pages.converter_settings_page);
+                LibraryModelControl = new OspreyLibraryModelControl
+                {
+                    SearchedFiles = () => BuildPepSearchLibControl.DdaSearchDataSources.Select(f => f.GetFilePath()).ToList(),
+                    DocumentFilePath = DocumentFilePath
+                };
+                AddPageControl(LibraryModelControl, libraryModelPage, 18, 50);
+            }
 
             if (isFeatureDetection)
             {
@@ -145,6 +160,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ReturnToModificationsPage),
                     new WizardPage(Pages.import_fasta_page, () => true, LeaveFastaPage),
                     new WizardPage(Pages.converter_settings_page, () => WorkflowType == Workflow.dia, LeaveConverterSettingsPage),
+                    new WizardPage(Pages.library_model_page, () => WorkflowType == Workflow.dia, LeaveLibraryModelPage,
+                        null, EnterLibraryModelPage) { IsShown = () => OspreyPredictsLibrary },
                     searchSettingsPage,
                     new WizardPage(Pages.transition_settings_page, () => !IsDdaWorkflow, LeaveTransitionSettingsPage,
                         () => RestoreDocumentBeforePage(Pages.transition_settings_page)),
@@ -156,6 +173,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public ConverterSettingsControl ConverterSettingsControl { get; }
         public SearchSettingsControl SearchSettingsControl { get; }
+
+        /// <summary>
+        /// The Library Model page: the model Osprey predicts its library with, and the runs a new model
+        /// is fine-tuned on. Null in feature detection.
+        /// </summary>
+        public OspreyLibraryModelControl LibraryModelControl { get; }
+
+        /// <summary>True when Osprey searches the DIA spectra.</summary>
+        private bool IsOspreySearch => WorkflowType == Workflow.dia && !ConverterSettingsControl.UseDiaUmpire &&
+                                       ConverterSettingsControl.DirectDiaSearchEngine == SearchEngine.Osprey;
+
+        /// <summary>True when Osprey searches the DIA spectra with a library it predicts from the FASTA.</summary>
+        private bool OspreyPredictsLibrary => IsOspreySearch && ConverterSettingsControl.PredictLibrary;
         public SearchControl SearchControl { get; }
 
         /// <summary>
@@ -190,8 +220,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public Func<bool> AcceptSearchResults { get; set; }
 
+        // Osprey's settings are recorded as OspreySearchSettings
         protected override SearchSettingsControl.DdaSearchSettings DdaSearchSettings =>
-            ImportPeptideSearch.IsDDASearch && !IsFeatureDetectionWorkflow ? SearchSettingsControl.SearchSettings : null;
+            ImportPeptideSearch.IsDDASearch && !IsFeatureDetectionWorkflow && !IsOspreySearch ? SearchSettingsControl.SearchSettings : null;
 
         protected override ConverterSettingsControl.DdaConverterSettings DdaConverterSettings => ConverterSettingsControl.ConverterSettings;
 
@@ -281,8 +312,132 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool LeaveConverterSettingsPage()
         {
+            if (IsOspreySearch)
+            {
+                // Its settings page asks Osprey for the settings it takes
+                if (!ValidateOspreySearch())
+                    return false;
+            }
             UpdateSearchedSpectra();
             return true;
+        }
+
+        /// <summary>
+        /// What an Osprey search needs from the pages before its settings: an existing library it can
+        /// search, runs of different file names, since Osprey keeps one spectra cache per name, and Osprey
+        /// installed. Checked as the DIA search method page is left, and again at Run, since a preset
+        /// can choose Osprey on a later page.
+        /// </summary>
+        private bool ValidateOspreySearch()
+        {
+            if (!ConverterSettingsControl.PredictLibrary && !ValidateExistingLibraryPath())
+                return false;
+            if (!OspreyLibraryModelControl.ValidateNoStemClash(this,
+                    BuildPepSearchLibControl.DdaSearchDataSources.Select(f => f.GetFilePath())))
+                return false;
+            return OspreyInstaller.EnsureInstalled(this);
+        }
+
+        /// <summary>
+        /// An existing library for Osprey must be a file in a format its <c>-l</c> reads (.blib or .tsv),
+        /// and neither the library Osprey writes, which a search deletes before it starts, nor the
+        /// document library, which the run replaces with it.
+        /// </summary>
+        private bool ValidateExistingLibraryPath()
+        {
+            string path = ConverterSettingsControl.ExistingLibraryPath;
+            if (!EditLibraryDlg.ValidateLibraryPath(this, path))
+                return false;
+            if (!PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT) && !PathEx.HasExtension(path, BiblioSpecLiteBuilder.EXT_TSV))
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateExistingLibraryPath_Osprey_searches__0__and__1__libraries__not__2__,
+                    BiblioSpecLiteSpec.EXT, BiblioSpecLiteBuilder.EXT_TSV, path));
+                return false;
+            }
+            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+            string ospreyOutputPath = new OspreySearchEngine(DocumentFilePath).OutputPath;
+            if (new[] { docBlibPath, ospreyOutputPath }.Any(written =>
+                    string.Equals(Path.GetFullPath(path), Path.GetFullPath(written), StringComparison.OrdinalIgnoreCase)))
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.RunPeptideSearchDlg_ValidateExistingLibraryPath_The_library__0__cannot_be_searched__the_run_replaces_it_with_the_library_Osprey_writes_,
+                    path));
+                return false;
+            }
+            return true;
+        }
+
+        private bool _libraryModelPageEntered; // Its Use GPU checkbox shows the saved choice once entered
+
+        private void EnterLibraryModelPage()
+        {
+            _libraryModelPageEntered = true;
+            // The files to search may have changed since the list was last filled
+            LibraryModelControl.SyncSearchedTuningFiles();
+            // Only now, so the NVIDIA driver is not loaded for a search that predicts nothing
+            LibraryModelControl.UpdateUseGpu();
+        }
+
+        /// <summary>
+        /// The page's own checks (a saved model must open; a fine-tune needs runs that exist, with no two
+        /// of the same file name), and when the document already has a fine-tuned model that a new one
+        /// would replace, the user agrees to that or stays on the page.
+        /// </summary>
+        private bool LeaveLibraryModelPage()
+        {
+            // A preset chosen on the page can leave it nothing to ask
+            if (!OspreyPredictsLibrary)
+                return true;
+            if (!LibraryModelControl.ValidatePage())
+                return false;
+            if (LibraryModelControl.UseExistingModel)
+                return true;
+            string documentModelPath = OspreyHelpers.GetDocumentModelPath(DocumentFilePath);
+            if (File.Exists(documentModelPath))
+            {
+                var choice = MultiButtonMsgDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateLibraryModelPage_The_document_s_fine_tuned_model__0__already_exists__Continuing_will_overwrite_it_with_the_model_this_search_fine_tunes_,
+                    documentModelPath), MessageBoxButtons.OKCancel);
+                if (choice != DialogResult.OK)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The Osprey search as the pages set it up: the runs, the FASTA, the library source, the model,
+        /// the settings page, and the peptide length, charges and variable modifications the library is
+        /// predicted for, from the document as the transition settings page left it. The engine adds the
+        /// enzyme, the modifications and the output when it runs.
+        /// </summary>
+        public OspreyConfig GetOspreyConfig()
+        {
+            var peptideSettings = Document.Settings.PeptideSettings;
+            var charges = Document.Settings.TransitionSettings.Filter.PeptidePrecursorCharges
+                .Select(a => a.AdductCharge).ToList();
+            bool predictsLibrary = ConverterSettingsControl.PredictLibrary;
+            string libraryPath = predictsLibrary ? null : ConverterSettingsControl.ExistingLibraryPath;
+            var model = predictsLibrary && LibraryModelControl.UseExistingModel ? LibraryModelControl.Model : null;
+            var config = new OspreyConfig
+            {
+                DataFiles = BuildPepSearchLibControl.DdaSearchDataSources.Select(f => f.GetFilePath()).ToList(),
+                FastaPath = ImportFastaControl.FastaFile,
+                LibraryPath = libraryPath,
+                DecoysInLibrary = !predictsLibrary && OspreyHelpers.LibraryHasDecoyPairs(libraryPath),
+                ModelPath = model != null && !model.IsDefault ? model.FilePath : null,
+                TrainingInputs = predictsLibrary && !LibraryModelControl.UseExistingModel ? LibraryModelControl.TuningFiles : new List<string>(),
+                TorchRuntimesDirectory = LibraryModelControl.TorchRuntimes.RuntimesDirectory,
+                Device = LibraryModelControl.UseGpu ? OspreyHelpers.DEVICE_GPU : OspreyHelpers.DEVICE_CPU,
+                MinPeptideLength = peptideSettings.Filter.MinPeptideLength,
+                MaxPeptideLength = peptideSettings.Filter.MaxPeptideLength,
+                MinCharge = charges.Count > 0 ? charges.Min() : 2,
+                MaxCharge = charges.Count > 0 ? charges.Max() : 3,
+                MaxVariableMods = peptideSettings.Modifications.MaxVariableMods,
+                CultureName = CultureInfo.CurrentUICulture.Name
+            };
+            SearchSettingsControl.OspreySettingsControl.ApplyTo(config);
+            return config;
         }
 
         /// <summary>
@@ -299,6 +454,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool LeaveSearchSettingsPage()
         {
             if (!SearchSettingsControl.SaveAllSettings(!IsAutomatedTest))
+                return false;
+            if (OspreyPredictsLibrary && !ValidateOspreyPrediction())
                 return false;
             // Feature detection's last page before the run
             return !IsFeatureDetectionWorkflow || PrepareRun();
@@ -327,6 +484,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private bool PrepareRun()
         {
+            if (IsOspreySearch)
+            {
+                // A preset chosen after the search settings page made its engine anew
+                if (!ValidateOspreySearch() || !SearchSettingsControl.SaveAllSettings(!IsAutomatedTest))
+                    return false;
+                if (OspreyPredictsLibrary && !ValidateOspreyPrediction())
+                    return false;
+            }
+
             // DIA-Umpire splits the spectra by the isolation windows of the full-scan settings
             if (WorkflowType == Workflow.dia && ConverterSettingsControl.UseDiaUmpire &&
                 (FullScanSettingsControl.IsolationScheme?.PrespecifiedIsolationWindows.Count ?? 0) == 0)
@@ -344,8 +510,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
-        /// When the document already has its library, asks whether the run replaces it or adds to it.
-        /// False when the user cancels.
+        /// Osprey predicts its library with Carafe, which knows only some enzymes and modifications.
+        /// </summary>
+        private bool ValidateOspreyPrediction()
+        {
+            if (!OspreyHelpers.GetCarafeEnzymeIndex(ImportFastaControl.Enzyme).HasValue)
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_,
+                    ImportFastaControl.Enzyme?.Name));
+                return false;
+            }
+            var unsupported = ((OspreySearchEngine) ImportPeptideSearch.SearchEngine).GetUnsupportedModifications();
+            if (unsupported.Count > 0)
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(
+                    PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_with_these_modifications_,
+                    TextUtil.LineSeparate(unsupported.Select(m => m.Name))));
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// When the document already has its library, asks whether the run replaces it or adds to it;
+        /// a search that writes its own library (Osprey) can only replace it. False when the user cancels.
         /// </summary>
         private bool AskOverwriteDocumentLibrary()
         {
@@ -355,6 +544,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             if (!Document.Settings.HasDocumentLibrary || !File.Exists(docBlibPath))
                 return true;
+
+            if (ImportPeptideSearch.SearchEngine.SearchResultIsLibrary)
+            {
+                var overwrite = MultiButtonMsgDlg.Show(this,
+                    string.Format(PeptideSearchResources.OspreySearchDlg_StartSearch_The_document_library__0__already_exists__Overwrite_it_with_the_results_of_this_search_, docBlibPath),
+                    PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_Overwrite);
+                if (overwrite != DialogResult.OK)
+                    return false;
+                _overwriteDocumentLibrary = true;
+                return true;
+            }
 
             var choice = MultiButtonMsgDlg.Show(this,
                 string.Format(PeptideSearchResources.RunPeptideSearchDlg_PrepareRun_A_spectral_library_already_exists_at___0___Overwrite_it__or_append_the_new_results_to_it_, docBlibPath),
@@ -382,6 +582,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             try
             {
+                if (ImportPeptideSearch.SearchEngine is OspreySearchEngine ospreySearchEngine)
+                {
+                    if (OspreyPredictsLibrary && _libraryModelPageEntered)
+                        LibraryModelControl.SaveUseGpuSetting();
+                    ospreySearchEngine.Config = GetOspreyConfig();
+                    OspreySearchSettings = new OspreySearchSettings(ospreySearchEngine.Config);
+                }
+                else
+                {
+                    OspreySearchSettings = null;
+                }
                 ImportFastaControl.UpdateDigestSettings();
                 ImportPeptideSearch.DdaConverter = WorkflowType == Workflow.dia && ConverterSettingsControl.UseDiaUmpire
                     ? ConverterSettingsControl.GetDiaUmpireConverter()
@@ -478,6 +689,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 CutoffScore = SearchSettingsControl.CutoffScore,
                 IncludeAmbiguousMatches = BuildPepSearchLibControl.IncludeAmbiguousMatches,
                 OverwriteDocumentLibrary = _overwriteDocumentLibrary,
+                SearchResultIsLibrary = ImportPeptideSearch.SearchEngine.SearchResultIsLibrary,
                 IrtStandard = BuildPepSearchLibControl.IrtStandards,
                 CirtPeptideCount = BuildPepSearchLibControl.CirtPeptideCount,
                 RecalibrateIrtStandard = BuildPepSearchLibControl.RecalibrateIrtStandard,
@@ -551,10 +763,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             ImportResults(SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search, _namedResults);
+            string tunedModelWarning = (ImportPeptideSearch.SearchEngine as OspreySearchEngine)?.TunedModelWarning;
             ImportPeptideSearch.SearchEngine.Dispose();
 
             AddSummary(result);
             RunFinished(true);
+            if (tunedModelWarning != null)
+                MessageDlg.Show(this, tunedModelWarning);
         }
 
         private void AddSummary(RunPeptideSearchPipeline.Result result)
@@ -667,6 +882,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     hardklor.Instrument, hardklor.Resolution, hardklor.MinIdotP, hardklor.SignalToNoise,
                     string.Join(@",", hardklor.Charges), hardklor.MinIntensityPPM, hardklor.RetentionTimeTolerance
                 });
+            }
+            else if (ImportPeptideSearch.SearchEngine is OspreySearchEngine ospreySearchEngine)
+            {
+                // The command line, and the files it names that can change in place
+                var config = ospreySearchEngine.GetRunConfig();
+                parts.Add(OspreyHelpers.BuildCommandLine(config));
+                parts.AddRange(config.TrainingInputs.Append(config.LibraryPath).Append(config.ModelPath)
+                    .Select(f => f != null && File.Exists(f) ? File.GetLastWriteTimeUtc(f).Ticks : 0).Cast<object>());
             }
             else
             {
@@ -847,18 +1070,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _lastAppliedPreset = preset;
 
             // A DIA preset chooses on the DIA search method page how its engine searches the DIA spectra:
-            // DIA-NN directly, MSFragger directly or after DIA-Umpire, the other engines after DIA-Umpire
+            // DIA-NN and Osprey directly, MSFragger directly or after DIA-Umpire, the other engines after DIA-Umpire
             if (preset.Workflow == SearchWorkflowType.dia)
             {
-                if (preset.SearchEngine == SearchEngine.DIANN)
+                bool searchesDirectly = preset.SearchEngine == SearchEngine.DIANN || preset.SearchEngine == SearchEngine.Osprey;
+                if (searchesDirectly)
                     ConverterSettingsControl.UseDiaUmpire = false;
                 else if (preset.SearchEngine != SearchEngine.MSFragger)
                     ConverterSettingsControl.UseDiaUmpire = true;
-                if (preset.SearchEngine == SearchEngine.DIANN || preset.SearchEngine == SearchEngine.MSFragger)
+                if (searchesDirectly || preset.SearchEngine == SearchEngine.MSFragger)
                     ConverterSettingsControl.DirectDiaSearchEngine = preset.SearchEngine;
 
                 // Past that page, the search settings page offers the engine it now chooses
-                if (IsPageApplicable(Pages.converter_settings_page) && IsAtOrAfterPage(Pages.dda_search_settings_page))
+                if (IsPageApplicable(Pages.converter_settings_page) && IsAtOrAfterPage(Pages.library_model_page))
                     UpdateSearchedSpectra();
             }
 
@@ -1008,7 +1232,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 heavyModifications: heavyMods,
                 workflowType: (SearchWorkflowType)BuildPepSearchLibControl.WorkflowType,
                 irtStandardName: BuildPepSearchLibControl.IrtStandards?.Name,
-                hasExplicitModifications: true);
+                hasExplicitModifications: true)
+                .ChangeOspreySettings(SearchSettingsControl?.SelectedSearchEngine == SearchEngine.Osprey
+                    ? SearchSettingsControl.OspreySettingsControl?.BuildPreset(name)
+                    : null);
         }
 
         // Test helpers
