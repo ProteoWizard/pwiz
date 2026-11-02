@@ -136,6 +136,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// "Feature Scores" per-feature distribution view.
         /// </summary>
         public double[] FeatureHistEdges { get; set; }
+        /// <summary>
+        /// The first-pass model on its own training subset (#4550, #4467): final-training-set
+        /// population, composite ROC curves, permutation baseline, correlation and groups. Null
+        /// when the model carries no training-set analysis; the per-feature values are on
+        /// <see cref="Model"/>'s rows.
+        /// </summary>
+        public TrainingSetView TrainingSet { get; set; }
         public ScoreHistogram Scores { get; set; }
         /// <summary>
         /// Non-parametric null-alignment ratios (Storey-style) derived from
@@ -192,6 +199,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool Degenerate { get; set; }
             public List<FeatureRow> Features { get; set; }
             public ScoreHistogram Scores { get; set; }
+            /// <summary>This pass's model on its own training subset, or null.</summary>
+            public TrainingSetView TrainingSet { get; set; }
         }
 
         /// <summary>
@@ -286,6 +295,34 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public int[] TargetHist { get; set; }
             public int[] DecoyHist { get; set; }
+
+            // ---- Fold-to-fold weight stability (#4550): the composition's reproducibility.
+            // Coefficient is the fold mean. NaN for a tree ensemble.
+            public double FoldWeightSd { get; set; } = double.NaN;
+            public double FoldWeightMin { get; set; } = double.NaN;
+            public double FoldWeightMax { get; set; } = double.NaN;
+            /// <summary>Every fold's weight has the same sign.</summary>
+            public bool FoldSignConsistent { get; set; }
+
+            // ---- The final training set (#4550, #4467), from TrainingSetAnalysis.FeatureStats.
+            // NaN / null when the model carries no training-set analysis - also the defaults, so a
+            // pass-1 product written before these keys existed reads back as "not available".
+            /// <summary>P(positive &gt; decoy) on the pooled final training set, ties half.</summary>
+            public double Auroc { get; set; } = double.NaN;
+            public double AurocFoldMin { get; set; } = double.NaN;
+            public double AurocFoldMax { get; set; } = double.NaN;
+            public double CohenD { get; set; } = double.NaN;
+            /// <summary>TPR at <see cref="TrainingSetView.ReferenceFpr"/>.</summary>
+            public double TprAtReferenceFpr { get; set; } = double.NaN;
+            /// <summary>TPR at each <see cref="TrainingSetView.RocFpr"/>.</summary>
+            public double[] RocTpr { get; set; }
+            /// <summary>Final-training-set histograms over <see cref="FeatureHistEdges"/>.</summary>
+            public int[] TrainTargetHist { get; set; }
+            public int[] TrainDecoyHist { get; set; }
+            /// <summary>Fractional drop in held-out passing targets with this feature permuted.</summary>
+            public double PermutationDrop { get; set; } = double.NaN;
+            /// <summary>Index into <see cref="TrainingSetView.Groups"/>, or -1 when ungrouped.</summary>
+            public int Group { get; set; } = -1;
         }
 
         /// <summary>
@@ -888,6 +925,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var rows = new List<FeatureRow>();
             var targetHist = contributions.TargetHistograms;
             var decoyHist = contributions.DecoyHistograms;
+            var analysis = contributions.TrainingAnalysis;
+            var groupOf = TrainingSetView.GroupIndexByFeature(analysis);
             // A tree ensemble has no percents to rank by, so its rows stay in feature order.
             bool unranked = contributions.IsDegenerate || contributions.IsTreeEnsemble;
             foreach (var f in contributions.Features
@@ -912,9 +951,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // model; null when not collected).
                     TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,
                     DecoyHist = decoyHist != null && f.Index < decoyHist.Count ? decoyHist[f.Index] : null,
+                    FoldWeightSd = f.FoldWeightSd,
+                    FoldWeightMin = f.FoldWeightMin,
+                    FoldWeightMax = f.FoldWeightMax,
+                    FoldSignConsistent = f.IsFoldSignConsistent,
                 });
+                SetTrainingStats(rows[rows.Count - 1], analysis, groupOf);
             }
             return rows;
+        }
+
+        /// <summary>A row's final-training-set values, or the not-available markers.</summary>
+        private static void SetTrainingStats(FeatureRow row, TrainingSetAnalysis analysis, int[] groupOf)
+        {
+            var stats = analysis?.Features != null && row.Index < analysis.Features.Length
+                ? analysis.Features[row.Index]
+                : null;
+            row.Group = groupOf != null && row.Index < groupOf.Length ? groupOf[row.Index] : -1;
+            row.Auroc = stats?.Auroc ?? double.NaN;
+            row.AurocFoldMin = stats?.AurocFoldMin ?? double.NaN;
+            row.AurocFoldMax = stats?.AurocFoldMax ?? double.NaN;
+            row.CohenD = stats?.CohenD ?? double.NaN;
+            row.TprAtReferenceFpr = stats?.TprAtReferenceFpr ?? double.NaN;
+            row.PermutationDrop = stats?.PermutationDrop ?? double.NaN;
+            row.RocTpr = stats?.RocTpr;
+            row.TrainTargetHist = stats?.TrainTargetHist;
+            row.TrainDecoyHist = stats?.TrainDecoyHist;
         }
 
         /// <summary>
@@ -957,6 +1019,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 Degenerate = contributions.IsDegenerate,
                 Features = BuildFeatureRows(contributions),
                 Scores = BuildScoreHistogram(precs),
+                TrainingSet = TrainingSetView.From(contributions),
             };
         }
 

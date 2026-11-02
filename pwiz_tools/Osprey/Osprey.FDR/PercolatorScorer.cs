@@ -224,7 +224,7 @@ namespace pwiz.Osprey.FDR
             }
 
             var contributions = reportContributions
-                ? BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config)
+                ? BuildContributions(contribAcc, gbtModels, trainResults, config)
                 : null;
             // Surface the trained model's contributions to the caller (the projection-path
             // --model-diagnostics report reads them). No-op (null) on every path that does not
@@ -1096,7 +1096,7 @@ namespace pwiz.Osprey.FDR
             // A report over only the files this process scored would describe a different
             // population than the run's, with nothing on the page to say so.
             var contributions = sharesComplete
-                ? BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig)
+                ? BuildContributions(contribAcc, gbtModels, trainResults, percConfig)
                 : null;
             captureContributions?.Invoke(contributions);
 
@@ -1365,12 +1365,12 @@ namespace pwiz.Osprey.FDR
         /// (<see cref="FeatureContributions.Accumulator.BuildForTreeEnsemble"/>).
         /// </summary>
         private static FeatureContributions BuildContributions(FeatureContributions.Accumulator contribAcc,
-            IReadOnlyList<GradientBoostedTrees> gbtModels, IReadOnlyList<double[]> foldWeights,
+            IReadOnlyList<GradientBoostedTrees> gbtModels, PercolatorResults model,
             PercolatorConfig config)
         {
             if (gbtModels != null)
-                return contribAcc.BuildForTreeEnsemble(config.FeatureInfos);
-            var contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
+                return contribAcc.BuildForTreeEnsemble(config.FeatureInfos, model.TrainingAnalysis);
+            var contributions = contribAcc.Build(model.FoldWeights, config.FeatureInfos, model.TrainingAnalysis);
             PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
             return contributions;
         }
@@ -1393,7 +1393,7 @@ namespace pwiz.Osprey.FDR
             }
             if (contribAcc == null)
                 return null;
-            return BuildContributions(contribAcc, ResolveGbtModels(model), model.FoldWeights,
+            return BuildContributions(contribAcc, ResolveGbtModels(model), model,
                 new PercolatorConfig { FeatureInfos = featureInfos });
         }
 
