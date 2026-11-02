@@ -2608,11 +2608,13 @@ namespace pwiz.Osprey.Test
         #region FdrScoresSidecar Tests
 
         /// <summary>
-        /// The feature mask is applied where the FDR stage loads features, not where scoring writes
-        /// them: the scores parquet holds every feature, and only
-        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> leaves a masked one out. That
-        /// split is what lets a mask arm adopt another arm's per-file scores and run the FDR stage
-        /// alone. The test process leaves OSPREY_FEATURE_MASK unset, so the default set is masked.
+        /// The feature mask decides two things. The FDR stage loads only the unmasked features
+        /// (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>), and the scores parquet holds
+        /// a column only for the recorded ones (<see cref="PinFeatureMask.IsRecorded"/>): the core
+        /// features and each family with an unmasked feature. The test process leaves
+        /// OSPREY_FEATURE_MASK and OSPREY_RECORD_ALL_FEATURES unset, so the default set is masked
+        /// and only the 21 core features are recorded - and a file that lacks a column a reader
+        /// needs is refused, not read as zeros.
         /// </summary>
         [TestMethod]
         public void TestFeatureMaskAppliesAtFdrLoad()
@@ -2639,9 +2641,15 @@ namespace pwiz.Osprey.Test
                 for (int f = 0; f < features.Length; f++)
                 {
                     string name = ParquetScoreCache.PIN_FEATURE_NAMES[f];
-                    Assert.AreEqual(f + 1.0, stored[f], name + " must be written unmasked");
                     bool masked = PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(name);
                     Assert.AreEqual(masked, PinFeatureMask.IsMasked(f), name);
+                    // Every default-masked feature is in a family with no unmasked feature, so
+                    // the default records the core features alone.
+                    bool recorded = f < PinFeatureMask.CORE_FEATURE_COUNT;
+                    Assert.AreEqual(recorded, PinFeatureMask.IsRecorded(f), name);
+                    Assert.AreEqual(recorded, ParquetScoreCache.HasColumn(saver.SafeName, name),
+                        name + " must have a column exactly when it is recorded");
+                    Assert.AreEqual(recorded ? f + 1.0 : 0.0, stored[f], name + " as stored");
                     if (masked)
                         Assert.IsFalse(loadedByName.ContainsKey(name), name + " must be absent as the FDR stage loads it");
                     else
@@ -2654,6 +2662,49 @@ namespace pwiz.Osprey.Test
             }
             Assert.IsNull(PinFeatureMask.UnknownFeatureName());
             Assert.AreEqual(@";featmask=default;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix());
+            Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(),
+                "the default records the core features only, so default keys must not change");
+            AssertMissingFeatureColumnIsRefused();
+        }
+
+        /// <summary>
+        /// A scores file that holds features but not one the reader needs - scored under a
+        /// narrower recorded set than this run uses - is refused by both the FDR load and the full
+        /// row read, naming the column, rather than read as zeros.
+        /// </summary>
+        private static void AssertMissingFeatureColumnIsRefused()
+        {
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_featmissing_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                var entryIdField = new DataField<uint>("entry_id");
+                var isDecoyField = new DataField<bool>("is_decoy");
+                var chargeField = new DataField<byte>("charge");
+                var firstFeatureField = new DataField<double>(ParquetScoreCache.PIN_FEATURE_NAMES[0]);
+                var schema = new ParquetSchema(entryIdField, isDecoyField, chargeField, firstFeatureField);
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                {
+                    var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        group.WriteAsync(entryIdField, new ReadOnlyMemory<uint>(new[] { 1u })).GetAwaiter().GetResult();
+                        group.WriteAsync(isDecoyField, new ReadOnlyMemory<bool>(new[] { false })).GetAwaiter().GetResult();
+                        group.WriteAsync(chargeField, new ReadOnlyMemory<byte>(new byte[] { 2 })).GetAwaiter().GetResult();
+                        group.WriteAsync(firstFeatureField, new ReadOnlyMemory<double>(new[] { 1.0 })).GetAwaiter().GetResult();
+                    }
+                    // Writes the footer
+                    writer.DisposeAsync().GetAwaiter().GetResult();
+                }
+
+                string missing = ParquetScoreCache.PIN_FEATURE_NAMES[1];
+                var fdrLoad = Assert.ThrowsException<InvalidDataException>(
+                    () => ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName));
+                StringAssert.Contains(fdrLoad.Message, missing);
+                var fullRead = Assert.ThrowsException<InvalidDataException>(
+                    () => ParquetScoreCache.LoadFullFdrEntries(saver.SafeName));
+                StringAssert.Contains(fullRead.Message, missing);
+            }
         }
 
         /// <summary>
@@ -3469,9 +3520,11 @@ namespace pwiz.Osprey.Test
 
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)
         {
+            // A value for each recorded feature and 0 for the rest, as scoring leaves the vector:
+            // an unrecorded feature has no parquet column, so it cannot round-trip a value.
             var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
             for (int f = 0; f < features.Length; f++)
-                features[f] = baseValue + f;
+                features[f] = PinFeatureMask.IsRecorded(f) ? baseValue + f : 0.0;
             return new FdrEntry
             {
                 EntryId = id,

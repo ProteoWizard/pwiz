@@ -335,6 +335,9 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.ValidityKeySuffix()
                 + PinFeatureMask.RescoreValidityKeySuffix()
+                // The reconciled parquet copies the scores parquet's recorded feature columns and
+                // writes the rescored rows' features beside them, so it records what scoring did.
+                + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass

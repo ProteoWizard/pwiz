@@ -283,9 +283,14 @@ namespace pwiz.Osprey.IO
                 ReferenceXicRts = new DataField(COLUMN_REFERENCE_XIC_RTS, typeof(byte[]), isNullable: true, isArray: false);
                 ReferenceXicIntensities = new DataField(COLUMN_REFERENCE_XIC_INTENSITIES, typeof(byte[]), isNullable: true, isArray: false);
                 ScoreIndex = includeScoreIndex ? new DataField<uint>(COLUMN_SCORE_INDEX) : null;
+                // A column for each recorded feature only: a feature scoring did not compute has
+                // none, rather than a column of zeros a reader could take for values.
                 Features = new DataField[NUM_PIN_FEATURES];
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                    Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+                {
+                    if (PinFeatureMask.IsRecorded(i))
+                        Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+                }
 
                 // Order matches Rust's pipeline.rs build of `write_scores_parquet_with_metadata`.
                 // Field order is informational only -- Parquet is name-indexed.
@@ -301,7 +306,7 @@ namespace pwiz.Osprey.IO
                 // informational. Only the reconciled write asks for it.
                 if (ScoreIndex != null)
                     fields.Add(ScoreIndex);
-                fields.AddRange(Features);
+                fields.AddRange(Features.Where(field => field != null));
                 Schema = new ParquetSchema(fields.ToArray());
             }
 
@@ -327,6 +332,7 @@ namespace pwiz.Osprey.IO
             public DataField ReferenceXicIntensities { get; }
             /// <summary>Null unless the write is a reconciled one; see <see cref="COLUMN_SCORE_INDEX"/>.</summary>
             public DataField ScoreIndex { get; }
+            /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureMask.IsRecorded"/>).</summary>
             public DataField[] Features { get; }
         }
 
@@ -561,9 +567,7 @@ namespace pwiz.Osprey.IO
                 var fragmentIntensities = new byte[count][];
                 var refXicRts = new byte[count][];
                 var refXicIntensities = new byte[count][];
-                var featureArrays = new double[NUM_PIN_FEATURES][];
-                for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                    featureArrays[f] = new double[count];
+                var featureArrays = NewFeatureArrays(fields, count);
 
                 for (int j = 0; j < count; j++)
                 {
@@ -697,9 +701,7 @@ namespace pwiz.Osprey.IO
             var fragmentIntensities = new byte[count][];
             var refXicRts = new byte[count][];
             var refXicIntensities = new byte[count][];
-            var featureArrays = new double[NUM_PIN_FEATURES][];
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                featureArrays[f] = new double[count];
+            var featureArrays = NewFeatureArrays(fields, count);
 
             for (int j = 0; j < count; j++)
             {
@@ -802,7 +804,10 @@ namespace pwiz.Osprey.IO
                 if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureArrays[f][j] = Finite(featureVec[f]);
+                    {
+                        if (featureArrays[f] != null)
+                            featureArrays[f][j] = Finite(featureVec[f]);
+                    }
                 }
                 // else: leave zeros (entries without features can't drive Stage 5+).
             }
@@ -857,8 +862,23 @@ namespace pwiz.Osprey.IO
             if (scoreIndices != null)
                 columns.Add(Column(fields.ScoreIndex, scoreIndices));
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                columns.Add(Column(fields.Features[f], featureArrays[f]));
+            {
+                if (fields.Features[f] != null)
+                    columns.Add(Column(fields.Features[f], featureArrays[f]));
+            }
             return columns;
+        }
+
+        /// <summary>One row group's value array for each recorded feature column, null for the rest.</summary>
+        private static double[][] NewFeatureArrays(WriteFields fields, int count)
+        {
+            var featureArrays = new double[NUM_PIN_FEATURES][];
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+            {
+                if (fields.Features[f] != null)
+                    featureArrays[f] = new double[count];
+            }
+            return featureArrays;
         }
 
         /// <summary>
@@ -1038,7 +1058,10 @@ namespace pwiz.Osprey.IO
             if (f == null)
             {
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                    arrays[i][row] = 0.0;
+                {
+                    if (arrays[i] != null)
+                        arrays[i][row] = 0.0;
+                }
                 return;
             }
 
@@ -2198,11 +2221,17 @@ namespace pwiz.Osprey.IO
                 if (entryIdCol == null || isDecoyCol == null)
                     return entries;
 
+                // The recorded features, which this process would write back; a feature it does
+                // not record stays 0 and is dropped on a rewrite. A file with no feature columns
+                // at all reads as zeros, as it always has.
                 var featureCols = new double[NUM_PIN_FEATURES][];
-                if (!scalarsOnly)
+                if (!scalarsOnly && fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]))
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                    {
+                        if (PinFeatureMask.IsRecorded(f))
+                            featureCols[f] = RequireFeatureColumn(groupReader, fieldsByName, f, path);
+                    }
                 }
 
                 int rowCount = entryIdCol.Length;
@@ -2258,8 +2287,8 @@ namespace pwiz.Osprey.IO
         /// Load the FDR classifier's feature vectors from a Parquet cache, one double[] per row.
         /// Each holds only the features <see cref="PinFeatureMask"/> leaves unmasked, in PIN order
         /// (<see cref="PinFeatureMask.FdrFeatureNames"/> names its positions): this is where the
-        /// mask is applied, so the parquet itself always holds every feature. A masked column is
-        /// not read at all.
+        /// mask is applied. A masked column is not read at all, and a file lacking an unmasked one
+        /// (scored under a narrower recorded set, <see cref="PinFeatureMask.IsRecorded"/>) is refused.
         /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
@@ -2287,7 +2316,7 @@ namespace pwiz.Osprey.IO
                             int f = featureIndices[i];
                             featureCols[i] = f == 0
                                 ? firstCol
-                                : ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                                : RequireFeatureColumn(groupReader, fieldsByName, f, path);
                         }
 
                         int rowCount = firstCol.Length;
@@ -2306,6 +2335,27 @@ namespace pwiz.Osprey.IO
             }
 
             return allFeatures;
+        }
+
+        /// <summary>
+        /// Read PIN feature <paramref name="featureIndex"/>'s column, which the caller needs, from a
+        /// file that holds features. A missing column means the run that scored the file did not
+        /// record that feature (<see cref="PinFeatureMask.IsRecorded"/>), so reading it as zeros
+        /// would hand the classifier or a rewrite values nothing computed: refused, naming the switch
+        /// that records it.
+        /// </summary>
+        private static double[] RequireFeatureColumn(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, int featureIndex, string path)
+        {
+            string name = PIN_FEATURE_NAMES[featureIndex];
+            var column = ReadColumnByName<double>(groupReader, fieldsByName, name);
+            if (column == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyIOResources.ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column,
+                    path, name, @"OSPREY_FEATURE_MASK", @"OSPREY_RECORD_ALL_FEATURES"));
+            }
+            return column;
         }
 
         #endregion

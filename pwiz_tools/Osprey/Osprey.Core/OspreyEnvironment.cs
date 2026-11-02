@@ -111,7 +111,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_NO_PREFILTER", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RECORD_ALL_FEATURES", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
@@ -737,11 +737,24 @@ namespace pwiz.Osprey.Core
         /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (left out of the
         /// vectors the FDR stage loads, so the classifier never sees them), as comma-separated feature
         /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
-        /// under evaluation, is masked. Scoring writes every feature either way, so arms that differ
-        /// only in the mask share their per-file scores. An unknown name stops the search at startup.
+        /// under evaluation, is masked. Scoring computes and records only the feature families the
+        /// mask leaves a feature of (and the 21 core features always), so arms share their per-file
+        /// scores only when they record the same families - see <see cref="RecordAllFeatures"/>.
+        /// An unknown name stops the search at startup.
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
+
+        /// <summary>
+        /// OSPREY_RECORD_ALL_FEATURES=1 (developer and research switch, not for release use): Stage 4
+        /// computes every PIN feature and records it in the scores parquet, whatever the mask hides
+        /// from the classifier. Unset, scoring computes only the features the FDR stage will read
+        /// (<c>PinFeatureMask.IsRecorded</c>), so a default search costs what it did before the
+        /// features under evaluation were added. Recording everything once lets a researcher compare
+        /// masks on the FDR stage alone. Keyed into the per-file scoring and rescoring validity keys
+        /// through the recorded-feature term, so a run that needs a feature its scores lack rescores.
+        /// </summary>
+        public static readonly bool RecordAllFeatures = ParseIntOrNull(@"OSPREY_RECORD_ALL_FEATURES") == 1;
 
         /// <summary>
         /// OSPREY_FDR_SEED (experiment): the Percolator seed in place of 42 (fold split, training subsample, GBDT

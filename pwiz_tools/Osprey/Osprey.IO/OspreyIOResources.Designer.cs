@@ -714,6 +714,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} has no {1} column: the run that scored it did not record that feature, which this run needs. Score the file again with this run&apos;s {2}, or set {3}=1 when scoring to record every feature..
+        /// </summary>
+        public static string ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Writing precursor candidate peaks.
         /// </summary>
         public static string ParquetScoreCache_static_Writing_precursor_candidate_peaks {

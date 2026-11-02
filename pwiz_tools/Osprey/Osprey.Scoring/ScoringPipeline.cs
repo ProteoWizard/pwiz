@@ -50,11 +50,17 @@ namespace pwiz.Osprey.Scoring
     {
         private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
+        private readonly bool[] _recordedFeatures;           // null computes every feature
 
-        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics)
+        /// <summary>
+        /// A pipeline that scores through a <see cref="CoelutionScorer"/> computing the PIN features
+        /// <paramref name="recordedFeatures"/> flags (see that constructor), or every feature when null.
+        /// </summary>
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
         {
             _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
+            _recordedFeatures = recordedFeatures;
         }
 
 
@@ -243,7 +249,7 @@ namespace pwiz.Osprey.Scoring
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when -d is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(_diagnostics);
+            var coelutionScorer = new CoelutionScorer(_diagnostics, _recordedFeatures);
 
             using (var progress = new ProgressReporter(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,

@@ -79,14 +79,16 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Build the <see cref="ScoringPipeline"/> the tasks score through, wired
-        /// to the run's log sink and (optional) diagnostics seam. Cheap: the
-        /// pipeline only carries those two references, so constructing one per
+        /// to the run's log sink and (optional) diagnostics seam, and computing only
+        /// the PIN features the scores parquet records (<see cref="PinFeatureMask.IsRecorded"/>).
+        /// Cheap: the pipeline only carries those references, so constructing one per
         /// scoring call matches the former per-call construction inside the base
         /// class forwarders exactly.
         /// </summary>
         internal static ScoringPipeline Pipeline(PipelineContext ctx)
         {
-            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics);
+            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics,
+                PinFeatureMask.RecordedFeatureFlags());
         }
 
         /// <summary>

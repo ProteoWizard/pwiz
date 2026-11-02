@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Test
@@ -59,6 +60,7 @@ namespace pwiz.Osprey.Test
         {
             AssertCleanPrecursor();
             AssertCosineReproducesTheScorer();
+            AssertSkippedFamiliesChangeNoOtherFeature();
             AssertInterferingSpike();
             AssertBoundaryValues();
             AssertSharedPeakClaimants();
@@ -137,19 +139,7 @@ namespace pwiz.Osprey.Test
         {
             var entry = Peptide(SEQUENCE, 2, 1);
             var window = Window(entry, spikeSlot: -1);
-            var config = Settings(false).SearchConfig;
-            var context = new ScoringContext(config, @"synthetic")
-            {
-                BoundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>
-                {
-                    { entry.Id, (RT0 + RT_STEP * APEX, RT0 + RT_STEP * FIRST, RT0 + RT_STEP * LAST) },
-                },
-            };
-            var scorer = context.Resolution.CreateScorer();
-            context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
-            var scored = new CoelutionScorer(null).ScoreWindow(new IsolationWindow(500.0, 2.0, 2.0),
-                new List<LibraryEntry> { entry }, new List<Spectrum>(window.Spectra), new List<MS1Spectrum>(),
-                null, MzCalibrationResult.Uncalibrated(), 5.0, 1.0, scorer, context).Single();
+            var scored = ScoreAtFixedBounds(entry, window, null, false);
             Assert.AreEqual(SCAN0 + APEX, scored.ScanNumber, @"the scorer's apex is the fixture's");
             Assert.IsTrue(scored.Features[15] > 0.99, @"the scorer fit the clean ladder");
 
@@ -158,6 +148,63 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(record.MpCosineParity);
             scored.Features[15] += 1e-9;
             Assert.IsFalse(Compute(entry, scored, window, null).MpCosineParity);
+        }
+
+        /// <summary>
+        /// Scoring computes only the recorded feature families (<see cref="PinFeatureMask.IsRecorded"/>),
+        /// which is safe only if skipping a family changes no other feature. Scored once computing
+        /// everything, then with the core features alone (the default) and with each family alone:
+        /// every computed feature is bit for bit the full scoring's, and every skipped one is 0.
+        /// </summary>
+        private static void AssertSkippedFamiliesChangeNoOtherFeature()
+        {
+            var entry = Peptide(SEQUENCE, 2, 1);
+            var window = Window(entry, spikeSlot: -1);
+            double[] full = ScoreAtFixedBounds(entry, window, null, true).Features;
+            int n = ParquetScoreCache.NUM_PIN_FEATURES;
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, n);
+            Assert.AreEqual(OspreyFeatureCalculators.CORE_FEATURE_COUNT, PinFeatureMask.CORE_FEATURE_COUNT);
+            var recordedSets = new List<bool[]> { PinFeatureMask.RecordedFeatures(f => true, false) };
+            foreach (string first in PinFeatureMask.FAMILY_FIRST_FEATURES)
+            {
+                int unmasked = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, first);
+                recordedSets.Add(PinFeatureMask.RecordedFeatures(f => f != unmasked, false));
+            }
+            foreach (var recorded in recordedSets)
+            {
+                double[] gated = ScoreAtFixedBounds(entry, window, recorded, true).Features;
+                for (int f = 0; f < n; f++)
+                {
+                    string name = ParquetScoreCache.PIN_FEATURE_NAMES[f];
+                    double expected = recorded[f] ? full[f] : 0.0;
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(gated[f]),
+                        string.Format(@"{0}: {1} gated, {2} expected", name, gated[f], expected));
+                }
+            }
+        }
+
+        /// <summary>
+        /// <paramref name="entry"/> scored by <see cref="CoelutionScorer"/> at the fixture's fixed
+        /// boundaries - the boundary override Stage 6 scores every reconciled row with - computing
+        /// the <paramref name="recordedFeatures"/> (all when null).
+        /// </summary>
+        private static FdrEntry ScoreAtFixedBounds(LibraryEntry entry, TrainingEvidenceWindow window,
+            bool[] recordedFeatures, bool overrideRunnerUpCandidates)
+        {
+            var config = Settings(false).SearchConfig;
+            var context = new ScoringContext(config, @"synthetic")
+            {
+                BoundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>
+                {
+                    { entry.Id, (RT0 + RT_STEP * APEX, RT0 + RT_STEP * FIRST, RT0 + RT_STEP * LAST) },
+                },
+                OverrideRunnerUpCandidates = overrideRunnerUpCandidates,
+            };
+            var scorer = context.Resolution.CreateScorer();
+            context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
+            return new CoelutionScorer(null, recordedFeatures).ScoreWindow(new IsolationWindow(500.0, 2.0, 2.0),
+                new List<LibraryEntry> { entry }, new List<Spectrum>(window.Spectra), new List<MS1Spectrum>(),
+                null, MzCalibrationResult.Uncalibrated(), 5.0, 1.0, scorer, context).Single();
         }
 
         /// <summary>

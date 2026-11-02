@@ -59,10 +59,24 @@ namespace pwiz.Osprey.Scoring
 
         private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
+        private readonly bool[] _recordedFeatures;   // null computes every feature
 
-        public CoelutionScorer(IScoringDiagnostics diagnostics)
+        /// <summary>
+        /// A scorer that computes every PIN feature, or, when <paramref name="recordedFeatures"/> is
+        /// given, only the features it flags beyond the first <see cref="OspreyFeatureCalculators.CORE_FEATURE_COUNT"/>,
+        /// which are always computed. An unflagged feature is left 0 in the vector and is not
+        /// written to the scores parquet (<c>PinFeatureMask.IsRecorded</c> decides both).
+        /// </summary>
+        public CoelutionScorer(IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
         {
+            if (recordedFeatures != null && recordedFeatures.Length != OspreyFeatureCalculators.FeatureCount)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new ArgumentException(string.Format(@"Expected {0} recorded-feature flags, not {1}",
+                    OspreyFeatureCalculators.FeatureCount, recordedFeatures.Length), nameof(recordedFeatures));
+            }
             _diagnostics = diagnostics;
+            _recordedFeatures = recordedFeatures;
             _extractor = new PeakDataExtractor(diagnostics);
         }
 
@@ -314,8 +328,13 @@ namespace pwiz.Osprey.Scoring
             features[18] = OspreyFeatureCalculators.Get(18).Calculate(ospreyContext, ospreyPeakData);
             features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
             features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
-            for (int f = 21; f < features.Length; f++)
-                features[f] = OspreyFeatureCalculators.Get(f).Calculate(ospreyContext, ospreyPeakData);
+            // The feature families: only those that are recorded. Each computes its own byproduct
+            // on first use, so skipping one changes no other feature's value.
+            for (int f = OspreyFeatureCalculators.CORE_FEATURE_COUNT; f < features.Length; f++)
+            {
+                if (_recordedFeatures == null || _recordedFeatures[f])
+                    features[f] = OspreyFeatureCalculators.Get(f).Calculate(ospreyContext, ospreyPeakData);
+            }
 
             // Median-polish bisection dump (after the feature vector so the four
             // values are available). Reads the polish + cropped inputs from the

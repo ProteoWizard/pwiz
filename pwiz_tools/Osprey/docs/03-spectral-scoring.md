@@ -290,9 +290,10 @@ EntryId for determinism). See `07-fdr-control.md` and `16-determinism.md`.
 
 ### B.7 The C#-only features (21-40), the feature mask and the XIC count
 
-Twenty features were added after the Rust port, in four families. Scoring always computes them
-and writes them to the `.scores.parquet`; the FDR classifier sees them only when
-`OSPREY_FEATURE_MASK` lets it. **By default all 20 are masked**, so a default search reports what
+Twenty features were added after the Rust port, in four families. The FDR classifier sees them
+only when `OSPREY_FEATURE_MASK` lets it, and scoring computes and writes a family to the
+`.scores.parquet` only when the mask leaves one of its features unmasked (or under the
+developer switch `OSPREY_RECORD_ALL_FEATURES=1`; see "What scoring records" below). **By default all 20 are masked**, so a default search reports what
 the 21 Rust features report, and every golden is unchanged. Turning them on is recommended for
 every kind of data measured so far (see "Which settings for which data" below); making that the
 default is a separate decision, because it moves every golden.
@@ -373,20 +374,53 @@ feature used to load as a column of zeros, which the classifier could not use bu
 see "Absent, not zero" below.) The feature names travel with the vectors
 (`PinFeatureMask.FdrFeatureNames`): the trained model records them
 (`PercolatorResults.FeatureNames`, the `FeatureNames` of `.1st-pass.model.json`), and a saved model
-whose names are not the run's FDR features loads as unusable. The parquet always holds every
-feature, so:
-- searches that differ only in the mask share their per-file scores. The mask is in the validity
-  keys of FirstPassFDR, PerFileRescoring and SecondPassFDR (`;featmask=default|none|<names>`) but
-  not of PerFileScoring, so pointing a new mask at existing scores re-runs only the FDR stages
-  (minutes on three runs, against the whole search). See `14-intermediate-files.md`. When a
+whose names are not the run's FDR features loads as unusable. The mask is not in PerFileScoring's
+key; what scoring records is (below), so:
+- searches that differ only in the mask share their per-file scores when they record the same
+  families. The mask is in the validity keys of FirstPassFDR, PerFileRescoring and SecondPassFDR
+  (`;featmask=default|none|<names>`), so pointing a new mask at scores that hold its features
+  re-runs only the FDR stages (minutes on three runs, against the whole search). See
+  `14-intermediate-files.md`. When a
   runner-up feature is unmasked, PerFileRescoring and SecondPassFDR also carry
   `;runnerup=override-candidates`, because only then does the override path find the first
   pass's candidates (above); under the default mask the term is empty and the detection is
   skipped. Pointing a mask that unmasks a runner-up feature at a default search's outputs
   therefore re-runs rescoring too.
 - the training export (`22-training-export.md`) and anything else reading the parquet see every
-  feature unmasked, except that under a mask hiding all three runner-up features, peaks rescored
-  at override bounds carry lone-candidate runner-up values.
+  recorded feature unmasked, except that under a mask hiding all three runner-up features, peaks
+  rescored at override bounds carry lone-candidate runner-up values.
+
+#### What scoring records (`OSPREY_RECORD_ALL_FEATURES`)
+
+Computing a feature nothing reads is a cost a released search should not pay, so Stage 4 computes
+only what the FDR path will read. The PIN features fall into the 21 **core** features (PIN 0-20)
+and **families** after them (`PinFeatureMask.FAMILY_FIRST_FEATURES`; a family runs to the next
+one's first feature). A family's features share one per-candidate computation - a byproduct
+cached on `OspreyScoringContext`, computed on first use - so recording one costs nearly what
+recording all of them does, and scoring computes or skips a family as a unit:
+- the core features are always computed and recorded, whatever the mask: the coelution sum is every
+  row's first-pass score (`FdrEntry.CoelutionSum`), and the median-polish dump and the training
+  export read core features directly;
+- a family is computed and recorded when the mask leaves any of its features unmasked
+  (`PinFeatureMask.IsRecorded`), so every feature the classifier reads is recorded;
+- `OSPREY_RECORD_ALL_FEATURES=1` records every family. **It is a developer and research switch,
+  not for release use**: it lets one scoring of a dataset serve every mask arm, at the cost of
+  computing and storing features a default search never reads.
+
+Under the default mask that is the core alone, so a default search costs and writes what the
+21-feature engine did. A skipped feature stays 0 in the in-memory vector (`CoelutionScorer`,
+handed the flags by `ScoringTaskShared.Pipeline`), and the parquet has **no column** for it rather
+than a column of zeros. That keeps the file small and makes a missing feature detectable: a reader
+that needs a column the file lacks - the FDR load, or the full-row read Stage 6 rewrites into the
+reconciled parquet - refuses the file, naming the column and the switch, instead of reading zeros.
+Skipping a family changes no other feature's value (`TrainingEvidenceTest` scores with each family
+alone and compares against scoring everything, bit for bit).
+
+The recorded set is keyed into PerFileScoring and PerFileRescoring (`;featrec=`: empty for the core
+alone, `all` for every family, else the recorded families' first features), so a resume under a
+mask that unmasks a family the scores lack rescores rather than adopting them.
+`OSPREY_FEATURE_MASK=none` and `OSPREY_RECORD_ALL_FEATURES=1` record the same set and share their
+scores.
 
 **Absent, not zero.** A zero column and an absent one train the same model in exact arithmetic -
 the standardizer gives a constant column scale 1 and value 0, and the SVM's dual coordinate
@@ -523,7 +557,8 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
 | `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
 | `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key. 6 for unit resolution, 12 for HRAM with GBDT (B.7). |
-| `OSPREY_FEATURE_MASK` (env) | unset = features 21-40 masked | PIN features the FDR classifier must not use (comma-separated names, or `none`). Applied when the FDR stage loads features, so it does not change the scores parquet; in the FDR tasks' validity keys. `none` recommended on every dataset measured (B.7). |
+| `OSPREY_FEATURE_MASK` (env) | unset = features 21-40 masked | PIN features the FDR classifier must not use (comma-separated names, or `none`). Applied when the FDR stage loads features; also decides which feature families scoring computes and records. In the FDR tasks' validity keys. `none` recommended on every dataset measured (B.7). |
+| `OSPREY_RECORD_ALL_FEATURES=1` (env) | unset = record what the mask needs | Developer and research switch: compute and record every PIN feature, so arms that differ only in the mask can share one scoring. In the PerFileScoring and PerFileRescoring validity keys (`;featrec=all`). Not for release use (B.7, "What scoring records"). |
 
 Diagnostic env vars for this stage (shared with Rust for cross-impl bisection):
 
