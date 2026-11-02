@@ -138,16 +138,10 @@ namespace pwiz.Osprey.Scoring
         private static double[][] TopTraces(IReadOnlyList<XicData> xics, int[] rankedFragments)
         {
             var traces = new List<double[]>();
-            foreach (int fragmentIndex in rankedFragments)
+            foreach (int xicIndex in TopFragments.XicIndices(xics, rankedFragments))
             {
-                foreach (var xic in xics)
-                {
-                    if (xic.FragmentIndex == fragmentIndex)
-                    {
-                        traces.Add(xic.Intensities);
-                        break;
-                    }
-                }
+                if (xicIndex >= 0)
+                    traces.Add(xics[xicIndex].Intensities);
             }
             return traces.ToArray();
         }
@@ -225,6 +219,8 @@ namespace pwiz.Osprey.Scoring
                 }
                 else
                 {
+                    // All top-6 traces, flagged or not: DIA-NN's get_corr_matrix covers every fragment here, and
+                    // the flags only decide between this branch and the two-fragment one.
                     count = RankByCorrelationSum(start, end);
                 }
 

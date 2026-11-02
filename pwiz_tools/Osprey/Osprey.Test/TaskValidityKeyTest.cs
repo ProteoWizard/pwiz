@@ -614,21 +614,25 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(PinFeatureMask.UsesRunnerUpFeatures(f => f != margin),
                 @"any one runner-up feature unmasked must run the override-path detection");
 
-            // The FDR-stage feature switches change what the classifier trains on, so each keys differently too.
-            var log = new[] { @"explained_intensity" };
-            var clip = new[] { @"explained_intensity:0.1" };
-            var featureKeys = new[]
+            // The FDR classifier switches change the draw or the positives the classifier trains on, so each
+            // keys differently too.
+            var classifierKeys = new[]
             {
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, null, null),
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(log, null, null, null),
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, clip, null, null),
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, @"width", null),
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, @"scalefree", null),
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, null, 7),
-                OspreyEnvironment.FdrFeatureValidityKeySuffix(null, null, null, 42),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(null, null),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(7, null),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(42, null),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(null, 0.01),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(null, 1.0),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(7, 1.0),
             };
-            Assert.AreEqual(string.Empty, featureKeys[0], @"unset switches must not change existing keys");
-            Assert.AreEqual(featureKeys.Length, featureKeys.Distinct().Count(), @"every switch must key differently");
+            Assert.AreEqual(string.Empty, classifierKeys[0], @"unset switches must not change existing keys");
+            Assert.AreEqual(classifierKeys.Length, classifierKeys.Distinct().Count(), @"every switch must key differently");
+
+            // OSPREY_FDR_TRAIN_FDR accepts only a q-value in (0, 1]; anything else stops the search at startup.
+            Assert.AreEqual(0.05, OspreyEnvironment.ParseFdrTrainFdr(@"0.05"));
+            Assert.AreEqual(1.0, OspreyEnvironment.ParseFdrTrainFdr(@"1"));
+            foreach (string rejected in new[] { @"0", @"-0.1", @"1.5", @"5%", @"0,05", @"NaN", @"" })
+                Assert.IsNull(OspreyEnvironment.ParseFdrTrainFdr(rejected), rejected);
         }
 
         /// <summary>

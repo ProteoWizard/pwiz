@@ -99,7 +99,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FEATURE_CLIP", @"OSPREY_FDR_FEATURE_LOG", @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_SHARPNESS", @"OSPREY_FDR_TRAIN_FDR", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_TRAIN_FDR", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
@@ -744,42 +744,26 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
 
         /// <summary>
-        /// OSPREY_FDR_FEATURE_LOG (experiment): scoring features the FDR stages read back through
-        /// sign(v) * ln(1 + 1000 * |v|), as comma-separated feature names. A heavy-tailed feature
-        /// (explained_intensity: mean 0.003, SD 0.01, clean peaks at 0.2) otherwise reaches a linear
-        /// model 20 SD out, where a weight learned on the bulk of the data decides the score alone.
-        /// Null when unset. An unknown name stops the search when the FDR stage starts.
-        /// </summary>
-        public static readonly string[] FdrFeatureLog = ParseFeatureMask(
-            Environment.GetEnvironmentVariable(@"OSPREY_FDR_FEATURE_LOG"));
-
-        /// <summary>
-        /// OSPREY_FDR_FEATURE_CLIP (experiment): name:max pairs, comma-separated; the FDR stages read each named
-        /// feature capped at max, so a heavy tail stops growing a linear score. Null when unset.
-        /// </summary>
-        public static readonly string[] FdrFeatureClip = ParseFeatureMask(
-            Environment.GetEnvironmentVariable(@"OSPREY_FDR_FEATURE_CLIP"));
-
-        /// <summary>
-        /// OSPREY_FDR_SHARPNESS (experiment): <c>width</c> or <c>scalefree</c> replaces peak_sharpness as the FDR
-        /// stages read it, with the peak width or the edge slope divided by the apex. Null when unset.
-        /// </summary>
-        public static readonly string FdrSharpness = Environment.GetEnvironmentVariable(@"OSPREY_FDR_SHARPNESS");
-
-        /// <summary>
         /// OSPREY_FDR_SEED (experiment): the Percolator seed in place of 42 (fold split, training subsample, GBDT
         /// row and column sampling), to measure how much a feature-set comparison owes to the draw. Null when unset.
         /// </summary>
         public static readonly ulong? FdrSeed = ulong.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_SEED"),
             NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) ? seed : null;
 
+        /// <summary>OSPREY_FDR_TRAIN_FDR exactly as set, or null when unset.</summary>
+        public static readonly string FdrTrainFdrSetting = Environment.GetEnvironmentVariable(@"OSPREY_FDR_TRAIN_FDR");
+
+        /// <summary>True when OSPREY_FDR_TRAIN_FDR is set to anything but a number in (0, 1]. Program startup
+        /// aborts on this rather than training under the default and keying the directories as the default.</summary>
+        public static readonly bool FdrTrainFdrUnrecognized =
+            !string.IsNullOrEmpty(FdrTrainFdrSetting) && !ParseFdrTrainFdr(FdrTrainFdrSetting).HasValue;
+
         /// <summary>
         /// OSPREY_FDR_TRAIN_FDR (experiment): the q-value under which Percolator takes targets as positives, in
         /// place of 0.01. 1 trains on every target against the decoys, as DIA-NN 1.7.12's neural network does.
-        /// Not keyed: run each value into its own output directory. Null when unset.
+        /// Keyed into the FDR validity keys when set. Null when unset or not a number in (0, 1].
         /// </summary>
-        public static readonly double? FdrTrainFdr = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_TRAIN_FDR"),
-            NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ? trainFdr : null;
+        public static readonly double? FdrTrainFdr = ParseFdrTrainFdr(FdrTrainFdrSetting);
 
         /// <summary>
         /// OSPREY_NO_PREFILTER=1 (experiment): turns off the coelution signal pre-filter, as --no-prefilter does, for
@@ -1335,12 +1319,12 @@ namespace pwiz.Osprey.Core
         /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
         /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
         /// every FDR output after it. Empty when both are unset, so default outputs keep their key.
-        /// The FDR-stage feature switches follow (<see cref="FdrFeatureValidityKeySuffix(string[], string[], string, ulong?)"/>).
+        /// The FDR classifier switches follow (<see cref="FdrClassifierValidityKeySuffix(ulong?, double?)"/>).
         /// </summary>
         public static string FdrExperimentValidityKeySuffix()
         {
             return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm)
-                   + FdrFeatureValidityKeySuffix(FdrFeatureLog, FdrFeatureClip, FdrSharpness, FdrSeed);
+                   + FdrClassifierValidityKeySuffix(FdrSeed, FdrTrainFdr);
         }
 
         /// <summary>
@@ -1358,24 +1342,18 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Validity-key suffix for the FDR-stage feature switches <see cref="FdrFeatureLog"/>,
-        /// <see cref="FdrFeatureClip"/>, <see cref="FdrSharpness"/> and <see cref="FdrSeed"/>: each
-        /// changes the features or the draw the classifier trains on, and so every FDR output. A
-        /// switch emits nothing when unset, so default outputs keep their key. Names are kept in the
-        /// order given, so a reordered list only costs a re-run.
+        /// Validity-key suffix for the FDR classifier switches <see cref="FdrSeed"/> and
+        /// <see cref="FdrTrainFdr"/>: each changes the draw or the positives the classifier trains
+        /// on, and so every FDR output. A switch emits nothing when unset, so default outputs keep
+        /// their key.
         /// </summary>
-        public static string FdrFeatureValidityKeySuffix(string[] featureLog, string[] featureClip,
-            string sharpness, ulong? seed)
+        public static string FdrClassifierValidityKeySuffix(ulong? seed, double? trainFdr)
         {
             string suffix = string.Empty;
-            if (featureLog != null)
-                suffix += @";fdrlog=" + string.Join(@"+", featureLog);
-            if (featureClip != null)
-                suffix += @";fdrclip=" + string.Join(@"+", featureClip);
-            if (sharpness != null)
-                suffix += @";fdrsharp=" + sharpness;
             if (seed.HasValue)
                 suffix += @";fdrseed=" + seed.Value.ToString(CultureInfo.InvariantCulture);
+            if (trainFdr.HasValue)
+                suffix += @";fdrtrain=" + trainFdr.Value.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
         }
 
@@ -1599,6 +1577,22 @@ namespace pwiz.Osprey.Core
             // -0 passes the range check but formats as "-0" in the validity key on .NET Core, so
             // it would key apart from the 0 it selects.
             return tolerance == 0 ? 0 : tolerance;
+        }
+
+        /// <summary>
+        /// An OSPREY_FDR_TRAIN_FDR value as a number in (0, 1] (invariant culture), or null when it is
+        /// unset, unparseable or out of range - the null that <see cref="FdrTrainFdrUnrecognized"/>
+        /// reports for a set variable. Internal so a test can pin what is accepted.
+        /// </summary>
+        internal static double? ParseFdrTrainFdr(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) ||
+                !double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ||
+                !(trainFdr > 0 && trainFdr <= 1))
+            {
+                return null;
+            }
+            return trainFdr;
         }
 
         private static bool IsSet(string name)

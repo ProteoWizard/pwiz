@@ -178,12 +178,6 @@ namespace pwiz.Osprey.IO
 
         public const int NUM_PIN_FEATURES = 97;
 
-        /// <summary>
-        /// Features the FDR stages read log-compressed (OSPREY_FDR_FEATURE_LOG), by PIN index. Built after
-        /// <see cref="PIN_FEATURE_NAMES"/>, which it looks names up in.
-        /// </summary>
-        private static readonly bool[] FDR_LOG_FEATURES = CreateFeatureFlags(OspreyEnvironment.FdrFeatureLog, @"OSPREY_FDR_FEATURE_LOG");
-
         #endregion
 
         #region Schema Fields
@@ -1179,98 +1173,6 @@ namespace pwiz.Osprey.IO
             var values = new T[RowCount(groupReader)];
             RunSync(groupReader.ReadAsync(field, values.AsMemory()));
             return values;
-        }
-
-        // Read PIN feature column f for the FDR stages, with the OSPREY_FDR_FEATURE_LOG, OSPREY_FDR_FEATURE_CLIP
-        // and OSPREY_FDR_SHARPNESS transforms applied when they name the feature, or null if the column is
-        // absent like any other column.
-        private static double[] ReadFeatureColumn(ParquetRowGroupReader groupReader,
-            IReadOnlyDictionary<string, DataField> fieldsByName, int f)
-        {
-            var values = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
-            if (values != null && FDR_LOG_FEATURES[f])
-            {
-                for (int i = 0; i < values.Length; i++)
-                    values[i] = LogCompress(values[i]);
-            }
-            if (values != null && !double.IsNaN(FDR_CLIP_FEATURES[f]))
-            {
-                for (int i = 0; i < values.Length; i++)
-                    values[i] = Math.Min(values[i], FDR_CLIP_FEATURES[f]);
-            }
-            if (values != null && f == PEAK_SHARPNESS_FEATURE && OspreyEnvironment.FdrSharpness != null)
-                ReplaceSharpness(groupReader, fieldsByName, values);
-            return values;
-        }
-
-        private const int PEAK_APEX_FEATURE = 3;
-        private const int PEAK_SHARPNESS_FEATURE = 5;
-
-        // OSPREY_FDR_SHARPNESS: width = end_rt - start_rt; scalefree = edge slope / apex, recovered from the stored
-        // log10(x + 1) of both, so a sharp weak peak and a sharp strong peak read the same.
-        private static void ReplaceSharpness(ParquetRowGroupReader groupReader,
-            IReadOnlyDictionary<string, DataField> fieldsByName, double[] values)
-        {
-            if (OspreyEnvironment.FdrSharpness == @"width")
-            {
-                var start = ReadColumnByName<double>(groupReader, fieldsByName, @"start_rt");
-                var end = ReadColumnByName<double>(groupReader, fieldsByName, @"end_rt");
-                for (int i = 0; i < values.Length; i++)
-                    values[i] = end[i] - start[i];
-                return;
-            }
-            var apex = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[PEAK_APEX_FEATURE]);
-            for (int i = 0; i < values.Length; i++)
-            {
-                double apexLinear = Math.Pow(10, apex[i]) - 1;
-                values[i] = apexLinear > 0 ? (Math.Pow(10, values[i]) - 1) / apexLinear : 0;
-            }
-        }
-
-        private static readonly double[] FDR_CLIP_FEATURES = CreateFdrClip(OspreyEnvironment.FdrFeatureClip);
-
-        private static double[] CreateFdrClip(string[] clips)
-        {
-            var limits = Enumerable.Repeat(double.NaN, NUM_PIN_FEATURES).ToArray();
-            if (clips == null)
-                return limits;
-            foreach (string clip in clips)
-            {
-                var parts = clip.Split(':');
-                int index = Array.IndexOf(PIN_FEATURE_NAMES, parts[0]);
-                if (parts.Length != 2 || index < 0)
-                    throw new InvalidOperationException(string.Format(@"OSPREY_FDR_FEATURE_CLIP: bad entry {0}", clip));
-                limits[index] = double.Parse(parts[1], CultureInfo.InvariantCulture);
-            }
-            return limits;
-        }
-
-        // sign(v) * ln(1 + 1000|v|): monotone, so feature order is kept, but a 20-SD tail becomes a few SD.
-        internal static double LogCompress(double v)
-        {
-            return Math.Sign(v) * Math.Log(1.0 + 1000.0 * Math.Abs(v));
-        }
-
-        /// <summary>
-        /// One flag per PIN feature, set for each of <paramref name="names"/>; none set when it is null.
-        /// An unknown name throws, naming <paramref name="variable"/>, the setting that listed it.
-        /// </summary>
-        internal static bool[] CreateFeatureFlags(string[] names, string variable)
-        {
-            var flags = new bool[NUM_PIN_FEATURES];
-            if (names == null)
-                return flags;
-            foreach (string name in names)
-            {
-                int index = Array.IndexOf(PIN_FEATURE_NAMES, name);
-                if (index < 0)
-                {
-                    throw new InvalidOperationException(
-                        string.Format(@"{0} names an unknown feature: {1}", variable, name));
-                }
-                flags[index] = true;
-            }
-            return flags;
         }
 
         private static string[] ReadStringColumnByName(ParquetRowGroupReader groupReader,
@@ -2300,7 +2202,7 @@ namespace pwiz.Osprey.IO
                 if (!scalarsOnly)
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureCols[f] = ReadFeatureColumn(groupReader, fieldsByName, f);
+                        featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
                 }
 
                 int rowCount = entryIdCol.Length;
@@ -2374,7 +2276,7 @@ namespace pwiz.Osprey.IO
                         var featureCols = new double[NUM_PIN_FEATURES][];
                         for (int f = 0; f < NUM_PIN_FEATURES; f++)
                         {
-                            featureCols[f] = ReadFeatureColumn(groupReader, fieldsByName, f);
+                            featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
                         }
 
                         if (featureCols[0] == null)

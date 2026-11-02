@@ -92,7 +92,9 @@ namespace pwiz.Osprey.Scoring
             if (elution == null || tolerance == null)
                 return result;
 
-            // The window spectra, one per window scan: XIC index i is apex offset i - ApexIndex.
+            // The window spectra, one per window scan: XIC index i is apex offset i - ApexIndex. The offset is
+            // taken from the unclamped ApexIndex because TryGetApexOffsetSpectrum counts from that same index;
+            // WindowStart is an absolute XIC index, whichever apex placed it.
             int n = elution.Length;
             var spectra = new Spectrum[n];
             int firstOffset = timeCorr.WindowStart - peakData.PeakBounds.ApexIndex;

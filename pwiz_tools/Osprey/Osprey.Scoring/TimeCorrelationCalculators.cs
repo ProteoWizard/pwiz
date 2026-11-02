@@ -19,8 +19,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -97,7 +95,7 @@ namespace pwiz.Osprey.Scoring
             if (end - start < 2)
                 return result;
 
-            var elution = Smooth(xics[ChooseReference(xics, start, end)].Intensities, start, end);
+            var elution = Smooth(xics[ReferenceCorrelations.ChooseReference(xics, start, end)].Intensities, start, end);
             int[] ranked = FragmentMath.TopIndicesByIntensity(fragments, Math.Min(RANK_COUNT, fragments.Count));
             result.WindowStart = start;
             result.HalfScans = halfScans;
@@ -135,30 +133,6 @@ namespace pwiz.Osprey.Scoring
             if (spacing <= 0)
                 return 2;
             return Math.Max(2, (int) Math.Round(halfWindowMinutes / spacing));
-        }
-
-        // The XIC with the highest summed correlation to the others over the window; ties go to the first.
-        private static int ChooseReference(IReadOnlyList<XicData> xics, int start, int end)
-        {
-            var sums = new double[xics.Count];
-            for (int i = 0; i < xics.Count; i++)
-            {
-                for (int j = i + 1; j < xics.Count; j++)
-                {
-                    double corr = ScoringMath.PearsonCorrelationInRange(xics[i].Intensities, xics[j].Intensities, start, end);
-                    if (double.IsNaN(corr))
-                        continue;
-                    sums[i] += corr;
-                    sums[j] += corr;
-                }
-            }
-            int best = 0;
-            for (int i = 1; i < sums.Length; i++)
-            {
-                if (sums[i] > sums[best])
-                    best = i;
-            }
-            return best;
         }
 
         // DIA-NN's smooth(): weights 1/4, 1/2, 1/4 inside, 2/3 and 1/3 at the ends.

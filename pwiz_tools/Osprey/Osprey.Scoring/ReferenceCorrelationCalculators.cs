@@ -103,7 +103,7 @@ namespace pwiz.Osprey.Scoring
             if (xics.Count < 2)
                 return result;
 
-            int reference = ChooseReference(xics, peak);
+            int reference = ChooseReference(xics, peak.StartIndex, peak.EndIndex);
             result.ReferenceIndex = reference;
             result.SortedCorrelations = SortedCorrelationsWith(xics, reference, peak, x => x);
             result.SortedMinFilteredCorrelations = SortedCorrelationsWith(xics, reference, peak, RunningMinimum);
@@ -124,16 +124,17 @@ namespace pwiz.Osprey.Scoring
             return Math.Log10(1.0 + Math.Max(0.0, sum - top));
         }
 
-        // The fragment with the highest summed correlation to the others over the peak; ties go to the first.
-        private static int ChooseReference(IReadOnlyList<XicData> xics, XICPeakBounds peak)
+        /// <summary>
+        /// The XIC with the highest summed correlation to the others over [start, end]; ties go to the first.
+        /// </summary>
+        internal static int ChooseReference(IReadOnlyList<XicData> xics, int start, int end)
         {
             var sums = new double[xics.Count];
             for (int i = 0; i < xics.Count; i++)
             {
                 for (int j = i + 1; j < xics.Count; j++)
                 {
-                    double corr = ScoringMath.PearsonCorrelationInRange(
-                        xics[i].Intensities, xics[j].Intensities, peak.StartIndex, peak.EndIndex);
+                    double corr = ScoringMath.PearsonCorrelationInRange(xics[i].Intensities, xics[j].Intensities, start, end);
                     if (double.IsNaN(corr))
                         continue;
                     sums[i] += corr;
