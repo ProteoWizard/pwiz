@@ -167,6 +167,7 @@ namespace pwiz.Osprey
                 // wipe the per-file outputs that <see cref="PerFileScoringTask"/>
                 // relies on for its within-task per-file skip.
                 ((PipelineContext)ctx).LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
+                WarnOtherBuildOutputs(task, ctx);
             }
 
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
@@ -207,6 +208,38 @@ namespace pwiz.Osprey
                 }
                 // Last: the developer stop ends the run between this task and the next.
                 TaskBudget.TaskDone(task.Name, ctx.ExitCode);
+            }
+
+            /// <summary>
+            /// Say so when this task is about to recompute outputs another build of Osprey wrote.
+            /// A stamp from another build is never current, so a resume the day after a run
+            /// started re-runs every stage, which is hours at cohort scale, and nothing said why.
+            /// An operator who meant to reuse those outputs needs both versions and the variable
+            /// that pins this build to the older one.
+            /// </summary>
+            private static void WarnOtherBuildOutputs(PipelineTask task, TaskContext ctx)
+            {
+                int outputCount = 0;
+                int otherBuildCount = 0;
+                string otherVersion = null;
+                foreach (string output in task.Outputs(ctx))
+                {
+                    outputCount++;
+                    var stamp = ctx.ReadStamp(output);
+                    if (stamp == null ||
+                        !string.Equals(stamp.Task, task.Name, StringComparison.Ordinal) ||
+                        string.Equals(stamp.Version, ctx.Version, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+                    otherBuildCount++;
+                    otherVersion ??= stamp.Version;
+                }
+                if (otherBuildCount == 0)
+                    return;
+                ctx.LogWarning(string.Format(
+                    OspreyResources.AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__,
+                    task.Name, otherBuildCount, outputCount, otherVersion, ctx.Version, OspreyVersion.ENV_OVERRIDE));
             }
         }
 

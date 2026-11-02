@@ -151,6 +151,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}: {1} of its {2} output files were written by Osprey {3}, not by this build ({4}), and will be recomputed. To reuse them instead, run with {5}={3}..
+        /// </summary>
+        public static string AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__ {
+            get {
+                return ResourceManager.GetString("AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Searching the predicted library {0}.
         /// </summary>
         public static string LibraryBuildWorkflow_Run_Searching_the_predicted_library__0_ {
