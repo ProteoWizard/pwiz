@@ -216,30 +216,39 @@ namespace pwiz.Osprey
             /// started re-runs every stage, which is hours at cohort scale, and nothing said why.
             /// An operator who meant to reuse those outputs needs both versions and the variable
             /// that pins this build to the older one.
+            ///
+            /// <para>Only outputs the pin would make current are counted: this task's stamp with
+            /// this run's key, under another version. An output whose key also differs recomputes
+            /// whatever the version, and advising a pin for it would only stamp the recomputed
+            /// file with a version that did not write it. One line per earlier version, since a
+            /// pin reuses only the outputs of the version it names.</para>
             /// </summary>
             private static void WarnOtherBuildOutputs(PipelineTask task, TaskContext ctx)
             {
+                string key = task.ValidityKey(ctx);
                 int outputCount = 0;
-                int otherBuildCount = 0;
-                string otherVersion = null;
+                var countsByVersion = new Dictionary<string, int>();
+                var versions = new List<string>();
                 foreach (string output in task.Outputs(ctx))
                 {
                     outputCount++;
                     var stamp = ctx.ReadStamp(output);
                     if (stamp == null ||
-                        !string.Equals(stamp.Task, task.Name, StringComparison.Ordinal) ||
-                        string.Equals(stamp.Version, ctx.Version, StringComparison.Ordinal))
+                        string.Equals(stamp.Version, ctx.Version, StringComparison.Ordinal) ||
+                        !stamp.IsCurrent(task.Name, stamp.Version, task.OutputValidityKey(ctx, key, output)))
                     {
                         continue;
                     }
-                    otherBuildCount++;
-                    otherVersion ??= stamp.Version;
+                    if (!countsByVersion.TryGetValue(stamp.Version, out int count))
+                        versions.Add(stamp.Version);
+                    countsByVersion[stamp.Version] = count + 1;
                 }
-                if (otherBuildCount == 0)
-                    return;
-                ctx.LogWarning(string.Format(
-                    OspreyResources.AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__,
-                    task.Name, otherBuildCount, outputCount, otherVersion, ctx.Version, OspreyVersion.ENV_OVERRIDE));
+                foreach (string version in versions)
+                {
+                    ctx.LogWarning(string.Format(
+                        OspreyResources.AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__,
+                        task.Name, countsByVersion[version], outputCount, version, ctx.Version, OspreyVersion.ENV_OVERRIDE));
+                }
             }
         }
 
