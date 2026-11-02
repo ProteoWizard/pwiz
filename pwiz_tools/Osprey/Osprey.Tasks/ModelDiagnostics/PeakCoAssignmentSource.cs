@@ -231,6 +231,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     // library, i.e. ~79 GB at the 500-file target.
                     builder.SealRunCutoff(fileIdx);
                 }
+                scanProgress.Complete();
             }
             // Also reported: SealCutoffs walks the whole experiment population in score order to
             // find where this pass's own count reaches the target FDR, which is the other half of
@@ -293,6 +294,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     totalDetected += detected;
                     builder.FlushFile(f);
                 }
+                progress.Complete();
             }
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-end");
             if (tally != null)

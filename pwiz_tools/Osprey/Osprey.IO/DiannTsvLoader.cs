@@ -121,13 +121,13 @@ namespace pwiz.Osprey.IO
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 1))
             {
-                // NOT a using: this reporter measures the READ, which finishes partway through
-                // ParseReader. Disposing it with the stack would force its 100% out after phase 2
-                // and after the interning summary - a completion line for a phase that ended
-                // minutes earlier. ParseReader disposes it when the stream is exhausted.
-                var readProgress = new ProgressReporter(
+                // This reporter measures the READ, which finishes partway through ParseReader, so
+                // ParseReader completes it when the stream is exhausted rather than at the end of
+                // this scope - after phase 2 and the interning summary, a completion line for a
+                // phase that ended minutes earlier.
+                using (var readProgress = new ProgressReporter(
                     string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 using (var progressStream = new ProgressStream(stream, readProgress))
                 // leaveOpen so ownership of progressStream is explicit rather than resting on
                 // ProgressStream declining to override Dispose (it does not own the inner stream).
@@ -147,12 +147,12 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but disposes
+        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but completes
         /// <paramref name="readProgress"/> when the READ finishes rather than when the caller's
         /// scope ends - the row loop below is only the first half of this method.
         /// </summary>
         private List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo,
-            IDisposable readProgress)
+            ProgressReporter readProgress)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -179,7 +179,7 @@ namespace pwiz.Osprey.IO
                 ParseRow(fields, cols, lineNum, precursorMap, errors);
             }
             // Stream exhausted: the byte progress is complete and must say so HERE.
-            readProgress?.Dispose();
+            readProgress?.Complete();
 
             // A library with any invalid line is refused whole, after every line has been read, so
             // one run names every line to fix. Searching with a value guessed for a bad cell
@@ -198,52 +198,52 @@ namespace pwiz.Osprey.IO
             uint id = 0;
 
             // Phase 2. The byte progress above ends when the stream is exhausted, so without this
-            // the console sat at 100% through the whole materialization pass. Constructed rather
-            // than `using`d so the loop needs no re-indent and so an exception here does not print
-            // a completed-looking 100% while unwinding.
-            var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
-            long nBuilt = 0;
-
-            foreach (var data in precursorMap.Values)
+            // the console sat at 100% through the whole materialization pass.
+            using (var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                progress.Report(++nBuilt);
-                if (data.Fragments.Count < _minFragments)
-                    continue;
+                long nBuilt = 0;
 
-                // Checked here, after the min-fragment filter, so a row that is not going
-                // into the library at all cannot fail the run.
-                LibraryValidation.ValidatePeptideLength(data.Sequence);
+                foreach (var data in precursorMap.Values)
+                {
+                    progress.Report(++nBuilt);
+                    if (data.Fragments.Count < _minFragments)
+                        continue;
 
-                var modifications = BuildInternedModifications(data.Modifications, interner);
+                    // Checked here, after the min-fragment filter, so a row that is not going
+                    // into the library at all cannot fail the run.
+                    LibraryValidation.ValidatePeptideLength(data.Sequence);
 
-                // The modified sequence in the one text every loader gives it, built from the
-                // modification masses as the blib writer builds it (C[+57.0215], not
-                // C[UniMod:4]), so an entry reads the same from a .tsv and from its .blib.
-                var entry = new LibraryEntry(id,
-                    interner.Intern(data.Sequence),
-                    interner.Intern(BlibSpectrum.FormatModifiedSequence(data.Sequence,
-                        PeptideFragmentMass.ModMassesByPosition(modifications))),
-                    data.Charge, data.PrecursorMz, data.RetentionTime);
-                entry.Modifications = modifications;
-                // In m/z order, as a .blib stores peaks and the blib loader reads them, so the
-                // library is the same object whichever file it came from: the order of an entry's
-                // fragments reaches the search (the top-fragment selection returns a short entry
-                // in it), and a .tsv's row order is the writer's, not a property of the library.
-                // Then one peak per m/z, as a spectrum has (FragmentPeaks).
-                var fragments = FragmentPeaks.MergeEqualMz(data.Fragments.OrderBy(f => f.Mz).ToArray());
-                if (_fragmentTolerance != null)
-                    ApplyTyping(entry, fragments, _fragmentTolerance, TypeCheck);
-                entry.Fragments = fragments;
-                entry.ProteinIds = interner.InternToArray(data.ProteinIds);
-                entry.GeneNames = interner.InternToArray(data.GeneNames);
-                entry.IsDecoy = data.IsDecoy;
+                    var modifications = BuildInternedModifications(data.Modifications, interner);
 
-                entries.Add(entry);
-                id++;
+                    // The modified sequence in the one text every loader gives it, built from the
+                    // modification masses as the blib writer builds it (C[+57.0215], not
+                    // C[UniMod:4]), so an entry reads the same from a .tsv and from its .blib.
+                    var entry = new LibraryEntry(id,
+                        interner.Intern(data.Sequence),
+                        interner.Intern(BlibSpectrum.FormatModifiedSequence(data.Sequence,
+                            PeptideFragmentMass.ModMassesByPosition(modifications))),
+                        data.Charge, data.PrecursorMz, data.RetentionTime);
+                    entry.Modifications = modifications;
+                    // In m/z order, as a .blib stores peaks and the blib loader reads them, so the
+                    // library is the same object whichever file it came from: the order of an entry's
+                    // fragments reaches the search (the top-fragment selection returns a short entry
+                    // in it), and a .tsv's row order is the writer's, not a property of the library.
+                    // Then one peak per m/z, as a spectrum has (FragmentPeaks).
+                    var fragments = FragmentPeaks.MergeEqualMz(data.Fragments.OrderBy(f => f.Mz).ToArray());
+                    if (_fragmentTolerance != null)
+                        ApplyTyping(entry, fragments, _fragmentTolerance, TypeCheck);
+                    entry.Fragments = fragments;
+                    entry.ProteinIds = interner.InternToArray(data.ProteinIds);
+                    entry.GeneNames = interner.InternToArray(data.GeneNames);
+                    entry.IsDecoy = data.IsDecoy;
+
+                    entries.Add(entry);
+                    id++;
+                }
+
+                progress.Complete();
             }
-
-            progress.Dispose();
             interner.LogSummary(logInfo);
             return entries;
         }

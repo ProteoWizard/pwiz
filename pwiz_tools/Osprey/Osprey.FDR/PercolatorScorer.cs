@@ -221,6 +221,7 @@ namespace pwiz.Osprey.FDR
                         contribAcc.Add(share.ToFeatureSums());
                     scoreProgress.Report(gi);
                 }
+                scoreProgress.Complete();
             }
 
             var contributions = reportContributions
@@ -315,6 +316,7 @@ namespace pwiz.Osprey.FDR
                     off += count;
                     floorProgress?.Report(++floorFile);
                 }
+                floorProgress?.Complete();
             }
 
             // Emit pass: recompute each file's per-run q-values, assign every row's five q-values
@@ -725,7 +727,7 @@ namespace pwiz.Osprey.FDR
                 // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
                 f => ReadFileRows(streamFileRows, fileNames[f], StubColumns.Core),
                 DedupFile);
-            ingestProgress.Dispose();
+            ingestProgress.Complete();
             int n = g;
             log.LogInfo(LogTag.PATH, @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n);
             LogBlockReads(log, passLabel, @"pass 0");
@@ -849,6 +851,7 @@ namespace pwiz.Osprey.FDR
                         }
                         loadProgress.Report(Interlocked.Increment(ref subsetFilesLoaded));
                     });
+                    loadProgress.Complete();
                 }
             }
             else
@@ -1083,6 +1086,7 @@ namespace pwiz.Osprey.FDR
                 }
 
                 OrderedFileLanes.Run(nFiles, fileLanes, ScoreFile, ApplyScoredFile);
+                scoreProgress.Complete();
             }
             wall1.Stop();
             log.LogInfo(LogTag.PATH,
@@ -1250,6 +1254,7 @@ namespace pwiz.Osprey.FDR
                 }
 
                 OrderedFileLanes.Run(nFiles, fileLanes, PrepareFile, MergeFile);
+                foldProgress.Complete();
             }
             wall.Stop();
             log.LogInfo(LogTag.PATH,

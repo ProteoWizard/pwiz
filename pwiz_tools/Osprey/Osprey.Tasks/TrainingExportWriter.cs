@@ -159,6 +159,7 @@ namespace pwiz.Osprey.Tasks
                         rtNeighborhood, ddcTolerance, ddcUnit, out observed[w]);
                     progress.Report(Interlocked.Increment(ref nDone));
                 });
+                progress.Complete();
             }
 
             var records = perWindow.Where(list => list != null).SelectMany(list => list)
