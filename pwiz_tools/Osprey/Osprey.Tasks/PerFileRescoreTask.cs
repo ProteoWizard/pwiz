@@ -151,6 +151,11 @@ namespace pwiz.Osprey.Tasks
         private readonly ConcurrentDictionary<string, string> _trainingExportErrors =
             new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
 
+        // The first pass's retained base_ids, read once for every run's fragment mass-error
+        // summary rather than once per run; null inside when the summary is unreadable.
+        private readonly object _retainedBaseIdsLock = new object();
+        private Tuple<HashSet<uint>> _retainedBaseIds;
+
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it (#4486).
@@ -286,6 +291,15 @@ namespace pwiz.Osprey.Tasks
                     yield return TrainingExportWriter.PathFor(input);
             }
 
+            // The fragment mass-error summaries the --model-diagnostics report draws its mass-error
+            // view from. They measure the run's calibrated spectra at the targets the first pass
+            // accepted, and only this task holds a run's spectra after the first pass (P17).
+            if (WritesFragmentMassErrors(ctx.Config))
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return FragmentMassErrorWriter.PathFor(input);
+            }
+
             // The per-run 2nd-pass FDR sidecar is THIS task's output (#4486): the per-file half
             // of the second pass runs in the rescore worker, so the file is produced here and
             // merely READ by SecondPassFDR. Declaring it matters beyond provenance - the driver
@@ -354,6 +368,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
         {
+            string massErrorInput = FragmentMassErrorInputFor(ctx.Config, output);
+            if (massErrorInput != null)
+                return taskKey + FragmentMassErrorWriter.RunInputIdentities(massErrorInput);
             string input = TrainingExportInputFor(ctx.Config, output);
             return input == null
                 ? taskKey
@@ -366,19 +383,23 @@ namespace pwiz.Osprey.Tasks
             // so write the exports from each run's own artifacts and re-score nothing - P16's
             // pay-later path, the counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. Taken
             // before anything below demands FirstPassFDR's buffer, which would load it.
-            if (OnlyTrainingExportsOutstanding(ctx))
+            if (OnlyOptionalProductsOutstanding(ctx))
             {
                 // A SecondPassFDR that still has to run loads the library anyway, so the
                 // exports take that one load rather than a private second one.
                 bool secondPassWillRun = SecondPassFdrWillRun(ctx);
                 if (!WriteTrainingExports(ctx, secondPassWillRun))
                     return false;
+                WriteFragmentMassErrors(ctx, secondPassWillRun);
                 // The driver marks this task done after Run, so a SecondPassFDR that still has
                 // to run would find RescoredEntries unpublished: publish it the way a skipped
                 // task does.
                 return !secondPassWillRun || Rehydrate(ctx);
             }
-            return RunRescore(ctx) && WriteTrainingExports(ctx, false);
+            if (!RunRescore(ctx) || !WriteTrainingExports(ctx, false))
+                return false;
+            WriteFragmentMassErrors(ctx, false);
+            return true;
         }
 
         /// <summary>
@@ -453,21 +474,22 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Whether the only outputs of this task not current are training exports: the flag
-        /// added to an analysis whose re-scoring is done. The counterpart of FirstPassFdrTask's
+        /// Whether the only outputs of this task not current are its optional per-run products -
+        /// training exports and fragment mass-error summaries: a flag added to an analysis whose
+        /// re-scoring is done. The counterpart of FirstPassFdrTask's
         /// OnlyDiagnosticsProductOutstanding - every other declared output must be current
         /// against its own key, so a partly re-scored analysis still takes the full path.
         /// </summary>
-        private bool OnlyTrainingExportsOutstanding(PipelineContext ctx)
+        private bool OnlyOptionalProductsOutstanding(PipelineContext ctx)
         {
-            if (!ExportsTraining(ctx.Config))
+            if (!ExportsTraining(ctx.Config) && !WritesFragmentMassErrors(ctx.Config))
                 return false;
             string key = ValidityKey(ctx);
             bool anyExportOutstanding = false;
             foreach (string output in Outputs(ctx))
             {
                 bool current = PerFileResumeDriver.IsCurrent(output, Name, OutputValidityKey(ctx, key, output));
-                if (TrainingExportInputFor(ctx.Config, output) != null)
+                if (TrainingExportInputFor(ctx.Config, output) != null || FragmentMassErrorInputFor(ctx.Config, output) != null)
                     anyExportOutstanding |= !current;
                 else if (!current)
                     return false;
@@ -521,6 +543,95 @@ namespace pwiz.Osprey.Tasks
             return string.Format(CultureInfo.InvariantCulture, @";trainexport={0};maxq={1:R};claimq={2:R};xics={3}",
                 TrainingExportParquet.FORMAT_VERSION, settings.EffectiveMaxQ(config.RunFdr),
                 settings.EffectiveClaimantQ, settings.WriteXics ? 1 : 0);
+        }
+
+        /// <summary>
+        /// Writes each run's fragment mass-error summary that is not current, from the run's own
+        /// artifacts - every run the rescore did not write one for while its spectra were in
+        /// hand: resumed, with no re-scoring work, or the diagnostics-only arm. A failure is
+        /// reported and never fails the task: a diagnostics product does not stop an analysis,
+        /// and the next run of the command retries it.
+        /// </summary>
+        private void WriteFragmentMassErrors(PipelineContext ctx, bool demandPipelineLibrary)
+        {
+            var config = ctx.Config;
+            if (!WritesFragmentMassErrors(config) || config.InputFiles == null)
+                return;
+            string key = ValidityKey(ctx);
+            IReadOnlyDictionary<uint, LibraryEntry> library = null;
+            foreach (string input in config.InputFiles)
+            {
+                string output = FragmentMassErrorWriter.PathFor(input);
+                string runKey = OutputValidityKey(ctx, key, output);
+                if (PerFileResumeDriver.IsCurrent(output, Name, runKey))
+                    continue;
+                library = library ?? TrainingExportWriter.ResolveTargets(ctx, demandPipelineLibrary);
+                if (library == null)
+                    return;
+                WriteFragmentMassError(input, output, runKey, library, ctx, config.NThreads, null, null);
+            }
+        }
+
+        /// <summary>
+        /// One run's fragment mass-error summary, its stamp embedded as it lands. Reads only the
+        /// run's durable artifacts and the spectra it is handed, and writes only the summary, so
+        /// no score depends on whether the report was asked for. A failure is logged as a
+        /// warning, never thrown; an out-of-memory propagates as it does everywhere (#4615).
+        /// </summary>
+        private void WriteFragmentMassError(string input, string output, string runKey,
+            IReadOnlyDictionary<uint, LibraryEntry> library, PipelineContext ctx, int maxThreads,
+            SpectraWindowIndex spectra, MzCalibrationResult ms2Cal)
+        {
+            try
+            {
+                FragmentMassErrorWriter.WriteRun(input, output, library, RetainedBaseIds(ctx.Config), ctx, maxThreads,
+                    OspreyVersion.Stamp(Name, runKey), spectra, ms2Cal);
+            }
+            catch (Exception ex) when (!IsOutOfMemory(ex))
+            {
+                var reported = CommonExceptionUtil.UnwrapUserException(ex);
+                ctx.LogWarning(string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_,
+                    input, !CommonExceptionUtil.IsProgrammingDefect(reported) && !string.IsNullOrEmpty(reported.Message)
+                        ? reported.Message
+                        : ex.ToString()));
+            }
+        }
+
+        /// <summary>The first pass's retained base_ids, read on first use; null when unreadable.</summary>
+        private HashSet<uint> RetainedBaseIds(OspreyConfig config)
+        {
+            lock (_retainedBaseIdsLock)
+            {
+                if (_retainedBaseIds == null)
+                    _retainedBaseIds = Tuple.Create(ScoringTaskShared.ReadRetainedBaseIds(config, out _));
+                return _retainedBaseIds.Item1;
+            }
+        }
+
+        /// <summary>
+        /// Asked for with --model-diagnostics, including under --task ModelDiagnostics: the
+        /// summaries are products of the report, which that task exists to complete (P16).
+        /// </summary>
+        private static bool WritesFragmentMassErrors(OspreyConfig config)
+        {
+            return config.ModelDiagnostics;
+        }
+
+        /// <summary>The input whose fragment mass-error summary <paramref name="output"/> is, or null.</summary>
+        private static string FragmentMassErrorInputFor(OspreyConfig config, string output)
+        {
+            if (!WritesFragmentMassErrors(config) || config.InputFiles == null ||
+                !output.EndsWith(FragmentMassErrorWriter.EXT, StringComparison.Ordinal))
+            {
+                return null;
+            }
+            foreach (string input in config.InputFiles)
+            {
+                if (string.Equals(FragmentMassErrorWriter.PathFor(input), output, StringComparison.Ordinal))
+                    return input;
+            }
+            return null;
         }
 
         /// <summary>
@@ -1651,6 +1762,17 @@ namespace pwiz.Osprey.Tasks
             {
                 string exportPath = TrainingExportWriter.PathFor(inputFile);
                 WriteTrainingExport(inputFile, exportPath, OutputValidityKey(ctx, inputs.TaskValidityKey, exportPath),
+                    inputs.LibraryById, ctx, fileConfig.NThreads, spectraIndex, ms2Cal);
+            }
+
+            // The fragment mass-error summary, for the same reason and at the same point: the
+            // spectra index and calibration are in hand, and every score of this run is already
+            // on disk, so measuring cannot move one. WriteFragmentMassErrors writes the runs this
+            // does not reach from disk; the summary is the same either way.
+            if (wroteReconciled && WritesFragmentMassErrors(inputs.Config))
+            {
+                string massErrorPath = FragmentMassErrorWriter.PathFor(inputFile);
+                WriteFragmentMassError(inputFile, massErrorPath, OutputValidityKey(ctx, inputs.TaskValidityKey, massErrorPath),
                     inputs.LibraryById, ctx, fileConfig.NThreads, spectraIndex, ms2Cal);
             }
 

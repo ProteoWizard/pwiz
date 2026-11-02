@@ -1355,7 +1355,17 @@ namespace pwiz.Osprey.Tasks {
                         "t_precursor_candidates_cannot_be_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: fragment mass error of {1:N0} target precursors ({2:N0} peaks): mean {3:F2}, SD {4:F2}, robust SD {5:F2}, |mean| + 3 SD {6:F2} {7}; search tolerance {8:F2} {7}.
+        /// </summary>
+        public static string FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precursors {
+            get {
+                return ResourceManager.GetString("FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precur" +
+                        "sors", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Classifying {0:N0} precursor candidates for first-pass model diagnostics....
         /// </summary>
@@ -2465,6 +2475,16 @@ namespace pwiz.Osprey.Tasks {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The fragment mass-error summary for the model diagnostics report failed for {0}: {1}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed" +
+                        "_for__0____1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failed to remove the incomplete re-scored results file {0} after a failed write: {1}.
         /// </summary>
