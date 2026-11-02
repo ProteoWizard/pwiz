@@ -42,7 +42,8 @@ namespace pwiz.Skyline.Model.Tools
     public class PythonInstaller
     {
         private const string PYTHON = @"Python";
-        private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/pip/";
+        private const string GET_PIP_REPO_URL = @"https://raw.githubusercontent.com/pypa/get-pip/";
+        private const string GET_PIP_COMMIT = @"37ae3c4daaf63a0c203176251fb99c0e238562b5";
         private const string CD = @"cd";
         private const string CMD_ESCAPE_SYMBOL = TextUtil.CARET;
         internal const string CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND;
@@ -151,10 +152,13 @@ namespace pwiz.Skyline.Model.Tools
         public static Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
-        // Use PyPA's version-pinned subpath (e.g. /pip/3.9/get-pip.py) rather than the unpinned
-        // /get-pip.py: the unpinned URL serves the latest pip, which drops support for retired
-        // Python versions. The version-pinned URL serves the last pip release for that Python.
-        public static Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + PythonMajorMinorVersion + FORWARD_SLASH + GET_PIP_SCRIPT_FILE_NAME);
+        // Use the Python-version-specific script (public/3.9/get-pip.py) rather than the generic one:
+        // the generic script installs the latest pip, which drops support for retired Python versions.
+        // Fetch it from a fixed pypa/get-pip commit rather than bootstrap.pypa.io, which republishes
+        // whenever PyPA changes the script. Versions after this commit launch pip in a subprocess, which
+        // trips pip's Windows guard against modifying itself and fails the install.
+        public static Uri GetPipScriptDownloadUri => new Uri(GET_PIP_REPO_URL + GET_PIP_COMMIT + FORWARD_SLASH +
+                                                             @"public" + FORWARD_SLASH + PythonMajorMinorVersion + FORWARD_SLASH + GET_PIP_SCRIPT_FILE_NAME);
         private static string PythonMajorMinorVersion
         {
             get
@@ -163,11 +167,11 @@ namespace pwiz.Skyline.Model.Tools
                 return parts.Length >= 2 ? parts[0] + @"." + parts[1] : PythonVersion;
             }
         }
-        // Version the local filename by major.minor so a URL change (e.g. unpinned -> pip/3.9/) invalidates
-        // any previously cached file. DownloadGetPipScriptTask's signature only covers file content, not
+        // Version the local filename by major.minor and get-pip commit so a URL change invalidates any
+        // previously cached file. DownloadGetPipScriptTask's signature only covers file content, not
         // source, so without this a stale file from the old URL would be treated as valid.
         public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir,
-            string.Format(@"get-pip-{0}.py", PythonMajorMinorVersion));
+            string.Format(@"get-pip-{0}-{1}.py", PythonMajorMinorVersion, GET_PIP_COMMIT.Substring(0, 8)));
         public static string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
 
         public int NumTotalTasks { get; set; }
