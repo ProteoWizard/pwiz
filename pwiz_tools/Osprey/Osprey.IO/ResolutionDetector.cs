@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -69,23 +70,25 @@ namespace pwiz.Osprey.IO
         public const int MIN_SPACINGS = 100;
 
         /// <summary>
-        /// The resolution an analysis is searched at, measured from its first input and checked
-        /// against the others; when no input has spectra to measure, read from the scores file
-        /// written for the first one that has one. Null when neither decides it.
+        /// The resolution an analysis is searched at, measured from the first input whose spectra
+        /// decide it and checked against the others; when no input's spectra decide it, read from
+        /// the scores file written for the first input that has one. Null when neither decides it.
         /// </summary>
         public static ResolutionDetection Detect(OspreyConfig config)
         {
             var inputs = config.InputFiles;
             if (inputs == null || inputs.Count == 0)
                 return null;
-            var first = MeasureInput(inputs[0]);
-            if (first != null && first.IsDecided)
+            var measurements = inputs.Select(MeasureInput).ToList();
+            int decider = measurements.FindIndex(m => m != null && m.IsDecided);
+            if (decider >= 0)
             {
-                var detection = new ResolutionDetection(first.Mode, inputs[0], first);
-                for (int i = 1; i < inputs.Count; i++)
+                var reference = measurements[decider];
+                var detection = new ResolutionDetection(reference.Mode, inputs[decider], reference);
+                for (int i = 0; i < inputs.Count; i++)
                 {
-                    var other = MeasureInput(inputs[i]);
-                    if (other != null && other.IsDecided && other.Mode != first.Mode)
+                    var other = measurements[i];
+                    if (other != null && other.IsDecided && other.Mode != reference.Mode)
                         detection.Disagreements.Add(new KeyValuePair<string, ResolutionMeasurement>(inputs[i], other));
                 }
                 return detection;
@@ -96,19 +99,31 @@ namespace pwiz.Osprey.IO
                 if (recorded.HasValue)
                     return new ResolutionDetection(recorded.Value, input, null) { ScoresPath = scoresPath };
             }
-            return first != null ? new ResolutionDetection(null, inputs[0], first) : null;
+            int measured = measurements.FindIndex(m => m != null);
+            return measured >= 0 ? new ResolutionDetection(null, inputs[measured], measurements[measured]) : null;
         }
 
         /// <summary>
         /// The measurement of one run from its spectra cache when the search would accept it,
-        /// else from its source file. Null when it has neither, or the source cannot be read.
+        /// else from its source file. Null when it has neither, or neither can be read.
         /// </summary>
         public static ResolutionMeasurement MeasureInput(string inputFile)
         {
-            var sample = new ResolutionMeasurement();
             string sourcePath = File.Exists(inputFile) || Directory.Exists(inputFile) ? inputFile : null;
-            if (SpectraCache.VisitMs2Spectra(SpectraCache.GetCachePath(inputFile), sourcePath, sample.Add))
-                return sample;
+            // A file that cannot be read measures nothing: a damaged or locked cache falls back to
+            // the source, and an unreadable source to the scores files. The task that reads the
+            // file reports why, and a task that never reads it (one handed scores files) has no
+            // reason to fail on it here.
+            var sample = new ResolutionMeasurement();
+            try
+            {
+                if (SpectraCache.VisitMs2Spectra(SpectraCache.GetCachePath(inputFile), sourcePath, sample.Add))
+                    return sample;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                sample = new ResolutionMeasurement();
+            }
             if (sourcePath == null)
                 return null;
             try
@@ -117,9 +132,6 @@ namespace pwiz.Osprey.IO
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
-                // A file that cannot be read measures nothing. The task that reads it reports
-                // why, and a task that never reads it (one handed scores files) has no reason
-                // to fail on it here.
                 return null;
             }
             return sample;

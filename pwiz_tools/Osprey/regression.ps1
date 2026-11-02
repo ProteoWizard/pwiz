@@ -1118,8 +1118,10 @@ function Resolve-DatasetInputs {
         $exportDir = Join-Path $derivedDir 'export'
         $exportLog = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.export.log')
         Remove-Item $blib, $blibTmp -Force -ErrorAction SilentlyContinue
-        $exportArgs = @('-l', $library, '--export-library', $blibTmp) + (Get-ResolutionArgs $Spec.Resolution) +
-                      @('--threads', $Threads.ToString(), '--work-dir', $exportDir)
+        # Always the table's --resolution, even with -DetectResolution: the export reads no
+        # inputs, so it has nothing to measure, and the library must be typed as the search's is.
+        $exportArgs = @('-l', $library, '--export-library', $blibTmp, '--resolution', $Spec.Resolution,
+                        '--threads', $Threads.ToString(), '--work-dir', $exportDir)
         if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
         if ($manifest) { $exportArgs += @('--decoy-pairing-manifest', $manifest) }
         Write-Host "  exporting the library as a .blib for the legs to search..."

@@ -271,7 +271,8 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// Where the resolution came from: <c>explicit</c> (<c>--resolution</c>),
         /// <c>spectra &lt;mode&gt;</c> (measured), <c>scores-file</c> (read from the settings a
-        /// scores file records) or <c>undecided</c> (nothing to measure; the default).
+        /// scores file records), <c>undecided</c> (nothing to measure; the default) or
+        /// <c>unused</c> (a library phase, which scores nothing).
         /// </summary>
         public const string ROUTE_RESOLUTION = @"resolution";
         /// <summary>A partial rescore resumed: runs adopted and runs re-scored.</summary>

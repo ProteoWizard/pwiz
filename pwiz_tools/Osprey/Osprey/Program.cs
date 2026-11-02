@@ -1297,7 +1297,8 @@ namespace pwiz.Osprey
             LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
             if (!detected)
             {
-                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"explicit"));
+                // A library phase scores nothing, so an auto resolution there is never resolved.
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, config.DetectResolution ? @"unused" : @"explicit"));
                 return;
             }
             string choose = OspreyCommandArgs.ARG_RESOLUTION.ArgumentText + @" " +

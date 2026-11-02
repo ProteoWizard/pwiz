@@ -88,13 +88,18 @@ spectra, read from its `.spectra.bin` when one exists, else from the data file:
   file it came from. The other inputs are measured too, and any that measures as the other mode
   is named in a warning; every input of one search is scored at the first input's mode, so
   search runs of different resolution separately (or give `--resolution`).
-- **HPC**: each `--task` node resolves the same mode. Nodes with spectra (PerFileScoring,
-  PerFileRescoring) measure them; FDR nodes handed only scores files read the mode whose search
-  settings match the hash stamped in the first scores file. A detected and an explicit mode give
-  the same search settings hash, so their artifacts are interchangeable.
-- **Too few peaks** to decide (fewer than 100 gaps): searched as `hram`, with a warning.
+- **HPC**: nodes with spectra (PerFileScoring, PerFileRescoring) measure their own inputs; FDR
+  nodes handed only scores files read the mode whose search settings match the hash stamped in
+  the first scores file. Runs of one instrument therefore resolve the same mode on every node. A
+  per-file node sees only its own run, so a cohort mixing resolutions scores each run at its own
+  mode, and the FDR join refuses the scores files whose search settings differ: give
+  `--resolution` to every node of such a chain. A detected and an explicit mode give the same
+  search settings hash, so their artifacts are interchangeable.
+- **Too few peaks** to decide (fewer than 100 gaps): the next input that decides is used; when
+  none does, the search runs as `hram`, with a warning.
 
-`--resolution hram` or `--resolution unit` skips the measurement.
+`--resolution hram` or `--resolution unit` skips the measurement. `--export-library` reads no
+inputs, so it measures nothing and types fragments at `hram` unless `--resolution` is given.
 
 ### Useful extras
 
