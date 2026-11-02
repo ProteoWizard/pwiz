@@ -18,8 +18,9 @@ Osprey -i path/to/file ... --fasta path/to/file.fasta -o path/to/file.blib [opti
 The three required inputs are `-i`/`--input` (one or more mzML), a library - `-l`/`--library`
 (a DIA-NN TSV or `.blib`) or `--fasta` (a protein FASTA the library is predicted from, see
 [Library build](#library-build)) - and `-o`/`--output` (the result `.blib`). Everything else
-has a sensible default; `--resolution unit` is the one a search of unit-resolution data (an ion
-trap such as Stellar) must give, since the default is `hram` and nothing detects it from the data.
+has a sensible default, including the resolution: `--resolution auto`, the default, measures
+whether the data is unit resolution (an ion trap such as Stellar) or high resolution (Orbitrap,
+Astral, TOF) and logs the measurement - see [Resolution detection](#resolution-detection).
 
 A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
 column the library has (a fragment charge of `1.0` or `0`, an ion type other than
@@ -67,8 +68,33 @@ Osprey -i sample.mzML -l predicted.tsv -o results.blib \
 ```
 
 HRAM turns on the MS1 precursor-coelution and isotope-cosine features and selects the
-Astral-trained defaults for the learned pick. `hram` is the default; the resolution is not
-inferred from the data, so a unit-resolution search must pass `--resolution unit`.
+Astral-trained defaults for the learned pick. The examples above give `--resolution` to show the
+mode; without it the same data measures as the same mode (next section).
+
+### Resolution detection
+
+`--resolution auto` (the default) decides between `unit` and `hram` from the first input's MS2
+spectra, read from its `.spectra.bin` when one exists, else from the data file:
+
+- **Statistic**: the gaps in m/z between adjacent centroids, pooled over the first MS2 spectra in
+  acquisition order until 10,000 gaps (or 1,000 spectra) are collected; the decision reads the
+  **1st percentile** of those gaps.
+- **Threshold**: below **0.2 m/z** is `hram`, else `unit`. A unit-resolution analyzer does not
+  separate peaks that close; a high-resolution one shows some in every DIA spectrum. On the
+  regression data Stellar measures 0.44-0.45 m/z and Astral 0.03 m/z.
+- **Cost**: about 50-130 spectra; tens of milliseconds from a cache, a fraction of a second from
+  an mzML.
+- **Log**: the `Resolution:` settings line is followed by the measurement, the threshold and the
+  file it came from. The other inputs are measured too, and any that measures as the other mode
+  is named in a warning; every input of one search is scored at the first input's mode, so
+  search runs of different resolution separately (or give `--resolution`).
+- **HPC**: each `--task` node resolves the same mode. Nodes with spectra (PerFileScoring,
+  PerFileRescoring) measure them; FDR nodes handed only scores files read the mode whose search
+  settings match the hash stamped in the first scores file. A detected and an explicit mode give
+  the same search settings hash, so their artifacts are interchangeable.
+- **Too few peaks** to decide (fewer than 100 gaps): searched as `hram`, with a warning.
+
+`--resolution hram` or `--resolution unit` skips the measurement.
 
 ### Useful extras
 
@@ -209,7 +235,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
-| `--resolution` | `hram \| unit` | `hram` | How spectra are scored. `hram` (Orbitrap, Astral, TOF): fine bins, the MS1 precursor features, 10 ppm fragment and precursor tolerance. `unit` (ion traps such as Stellar): coarse bins, no MS1 features, 0.5 m/z fragment and 1.0 m/z precursor tolerance. Also selects the default pick model. Not detected from the data. See [03-spectral-scoring.md](03-spectral-scoring.md), [06-peak-detection.md](06-peak-detection.md). |
+| `--resolution` | `auto \| hram \| unit` | `auto` | How spectra are scored. `hram` (Orbitrap, Astral, TOF): fine bins, the MS1 precursor features, 10 ppm fragment and precursor tolerance. `unit` (ion traps such as Stellar): coarse bins, no MS1 features, 0.5 m/z fragment and 1.0 m/z precursor tolerance. Also selects the default pick model. `auto` measures which from the first input's MS2 peak spacing ([Resolution detection](#resolution-detection)). See [03-spectral-scoring.md](03-spectral-scoring.md), [06-peak-detection.md](06-peak-detection.md). |
 | `--fragment-tolerance` | `<number>` | `10` ppm; `0.5` m/z at `unit` | Fragment m/z tolerance, in the `--fragment-unit` unit. |
 | `--fragment-unit` | `ppm \| mz` | `ppm`; `mz` at `unit` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |

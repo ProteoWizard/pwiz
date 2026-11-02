@@ -166,40 +166,12 @@ namespace pwiz.Osprey.IO
                     }
                 }
             }
-            catch (InvalidOperationException ex) when (
-                ex.Message.Contains(@"NoVendorPeakPickingException"))
+            catch (Exception ex) when (ReadErrorMessage(path, ex) != null)
             {
-                // ProteoWizard refuses to centroid, one spectrum at a time, by throwing from
-                // VendorOnlyPeakDetector with that marker in the message - the same string
-                // Skyline matches in ChromCacheBuilder, ScanProvider and
-                // SpectraChromDataProvider. Osprey has to translate it too, or the user gets
-                // an internal peak-picker message naming neither the file nor an action.
-                //
-                // Refusing is CORRECT and must stay: Osprey scores centroids, and reading
-                // profile peaks as if they were centroids is a wrong answer from a run that
-                // looks entirely normal. The reachable case today is Agilent, whose
-                // SpectrumList_Agilent does not implement IVendorCentroidingSpectrumList
-                // while every other vendor Osprey lists does. Note MsDataFileImpl's
-                // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
-                // "is this a vendor reader" (true for Agilent), not "does it centroid".
-                //
-                // A UserMessageException, like the one below, so the user is shown this
-                // message alone: any other type reads as a defect at the top level
-                // (CommonExceptionUtil.IsProgrammingDefect) and prints with its stack.
-                throw new UserMessageException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_,
-                    path, CMD_MSCONVERT_PEAK_PICKING), ex);
-            }
-            catch (VendorSupportNotEnabledException ex)
-            {
-                // Reached by a copy built without the vendor licenses (a developer build, or
-                // a reader whose SDK is native and so absent from the Linux package).
-                // ProteoWizard's own message names no file and tells the reader to rebuild
-                // with a build flag. Osprey users do not build Osprey, so the one action
-                // offered is converting the file. The original stays as InnerException.
-                throw new UserMessageException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_reader_for_this_instrument_vendor_format_,
-                    path, CMD_MSCONVERT), ex);
+                // A UserMessageException, so the user is shown this message alone: any other
+                // type reads as a defect at the top level (CommonExceptionUtil.IsProgrammingDefect)
+                // and prints with its stack. The original stays as InnerException.
+                throw new UserMessageException(ReadErrorMessage(path, ex), ex);
             }
 
             return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount)
@@ -207,6 +179,80 @@ namespace pwiz.Osprey.IO
                 DemultiplexScheme = demultiplexed,
                 MultiplexedSchemeNotDemultiplexed = notDemultiplexed,
             };
+        }
+
+        /// <summary>
+        /// Hands the file's MS2 spectra to <paramref name="visit"/> in acquisition order, read
+        /// as <see cref="LoadAllSpectra"/> reads them without demultiplexing, until it returns
+        /// false. Stops reading there, so a sample from the start of a run does not parse the
+        /// rest of it.
+        /// </summary>
+        public static void VisitMs2Spectra(string path, Func<Spectrum, bool> visit)
+        {
+            ReportVendorRegistrationFailures();
+            var ms2Spectra = new List<Spectrum>();
+            var ms1Spectra = new List<MS1Spectrum>();
+            int unsortedCount = 0;
+            try
+            {
+                using (var msData = OpenForSearch(path, null, 1))
+                {
+                    int count = msData.SpectrumCount;
+                    for (int i = 0; i < count; i++)
+                    {
+                        AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra, ref unsortedCount);
+                        ms1Spectra.Clear();
+                        if (ms2Spectra.Count == 0)
+                            continue;
+                        var spectrum = ms2Spectra[0];
+                        ms2Spectra.Clear();
+                        if (!visit(spectrum))
+                            return;
+                    }
+                }
+            }
+            catch (Exception ex) when (ReadErrorMessage(path, ex) != null)
+            {
+                throw new UserMessageException(ReadErrorMessage(path, ex), ex);
+            }
+        }
+
+        /// <summary>
+        /// The message for a read failure the user can act on, or null for any other exception.
+        /// </summary>
+        private static string ReadErrorMessage(string path, Exception ex)
+        {
+            // ProteoWizard refuses to centroid, one spectrum at a time, by throwing from
+            // VendorOnlyPeakDetector with that marker in the message - the same string
+            // Skyline matches in ChromCacheBuilder, ScanProvider and
+            // SpectraChromDataProvider. Osprey has to translate it too, or the user gets
+            // an internal peak-picker message naming neither the file nor an action.
+            //
+            // Refusing is CORRECT and must stay: Osprey scores centroids, and reading
+            // profile peaks as if they were centroids is a wrong answer from a run that
+            // looks entirely normal. The reachable case today is Agilent, whose
+            // SpectrumList_Agilent does not implement IVendorCentroidingSpectrumList
+            // while every other vendor Osprey lists does. Note MsDataFileImpl's
+            // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
+            // "is this a vendor reader" (true for Agilent), not "does it centroid".
+            if (ex is InvalidOperationException && ex.Message.Contains(@"NoVendorPeakPickingException"))
+            {
+                return string.Format(
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_,
+                    path, CMD_MSCONVERT_PEAK_PICKING);
+            }
+            // Reached by a copy built without the vendor licenses (a developer build, or
+            // a reader whose SDK is native and so absent from the Linux package).
+            // ProteoWizard's own message names no file and tells the reader to rebuild
+            // with a build flag. Osprey users do not build Osprey, so the one action
+            // offered is converting the file.
+            if (ex is VendorSupportNotEnabledException)
+            {
+                return string.Format(
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_reader_for_this_instrument_vendor_format_,
+                    path, CMD_MSCONVERT);
+            }
+            return null;
         }
 
         /// <summary>
@@ -287,7 +333,10 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private static MsDataFileImpl OpenForSearch(string path, SpectrumListDemux.Params demultiplex)
+        // decodeThreads: null for the search's read-ahead (OspreyEnvironment.MzmlDecodeThreads);
+        // a read of the first few spectra passes 1, since decoding ahead would only add work.
+        private static MsDataFileImpl OpenForSearch(string path, SpectrumListDemux.Params demultiplex,
+            int? decodeThreads = null)
         {
             bool vendorFormat = IsVendorFormat(path);
             return new MsDataFileImpl(path,
@@ -295,7 +344,7 @@ namespace pwiz.Osprey.IO
                 requireVendorCentroidedMS1: vendorFormat,
                 requireVendorCentroidedMS2: vendorFormat,
                 combineIonMobilitySpectra: false,
-                mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads,
+                mzmlDecodeThreads: decodeThreads ?? OspreyEnvironment.MzmlDecodeThreads,
                 demultiplex: demultiplex);
         }
 

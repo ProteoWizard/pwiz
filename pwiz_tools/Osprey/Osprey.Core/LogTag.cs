@@ -268,6 +268,12 @@ namespace pwiz.Osprey.Core
         /// <c>scores-parquet</c> (value <c>kind n/total</c>).
         /// </summary>
         public const string ROUTE_INPUT_SOURCE = @"input-source";
+        /// <summary>
+        /// Where the resolution came from: <c>explicit</c> (<c>--resolution</c>),
+        /// <c>spectra &lt;mode&gt;</c> (measured), <c>scores-file</c> (read from the settings a
+        /// scores file records) or <c>undecided</c> (nothing to measure; the default).
+        /// </summary>
+        public const string ROUTE_RESOLUTION = @"resolution";
         /// <summary>A partial rescore resumed: runs adopted and runs re-scored.</summary>
         public const string ROUTE_RESCORE_RESUME = @"rescore-resume";
         /// <summary>A model-diagnostics peak co-assignment phase starting (scan, reduce, join);

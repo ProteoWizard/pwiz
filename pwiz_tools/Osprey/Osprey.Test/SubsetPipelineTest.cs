@@ -258,6 +258,46 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// <c>--resolution auto</c>, the default (#4893). The Stellar subset measures as unit
+        /// resolution and the Astral subset as high resolution, each well away from the threshold,
+        /// and a run measures the same from its spectra cache as from its mzML. Then the one-run
+        /// Stellar chain without <c>--resolution</c>: PerFileScoring measures the mzML,
+        /// PerFileRescoring the spectra cache, and the two FDR nodes, handed only scores files,
+        /// read the resolution the scores were written under. Every node reaches unit resolution,
+        /// and the library is the one an explicit <c>--resolution unit</c> search writes.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetResolutionDetection()
+        {
+            string run = RUN_NAMES[1];
+            var stellar = AssertMeasures(Path.Combine(_dataDir, run + MZML_EXTENSION), ResolutionMode.UnitResolution);
+            AssertMeasures(Path.Combine(ExtractAstral(), ASTRAL_RUN_NAMES[0] + MZML_EXTENSION), ResolutionMode.HRAM);
+
+            var logs = new Dictionary<string, string>();
+            var detected = new Subset(_dataDir, LIBRARY_FILE, null, new[] { run });
+            AssertHpcChainMatchesStraight(detected, @"detect-", logs);
+            string measuredUnit = string.Format(CultureInfo.InvariantCulture, @"spectra {0}", ResolutionMode.UnitResolution);
+            foreach (string measuring in new[] { @"straight", PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME })
+                AssertHasLine(logs[measuring], PathLine(LogKey.ROUTE_RESOLUTION, measuredUnit));
+            foreach (string reading in new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME })
+                AssertHasLine(logs[reading], PathLine(LogKey.ROUTE_RESOLUTION, @"scores-file"));
+
+            // The PerFileScoring node wrote the run's spectra cache, which measures exactly as the mzML did.
+            string cache = Path.Combine(_testDir, @"detect-phase1_" + run, run + SPECTRA_CACHE_EXTENSION);
+            var fromCache = new ResolutionMeasurement();
+            Assert.IsTrue(SpectraCache.VisitMs2Spectra(cache, null, fromCache.Add));
+            Assert.AreEqual(stellar.SpectrumCount, fromCache.SpectrumCount);
+            Assert.AreEqual(stellar.SpacingQuantile, fromCache.SpacingQuantile);
+
+            // The same search with --resolution unit writes the same library.
+            var explicitUnit = new Subset(_dataDir, LIBRARY_FILE, OspreyCommandArgs.RESOLUTION_UNIT, detected.Runs);
+            string explicitDir = CreateDir(@"explicit-straight");
+            string explicitLog = RunOsprey(explicitUnit.AnalysisArgs(explicitDir), explicitUnit.Variables(true));
+            AssertHasLine(explicitLog, PathLine(LogKey.ROUTE_RESOLUTION, @"explicit"));
+            AssertBlibsEqual(Path.Combine(explicitDir, BLIB_FILE), Path.Combine(_testDir, @"detect-straight", BLIB_FILE));
+        }
+
+        /// <summary>
         /// The StellarLibDecoy / StellarGenDecoyEntrap legs: a library that supplies its own
         /// decoys and carries shuffled entrapment peptides, searched with its pairing manifest,
         /// the model diagnostics report and FDRBench input for both passes. Then the report again
@@ -1298,12 +1338,17 @@ namespace pwiz.Osprey.Test
         /// <param name="data">The subset and pass-2 mode.</param>
         /// <param name="dirPrefix">Prefixes every directory, so two chains in one test do not
         /// share any.</param>
-        private void AssertHpcChainMatchesStraight(Subset data, string dirPrefix = @"")
+        /// <param name="logs">When given, receives the straight run's log under
+        /// <c>straight</c> and each task's last log under its task name.</param>
+        private void AssertHpcChainMatchesStraight(Subset data, string dirPrefix = @"",
+            IDictionary<string, string> logs = null)
         {
+            logs ??= new Dictionary<string, string>();
             // The straight run verifies the second pass's worker answers and the chain folds them
             // unverified, so the two legs cover different second-pass paths.
             string straightDir = CreateDir(dirPrefix + @"straight");
             string straightLog = RunOsprey(data.AnalysisArgs(straightDir), data.Variables(true));
+            logs[@"straight"] = straightLog;
             string straightBlib = Path.Combine(straightDir, BLIB_FILE);
 
             // Phase 1, one worker per run: score it from its mzML.
@@ -1311,7 +1356,7 @@ namespace pwiz.Osprey.Test
             {
                 string phaseDir = CreateDir(dirPrefix + @"phase1_" + run);
                 File.Copy(Path.Combine(data.DataDir, run + MZML_EXTENSION), Path.Combine(phaseDir, run + MZML_EXTENSION));
-                RunTask(data, phaseDir, PerFileScoringTask.TASK_NAME, run);
+                logs[PerFileScoringTask.TASK_NAME] = RunTask(data, phaseDir, PerFileScoringTask.TASK_NAME, run);
             }
 
             // Phase 2, one node over every run: first-pass FDR from the scores and calibrations.
@@ -1320,7 +1365,7 @@ namespace pwiz.Osprey.Test
             {
                 ShipFiles(dirPrefix + @"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
             }
-            RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
+            logs[FirstPassFdrTask.TASK_NAME] = RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
 
             // Phase 3, one worker per run: rescore with the first pass's answer.
             foreach (string run in data.Runs)
@@ -1336,6 +1381,7 @@ namespace pwiz.Osprey.Test
                 ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, OutputArtifact(FirstPassModelIO.EXT_STRATUM),
                     ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
+                logs[PerFileRescoreTask.TASK_NAME] = log;
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
             }
 
@@ -1359,6 +1405,7 @@ namespace pwiz.Osprey.Test
             ShipFilesIfPresent(dirPrefix + @"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
                 OutputArtifact(FirstPassModelIO.EXT_STRATUM), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
+            logs[SecondPassFdrTask.TASK_NAME] = phase4Log;
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
             // otherwise, so the fold line is the evidence it ran. It and the verifier belong to
@@ -1492,15 +1539,16 @@ namespace pwiz.Osprey.Test
             return CommonArgs(@"unit");
         }
 
+        /// <summary>The arguments every leg gives; a null <paramref name="resolution"/> leaves it to be measured.</summary>
         private static IEnumerable<string> CommonArgs(string resolution)
         {
-            return new[]
+            var args = new[]
             {
-                OspreyCommandArgs.ARG_RESOLUTION.ArgumentText, resolution,
                 OspreyCommandArgs.ARG_PROTEIN_FDR.ArgumentText, @"0.01",
                 OspreyCommandArgs.ARG_THREADS.ArgumentText, @"4",
                 OspreyCommandArgs.ARG_PERF_STATS.ArgumentText
             };
+            return resolution == null ? args : new[] { OspreyCommandArgs.ARG_RESOLUTION.ArgumentText, resolution }.Concat(args);
         }
 
         private static IEnumerable<string> InputArgs(IEnumerable<string> inputs)
@@ -1572,6 +1620,23 @@ namespace pwiz.Osprey.Test
             string dataDir = Path.Combine(_testDir, @"astral-data");
             ZipFile.ExtractToDirectory(Path.Combine(AppContext.BaseDirectory, @"TestData", ASTRAL_ZIP), dataDir);
             return dataDir;
+        }
+
+        /// <summary>
+        /// The measurement of a run's mzML, which must decide <paramref name="expected"/> with the
+        /// threshold well away: the measured spacing at least half again above it for unit
+        /// resolution, at most half of it for high resolution.
+        /// </summary>
+        private static ResolutionMeasurement AssertMeasures(string mzml, ResolutionMode expected)
+        {
+            var measurement = new ResolutionMeasurement();
+            SpectrumFileReader.VisitMs2Spectra(mzml, measurement.Add);
+            Assert.IsTrue(measurement.IsDecided, mzml);
+            Assert.AreEqual(expected, measurement.Mode, mzml);
+            double ratio = measurement.SpacingQuantile / ResolutionDetector.HRAM_MAX_SPACING;
+            Assert.IsTrue(expected == ResolutionMode.HRAM ? ratio < 0.5 : ratio > 1.5,
+                string.Format(CultureInfo.InvariantCulture, @"{0}: spacing {1} m/z", mzml, measurement.SpacingQuantile));
+            return measurement;
         }
 
         private string CreateDir(string name)
