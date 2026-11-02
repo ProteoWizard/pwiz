@@ -734,8 +734,8 @@ namespace pwiz.Osprey.Core
             Environment.GetEnvironmentVariable(@"OSPREY_XIC_FRAGMENTS"));
 
         /// <summary>
-        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (read as 0 when the
-        /// FDR stage loads features, so the classifier cannot use them), as comma-separated feature
+        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (left out of the
+        /// vectors the FDR stage loads, so the classifier never sees them), as comma-separated feature
         /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
         /// under evaluation, is masked. Scoring writes every feature either way, so arms that differ
         /// only in the mask share their per-file scores. An unknown name stops the search at startup.

@@ -687,6 +687,13 @@ namespace pwiz.Osprey
                         @"commas, or 'none' to mask nothing.", unknownMaskedFeature));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // A masked feature is absent from the classifier's vectors, so a mask with nothing
+                // left would hand it vectors of no features at all.
+                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
+                {
+                    LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
                     LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",

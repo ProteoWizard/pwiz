@@ -2255,14 +2255,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load only the PIN feature columns from a Parquet cache, for the FDR stage.
-        /// Returns a list of feature vectors (one double[] per row). A feature masked by
-        /// <see cref="PinFeatureMask"/> reads as 0: this is where the mask is applied, so the
-        /// parquet itself always holds every feature.
+        /// Load the FDR classifier's feature vectors from a Parquet cache, one double[] per row.
+        /// Each holds only the features <see cref="PinFeatureMask"/> leaves unmasked, in PIN order
+        /// (<see cref="PinFeatureMask.FdrFeatureNames"/> names its positions): this is where the
+        /// mask is applied, so the parquet itself always holds every feature. A masked column is
+        /// not read at all.
         /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
             var allFeatures = new List<double[]>();
+            int[] featureIndices = PinFeatureMask.FdrFeatureIndices;
+            int nFeatures = featureIndices.Length;
 
             using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
@@ -2272,24 +2275,29 @@ namespace pwiz.Osprey.IO
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        // Read all feature columns
-                        var featureCols = new double[NUM_PIN_FEATURES][];
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        {
-                            featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
-                        }
-
-                        if (featureCols[0] == null)
+                        // A file without the first PIN column has no features at all, whatever the
+                        // mask: the readability test the per-file stages use (HasPinFeatures).
+                        var firstCol = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[0]);
+                        if (firstCol == null)
                             continue;
 
-                        int rowCount = featureCols[0].Length;
+                        var featureCols = new double[nFeatures][];
+                        for (int i = 0; i < nFeatures; i++)
+                        {
+                            int f = featureIndices[i];
+                            featureCols[i] = f == 0
+                                ? firstCol
+                                : ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                        }
+
+                        int rowCount = firstCol.Length;
                         for (int row = 0; row < rowCount; row++)
                         {
-                            var features = new double[NUM_PIN_FEATURES];
-                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            var features = new double[nFeatures];
+                            for (int i = 0; i < nFeatures; i++)
                             {
-                                double v = featureCols[f][row];
-                                features[f] = PinFeatureMask.IsMasked(f) || double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                                double v = featureCols[i][row];
+                                features[i] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                             }
                             allFeatures.Add(features);
                         }

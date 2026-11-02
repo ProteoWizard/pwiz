@@ -2184,10 +2184,10 @@ namespace pwiz.Osprey.Test
                 // would silently break both.
                 Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
 
-                // Read PIN features
+                // Read the FDR features: the unmasked ones, which lead with PIN 0-20 under the default mask
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName);
                 Assert.AreEqual(3, features.Count);
-                Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
+                Assert.AreEqual(PinFeatureMask.FdrFeatureIndices.Length, features[0].Length);
                 // Check first entry features
                 Assert.AreEqual(0.9, features[0][0], 0.001); // coelution_sum
                 Assert.AreEqual(0.95, features[0][1], 0.001); // coelution_max
@@ -2610,7 +2610,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The feature mask is applied where the FDR stage loads features, not where scoring writes
         /// them: the scores parquet holds every feature, and only
-        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> reads a masked one as 0. That
+        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> leaves a masked one out. That
         /// split is what lets a mask arm adopt another arm's per-file scores and run the FDR stage
         /// alone. The test process leaves OSPREY_FEATURE_MASK unset, so the default set is masked.
         /// </summary>
@@ -2632,6 +2632,9 @@ namespace pwiz.Osprey.Test
 
                 double[] stored = ParquetScoreCache.LoadFullFdrEntries(saver.SafeName).Single().Features;
                 double[] loaded = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName).Single();
+                var loadedByName = PinFeatureMask.FdrFeatureNames.Zip(loaded, (name, v) => (name, v))
+                    .ToDictionary(p => p.name, p => p.v);
+                Assert.AreEqual(loaded.Length, loadedByName.Count);
                 int maskedCount = 0;
                 for (int f = 0; f < features.Length; f++)
                 {
@@ -2639,7 +2642,10 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(f + 1.0, stored[f], name + " must be written unmasked");
                     bool masked = PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(name);
                     Assert.AreEqual(masked, PinFeatureMask.IsMasked(f), name);
-                    Assert.AreEqual(masked ? 0.0 : f + 1.0, loaded[f], name + " as the FDR stage loads it");
+                    if (masked)
+                        Assert.IsFalse(loadedByName.ContainsKey(name), name + " must be absent as the FDR stage loads it");
+                    else
+                        Assert.AreEqual(f + 1.0, loadedByName[name], name + " as the FDR stage loads it");
                     if (masked)
                         maskedCount++;
                 }
@@ -2647,7 +2653,7 @@ namespace pwiz.Osprey.Test
                     "every default-masked name must be a PIN feature");
             }
             Assert.IsNull(PinFeatureMask.UnknownFeatureName());
-            Assert.AreEqual(@";featmask=default", PinFeatureMask.ValidityKeySuffix());
+            Assert.AreEqual(@";featmask=default;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix());
         }
 
         /// <summary>

@@ -107,6 +107,13 @@ namespace pwiz.Osprey.Tasks
             /// unreadable, which on a SecondPassFDR node is the hard fail-fast, not a graceful
             /// degradation.</summary>
             public string ExperimentAgg { get; set; }
+
+            /// <summary>The name of each feature the model was trained on, in vector order
+            /// (<see cref="PercolatorResults.FeatureNames"/>), so the file says which columns its
+            /// weights belong to. Additive like <see cref="ExperimentAgg"/>, and omitted when
+            /// null.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string[] FeatureNames { get; set; }
         }
 
         /// <summary>Serializable form of the protein-compact stratum: the base ids of every
@@ -237,6 +244,7 @@ namespace pwiz.Osprey.Tasks
                 Means = model.Standardizer.Means,
                 Stds = model.Standardizer.Stds,
                 ExperimentAgg = experimentAgg,
+                FeatureNames = model.FeatureNames,
             };
             if (model.IsGradientBoostedTrees)
             {
@@ -329,6 +337,11 @@ namespace pwiz.Osprey.Tasks
         /// null there means "unknown", never "max" - a caller that gates on the arm must treat it
         /// as unknown rather than assuming the default. <see cref="Sidecar.StratumBaseIds"/> is
         /// null under every mode but protein-compact, and likewise on an older sidecar.
+        ///
+        /// A model whose recorded feature names are not this run's FDR features
+        /// (<see cref="PinFeatureMask.FdrFeatureNames"/>) is unusable too, and loads as null: the
+        /// frozen scorer would weigh each column of a vector as some other feature. The validity
+        /// key already keeps out a model trained under another mask; this checks the file itself.
         /// </summary>
         /// <param name="path">Sidecar path to read.</param>
         public static Sidecar Load(string path)
@@ -345,13 +358,17 @@ namespace pwiz.Osprey.Tasks
                 var dto = JsonConvert.DeserializeObject<ModelDto>(File.ReadAllText(path), settings);
                 if (dto == null || dto.SchemaVersion != 1 ||
                     dto.Means == null || dto.Stds == null || dto.Means.Length != dto.Stds.Length ||
-                    dto.NumFeatures != dto.Means.Length)
+                    dto.NumFeatures != dto.Means.Length ||
+                    (dto.FeatureNames != null && dto.FeatureNames.Length != dto.NumFeatures))
                     return null;
 
                 var model = dto.FoldGbtModels != null && dto.FoldGbtModels.Length > 0
                     ? LoadTreeModel(dto)
                     : LoadLinearModel(dto);
                 if (model == null)
+                    return null;
+                model.FeatureNames = dto.FeatureNames;
+                if (!HasFdrFeatureLayout(model))
                     return null;
 
                 return new Sidecar
@@ -452,6 +469,17 @@ namespace pwiz.Osprey.Tasks
         {
             return data != null && data.FeatureCount == numFeatures &&
                    data.Objective == GbtObjective.LogisticBinary;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="model"/> was trained on this run's FDR feature vectors: its
+        /// names, when it records them, are <see cref="PinFeatureMask.FdrFeatureNames"/> in order.
+        /// A model without names (written before they were recorded) is judged by its stamp alone.
+        /// </summary>
+        private static bool HasFdrFeatureLayout(PercolatorResults model)
+        {
+            return model.FeatureNames == null ||
+                   model.FeatureNames.SequenceEqual(PinFeatureMask.FdrFeatureNames, StringComparer.Ordinal);
         }
 
         /// <summary>

@@ -365,9 +365,16 @@ A comma-separated list of PIN feature names the classifier must not use, or `non
 unknown name stops the search at startup.
 
 The mask is applied **where the FDR stage loads features**, not at scoring:
-`ParquetScoreCache.LoadPinFeaturesFromParquet` reads a masked feature as 0
-(`ParquetScoreCache.cs:2228`), so the standardizer sees a constant and the classifier gets
-nothing from it. The parquet always holds all 41, so:
+`ParquetScoreCache.LoadPinFeaturesFromParquet` does not read a masked column, and each vector it
+returns holds only the unmasked features, in PIN order (`PinFeatureMask.FdrFeatureIndices`). The
+classifier's matrix is therefore as wide as the unmasked set - 21 columns under the default mask,
+the same matrix the 21-feature engine trained on - and training costs scale with it. (A masked
+feature used to load as a column of zeros, which the classifier could not use but still paid for;
+see "Absent, not zero" below.) The feature names travel with the vectors
+(`PinFeatureMask.FdrFeatureNames`): the trained model records them
+(`PercolatorResults.FeatureNames`, the `FeatureNames` of `.1st-pass.model.json`), and a saved model
+whose names are not the run's FDR features loads as unusable. The parquet always holds every
+feature, so:
 - searches that differ only in the mask share their per-file scores. The mask is in the validity
   keys of FirstPassFDR, PerFileRescoring and SecondPassFDR (`;featmask=default|none|<names>`) but
   not of PerFileScoring, so pointing a new mask at existing scores re-runs only the FDR stages
@@ -380,6 +387,27 @@ nothing from it. The parquet always holds all 41, so:
 - the training export (`22-training-export.md`) and anything else reading the parquet see every
   feature unmasked, except that under a mask hiding all three runner-up features, peaks rescored
   at override bounds carry lone-candidate runner-up values.
+
+**Absent, not zero.** A zero column and an absent one train the same model in exact arithmetic -
+the standardizer gives a constant column scale 1 and value 0, and the SVM's dual coordinate
+descent then never moves its weight off 0 - but not in floating point, and not at the same cost:
+- **The linear SVM** (the default) sums its dot products in `Vector<double>` lanes
+  (`LinearSvmClassifier`), so a zero column still shifts which lane each later product lands in
+  and the order the lanes are added. Removing the zero columns changes the rounding, not the
+  model. Under the default mask the unmasked features are PIN 0-20, a prefix, so the reduced
+  matrix is exactly the 21-feature engine's and the committed goldens hold.
+- **Gradient-boosted trees** (`OSPREY_FDR_MODEL=gbdt`) draw a column subsample per tree from the
+  column count, so a different count draws different columns and grows different trees. Under
+  gbdt, results with the mask applied this way differ from the zero-column form; the masked
+  features were never splittable, so the change is in which unmasked columns each tree samples.
+- **Cost**: with every feature written but 21 unmasked, the zero-column form trained on 97 columns.
+  On Stellar that doubled first-pass FDR against the 41-column form before it (1:39 to 3:16);
+  with the 21 columns alone it is 1:04 against that same 41-column build's 1:37, and the run
+  3:28 against 3:53 (Test-PerfGate, 2 paired repeats, 2026-11-02).
+- Two fallbacks index the vector by position and assume PIN 0 (`fragment_coelution_sum`) leads
+  it, which holds unless a mask hides it: the basic vector built for a row whose features cannot
+  be resolved (`PercolatorScorer.BuildBasicFeatures`), and the target-decoy pairing that ranks by
+  `Features[0]` when it has no scores (`PercolatorSampling`).
 
 #### The XIC count (`OSPREY_XIC_FRAGMENTS`)
 
@@ -550,8 +578,8 @@ presence rather than a CLI flag.
 - **[INTENTIONAL-CSHARP-DESIGN] 20 C#-only PIN features (21-40), masked by default** - the
   runner-up, context, per-fragment-rank and spectrum-across-peak families (B.7) have no Rust
   counterpart. They widen the parquet to 41 feature columns, but with the default
-  `OSPREY_FEATURE_MASK` the classifier reads them as 0, so default results match the 21-feature
-  engine. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (41 names), `PinFeatureMask`.
+  `OSPREY_FEATURE_MASK` they are absent from the classifier's vectors, so default results match the
+  21-feature engine. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (41 names), `PinFeatureMask`.
   Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] MS1 features gated by resolution strategy, not a config

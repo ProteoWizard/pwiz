@@ -737,7 +737,7 @@ a specific wrong answer:
 | experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
 | pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
 | training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
-| feature mask (`;featmask=`, `PinFeatureMask.ValidityKeySuffix`) | an arm that hides different features from the classifier adopts another arm's model and q-values. Emitted for every mask, the default included |
+| feature mask (`;featmask=`, `PinFeatureMask.ValidityKeySuffix`) | an arm that hides different features from the classifier adopts another arm's model and q-values. Emitted for every mask, the default included. Its `;fdrcols=unmasked` term marks the layout where a masked feature is absent from the FDR vectors: a model or feature sums written when masked features were zero columns are 97 wide where this layout's are 21, and a frozen model of the wrong width declines every vector |
 | library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
 | classifier and tree settings (`OSPREY_FDR_MODEL=gbdt` only, the `;fdrmodel=gbdt` term) | a percolator directory re-run as gbdt, a gbdt directory written while the lean first pass still trained the SVM, or one `OSPREY_GBT_*` sweep point re-run as the next reports "skipping (outputs valid)" and hands back the other arm's results. Empty for the linear SVM, so no existing directory is invalidated (`PercolatorEngine.GbdtValidityKeySuffix`) |
 

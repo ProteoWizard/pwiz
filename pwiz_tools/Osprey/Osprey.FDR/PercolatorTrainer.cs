@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
@@ -284,6 +285,7 @@ namespace pwiz.Osprey.FDR
                         ? new List<GradientBoostedTrees>(foldGbtModels)
                         : null,
                     Standardizer = standardizer,
+                    FeatureNames = FeatureNamesOf(config),
                     IterationsPerFold = trainIterations
                 };
             }
@@ -415,9 +417,16 @@ namespace pwiz.Osprey.FDR
                     ? new List<GradientBoostedTrees>(foldGbtModels)
                     : null,
                 Standardizer = standardizer,
+                FeatureNames = FeatureNamesOf(config),
                 IterationsPerFold = iterationsPerFold,
                 FeatureContributions = contributions
             };
+        }
+
+        /// <summary>The trained features' names, from the config's feature metadata, or null without it.</summary>
+        private static string[] FeatureNamesOf(PercolatorConfig config)
+        {
+            return config.FeatureInfos?.Select(info => info.Name).ToArray();
         }
 
         /// <summary>

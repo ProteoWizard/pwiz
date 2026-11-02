@@ -26,8 +26,11 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// The PIN features the FDR classifier may not use (OSPREY_FEATURE_MASK). A masked feature
-    /// reads as 0 when the FDR stage loads features (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>),
-    /// so the standardizer gives it scale 1 and value 0 and the classifier cannot use it.
+    /// is absent from the vectors the FDR stage loads (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>):
+    /// each holds only the <see cref="FdrFeatureNames"/>, in PIN order, so training costs what the
+    /// unmasked features cost and not what all of them would. A masked feature used to be loaded as
+    /// a column of zeros, which the classifier could not use but still paid for - 97 columns where
+    /// 21 carried information.
     ///
     /// The mask is applied at load, not at scoring, so the scores parquet always holds every
     /// feature. A mask arm then needs only the FDR stage: it can adopt another arm's per-file
@@ -71,6 +74,7 @@ namespace pwiz.Osprey.IO
         // Lazy so an unknown name surfaces as its own exception at first use rather than as a
         // TypeInitializationException; Program checks it at startup with UnknownFeatureName.
         private static readonly Lazy<bool[]> _masked = new Lazy<bool[]>(() => CreateMask(MaskedNames));
+        private static readonly Lazy<int[]> _fdrFeatureIndices = new Lazy<int[]>(() => UnmaskedIndices(IsMasked));
 
         /// <summary>The masked feature names in effect: OSPREY_FEATURE_MASK, or the default set when it is unset.</summary>
         private static string[] MaskedNames => OspreyEnvironment.FeatureMask ?? DEFAULT_MASKED_FEATURES;
@@ -79,6 +83,51 @@ namespace pwiz.Osprey.IO
         public static bool IsMasked(int featureIndex)
         {
             return _masked.Value[featureIndex];
+        }
+
+        /// <summary>
+        /// The PIN index of each feature the FDR classifier sees, ascending: position i of an FDR
+        /// feature vector holds PIN feature <c>FdrFeatureIndices[i]</c>. Under the default mask this
+        /// is 0 to 20, the 21 features Osprey had before the masked ones were added, so the default
+        /// classifier sees exactly the matrix it saw then.
+        /// </summary>
+        public static int[] FdrFeatureIndices => _fdrFeatureIndices.Value;
+
+        /// <summary>The PIN names of the FDR feature vector's positions, in its order.</summary>
+        public static string[] FdrFeatureNames => SelectFdrFeatures(ParquetScoreCache.PIN_FEATURE_NAMES);
+
+        /// <summary>
+        /// The FDR classifier's view of a per-PIN-feature array (feature names, feature metadata, a
+        /// full feature vector): its unmasked elements, in PIN order. Use it wherever something
+        /// indexed by PIN feature has to line up with an FDR feature vector, so names and values
+        /// cannot drift apart.
+        /// </summary>
+        public static T[] SelectFdrFeatures<T>(T[] perPinFeature)
+        {
+            return SelectFeatures(perPinFeature, FdrFeatureIndices);
+        }
+
+        /// <summary><see cref="SelectFdrFeatures{T}"/> for explicitly supplied feature indices.</summary>
+        public static T[] SelectFeatures<T>(T[] perPinFeature, int[] featureIndices)
+        {
+            if (perPinFeature == null)
+                throw new ArgumentNullException(nameof(perPinFeature));
+            if (perPinFeature.Length != ParquetScoreCache.NUM_PIN_FEATURES)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new ArgumentException(string.Format(@"Expected {0} PIN features, not {1}",
+                    ParquetScoreCache.NUM_PIN_FEATURES, perPinFeature.Length), nameof(perPinFeature));
+            }
+            var selected = new T[featureIndices.Length];
+            for (int i = 0; i < featureIndices.Length; i++)
+                selected[i] = perPinFeature[featureIndices[i]];
+            return selected;
+        }
+
+        /// <summary>The ascending PIN indices <paramref name="isMasked"/> leaves unmasked.</summary>
+        public static int[] UnmaskedIndices(Func<int, bool> isMasked)
+        {
+            return Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Where(f => !isMasked(f)).ToArray();
         }
 
         /// <summary>
@@ -95,6 +144,12 @@ namespace pwiz.Osprey.IO
         /// and everything after it. Emitted for every arm, the default included, because outputs
         /// written before the mask moved to load time carry no term and were computed under a mask
         /// nothing recorded. The names are sorted, so the order they were listed in does not matter.
+        ///
+        /// <para>The <c>fdrcols</c> term records that a masked feature is absent from the FDR
+        /// vectors rather than a column of zeros. The saved first-pass model and each run's
+        /// first-pass feature sums are sized to those vectors, so one written under the zero-column
+        /// layout must not be adopted: a frozen model 97 features wide would decline every 21-wide
+        /// vector it was handed.</para>
         /// </summary>
         public static string ValidityKeySuffix()
         {
@@ -105,7 +160,7 @@ namespace pwiz.Osprey.IO
                 mask = @"none";
             else
                 mask = string.Join(@"+", OspreyEnvironment.FeatureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
-            return @";featmask=" + mask;
+            return @";featmask=" + mask + @";fdrcols=unmasked";
         }
 
         /// <summary>

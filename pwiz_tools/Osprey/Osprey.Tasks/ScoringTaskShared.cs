@@ -67,6 +67,17 @@ namespace pwiz.Osprey.Tasks
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
         /// <summary>
+        /// The metadata of the FDR classifier's features - the unmasked PIN features, in the order
+        /// <see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/> lays out each vector -
+        /// so the model, its diagnostics and the feature report name the columns it trained on.
+        /// </summary>
+        internal static OspreyFeatureInfo[] FdrFeatureInfos()
+        {
+            return PinFeatureMask.SelectFdrFeatures(
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES));
+        }
+
+        /// <summary>
         /// Build the <see cref="ScoringPipeline"/> the tasks score through, wired
         /// to the run's log sink and (optional) diagnostics seam. Cheap: the
         /// pipeline only carries those two references, so constructing one per
