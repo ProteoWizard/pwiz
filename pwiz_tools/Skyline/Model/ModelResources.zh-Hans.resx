@@ -885,12 +885,6 @@
   <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
     <value>正在导入谱图库</value>
   </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
-    <value>成功完成 BlibBuild。</value>
-  </data>
-  <data name="CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
-    <value>无法完成 BlibBuild。</value>
-  </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>详细日志</value>
   </data>

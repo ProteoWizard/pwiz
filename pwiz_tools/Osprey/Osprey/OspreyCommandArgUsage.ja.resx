@@ -97,10 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="_diagnostics" xml:space="preserve">
-    <value>開発者向けの診断ダンプファイルを書き込みます（Rust実装との比較用）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_fdrbench" xml:space="preserve">
     <value>FDRBench互換の入力TSVをこのパスに書き込みます。レベルは{0}から取得します（{2}。{3}と{4}はプリカーサーレベルを出力）。報告されたすべてのターゲット（つまり実際に出力に書き込まれたペプチド）をQ値に関係なく含み、生のSVM判別値を「{1}」として出力するため、FDRBenchはOspreyの閾値で切り捨てられることなく、エントラップメントのカウントによって真のFDRを計算できます。</value>
     <comment>Needs Review:New resource</comment>
@@ -119,10 +115,6 @@
   </data>
   <data name="_input_list" xml:space="preserve">
     <value>入力パスを記載したファイル（1行に1つ、#コメントは無視）。長い{0}リストの代わりに使用できます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_memstamp" xml:space="preserve">
-    <value>各出力行の先頭に、マネージドメモリとプライベートメモリ（MB）を付加します（perfviz用に{0}と併用）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_model_diagnostics" xml:space="preserve">

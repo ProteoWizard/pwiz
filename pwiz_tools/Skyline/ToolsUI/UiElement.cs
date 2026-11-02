@@ -1129,7 +1129,7 @@ namespace pwiz.Skyline.ToolsUI
         // stands there until it is dismissed.
         public override bool IsTransient => Form is LongWaitDlg;
         public override bool IsProgressing => Form is ILongWaitForm { IsBusy: true };
-        public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
+        public override string DetailedMessage => (Form as IDetailedMessage)?.DetailedMessage ?? Form.Text;
 
         /// <summary>Presses a key on the form as the keyboard does while it is the active window: on the
         /// control that has the focus in it, or on the form itself when none does (see <see cref="KeyStroke"/>).
@@ -1450,10 +1450,11 @@ namespace pwiz.Skyline.ToolsUI
 
             formInfo.DockState = GetDockState();
             formInfo.HasGraph = TryGetGraphControl() != null;
-            // What the form SAYS -- an alert's text -- so a caller listing the forms can see that one is in the way,
-            // and why, without capturing an image of it. Only for a form that says something beyond its own title (a
-            // CommonFormEx: an alert, an error); a plain form's DetailedMessage IS its title.
-            formInfo.DetailedMessage = Form is CommonFormEx
+            // What the form SAYS - an alert's text, a test pause's description - so a caller listing the forms can
+            // see that one is in the way, and why, without capturing an image of it. Only for a form that says
+            // something beyond its own title (IDetailedMessage: a CommonFormEx alert or error, the pause form); a
+            // plain form's DetailedMessage IS its title.
+            formInfo.DetailedMessage = Form is IDetailedMessage
                 ? JsonUiService.TruncateDetail(DetailedMessage)
                 : null;
             return formInfo;

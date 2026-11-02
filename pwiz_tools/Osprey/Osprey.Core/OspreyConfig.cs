@@ -236,18 +236,11 @@ namespace pwiz.Osprey.Core
 
 
         /// <summary>
-        /// -d / --diagnostics: master switch that turns on the cross-impl
-        /// bisection dump bundle (see <c>OspreyDiagnostics.Initialize</c>).
-        /// Runtime toggle only -- intentionally NOT part of any identity hash.
-        /// </summary>
-        public bool Diagnostics { get; set; }
-
-        /// <summary>
         /// --model-diagnostics: emit a single self-contained interactive HTML
         /// report of the trained scoring model + FDR calibration (feature
         /// contributions, target/decoy/entrapment score densities, q-value to
         /// FDP calibration, paired decoy-win fraction) when first-pass FDR
-        /// completes. A user-facing deliverable, distinct from the -d bisection
+        /// completes. A user-facing deliverable, distinct from the OSPREY_DIAGNOSTICS bisection
         /// dumps; opt-in and off the default output path (writes only its own
         /// HTML file), so it does not affect any other output. Runtime toggle
         /// only -- intentionally NOT part of any identity hash.

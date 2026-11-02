@@ -407,7 +407,9 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// The precursors the library is predicted for: the document's, or a protein FASTA's,
         /// digested with the document's settings into a document of its own, as Import FASTA would
-        /// add them to the document; then the entrapment peptides, if asked for, and a
+        /// add them to the document - except that every peptide the filter allows is kept, with its
+        /// precursors, whatever the library pick, rank and auto-select say; then the entrapment
+        /// peptides, if asked for, and a
         /// reverse-sequence decoy of every peptide, if asked for, which the library marks in its DecoyPairs
         /// table (<see cref="LibraryDecoyPairs"/>). The open document itself is never changed. Null
         /// when a digest is cancelled, fails or gives no peptides, after reporting it.
@@ -416,9 +418,14 @@ namespace pwiz.Skyline.SettingsUI
         {
             var doc = _documentUiContainer.DocumentUI;
             _entrapmentTargets = null;
-            // A digest for prediction keeps every peptide the filter allows: the library-match pick
-            // would keep only peptides with spectra already, which is the opposite of the point
-            var settingsDigest = doc.Settings.ChangePeptideLibraries(lib => lib.ChangePick(PeptidePick.filter));
+            // A digest for prediction keeps every peptide the filter allows, with every precursor the
+            // transition filter allows: the library-match pick would keep only peptides with spectra
+            // already, and auto-select off would digest the proteins into no peptides, or the peptides
+            // into no precursors, which are the opposite of the point. The rank goes before the pick,
+            // since a pick by filter refuses a rank
+            var settingsDigest = doc.Settings.ChangePeptideLibraries(lib => lib.ChangeRankId(null).ChangePick(PeptidePick.filter))
+                .ChangePeptideFilter(filter => filter.ChangeAutoSelect(true))
+                .ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
             if (!PredictForDocument)
             {
                 doc = ImportFastaToPredict(new SrmDocument(settingsDigest), PredictForFastaPath, out _);
