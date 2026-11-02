@@ -54,7 +54,9 @@ namespace pwiz.Osprey.IO
     {
 
         /// <summary>
-        /// Version of what this reader makes of a blib. 4: peaks in m/z order, one peak per m/z
+        /// Version of what this reader makes of a blib. 5: modification ids, names and masses
+        /// from unimod.obo (<see cref="UniMod"/>), so any UniMod id is read and iTRAQ4plex is
+        /// 144.102063, not 144.102062. 4: peaks in m/z order, one peak per m/z
         /// (<see cref="FragmentPeaks"/>); ids from 0 in reading order and the modified sequence
         /// rebuilt from the modification masses, as the TSV loader's are, so an entry reads the
         /// same from either file. 3: the residue masses the typing computes
@@ -66,7 +68,7 @@ namespace pwiz.Osprey.IO
         /// and the task-key term both carry it for every blib, and a change to either moves
         /// both by editing this one value.
         /// </summary>
-        public const string READER_VERSION = @"4";
+        public const string READER_VERSION = @"5";
 
         /// <summary>
         /// Spectra per partition below which fewer threads than asked for are used: a reader per
@@ -579,7 +581,7 @@ namespace pwiz.Osprey.IO
         /// Identify the modification a bracket's <paramref name="text"/> names on
         /// <paramref name="residue"/>, or null when it cannot be identified.
         ///
-        /// <para>A UniMod id must be one Osprey knows (<see cref="UniMod"/>). A mass is matched
+        /// <para>A UniMod id must be one in UniMod (<see cref="UniMod"/>). A mass is matched
         /// against the known modifications allowed on the residue as Skyline matches it, at the
         /// precision it is printed with (<see cref="UniMod.Match"/>): BiblioSpec prints one
         /// decimal (<c>C[+57.0]</c>, <c>K[+8.0]</c>), and the fragments need the modification's
