@@ -22,59 +22,94 @@
  */
 
 using System.Globalization;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// Represents a neutral loss from a fragment ion.
-    /// Maps to osprey-core/src/types.rs NeutralLoss enum.
+    /// Neutral loss kind, carried inline on a <see cref="FragmentAnnotation"/> as
+    /// a compact value code rather than a per-fragment heap reference. The values
+    /// match the on-disk tags written by the library cache, so serialization needs
+    /// no translation table. Maps to osprey-core/src/types.rs NeutralLoss enum.
     /// </summary>
-    public class NeutralLoss
+    public enum NeutralLossCode : byte
     {
-        public static readonly NeutralLoss H2O = new NeutralLoss(18.010565);
-        public static readonly NeutralLoss NH3 = new NeutralLoss(17.026549);
-        public static readonly NeutralLoss H3PO4 = new NeutralLoss(97.976896);
+        None = 0,
+        H2O = 1,
+        NH3 = 2,
+        H3PO4 = 3,
+        Custom = 4
+    }
 
-        public double Mass { get; private set; }
+    /// <summary>
+    /// Neutral loss masses and parsing. Formerly a per-fragment reference type;
+    /// now a static helper so a <see cref="FragmentAnnotation"/> can hold a
+    /// <see cref="NeutralLossCode"/> plus a custom mass entirely by value.
+    /// </summary>
+    public static class NeutralLoss
+    {
+        // From the formulas and the isotope table every tool in pwiz shares
+        // (pwiz.Common.Chemistry, the values Skyline calculates with), not a copy of them: the
+        // tools that compute peptide and fragment masses must agree to the last digit.
+        public static readonly double H2OMass = MonoisotopicMass(@"H2O");
+        public static readonly double NH3Mass = MonoisotopicMass(@"NH3");
+        public static readonly double H3PO4Mass = MonoisotopicMass(@"H3PO4");
 
-        private NeutralLoss(double mass)
+        /// <summary>The monoisotopic mass of <paramref name="formula"/> from <see cref="IsotopeAbundances.Default"/>, as <see cref="AminoAcidFormulas"/> sums a peptide's.</summary>
+        public static double MonoisotopicMass(string formula)
         {
-            Mass = mass;
+            double mass = 0.0;
+            foreach (var element in Molecule.Parse(formula))
+                mass += IsotopeAbundances.Default[element.Key].MostAbundanceMass * element.Value;
+            return mass;
         }
 
         /// <summary>
-        /// Creates a custom neutral loss with the specified mass.
+        /// Mass of the neutral loss for the given code, using
+        /// <paramref name="customMass"/> only when the code is
+        /// <see cref="NeutralLossCode.Custom"/>. Returns 0 for
+        /// <see cref="NeutralLossCode.None"/>.
         /// </summary>
-        public static NeutralLoss Custom(double mass)
+        public static double MassFor(NeutralLossCode code, double customMass)
         {
-            return new NeutralLoss(mass);
+            switch (code)
+            {
+                case NeutralLossCode.H2O: return H2OMass;
+                case NeutralLossCode.NH3: return NH3Mass;
+                case NeutralLossCode.H3PO4: return H3PO4Mass;
+                case NeutralLossCode.Custom: return customMass;
+                default: return 0.0;
+            }
         }
 
         /// <summary>
-        /// Parses a string to a <see cref="NeutralLoss"/>. Returns null for empty, "NOLOSS", or unrecognized input.
+        /// Parses a string to a neutral loss: (<see cref="NeutralLossCode.None"/>, 0) for
+        /// "NOLOSS", a named code for known losses, and
+        /// (<see cref="NeutralLossCode.Custom"/>, mass) for a numeric mass. Null for empty or
+        /// unrecognized input, which a library reader must report rather than read as no loss.
         /// </summary>
-        public static NeutralLoss Parse(string s)
+        public static (NeutralLossCode Code, double CustomMass)? Parse(string s)
         {
             if (string.IsNullOrEmpty(s))
                 return null;
 
             switch (s.ToUpperInvariant())
             {
-                case "H2O":
-                case "WATER":
-                    return H2O;
-                case "NH3":
-                case "AMMONIA":
-                    return NH3;
-                case "H3PO4":
-                case "PHOSPHO":
-                    return H3PO4;
-                case "NOLOSS":
-                    return null;
+                case @"H2O":
+                case @"WATER":
+                    return (NeutralLossCode.H2O, 0.0);
+                case @"NH3":
+                case @"AMMONIA":
+                    return (NeutralLossCode.NH3, 0.0);
+                case @"H3PO4":
+                case @"PHOSPHO":
+                    return (NeutralLossCode.H3PO4, 0.0);
+                case @"NOLOSS":
+                    return (NeutralLossCode.None, 0.0);
                 default:
                     double mass;
                     if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out mass))
-                        return Custom(mass);
+                        return (NeutralLossCode.Custom, mass);
                     return null;
             }
         }

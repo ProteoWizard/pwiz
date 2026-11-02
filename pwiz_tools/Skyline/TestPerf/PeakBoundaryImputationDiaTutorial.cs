@@ -40,7 +40,7 @@ namespace TestPerf
     [TestClass]
     public class PeakBoundaryImputationDiaTutorial : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Exhausts memory when run alongside other workers
         public void TestPeakBoundaryImputationDiaTutorial()
         {
             if (IsTranslationRequired)
@@ -161,6 +161,8 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SelectedResultsIndex = 0);
             WaitForRTRegressionComplete();
             PauseForRetentionTimeGraphScreenShot("Residuals for EV13 replicate");
+            // The regression graph shows where it was last placed, floating over the chromatograms
+            RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.score_to_run_regression));
             SelectPeptide(pepOfInterest1);
             RunUI(() => rtReplicateGraphSummary.Activate());
             PauseForScreenShot(SkylineWindow, $"{pepOfInterest1} peptide view");

@@ -501,6 +501,21 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&amp;oops")); // Already escaped
             Assert.AreEqual("&amp;oops &amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops &amp;oops")); // Mix of escaped and unescaped
             Assert.AreEqual("&amp;oops &amp;oops &apos;oops", PathEx.EscapePathForXML("&oops &oops &apos;oops")); // Use of & to escape apostrophe
+            Assert.AreEqual("&#38;oops &#x26;oops", PathEx.EscapePathForXML("&#38;oops &#x26;oops")); // Character references
+            Assert.AreEqual("R&amp;#D", PathEx.EscapePathForXML("R&#D")); // '#' without a complete reference
+            Assert.AreEqual("&amp;#;oops", PathEx.EscapePathForXML("&#;oops")); // Empty reference
+            Assert.AreEqual("&amp;#X41;oops", PathEx.EscapePathForXML("&#X41;oops")); // XML requires lowercase 'x'
+            // References to characters XML does not allow
+            Assert.AreEqual("&amp;#0;oops", PathEx.EscapePathForXML("&#0;oops"));
+            Assert.AreEqual("&amp;#1;oops", PathEx.EscapePathForXML("&#1;oops"));
+            Assert.AreEqual("&amp;#xD800;oops", PathEx.EscapePathForXML("&#xD800;oops")); // Surrogate
+            Assert.AreEqual("&amp;#xFFFE;oops", PathEx.EscapePathForXML("&#xFFFE;oops"));
+            Assert.AreEqual("&amp;#x110000;oops", PathEx.EscapePathForXML("&#x110000;oops")); // Beyond Unicode
+            Assert.AreEqual("&amp;#99999999999;oops", PathEx.EscapePathForXML("&#99999999999;oops")); // Overflows int
+            // References to characters XML allows
+            Assert.AreEqual("&#9;&#xA;&#xD;&#x10000;&#x10FFFF;oops", PathEx.EscapePathForXML("&#9;&#xA;&#xD;&#x10000;&#x10FFFF;oops"));
+            const char arabicIndicThree = (char) 0x0663; // Non-ASCII digit, which Regex \d would match
+            Assert.AreEqual("&amp;#" + arabicIndicThree + ";oops", PathEx.EscapePathForXML("&#" + arabicIndicThree + ";oops"));
         }
 
         [TestMethod]
@@ -549,6 +564,12 @@ namespace pwiz.SkylineTest
                         }
                     }
                 }
+
+                if (!Install.IsRunningOnWine)
+                {
+                    VerifyAccessDeniedNamesTheLockingProcess(filePath);
+                }
+
                 // Now test successful cleanup
                 DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
                 testFilesDir.Cleanup();
@@ -563,6 +584,46 @@ namespace pwiz.SkylineTest
             finally
             {
                 DesiredCleanupLevel = cleanupLevel;
+            }
+        }
+
+        /// <summary>
+        /// A lock is reported as a sharing violation when the file is opened, but as access-denied
+        /// when it is deleted or replaced - which is what an overwriting unzip does, and how the
+        /// crux tool extraction fails. Both must name the process holding the file.
+        /// </summary>
+        private static void VerifyAccessDeniedNamesTheLockingProcess(string filePath)
+        {
+            // The message shape .NET uses for access-denied, with the path it could not replace
+            var accessDenied = new UnauthorizedAccessException(
+                string.Format(@"Access to the path '{0}' is denied.", filePath));
+
+            using (File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var described = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
+                if (!ReferenceEquals(described, accessDenied))
+                {
+                    // Only assert the naming when the Restart Manager was actually able to answer.
+                    // Where it is unavailable - a container, or an account without the rights - it
+                    // names no process and the original exception is returned untouched, which the
+                    // locking test above tolerates for the same reason.
+                    AssertEx.Contains(described.Message, filePath,
+                        MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process);
+                }
+            }
+
+            // Unlocked by us now, so nothing of OURS holds it and the original should survive
+            // untouched. Not asserted as identity though: this asks the Restart Manager about a file
+            // on a shared machine, where a scanner or an indexer may legitimately be holding it for a
+            // moment - and naming that holder would be the finder working correctly, not failing.
+            // Asserting identity here would make the test fail on other software's timing.
+            var whenUnlocked = FileLockingProcessFinder.ToFileLockingException(accessDenied, null);
+            if (!ReferenceEquals(accessDenied, whenUnlocked))
+            {
+                AssertEx.IsFalse(whenUnlocked.Message.Contains(
+                        MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process),
+                    TextUtil.LineSeparate(@"A file this process had already closed was reported as locked by it.",
+                        whenUnlocked.Message));
             }
         }
 
@@ -598,6 +659,19 @@ namespace pwiz.SkylineTest
             // as a programming defect and showing a crash dialog instead of a friendly error
             Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(
                 new PanoramaImportErrorException(testUri, testUri, "Import failed")));
+        }
+
+        [TestMethod]
+        public void TestTryMatchUnicode()
+        {
+            // Test TryMatch with case-insensitive filename matching (Issue #4142)
+            // On Windows, filenames are case-insensitive, so "µ-Sample.mzML" should match "µ-sample.mzML"
+            var ips = new ImportPeptideSearch();
+            ips.SpectrumSourceFiles.Add(@"µ-sample.mzML",
+                new ImportPeptideSearch.FoundResultsFilePossibilities(@"µ-sample"));
+            ips.TryMatch(@"C:\Data\µ-Experiment\µ-Sample.mzML", false);
+            Assert.IsTrue(ips.SpectrumSourceFiles[@"µ-sample.mzML"].HasExactMatch,
+                "TryMatch should find case-insensitive match for Unicode filename");
         }
     }
 }

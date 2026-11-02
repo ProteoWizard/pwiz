@@ -27,23 +27,111 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Parquet;
+using Parquet.Schema;
+using Pwiz.Data.MsData.Readers;
+using pwiz.BiblioSpec.IO;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for Osprey.IO types: BlibWriter, SpectraCache, MzmlReader, and ParquetScoreCache.
+    /// Tests for Osprey.IO types: OspreyBlibWriter, SpectraCache, SpectrumFileReader, and ParquetScoreCache.
     /// Ported from osprey-io Rust tests.
     /// </summary>
     [TestClass]
     public class IOTest
     {
+        #region CarafeProteinIdNormalizer Tests
+
+        /// <summary>
+        /// Carafe writes one synthetic accession PER PEPTIDE
+        /// (<c>sp|O95139_pep00019|NDUB6_HUMAN</c>), so every peptide becomes its own protein.
+        /// Left in place that breaks protein parsimony and, worse, silently empties the
+        /// <c>protein-compact</c> stratum - "proteins with &gt;=2 detected peptides" can never
+        /// fire when each protein owns one peptide. Measured on the Stellar entrapment library:
+        /// 7 proteins / 23 base_ids before stripping, 4,022 / 167,660 after.
+        /// </summary>
+        [TestMethod]
+        public void TestCarafeProteinIdNormalizer()
+        {
+            // Two peptides of ONE real protein, each carrying its own pseudo-accession, plus the
+            // entrapment and decoy forms whose markers must survive intact.
+            var library = new List<LibraryEntry>
+            {
+                ProtEntry(@"PEPTIDEK", 2, @"sp|O95139_pep00019|NDUB6_HUMAN"),
+                ProtEntry(@"PEPTIDER", 2, @"sp|O95139_pep00042|NDUB6_HUMAN"),
+                ProtEntry(@"ENTRAPK", 2, @"sp|Q9ULK4_p_target_pep00052|MED23_HUMAN_p_target"),
+                ProtEntry(@"DECOYK", 2, @"decoy_sp|Q04726_p_target_pep00087|TLE3_HUMAN_p_target"),
+            };
+            string warning = null;
+            int n = CarafeProteinIdNormalizer.Normalize(library, w => warning = w);
+
+            Assert.AreEqual(4, n);
+            Assert.IsNotNull(warning, @"stripping the suffix must warn - it changes protein-level results");
+            // The two peptides now share ONE protein, which is the whole point: only then can a
+            // protein reach the 2-detected-peptide bar protein-compact stratifies on.
+            Assert.AreEqual(@"sp|O95139|NDUB6_HUMAN", library[0].ProteinIds[0]);
+            Assert.AreEqual(@"sp|O95139|NDUB6_HUMAN", library[1].ProteinIds[0]);
+            // Entrapment and decoy markers are NOT part of the suffix and must be preserved -
+            // the entrapment form must match what the pairing manifest's `proteins` column holds,
+            // or classification and pairing would stop agreeing with it.
+            Assert.AreEqual(@"sp|Q9ULK4_p_target|MED23_HUMAN_p_target", library[2].ProteinIds[0]);
+            Assert.AreEqual(@"decoy_sp|Q04726_p_target|TLE3_HUMAN_p_target", library[3].ProteinIds[0]);
+        }
+
+        /// <summary>
+        /// The no-op paths: a clean library must be left byte-identical and must NOT warn, and an
+        /// accession containing a bare "_pep" with no digits is a real accession, not a Carafe
+        /// suffix. Also covers the collapse case - once the suffix is gone, two accessions on one
+        /// entry can become the same protein and must not be stored twice.
+        /// </summary>
+        [TestMethod]
+        public void TestCarafeProteinIdNormalizerLeavesCleanLibraries()
+        {
+            var clean = new List<LibraryEntry>
+            {
+                ProtEntry(@"PEPTIDEK", 2, @"sp|Q9NP61|ARFG3_HUMAN"),
+                ProtEntry(@"PEPTIDER", 2, @"sp|P00761_peptidase|TRYP_PIG"),
+            };
+            string warning = null;
+            Assert.AreEqual(0, CarafeProteinIdNormalizer.Normalize(clean, w => warning = w));
+            Assert.IsNull(warning, @"a library with no Carafe suffix must not warn");
+            Assert.AreEqual(@"sp|Q9NP61|ARFG3_HUMAN", clean[0].ProteinIds[0]);
+            Assert.AreEqual(@"sp|P00761_peptidase|TRYP_PIG", clean[1].ProteinIds[0],
+                @"'_pep' without digits is part of a real accession and must survive");
+
+            var collapsing = new List<LibraryEntry> { ProtEntry(@"SHAREDK", 2, null) };
+            collapsing[0].ProteinIds = new[] { @"sp|P1_pep00001|A", @"sp|P1_pep00002|A", @"sp|P2_pep00003|B" };
+            Assert.AreEqual(1, CarafeProteinIdNormalizer.Normalize(collapsing, w => { }));
+            CollectionAssert.AreEqual(new[] { @"sp|P1|A", @"sp|P2|B" },
+                collapsing[0].ProteinIds.ToArray(),
+                @"accessions that become identical once the suffix is stripped must collapse to one");
+        }
+
+        private static uint _protEntryId;
+
+        private static LibraryEntry ProtEntry(string sequence, byte charge, string proteinId)
+        {
+            var entry = new LibraryEntry(++_protEntryId, sequence, sequence, charge, 500.0, 10.0);
+            if (proteinId != null)
+                entry.ProteinIds = new[] { proteinId };
+            return entry;
+        }
+
+        #endregion
+
         #region BlibWriter Tests
 
         /// <summary>
@@ -55,7 +143,7 @@ namespace pwiz.Osprey.Test
             string path = Path.GetTempFileName();
             try
             {
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     Assert.IsTrue(fileId > 0);
@@ -70,8 +158,8 @@ namespace pwiz.Osprey.Test
                     Assert.IsTrue(refId > 0);
 
                     writer.AddRetentionTime(refId, fileId, 10.0, 9.0, 11.0, 0.01, true);
-                    writer.AddMetadata("osprey_version", "0.1.0");
-                    writer.FinalizeDatabase();
+                    writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, "0.1.0");
+                    writer.Complete();
                 }
 
                 // Verify schema and data by opening a separate read connection
@@ -111,22 +199,21 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    var mods = new List<Modification>
+                    {
+                        new Modification { Position = 4, UnimodId = 4, MassDelta = 57.021464, Name = "Carbamidomethyl" }
+                    };
                     refId = writer.AddSpectrum(
                         "PEPTCIDE", "PEPTC[+57.021]IDE",
                         500.0, 2,
                         10.0, 9.0, 11.0,
                         new[] { 300.0 },
                         new[] { 100.0f },
-                        0.01, fileId, 1, 0.0);
-
-                    var mods = new List<Modification>
-                    {
-                        new Modification { Position = 4, UnimodId = 4, MassDelta = 57.021464, Name = "Carbamidomethyl" }
-                    };
-                    writer.AddModifications(refId, mods);
+                        0.01, fileId, 1, 0.0, mods);
+                    writer.Complete();
                 }
 
                 // Verify stored as 1-based: position 4 (0-based) -> 5 (1-based)
@@ -159,7 +246,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     refId = writer.AddSpectrum(
@@ -169,6 +256,7 @@ namespace pwiz.Osprey.Test
                         new[] { 300.0 },
                         new[] { 100.0f },
                         0.01, fileId, 1, 0.0);
+                    writer.Complete();
                 }
 
                 using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
@@ -206,7 +294,7 @@ namespace pwiz.Osprey.Test
                 float[] intensities = { 100.0f, 80.5f, 60.0f, 45.2f, 30.0f };
                 long refId;
 
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     refId = writer.AddSpectrum(
@@ -215,6 +303,7 @@ namespace pwiz.Osprey.Test
                         10.0, 9.0, 11.0,
                         mzs, intensities,
                         0.005, fileId, 1, 0.0);
+                    writer.Complete();
                 }
 
                 // Read back from SQLite using a separate connection
@@ -238,8 +327,7 @@ namespace pwiz.Osprey.Test
                             Assert.AreEqual(5, numPeaks);
 
                             // Decompress and verify m/z values
-                            byte[] mzBytes = BlibWriter.DecompressBlob(mzBlob, mzs.Length * 8);
-                            double[] readMzs = BlibWriter.BytesToDoubles(mzBytes);
+                            double[] readMzs = BlibWriter.DecodeMzs(mzBlob, mzs.Length);
                             Assert.AreEqual(mzs.Length, readMzs.Length);
                             for (int i = 0; i < mzs.Length; i++)
                             {
@@ -248,8 +336,7 @@ namespace pwiz.Osprey.Test
                             }
 
                             // Decompress and verify intensities
-                            byte[] intBytes = BlibWriter.DecompressBlob(intBlob, intensities.Length * 4);
-                            float[] readInts = BlibWriter.BytesToFloats(intBytes);
+                            float[] readInts = BlibWriter.DecodeIntensities(intBlob, intensities.Length);
                             Assert.AreEqual(intensities.Length, readInts.Length);
                             for (int i = 0; i < intensities.Length; i++)
                             {
@@ -277,7 +364,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId1 = writer.AddSourceFile("run1.mzML", "library.tsv", 0.01);
                     long fileId2 = writer.AddSourceFile("run2.mzML", "library.tsv", 0.01);
@@ -297,6 +384,7 @@ namespace pwiz.Osprey.Test
                     writer.AddRetentionTime(refId, fileId2, 10.3, 9.3, 11.3, 0.005, true);
                     // Run 3: no ID (null RT), has boundaries
                     writer.AddRetentionTime(refId, fileId3, null, 9.7, 11.7, 0.012, false);
+                    writer.Complete();
                 }
 
                 // Read back RetentionTimes using a separate connection
@@ -349,23 +437,22 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    var proteins = new List<string>
+                    {
+                        "sp|P12345|PROT_HUMAN",
+                        "sp|P67890|PROT2_HUMAN"
+                    };
                     refId = writer.AddSpectrum(
                         "PEPTIDE", "PEPTIDE",
                         400.0, 2,
                         10.0, 9.0, 11.0,
                         new[] { 300.0 },
                         new[] { 100.0f },
-                        0.01, fileId, 1, 0.0);
-
-                    var proteins = new List<string>
-                    {
-                        "sp|P12345|PROT_HUMAN",
-                        "sp|P67890|PROT2_HUMAN"
-                    };
-                    writer.AddProteinMapping(refId, proteins);
+                        0.01, fileId, 1, 0.0, proteins: proteins);
+                    writer.Complete();
                 }
 
                 // Read back protein accessions via join using a separate connection
@@ -397,48 +484,150 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Verifies the experiment-level columns of a search blib: absent from a library export,
+        /// present once <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> asks for them, then
+        /// a precursor q-value, precursor PEP and peptide q-value on each spectrum and a q-value
+        /// on each protein group, with a group shared by two spectra written once and a spectrum
+        /// linked to two groups.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchGlobalColumns()
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                using (var writer = new OspreyBlibWriter(path))
+                {
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    AddTestSpectrum(writer, fileId, 2);
+                    writer.Complete();
+                }
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorQValue"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorPep"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(conn, "Proteins", "QValue"));
+                }
+
+                long refId2, refId3;
+                using (var writer = new OspreyBlibWriter(path))
+                {
+                    writer.AddSearchGlobalColumns();
+                    writer.BeginBatch();
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004));
+                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004));
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
+                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002));
+                    writer.AddSpectrumProtein(refId2, groupA);
+                    writer.AddSpectrumProtein(refId2, groupC);
+                    writer.AddSpectrumProtein(refId3, groupA);
+                    writer.CommitBatch();
+                    writer.Complete();
+                }
+
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.AreEqual(0.003, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.006, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.02, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
+                    Assert.AreEqual(0.002, QueryDouble(conn,
+                        "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
+                    Assert.AreEqual(2L, QueryLong(conn,
+                        "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
+                        "WHERE p.accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"));
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        private static long AddTestSpectrum(OspreyBlibWriter writer, long fileId, int charge, SearchGlobalValues globalValues = null)
+        {
+            return writer.AddSpectrum("PEPTIDE", "PEPTIDE", 800.0 / charge, charge,
+                10.0, 9.0, 11.0, new[] { 300.0 }, new[] { 100.0f }, 0.01, fileId, 1, 0.0, null, null, globalValues);
+        }
+
+        private static bool HasColumn(SQLiteConnection conn, string table, string column)
+        {
+            using (var cmd = new SQLiteCommand("PRAGMA table_info(" + table + ")", conn))
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    if (reader.GetString(1) == column)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static double QueryDouble(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToDouble(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        private static long QueryLong(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Verifies that StripFlankingChars correctly removes flanking amino acid notation.
         /// </summary>
         [TestMethod]
         public void TestStripFlankingChars()
         {
             // No flanking chars
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("PEPTIDE"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("PEPTIDE"));
 
             // Underscores (DIA-NN format)
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("_PEPTIDE_"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("_PEPTIDE_"));
 
             // Periods/underscores (Prosit format)
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("_.PEPTIDE._"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("_.PEPTIDE._"));
 
             // Flanking amino acids with periods (standard notation)
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("K.PEPTIDE.R"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("K.PEPTIDE.R"));
 
             // Just periods
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars(".PEPTIDE."));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars(".PEPTIDE."));
 
             // Modified sequence with flanking chars
             Assert.AreEqual("PEPTC[+57.021]IDE",
-                BlibWriter.StripFlankingChars("_PEPTC[+57.021]IDE_"));
+                BlibPeptideText.StripFlankingChars("_PEPTC[+57.021]IDE_"));
 
             // Dashes at ends
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("-PEPTIDE-"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("-PEPTIDE-"));
 
             // Dots inside modification brackets must NOT be treated as flanking separators
             Assert.AreEqual("C[+57.02146]GPSPC[+57.02146]GLLK",
-                BlibWriter.StripFlankingChars("C[+57.02146]GPSPC[+57.02146]GLLK"));
+                BlibPeptideText.StripFlankingChars("C[+57.02146]GPSPC[+57.02146]GLLK"));
 
             // Multiple modifications with decimal dots
             Assert.AreEqual("AC[+57.02146]AC[+57.02146]AHGMLAEDGASC[+57.02146]R",
-                BlibWriter.StripFlankingChars("AC[+57.02146]AC[+57.02146]AHGMLAEDGASC[+57.02146]R"));
+                BlibPeptideText.StripFlankingChars("AC[+57.02146]AC[+57.02146]AHGMLAEDGASC[+57.02146]R"));
 
             // Flanking chars with modification dots
             Assert.AreEqual("C[+57.02146]PEPTIDE",
-                BlibWriter.StripFlankingChars("K.C[+57.02146]PEPTIDE.R"));
+                BlibPeptideText.StripFlankingChars("K.C[+57.02146]PEPTIDE.R"));
 
             // N-terminal modification with dot
             Assert.AreEqual("[+42.011]PEPTC[+57.02146]IDE",
-                BlibWriter.StripFlankingChars("[+42.011]PEPTC[+57.02146]IDE"));
+                BlibPeptideText.StripFlankingChars("[+42.011]PEPTC[+57.02146]IDE"));
         }
 
         /// <summary>
@@ -448,50 +637,73 @@ namespace pwiz.Osprey.Test
         public void TestConvertUnimodToMass()
         {
             // No modifications
-            Assert.AreEqual("PEPTIDE", BlibWriter.ConvertUnimodToMass("PEPTIDE"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.ConvertUnimodToMass("PEPTIDE"));
 
             // Already mass notation - unchanged
             Assert.AreEqual("PEPTC[+57.021]IDE",
-                BlibWriter.ConvertUnimodToMass("PEPTC[+57.021]IDE"));
+                BlibPeptideText.ConvertUnimodToMass("PEPTC[+57.021]IDE"));
 
             // UniMod:4 (Carbamidomethyl)
-            string result = BlibWriter.ConvertUnimodToMass("PEPTC[UniMod:4]IDE");
+            string result = BlibPeptideText.ConvertUnimodToMass("PEPTC[UniMod:4]IDE");
             Assert.IsTrue(result.StartsWith("PEPTC[+57."),
                 "Expected mass notation for UniMod:4, got: " + result);
             Assert.IsTrue(result.EndsWith("]IDE"),
                 "Expected to end with ]IDE, got: " + result);
 
             // UniMod:35 (Oxidation)
-            result = BlibWriter.ConvertUnimodToMass("PEPTM[UniMod:35]IDE");
+            result = BlibPeptideText.ConvertUnimodToMass("PEPTM[UniMod:35]IDE");
             Assert.IsTrue(result.StartsWith("PEPTM[+15."),
                 "Expected mass notation for UniMod:35, got: " + result);
 
             // Multiple modifications
-            result = BlibWriter.ConvertUnimodToMass("PEPTC[UniMod:4]M[UniMod:35]IDE");
+            result = BlibPeptideText.ConvertUnimodToMass("PEPTC[UniMod:4]M[UniMod:35]IDE");
             Assert.IsTrue(result.Contains("[+57."), "Should contain Carbamidomethyl mass");
             Assert.IsTrue(result.Contains("[+15."), "Should contain Oxidation mass");
 
             // Unknown UniMod - kept as-is
             Assert.AreEqual("PEPTX[UniMod:99999]IDE",
-                BlibWriter.ConvertUnimodToMass("PEPTX[UniMod:99999]IDE"));
+                BlibPeptideText.ConvertUnimodToMass("PEPTX[UniMod:99999]IDE"));
 
             // Case insensitive UNIMOD
-            result = BlibWriter.ConvertUnimodToMass("PEPTC[UNIMOD:4]IDE");
+            result = BlibPeptideText.ConvertUnimodToMass("PEPTC[UNIMOD:4]IDE");
             Assert.IsTrue(result.StartsWith("PEPTC[+57."),
                 "Case-insensitive UNIMOD should work, got: " + result);
 
-            // Negative mass (Glu->pyro-Glu)
-            result = BlibWriter.ConvertUnimodToMass("E[UniMod:28]PEPTIDE");
-            Assert.IsTrue(result.Contains("[-18."),
-                "Expected negative mass for UniMod:28, got: " + result);
+            // Negative masses: Glu->pyro-Glu is UniMod:27, Gln->pyro-Glu UniMod:28
+            Assert.AreEqual("E[-18.0106]PEPTIDE", BlibPeptideText.ConvertUnimodToMass("E[UniMod:27]PEPTIDE"));
+            Assert.AreEqual("Q[-17.0265]PEPTIDE", BlibPeptideText.ConvertUnimodToMass("Q[UniMod:28]PEPTIDE"));
 
             // Verify TryGetUnimodMass for known IDs
             double mass;
-            Assert.IsTrue(BlibWriter.TryGetUnimodMass(4, out mass));
+            Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(4, out mass));
             Assert.AreEqual(57.021464, mass, 1e-6);
-            Assert.IsTrue(BlibWriter.TryGetUnimodMass(35, out mass));
+            Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(35, out mass));
             Assert.AreEqual(15.994915, mass, 1e-6);
-            Assert.IsFalse(BlibWriter.TryGetUnimodMass(99999, out mass));
+            Assert.IsFalse(BlibPeptideText.TryGetUnimodMass(99999, out mass));
+
+            // The ids Osprey once mapped to another modification's mass, now Skyline's UniModData
+            // masses: every reader and writer shares the one table.
+            var skylineMasses = new Dictionary<int, double>
+            {
+                { 27, -18.010565 },   // Glu->pyro-Glu
+                { 28, -17.026549 },   // Gln->pyro-Glu, once Glu->pyro-Glu
+                { 122, 27.994915 },   // Formyl, once SUMO
+                { 214, 144.102062 },  // iTRAQ4plex, once Nitro
+                { 312, 119.004099 },  // Cysteinyl, once Ammonia-loss
+                { 354, 44.985078 },   // Nitro
+                { 385, -17.026549 },  // Ammonia-loss, once TMT6plex
+                { 737, 229.162932 },  // TMT6plex
+                { 747, 86.000394 },   // Malonyl, once TMTpro
+                { 2016, 304.207146 }, // TMTpro
+                { 259, 8.014199 },    // Label:13C(6)15N(2)
+                { 267, 10.008269 },   // Label:13C(6)15N(4)
+            };
+            foreach (var pair in skylineMasses)
+            {
+                Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(pair.Key, out mass), pair.Key.ToString());
+                Assert.AreEqual(pair.Value, mass, pair.Key.ToString());
+                Assert.AreEqual(pair.Value, DiannTsvLoader.UnimodIdToMass(pair.Key), pair.Key.ToString());
+            }
         }
 
         #endregion
@@ -592,6 +804,352 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// Verifies that <see cref="SpectraWindowIndex"/> streams each isolation
+        /// window's MS2 spectra byte-for-byte identically to the resident grouping
+        /// that scoring builds today from <see cref="SpectraCache.LoadSpectraCache"/>.
+        /// This is the load-bearing correctness gate for the per-window streaming
+        /// refactor: same window key (Round(center*10)), same file-order membership
+        /// (including two distinct centers that round to one key), same decoded
+        /// fields/peaks, an empty-peak record, MS1 records the index must skip, an
+        /// absent key returning empty, AllMs2Rts mirroring the file-order RTs, and
+        /// invalid/missing caches rejected the same way LoadSpectraCache rejects them.
+        /// </summary>
+        [TestMethod]
+        public void TestSpectraWindowIndex()
+        {
+            // Interleaved DIA-style cycling across three windows in the INPUT (file /
+            // acquisition order), so the v4 writer's window grouping makes on-disk order
+            // differ from file order -- this exercises both the grouping and the readers'
+            // reconstruction of file-order membership. 500.03 and 699.98 round to the
+            // same keys as 500.0 and 700.0, and one record has zero peaks.
+            var ms2 = new List<Spectrum>
+            {
+                MakeIndexMs2(1, 10.0, 500.00, 3),
+                MakeIndexMs2(2, 10.0, 600.00, 2),
+                MakeIndexMs2(3, 10.0, 700.00, 5),
+                MakeIndexMs2(4, 10.1, 500.03, 1),
+                MakeIndexMs2(5, 10.1, 600.00, 0),
+                MakeIndexMs2(6, 10.1, 699.98, 4),
+                MakeIndexMs2(7, 10.2, 500.00, 2),
+                MakeIndexMs2(8, 10.2, 600.00, 3),
+                MakeIndexMs2(9, 10.2, 700.00, 1),
+            };
+            var ms1 = new List<MS1Spectrum>
+            {
+                new MS1Spectrum
+                {
+                    ScanNumber = 0, RetentionTime = 9.9,
+                    Mzs = new[] { 400.0, 500.0 }, Intensities = new[] { 10.0f, 20.0f }
+                },
+                new MS1Spectrum
+                {
+                    ScanNumber = 10, RetentionTime = 10.3,
+                    Mzs = new[] { 450.0 }, Intensities = new[] { 30.0f }
+                },
+            };
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, ms1);
+
+                // Reference grouping = exactly what RunCoelutionScoring builds today.
+                SpectraCacheResult full = SpectraCache.LoadSpectraCache(path);
+                Assert.IsNotNull(full);
+
+                // LoadSpectraCache must return MS2 in ACQUISITION (file) order even
+                // though the v4 body is physically window-grouped -- Stage-6 rescore
+                // relies on a full resident load in file order, so grouping must not
+                // force it to stream. The interleaved input makes grouped order differ
+                // from file order, so this catches a loader that returns on-disk order.
+                Assert.AreEqual(ms2.Count, full.Ms2Spectra.Count);
+                for (int i = 0; i < ms2.Count; i++)
+                {
+                    Assert.AreEqual(ms2[i].ScanNumber, full.Ms2Spectra[i].ScanNumber);
+                    Assert.AreEqual(ms2[i].RetentionTime, full.Ms2Spectra[i].RetentionTime, 0.0);
+                }
+
+                var expected = GroupByWindowKey(full.Ms2Spectra);
+
+                SpectraWindowIndex index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+                Assert.AreEqual(full.Ms2Spectra.Count, index.Ms2Count);
+
+                // Each window's streamed spectra are byte-identical, in file order.
+                int streamedTotal = 0;
+                foreach (var kvp in expected)
+                {
+                    List<Spectrum> streamed = index.LoadWindow(kvp.Key);
+                    AssertSpectraListEqual(kvp.Value, streamed);
+                    streamedTotal += streamed.Count;
+                    // One block read decodes to the same spectra; the last window's block ends
+                    // at the MS1 section, the others at the next window's first record.
+                    AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key));
+                }
+                // No record lost or double-counted across the window partition.
+                Assert.AreEqual(full.Ms2Spectra.Count, streamedTotal);
+
+                // One caller-kept buffer across every window, twice: after the first pass it is
+                // the largest block's size, so the second pass reads smaller blocks into a buffer
+                // whose tail still holds another window's bytes.
+                byte[] readBuffer = null;
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    foreach (var kvp in expected)
+                        AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key, ref readBuffer));
+                }
+
+                // Absent key -> empty list (matches the dictionary miss).
+                int absentKey = 1;
+                while (expected.ContainsKey(absentKey))
+                    absentKey++;
+                Assert.AreEqual(0, index.LoadWindow(absentKey).Count);
+                Assert.AreEqual(0, index.LoadWindowSerialRead(absentKey).Count);
+
+                // AllMs2Rts mirrors the file-order RTs (dedup's sole dependency).
+                Assert.AreEqual(full.Ms2Spectra.Count, index.AllMs2Rts.Count);
+                for (int i = 0; i < full.Ms2Spectra.Count; i++)
+                    Assert.AreEqual(full.Ms2Spectra[i].RetentionTime, index.AllMs2Rts[i], 0.0);
+
+                // MS1 loaded via the EOF index (its recorded section offset) is byte-identical
+                // to the full load's MS1 -- streaming Stages 1-4 get MS1 without the MS2 list.
+                Assert.AreEqual(full.Ms1Spectra.Count, index.Ms1Spectra.Count);
+                for (int i = 0; i < full.Ms1Spectra.Count; i++)
+                {
+                    Assert.AreEqual(full.Ms1Spectra[i].ScanNumber, index.Ms1Spectra[i].ScanNumber);
+                    Assert.AreEqual(full.Ms1Spectra[i].RetentionTime, index.Ms1Spectra[i].RetentionTime, 0.0);
+                    CollectionAssert.AreEqual(full.Ms1Spectra[i].Mzs, index.Ms1Spectra[i].Mzs);
+                    CollectionAssert.AreEqual(full.Ms1Spectra[i].Intensities, index.Ms1Spectra[i].Intensities);
+                }
+
+                // Isolation windows: every distinct rounded-center key, each carrying that
+                // key's first record's window, sorted by center - here the three windows of
+                // cycle 1 (records 1-3), since the later records only repeat their keys.
+                Assert.AreEqual(3, index.IsolationWindows.Count);
+                for (int i = 0; i < 3; i++)
+                {
+                    Assert.AreEqual(ms2[i].IsolationWindow.Center, index.IsolationWindows[i].Center, 0.0);
+                    Assert.AreEqual(ms2[i].IsolationWindow.LowerOffset, index.IsolationWindows[i].LowerOffset, 0.0);
+                    Assert.AreEqual(ms2[i].IsolationWindow.UpperOffset, index.IsolationWindows[i].UpperOffset, 0.0);
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+
+            // Windows acquired out of center order are stored out of center order, as on real Astral
+            // data: a window's block must end at the next block on disk, not at the next window by
+            // center.
+            AssertSerialReadsMatch(new List<Spectrum>
+            {
+                MakeIndexMs2(1, 10.0, 600.00, 3),
+                MakeIndexMs2(2, 10.0, 500.00, 2),
+                MakeIndexMs2(3, 10.0, 700.00, 4),
+                MakeIndexMs2(4, 10.1, 600.00, 1),
+                MakeIndexMs2(5, 10.1, 500.00, 5),
+                MakeIndexMs2(6, 10.1, 700.00, 2),
+            });
+
+            // A cache with bad magic -> null (same rule as LoadSpectraCache), so a
+            // caller can fall back to a resident load rather than stream garbage.
+            string badPath = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllBytes(badPath, Encoding.ASCII.GetBytes("NOTVALID"));
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(badPath));
+            }
+            finally
+            {
+                TryDeleteFile(badPath);
+            }
+
+            // A missing file -> null.
+            Assert.IsNull(SpectraWindowIndex.BuildFromCache(
+                Path.Combine(Path.GetTempPath(),
+                    "osprey_no_such_" + Guid.NewGuid().ToString("N") + ".spectra.bin")));
+
+            // A cache written by the pre-grouping v3 format is rejected (the VERSION
+            // bump invalidates old caches so they re-populate window-grouped on first
+            // use) -- both readers return null on the version mismatch.
+            string v3Path = Path.GetTempFileName();
+            try
+            {
+                using (var fs = new FileStream(v3Path, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(fs))
+                {
+                    w.Write(Encoding.ASCII.GetBytes("OSPRSPC\0"));
+                    w.Write((uint)3);   // pre-grouping version
+                    w.Write((ulong)0);  // source size (no fingerprint)
+                    w.Write((long)0);   // source mtime
+                    w.Write((uint)0);   // n_ms2
+                    w.Write((uint)0);   // n_ms1
+                }
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(v3Path));
+                Assert.IsNull(SpectraCache.LoadSpectraCache(v3Path));
+            }
+            finally
+            {
+                TryDeleteFile(v3Path);
+            }
+        }
+
+        /// <summary>
+        /// A build WITHOUT the vendor reader must still run against a <c>.spectra.bin</c>
+        /// that an opt-in build produced from a vendor raw file. That is the whole point of
+        /// staging caches once on a vendor-capable machine: every other machine consumes
+        /// them with no ProteoWizard and no mzML conversion.
+        ///
+        /// The guarantee is an ORDERING one - <c>EnsureSpectraCache</c> has to consult the
+        /// cache before it dispatches on file extension - and nothing else pins it. An
+        /// up-front extension check, added for a friendlier error message, would silently
+        /// break this workflow while every other test stayed green.
+        ///
+        /// The assertion is sound in either build. Where the vendor reader is absent
+        /// <see cref="SpectrumFileReader"/> throws for a non-mzML path, so a cache MISS
+        /// fails loudly rather than passing for the wrong reason; where it is present the
+        /// stand-in file is not a real raw, so a miss fails there too.
+        /// </summary>
+        [TestMethod]
+        public void TestVendorCacheUsableWithoutVendorReader()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyVendorCache" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Stands in for a Thermo .raw. The extension is what dispatch keys off,
+                // and the bytes are never read because the cache hit precedes the reader.
+                string rawPath = Path.Combine(dir, @"vendor_file.raw");
+                File.WriteAllBytes(rawPath, new byte[] { 1, 2, 3, 4 });
+
+                var ms2 = new List<Spectrum>
+                {
+                    new Spectrum
+                    {
+                        ScanNumber = 1,
+                        RetentionTime = 10.5,
+                        PrecursorMz = 500.0,
+                        IsolationWindow = new IsolationWindow(500.0, 1.5, 1.5),
+                        Mzs = new[] { 100.0, 200.0 },
+                        Intensities = new[] { 1000.0f, 2000.0f }
+                    }
+                };
+                var ms1 = new List<MS1Spectrum>
+                {
+                    new MS1Spectrum
+                    {
+                        ScanNumber = 0,
+                        RetentionTime = 10.0,
+                        Mzs = new[] { 400.0 },
+                        Intensities = new[] { 5000.0f }
+                    }
+                };
+
+                // Saved WITH the source path, so the header carries the same fingerprint an
+                // opt-in build would have written, and the read back exercises the real
+                // staleness check rather than the no-fingerprint shortcut.
+                string cachePath = SpectraCache.GetCachePath(rawPath);
+                SpectraCache.SaveSpectraCache(cachePath, ms2, ms1, rawPath);
+
+                var ctx = new PipelineContext(new OspreyConfig(), new OspreyTask[0], null, null, null);
+                SpectraWindowIndex index = ScoringTaskShared.EnsureSpectraCache(
+                    rawPath, false, out int unsortedCount, ctx);
+
+                Assert.IsNotNull(index);
+                Assert.AreEqual(ms2.Count, index.Ms2Count);
+                // Deliberately NOT asserting unsortedCount here. EnsureSpectraCache
+                // zeroes it up front and only assigns on the cache-MISS branch, which
+                // this test asserts is not taken - so the assertion could never fail and
+                // would read as coverage it does not provide.
+                List<Spectrum> streamed = index.LoadWindow(SpectraCache.WindowKey(500.0));
+                Assert.AreEqual(1, streamed.Count);
+                Assert.AreEqual(10.5, streamed[0].RetentionTime, 0.0);
+            }
+            finally
+            {
+                TryDeleteDirectory(dir);
+            }
+        }
+
+        // Distinct, non-round peak values per record so any field/peak mis-decode
+        // surfaces; isolation offsets vary per scan so those decode paths are checked.
+        private static Spectrum MakeIndexMs2(uint scan, double rt, double center, int nPeaks)
+        {
+            var mzs = new double[nPeaks];
+            var intensities = new float[nPeaks];
+            for (int p = 0; p < nPeaks; p++)
+            {
+                mzs[p] = 100.0 + scan * 7.0 + p * 1.5;
+                intensities[p] = scan * 100.0f + p * 3.0f;
+            }
+            return new Spectrum
+            {
+                ScanNumber = scan,
+                RetentionTime = rt,
+                PrecursorMz = center,
+                IsolationWindow = new IsolationWindow(center, 0.5 + scan * 0.01, 1.5 + scan * 0.02),
+                Mzs = mzs,
+                Intensities = intensities
+            };
+        }
+
+        // Group MS2 by the same key scoring uses: (int)Math.Round(center * 10.0),
+        // preserving file order within each window.
+        private static void AssertSerialReadsMatch(List<Spectrum> ms2)
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, new List<MS1Spectrum>());
+                SpectraWindowIndex index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+                foreach (var kvp in GroupByWindowKey(ms2))
+                {
+                    AssertSpectraListEqual(kvp.Value, index.LoadWindow(kvp.Key));
+                    AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key));
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        private static Dictionary<int, List<Spectrum>> GroupByWindowKey(List<Spectrum> ms2)
+        {
+            var byKey = new Dictionary<int, List<Spectrum>>();
+            foreach (var s in ms2)
+            {
+                int key = (int)Math.Round(s.IsolationWindow.Center * 10.0);
+                if (!byKey.TryGetValue(key, out var list))
+                {
+                    list = new List<Spectrum>();
+                    byKey[key] = list;
+                }
+                list.Add(s);
+            }
+            return byKey;
+        }
+
+        private static void AssertSpectraListEqual(List<Spectrum> expected, List<Spectrum> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                Spectrum e = expected[i];
+                Spectrum a = actual[i];
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.RetentionTime, a.RetentionTime, 0.0);
+                Assert.AreEqual(e.PrecursorMz, a.PrecursorMz, 0.0);
+                Assert.AreEqual(e.IsolationWindow.Center, a.IsolationWindow.Center, 0.0);
+                Assert.AreEqual(e.IsolationWindow.LowerOffset, a.IsolationWindow.LowerOffset, 0.0);
+                Assert.AreEqual(e.IsolationWindow.UpperOffset, a.IsolationWindow.UpperOffset, 0.0);
+                CollectionAssert.AreEqual(e.Mzs, a.Mzs);
+                CollectionAssert.AreEqual(e.Intensities, a.Intensities);
+            }
+        }
+
         #endregion
 
         #region DiannTsvLoader Tests
@@ -660,14 +1218,10 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestIdentifyModification()
         {
-            double massDelta;
-            int? unimodId;
-            string name;
-
-            BlibLoader.IdentifyModification(57.021, false, out massDelta, out unimodId, out name);
-            Assert.AreEqual(57.021464, massDelta, 0.01);
-            Assert.AreEqual(4, unimodId);
-            Assert.AreEqual("Carbamidomethyl", name);
+            var modification = BlibLoader.IdentifyModification("+57.021", 'C', false, false);
+            Assert.AreEqual(57.021464, modification.MassDelta);
+            Assert.AreEqual(4, modification.UnimodId);
+            Assert.AreEqual("Carbamidomethyl", modification.Name);
         }
 
         #endregion
@@ -763,266 +1317,72 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
-        #region LibraryCache Tests
+        #region Library string interning
 
         [TestMethod]
-        public void TestLibraryCacheRoundTrip()
+        public void TestLibraryStringInterning()
         {
-            var entries = new List<LibraryEntry>
+            // The interner is an instance pool the loaders route every string
+            // through as they build each entry's arrays. Build two entries that
+            // repeat the same values across every interned field, sharing one
+            // pool, and a third with a null value / empty arrays.
+            var interner = new LibraryStringInterner();
+            var e0 = MakeInternEntry(interner, 1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            var e1 = MakeInternEntry(interner, 2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+
+            // A third entry with a null protein element, empty gene array, and a
+            // null modification name -- interning must leave these unchanged, not throw.
+            var e2 = new LibraryEntry(3,
+                interner.Intern(FreshCopy("PEPTIDEK")), interner.Intern(FreshCopy("PEPTIDEK")),
+                2, 600.0, 8.0);
+            e2.ProteinIds = new[] { interner.Intern(null) };
+            e2.GeneNames = Array.Empty<string>();
+            e2.Modifications = new[] { new Modification { Position = 0, Name = interner.Intern(null) } };
+
+            // Values are unchanged on every interned field...
+            Assert.AreEqual("PEPTIDER", e0.Sequence);
+            Assert.AreEqual("M[16]PEPTIDER", e0.ModifiedSequence);
+            Assert.AreEqual("P12345", e0.ProteinIds[0]);
+            Assert.AreEqual("GENEA", e0.GeneNames[0]);
+            Assert.AreEqual("Oxidation", e0.Modifications[0].Name);
+
+            // ...but duplicates share one instance, for each interned field.
+            // (The char-array copies in MakeInternEntry defeat the compiler's
+            // literal interning, so AreSame proves the pool shared them -- not
+            // the CLR string pool.)
+            Assert.AreSame(e0.Sequence, e1.Sequence);
+            Assert.AreSame(e0.ModifiedSequence, e1.ModifiedSequence);
+            Assert.AreSame(e0.ProteinIds[0], e1.ProteinIds[0]);
+            Assert.AreSame(e0.GeneNames[0], e1.GeneNames[0]);
+            Assert.AreSame(e0.Modifications[0].Name, e1.Modifications[0].Name);
+
+            // The null/empty entry is untouched (no NRE).
+            Assert.IsNull(e2.ProteinIds[0]);
+            Assert.AreEqual(0, e2.GeneNames.Count);
+            Assert.IsNull(e2.Modifications[0].Name);
+            Assert.AreEqual("PEPTIDEK", e2.Sequence);
+        }
+
+        // Fresh instance with the same characters, so the compiler's literal
+        // interning does not pre-share it before the interner runs.
+        private static string FreshCopy(string s)
+        {
+            return new string(s.ToCharArray());
+        }
+
+        private static LibraryEntry MakeInternEntry(LibraryStringInterner interner, uint id,
+            string seq, string modSeq, string protein, string gene, string modName)
+        {
+            var e = new LibraryEntry(id,
+                interner.Intern(FreshCopy(seq)), interner.Intern(FreshCopy(modSeq)),
+                2, 500.0, 10.0);
+            e.ProteinIds = new[] { interner.Intern(FreshCopy(protein)) };
+            e.GeneNames = new[] { interner.Intern(FreshCopy(gene)) };
+            e.Modifications = new[]
             {
-                MakeTestEntry(0),
-                MakeTestEntry(1)
+                new Modification { Position = 1, Name = interner.Intern(FreshCopy(modName)) }
             };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_" + Guid.NewGuid().ToString("N") + ".libcache");
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "round-trip-hash");
-                var loaded = LibraryCache.LoadCache(tempPath);
-
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(2, loaded.Count);
-
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    var orig = entries[i];
-                    var copy = loaded[i];
-
-                    Assert.AreEqual(orig.Id, copy.Id);
-                    Assert.AreEqual(orig.Sequence, copy.Sequence);
-                    Assert.AreEqual(orig.ModifiedSequence, copy.ModifiedSequence);
-                    Assert.AreEqual(orig.Charge, copy.Charge);
-                    Assert.AreEqual(orig.PrecursorMz, copy.PrecursorMz, 1e-10);
-                    Assert.AreEqual(orig.RetentionTime, copy.RetentionTime, 1e-10);
-                    Assert.AreEqual(orig.RtCalibrated, copy.RtCalibrated);
-                    Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
-                    Assert.AreEqual(orig.Fragments.Count, copy.Fragments.Count);
-                    Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
-                    CollectionAssert.AreEqual(orig.ProteinIds, copy.ProteinIds);
-                    CollectionAssert.AreEqual(orig.GeneNames, copy.GeneNames);
-
-                    // Check fragment details
-                    for (int f = 0; f < orig.Fragments.Count; f++)
-                    {
-                        Assert.AreEqual(orig.Fragments[f].Mz, copy.Fragments[f].Mz, 1e-10);
-                        Assert.AreEqual(orig.Fragments[f].RelativeIntensity,
-                            copy.Fragments[f].RelativeIntensity, 1e-6);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.IonType,
-                            copy.Fragments[f].Annotation.IonType);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.Ordinal,
-                            copy.Fragments[f].Annotation.Ordinal);
-                        Assert.AreEqual(orig.Fragments[f].Annotation.Charge,
-                            copy.Fragments[f].Annotation.Charge);
-
-                        var origNl = orig.Fragments[f].Annotation.NeutralLoss;
-                        var copyNl = copy.Fragments[f].Annotation.NeutralLoss;
-                        if (origNl == null)
-                            Assert.IsNull(copyNl);
-                        else
-                        {
-                            Assert.IsNotNull(copyNl);
-                            Assert.AreEqual(origNl.Mass, copyNl.Mass, 1e-10);
-                        }
-                    }
-
-                    // Check modification details
-                    for (int m = 0; m < orig.Modifications.Count; m++)
-                    {
-                        Assert.AreEqual(orig.Modifications[m].Position,
-                            copy.Modifications[m].Position);
-                        Assert.AreEqual(orig.Modifications[m].UnimodId,
-                            copy.Modifications[m].UnimodId);
-                        Assert.AreEqual(orig.Modifications[m].MassDelta,
-                            copy.Modifications[m].MassDelta, 1e-10);
-                        Assert.AreEqual(orig.Modifications[m].Name,
-                            copy.Modifications[m].Name);
-                    }
-                }
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheIdentityHash()
-        {
-            // The .libcache stamps the source library's identity hash into its
-            // header (v2). A cache is reused only when the caller-supplied
-            // expected hash matches the stored one; a mismatch reports
-            // IdentityMismatch and does NOT read the entries (so a stale cache
-            // from a rebuilt-in-place library, whose decoys/pairing no longer
-            // match the current run, is rebuilt from source rather than loaded).
-            var entries = new List<LibraryEntry>
-            {
-                MakeTestEntry(0),
-                MakeTestEntry(1)
-            };
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_identity_" + Guid.NewGuid().ToString("N") + ".libcache");
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "hash-A");
-
-                // Matching hash -> loaded with entries.
-                LibraryCache.LibraryCacheStatus status;
-                var loadedMatch = LibraryCache.LoadCache(tempPath, "hash-A", out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
-                Assert.IsNotNull(loadedMatch);
-                Assert.AreEqual(2, loadedMatch.Count);
-
-                // Different hash -> identity mismatch, no entries read.
-                var loadedMismatch = LibraryCache.LoadCache(tempPath, "hash-B", out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
-                Assert.IsNull(loadedMismatch);
-
-                // Null expected hash -> identity check skipped, entries loaded.
-                var loadedNoCheck = LibraryCache.LoadCache(tempPath, null, out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
-                Assert.IsNotNull(loadedNoCheck);
-                Assert.AreEqual(2, loadedNoCheck.Count);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheRealIdentityHash()
-        {
-            // End-to-end: stamp a cache with the REAL LibraryIdentityHash of a
-            // temp library file, then change the file's size and mtime and
-            // confirm the recomputed hash no longer matches the stored one, so
-            // the cache reports IdentityMismatch. This locks the size+mtime
-            // sensitivity of SearchIdentity.LibraryIdentityHash to the actual
-            // file, catching even a timestamp-preserving swap that the old
-            // mtime-ordering check would have missed.
-            string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cache_identity_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            string source = Path.Combine(dir, "lib.tsv");
-            string cachePath = Path.Combine(dir, "lib.tsv.libcache");
-            try
-            {
-                File.WriteAllText(source, "original library contents");
-                var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(source) };
-                string hashBefore = config.Identity.LibraryIdentityHash();
-
-                var entries = new List<LibraryEntry> { MakeTestEntry(0) };
-                LibraryCache.SaveCache(cachePath, entries, hashBefore);
-
-                // The cache is reused while the file identity is unchanged.
-                LibraryCache.LibraryCacheStatus status;
-                var loaded = LibraryCache.LoadCache(cachePath, hashBefore, out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(1, loaded.Count);
-
-                // Rebuild the library in place with a different size and mtime.
-                File.WriteAllText(source, "a rebuilt library with different contents and length");
-                File.SetLastWriteTimeUtc(source,
-                    File.GetLastWriteTimeUtc(source).AddHours(1));
-                string hashAfter = config.Identity.LibraryIdentityHash();
-                Assert.AreNotEqual(hashBefore, hashAfter,
-                    "changing the library's size and mtime must change its identity hash");
-
-                // The stale cache is now detected and rebuilt from source.
-                var stale = LibraryCache.LoadCache(cachePath, hashAfter, out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
-                Assert.IsNull(stale);
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheStaleVersionInvalid()
-        {
-            // A cache whose header carries an unsupported version -- e.g. a pre-v2
-            // cache left on disk from an older build -- reads as Invalid and is
-            // rebuilt; its body is never reinterpreted under the current layout.
-            // Poke the version field (the uint32 immediately after the 8-byte
-            // magic) down to v1 to simulate that, and confirm both the
-            // identity-checked and the no-check load report Invalid rather than
-            // misparsing the body.
-            var entries = new List<LibraryEntry> { MakeTestEntry(0) };
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_version_" + Guid.NewGuid().ToString("N") + ".libcache");
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "hash-A");
-
-                byte[] bytes = File.ReadAllBytes(tempPath);
-                BitConverter.GetBytes((uint)1).CopyTo(bytes, 8); // version at offset 8
-                File.WriteAllBytes(tempPath, bytes);
-
-                LibraryCache.LibraryCacheStatus status;
-                var loaded = LibraryCache.LoadCache(tempPath, "hash-A", out status);
-                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Invalid, status);
-                Assert.IsNull(loaded);
-
-                // The version gate precedes the identity check, so the identity-
-                // agnostic overload is Invalid too, not silently accepted.
-                Assert.IsNull(LibraryCache.LoadCache(tempPath));
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheEmpty()
-        {
-            var entries = new List<LibraryEntry>();
-
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_empty_" + Guid.NewGuid().ToString("N") + ".libcache");
-
-            try
-            {
-                LibraryCache.SaveCache(tempPath, entries, "empty-hash");
-                var loaded = LibraryCache.LoadCache(tempPath);
-
-                Assert.IsNotNull(loaded);
-                Assert.AreEqual(0, loaded.Count);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
-        }
-
-        [TestMethod]
-        public void TestLibraryCacheInvalidMagic()
-        {
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_bad_" + Guid.NewGuid().ToString("N") + ".libcache");
-
-            try
-            {
-                File.WriteAllBytes(tempPath, System.Text.Encoding.ASCII.GetBytes("NOTVALID"));
-
-                var result = LibraryCache.LoadCache(tempPath);
-                Assert.IsNull(result);
-            }
-            finally
-            {
-                if (File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
+            return e;
         }
 
         #endregion
@@ -1048,8 +1408,8 @@ namespace pwiz.Osprey.Test
             byte[] compressedMz = ZlibCompress(mzBytes);
             byte[] compressedInt = ZlibCompress(intBytes);
 
-            // Decompress and verify
-            byte[] decompressedMz = BlibLoader.TryZlibDecompress(compressedMz, mzBytes.Length);
+            // Decompress and verify through the shared reader's decoders
+            byte[] decompressedMz = BlibWriter.DecodeBlob(compressedMz, mzBytes.Length);
             Assert.IsNotNull(decompressedMz);
             Assert.AreEqual(mzBytes.Length, decompressedMz.Length);
 
@@ -1060,9 +1420,38 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(mzValues[i], mz, 1e-10);
             }
 
-            byte[] decompressedInt = BlibLoader.TryZlibDecompress(compressedInt, intBytes.Length);
+            byte[] decompressedInt = BlibWriter.DecodeBlob(compressedInt, intBytes.Length);
             Assert.IsNotNull(decompressedInt);
             Assert.AreEqual(intBytes.Length, decompressedInt.Length);
+
+            // Decoded together, scaled to the base peak, as the loader makes fragments of them.
+            var peaks = BlibReader.DecodePeaks(compressedMz, compressedInt, mzValues.Length);
+            Assert.IsNotNull(peaks);
+            CollectionAssert.AreEqual(mzValues, peaks.Mzs);
+            CollectionAssert.AreEqual(intValues, peaks.Intensities);
+            var fragments = BlibLoader.ToFragments(peaks);
+            CollectionAssert.AreEqual(new[] { 1f, 0.5f, 0.25f }, fragments.Select(f => f.RelativeIntensity).ToArray());
+
+            // Eight bytes per peak is a float64 intensity blob, which an early writer stored.
+            byte[] doubleIntBytes = new byte[intValues.Length * 8];
+            for (int i = 0; i < intValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)intValues[i]), 0, doubleIntBytes, i * 8, 8);
+            CollectionAssert.AreEqual(intValues, BlibWriter.DecodeIntensities(doubleIntBytes, intValues.Length));
+            // Compressed too, on enough values that the zlib bytes cannot be a raw length.
+            float[] manyValues = Enumerable.Range(0, 64).Select(i => 1000f - i * 7.5f).ToArray();
+            byte[] manyDoubleBytes = new byte[manyValues.Length * 8];
+            for (int i = 0; i < manyValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)manyValues[i]), 0, manyDoubleBytes, i * 8, 8);
+            byte[] compressedDoubleInt = ZlibCompress(manyDoubleBytes);
+            Assert.AreNotEqual(manyValues.Length * 4, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            Assert.AreNotEqual(manyValues.Length * 8, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            CollectionAssert.AreEqual(manyValues, BlibWriter.DecodeIntensities(compressedDoubleInt, manyValues.Length));
+
+            // A blob that inflates to another length than numPeaks says, or that is neither raw
+            // nor zlib, is refused as library data, not misread.
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(compressedMz, mzBytes.Length + 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(mzBytes, mzBytes.Length - 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeIntensities(compressedMz, intValues.Length + 1));
         }
 
         #endregion
@@ -1073,21 +1462,87 @@ namespace pwiz.Osprey.Test
         public void TestBlibModifications()
         {
             // Simple unmodified
-            var mods = BlibLoader.ParseBlibModifications("PEPTIDE");
-            Assert.AreEqual(0, mods.Count);
+            Assert.AreEqual(0, ParseBlibModifications("PEPTIDE").Count);
 
             // Carbamidomethyl
-            mods = BlibLoader.ParseBlibModifications("PEPTC[+57.021]IDE");
+            var mods = ParseBlibModifications("PEPTC[+57.021]IDE");
             Assert.AreEqual(1, mods.Count);
             Assert.AreEqual(4, mods[0].Position);
-            Assert.AreEqual(57.021464, mods[0].MassDelta, 0.01);
+            Assert.AreEqual(57.021464, mods[0].MassDelta);
             Assert.AreEqual(4, mods[0].UnimodId);
 
             // Oxidation
-            mods = BlibLoader.ParseBlibModifications("PEPTM[+15.995]IDE");
+            mods = ParseBlibModifications("PEPTM[+15.995]IDE");
             Assert.AreEqual(1, mods.Count);
             Assert.AreEqual(4, mods[0].Position);
             Assert.AreEqual(35, mods[0].UnimodId);
+
+            // A mass matches a known modification as Skyline matches it: rounded at the precision
+            // its text prints, so BiblioSpec's one decimal gets the exact mass.
+            AssertBlibModification("PEPTC[+57.0]IDE", 57.021464, 4);
+            AssertBlibModification("[+42.0]PEPTIDE", 42.010565, 1);
+            AssertBlibModification("PEPS[+80.0]TIDE", 79.966331, 21);
+            AssertBlibModification("PEPTIDEK[+8.0]", 8.014199, 259);
+            AssertBlibModification("PEPTIDER[+10.0]", 10.008269, 267);
+            AssertBlibModification("Q[-17.0]PEPTIDE", -17.026549, 28);
+            AssertBlibModification("PEPTK[+114.0]IDE", 114.042927, 121);
+            // Only on its residue or terminus: acetyl on lysine, trimethyl where two decimals
+            // tell it from acetyl, and sulfo where three tell it from phospho.
+            AssertBlibModification("PEPTK[+42.0]IDE", 42.010565, 1);
+            AssertBlibModification("PEPTK[+42.05]IDE", 42.046950, 37);
+            AssertBlibModification("PEPTY[+79.957]IDE", 79.956815, 40);
+            // A mass printed with four or more decimals that matches nothing is used as printed.
+            AssertBlibModification("[+42.03000]PEPTIDE", 42.03, null);
+            AssertBlibModification("PEPTC[+125.047679]IDE", 125.047679, null);
+            // A delta between 100 and 200 Da is not an absolute cysteine mass on any other
+            // residue (GlyGly on lysine), nor on cysteine when it is signed (N-ethylmaleimide).
+            AssertBlibModification("PEPTK[+114.042927]IDE", 114.042927, 121);
+            // An unsigned value on cysteine is still its absolute mass.
+            AssertBlibModification("PEPTC[160.030649]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTC[160.0]IDE", 57.021464, 4);
+            // A UniMod id, in brackets or in parentheses as DIA-NN writes it.
+            AssertBlibModification("PEPTC[UniMod:4]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTM(UniMod:35)IDE", 15.994915, 35);
+            mods = ParseBlibModifications("C(UniMod:4)PEPTIDEM(UniMod:35)K");
+            Assert.AreEqual(2, mods.Count);
+            Assert.AreEqual(0, mods[0].Position);
+            Assert.AreEqual(8, mods[1].Position);
+            // A bracket summing a modification of the first residue and the N-terminus is used
+            // as printed at four decimals, as Osprey writes it.
+            AssertBlibModification("M[+58.0055]PEPTIDEK", 58.0055, null);
+            // A mass that rounds to zero is written as a readable zero.
+            Assert.AreEqual("[+0.0]", BlibSpectrum.FormatMassDelta(-4e-6));
+            Assert.AreEqual("[-17.0265]", BlibSpectrum.FormatMassDelta(-17.026549));
+
+            // Not identified: a mass printed with fewer than four decimals that matches nothing,
+            // a known mass off its residue, an unknown UniMod id, and other text.
+            AssertUnidentified("PEPTC[+99.9]IDE", "[+99.9]");
+            AssertUnidentified("PEPTIDEK[+80.0]", "[+80.0]");
+            AssertUnidentified("M[+58.0]PEPTIDEK", "[+58.0]");
+            AssertUnidentified("PEPTIDEK(UniMod:99999)", "(UniMod:99999)");
+            AssertUnidentified("PEPTIDEK[Oxidation]", "[Oxidation]");
+            AssertUnidentified("PEPTIDEK[+1e2]", "[+1e2]");
+        }
+
+        private static List<Modification> ParseBlibModifications(string modSeq)
+        {
+            var mods = BlibLoader.ParseBlibModifications(modSeq, out string unidentified);
+            Assert.IsNull(unidentified, modSeq);
+            return mods;
+        }
+
+        private static void AssertBlibModification(string modSeq, double massDelta, int? unimodId)
+        {
+            var mods = ParseBlibModifications(modSeq);
+            Assert.AreEqual(1, mods.Count, modSeq);
+            Assert.AreEqual(massDelta, mods[0].MassDelta, 1e-12, modSeq);
+            Assert.AreEqual(unimodId, mods[0].UnimodId, modSeq);
+        }
+
+        private static void AssertUnidentified(string modSeq, string bracket)
+        {
+            Assert.IsNull(BlibLoader.ParseBlibModifications(modSeq, out string unidentified), modSeq);
+            Assert.AreEqual(bracket, unidentified, modSeq);
         }
 
         #endregion
@@ -1134,15 +1589,209 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, entries.Count); // should be skipped (only 2 fragments)
         }
 
-        #endregion
-
-        #region MzmlReader Tests
-
         /// <summary>
-        /// Verifies that isolation window CVs are parsed correctly from a minimal mzML snippet.
+        /// A library value the loader cannot read is never replaced with a guess: every invalid
+        /// value on every line is reported, after the whole file is read, and the library is
+        /// refused. Each error is located as Skyline's transition list import locates one - the
+        /// 1-based line of the file (the header is line 1, a blank line still counts) and the
+        /// 1-based column. Covers each column the reader validates, two bad values on one line,
+        /// a modification with no known mass, and the cap on how many errors the message lists.
         /// </summary>
         [TestMethod]
-        public void TestMzmlIsolationWindowParsing()
+        public void TestDiannTsvLoaderRefusesEveryInvalidLine()
+        {
+            string tsv = DIANN_HEADER +
+                DiannRow() +                                             // line 2: valid
+                "\n" +                                                   // line 3: blank
+                DiannRow(fragmentCharge: @"1.0") +                        // line 4
+                DiannRow(fragmentCharge: @"0") +                          // line 5
+                DiannRow(fragmentType: @"q") +                            // line 6
+                DiannRow(fragmentNumber: string.Empty) +                  // line 7
+                DiannRow(loss: @"garbage") +                              // line 8
+                DiannRow(decoy: @"maybe") +                               // line 9
+                DiannRow(rt: @"abc") +                                    // line 10
+                DiannRow(precursorMz: @"x", intensity: @"?") +            // line 11: two errors
+                DiannRow(modifiedPeptide: @"_(UniMod:9999)PEPTIDER_") +   // line 12
+                DiannRow(charge: @"0");                                   // line 13
+
+            string message = LoadDiannExpectingRefusal(tsv);
+            StringAssert.Contains(message, string.Format(
+                OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, 10));
+            // (line, 1-based column in DIANN_HEADER, column name, value)
+            foreach (var (line, column, name, value) in new[]
+            {
+                (4, 12, @"FragmentCharge", @"1.0"), (5, 12, @"FragmentCharge", @"0"), (6, 10, @"FragmentType", @"q"),
+                (8, 13, @"FragmentLossType", @"garbage"), (9, 7, @"Decoy", @"maybe"),
+                (10, 5, @"NormalizedRetentionTime", @"abc"), (11, 3, @"PrecursorMz", @"x"),
+                (11, 9, @"RelativeIntensity", @"?"), (12, 1, @"ModifiedPeptide", @"UniMod:9999"),
+                (13, 4, @"PrecursorCharge", @"0")
+            })
+            {
+                StringAssert.Contains(message, string.Format(
+                    OspreyIOResources.DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__, line, column, name, value));
+            }
+            StringAssert.Contains(message, string.Format(
+                OspreyIOResources.DiannTsvLoader_LineReader___line__0___column__1___Missing__2_, 7, 11, @"FragmentSeriesNumber"));
+            // The header line and exactly the eleven errors: the valid line reports nothing.
+            Assert.AreEqual(12, message.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Length);
+
+            // A column wrong throughout lists the first 100 errors and counts the rest.
+            var many = new StringBuilder(DIANN_HEADER);
+            for (int i = 0; i < 150; i++)
+                many.Append(DiannRow(fragmentCharge: @"x"));
+            string manyMessage = LoadDiannExpectingRefusal(many.ToString());
+            StringAssert.Contains(manyMessage, string.Format(
+                OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, 150));
+            StringAssert.Contains(manyMessage, string.Format(OspreyIOResources.DiannTsvLoader_ToException____and__0__more_errors, 50));
+        }
+
+        private const string DIANN_HEADER =
+            "ModifiedPeptide\tStrippedPeptide\tPrecursorMz\tPrecursorCharge\tTr_recalibrated\tProteinID\tDecoy\t" +
+            "FragmentMz\tRelativeIntensity\tFragmentType\tFragmentNumber\tFragmentCharge\tFragmentLossType\n";
+
+        /// <summary>One DIA-NN library line, valid unless a value is overridden.</summary>
+        private static string DiannRow(string modifiedPeptide = @"_PEPTIDEK_", string precursorMz = @"500.0",
+            string charge = @"2", string rt = @"10.5", string decoy = @"0", string intensity = @"1.0",
+            string fragmentType = @"y", string fragmentNumber = @"1", string fragmentCharge = @"1", string loss = @"noloss")
+        {
+            string stripped = DiannTsvLoader.StripModifications(DiannTsvLoader.StripFlankingChars(modifiedPeptide));
+            return string.Join("\t", modifiedPeptide, stripped, precursorMz, charge, rt, @"sp|P00001|TEST_HUMAN", decoy,
+                @"200.0", intensity, fragmentType, fragmentNumber, fragmentCharge, loss) + "\n";
+        }
+
+        /// <summary>The message of the <see cref="InvalidDataException"/> loading <paramref name="tsv"/> must throw.</summary>
+        private static string LoadDiannExpectingRefusal(string tsv)
+        {
+            using (var reader = new StringReader(tsv))
+            {
+                var ex = Assert.ThrowsException<InvalidDataException>(() => new DiannTsvLoader(1).ParseReader(reader));
+                return ex.Message;
+            }
+        }
+
+        #endregion
+
+        #region Retention time precision
+
+        /// <summary>
+        /// A scan start time must survive the mzML round trip bit-exactly.
+        /// 0.86653405 is a real Thermo value (spectrum index 5679 of a TDP-43
+        /// PlasmaEV acquisition) that came out of Osprey's hand-written mzML
+        /// reader as 0.8665340500000001 on the net472 build while the net8.0
+        /// build of the same code returned it exactly - a 1-ULP difference that
+        /// made a raw-sourced .spectra.bin disagree with an mzML-sourced one
+        /// (issue #4496). That reader is gone (issue #4497); the case survives
+        /// because ProteoWizard now has to clear the same bar, and because
+        /// <c>SpectrumFileReader.GetStartTime</c> deliberately does NOT route a
+        /// minute-valued scan start time through TimeInSeconds()/60, which is a
+        /// multiply-then-divide that perturbs most values by an ULP (PR #4501).
+        ///
+        /// The reference values below are COMPILED LITERALS on purpose: Roslyn
+        /// rounds them correctly at compile time, so they are a parser-independent
+        /// oracle. An earlier version of this test compared the reader against
+        /// XmlConvert.ToDouble of the same text and passed while the defect was
+        /// live, because both sides were wrong in the same way - a self-referential
+        /// assertion proves nothing.
+        /// </summary>
+        [TestMethod]
+        public void TestSpectrumFileReaderRetentionTimePrecision()
+        {
+            // Text as it appears in the mzML, paired with the correctly rounded
+            // double. The text must be exactly what a literal formats to, so the
+            // file really does contain the decimal under test.
+            var cases = new[]
+            {
+                new { Text = @"0.86653405", Expected = 0.86653405 },
+                new { Text = @"0.97263695", Expected = 0.97263695 },
+                new { Text = @"0.5903117", Expected = 0.5903117 },
+            };
+            foreach (var testCase in cases)
+            {
+                string text = testCase.Text;
+                double expected = testCase.Expected;
+
+                string mzml = BuildMinimalMzml(
+                    msLevel: 2,
+                    retentionTimeMinutes: expected,
+                    precursorMz: 711.07312,
+                    isoTarget: 711.07312,
+                    isoLower: 1.5006999969482422,
+                    isoUpper: 1.5006999969482422,
+                    mzValues: new[] { 200.0, 300.0, 400.0 },
+                    intensityValues: new[] { 100.0f, 200.0f, 300.0f });
+
+                // The file must actually carry the decimal under test; otherwise a
+                // formatting change could quietly swap in a different value and the
+                // assertion below would still pass.
+                StringAssert.Contains(mzml, @"value=""" + text + @"""");
+
+                string path = Path.GetTempFileName() + ".mzML";
+                try
+                {
+                    File.WriteAllText(path, mzml);
+                    var result = SpectrumFileReader.LoadAllSpectra(path);
+                    Assert.AreEqual(1, result.Ms2Spectra.Count);
+                    Assert.AreEqual(expected, result.Ms2Spectra[0].RetentionTime, 0.0,
+                        @"retention time not preserved bit-exactly for " + text);
+                }
+                finally
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
+        #endregion
+
+        #region SpectrumFileReader Tests
+
+        /// <summary>
+        /// The by-extension format predicates. ProteoWizard reads every format
+        /// now, so these no longer pick a parser - but <see cref="SpectrumFileReader.IsVendorFormat"/>
+        /// still decides whether vendor centroiding is REQUESTED, and asking for
+        /// it on a non-vendor input lands in a VendorOnlyPeakDetector that throws.
+        /// Consolidated: the gzip and case variants are exactly where a wrong
+        /// answer would happen quietly.
+        /// </summary>
+        [TestMethod]
+        public void TestSpectrumFileReaderFormatRouting()
+        {
+            foreach (var mzml in new[]
+                     {
+                         @"a.mzML", @"a.mzml", @"a.MZML",
+                         @"C:\data\some.file.name.mzML",
+                         @"a.mzML.gz", @"a.mzml.gz",
+                     })
+            {
+                Assert.IsTrue(SpectrumFileReader.IsMzml(mzml), mzml);
+            }
+
+            foreach (var vendor in new[]
+                     {
+                         @"a.raw", @"a.RAW", @"a.d", @"a.wiff", @"a.wiff2",
+                         @"C:\data\some.file.name.raw",
+                         // Not mzML despite the substring: routing must key on the
+                         // extension, not a name that happens to contain "mzml".
+                         @"mzml_backup.raw", @"a.mzXML",
+                     })
+            {
+                Assert.IsFalse(SpectrumFileReader.IsMzml(vendor), vendor);
+            }
+        }
+
+        #endregion
+
+        #region mzML reading
+
+        /// <summary>
+        /// Verifies that isolation window CVs are parsed correctly from a minimal mzML
+        /// snippet. Reads through <see cref="SpectrumFileReader"/>, i.e. ProteoWizard:
+        /// the assertions are unchanged from when Osprey parsed this file itself, so
+        /// they pin that the reader swap of issue #4497 preserved the offsets-not-widths
+        /// reading of MS:1000828 / MS:1000829 and the precursor-m/z choice.
+        /// </summary>
+        [TestMethod]
+        public void TestSpectrumFileReaderIsolationWindowParsing()
         {
             string mzml = BuildMinimalMzml(
                 msLevel: 2,
@@ -1158,7 +1807,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, mzml);
-                var result = MzmlReader.LoadAllSpectra(path);
+                var result = SpectrumFileReader.LoadAllSpectra(path);
 
                 Assert.AreEqual(1, result.Ms2Spectra.Count);
                 Assert.AreEqual(0, result.Ms1Spectra.Count);
@@ -1185,7 +1834,7 @@ namespace pwiz.Osprey.Test
         /// Verifies that MS1 and MS2 spectra are separated correctly.
         /// </summary>
         [TestMethod]
-        public void TestMzmlMs1Ms2Separation()
+        public void TestSpectrumFileReaderMs1Ms2Separation()
         {
             // Build mzML with one MS1 and one MS2
             string ms1Block = BuildSpectrumElement(
@@ -1218,7 +1867,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, mzml);
-                var result = MzmlReader.LoadAllSpectra(path);
+                var result = SpectrumFileReader.LoadAllSpectra(path);
 
                 Assert.AreEqual(1, result.Ms1Spectra.Count);
                 Assert.AreEqual(1, result.Ms2Spectra.Count);
@@ -1235,18 +1884,25 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Verifies that retention time in seconds (MS:1000894) is converted to minutes.
+        /// Verifies that a scan start time recorded in seconds is converted to minutes.
+        ///
+        /// The term is MS:1000016 (scan start time) with UO:0000010 seconds, which is what
+        /// a seconds-valued acquisition actually writes. The fixture used to say MS:1000894
+        /// (retention time) instead - a different term that Osprey's hand-written parser
+        /// also accepted. ProteoWizard does not read it for a scan start time and neither
+        /// does Skyline's MsDataFileImpl, so keeping it would have pinned a leniency of the
+        /// parser deleted in issue #4497 rather than the conversion under test.
         /// </summary>
         [TestMethod]
-        public void TestMzmlRetentionTimeSeconds()
+        public void TestSpectrumFileReaderRetentionTimeSeconds()
         {
-            // Build mzML with RT in seconds using MS:1000894
+            // Build mzML with the scan start time in seconds (330 s = 5.5 min).
             string spectrumBlock = @"
       <spectrum index=""0"" defaultArrayLength=""1"" id=""scan=1"">
         <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""2"" />
         <scanList count=""1"">
           <scan>
-            <cvParam cvRef=""MS"" accession=""MS:1000894"" value=""330.0"" unitName=""second"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""330.0"" unitCvRef=""UO"" unitAccession=""UO:0000010"" unitName=""second"" />
           </scan>
         </scanList>
         <precursorList count=""1"">
@@ -1284,7 +1940,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 File.WriteAllText(path, mzml);
-                var result = MzmlReader.LoadAllSpectra(path);
+                var result = SpectrumFileReader.LoadAllSpectra(path);
 
                 Assert.AreEqual(1, result.Ms2Spectra.Count);
                 // 330 seconds = 5.5 minutes
@@ -1298,6 +1954,141 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region Raw vs mzML parity
+
+        /// <summary>
+        /// The same acquisition read from a vendor .raw and from the mzML msconvert wrote
+        /// from it must produce the same Osprey spectra. This is the axis the reader swap
+        /// of issue #4497 is most exposed on, and the only one a committed test can cover:
+        /// the reader-vs-reader and raw-vs-raw comparisons both need multi-GB off-repo
+        /// acquisitions, but the ProteoWizard Thermo test fixture is already tracked here.
+        ///
+        /// Designed during issue #4496 (see ai/todos/completed/TODO-20260729_osprey_vendor_raw_reader.md,
+        /// "Tier 2") and never landed - the large-file parity was run by hand instead, so
+        /// nothing has guarded the field mapping since. It is cheap: three spectra, no
+        /// msconvert run, no staged data.
+        ///
+        /// Known limit, inherited from the fixture: its binary arrays are 32-bit for BOTH
+        /// m/z and intensity, so this pins the field mapping, the isolation-window
+        /// offset semantics and the MS-level split, but cannot catch an f64 m/z precision
+        /// defect. That is what the large-file comparisons cover.
+        ///
+        /// Without the vendor SDK the .raw cannot be read at all, so the test asserts the
+        /// OTHER half of the contract there: that the failure is a clear, actionable error
+        /// rather than an empty result. Both branches are real assertions - this never
+        /// silently passes for lack of a vendor build.
+        /// </summary>
+        [TestMethod]
+        public void TestRawVsMzmlSpectraParity()
+        {
+            string dataDir = Path.Combine(FindPwizRoot(),
+                @"pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data");
+            string rawPath = Path.Combine(dataDir, @"source_cid_test_3scans.raw");
+            // The CENTROID conversion: Osprey asks ProteoWizard for vendor centroiding on a
+            // .raw, so the mzML that must match is the one msconvert wrote with the same
+            // request, not the profile conversion beside it.
+            string mzmlPath = Path.Combine(dataDir, @"source_cid_test_3scans-centroid.mzML");
+            Assert.IsTrue(File.Exists(rawPath), rawPath);
+            Assert.IsTrue(File.Exists(mzmlPath), mzmlPath);
+
+            var fromMzml = SpectrumFileReader.LoadAllSpectra(mzmlPath);
+            Assert.IsTrue(fromMzml.Ms1Spectra.Count + fromMzml.Ms2Spectra.Count > 0,
+                @"the mzML fixture produced no spectra");
+
+            SpectrumFileResult fromRaw;
+            try
+            {
+                fromRaw = SpectrumFileReader.LoadAllSpectra(rawPath);
+            }
+            catch (UserMessageException ex) when (ex.InnerException is VendorSupportNotEnabledException)
+            {
+                // No vendor SDK in this build. Pin that the message at least NAMES the
+                // file, so a user is not left with a bare format complaint. Asserting on the
+                // file name rather than on wording keeps this translation-proof. The type
+                // itself is pinned too: it is what makes the top level print this message
+                // alone instead of a stack trace.
+                //
+                // Only the refusal for missing vendor support, NOT any Exception or any
+                // UserMessageException (the peak-picking refusal is one too): SpectrumFileReader
+                // interpolates the path into its message, so a blanket catch would let an
+                // IOException from a file lock - or a genuine mapping defect that happened to
+                // quote the path - satisfy this assertion and skip every parity check below.
+                // The two branches have to be disjoint for the pass to mean anything.
+                StringAssert.Contains(ex.Message, Path.GetFileName(rawPath));
+                return;
+            }
+
+            Assert.AreEqual(fromMzml.Ms2Spectra.Count, fromRaw.Ms2Spectra.Count);
+            Assert.AreEqual(fromMzml.Ms1Spectra.Count, fromRaw.Ms1Spectra.Count);
+            for (int i = 0; i < fromMzml.Ms1Spectra.Count; i++)
+            {
+                AssertMs1SpectrumEqual(fromMzml.Ms1Spectra[i], fromRaw.Ms1Spectra[i]);
+            }
+            for (int i = 0; i < fromMzml.Ms2Spectra.Count; i++)
+            {
+                AssertMs2SpectrumEqual(fromMzml.Ms2Spectra[i], fromRaw.Ms2Spectra[i]);
+            }
+        }
+
+        private static void AssertMs1SpectrumEqual(MS1Spectrum expected, MS1Spectrum actual)
+        {
+            Assert.AreEqual(expected.ScanNumber, actual.ScanNumber);
+            Assert.AreEqual(expected.RetentionTime, actual.RetentionTime, 0.0);
+            AssertPeaksEqual(expected.Mzs, expected.Intensities, actual.Mzs, actual.Intensities);
+        }
+
+        private static void AssertMs2SpectrumEqual(Spectrum expected, Spectrum actual)
+        {
+            Assert.AreEqual(expected.ScanNumber, actual.ScanNumber);
+            Assert.AreEqual(expected.RetentionTime, actual.RetentionTime, 0.0);
+            Assert.AreEqual(expected.PrecursorMz, actual.PrecursorMz, 0.0);
+            // The isolation window is the field most likely to be silently wrong in a
+            // binding: lower/upper are OFFSETS from the centre, not a width or bounds.
+            Assert.AreEqual(expected.IsolationWindow.Center, actual.IsolationWindow.Center, 0.0);
+            Assert.AreEqual(expected.IsolationWindow.LowerOffset, actual.IsolationWindow.LowerOffset, 0.0);
+            Assert.AreEqual(expected.IsolationWindow.UpperOffset, actual.IsolationWindow.UpperOffset, 0.0);
+            AssertPeaksEqual(expected.Mzs, expected.Intensities, actual.Mzs, actual.Intensities);
+        }
+
+        /// <summary>
+        /// Exact comparison, no tolerance: both sides come from ProteoWizard reading the
+        /// same acquisition, so any difference is a defect rather than accumulated error.
+        /// </summary>
+        private static void AssertPeaksEqual(double[] expectedMzs, float[] expectedIntensities,
+            double[] actualMzs, float[] actualIntensities)
+        {
+            Assert.AreEqual(expectedMzs.Length, actualMzs.Length);
+            Assert.AreEqual(expectedIntensities.Length, actualIntensities.Length);
+            for (int i = 0; i < expectedMzs.Length; i++)
+            {
+                Assert.AreEqual(expectedMzs[i], actualMzs[i], 0.0);
+                Assert.AreEqual(expectedIntensities[i], actualIntensities[i], 0.0f);
+            }
+        }
+
+        /// <summary>
+        /// Walk up from the test assembly to the pwiz checkout root (the directory holding
+        /// both pwiz/ and pwiz_tools/), so the tracked vendor-reader fixtures can be found
+        /// without hardcoding a machine path.
+        /// </summary>
+        internal static string FindPwizRoot()
+        {
+            string dir = Path.GetDirectoryName(typeof(IOTest).Assembly.Location);
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, @"pwiz")) &&
+                    Directory.Exists(Path.Combine(dir, @"pwiz_tools")))
+                {
+                    return dir;
+                }
+                dir = Path.GetDirectoryName(dir);
+            }
+            throw new InvalidOperationException(
+                @"Could not locate the pwiz root from the test assembly location.");
+        }
+
+        #endregion
+
         #region ParquetScoreCache Tests
 
         /// <summary>
@@ -1307,8 +2098,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParquetScoreCacheRoundTrip()
         {
-            string path = Path.GetTempFileName() + ".parquet";
-            try
+            // SimpleFileSaver owns the scratch file's lifecycle: write + read back through
+            // its sibling temp and never Commit() -- Dispose discards it (no leaked
+            // GetTempFileName file, cleaned up even if an assertion throws).
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_roundtrip_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
             {
                 // Create test entries
                 var entries = new List<CoelutionScoredEntry>();
@@ -1365,11 +2160,11 @@ namespace pwiz.Osprey.Test
                 };
 
                 // Write
-                ParquetScoreCache.WriteScoresParquet(path, entries, metadata);
-                Assert.IsTrue(File.Exists(path), "Parquet file should exist");
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata);
+                Assert.IsTrue(File.Exists(saver.SafeName), "Parquet file should exist");
 
                 // Read FDR stubs
-                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(saver.SafeName);
                 Assert.AreEqual(3, stubs.Count);
                 Assert.AreEqual(100u, stubs[0].EntryId);
                 Assert.AreEqual(101u, stubs[1].EntryId);
@@ -1386,8 +2181,15 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0u, stubs[0].ParquetIndex);
                 Assert.AreEqual(1u, stubs[1].ParquetIndex);
 
+                // A valid Osprey parquet must pass the lean-path feature-presence
+                // guard (else the resume/HPC-merge fail-fast would reject every real
+                // run). This also pins the writer's first feature column name to the
+                // PIN_FEATURE_NAMES[0] the probe checks -- a rename desync between them
+                // would silently break both.
+                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
+
                 // Read PIN features
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName);
                 Assert.AreEqual(3, features.Count);
                 Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
                 // Check first entry features
@@ -1399,16 +2201,50 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(2.6, features[1][6], 0.001);
 
                 // Validate metadata
-                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(path, metadata));
+                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(saver.SafeName, metadata));
                 var wrongMeta = new Dictionary<string, string>
                 {
                     { "osprey.version", "2.0.0" },
                 };
-                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(path, wrongMeta));
+                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(saver.SafeName, wrongMeta));
             }
-            finally
+        }
+
+        /// <summary>
+        /// A parquet that carries the scalar stub columns but NOT the PIN feature
+        /// columns (a foreign or truncated scores file) must fail the lean-path
+        /// feature-presence guard, so the resume / HPC-merge paths abort up front
+        /// instead of streaming scalars from an untrustworthy file. Writes a minimal
+        /// single-column parquet lacking the feature schema and asserts the footer
+        /// probe reports it. Paired with the positive assertion in
+        /// <see cref="TestParquetScoreCacheRoundTrip"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestHasPinFeatureColumnsRejectsFeaturelessParquet()
+        {
+            // SimpleFileSaver owns the scratch file's lifecycle: write the fixture to its
+            // sibling temp, probe that, and never Commit() -- Dispose discards the temp
+            // (no leaked temp file, cleaned up even if an assertion throws).
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_haspin_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
             {
-                TryDeleteFile(path);
+                var entryIdField = new DataField<uint>("entry_id");
+                var schema = new ParquetSchema(entryIdField);
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                {
+                    var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        group.WriteAsync(entryIdField, new ReadOnlyMemory<uint>(new[] { 1u, 2u, 3u }))
+                            .GetAwaiter().GetResult();
+                    }
+                    // Writes the footer
+                    writer.DisposeAsync().GetAwaiter().GetResult();
+                }
+
+                Assert.IsFalse(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName),
+                    "A parquet without the PIN feature columns must be rejected by the lean-path guard.");
             }
         }
 
@@ -1481,40 +2317,58 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Verifies EffectiveScoresPathFromScoresPath returns the reconciled
-        /// sibling when it exists on disk, else the original -- the per-file
-        /// read contract that makes the separate-reconciled-file design
-        /// byte-equivalent to the former in-place overwrite.
+        /// Which parquet a task reads is decided by the TASK, and NOT by what is on disk.
+        ///
+        /// <para>The predecessor of this test pinned the opposite - a probe that took the
+        /// reconciled sibling wherever it existed. That gives the right answer only because
+        /// the pipeline runs the stages in order, and it silently gives the wrong one on a
+        /// re-run: <c>--task FirstPassFDR</c> over a directory a previous run completed found
+        /// the reconciled parquets and would have trained the FIRST pass on the survivor
+        /// SUBSET, with every version, search and library hash matching. So the assertion
+        /// that matters is the negative one - BOTH files present, and the task still decides.
+        /// A test that laid down only one file would pass against the probe as well.</para>
         /// </summary>
         [TestMethod]
-        public void TestEffectiveScoresPathFromScoresPath()
+        public void TestScoresPathsDependOnTaskNotDisk()
         {
             string dir = Path.Combine(Path.GetTempPath(),
                 "osprey_eff_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
+                string input = Path.Combine(dir, "sample1.mzML");
                 string original = Path.Combine(dir, "sample1.scores.parquet");
                 string reconciled = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+                // BOTH on disk, which is the state a completed run leaves behind.
+                File.WriteAllText(input, "x");
                 File.WriteAllText(original, "x");
-
-                // No reconciled sibling -> original (no-work file).
-                Assert.AreEqual(original,
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
-
-                // Reconciled sibling present -> reconciled (rescored file).
                 File.WriteAllText(reconciled, "y");
-                Assert.AreEqual(reconciled,
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
 
-                // An already-reconciled input that exists is returned as-is.
-                Assert.AreEqual(reconciled,
-                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(reconciled));
+                // The two passes that run BEFORE Stage 6 read the Stage 4 file even though
+                // the reconciled sibling is sitting beside it.
+                AssertScoresPathForTask(input, FirstPassFdrTask.TASK_NAME, original);
+                AssertScoresPathForTask(input, PerFileRescoreTask.TASK_NAME, original);
+
+                // The join reads the reconciled one - the only artifact its node is shipped.
+                AssertScoresPathForTask(input, SecondPassFdrTask.TASK_NAME, reconciled);
             }
             finally
             {
                 try { Directory.Delete(dir, true); } catch { /* best-effort */ }
             }
+        }
+
+        /// <summary>
+        /// One input, one task, one expected parquet - through the same helper the pipeline
+        /// calls, so the test cannot agree with a rule the tasks do not use.
+        /// </summary>
+        private static void AssertScoresPathForTask(string input, string taskName, string expected)
+        {
+            var config = TaskConfigs.ForTask(taskName);
+            config.InputFiles = new List<string> { input };
+            var paths = ScoringTaskShared.ScoresPathsForInputs(config);
+            Assert.AreEqual(1, paths.Count);
+            Assert.AreEqual(expected, paths[0]);
         }
 
         /// <summary>
@@ -1555,6 +2409,16 @@ namespace pwiz.Osprey.Test
             return WrapInMzml(specBlock);
         }
 
+        /// <summary>
+        /// Build one <c>spectrum</c> element. Units are spelled out in full -
+        /// <c>unitCvRef</c> + <c>unitAccession</c> + <c>unitName</c> - because that is
+        /// what a real mzML carries (ProteoWizard's own writer emits all three) and what
+        /// a reader keys off. Osprey's hand-written parser read <c>unitName</c>, so a
+        /// fixture carrying only that name survived until issue #4497; ProteoWizard reads
+        /// <c>unitAccession</c>, and a scan start time with no unit accession has UNKNOWN
+        /// units, which converts to 0 rather than failing. A fixture that is not valid
+        /// mzML tests the reader against input the reader will never see.
+        /// </summary>
         private static string BuildSpectrumElement(int index, int msLevel,
             double retentionTimeMinutes, double precursorMz,
             double isoTarget, double isoLower, double isoUpper,
@@ -1593,7 +2457,7 @@ namespace pwiz.Osprey.Test
         <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""{2}"" />
         <scanList count=""1"">
           <scan>
-            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""{3}"" unitName=""minute"" />
+            <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""{3}"" unitCvRef=""UO"" unitAccession=""UO:0000031"" unitName=""minute"" />
           </scan>
         </scanList>{4}
         <binaryDataArrayList count=""2"">
@@ -1660,63 +2524,6 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        private static LibraryEntry MakeTestEntry(uint id)
-        {
-            var entry = new LibraryEntry(id, "PEPTIDEK", "PEPTIDEK", 2, 471.2567, 25.3);
-            entry.Modifications = new List<Modification>
-            {
-                new Modification
-                {
-                    Position = 0,
-                    UnimodId = 1,
-                    MassDelta = 42.010565,
-                    Name = "Acetyl"
-                }
-            };
-            entry.Fragments = new List<LibraryFragment>
-            {
-                new LibraryFragment
-                {
-                    Mz = 147.1128,
-                    RelativeIntensity = 1.0f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.Y,
-                        Ordinal = 1,
-                        Charge = 1
-                    }
-                },
-                new LibraryFragment
-                {
-                    Mz = 262.1398,
-                    RelativeIntensity = 0.5f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.B,
-                        Ordinal = 3,
-                        Charge = 1,
-                        NeutralLoss = NeutralLoss.H2O
-                    }
-                },
-                new LibraryFragment
-                {
-                    Mz = 500.0,
-                    RelativeIntensity = 0.3f,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.Y,
-                        Ordinal = 5,
-                        Charge = 2,
-                        NeutralLoss = NeutralLoss.Custom(98.0)
-                    }
-                }
-            };
-            entry.ProteinIds = new List<string> { "P12345", "Q67890" };
-            entry.GeneNames = new List<string> { "GENE1" };
-
-            return entry;
-        }
-
         /// <summary>
         /// Compress data using zlib format (2-byte header + deflate + checksum).
         /// </summary>
@@ -1767,6 +2574,19 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        private static void TryDeleteDirectory(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, true);
+            }
+            catch (Exception)
+            {
+                // Best effort: a temp directory left behind must never fail a test.
+            }
+        }
+
         private static void TryDeleteFile(string path)
         {
             try
@@ -1791,8 +2611,881 @@ namespace pwiz.Osprey.Test
 
         #region FdrScoresSidecar Tests
 
+        /// <summary>
+        /// Bounded row-group write: a parquet written as several row groups (forced via the
+        /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
+        /// logically identical -- same rows in the same global (entry_id, charge, scan_number)
+        /// order, same running ParquetIndex spanning the group boundaries, same per-row
+        /// features + fragment blobs -- to the same entries written as one row group. Only the
+        /// physical row-group framing differs. Guards the memory-capping chunked write path.
+        /// </summary>
+        [TestMethod]
+        public void TestParquetBoundedRowGroupRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_rowgroup_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // EntryIds deliberately out of order so the write's canonical sort is
+                // exercised; distinct features + fragment blobs per row so a chunk-boundary
+                // row mismap surfaces as a value mismatch, not a silent pass.
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+                    for (int f = 0; f < features.Length; f++)
+                        features[f] = id * 100.0 + f;
+                    entries.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        IsDecoy = (id & 1u) == 0,
+                        Charge = 2,
+                        ScanNumber = id * 10,
+                        ApexRt = id + 0.5,
+                        StartRt = id + 0.1,
+                        EndRt = id + 0.9,
+                        ModifiedSequence = "PEPTIDE" + id,
+                        Features = features,
+                        FragmentMzs = new[] { id + 0.25, id + 0.75 },
+                        FragmentIntensities = new float[] { id, id + 1 },
+                        ReferenceXicRts = new[] { id + 1.5, id + 2.5, id + 3.5 },
+                        ReferenceXicIntensities = new[] { id * 2.0, id * 3.0 },
+                    });
+                }
+
+                string singlePath = Path.Combine(dir, "single.scores.parquet");
+                string multiPath = Path.Combine(dir, "multi.scores.parquet");
+
+                // Single-group reference (cap unset), then multi-group (cap 3 -> ceil(7/3)=3
+                // groups). Same entries, same writer, only the row-group cap differs.
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                ParquetScoreCache.WriteScoresParquet(singlePath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(multiPath, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(1, CountRowGroups(singlePath));
+                Assert.AreEqual(3, CountRowGroups(multiPath));
+
+                var single = ParquetScoreCache.LoadFullFdrEntries(singlePath);
+                var multi = ParquetScoreCache.LoadFullFdrEntries(multiPath);
+
+                Assert.AreEqual(entries.Count, single.Count);
+                Assert.AreEqual(single.Count, multi.Count);
+
+                // Distinct entry_ids -> canonical sort is ascending; ParquetIndex is the
+                // running global row position, unbroken across the row-group boundaries.
+                var expectedIds = new uint[] { 1, 2, 3, 5, 7, 8, 9 };
+                for (int i = 0; i < multi.Count; i++)
+                {
+                    Assert.AreEqual(expectedIds[i], multi[i].EntryId);
+                    Assert.AreEqual((uint)i, multi[i].ParquetIndex,
+                        "ParquetIndex must be the global row position across row groups");
+
+                    // Multi-group row equals single-group row field-for-field.
+                    Assert.AreEqual(single[i].EntryId, multi[i].EntryId);
+                    Assert.AreEqual(single[i].ParquetIndex, multi[i].ParquetIndex);
+                    Assert.AreEqual(single[i].IsDecoy, multi[i].IsDecoy);
+                    Assert.AreEqual(single[i].Charge, multi[i].Charge);
+                    Assert.AreEqual(single[i].ScanNumber, multi[i].ScanNumber);
+                    Assert.AreEqual(single[i].ApexRt, multi[i].ApexRt);
+                    Assert.AreEqual(single[i].StartRt, multi[i].StartRt);
+                    Assert.AreEqual(single[i].EndRt, multi[i].EndRt);
+                    Assert.AreEqual(single[i].ModifiedSequence, multi[i].ModifiedSequence);
+                    CollectionAssert.AreEqual(single[i].Features, multi[i].Features);
+                    CollectionAssert.AreEqual(single[i].FragmentMzs, multi[i].FragmentMzs);
+                    CollectionAssert.AreEqual(single[i].FragmentIntensities, multi[i].FragmentIntensities);
+                }
+
+                // An all-empty blob column across bounded row groups. Decoys form a
+                // contiguous block at the end of the entry_id sort, so a group can fall
+                // entirely in a region where a blob (e.g. reference XIC) is absent on
+                // every row. A zero-length blob would make the whole group's column
+                // zero-length, which the Parquet reader cannot decode; empty blobs are
+                // written as NULL cells to avoid that. Here reference_xic is empty on
+                // every row and cap=3 forces 3 groups -> every group's reference_xic
+                // column is all-null; it must still read back as empty per row.
+                var emptyXic = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 1, 2, 3, 4, 5, 6, 7 })
+                {
+                    emptyXic.Add(new FdrEntry
+                    {
+                        EntryId = id,
+                        Charge = 2,
+                        ScanNumber = id,
+                        ModifiedSequence = "PEP" + id,
+                        Features = new double[ParquetScoreCache.NUM_PIN_FEATURES],
+                        FragmentMzs = new[] { id + 0.5 },
+                        FragmentIntensities = new float[] { id },
+                        // ReferenceXicRts / ReferenceXicIntensities left null (empty).
+                    });
+                }
+                string emptyXicPath = Path.Combine(dir, "empty_xic.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(emptyXicPath, emptyXic, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                Assert.AreEqual(3, CountRowGroups(emptyXicPath));
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(emptyXicPath);
+                Assert.AreEqual(emptyXic.Count, reloaded.Count);
+                foreach (var e in reloaded)
+                {
+                    Assert.AreEqual(0, e.ReferenceXicRts.Length,
+                        "an all-empty reference-XIC column must read back as empty, not crash");
+                    Assert.AreEqual(0, e.ReferenceXicIntensities.Length);
+                    Assert.AreEqual(1, e.FragmentMzs.Length);
+                }
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// CWT-candidate column round-trip through the real writer and reader: the
+        /// per-row candidate lists come back bit-identical, keep their own row via the
+        /// running <see cref="FdrEntry.ParquetIndex"/>, and survive a multi-row-group
+        /// write. Covers <see cref="CwtCandidateCodec"/>'s wiring into the
+        /// cwt_candidates column, which the codec's own unit tests cannot reach
+        /// because they never touch parquet.
+        ///
+        /// A row with a NULL candidate list is included deliberately: the writer
+        /// normalizes null and empty alike to a 4-byte zero-count blob (never a null
+        /// cell) to match Rust, and nothing else exercises the null branch.
+        /// </summary>
+        [TestMethod]
+        public void TestCwtCandidatesRoundTripThroughParquet()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cwt_parquet_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Ids out of order so the write's canonical sort runs; candidate-list
+                // lengths deliberately mixed (2 / none / 1 / null) so a per-row boundary
+                // mismap surfaces as a count mismatch instead of a silent pass.
+                var byId = new Dictionary<uint, List<CwtCandidate>>
+                {
+                    { 5, new List<CwtCandidate> {
+                        NewCwtCandidate(51.5, 51.0, 52.0, 1.5e6, 42.5, 8.25),
+                        // Boundary value that pins the byte-exact BitConverter path
+                        // (the ryu/R formatter ambiguity from the Stage 5 dump).
+                        NewCwtCandidate(0.097751617431640625, 0.5, 1.5, 1.0, 1.0, -1.5) } },
+                    { 2, new List<CwtCandidate>() },
+                    { 9, new List<CwtCandidate> {
+                        NewCwtCandidate(90.25, 90.0, 90.5, 7.5e5, 13.0, 3.125) } },
+                    { 1, null },
+                };
+
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1 })
+                {
+                    var e = MakeStreamEntry(id, id * 100.0);
+                    e.CwtCandidates = byId[id];
+                    entries.Add(e);
+                }
+
+                string path = Path.Combine(dir, "cwt.scores.parquet");
+                // Cap 2 -> ceil(4/2) = 2 row groups, so the reader's per-group append
+                // loop is exercised rather than a single-group degenerate case.
+                ParquetScoreCache.RowGroupRowCapForTest = 2;
+                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                // Full entries carry both ParquetIndex and CwtCandidates, so one load
+                // checks the candidate values AND that each list landed on the row its
+                // running index claims (the alignment defect that once made every
+                // lookup return row 0's list).
+                var reloaded = ParquetScoreCache.LoadFullFdrEntries(path);
+                Assert.AreEqual(entries.Count, reloaded.Count, "row count");
+                for (int i = 0; i < reloaded.Count; i++)
+                {
+                    Assert.AreEqual((uint)i, reloaded[i].ParquetIndex,
+                        "ParquetIndex must be the running row position");
+                }
+
+                // The column-only reader must agree row-for-row with the full load.
+                var columnOnly = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                Assert.AreEqual(reloaded.Count, columnOnly.Count, "cwt column row count");
+
+                foreach (var row in reloaded)
+                {
+                    var expected = byId[row.EntryId] ?? new List<CwtCandidate>();
+                    var actual = row.CwtCandidates ?? new List<CwtCandidate>();
+                    string label = "entry " + row.EntryId;
+                    Assert.AreEqual(expected.Count, actual.Count, label + " candidate count");
+                    // Null and empty must both decode to an empty list, never null:
+                    // the writer emits the 4-byte zero-count blob for each.
+                    Assert.IsNotNull(row.CwtCandidates, label + " list must not be null");
+                    Assert.AreEqual(expected.Count, columnOnly[(int)row.ParquetIndex].Count,
+                        label + " column-only candidate count");
+                    for (int k = 0; k < expected.Count; k++)
+                    {
+                        AssertCwtCandidateBitEqual(expected[k], actual[k],
+                            label + " candidate " + k);
+                    }
+                }
+
+                AssertTrainingExportProjection(path, reloaded);
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Concurrent scores-parquet writes must not corrupt each other's nullable columns.
+        /// When the writer's DataFields were shared statics, building one write's schema reset
+        /// the shared fields' definition level to 0 for a moment. A write in progress on another
+        /// thread then recorded present values as null, and its file read back with null
+        /// cwt_candidates cells and every later list shifted onto the wrong row. Found with 4
+        /// files scored at once in the 2026-10-13 SEA-AD acceptance run. Each row here carries
+        /// one candidate whose apex is its own entry id, so any null or shift is a mismatch.
+        /// </summary>
+        [TestMethod]
+        public void TestConcurrentScoresParquetWritesKeepCwtCandidatesAligned()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cwt_concurrent_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                const int rows = 20000;
+                var entries = new List<FdrEntry>(rows);
+                for (uint id = 1; id <= rows; id++)
+                {
+                    var e = MakeStreamEntry(id, id);
+                    e.CwtCandidates = new List<CwtCandidate> { NewCwtCandidate(id, id - 0.5, id + 0.5, 1.0, 1.0, 1.0) };
+                    entries.Add(e);
+                }
+
+                int writers = Math.Max(4, Environment.ProcessorCount / 2);
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                int files = 0;
+                var failures = new List<string>();
+                Parallel.For(0, writers, new ParallelOptions { MaxDegreeOfParallelism = writers }, w =>
+                {
+                    // Each writer needs its own entries: the write assigns ParquetIndex.
+                    var mine = entries.Select(e => MakeStreamEntry(e.EntryId, e.EntryId)).ToList();
+                    for (int i = 0; i < mine.Count; i++)
+                        mine[i].CwtCandidates = entries[i].CwtCandidates;
+                    // A minimum number of writes each, so a writer started late still overlaps the others.
+                    for (int n = 0; n < 3 || DateTime.UtcNow < deadline; n++)
+                    {
+                        string path = Path.Combine(dir, string.Format("w{0}_{1}.scores.parquet", w, n));
+                        ParquetScoreCache.WriteScoresParquet(path, mine, null, null, "f.mzML");
+                        var lists = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                        Interlocked.Increment(ref files);
+                        if (lists.Count != rows)
+                        {
+                            lock (failures)
+                                failures.Add(string.Format("{0}: {1} rows", Path.GetFileName(path), lists.Count));
+                        }
+                        for (int row = 0; row < lists.Count; row++)
+                        {
+                            var list = lists[row];
+                            if (list == null || list.Count != 1 || list[0].ApexRt != row + 1)
+                            {
+                                lock (failures)
+                                {
+                                    failures.Add(string.Format("{0} row {1}: {2}", Path.GetFileName(path), row,
+                                        list == null ? "null" : list.Count == 1 ? "apex " + list[0].ApexRt : list.Count + " candidates"));
+                                }
+                                break;
+                            }
+                        }
+                        File.Delete(path);
+                    }
+                });
+                Assert.AreEqual(0, failures.Count, string.Format("{0} of {1} concurrently written files misaligned: {2}",
+                    failures.Count, files, string.Join("; ", failures.Take(5))));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The training export's projection of the same two-group file: the target rows only,
+        /// each field it reads exactly as the full load reads it - the running ParquetIndex
+        /// across groups with the decoys skipped included - and no CWT candidates or fragment
+        /// arrays.
+        /// </summary>
+        private static void AssertTrainingExportProjection(string path, List<FdrEntry> full)
+        {
+            var targets = full.Where(e => !e.IsDecoy).ToList();
+            var projected = ParquetScoreCache.LoadTrainingExportRows(path);
+            Assert.AreEqual(targets.Count, projected.Count, "targets only");
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var e = targets[i];
+                var a = projected[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.ParquetIndex, a.ParquetIndex);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
+                Assert.IsNull(a.CwtCandidates, "the CWT candidates are not decoded");
+                Assert.AreEqual(0, a.FragmentMzs.Length, "the fragment m/z are not decoded");
+                Assert.AreEqual(0, a.FragmentIntensities.Length, "the fragment intensities are not decoded");
+            }
+        }
+
+        private static CwtCandidate NewCwtCandidate(double apexRt, double startRt, double endRt,
+            double area, double snr, double coelutionScore)
+        {
+            return new CwtCandidate
+            {
+                ApexRt = apexRt,
+                StartRt = startRt,
+                EndRt = endRt,
+                Area = area,
+                Snr = snr,
+                CoelutionScore = coelutionScore,
+            };
+        }
+
+        private static void AssertCwtCandidateBitEqual(CwtCandidate expected, CwtCandidate actual,
+            string label)
+        {
+            AssertBitEqual(expected.ApexRt, actual.ApexRt, label + " ApexRt");
+            AssertBitEqual(expected.StartRt, actual.StartRt, label + " StartRt");
+            AssertBitEqual(expected.EndRt, actual.EndRt, label + " EndRt");
+            AssertBitEqual(expected.Area, actual.Area, label + " Area");
+            AssertBitEqual(expected.Snr, actual.Snr, label + " Snr");
+            AssertBitEqual(expected.CoelutionScore, actual.CoelutionScore, label + " CoelutionScore");
+        }
+
+        private static void AssertBitEqual(double expected, double actual, string label)
+        {
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected),
+                BitConverter.DoubleToInt64Bits(actual), label + " bit mismatch");
+        }
+
+        /// <summary>
+        /// The survivor-subset currency predicate
+        /// (<see cref="ParquetScoreCache.IsCurrentReconciledSurvivorSubset"/>), against real
+        /// artifacts rather than a hand-built footer.
+        ///
+        /// <para>It answers whether a reconciled parquet can be READ in the shape a per-run
+        /// survivor rebuild needs, and two callers ask it: the Stage 7 refusal that names the
+        /// stale files, and the admission that decides whether the second-pass join may fold a
+        /// run at a time. Both of them turn a wrong answer into a whole-cohort outcome - a run
+        /// admitted to a fold it then aborts, or an O(files) pool nobody asked for - so the
+        /// three states are pinned here: absent, present-without-the-marker (the Stage 4
+        /// original, which is exactly the file a path-derivation slip would hand it), and
+        /// present-and-current.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestIsCurrentReconciledSurvivorSubset()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_recon_current_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string originalPath = Path.Combine(dir, "sample1.scores.parquet");
+                string reconciledPath = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+
+                // Absent: false, and no throw. This is the no-work state on a cold cohort, so it
+                // has to be an answer rather than an error.
+                Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
+
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 3, 1, 2 })
+                    original.Add(MakeStreamEntry(id, id * 10.0));
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // The Stage 4 original is a well-formed parquet with neither the marker nor the
+                // score_index column, and it must not pass: it is the file a stem-derivation
+                // slip substitutes, and its rows are the PRE-reconciliation ones.
+                Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(originalPath));
+
+                // Written the way Stage 6 writes it - the marker in the footer, score_index in
+                // the schema - which is the only combination that passes.
+                //
+                // Metadata from the REAL producer, not hand-fed. StreamReconciledScoresParquet
+                // writes the caller's map verbatim, so a test that supplies the marker itself
+                // asserts only that the reader can read what the test wrote: let
+                // ReconciledParquetWriter stop stamping it and this would still pass while
+                // AllReconciledParquetsCurrent returned false for every real run and the whole
+                // cohort fell back to the resident join. Going through the producer is what
+                // makes the two sides able to disagree.
+                var metadata = ReconciledParquetWriter.BuildReconciliationMetadata(
+                    new OspreyConfig(), null);
+                Assert.AreEqual(ParquetScoreCache.RECONCILED_SURVIVORS,
+                    metadata["osprey.reconciled"]);
+                ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, reconciledPath, null, null, metadata, null, "f.mzML", null,
+                    PerFileRescoreTask.TASK_NAME, null, null);
+                Assert.IsTrue(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
+
+                // And it is the POSITIVE form of the interim-shape refusal, not a second
+                // opinion: a file this accepts is one that one rejects.
+                Assert.IsFalse(ParquetScoreCache.IsSubsetWithoutScoreIndex(reconciledPath));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
+        }
+
+        /// <summary>
+        /// Stage-6 streaming reconciled transfer: streaming the original parquet
+        /// group-by-group with an overlay map + gap-fill list
+        /// (<see cref="ParquetScoreCache.StreamReconciledScoresParquet"/>) is logically
+        /// identical -- same rows, same per-row features + blobs -- to the former
+        /// load-all + in-place overlay + re-sort write, including the gap-fill (which the
+        /// streaming path merges into canonical (entry_id, charge, scan) position). Also asserts the
+        /// replaced / appended / original counts, the out-of-range warning, and that the
+        /// output is genuinely multi-group.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamReconciledTransferMatchesLoadAllOverlay()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_stream_recon_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Original rows: out-of-order ids so the write's canonical sort runs,
+                // distinct features + blobs per row so any chunk-boundary mismap surfaces
+                // as a value mismatch rather than a silent pass.
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                    original.Add(MakeStreamEntry(id, id * 100.0));
+
+                string originalPath = Path.Combine(dir, "orig.scores.parquet");
+                string refPath = Path.Combine(dir, "ref.scores-reconciled.parquet");
+                string streamPath = Path.Combine(dir, "stream.scores-reconciled.parquet");
+
+                // Write the original as several bounded row groups (cap 3 -> 3 groups).
+                ParquetScoreCache.RowGroupRowCapForTest = 3;
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // Map each original entry_id to the global row position the write assigned,
+                // so the overlay indices below hit the right rows.
+                var posById = new Dictionary<uint, uint>();
+                foreach (var e in ParquetScoreCache.LoadFullFdrEntries(originalPath))
+                    posById[e.EntryId] = e.ParquetIndex.Value;
+
+                // Overlay two existing rows (id 3, id 8) with distinctly re-scored
+                // features/blobs; leave id 2 un-overlaid (its original row must stream
+                // through untouched); and one out-of-range index that must be dropped
+                // with a warning.
+                var overlayByIndex = new Dictionary<uint, FdrEntry>
+                {
+                    { posById[3], MakeStreamEntry(3, 7777.0) },
+                    { posById[8], MakeStreamEntry(8, 8888.0) },
+                    { 999u, MakeStreamEntry(200, 1.0) },   // out of range -> dropped + warned
+                };
+                // Gap-fill ids 4 and 6 fall BETWEEN existing original ids (3 < 4 < 5 < 6 <
+                // 7), so the streaming merge must interleave them into canonical position;
+                // a plain append-at-end would misplace them and the physical-order check
+                // below would fail. Listed out of order so the merge's own sort is exercised.
+                var gapFill = new List<FdrEntry>
+                {
+                    MakeStreamEntry(6, 60060.0),
+                    MakeStreamEntry(4, 40040.0),
+                };
+
+                // Reference (old behavior): load the whole file, overlay in place by index,
+                // append gap-fill, re-sort on write.
+                var oldFull = ParquetScoreCache.LoadFullFdrEntries(originalPath);
+                foreach (var kv in overlayByIndex)
+                    if (kv.Key < oldFull.Count)
+                        oldFull[(int)kv.Key] = kv.Value;
+                oldFull.AddRange(gapFill);
+                ParquetScoreCache.WriteScoresParquet(refPath, oldFull, null, null, "f.mzML");
+                var refResult = ParquetScoreCache.LoadFullFdrEntries(refPath);
+
+                // New behavior: stream the transfer.
+                var warnings = new List<string>();
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", null,
+                    PerFileRescoreTask.TASK_NAME, null, warnings.Add);
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+
+                // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
+                Assert.AreEqual(2, result.NReplaced);
+                Assert.AreEqual(2, result.NAppended);
+                Assert.AreEqual(7, result.OrigRowCount);
+
+                // The one out-of-range overlay index is dropped with exactly one warning.
+                Assert.AreEqual(1, warnings.Count);
+
+                // The stream output is genuinely multi-group (3 original groups + gap-fill).
+                Assert.IsTrue(CountRowGroups(streamPath) >= 3,
+                    "streaming reconciled transfer must preserve bounded row groups");
+
+                // Physical order: the streaming merge must emit rows already in canonical
+                // (entry_id, charge, scan_number) order -- gap-fill interleaved by scan,
+                // NOT appended at the end. This is the guarantee Pass 2's projection sort
+                // relies on; a plain append would leave ids 4/6 after id 9 and fail here.
+                var streamResult = ParquetScoreCache.LoadFullFdrEntries(streamPath);
+                Comparison<FdrEntry> byKey = (a, b) =>
+                {
+                    int c = a.EntryId.CompareTo(b.EntryId);
+                    if (c != 0)
+                        return c;
+                    c = a.Charge.CompareTo(b.Charge);
+                    return c != 0 ? c : a.ScanNumber.CompareTo(b.ScanNumber);
+                };
+                for (int i = 1; i < streamResult.Count; i++)
+                    Assert.IsTrue(byKey(streamResult[i - 1], streamResult[i]) <= 0,
+                        "streaming reconciled transfer must emit rows in canonical sorted order");
+
+                // Logical equivalence: same rows, same values (both canonical after sort).
+                refResult.Sort(byKey);
+                streamResult.Sort(byKey);
+                AssertStreamRowsEqual(refResult, streamResult);
+
+                // The overlay actually took effect: id 3 / id 8 carry the re-scored
+                // features, while the un-overlaid id 2 keeps its ORIGINAL features.
+                Assert.AreEqual(7777.0, RowById(streamResult, 3).Features[0]);
+                Assert.AreEqual(8888.0, RowById(streamResult, 8).Features[0]);
+                Assert.AreEqual(200.0, RowById(streamResult, 2).Features[0]);
+            }
+            finally
+            {
+                ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The Stage-6 reconciled parquet carries only the Stage 5 SURVIVORS, not a
+        /// row-for-row twin of the Stage 4 parquet: an original row whose entry_id is
+        /// outside the keep set is not emitted, gap-fill rows are emitted regardless
+        /// (survivors by construction), canonical order still holds across the drops, and
+        /// the reported original-row count still describes the INPUT rather than the
+        /// output. Emitting the compacted-away rows is what made the Stage 4 parquet a
+        /// required Stage 7 input (issue #4486).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciledTransferKeepsOnlySurvivors()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_recon_subset_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var original = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                    original.Add(MakeStreamEntry(id, id * 100.0));
+
+                string originalPath = Path.Combine(dir, "orig.scores.parquet");
+                string subsetPath = Path.Combine(dir, "subset.scores-reconciled.parquet");
+                ParquetScoreCache.WriteScoresParquet(originalPath, original, null, null, "f.mzML");
+
+                // Survivors: 2, 3, 8. Dropped: 1, 5, 7, 9. Gap-fill id 4 sorts between a
+                // kept row (3) and a DROPPED one (5), so an interleave that only advanced
+                // on emitted rows would misplace it.
+                // Keyed on the full identity MakeStreamEntry assigns (charge 2, scan id*10),
+                // not on entry_id: compaction drops an entry_id's extra scans, so an
+                // entry_id-keyed set would match every row and drop nothing.
+                var keep = new HashSet<(uint, byte, uint)>
+                {
+                    (2u, 2, 20u), (3u, 2, 30u), (8u, 2, 80u),
+                };
+                var gapFill = new List<FdrEntry> { MakeStreamEntry(4, 40040.0) };
+
+                var result = ParquetScoreCache.StreamReconciledScoresParquet(
+                    originalPath, subsetPath, new Dictionary<uint, FdrEntry>(), gapFill,
+                    null, null, "f.mzML", keep, PerFileRescoreTask.TASK_NAME, null, s => { });
+
+                Assert.AreEqual(1, result.NAppended);
+                // Rows READ, not emitted - the count still describes the input.
+                Assert.AreEqual(7, result.OrigRowCount);
+                // Four emitted: three survivors plus the gap-fill row.
+                Assert.AreEqual(4, result.NWritten);
+
+                var rows = ParquetScoreCache.LoadFullFdrEntries(subsetPath);
+                var ids = new List<uint>();
+                foreach (var row in rows)
+                    ids.Add(row.EntryId);
+                CollectionAssert.AreEqual(new uint[] { 2, 3, 4, 8 }, ids,
+                    "reconciled parquet must hold the survivors plus gap-fill, in canonical order");
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The parquet footer's declared row count is the SAME number a full scan reaches.
+        ///
+        /// <para>This is the invariant the counts-only projection rests on. It used to read
+        /// every row of every file - 1,342,686,095 at 446 runs, ~10 minutes - through a builder
+        /// whose <c>AddRow</c> discards all five fields and increments a counter, to learn what
+        /// <c>ProbeResumeSchemaAndRows</c> returns from a footer the same loop had already
+        /// opened. The scan is gone; if these two ever disagreed, first-pass FDR would be sized
+        /// from a number no longer describing the file, so pin them together.</para>
+        ///
+        /// <para>Multiple row groups on purpose (cap 2 over 5 rows -> 3 groups): a footer count
+        /// and a per-group append loop are the two things that could drift apart, and a
+        /// single-group file cannot tell them apart.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFooterRowCountMatchesScan()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_rowcount_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var entries = new List<FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7 })
+                    entries.Add(MakeStreamEntry(id, id * 100.0));
+
+                string path = Path.Combine(dir, "counts.scores.parquet");
+                ParquetScoreCache.RowGroupRowCapForTest = 2;
+                try
+                {
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                }
+                finally
+                {
+                    ParquetScoreCache.RowGroupRowCapForTest = null;
+                }
+
+                // Assert the multi-group shape rather than assuming the cap took. If the writer
+                // is ever re-routed off WriteChunkedParquet the 5 rows land in ONE group and
+                // this test still passes 5 == 5 - now exercising exactly the degenerate case
+                // its own premise says cannot detect footer-vs-per-group drift.
+                Assert.AreEqual(3, CountRowGroups(path));
+
+                int scanned = 0;
+                ParquetScoreCache.ReadFdrStubScalars(path,
+                    (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => scanned++,
+                    StubColumns.Core);
+
+                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(path);
+                Assert.IsTrue(probe.HasPinFeatures);
+                Assert.AreEqual(entries.Count, scanned);
+                Assert.AreEqual(scanned, probe.RowCount);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
+        }
+
+        // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
+        // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
+        // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        /// <summary>
+        /// Write and read the same fixture many times over and assert every scalar survives.
+        /// The regression guard for the parallel-write data race: `ParquetPlainEncoder` returned
+        /// its widening buffer to the ArrayPool and then encoded from it, so once columns
+        /// compressed concurrently another column's dictionary-index buffer could land in the
+        /// byte-typed <c>charge</c> column. Measured at 27 corrupted round-trips in 20,000
+        /// before the fix and 0 in 100,000 after.
+        ///
+        /// <para>A single-shot round-trip cannot see a defect this rare - it surfaced as a ~2%
+        /// failure across four unrelated tests. Iterating in-process is what turns hours of
+        /// full-suite soaking into seconds. Cheap by default (25 iterations) so it costs the
+        /// gate nothing; set <c>OSPREYDEV_PARQUET_STRESS_ITERS</c> to sweep harder. The 6.1.0 fork
+        /// had the same bug, fixed in 6.1.0-osprey3, and Osprey prepares a row group's columns
+        /// concurrently on it too. On .NET 10 this test did not catch the unfixed fork in 5,000
+        /// iterations, so it is a round-trip check rather than a guard for that fix.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestParquetRoundTripScalarStress()
+        {
+            int iters = 25;
+            string raw = Environment.GetEnvironmentVariable(@"OSPREYDEV_PARQUET_STRESS_ITERS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int parsed) && parsed > 0)
+                iters = parsed;
+
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_stress_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var entries = new List<FdrEntry>();
+                var expected = new Dictionary<uint, FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var e = MakeStreamEntry(id, id * 100.0);
+                    entries.Add(e);
+                    expected[id] = e;
+                }
+
+                int nBad = 0;
+                string firstBad = null;
+                for (int i = 0; i < iters; i++)
+                {
+                    string path = Path.Combine(dir, @"stress" + i + ParquetScoreCache.EXT_SCORES);
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                    string bad = null;
+                    if (stubs.Count != entries.Count)
+                    {
+                        bad = string.Format(@"row count {0}, expected {1}", stubs.Count, entries.Count);
+                    }
+                    else
+                    {
+                        foreach (var s in stubs)
+                        {
+                            if (!expected.TryGetValue(s.EntryId, out FdrEntry want))
+                            {
+                                bad = string.Format(@"unknown entry_id {0}", s.EntryId);
+                                break;
+                            }
+                            if (s.Charge != want.Charge)
+                                bad = string.Format(@"charge {0}, expected {1}", s.Charge, want.Charge);
+                            else if (s.ScanNumber != want.ScanNumber)
+                                bad = string.Format(@"scan_number {0}, expected {1}", s.ScanNumber, want.ScanNumber);
+                            else if (s.IsDecoy != want.IsDecoy)
+                                bad = string.Format(@"is_decoy {0}, expected {1}", s.IsDecoy, want.IsDecoy);
+                            if (bad != null)
+                            {
+                                bad = string.Format(@"entry_id {0}: {1}", s.EntryId, bad);
+                                break;
+                            }
+                        }
+                    }
+                    if (bad != null)
+                    {
+                        nBad++;
+                        if (firstBad == null)
+                            firstBad = string.Format(@"iteration {0} - {1}", i, bad);
+                    }
+                    File.Delete(path);
+                }
+
+                Assert.AreEqual(0, nBad, string.Format(
+                    @"{0} of {1} parquet round-trips lost a scalar. First: {2}",
+                    nBad, iters, firstBad ?? @"(none)"));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
+        // overlay preserves the canonical sort key of the row it replaces.
+        /// <summary>
+        /// A score parquet with a zero charge - the pre-2026-09-17 column-writer race - is
+        /// refused by the stub walks even when the charges are taken from the library
+        /// (OSPREY_STUB_IDENTITY=1, the default), which never needs the file's charge. Without
+        /// the check such a file passed Stages 5 and 6 on library charges and failed hours later.
+        /// Asserts the exception type only: the message is a resource string.
+        /// </summary>
+        [TestMethod]
+        public void TestZeroChargeRefusedUnderLibraryIdentity()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_zero_charge_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Odd ids, so MakeStreamEntry marks them targets, matching the library.
+                var entries = new List<FdrEntry> { MakeStreamEntry(1, 100.0), MakeStreamEntry(3, 300.0) };
+                entries[1].Charge = 0;
+                string path = Path.Combine(dir, "zero.scores.parquet");
+                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                var identity = new LibraryIdentity(new List<LibraryEntry>
+                {
+                    new LibraryEntry(1, @"PEPTIDE1", @"PEPTIDE1", 2, 450.0, 10.0),
+                    new LibraryEntry(3, @"PEPTIDE3", @"PEPTIDE3", 2, 460.0, 11.0),
+                });
+
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    ParquetScoreCache.ReadFdrStubScalars(path, (id, charge, decoy, coelution, modseq, apex) => { },
+                        StubColumns.Core, identity));
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    ParquetScoreCache.LoadFdrStubsFromParquet(path, null, null, identity));
+                // And without the library, as before.
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    ParquetScoreCache.ReadFdrStubScalars(path, (id, charge, decoy, coelution, modseq, apex) => { },
+                        StubColumns.Core));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        private static FdrEntry MakeStreamEntry(uint id, double baseValue)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = baseValue + f;
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = (id & 1u) == 0,
+                Charge = 2,
+                ScanNumber = id * 10,
+                ApexRt = id + 0.5,
+                StartRt = id + 0.1,
+                EndRt = id + 0.9,
+                BoundsArea = id + 0.3,
+                BoundsSnr = id + 0.7,
+                ModifiedSequence = "PEPTIDE" + id,
+                Features = features,
+                FragmentMzs = new[] { baseValue + 0.25, baseValue + 0.75 },
+                FragmentIntensities = new[] { (float)baseValue, (float)(baseValue + 1) },
+                ReferenceXicRts = new[] { baseValue + 1.5, baseValue + 2.5 },
+                ReferenceXicIntensities = new[] { baseValue * 2.0, baseValue * 3.0 },
+            };
+        }
+
+        private static FdrEntry RowById(List<FdrEntry> rows, uint id)
+        {
+            return rows.First(e => e.EntryId == id);
+        }
+
+        private static void AssertStreamRowsEqual(List<FdrEntry> expected, List<FdrEntry> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                var e = expected[i];
+                var a = actual[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.IsDecoy, a.IsDecoy);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.CoelutionSum, a.CoelutionSum);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                Assert.AreEqual(e.BoundsSnr, a.BoundsSnr);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.FragmentMzs, a.FragmentMzs);
+                CollectionAssert.AreEqual(e.FragmentIntensities, a.FragmentIntensities);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
+            }
+        }
+
+        private static int CountRowGroups(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                return ParquetReader.CreateAsync(stream).GetAwaiter().GetResult().RowGroupCount;
+        }
+
         private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,
-            double runProteinQvalue = 1.0)
+            double proteinQvalue = 1.0)
         {
             return new FdrEntry
             {
@@ -1804,10 +3497,9 @@ namespace pwiz.Osprey.Test
                 Score = score,
                 RunPrecursorQvalue = q,
                 RunPeptideQvalue = q + 1.0e-9,
-                RunProteinQvalue = runProteinQvalue,
                 ExperimentPrecursorQvalue = q + 2.0e-9,
                 ExperimentPeptideQvalue = q + 3.0e-9,
-                ExperimentProteinQvalue = 1.0,
+                ExperimentProteinQvalue = proteinQvalue,
                 Pep = pep,
                 ModifiedSequence = "PEPTIDE",
             };
@@ -1825,19 +3517,20 @@ namespace pwiz.Osprey.Test
             try
             {
                 string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
-                // Distinct run_protein_qvalue per entry catches a writer that
-                // drops the v3 field. Values match Rust's
-                // fdr_scores_sidecar_v3_round_trip exactly so the
-                // OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT byte-parity gate compares
-                // identical inputs on both sides.
+                // The RUN-scope columns are all this file carries at v5; the experiment-scope
+                // half is covered by TestFdrScopeSplitV5. Values still match Rust's
+                // fdr_scores_sidecar round-trip inputs, but the records themselves no longer
+                // do - Rust fuses both scopes into one 68-byte record, so the
+                // OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT byte-parity hook below cannot compare
+                // equal until that side splits too (issue #4486).
                 var entries = new List<FdrEntry>
                 {
-                    MakeFdrEntry(0, -3.5, 0.001, 0.02, runProteinQvalue: 0.0042),
-                    MakeFdrEntry(1, -3.4, 0.002, 0.05, runProteinQvalue: 0.0123),
-                    MakeFdrEntry(2, -3.3, 0.003, 0.08, runProteinQvalue: 0.95),
+                    MakeFdrEntry(0, -3.5, 0.001, 0.02, proteinQvalue: 0.0042),
+                    MakeFdrEntry(1, -3.4, 0.002, 0.05, proteinQvalue: 0.0123),
+                    MakeFdrEntry(2, -3.3, 0.003, 0.08, proteinQvalue: 0.95),
                 };
 
-                FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass);
+                FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 // Cross-impl byte-parity hook: when the harness runs this test
                 // with OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT=<path> set, copy our
@@ -1851,7 +3544,8 @@ namespace pwiz.Osprey.Test
                 // File size sanity check.
                 long size = new FileInfo(path).Length;
                 Assert.AreEqual(
-                    FdrScoresSidecar.HeaderLength + entries.Count * FdrScoresSidecar.RecordLength,
+                    FdrScoresSidecar.HeaderLength + entries.Count * FdrScoresSidecar.RecordLength +
+                    BinarySidecarStamp.Encode(TestStamps.Any).Length,
                     size);
 
                 // Stubs with cleared FDR fields — TryRead must repopulate them.
@@ -1861,6 +3555,19 @@ namespace pwiz.Osprey.Test
                     MakeFdrEntry(1, 0.0, 0.0, 0.0),
                     MakeFdrEntry(2, 0.0, 0.0, 0.0),
                 };
+                // Snapshot the EXPERIMENT-scope columns before the read: at v5 they are not in
+                // this file, so TryRead must leave them exactly as it found them. A reader that
+                // still wrote them would be decoding whatever field now sits at the offset it
+                // remembers, which is the failure mode the split was designed to make loud.
+                var expBefore = new List<double[]>();
+                foreach (var e in loaded)
+                {
+                    expBefore.Add(new[]
+                    {
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue,
+                        e.ExperimentProteinQvalue, e.ExperimentAggregateScore,
+                    });
+                }
                 Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass));
 
                 for (int i = 0; i < entries.Count; i++)
@@ -1871,14 +3578,12 @@ namespace pwiz.Osprey.Test
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPrecursorQvalue));
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunPeptideQvalue),
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunPeptideQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentPrecursorQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPrecursorQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].ExperimentPeptideQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].ExperimentPeptideQvalue));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].Pep),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].Pep));
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunProteinQvalue),
-                                    BitConverter.DoubleToInt64Bits(loaded[i].RunProteinQvalue));
+                    // NOT Pep: the per-file sidecar no longer carries it (issue #4486). It is an
+                    // experiment-scope value now, asserted against the experiment map below.
+                    Assert.AreEqual(expBefore[i][0], loaded[i].ExperimentPrecursorQvalue);
+                    Assert.AreEqual(expBefore[i][1], loaded[i].ExperimentPeptideQvalue);
+                    Assert.AreEqual(expBefore[i][2], loaded[i].ExperimentProteinQvalue);
+                    Assert.AreEqual(expBefore[i][3], loaded[i].ExperimentAggregateScore);
                 }
             }
             finally
@@ -1886,6 +3591,431 @@ namespace pwiz.Osprey.Test
                 try { Directory.Delete(dir, true); } catch (IOException) { }
             }
         }
+
+        /// <summary>
+        /// The per-file second-pass competition decoys artifact (issue #4486) - the decoy side of
+        /// one file's pass-2 competition, which the pool-image sidecar structurally cannot carry
+        /// because the winning decoy of a base_id is routinely a non-survivor.
+        ///
+        /// <list type="bullet">
+        /// <item><b>Canonical.</b> The file is a function of its CONTENTS, not of the order the
+        /// producer's dictionary enumerated: the same pairs inserted in opposite orders must
+        /// produce byte-identical files. The straight-through and distributed routes accumulate
+        /// in different orders and the gate compares their artifacts byte for byte.</item>
+        /// <item><b>Key-checked.</b> The base_id key is not stored - it is the entry_id's low 31
+        /// bits - so a TARGET entry_id or a mis-filed key would have the reader silently
+        /// re-derive a different base_id and put a target observation into the decoy null. Both
+        /// fail the write instead.</item>
+        /// <item><b>Rejects a foreign file.</b> This shares a header shape with the per-file
+        /// scores sidecar and the analysis-wide experiment sidecar; only the magic separates
+        /// them, so a mix-up has to be a rejection rather than plausible garbage.</item>
+        /// <item><b>Unreadable is null, never empty.</b> An empty competition and an unreadable
+        /// file must be distinguishable: the second silently empties the null every experiment
+        /// q-value is computed against, and no golden or entrapment gate can see that.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestPass2CompetitionDecoysArtifact()
+        {
+            // The decoy high bit, as PercolatorEntry sets it. Spelled out here because the
+            // artifact under test derives every base_id key from it.
+            const uint DECOY_BIT = 0x80000000;
+            string dir = Path.Combine(Path.GetTempPath(), "osprey_dcy_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var ascending = new Dictionary<uint, (double score, uint entryId)>();
+                var descending = new Dictionary<uint, (double score, uint entryId)>();
+                for (uint b = 1; b <= 8; b++)
+                    ascending[b] = (0.1 * b, DECOY_BIT | b);
+                for (uint b = 8; b >= 1; b--)
+                    descending[b] = (0.1 * b, DECOY_BIT | b);
+
+                string a = Path.Combine(dir, "a.bin");
+                string d = Path.Combine(dir, "d.bin");
+                Pass2CompetitionDecoys.Write(a, ascending, TestStamps.Any);
+                Pass2CompetitionDecoys.Write(d, descending, TestStamps.Any);
+                CollectionAssert.AreEqual(File.ReadAllBytes(a), File.ReadAllBytes(d),
+                    "the artifact must be a function of its contents, not of insertion order");
+
+                var map = Pass2CompetitionDecoys.ReadMap(a);
+                Assert.IsNotNull(map);
+                Assert.AreEqual(8, map.Count);
+                for (uint b = 1; b <= 8; b++)
+                {
+                    Assert.AreEqual(DECOY_BIT | b, map[b].entryId);
+                    Assert.AreEqual(0.1 * b, map[b].score);
+                }
+                Assert.IsTrue(Pass2CompetitionDecoys.IsCurrentFormat(a));
+
+                // A target entry_id has no decoy bit, so the reader would key it to its own
+                // base_id and the file would claim a target observation as a decoy best.
+                var target = new Dictionary<uint, (double score, uint entryId)> { { 3u, (0.5, 3u) } };
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "t.bin"), target, TestStamps.Any));
+
+                // A key that does not match the entry_id it files means the map was assembled
+                // rather than serialized - the one error this format cannot survive.
+                var misfiled = new Dictionary<uint, (double score, uint entryId)>
+                {
+                    { 3u, (0.5, DECOY_BIT | 4u) }
+                };
+                Assert.ThrowsException<InvalidOperationException>(
+                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "m.bin"), misfiled, TestStamps.Any));
+
+                // Empty is a real answer and round trips as one - distinct from unreadable.
+                string empty = Path.Combine(dir, "empty.bin");
+                Pass2CompetitionDecoys.Write(empty,
+                    new Dictionary<uint, (double score, uint entryId)>(), TestStamps.Any);
+                var emptyMap = Pass2CompetitionDecoys.ReadMap(empty);
+                Assert.IsNotNull(emptyMap);
+                Assert.AreEqual(0, emptyMap.Count);
+
+                // A corrupted magic byte is a rejection on both entry points, not a decode.
+                string foreign = Path.Combine(dir, "foreign.bin");
+                var bytes = File.ReadAllBytes(a);
+                bytes[5] = (byte)'X';
+                File.WriteAllBytes(foreign, bytes);
+                Assert.IsFalse(Pass2CompetitionDecoys.IsCurrentFormat(foreign));
+                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(foreign));
+
+                // So is a truncated body, which is what a partial write leaves behind.
+                string truncated = Path.Combine(dir, "truncated.bin");
+                var full = File.ReadAllBytes(a);
+                File.WriteAllBytes(truncated, full.Take(full.Length - 1).ToArray());
+                Assert.IsFalse(Pass2CompetitionDecoys.IsCurrentFormat(truncated));
+                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(truncated));
+
+                // And so is a missing file: null, never an empty map.
+                Assert.IsNull(Pass2CompetitionDecoys.ReadMap(Path.Combine(dir, "absent.bin")));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The v5 scope split (issue #4486), covered end to end in one test because the three
+        /// behaviours are one design: what the per-file sidecar keeps, what the analysis-wide
+        /// experiment sidecar takes over, and the single patch that survived the split.
+        ///
+        /// <list type="bullet">
+        /// <item><b>Experiment round trip.</b> One record per distinct entry_id, written in
+        /// ascending entry_id order whatever order the producer accumulated them in - the
+        /// straight-through and distributed routes do not agree on that order and the gate
+        /// compares their files byte for byte.</item>
+        /// <item><b>The collapse is checked, not trusted.</b> Two observations of one entry_id
+        /// carrying different experiment values must THROW rather than let one silently win.
+        /// The whole split rests on those values being a property of the precursor; a first-wins
+        /// collapse over values that had diverged would report q-values no run computed, and
+        /// both routes would collapse identically so no self-consistency gate could see it.</item>
+        /// <item><b>The two files cannot be read as each other.</b> Different magic, so a
+        /// mix-up is a rejection rather than plausible garbage.</item>
+        /// <item><b>PatchPep matches a single-phase write byte for byte.</b> The map is
+        /// entry_id-keyed and built out of record order, over records with non-sequential
+        /// entry_ids, to prove the patch locates each record's pep by entry_id and not by
+        /// position.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScopeSplitV5()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_scope_split_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                AssertExperimentSidecarRoundTrips(dir);
+                AssertExperimentCollapseRejectsDisagreement();
+                AssertUnreadableExperimentSidecarStopsTheRun(dir);
+                AssertSidecarsRejectEachOther(dir);
+                AssertPerFileSidecarCarriesNoPep(dir);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Accumulate out of entry_id order, then assert the file comes back in ascending
+        /// entry_id order with every column intact.
+        /// </summary>
+        /// <summary>
+        /// A PARTIAL update of an experiment record preserves every field it does not set.
+        ///
+        /// <para><c>SetProteinQvalue</c> replaces one column by rebuilding the record, so any
+        /// field it forgets to carry is silently replaced by whatever the constructor supplies.
+        /// PEP was dropped exactly that way on its first day in this record, and no C#-only gate
+        /// noticed: the whole Stellar regression stayed green while every experiment winner
+        /// reported 1.0. Only the cross-impl comparison against Rust caught it, and that gate is
+        /// scheduled for retirement (issue #4486).</para>
+        ///
+        /// <para>Asserts the WHOLE record rather than the one column, because "the field I
+        /// happened to think of" is the bug. The constructor no longer defaults <c>pep</c>, so a
+        /// newly added column is a compile error at every construction site - this covers the
+        /// case where a site compiles because it passed something wrong instead.</para>
+        /// </summary>
+        private static void AssertPartialUpdatePreservesEveryField()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25);
+            accumulator.SetProteinQvalue(7, 0.0042);
+
+            var updated = accumulator.Records[7];
+            Assert.AreEqual(7u, updated.EntryId);
+            AssertBitEqual(0.011, updated.ExperimentPrecursorQvalue);
+            AssertBitEqual(0.012, updated.ExperimentPeptideQvalue);
+            AssertBitEqual(0.0042, updated.ExperimentProteinQvalue);
+            AssertBitEqual(-1.5, updated.ExperimentAggregateScore);
+            AssertBitEqual(0.25, updated.Pep);
+        }
+
+        /// <summary>
+        /// The best-of-runs floors are APPLIED to the experiment q-values before the records are
+        /// written, and every other column survives the raise.
+        ///
+        /// <para>This is the whole of issue #4522's fix. The second pass used to write an
+        /// experiment q it had not floored - a value more confident than the precursor's own best
+        /// run, which downstream then corrected on 1,125,526 rows of the 446-run CHS cohort -
+        /// and the correction lived only in the .blib. Applying it here, where both the value and
+        /// the floor are in hand, makes the persisted number the final one.</para>
+        ///
+        /// <para>Asserted as MAX, not as assignment: a floor below the competed q must leave it
+        /// alone. The two q-values floor against differently-keyed minima, so they are moved
+        /// independently - a single entry can have its precursor q raised and its peptide q
+        /// untouched, which is the case a one-value test would miss.</para>
+        /// </summary>
+        private static void AssertRunQFloorsAreAppliedNotStored()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1);   // both floors bite
+            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2);   // neither floor bites
+            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3);   // only the precursor floor bites
+            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4);   // floors unknown
+
+            var floors = new Dictionary<uint, (double Entry, double Peptide)>
+            {
+                { 1, (0.010, 0.020) },
+                { 2, (0.010, 0.040) },
+                { 3, (0.010, 0.001) },
+                { 4, (double.NaN, double.NaN) },
+            };
+            int raised = accumulator.ApplyRunQFloors(id => floors[id]);
+
+            // 1 raises both, 3 raises one. Nothing else moves. The count is of RECORDS, so entry
+            // 1 counts once although both of its q-values moved.
+            Assert.AreEqual(2, raised);
+            AssertBitEqual(0.010, accumulator.Records[1].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.020, accumulator.Records[1].ExperimentPeptideQvalue);
+            // A floor EQUAL to the value is not a raise, and one below it is not a ceiling.
+            AssertBitEqual(0.030, accumulator.Records[2].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.040, accumulator.Records[2].ExperimentPeptideQvalue);
+            AssertBitEqual(0.010, accumulator.Records[3].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.050, accumulator.Records[3].ExperimentPeptideQvalue);
+            // NaN means "not known" and must raise nothing - every comparison against it is
+            // false, so this is a statement of intent rather than a guard the arithmetic needs.
+            AssertBitEqual(0.005, accumulator.Records[4].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.006, accumulator.Records[4].ExperimentPeptideQvalue);
+
+            // The columns the raise does not own, on a record it DID rewrite.
+            AssertBitEqual(0.5, accumulator.Records[1].ExperimentProteinQvalue);
+            AssertBitEqual(-1.0, accumulator.Records[1].ExperimentAggregateScore);
+            AssertBitEqual(0.1, accumulator.Records[1].Pep);
+            Assert.AreEqual(4, accumulator.Count);
+        }
+
+        private static void AssertExperimentSidecarRoundTrips(string dir)
+        {
+            AssertPartialUpdatePreservesEveryField();
+            AssertRunQFloorsAreAppliedNotStored();
+            string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
+            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0);
+            // A repeat sighting of an entry_id already held, with identical values: the ordinary
+            // case, since every observation of a precursor carries the same experiment values.
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
+            Assert.AreEqual(3, accumulator.Count);
+
+            FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+            Assert.AreEqual(
+                FdrExperimentSidecar.HeaderLength + 3 * FdrExperimentSidecar.RecordLength +
+                BinarySidecarStamp.Encode(TestStamps.Any).Length,
+                new FileInfo(path).Length);
+            Assert.IsTrue(FdrExperimentSidecar.IsCurrentFormat(path, FdrScoresSidecar.Pass.FirstPass));
+
+            var order = new List<uint>();
+            Assert.IsTrue(FdrExperimentSidecar.ReadRecords(
+                path, FdrScoresSidecar.Pass.FirstPass, rec => order.Add(rec.EntryId)));
+            CollectionAssert.AreEqual(new List<uint> { 2, 7, 9 }, order);
+
+            var map = FdrExperimentSidecar.ReadMap(path, FdrScoresSidecar.Pass.FirstPass);
+            Assert.IsNotNull(map);
+            AssertBitEqual(0.031, map[9].ExperimentPrecursorQvalue);
+            AssertBitEqual(0.032, map[9].ExperimentPeptideQvalue);
+            AssertBitEqual(0.033, map[9].ExperimentProteinQvalue);
+            AssertBitEqual(-3.5, map[9].ExperimentAggregateScore);
+
+            // SetProteinQvalue replaces only the column protein FDR owns, and ignores an
+            // entry_id the accumulator never saw rather than inventing a record for it.
+            accumulator.SetProteinQvalue(9, 0.5);
+            accumulator.SetProteinQvalue(12345, 0.5);
+            Assert.AreEqual(3, accumulator.Count);
+            AssertBitEqual(0.5, accumulator.Records[9].ExperimentProteinQvalue);
+            AssertBitEqual(0.031, accumulator.Records[9].ExperimentPrecursorQvalue);
+        }
+
+        /// <summary>
+        /// Absence and unreadability are DIFFERENT answers, and only absence is tolerable.
+        ///
+        /// <para>A sidecar the analysis never wrote reads as an empty map, because the callers'
+        /// defaults cover it. One that EXISTS and cannot be read stops the run: every consumer
+        /// applies these values through a <c>TryGetValue</c>, so an empty map is
+        /// indistinguishable from one that simply holds no matching entry, and every entry then
+        /// keeps its <c>ResetScores</c> defaults - which the run reports as computed values. A
+        /// valid file is read back FIRST as the negative control, because a throws-on-corrupt
+        /// assertion fed only corrupt input proves nothing about the case it must let through.
+        /// </para>
+        /// </summary>
+        private static void AssertUnreadableExperimentSidecarStopsTheRun(string dir)
+        {
+            const FdrScoresSidecar.Pass pass = FdrScoresSidecar.Pass.SecondPass;
+
+            // Nothing named and nothing on disk: the analysis has none, which is not an error.
+            Assert.AreEqual(0, Pass2FdrSidecar.LoadExperimentRecordsFrom(null, pass).Count);
+            Assert.AreEqual(0, Pass2FdrSidecar.LoadExperimentRecordsFrom(string.Empty, pass).Count);
+            Assert.AreEqual(0, Pass2FdrSidecar.LoadExperimentRecordsFrom(
+                Path.Combine(dir, "never-written.2nd-pass.fdr_experiment.bin"), pass).Count);
+
+            // Control: a valid file of the expected pass reads back with its records.
+            string path = Path.Combine(dir, "unreadable-probe.2nd-pass.fdr_experiment.bin");
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0);
+            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0);
+            FdrExperimentSidecar.Write(path, accumulator.Records, pass, TestStamps.Any);
+            Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
+
+            // The same file asked for as the OTHER pass. It is present and it is not what the
+            // caller needs, which is the shape a stale or mis-wired artifact arrives in.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.LoadExperimentRecordsFrom(path, FdrScoresSidecar.Pass.FirstPass));
+
+            // Truncated mid-record, with a header whose count still claims both records - the
+            // shape a killed writer leaves behind.
+            string truncated = Path.Combine(dir, "truncated.2nd-pass.fdr_experiment.bin");
+            var bytes = File.ReadAllBytes(path);
+            var shortened = new byte[bytes.Length - 8];
+            Array.Copy(bytes, shortened, shortened.Length);
+            File.WriteAllBytes(truncated, shortened);
+            Assert.ThrowsException<InvalidOperationException>(
+                () => Pass2FdrSidecar.LoadExperimentRecordsFrom(truncated, pass));
+        }
+
+        /// <summary>
+        /// A second observation of one entry_id carrying a DIFFERENT experiment value must
+        /// throw. See the class remarks on <see cref="FdrExperimentAccumulator"/>: this is the
+        /// assertion that keeps the per-entry_id collapse honest.
+        /// </summary>
+        private static void AssertExperimentCollapseRejectsDisagreement()
+        {
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0);
+            try
+            {
+                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0);
+                Assert.Fail("Disagreeing experiment values for one entry_id must throw.");
+            }
+            catch (InvalidOperationException)
+            {
+                // Expected: the collapse refuses to pick a winner.
+            }
+        }
+
+        /// <summary>
+        /// The per-file and experiment sidecars share a header shape and a pass byte, so each
+        /// reader must refuse the other's file on magic alone.
+        /// </summary>
+        private static void AssertSidecarsRejectEachOther(string dir)
+        {
+            string perFile = Path.Combine(dir, "run.1st-pass.fdr_scores.bin");
+            string experiment = Path.Combine(dir, "mix.1st-pass.fdr_experiment.bin");
+            FdrScoresSidecar.Write(perFile,
+                new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
+                FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+            var accumulator = new FdrExperimentAccumulator();
+            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0);
+            FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+
+            Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsNull(FdrExperimentSidecar.ReadMap(perFile, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsFalse(FdrScoresSidecar.IsCurrentFormat(experiment, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsFalse(FdrScoresSidecar.ReadRecords(
+                experiment, FdrScoresSidecar.Pass.FirstPass, rec => { }));
+        }
+
+        /// <summary>
+        /// A per-file sidecar carries NO PEP column, on either pass, and a second write of the
+        /// same records reproduces the file byte for byte (issue #4486).
+        ///
+        /// <para>This replaces a test that asserted a placeholder write plus <c>PatchPep</c>
+        /// equalled a single-phase write. That test passed for as long as the patch existed, and
+        /// the patch is exactly what it should have been questioning: PEP is one value per
+        /// base_id, so writing it per observation forced the second pass to reopen and rewrite
+        /// every per-run sidecar after the experiment fold. Those files are now written once and
+        /// never revisited, and PEP lives on <see cref="FdrExperimentRecord.Pep"/>.</para>
+        /// </summary>
+        private static void AssertPerFileSidecarCarriesNoPep(string dir)
+        {
+            string first = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
+            string second = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
+            // Non-sequential entry_ids, so a positional read cannot pass for a keyed one.
+            var records = new List<FdrScoreRecord>
+            {
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 31.5),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 42.25),
+            };
+            FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass, TestStamps.Any);
+            FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass, TestStamps.Any);
+            CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
+
+            // The record is exactly entry_id + score + the two RUN q-values + the apex RT.
+            // Every one of those is RUN-scope and per-observation; an experiment-scope column
+            // reappearing here would widen it, and that is what this pins.
+            Assert.AreEqual(sizeof(uint) + 4 * sizeof(double), FdrScoresSidecar.RecordLength);
+            Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength +
+                            BinarySidecarStamp.Encode(TestStamps.Any).Length,
+                new FileInfo(first).Length);
+
+            var read = new List<FdrScoreRecord>();
+            Assert.IsTrue(FdrScoresSidecar.ReadRecords(
+                first, FdrScoresSidecar.Pass.SecondPass, rec => read.Add(rec)));
+            Assert.AreEqual(2, read.Count);
+            AssertBitEqual(-2.0, read[0].Score);
+            AssertBitEqual(0.03, read[1].RunPrecursorQvalue);
+            // Round-tripped, and per record: the apex RT is the v7 column, and it is the only
+            // one whose writer and reader were added at the same time - so nothing else in this
+            // file would notice if the two disagreed on its offset.
+            AssertBitEqual(31.5, read[0].ApexRt);
+            AssertBitEqual(42.25, read[1].ApexRt);
+
+            // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
+            // change exists to remove: the file no longer matches the stamp first written with
+            // it, and a separate experiment-wide node has only what the per-file node
+            // left behind. Asserted here rather than trusted to the contract, because the
+            // contract WAS stated - in a commit title - and drifted for a sprint regardless.
+            Assert.ThrowsException<InvalidOperationException>(
+                () => FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass, TestStamps.Any));
+        }
+
+        /// <summary>Bit-exact double comparison, so a rounded value cannot pass.</summary>
+        private static void AssertBitEqual(double expected, double actual)
+        {
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected),
+                            BitConverter.DoubleToInt64Bits(actual));
+        }
+
 
         /// <summary>
         /// Pre-v2 sidecar files (no magic header, just raw f64 scores)
@@ -1942,7 +4072,7 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
                 FdrScoresSidecar.Write(path,
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 // entry_id=99 is the gap-fill stub (no sidecar record).
                 var entries = new List<FdrEntry>
@@ -1958,6 +4088,76 @@ namespace pwiz.Osprey.Test
                 // survives unchanged.
                 Assert.AreEqual(0.0, entries[1].Score, 0.0);
                 Assert.AreEqual(0.0, entries[1].RunPrecursorQvalue, 0.0);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Chunk-boundary coverage for the buffered body reads. Both
+        /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> now walk the body in fixed-size
+        /// buffers instead of materialising the file, which gives the record loop seams the
+        /// old whole-file indexing did not have: a count that is an exact multiple of the
+        /// buffer, one either side of it, and one that leaves a short final chunk.
+        ///
+        /// <para>Every other sidecar test in this file writes a handful of records, so all of
+        /// them would pass against a reader that dropped, duplicated or misaligned every
+        /// record past the first buffer. That is the whole reason this one exists.</para>
+        ///
+        /// <para>The counts bracket a range of plausible buffer sizes rather than naming the
+        /// private constant, so the test keeps its meaning if the buffer is ever retuned.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarChunkBoundaries()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_chunk_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                foreach (int count in new[] { 0, 1, 1023, 1024, 1025, 2047, 2048, 2049, 4096, 4103 })
+                {
+                    // A distinct path per count: FdrScoresSidecar refuses to write the same
+                    // path twice in one process, which is the guard that keeps a sidecar
+                    // write-once (P11).
+                    string path = Path.Combine(dir, "n" + count + ".1st-pass.fdr_scores.bin");
+                    var written = new List<FdrEntry>(count);
+                    for (int i = 0; i < count; i++)
+                        written.Add(MakeFdrEntry((uint)i, -i * 0.5, i * 1.0e-6, 0.0));
+                    FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+
+                    var loaded = new List<FdrEntry>(count);
+                    for (int i = 0; i < count; i++)
+                        loaded.Add(MakeFdrEntry((uint)i, 0.0, 0.0, 0.0));
+                    Assert.IsTrue(FdrScoresSidecar.TryRead(path, loaded, FdrScoresSidecar.Pass.FirstPass),
+                        "TryRead rejected a " + count + "-record sidecar");
+                    // Exact equality (delta 0.0): the assert recomputes the same expressions
+                    // MakeFdrEntry used, so anything but a bit-identical round trip is a
+                    // misaligned read rather than arithmetic drift.
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assert.AreEqual(-i * 0.5, loaded[i].Score, 0.0,
+                            "Score at record " + i + " of " + count);
+                        Assert.AreEqual(i * 1.0e-6, loaded[i].RunPrecursorQvalue, 0.0,
+                            "RunPrecursorQvalue at record " + i + " of " + count);
+                        Assert.AreEqual(i * 1.0e-6 + 1.0e-9, loaded[i].RunPeptideQvalue, 0.0,
+                            "RunPeptideQvalue at record " + i + " of " + count);
+                    }
+
+                    var byId = new Dictionary<uint, FdrEntry>();
+                    for (int i = 0; i < count; i++)
+                        byId[(uint)i] = MakeFdrEntry((uint)i, 0.0, 0.0, 0.0);
+                    Assert.IsTrue(
+                        FdrScoresSidecar.TryReadOverlay(path, byId, FdrScoresSidecar.Pass.FirstPass),
+                        "TryReadOverlay rejected a " + count + "-record sidecar");
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assert.AreEqual(-i * 0.5, byId[(uint)i].Score, 0.0,
+                            "Overlay Score at record " + i + " of " + count);
+                    }
+                }
             }
             finally
             {
@@ -1983,7 +4183,7 @@ namespace pwiz.Osprey.Test
                 // don't contain entry_id=0 — only entry_id=42.
                 FdrScoresSidecar.Write(path,
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var unrelated = new List<FdrEntry> { MakeFdrEntry(42, 0.0, 0.0, 0.0) };
                 Assert.IsFalse(FdrScoresSidecar.TryRead(path, unrelated, FdrScoresSidecar.Pass.FirstPass));
@@ -1999,7 +4199,7 @@ namespace pwiz.Osprey.Test
         /// otherwise wrap int when computing
         /// <c>HeaderLength + headerCount * RecordLength</c> and let the
         /// size check pass spuriously, leading to out-of-bounds reads in
-        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead"/>
+        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass)"/>
         /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> must reject
         /// the load via the checked-arithmetic guard.
         /// </summary>
@@ -2016,7 +4216,7 @@ namespace pwiz.Osprey.Test
                 // and overwrite headerCount with ulong.MaxValue.
                 FdrScoresSidecar.Write(path,
                     new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
                 byte[] header = File.ReadAllBytes(path);
                 Array.Resize(ref header, FdrScoresSidecar.HeaderLength);
                 BitConverter.GetBytes(ulong.MaxValue).CopyTo(header, 16);
@@ -2027,6 +4227,65 @@ namespace pwiz.Osprey.Test
 
                 var dict = new Dictionary<uint, FdrEntry> { { 0, entries[0] } };
                 Assert.IsFalse(FdrScoresSidecar.TryReadOverlay(path, dict, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The v9 first-pass sidecar's feature sums - the run's share of the model diagnostics
+        /// Model tab - round-trip exactly beside unchanged records; a sidecar written without
+        /// them reads as having none; and a share whose counts are corrupt reads as none rather
+        /// than throwing, which would abort a resume or a report fold.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarFeatureSums()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_sums_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var sums = new FeatureSums(2, 3) { TargetCount = 5, DecoyCount = 4 };
+                sums.TargetSums[0] = 1.25;
+                sums.TargetSums[1] = -0.1;
+                sums.DecoySums[0] = double.NaN;
+                sums.DecoySums[1] = 3e-300;
+                sums.TargetHistograms[1][2] = 7;
+                sums.DecoyHistograms[0][0] = 2;
+                var records = new List<FdrScoreRecord> { new FdrScoreRecord(3, 0.5, 0.01, 0.02, 12.5) };
+
+                string path = Path.Combine(dir, "with.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any, sums);
+                var read = FdrScoresSidecar.ReadFeatureSums(path);
+                Assert.IsNotNull(read);
+                Assert.AreEqual(sums.TargetCount, read.TargetCount);
+                Assert.AreEqual(sums.DecoyCount, read.DecoyCount);
+                for (int j = 0; j < 2; j++)
+                {
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sums.TargetSums[j]), BitConverter.DoubleToInt64Bits(read.TargetSums[j]));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sums.DecoySums[j]), BitConverter.DoubleToInt64Bits(read.DecoySums[j]));
+                    CollectionAssert.AreEqual(sums.TargetHistograms[j], read.TargetHistograms[j]);
+                    CollectionAssert.AreEqual(sums.DecoyHistograms[j], read.DecoyHistograms[j]);
+                }
+                var readRecords = new List<FdrScoreRecord>();
+                Assert.IsTrue(FdrScoresSidecar.ReadRecords(path, FdrScoresSidecar.Pass.FirstPass, readRecords.Add));
+                Assert.AreEqual(1, readRecords.Count);
+                Assert.AreEqual(3u, readRecords[0].EntryId);
+                Assert.AreEqual(TestStamps.Any.ToString(), FdrScoresSidecar.ReadStamp(path, FdrScoresSidecar.Pass.FirstPass)?.ToString());
+
+                string without = Path.Combine(dir, "without.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(without, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+                Assert.IsNull(FdrScoresSidecar.ReadFeatureSums(without));
+
+                // Feature and bin counts large enough that the implied length overflows an int.
+                byte[] data = File.ReadAllBytes(path);
+                int sumsOffset = FdrScoresSidecar.HeaderLength + FdrScoresSidecar.RecordLength;
+                BitConverter.GetBytes(20000u).CopyTo(data, sumsOffset);
+                BitConverter.GetBytes(20000u).CopyTo(data, sumsOffset + 4);
+                File.WriteAllBytes(path, data);
+                Assert.IsNull(FdrScoresSidecar.ReadFeatureSums(path));
             }
             finally
             {
@@ -2054,7 +4313,7 @@ namespace pwiz.Osprey.Test
                         MakeFdrEntry(0, -3.5, 0.001, 0.02),
                         MakeFdrEntry(1, -2.1, 0.005, 0.04),
                     },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var stubs = new List<FdrEntry>
                 {
@@ -2085,8 +4344,6 @@ namespace pwiz.Osprey.Test
                     new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                FileStems = new List<string> { "round_trip" },
-                FirstPassBaseIds = new[] { 3u, 100u, 101u, 200u, 201u },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -2099,7 +4356,6 @@ namespace pwiz.Osprey.Test
                         TargetEntryId = 3,
                     },
                 },
-                LibraryHash = "lib-hash-abc",
                 RefinedRtCalibration = new RefinedRtCalibrationJson
                 {
                     AbsResiduals = new[] { 0.01, 0.02, 0.015 },
@@ -2107,7 +4363,6 @@ namespace pwiz.Osprey.Test
                     LibraryRts   = new[] { 10.0, 20.0, 30.0 },
                     ResidualSd   = 0.123,
                 },
-                SearchHash = "search-hash-xyz",
                 UseCwtPeakActions = new List<UseCwtPeakEntry>
                 {
                     new UseCwtPeakEntry { ApexRt = 23.45, CandidateIdx = 1, EndRt = 23.80, EntryId = 100, StartRt = 23.10 },
@@ -2132,7 +4387,7 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(dir, "round_trip.reconciliation.json");
                 var file = MakeSampleReconciliationFile();
 
-                ReconciliationFile.Save(path, file);
+                ReconciliationFile.Save(path, file, TestStamps.Any);
 
                 if (!string.IsNullOrEmpty(OspreyEnvironment.CrossImplReconciliationOut))
                     File.Copy(path, OspreyEnvironment.CrossImplReconciliationOut, overwrite: true);
@@ -2140,8 +4395,6 @@ namespace pwiz.Osprey.Test
                 var parsed = ReconciliationFile.Load(path);
 
                 Assert.AreEqual(file.FormatVersion, parsed.FormatVersion);
-                Assert.AreEqual(file.SearchHash, parsed.SearchHash);
-                Assert.AreEqual(file.LibraryHash, parsed.LibraryHash);
                 Assert.AreEqual(file.UseCwtPeakActions.Count, parsed.UseCwtPeakActions.Count);
                 Assert.AreEqual(file.ForcedIntegrationActions.Count, parsed.ForcedIntegrationActions.Count);
                 Assert.AreEqual(file.GapFillTargets.Count, parsed.GapFillTargets.Count);
@@ -2192,7 +4445,10 @@ namespace pwiz.Osprey.Test
                 }
                 catch (InvalidDataException ex)
                 {
-                    StringAssert.Contains(ex.Message, "unsupported format_version");
+                    Assert.AreEqual(string.Format(
+                        OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
+                        path, 99, ReconciliationFile.CurrentFormatVersion, "format_version",
+                        "*" + ReconciliationFile.EXT), ex.Message);
                 }
             }
             finally
@@ -2276,191 +4532,31 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
-        #region RescoreHydration Tests
+        #region ArtifactStamp Tests
 
         /// <summary>
-        /// End-to-end round-trip: write a synthetic Stage 5 → Stage 6
-        /// boundary file pair (.scores.parquet + .1st-pass.fdr_scores.bin
-        /// + .reconciliation.json) for a single file, hydrate it via
-        /// <see cref="RescoreHydration.HydrateForRescore"/>, and assert
-        /// every piece of the in-memory state matches what was written.
-        /// Mirrors what the worker does at startup before driving the
-        /// rescore engine.
+        /// The validity stamp every pipeline artifact embeds in itself (replacing the
+        /// <c>.osprey.task</c> file that used to sit beside it). Covers the serialized form, the
+        /// "may this run reuse it" rule, and that every artifact family round-trips its stamp
+        /// through its own slot - and that a damaged or unstamped artifact reads as "no stamp"
+        /// rather than throwing, because "I cannot tell" has to resolve to recomputing.
         /// </summary>
         [TestMethod]
-        public void TestRescoreHydrationRoundTrip()
+        public void TestArtifactStampEmbedding()
         {
-            string dir = Path.Combine(Path.GetTempPath(),
-                "rescore_hydrate_" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "artifact_stamp_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
-                const string stem = "sample1";
-                string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
-                string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
-                string sidecarPath = FdrScoresSidecar.Pass1Path(mzmlSynthetic);
-                string reconPath = ReconciliationFile.PathForInput(mzmlSynthetic);
-
-                // 1. Build 3 synthetic scored entries and write the parquet.
-                var scoredEntries = new List<CoelutionScoredEntry>();
-                for (int i = 0; i < 3; i++)
-                {
-                    scoredEntries.Add(new CoelutionScoredEntry
-                    {
-                        EntryId = (uint)(100 + i),
-                        IsDecoy = i == 1,
-                        Sequence = "PEPTIDE",
-                        ModifiedSequence = "PEPTIDE",
-                        Charge = 2,
-                        PrecursorMz = 500.0 + i,
-                        ScanNumber = (uint)(1000 + i),
-                        ApexRt = 5.0 + i * 0.5,
-                        FileName = stem + ".mzML",
-                        PeakBounds = new XICPeakBounds
-                        {
-                            StartRt = 4.5 + i * 0.5,
-                            EndRt = 5.5 + i * 0.5,
-                        },
-                        Features = new CoelutionFeatureSet
-                        {
-                            CoelutionSum = 0.9 + i * 0.01,
-                            CoelutionMax = 0.95,
-                            NCoelutingFragments = 5,
-                            PeakApex = 1000.0,
-                            PeakArea = 5000.0,
-                            PeakSharpness = 0.8,
-                            Xcorr = 2.5,
-                            ConsecutiveIons = 3,
-                            ExplainedIntensity = 0.75,
-                            MassAccuracyMean = -0.5,
-                            AbsMassAccuracyMean = 0.5,
-                            RtDeviation = 0.1,
-                            AbsRtDeviation = 0.1,
-                            Ms1PrecursorCoelution = 0.85,
-                            Ms1IsotopeCosine = 0.92,
-                            MedianPolishCosine = 0.88,
-                            MedianPolishResidualRatio = 0.15,
-                            SgWeightedXcorr = 2.3,
-                            SgWeightedCosine = 0.87,
-                            MedianPolishMinFragmentR2 = 0.7,
-                            MedianPolishResidualCorrelation = 0.3,
-                        },
-                    });
-                }
-                ParquetScoreCache.WriteScoresParquet(parquetPath, scoredEntries,
-                    new Dictionary<string, string>
-                    {
-                        { "osprey.version", "1.0.0" },
-                        { "osprey.search_hash", "abc123" },
-                    });
-
-                // 2. Build matching FdrEntry list (same EntryId order +
-                //    distinct field values per record) and write the v3
-                //    sidecar.
-                var sidecarEntries = new List<FdrEntry>
-                {
-                    MakeFdrEntry(100, -3.5, 0.001, 0.02, runProteinQvalue: 0.42),
-                    MakeFdrEntry(101, -3.4, 0.002, 0.05, runProteinQvalue: 0.43),
-                    MakeFdrEntry(102, -3.3, 0.003, 0.08, runProteinQvalue: 0.44),
-                };
-                FdrScoresSidecar.Write(sidecarPath, sidecarEntries,
-                    FdrScoresSidecar.Pass.FirstPass);
-
-                // 3. Build a reconciliation.json envelope: one
-                //    UseCwtPeak action on entry 100, one ForcedIntegration
-                //    on entry 102, plus a refined cal and a single
-                //    gap-fill target.
-                var reconFile = new ReconciliationFile
-                {
-                    FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                    FileStems = new List<string> { stem },
-                    FirstPassBaseIds = new[] { 100u, 101u, 102u },
-                    SearchHash = "abc123",
-                    LibraryHash = "lib-h",
-                    UseCwtPeakActions = new List<UseCwtPeakEntry>
-                    {
-                        new UseCwtPeakEntry
-                        {
-                            ApexRt = 5.07, CandidateIdx = 1,
-                            EndRt = 5.40, EntryId = 100, StartRt = 4.70,
-                        },
-                    },
-                    ForcedIntegrationActions = new List<ForcedIntegrationEntry>
-                    {
-                        new ForcedIntegrationEntry
-                            { EntryId = 102, ExpectedRt = 6.10, HalfWidth = 0.075 },
-                    },
-                    RefinedRtCalibration = new RefinedRtCalibrationJson
-                    {
-                        AbsResiduals = new[] { 0.01, 0.02, 0.015 },
-                        FittedRts = new[] { 10.5, 20.5, 30.5 },
-                        LibraryRts = new[] { 10.0, 20.0, 30.0 },
-                        ResidualSd = 0.123,
-                    },
-                    GapFillTargets = new List<GapFillEntry>
-                    {
-                        new GapFillEntry
-                        {
-                            Charge = 2,
-                            DecoyEntryId = 0x80000005u,
-                            ExpectedRt = 33.5,
-                            HalfWidth = 0.08,
-                            ModifiedSequence = "PEPTIDE",
-                            TargetEntryId = 5,
-                        },
-                    },
-                };
-                ReconciliationFile.Save(reconPath, reconFile);
-
-                // 4. Hydrate.
-                var inputs = RescoreHydration.HydrateForRescore(new[] { parquetPath });
-
-                // 5. Assert per-file entries: same fileName, same count,
-                //    Score / RunProteinQvalue overlaid bit-exactly.
-                Assert.AreEqual(1, inputs.PerFileEntries.Count);
-                Assert.AreEqual(stem, inputs.PerFileEntries[0].Key);
-                var got = inputs.PerFileEntries[0].Value;
-                Assert.AreEqual(3, got.Count);
-                for (int i = 0; i < 3; i++)
-                {
-                    Assert.AreEqual(sidecarEntries[i].EntryId, got[i].EntryId);
-                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sidecarEntries[i].Score),
-                                    BitConverter.DoubleToInt64Bits(got[i].Score));
-                    Assert.AreEqual(
-                        BitConverter.DoubleToInt64Bits(sidecarEntries[i].RunProteinQvalue),
-                        BitConverter.DoubleToInt64Bits(got[i].RunProteinQvalue));
-                }
-
-                // 6. Assert reconciliation actions: keyed by
-                //    (fileName, vec_idx) where vec_idx is the row index
-                //    in PerFileEntries[0].Value.
-                Assert.AreEqual(2, inputs.ReconciliationActions.Count);
-                var useCwt = inputs.ReconciliationActions[(stem, 0)] as ReconcileAction.UseCwtPeak;
-                Assert.IsNotNull(useCwt, "expected UseCwtPeak at (stem, 0)");
-                Assert.AreEqual(1, useCwt.CandidateIndex);
-                Assert.AreEqual(5.07, useCwt.ApexRt);
-                Assert.AreEqual(4.70, useCwt.StartRt);
-                Assert.AreEqual(5.40, useCwt.EndRt);
-
-                var forced = inputs.ReconciliationActions[(stem, 2)]
-                    as ReconcileAction.ForcedIntegration;
-                Assert.IsNotNull(forced, "expected ForcedIntegration at (stem, 2)");
-                Assert.AreEqual(6.10, forced.ExpectedRt);
-                Assert.AreEqual(0.075, forced.HalfWidth);
-
-                // 7. Assert refined RT calibration is reconstructed.
-                Assert.IsTrue(inputs.RefinedCalibrations.ContainsKey(stem));
-
-                // 8. Assert gap-fill target round-trip.
-                Assert.IsTrue(inputs.PerFileGapFill.ContainsKey(stem));
-                var gap = inputs.PerFileGapFill[stem];
-                Assert.AreEqual(1, gap.Count);
-                Assert.AreEqual(5u, gap[0].TargetEntryId);
-                Assert.AreEqual(0x80000005u, gap[0].DecoyEntryId);
-                Assert.AreEqual(33.5, gap[0].ExpectedRt);
-                Assert.AreEqual(0.08, gap[0].HalfWidth);
-                Assert.AreEqual("PEPTIDE", gap[0].ModifiedSequence);
-                Assert.AreEqual((byte)2, gap[0].Charge);
+                // A key carrying every character that could confuse the serialized form or a
+                // JSON / HTML slot: the field separators, quotes, backslashes, control characters.
+                const string key = "search=abc;library=def;path=C:\\proj\\ai;q=\"x\";ctrl=\b\f\n\r\t\u0001";
+                var stamp = OspreyVersion.Stamp(PerFileScoringTask.TASK_NAME, key);
+                AssertStampSerialization(stamp, key);
+                AssertStampCurrency(stamp, key);
+                AssertBinaryStamps(dir, stamp);
+                AssertTextStamps(dir, stamp);
+                AssertParquetAndBlibStamps(dir, stamp);
             }
             finally
             {
@@ -2468,502 +4564,151 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        /// <summary>
-        /// If the planner emits an entry_id that doesn't appear in the
-        /// stub list (e.g., parquet/boundary mismatch from a botched
-        /// rebuild), the hydrator must throw rather than silently
-        /// skipping the action — a Stage 6 worker proceeding with
-        /// missing actions would scramble gap-fill results.
-        /// </summary>
-        [TestMethod]
-        public void TestRescoreHydrationRejectsActionEntryIdNotInStubs()
+        private static void AssertStampSerialization(ArtifactStamp stamp, string key)
         {
-            string dir = Path.Combine(Path.GetTempPath(),
-                "rescore_hyd_drift_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
+            var parsed = ArtifactStamp.Parse(stamp.ToString());
+            Assert.IsNotNull(parsed);
+            Assert.AreEqual(stamp.Task, parsed.Task);
+            Assert.AreEqual(stamp.Version, parsed.Version);
+            Assert.AreEqual(key, parsed.Key);
+            foreach (string garbage in new[]
+                     {
+                         null, string.Empty, "not a stamp",
+                         ArtifactStamp.PREFIX + ";task=T;version=V",          // no key field
+                         ArtifactStamp.PREFIX + ";version=V;task=T;key=K",    // fields out of order
+                         ArtifactStamp.PREFIX + ";task=;version=V;key=K",     // empty task
+                         "osprey-validity/2;task=T;version=V;key=K",          // unknown layout
+                     })
             {
-                const string stem = "sample1";
-                string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
-                string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
-                string sidecarPath = FdrScoresSidecar.Pass1Path(mzmlSynthetic);
-                string reconPath = ReconciliationFile.PathForInput(mzmlSynthetic);
+                Assert.IsNull(ArtifactStamp.Parse(garbage), garbage);
+            }
+        }
 
-                var scored = new List<CoelutionScoredEntry>
+        private static void AssertStampCurrency(ArtifactStamp stamp, string key)
+        {
+            Assert.IsTrue(stamp.IsCurrent(PerFileScoringTask.TASK_NAME, key));
+            Assert.IsFalse(stamp.IsCurrent(PerFileRescoreTask.TASK_NAME, key));
+            Assert.IsFalse(stamp.IsCurrent(PerFileScoringTask.TASK_NAME, key + "_modified"));
+            // Another build's artifact is never current: a version change invalidates.
+            var otherBuild = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current + ".1", key);
+            Assert.IsFalse(otherBuild.IsCurrent(PerFileScoringTask.TASK_NAME, key));
+        }
+
+        private static void AssertBinaryStamps(string dir, ArtifactStamp stamp)
+        {
+            var records = new List<FdrScoreRecord> { new FdrScoreRecord(7, 1.5, 0.01, 0.02, 12.5) };
+            string pass1 = Path.Combine(dir, "run.1st-pass.fdr_scores.bin");
+            string pass2 = Path.Combine(dir, "run.2nd-pass.fdr_scores.bin");
+            FdrScoresSidecar.Write(pass1, records, FdrScoresSidecar.Pass.FirstPass, stamp);
+            FdrScoresSidecar.Write(pass2, records, FdrScoresSidecar.Pass.SecondPass, stamp);
+            AssertStampRead(pass1, stamp);
+            AssertStampRead(pass2, stamp);
+            // The records still read at their fixed offsets with the stamp after them.
+            var read = new List<FdrScoreRecord>();
+            Assert.IsTrue(FdrScoresSidecar.ReadRecords(pass1, FdrScoresSidecar.Pass.FirstPass, read.Add));
+            Assert.AreEqual(1, read.Count);
+            Assert.AreEqual(12.5, read[0].ApexRt);
+
+            string decoys = Path.Combine(dir, "run.2nd-pass" + Pass2CompetitionDecoys.EXT);
+            Pass2CompetitionDecoys.Write(decoys,
+                new Dictionary<uint, (double score, uint entryId)> { { 7u, (2.5, 0x80000007u) } }, stamp);
+            AssertStampRead(decoys, stamp);
+            Assert.AreEqual(1, Pass2CompetitionDecoys.ReadMap(decoys).Count);
+
+            string experiment = Path.Combine(dir, "out.1st-pass" + FdrExperimentSidecar.EXT);
+            FdrExperimentSidecar.Write(experiment,
+                new Dictionary<uint, FdrExperimentRecord> { { 7u, new FdrExperimentRecord(7, 0.1, 0.2, 0.3, 4.0, 0.5) } },
+                FdrScoresSidecar.Pass.FirstPass, stamp);
+            AssertStampRead(experiment, stamp);
+            Assert.AreEqual(1, FdrExperimentSidecar.ReadMap(experiment, FdrScoresSidecar.Pass.FirstPass).Count);
+
+            string retained = Path.Combine(dir, "out.1st-pass" + RetainedBaseIdSidecar.EXT);
+            RetainedBaseIdSidecar.Write(retained, new[] { 3u, 1u, 2u }, stamp);
+            AssertStampRead(retained, stamp);
+            Assert.AreEqual(3, RetainedBaseIdSidecar.Read(retained).Count);
+
+            // A file cut short inside its stamp is damaged: neither the stamp nor the records
+            // may be trusted, so it reads as not current rather than as a shorter file.
+            byte[] bytes = File.ReadAllBytes(pass1);
+            File.WriteAllBytes(pass1, bytes.Take(bytes.Length - 3).ToArray());
+            Assert.IsNull(ArtifactValidity.ReadStamp(pass1));
+            Assert.IsFalse(FdrScoresSidecar.IsCurrentFormat(pass1, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsNull(ArtifactValidity.ReadStamp(Path.Combine(dir, "never_written" + FdrScoresSidecar.EXT)));
+        }
+
+        private static void AssertTextStamps(string dir, ArtifactStamp stamp)
+        {
+            // JSON: the stamp is the FIRST property, read without parsing the rest of a document
+            // far larger than the head the reader looks at.
+            string reconciliation = Path.Combine(dir, "run" + ReconciliationFile.EXT);
+            ReconciliationFile.Save(reconciliation, new ReconciliationFile
+            {
+                FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                GapFillTargets = Enumerable.Range(0, 20000).Select(i => new GapFillEntry
                 {
-                    new CoelutionScoredEntry
-                    {
-                        EntryId = 100, ModifiedSequence = "PEPTIDE", Sequence = "PEPTIDE",
-                        Charge = 2, PrecursorMz = 500.0, ScanNumber = 1000, ApexRt = 5.0,
-                        FileName = stem + ".mzML",
-                        PeakBounds = new XICPeakBounds { StartRt = 4.5, EndRt = 5.5 },
-                        Features = new CoelutionFeatureSet { CoelutionSum = 0.9 },
-                    },
-                };
-                ParquetScoreCache.WriteScoresParquet(parquetPath, scored,
-                    new Dictionary<string, string> { { "osprey.version", "1.0.0" } });
-                FdrScoresSidecar.Write(sidecarPath,
-                    new List<FdrEntry> { MakeFdrEntry(100, -3.5, 0.001, 0.02) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    Charge = 2,
+                    DecoyEntryId = (uint)i | 0x80000000u,
+                    ExpectedRt = i * 0.01,
+                    HalfWidth = 0.1,
+                    ModifiedSequence = "PEPTIDE",
+                    TargetEntryId = (uint)i,
+                }).ToList(),
+            }, stamp);
+            Assert.IsTrue(new FileInfo(reconciliation).Length > 1024 * 1024);
+            AssertStampRead(reconciliation, stamp);
+            Assert.IsNotNull(ReconciliationFile.Load(reconciliation));
 
-                // entry_id 999 is NOT in the parquet/sidecar — drift!
-                var reconFile = new ReconciliationFile
+            string calibration = Path.Combine(dir, "run" + CalibrationIO.EXT);
+            CalibrationIO.SaveCalibration(new CalibrationParams(), calibration, stamp);
+            AssertStampRead(calibration, stamp);
+            Assert.IsNotNull(CalibrationIO.LoadCalibration(calibration));
+
+            // A JSON document whose first property is anything else carries no stamp.
+            string unstamped = Path.Combine(dir, "unstamped.json");
+            File.WriteAllText(unstamped, "{\"format_version\": 3, \"" + ArtifactStamp.JSON_PROPERTY + "\": \"" + stamp + "\"}");
+            Assert.IsNull(ArtifactValidity.ReadStamp(unstamped));
+
+            // HTML: an opening comment ahead of the DOCTYPE.
+            string html = Path.Combine(dir, "out.model-diagnostics.html");
+            File.WriteAllText(html, stamp.ToHtmlComment() + "\n<!DOCTYPE html><html></html>");
+            AssertStampRead(html, stamp);
+            File.WriteAllText(html, "<!DOCTYPE html><html></html>");
+            Assert.IsNull(ArtifactValidity.ReadStamp(html));
+        }
+
+        private static void AssertParquetAndBlibStamps(string dir, ArtifactStamp stamp)
+        {
+            // One row: an empty entry list writes no parquet at all.
+            var entries = new List<CoelutionScoredEntry>
+            {
+                new CoelutionScoredEntry
                 {
-                    FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                    FileStems = new List<string> { stem },
-                    FirstPassBaseIds = new[] { 100u, 101u, 102u },
-                    SearchHash = "x",
-                    LibraryHash = "y",
-                    UseCwtPeakActions = new List<UseCwtPeakEntry>
-                    {
-                        new UseCwtPeakEntry
-                        {
-                            ApexRt = 5.0, CandidateIdx = 0, EndRt = 5.5,
-                            EntryId = 999, StartRt = 4.5,
-                        },
-                    },
-                    ForcedIntegrationActions = new List<ForcedIntegrationEntry>(),
-                    GapFillTargets = new List<GapFillEntry>(),
-                };
-                ReconciliationFile.Save(reconPath, reconFile);
-
-                try
-                {
-                    RescoreHydration.HydrateForRescore(new[] { parquetPath });
-                    Assert.Fail("expected InvalidDataException for entry_id drift");
-                }
-                catch (InvalidDataException ex)
-                {
-                    StringAssert.Contains(ex.Message, "999");
-                    StringAssert.Contains(ex.Message, "not found in stubs");
-                }
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        #endregion
-
-        #region RescoreCompaction Tests
-
-        /// <summary>
-        /// Worker compaction: drop non-passing entries by base_id and
-        /// re-key reconciliation actions from pre-compaction vec_idx to
-        /// post-compaction vec_idx. Mirrors what the in-process flow
-        /// does between first-pass FDR and Stage 6 — see
-        /// AnalysisPipeline's "First-pass compaction" block.
-        ///
-        /// Compaction predicate is the UNION of (a) the local-FDR
-        /// predicate (peptide_q OR protein_q pass) AND (b) every
-        /// base_id that has a reconciliation action emitted by the
-        /// planner. The planner runs cross-file consensus rescue
-        /// (ConsensusRts.Compute), so an entry whose own file fails
-        /// local first-pass FDR can still be a reconciliation target
-        /// when its peptide passes FDR in a sibling file. Without the
-        /// union, the local-FDR-only predicate drops those entries and
-        /// their planner actions are silently dropped too -- the
-        /// reconciled .scores.parquet ends up with stale Stage 4 apex_rt
-        /// / bounds for the rescued entries and the blib output diverges
-        /// from the in-memory straight-through pipeline.
-        ///
-        /// Test layout (single file, five entries):
-        ///   idx 0: target id=1, peptide_q=0.005 (PASS peptide)
-        ///   idx 1: decoy  id=0x80000001, base=1 (retained via target's base_id)
-        ///   idx 2: target id=2, peptide_q=0.5  (FAIL local; PLANNER ACTION at (f,2))
-        ///   idx 3: decoy  id=0x80000002, base=2 (retained via target's base_id from action)
-        ///   idx 4: target id=3, peptide_q=0.5, protein_q=0.005 (PASS via protein-rescue)
-        ///
-        /// With ProteinFdr=0.01 AND the planner-action union:
-        ///   local-FDR pass: base_ids {1, 3}
-        ///   planner action targets: base_ids {1, 2, 3}
-        ///   UNION: base_ids {1, 2, 3} — all 5 entries survive compaction.
-        ///
-        /// Reconciliation actions are seeded at:
-        ///   (f, 0) on id=1  → remains at (f, 0) (no compaction shift)
-        ///   (f, 4) on id=3  → remains at (f, 4)
-        ///   (f, 2) on id=2  → remains at (f, 2) (entry survives via union)
-        /// </summary>
-        [TestMethod]
-        public void TestRescoreCompactionUnionsActionsWithLocalFdrPredicate()
-        {
-            const string fileName = "f1";
-            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
-                {
-                    MakeFdrEntryWithProteinQ(1u,           runPeptideQ: 0.005, runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(0x80000001u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(2u,           runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(0x80000002u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(3u,           runPeptideQ: 0.5,   runProteinQ: 0.005),
-                }),
+                    EntryId = 1, Sequence = "PEPTIDE", ModifiedSequence = "PEPTIDE", Charge = 2,
+                    FileName = "run.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
+                },
             };
+            string parquet = Path.Combine(dir, "run.scores.parquet");
+            ParquetScoreCache.WriteScoresParquet(parquet, entries, ParquetScoreCache.WithStamp(null, stamp));
+            AssertStampRead(parquet, stamp);
+            string unstampedParquet = Path.Combine(dir, "unstamped.scores.parquet");
+            ParquetScoreCache.WriteScoresParquet(unstampedParquet, entries, null);
+            Assert.IsNull(ArtifactValidity.ReadStamp(unstampedParquet));
 
-            var actions = new Dictionary<(string, int), ReconcileAction>
+            string blib = Path.Combine(dir, "out.blib");
+            using (var writer = new OspreyBlibWriter(blib))
             {
-                { (fileName, 0), new ReconcileAction.UseCwtPeak(0, 1.0, 2.0, 3.0) },
-                { (fileName, 4), new ReconcileAction.ForcedIntegration(7.0, 0.05) },
-                { (fileName, 2), new ReconcileAction.UseCwtPeak(1, 5.0, 6.0, 7.0) },
-            };
-
-            var inputs = new RescoreInputs
-            {
-                PerFileEntries = perFile,
-                ReconciliationActions = actions,
-                RefinedCalibrations = new Dictionary<string, RTCalibration>(),
-                PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
-                // FirstJoin's authoritative join-wide set: only base_id 1 passed
-                // first-pass FDR. This test deliberately exercises the documented
-                // union semantics: RescoreCompaction retains that set PLUS the
-                // base_ids of reconciliation-action targets (below), pulling in 2
-                // and 3, so the retained set is {1, 2, 3} -- not {1} alone.
-                GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
-            };
-
-            var stats = RescoreCompaction.Apply(inputs);
-
-            // Compaction stats: planner-action union keeps base 2 alive.
-            Assert.AreEqual(5, stats.EntriesBefore);
-            Assert.AreEqual(5, stats.EntriesAfter);
-            Assert.AreEqual(3, stats.FirstPassBaseIds);   // base_ids {1, 2, 3}
-            Assert.AreEqual(0, stats.DroppedActions);     // no actions dropped
-
-            // Per-file list unchanged (all base_ids survived).
-            Assert.AreEqual(1, inputs.PerFileEntries.Count);
-            var got = inputs.PerFileEntries[0].Value;
-            Assert.AreEqual(5, got.Count);
-            Assert.AreEqual(1u, got[0].EntryId);
-            Assert.AreEqual(0x80000001u, got[1].EntryId);
-            Assert.AreEqual(2u, got[2].EntryId);
-            Assert.AreEqual(0x80000002u, got[3].EntryId);
-            Assert.AreEqual(3u, got[4].EntryId);
-
-            // All 3 reconciliation actions preserved.
-            Assert.AreEqual(3, inputs.ReconciliationActions.Count);
-            Assert.IsInstanceOfType(
-                inputs.ReconciliationActions[(fileName, 0)], typeof(ReconcileAction.UseCwtPeak));
-            Assert.IsInstanceOfType(
-                inputs.ReconciliationActions[(fileName, 2)], typeof(ReconcileAction.UseCwtPeak));
-            Assert.IsInstanceOfType(
-                inputs.ReconciliationActions[(fileName, 4)], typeof(ReconcileAction.ForcedIntegration));
+                writer.AddStamp(stamp);
+                writer.Complete();
+            }
+            AssertStampRead(blib, stamp);
         }
 
-        /// <summary>
-        /// With ProteinFdr=null (--protein-fdr not passed), the
-        /// protein-rescue branch is skipped entirely. An entry that
-        /// would have been retained via protein rescue (peptide_q
-        /// fails, protein_q passes) gets compacted away, taking any
-        /// action keyed to it with it.
-        /// </summary>
-        [TestMethod]
-        public void TestRescoreCompactionWithoutProteinFdrSkipsRescue()
+        private static void AssertStampRead(string path, ArtifactStamp expected)
         {
-            const string fileName = "f1";
-            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
-                {
-                    MakeFdrEntryWithProteinQ(1u, runPeptideQ: 0.005, runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(2u, runPeptideQ: 0.5,   runProteinQ: 0.005),
-                }),
-            };
-
-            var inputs = new RescoreInputs
-            {
-                PerFileEntries = perFile,
-                ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
-                RefinedCalibrations = new Dictionary<string, RTCalibration>(),
-                PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
-                // FirstJoin built the passing set WITHOUT the protein rescue, so
-                // entry 2 (failing peptide, passing protein) is not in it.
-                GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
-            };
-
-            var stats = RescoreCompaction.Apply(inputs);
-
-            // Only entry 1 passes; entry 2 dropped (no protein rescue).
-            Assert.AreEqual(1, stats.EntriesAfter);
-            Assert.AreEqual(1, stats.FirstPassBaseIds);
-            Assert.AreEqual(1u, inputs.PerFileEntries[0].Value[0].EntryId);
-        }
-
-        /// <summary>
-        /// Decoys are excluded from the predicate by design: a passing
-        /// target retains its paired decoy automatically via the
-        /// base_id retain step. If decoys WERE allowed in the
-        /// predicate, a decoy peptide whose paired-target's protein
-        /// passes protein-FDR would self-rescue via the protein-rescue
-        /// clause, inflating the base_id set beyond what the
-        /// in-process pipeline produces (AnalysisPipeline.cs:517 has
-        /// the matching `if (entry.IsDecoy) continue;` filter; Rust
-        /// rescore.rs:457 has the matching `!e.is_decoy &&`).
-        ///
-        /// Test layout: a single decoy with a passing protein_q AND a
-        /// failing peptide_q. Without the decoy filter, the decoy's
-        /// base_id would land in firstPassBaseIds via protein-rescue.
-        /// With the filter, the decoy is skipped — and since no target
-        /// shares its base_id, no entries survive at all.
-        /// </summary>
-        [TestMethod]
-        public void TestRescoreCompactionSkipsDecoysInPredicate()
-        {
-            const string fileName = "f1";
-            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
-            {
-                new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
-                {
-                    // Lone decoy with a passing protein_q. No paired target.
-                    MakeFdrEntryWithProteinQ(0x80000007u, runPeptideQ: 0.5, runProteinQ: 0.005),
-                }),
-            };
-
-            var inputs = new RescoreInputs
-            {
-                PerFileEntries = perFile,
-                ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
-                RefinedCalibrations = new Dictionary<string, RTCalibration>(),
-                PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
-                // FirstJoin excludes decoys when building the set, so a lone decoy's
-                // base_id is never in it -> empty set here -> decoy dropped.
-                GlobalFirstPassBaseIds = new HashSet<uint>(),
-            };
-
-            var stats = RescoreCompaction.Apply(inputs);
-
-            // Decoy's base_id is not in the global set; the base_id retain step
-            // drops it.
-            Assert.AreEqual(0, stats.FirstPassBaseIds);
-            Assert.AreEqual(0, stats.EntriesAfter);
-            Assert.AreEqual(0, inputs.PerFileEntries[0].Value.Count);
-        }
-
-        /// <summary>
-        /// Helper: build a minimal FdrEntry usable in compaction tests.
-        /// Sets the FDR fields the predicate inspects and leaves the
-        /// rest at their defaults.
-        /// </summary>
-        private static FdrEntry MakeFdrEntryWithProteinQ(uint id, double runPeptideQ,
-            double runProteinQ)
-        {
-            return new FdrEntry
-            {
-                EntryId = id,
-                ParquetIndex = id,
-                IsDecoy = (id & 0x80000000u) != 0,
-                Charge = 2,
-                RunPeptideQvalue = runPeptideQ,
-                RunProteinQvalue = runProteinQ,
-                ModifiedSequence = "PEPTIDE",
-            };
-        }
-
-        #endregion
-
-        #region TaskValiditySidecar Tests
-
-        private const string TASK_NAME = "PerFileScoring";
-        private const string TASK_VERSION = "26.6.0";
-
-        /// <summary>
-        /// Write a sidecar with a known validity_key, then confirm
-        /// <see cref="TaskValiditySidecar.IsValid"/> reports true when
-        /// queried with the same key. Baseline round-trip.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarRoundTrip()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_rt_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                File.WriteAllText(output, "stub");
-                const string key = "search=abc123;library=def456";
-
-                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
-                    new[] { Path.Combine(dir, "in.mzML"), Path.Combine(dir, "lib.tsv") });
-
-                Assert.IsTrue(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key + "_modified"));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
-        /// Validity keys containing quotes, backslashes, newlines, and
-        /// other control characters must round-trip exactly through the
-        /// JSON escape/unescape path. A naive writer would emit invalid
-        /// JSON; a naive reader would scramble the key. Either failure
-        /// would silently invalidate every sidecar with a path-derived
-        /// key on Windows (backslashes in paths).
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarJsonEscapes()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_esc_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                // Mix of every escape branch in TaskValiditySidecar.JsonString:
-                // quote, backslash, \b \f \n \r \t, and a sub-0x20 control
-                // character ("\u0001") that exercises the \u escape branch.
-                const string key = "k=\"v\";path=C:\\proj\\ai;ctrl=\b\f\n\r\t\u0001";
-
-                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
-                    new[] { "path with \"quotes\".mzML", "C:\\path\\with\\slashes.tsv" });
-
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
-        /// A missing sidecar must yield <c>IsValid == false</c> without
-        /// throwing. "I can't tell" is the conservative answer; throwing
-        /// would crash the pipeline driver on its first invocation.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarMissingFile()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_miss_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "never_written.scores.parquet");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, "any-key"));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
-        /// Malformed sidecar contents (truncated mid-field, missing
-        /// validity_key, raw garbage) must yield
-        /// <c>IsValid == false</c> without throwing. Each shape exercises
-        /// a different reader path: truncated → unterminated string;
-        /// missing field → ExtractStringField returns null; garbage →
-        /// the field-name needle is never found.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarMalformedRejected()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_bad_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                string sidecar = TaskValiditySidecar.PathFor(output, TASK_NAME);
-                const string key = "the-key";
-
-                // Truncated mid-key: writer wrote the validity_key opening
-                // quote and a few chars, then died. Unterminated string
-                // returns null (which IsValid maps to false).
-                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"validity_key\": \"the-");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                // Missing validity_key field entirely.
-                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"version\": \"26.5.0\"\n}\n");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                // Not-JSON garbage.
-                File.WriteAllText(sidecar, "not json at all");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                // Empty file.
-                File.WriteAllText(sidecar, string.Empty);
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
-        /// Two tasks writing sidecars for the same output path must not
-        /// trample each other. Naming includes the task name, so
-        /// PerFileScoring's sidecar and PerFileRescoring's sidecar are
-        /// distinct files on disk. This is the load-bearing property
-        /// that lets PerFileRescore overwrite a parquet in place while
-        /// PerFileScoring's "I produced this" record survives untouched.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarPerTaskNamingCollision()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_coll_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                const string scoringKey = "scoring-key";
-                const string rescoreKey = "rescore-key";
-
-                TaskValiditySidecar.Write(output, "PerFileScoring", TASK_VERSION,
-                    scoringKey, new string[0]);
-                TaskValiditySidecar.Write(output, "PerFileRescoring", TASK_VERSION,
-                    rescoreKey, new string[0]);
-
-                string scoringPath = TaskValiditySidecar.PathFor(output, "PerFileScoring");
-                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescoring");
-                Assert.AreNotEqual(scoringPath, rescorePath);
-                Assert.IsTrue(File.Exists(scoringPath));
-                Assert.IsTrue(File.Exists(rescorePath));
-
-                // Each task's IsValid sees its own key, not the other's.
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileScoring", scoringKey));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileScoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescoring", scoringKey));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
-        }
-
-        /// <summary>
-        /// <see cref="TaskValiditySidecar.Delete"/> removes an existing
-        /// sidecar (subsequent IsValid → false) and is a silent no-op
-        /// when the sidecar is absent. The no-op contract matters because
-        /// task Run methods call Delete unconditionally before producing
-        /// outputs.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarDelete()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_del_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                const string key = "k";
-
-                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key, new string[0]);
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                TaskValiditySidecar.Delete(output, TASK_NAME);
-                Assert.IsFalse(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                // Second Delete on the now-absent sidecar must not throw.
-                TaskValiditySidecar.Delete(output, TASK_NAME);
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
+            var read = ArtifactValidity.ReadStamp(path);
+            Assert.IsNotNull(read, path);
+            Assert.AreEqual(expected.ToString(), read.ToString(), path);
+            Assert.IsTrue(ArtifactValidity.IsCurrent(path, expected.Task, expected.Key), path);
         }
 
         #endregion

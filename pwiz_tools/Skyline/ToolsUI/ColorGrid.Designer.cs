@@ -85,20 +85,20 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // rgbCol
             // 
-            this.rgbCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.rgbCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
             this.rgbCol.DataPropertyName = "Rgb";
             this.rgbCol.HeaderText = "RGB";
-            this.rgbCol.MinimumWidth = 100;
+            this.rgbCol.MinimumWidth = 6;
             this.rgbCol.Name = "rgbCol";
             this.rgbCol.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.rgbCol.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
+            //
             // hexCol
-            // 
-            this.hexCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            //
+            this.hexCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
             this.hexCol.DataPropertyName = "Hex";
             this.hexCol.HeaderText = "HEX";
-            this.hexCol.MinimumWidth = 100;
+            this.hexCol.MinimumWidth = 6;
             this.hexCol.Name = "hexCol";
             // 
             // colBtn

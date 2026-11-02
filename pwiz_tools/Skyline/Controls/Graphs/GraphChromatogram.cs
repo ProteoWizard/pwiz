@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : (int?) null;
+                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : null;
             }
             set
             {
@@ -344,7 +344,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void FireClickedChromatogram(GraphPane graphPane)
         {
-            if (ClickedChromatogram == null)
+            if (ClickedChromatogram == null || _closestCurve == null)
                 return;
 
             var clickedItem = (ChromGraphItem) _closestCurve.Tag;
@@ -1683,6 +1683,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 _enableTrackingDot = false;
             if (_enableTrackingDot)
             {
+                // The recreated tracking point is invisible and at the origin, so the graph is no
+                // longer showing a dot the user can click, no matter what it was showing before.
+                // Without this the click is accepted and then silently discarded, because it reads
+                // its time from the point that was just reset.
+                _showingTrackingDot = false;
                 graphPane.CurveList.Insert(FULLSCAN_TRACKING_INDEX, CreateScanPoint(Color.Black));
                 graphPane.CurveList.Insert(FULLSCAN_SELECTED_INDEX, CreateScanPoint(Color.Red));
             }
@@ -2046,6 +2051,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromGroupInfo == null)
                     continue;
 
+                // Skip a group whose cached path no longer resolves to a peptide in the current
+                // document (a document change can briefly leave the tree selection referencing a
+                // removed node until the next update catches up). Checked before any peak work so a
+                // skipped group cannot influence auto-zoom; the next update redraws against the
+                // current selection.
+                var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
+                if (peptideDocNode == null)
+                    continue;
+
                 ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
                 // Collect the chromatogram info for the transition children
@@ -2097,7 +2111,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Apply any transform the user has chosen
                     infoPrimary.Transform(Transform);
 
-                    var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
                     int iColor = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                     Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
@@ -2456,13 +2469,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
-                    for (int iGroup = 0; iGroup < nodeGroups.Count;iGroup++)
+                    var listLabels = new List<string>();
+                    foreach (var nodePep in nodePeps.Distinct())
                     {
-                        double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(nodePeps[iGroup], nodeGroups[iGroup].PrecursorAdduct, FilePath, out _, out retentionTimes))
-                        {
-                            listTimes.AddRange(retentionTimes);
-                        }
+                        var nodeGroupsPep = nodeGroups.Where((_, iGroup) => ReferenceEquals(nodePeps[iGroup], nodePep)).ToList();
+                        AddIdTimes(settings, nodePep, nodeGroupsPep, listTimes, listLabels);
                     }
                     var selectedSpectrum = _stateProvider.SelectedSpectrum;
                     if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
@@ -2470,7 +2481,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
                     }
                     if (listTimes.Count > 0)
+                    {
                         chromGraphPrimary.RetentionMsMs = listTimes.ToArray();
+                        chromGraphPrimary.RetentionMsMsLabels = listLabels.ToArray();
+                    }
 
                     if (settings.PeptideSettings.Libraries.HasMidasLibrary && _stateProvider.SelectedNode != null)
                     {
@@ -2522,6 +2536,53 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds the IDs of every library precursor of a peptide, since all are pooled as evidence for each
+        /// of its precursors, labeling those that are not one of its displayed precursors. Small molecules
+        /// show only the IDs of the displayed precursors, whose adducts may share a charge.
+        /// </summary>
+        private void AddIdTimes(SrmSettings settings, PeptideDocNode nodePep, IList<TransitionGroupDocNode> nodeGroups,
+            List<double> listTimes, List<string> listLabels)
+        {
+            if (!nodePep.IsProteomic)
+            {
+                foreach (var nodeGroup in nodeGroups)
+                {
+                    if (settings.TryGetRetentionTimes(nodePep, nodeGroup.PrecursorAdduct, FilePath, out _, out var retentionTimes))
+                    {
+                        listTimes.AddRange(retentionTimes);
+                        listLabels.AddRange(retentionTimes.Select(_ => GraphsResources.ChromGraphItem_AddAnnotations_ID));
+                    }
+                }
+                return;
+            }
+
+            foreach (var precursorIdTimes in settings.GetPrecursorIdTimes(nodePep, FilePath))
+            {
+                string label = GetIdLabel(precursorIdTimes.Precursor, nodeGroups);
+                listTimes.AddRange(precursorIdTimes.Times);
+                listLabels.AddRange(precursorIdTimes.Times.Select(_ => label));
+            }
+        }
+
+        /// <summary>
+        /// Returns "ID" for the IDs of a displayed precursor, and otherwise adds the charge and,
+        /// when it is not displayed, the label type of the precursor that was identified,
+        /// e.g. "ID +++" or "ID ++ (light)".
+        /// </summary>
+        private static string GetIdLabel(LibraryPrecursor precursor, IList<TransitionGroupDocNode> nodeGroups)
+        {
+            string idText = GraphsResources.ChromGraphItem_AddAnnotations_ID;
+            if (nodeGroups.Any(precursor.IsPrecursor))
+                return idText;
+
+            string chargeText = Transition.GetChargeIndicator(precursor.Adduct);
+            var labelType = precursor.LabelType;
+            if (nodeGroups.Any(nodeGroup => Equals(labelType, nodeGroup.LabelType)))
+                return TextUtil.SpaceSeparate(idText, chargeText);
+            return TextUtil.SpaceSeparate(idText, chargeText, string.Format(@"({0})", labelType));
         }
 
         private static bool IntersectPeaks(ChromPeak peak, TransitionChromInfo chromInfo)
@@ -3615,9 +3676,10 @@ namespace pwiz.Skyline.Controls.Graphs
             _stateProvider.BuildChromatogramMenu(sender, paneKey, menuStrip, GetChromFileInfoId());
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnFormClosed(e);
         }
 
         public static IList<Color> COLORS_GROUPS
@@ -3700,7 +3762,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+            graphControl.PerformMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
@@ -3712,7 +3774,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl_MouseDownEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
+            graphControl.PerformMouseDown(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
+        }
+
+        public void TestMouseUp(double x, double y, PaneKey? paneKey)
+        {
+            var mouse = TransformCoordinates(x, y, paneKey);
+            graphControl.PerformMouseUp(new MouseEventArgs(MouseButtons.Left, 1, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)

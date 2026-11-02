@@ -642,7 +642,7 @@
     <potential_loss formula="H103C63N3O46" massdiff_monoisotopic="1637.581274" massdiff_average="1638.49387" />
   </static_modification>
   <static_modification name="dHex(1)Hex(3)HexNAc(3)Sulf(1) (ST)" aminoacid="S, T" variable="true" formula="H79C48N3O37S" unimod_id="1683">
-    <potential_loss formula="H79C48N3O37S" massdiff_monoisotopic="1321.411312" massdiff_average="1322.2109599999999" />
+    <potential_loss formula="H79C48N3O37S" massdiff_monoisotopic="1321.411312" massdiff_average="1322.21096" />
   </static_modification>
   <static_modification name="dHex(1)Hex(3)HexNAc(4) (N)" aminoacid="N" variable="true" formula="H92C56N4O39" unimod_id="305" short_name="G0F">
     <potential_loss formula="H92C56N4O39" massdiff_monoisotopic="1444.53387" massdiff_average="1445.34148" />

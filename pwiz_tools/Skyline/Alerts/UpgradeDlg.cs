@@ -28,13 +28,12 @@ namespace pwiz.Skyline.Alerts
     {
         private readonly string _defaultButtonText;
 
-        public UpgradeDlg(string versionText, bool automatic, bool updateFound)
+        public UpgradeDlg(string versionText, bool updateFound)
         {
             InitializeComponent();
 
             _defaultButtonText = btnLater.Text;
             VersionText = versionText;
-            UpdateAutomatic = automatic;
             UpdateFound = updateFound;
 
             pictureSkyline.Image = Program.SkylineImage;
@@ -49,15 +48,12 @@ namespace pwiz.Skyline.Alerts
             else
             {
                 labelRelease.Text = string.Format(labelRelease.Text, Program.Name, versionText ?? string.Empty);
-                if (automatic)
-                    labelDetail.Text = labelDetailAutomatic.Text;
             }
 
             cbAtStartup.Checked = UpgradeManager.CheckAtStartup;
         }
 
         public string VersionText { get; private set; }
-        public bool UpdateAutomatic { get; private set; }
         public bool UpdateFound { get; private set; }
 
         public bool CheckAtStartup

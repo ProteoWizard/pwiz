@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Lib
                     GenerateChromatogramLibrary(_encyclopeDiaDlibInputFilepath, _encyclopeDiaElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
 
                     if (_config.LogProgressForIndividualFiles)
-                        File.WriteAllText(originalFilename + ".log", progressMonitorForFile.LogText);
+                        File.WriteAllText(originalFilename + @".log", progressMonitorForFile.LogText);
 
                     lock (narrowFileQueue)
                     {
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Model.Lib
                     GenerateQuantLibrary(_encyclopeDiaElibOutputFilepath, _encyclopeDiaQuantElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
 
                     if (_config.LogProgressForIndividualFiles)
-                        File.WriteAllText(originalFilename + ".log", progressMonitorForFile.LogText);
+                        File.WriteAllText(originalFilename + @".log", progressMonitorForFile.LogText);
 
                     lock (wideFileQueue)
                     {
@@ -450,18 +450,16 @@ namespace pwiz.Skyline.Model.Lib
 
                 status = status.ChangeSegments(0, 2);
 
-                const string MSCONVERT_EXE = "msconvert";
-
                 status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
                 progressMonitorForFile.UpdateProgress(status);
 
                 var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                var psi = new ProcessStartInfo(MsconvertExe.Path)
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     Arguments =
-                        "-v -z --mzML " +
+                        $"{MsconvertExe.VERBOSE_PROGRESS_ARGS} -z --mzML " +
                         $"-o {Path.GetDirectoryName(outputFilepath).Quote()} " +
                         $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
                         " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +

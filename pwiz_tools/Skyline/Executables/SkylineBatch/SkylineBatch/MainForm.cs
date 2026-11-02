@@ -814,6 +814,37 @@ namespace SkylineBatch
             return count;
         }
 
+        /// <summary>
+        /// One line per configuration, naming it and either reporting it valid or giving the
+        /// validation error. ConfigManagerState swallows the ArgumentException from Validate()
+        /// when it records a configuration as invalid, so a failing CheckConfigs could only ever
+        /// say "Expected:&lt;0&gt;. Actual:&lt;7&gt;" - true, and useless. Re-runs Validate() rather than
+        /// reading the recorded flags, so the message says WHY.
+        /// </summary>
+        public string ConfigValidationReport()
+        {
+            var report = new List<string>();
+            foreach (var config in _configManager.GetState().BaseState.ConfigList)
+            {
+                string result;
+                try
+                {
+                    config.Validate();
+                    result = @"valid";
+                }
+                catch (ArgumentException e)
+                {
+                    result = e.Message.Replace(Environment.NewLine, @" ");
+                }
+                var skyline = (config as SkylineBatchConfig)?.SkylineSettings;
+                var skylineDesc = skyline == null
+                    ? @"(no Skyline settings)"
+                    : $@"type={skyline.Type} cmd={skyline.CmdPath ?? @"(null)"}";
+                report.Add($@"  {config.GetName()}: {result} [{skylineDesc}]");
+            }
+            return string.Join(Environment.NewLine, report);
+        }
+
         public bool ConfigRunning(string name)
         {
             var listViewItems = _configManager.ConfigsListViewItems(listViewConfigs.CreateGraphics());

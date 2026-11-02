@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download</title>
+<!--
+  Download page for a Skyline installer published by build.ps1, which copies it
+  beside the installers as <ProductName>.html. Upload it into the folder holding
+  the installer and its manifest, named one of two ways:
+
+    <ProductName>.html   several products share the folder; the product is the
+                         page's own base name
+    index.html           one product per folder; the product is the folder's name
+
+  The page finds <ProductName>.json beside itself, reads the published version
+  from it, and links to <ProductName>-Setup-<version>.exe and to the portable
+  <ProductName>-<version>.zip. Nothing here needs editing per product or per
+  version.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --text: #1d2430;
+    --muted: #5d6878;
+    --accent: #1f5fbf;
+    --panel: #f3f6fa;
+    --bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --text: #e6eaf0; --muted: #9aa5b5; --accent: #7fb0ff; --panel: #1d2430; --bg: #12171f; }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  main { max-width: 40rem; margin: 3rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.8rem; margin: 0 0 0.25rem; }
+  .version { color: var(--muted); margin: 0 0 1.5rem; }
+  .download {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .download:hover { filter: brightness(1.1); }
+  .zip { margin-top: 1.5rem; }
+  .detail { margin-top: 2rem; padding: 1rem; border-radius: 0.5rem; background: var(--panel); color: var(--muted); font-size: 0.9rem; }
+  .detail code { word-break: break-all; }
+  .error { color: #b3261e; }
+  @media (prefers-color-scheme: dark) { .error { color: #ff8a80; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="product">Download</h1>
+  <p id="version" class="version">Looking up the latest version...</p>
+  <p id="link"></p>
+  <p id="zip" class="zip" hidden></p>
+  <div id="detail" class="detail" hidden></div>
+</main>
+<script>
+  // Where the installer and manifest live, from where this page was loaded.
+  // Returns { product, folder } with folder ending in "/", or throws.
+  function resolvePublished(href) {
+    var path = new URL(href).pathname;
+    var lastSlash = path.lastIndexOf("/");
+    var leaf = decodeURIComponent(path.substring(lastSlash + 1));
+    var folder = path.substring(0, lastSlash + 1);
+    var product;
+    if (/\.html?$/i.test(leaf) && !/^index\.html?$/i.test(leaf)) {
+      // <ProductName>.html: the product is this page's base name
+      product = leaf.replace(/\.html?$/i, "");
+    } else if (leaf === "" || /^index\.html?$/i.test(leaf) || leaf.indexOf(".") < 0) {
+      // A folder, named for its one product: served as .../<ProductName>/,
+      // .../<ProductName>/index.html, or .../<ProductName> with no trailing slash
+      if (leaf !== "" && leaf.indexOf(".") < 0)
+        folder = path + "/";
+      var parts = folder.split("/").filter(function (part) { return part !== ""; });
+      if (parts.length === 0)
+        throw new Error("This page is at the root of the site, so no folder names the product.");
+      product = decodeURIComponent(parts[parts.length - 1]);
+    } else {
+      throw new Error("This page must be named <ProductName>.html or index.html; it is " + leaf + ".");
+    }
+    return { product: product, folder: folder };
+  }
+
+  function publishedUrl(folder, fileName) {
+    return new URL(folder + encodeURIComponent(fileName), window.location.href).href;
+  }
+
+  function show(id, text) {
+    document.getElementById(id).textContent = text;
+  }
+
+  function showError(message) {
+    var version = document.getElementById("version");
+    version.textContent = message;
+    version.className = "error";
+  }
+
+  (function () {
+    var published;
+    try {
+      published = resolvePublished(window.location.href);
+    } catch (e) {
+      showError(e.message);
+      return;
+    }
+    var manifestUrl = publishedUrl(published.folder, published.product + ".json");
+    show("product", published.product);
+    document.title = published.product;
+
+    fetch(manifestUrl, { cache: "no-store" })
+      .then(function (response) {
+        if (!response.ok)
+          throw new Error("The version file " + manifestUrl + " could not be read (HTTP " + response.status + ").");
+        return response.json();
+      })
+      .then(function (manifest) {
+        if (!manifest || typeof manifest.version !== "string")
+          throw new Error("The version file " + manifestUrl + " does not say what the latest version is.");
+        var fileName = published.product + "-Setup-" + manifest.version + ".exe";
+        var installerUrl = publishedUrl(published.folder, fileName);
+        show("version", "Latest version " + manifest.version);
+        var link = document.createElement("a");
+        link.className = "download";
+        link.href = installerUrl;
+        link.textContent = "Download " + published.product + " " + manifest.version;
+        document.getElementById("link").appendChild(link);
+
+        var zipName = published.product + "-" + manifest.version + ".zip";
+        var zip = document.getElementById("zip");
+        zip.textContent = "Or run it without installing: ";
+        var zipLink = document.createElement("a");
+        zipLink.href = publishedUrl(published.folder, zipName);
+        zipLink.textContent = "download the .zip";
+        zip.appendChild(zipLink);
+        zip.appendChild(document.createTextNode(
+          ", unblock it (Properties > Unblock), extract it, and run Skyline from the extracted " +
+          published.product + " folder. The .NET 10 Desktop Runtime must already be installed."));
+        zip.hidden = false;
+
+        var detail = document.getElementById("detail");
+        detail.innerHTML = "Installer: <code></code><br>Zip: <code></code>";
+        var codes = detail.querySelectorAll("code");
+        codes[0].textContent = fileName;
+        codes[1].textContent = zipName;
+        detail.hidden = false;
+      })
+      .catch(function (e) {
+        showError(e.message);
+      });
+  })();
+</script>
+</body>
+</html>

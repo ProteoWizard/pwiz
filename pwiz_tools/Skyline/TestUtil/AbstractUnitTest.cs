@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -26,6 +27,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -163,6 +165,13 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
+            // Same check on both frameworks. This was once #if'd to a hardcoded false on net8,
+            // on the belief that TestRunnerContext was TestRunner.exe-only - it is not:
+            // TestRunnerLib targets net472 AND net8.0-windows, defines a net8 TestRunnerContext
+            // for MSTest 3.x, and TestUtil references it. The stub silently made every
+            // IsRunningInTestRunner caller take its "not TestRunner" path on net8, which meant
+            // SkipWiff2TestInTestExplorer skipped FileTypeTest and Wiff2ResultsTest everywhere,
+            // including under TestRunner - so the wiff2 path had no coverage at all.
             get { return TestContext is TestRunnerContext; }
         }
 
@@ -445,10 +454,13 @@ namespace pwiz.SkylineTestUtil
             Program.TestName = TestContext.TestName;
             Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
+            // The loader trace ring is static and this process runs test after test, so anything
+            // left in it belongs to a previous test and would be presented as evidence for this
+            // one's failure.
+            Skyline.Model.BackgroundLoader.ClearLoaderTrace();
+
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
-
-            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
 
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(TestContext.TestName + " started");
@@ -467,6 +479,7 @@ namespace pwiz.SkylineTestUtil
             STOPWATCH.Restart();
             Initialize();
         }
+
 
         /// <summary>
         /// Called by the unit test framework when a test is finished.
@@ -497,15 +510,25 @@ namespace pwiz.SkylineTestUtil
             // Prevent any weird interactions between tests on reused processes
             Program.UnitTest = Program.FunctionalTest = false;
             Program.TestName = null;
-
+            // Perf tests turn on real MsDataFileImpl performance timers and rely on this to turn
+            // them off again. Left on, a two-pass chromatogram import in a later test fails.
+            MsDataFileImpl.PerfUtilFactory.Reset();
         }
 
-        public bool IsParallelClient => TestContext.Properties.Contains("ParallelClientId");
+        /// <summary>
+        /// True when this test is being run by a parallel test client. This used to look for a
+        /// "ParallelClientId" property, which nothing ever sets, so it always returned false.
+        /// </summary>
+        public bool IsParallelClient => TestContext.Properties.Contains(RunTests.PARALLEL_TEST_PROPERTY);
 
         private void CleanupFiles()
         {
             // Report any pooled streams left open, then stop tracking and clean up
             string poolReport = FileStreamManager.Default.ReportPooledStreams();
+            // A FileSaver holds its temporary file open with a plain FileStream that never
+            // enters the pool, so a leaked one is invisible above and surfaces only as the
+            // directory failing to delete, naming a "~SK*.tmp" locked by this process.
+            string fileSaverReport = FileSaver.ReportUndisposed();
             FileStreamManager.Default.EndTrackingHistory();
             FileStreamManager.Default.CloseAllStreams();
 
@@ -519,6 +542,8 @@ namespace pwiz.SkylineTestUtil
                 cleanupException = ex;
             }
 
+            // The FileSaver report explains a failure; it never causes one on its own. A saver
+            // for a load still in flight is undisposed for a moment without anything being wrong.
             if (poolReport != null || cleanupException != null)
             {
                 var errors = new List<string>();
@@ -526,6 +551,8 @@ namespace pwiz.SkylineTestUtil
                     errors.AddRange(new[] {"Streams left open:", string.Empty, poolReport});
                 if (cleanupException != null)
                     errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
+                if (fileSaverReport != null)
+                    errors.AddRange(new[] {"Temporary files left open:", string.Empty, fileSaverReport});
                 Assert.Fail(TextUtil.LineSeparate(errors));
             }
         }

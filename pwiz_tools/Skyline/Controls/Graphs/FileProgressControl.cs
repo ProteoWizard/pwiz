@@ -142,6 +142,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetStatus(ChromatogramLoadingStatus status)
         {
+            // Statuses are immutable snapshots delivered through the UI message queue, so an older
+            // one can arrive after a newer one and undo a file that already finished, leaving
+            // AllChromatogramsGraph.Finished false for the rest of the run. Retry loads the file
+            // again under a new status Id, which is why only the chain that finished is held back.
+            if (Status != null && Status.IsFinal && !status.IsFinal && ReferenceEquals(Status.Id, status.Id))
+                return;
+
             Status = status;
             IsCanceled = false;
             try

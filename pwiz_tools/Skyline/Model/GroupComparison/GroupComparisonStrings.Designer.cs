@@ -652,7 +652,25 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Circle.
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Color", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ●.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle {
             get {
@@ -661,7 +679,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Diamond.
+        ///   Looks up a localized string similar to ◆.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond {
             get {
@@ -706,7 +724,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Plus.
+        ///   Looks up a localized string similar to +.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus {
             get {
@@ -733,7 +751,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Square.
+        ///   Looks up a localized string similar to ■.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square {
             get {
@@ -742,7 +760,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Star.
+        ///   Looks up a localized string similar to ★.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star {
             get {
@@ -760,7 +778,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Triangle.
+        ///   Looks up a localized string similar to ▲.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle {
             get {
@@ -769,7 +787,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Triangle Down.
+        ///   Looks up a localized string similar to ▼.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown {
             get {
@@ -778,14 +796,176 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to X Cross.
+        ///   Looks up a localized string similar to ×.
         /// </summary>
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross {
             get {
                 return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to ○.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineCircle {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineCircle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to □.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineSquare {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineSquare", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to △.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangle {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ▽.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangleDown {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineTriangleDown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ◇.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineDiamond {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_OutlineDiamond", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Circle.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_Circle {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_Circle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Square.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_Square {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_Square", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Triangle.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_Triangle {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_Triangle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Triangle Down.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_TriangleDown {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_TriangleDown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Diamond.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_Diamond {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_Diamond", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to X.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_XCross {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_XCross", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Plus.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_Plus {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_Plus", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Star.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_Star {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_Star", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Outline Circle.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_OutlineCircle {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_OutlineCircle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Outline Square.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_OutlineSquare {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_OutlineSquare", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Outline Triangle.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_OutlineTriangle {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_OutlineTriangle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Outline Triangle Down.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_OutlineTriangleDown {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_OutlineTriangleDown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Outline Diamond.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_SymbolName_OutlineDiamond {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_SymbolName_OutlineDiamond", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to X-Large.
         /// </summary>
@@ -801,6 +981,33 @@ namespace pwiz.Skyline.Model.GroupComparison {
         internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small {
             get {
                 return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete rule.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_Delete_rule {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_Delete_rule", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move rule up.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_Move_rule_up {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_Move_rule_up", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move rule down.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_Move_rule_down {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_Move_rule_down", resourceCulture);
             }
         }
     }

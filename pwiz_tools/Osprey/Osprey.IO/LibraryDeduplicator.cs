@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -47,9 +48,17 @@ namespace pwiz.Osprey.IO
             // Group entries by (modified_sequence, charge)
             var groups = new Dictionary<string, List<LibraryEntry>>();
 
+            // Silent between the parse and "Loaded N library entries" - a full group-by over
+            // every entry (6.3M on the entrapment library). Not `using`d: no re-indent, and no
+            // completed-looking 100% if this throws.
+            var progress = new ProgressReporter(OspreyIOResources.LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors, entries.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            long nGrouped = 0;
+
             foreach (var entry in entries)
             {
-                string key = entry.ModifiedSequence + "\t" + entry.Charge;
+                progress.Report(++nGrouped);
+                string key = entry.ModifiedSequence + TextUtil.SEPARATOR_TSV + entry.Charge;
                 List<LibraryEntry> group;
                 if (!groups.TryGetValue(key, out group))
                 {
@@ -60,6 +69,11 @@ namespace pwiz.Osprey.IO
             }
 
             var deduped = new List<LibraryEntry>(groups.Count);
+            // One interner for the merged (count > 1) groups' unioned protein /
+            // gene accessions, so the dedup pass keeps the loader's array-backed
+            // interning instead of re-wrapping each merge in a fresh List.
+            // Singleton groups (the vast majority) pass through untouched below.
+            var interner = new LibraryStringInterner();
 
             foreach (var group in groups.Values)
             {
@@ -113,8 +127,8 @@ namespace pwiz.Osprey.IO
 
                 var best = group[0];
                 best.RetentionTime = avgRt;
-                best.ProteinIds = new List<string>(allProteins);
-                best.GeneNames = new List<string>(allGenes);
+                best.ProteinIds = interner.InternToArray(allProteins);
+                best.GeneNames = interner.InternToArray(allGenes);
                 deduped.Add(best);
             }
 
@@ -133,6 +147,7 @@ namespace pwiz.Osprey.IO
             for (int i = 0; i < deduped.Count; i++)
                 deduped[i].Id = (uint)i;
 
+            progress.Dispose();
             return deduped;
         }
     }

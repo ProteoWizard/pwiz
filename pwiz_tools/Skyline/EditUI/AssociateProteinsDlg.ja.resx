@@ -246,27 +246,6 @@
   <data name="&gt;&gt;cbGroupProteins.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 65</value>
-  </data>
-  <data name="comboSharedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Name" xml:space="preserve">
-    <value>comboSharedPeptides</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Parent" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <data name="lblGroupProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -774,8 +753,29 @@
   <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 65</value>
+  </data>
   <data name="comboSharedPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>341, 21</value>
+  </data>
+  <data name="comboSharedPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.Name" xml:space="preserve">
+    <value>comboSharedPeptides</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="gbParsimonyOptions.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 177</value>

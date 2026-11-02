@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using SharedBatch.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace SharedBatch
 {
@@ -37,11 +38,11 @@ namespace SharedBatch
             radioButtonSpecifySkylinePath.Checked = custom;
             if (custom)
             {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(path);
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(path) ?? string.Empty;
             }
             else if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
             {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath) ?? string.Empty;
             }
         }
 
@@ -62,7 +63,7 @@ namespace SharedBatch
             // Custom path set to saved value, defaults to C:\Program Files\Skyline if none saved
             if (!string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath))
             {
-                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath);
+                textSkylineInstallationPath.Text = Path.GetDirectoryName(Settings.Default.SkylineCustomCmdPath) ?? string.Empty;
             }
         }
 
@@ -106,7 +107,8 @@ namespace SharedBatch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var folderBrowserDlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var folderBrowserDlg = FormUtil.CreateFolderBrowserDialog())
             {
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = FileUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));

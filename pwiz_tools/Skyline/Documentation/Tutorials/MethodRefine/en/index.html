@@ -571,8 +571,11 @@
         <li>On the <b>File</b> menu, choose <b>Import</b>, and click <b>Results</b>.</li>
         <li>Choose <b>Add multi-injection replicates in directories</b>.</li>
         <li>Click the <b>OK</b> button.</li>
-        <li>Click the <b>OK</b> button in the <b>Browse For Folder</b> form to accept the default document folder.</li>
-        <li>Click the <b>Do not remove</b> button in the form that appears to ask about removing the common prefix “Unscheduled0”.</li>
+        <li>In the <b>Browse For Folder</b> form, make sure the MethodRefine folder is selected. (If you imported the supplementary data above,
+            the form may open on the MethodRefineSupplement folder instead.)</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the form that appears to ask about removing the common prefix “Unscheduled0”, choose <b>Do not remove</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         This will start Skyline importing 2 new unscheduled replicates from the 2 folders (Unscheduled01 and Unscheduled02) in the MethodRefine folder.
@@ -697,7 +700,8 @@
     </ul>
     <p>
         In the MethodRefine folder, you will find a new transition list file (Scheduled.csv) for scheduled SRM of the remaining peptides. If you look
-        at the file in Excel, you can see that start and stop times, 4 minutes apart, have been added in columns D and E:
+        at the file in Excel, you can see that the scheduled retention time for each peptide has been added in column D and the 4 minute time
+        window in column E:
     </p>
     <p>
         <img src="s-transition-list-spreadsheet.png" />

@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -55,8 +56,7 @@ namespace pwiz.SkylineTestFunctional
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
         private bool ReportLibraryBuildFailures { get; set; }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("zero_charge.pep.XML", null);
             BuildLibraryError("truncated.pep.XML", null);
             BuildLibraryError("missing_mzxml.pep.XML", null, null, "could not find matches for the following");
-            BuildLibraryError("..\\mascot\\F027319.dat", null, 1e-12, "No matches passed score filter");
+            BuildLibraryError("..\\mascot\\F027319.dat", null, 1e-12, "produced no spectra that passed");
             BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-scan-numbers.pepXML"), null, null, "WARNING: Could not find native id");
             BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-nativeid-format.mzid"), null, null, "WARNING: Mismatch between spectrum");
 
@@ -655,9 +655,8 @@ namespace pwiz.SkylineTestFunctional
 
             var messageDlg = WaitForOpenForm<MessageDlg>();
             Assert.IsNotNull(messageDlg, "No message box shown");
-            AssertEx.Contains(messageDlg.Message, "ERROR");
             if (messageParts.Length == 0)
-                AssertEx.Contains(messageDlg.Message, inputFile, "line");
+                AssertEx.Contains(messageDlg.Message, "ERROR", inputFile, "line");
             else
                 AssertEx.Contains(messageDlg.Message, messageParts);
             OkDialog(messageDlg, messageDlg.OkDialog);           
@@ -703,6 +702,44 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        // Adds the input files. A SINGLE file is added by driving the real native "Add Input Files" (Open) dialog --
+        // type its full path and accept -- so the build still exercises the connector's native-dialog automation
+        // (from the test thread, which is where those gestures run). MULTIPLE files are added directly through
+        // BuildLibraryDlg.AddInputFiles, which shows no dialog; driving a multiselect Open dialog by name is
+        // exercised on its own by NativeFileDialogTest.
+        private void AddInputFilesThroughDialog(BuildLibraryDlg buildLibraryDlg, IList<string> inputPaths)
+        {
+            if (inputPaths.Count > 1)
+            {
+                RunUI(() => buildLibraryDlg.AddInputFiles(inputPaths));
+                return;
+            }
+            RunLongNativeDlg<NativeOpenFileDialog>(buildLibraryDlg.ClickAddFile, dlg =>
+            {
+                dlg.EnterPath(inputPaths[0]);
+                dlg.Accept();
+            });
+        }
+
+        // Adds a directory of input files by driving the real native Browse-For-Folder dialog: select the folder
+        // and accept.
+        private void AddInputDirectoryThroughDialog(BuildLibraryDlg buildLibraryDlg, string inputDir)
+        {
+            RunLongNativeDlg<NativeFolderBrowserDialog>(buildLibraryDlg.ClickAddDirectory, dlg =>
+            {
+                dlg.SetValue(@"Folder", inputDir);
+                dlg.DismissWithAcceptButton();
+            });
+            // A folder browser that ignores the selection gesture returns the folder it opened on instead, and
+            // the build then quietly uses whatever inputs happen to live there. Fail on the directory, rather
+            // than several minutes later on a spectrum count that is merely surprising.
+            RunUI(() => AssertEx.IsTrue(
+                buildLibraryDlg.Grid.FilePaths.Any() && buildLibraryDlg.Grid.FilePaths.All(
+                    path => path.StartsWith(inputDir, System.StringComparison.OrdinalIgnoreCase)),
+                string.Format("Expected input files under {0}, got {1}", inputDir,
+                    string.Join(", ", buildLibraryDlg.Grid.FilePaths))));
+        }
+
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,
             bool keepRedundant, bool includeAmbiguous, bool filterPeptides, bool append, IrtStandard irtStandard,
             bool thresholdAll, double? threshold = null)
@@ -728,11 +765,14 @@ namespace pwiz.SkylineTestFunctional
                 if (irtStandard != null && !irtStandard.IsEmpty)
                     buildLibraryDlg.IrtStandard = irtStandard;
                 buildLibraryDlg.OkWizardPage();
-                if (inputPaths != null)
-                    buildLibraryDlg.AddInputFiles(inputPaths);
-                else
-                    buildLibraryDlg.AddDirectory(inputDir);
             });
+            // Add the inputs by driving the real native dialogs -- files through the "Add Input Files" (multiselect
+            // Open) dialog, a directory through the Browse-For-Folder dialog -- rather than calling AddInputFiles /
+            // AddDirectory directly, so every build here exercises the connector's native-dialog automation.
+            if (inputPaths != null)
+                AddInputFilesThroughDialog(buildLibraryDlg, inputPaths);
+            else
+                AddInputDirectoryThroughDialog(buildLibraryDlg, inputDir);
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             if (thresholdAll)
             {

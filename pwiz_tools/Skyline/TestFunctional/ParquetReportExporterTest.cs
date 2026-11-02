@@ -1,6 +1,7 @@
 /*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -18,17 +19,21 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
+using Parquet.Schema;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -41,9 +46,9 @@ namespace pwiz.SkylineTestFunctional
         {
             // Boxing a Nullable<T> with HasValue produces a boxed T, so assert
             // against the underlying value type rather than the nullable wrapper.
-            var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
+            var nullableDateTime = new ParquetReportExporter.StorageType(typeof(DateTime?)).ConvertValue(DateTime.UtcNow);
             Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime));
-            var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
+            var nullableFloat = new ParquetReportExporter.StorageType(typeof(float?)).ConvertValue(1f);
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
 
@@ -51,27 +56,119 @@ namespace pwiz.SkylineTestFunctional
         public void TestParquetArrays()
         {
             var items = new[]{Array.Empty<float>(), new float[1], null }.Select(array=>new MyObject(){FloatArray = new FormattableList<float>(array)}).ToList();
-            var viewSpec = new ViewSpec().SetColumns(new[]
+            var stream = ExportReport(items, nameof(MyObject.FloatArray));
+            ReadParquet(stream, reader =>
             {
-                new ColumnSpec(PropertyPath.Root.Property(nameof(MyObject.FloatArray)))
+                Assert.AreEqual(1, reader.Schema.Fields.Count);
+                // Exercise the data-read path so an array/list write or decode regression
+                // would surface here instead of only in downstream consumers.
+                using var groupReader = reader.OpenRowGroupReader(0);
+                var dataField = reader.Schema.GetDataFields().Single();
+                using var col = groupReader.ReadRawColumnDataBaseAsync(dataField).GetAwaiter().GetResult();
+                // One level per row: the empty list, the one element list and the null list
+                CollectionAssert.AreEqual(new[] { 0, 0, 0 }, col.RepetitionLevels.ToArray());
+                CollectionAssert.AreEqual(new[] { 1, 3, 0 }, col.DefinitionLevels.ToArray());
             });
+            VerifyWriterExceptionPropagates(items);
+        }
+
+        [TestMethod]
+        public void TestParquetTimestamps()
+        {
+            // Every DateTimeKind with the same digits, which are whole milliseconds
+            // because that is the precision written.
+            var ticks = new DateTime(2026, 3, 15, 9, 30, 0, 123).Ticks;
+            var kinds = new[] { DateTimeKind.Unspecified, DateTimeKind.Local, DateTimeKind.Utc };
+            var dateTimes = kinds.Select(kind => (DateTime?)new DateTime(ticks, kind)).Append(null).ToArray();
+            var items = dateTimes.Select(dateTime => new TimestampObject { Time = dateTime }).ToList();
+            var stream = ExportReport(items, nameof(TimestampObject.Time));
+            ReadParquet(stream, reader =>
+            {
+                var field = reader.Schema.GetDataFields().Single();
+                var dateTimeField = field as DateTimeDataField;
+                Assert.IsNotNull(dateTimeField);
+                AssertEx.AreEqual(DateTimeFormat.Timestamp, dateTimeField.DateTimeFormat);
+                AssertEx.IsTrue(dateTimeField.IsAdjustedToUTC);
+                using var groupReader = reader.OpenRowGroupReader(0);
+                var times = new DateTime?[groupReader.RowCount];
+                groupReader.ReadAsync(field, times.AsMemory()).GetAwaiter().GetResult();
+                // Only a local time is converted. A time with no time zone is written as if
+                // it were UTC, so the output is the same on every computer.
+                for (int i = 0; i < dateTimes.Length; i++)
+                {
+                    var expected = dateTimes[i]?.Kind == DateTimeKind.Local
+                        ? dateTimes[i].Value.ToUniversalTime()
+                        : dateTimes[i];
+                    AssertEx.AreEqual(expected?.Ticks, times[i]?.Ticks);
+                }
+            });
+        }
+
+        private static MemoryStream ExportReport<T>(IList<T> items, params string[] propertyNames)
+        {
             var stream = new MemoryStream();
+            ExportReport(stream, items, propertyNames);
+            stream.Position = 0;
+            return stream;
+        }
+
+        private static void ExportReport<T>(Stream stream, IList<T> items, params string[] propertyNames)
+        {
+            var viewSpec = new ViewSpec().SetColumns(propertyNames.Select(name =>
+                new ColumnSpec(PropertyPath.Root.Property(name))));
             var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
                 DataSchemaLocalizer.INVARIANT);
-            var viewInfo = new ViewInfo(dataSchema, typeof(MyObject), viewSpec);
+            var viewInfo = new ViewInfo(dataSchema, typeof(T), viewSpec);
             var rowItemExporter = new ParquetReportExporter();
             IProgressStatus status = new ProgressStatus();
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
-            stream.Position = 0;
-            using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
-            Assert.AreEqual(1, reader.Schema.Fields.Count);
-            // Exercise the data-read path so an array/list write or decode regression
-            // would surface here instead of only in downstream consumers.
-            using var groupReader = reader.OpenRowGroupReader(0);
-            var dataField = reader.Schema.GetDataFields().Single();
-            var col = groupReader.ReadColumnAsync(dataField).ConfigureAwait(false).GetAwaiter().GetResult();
-            Assert.IsNotNull(col.Data);
+        }
+
+        private static void ReadParquet(Stream stream, Action<ParquetReader> check)
+        {
+            // Parquet.Net's reader resumes on the caller's SynchronizationContext, and this
+            // test runs on the thread which every other test in the process shares, so it
+            // reads without one. The reader holds nothing of its own over a caller's stream,
+            // so it is not disposed.
+            ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                check(ParquetReader.CreateAsync(stream).GetAwaiter().GetResult());
+            });
+        }
+
+        /// <summary>
+        /// An exception on the writer thread, such as a full disk, has to come back to the caller
+        /// as the original exception instead of hanging the export waiting for the writer.
+        /// </summary>
+        private static void VerifyWriterExceptionPropagates(IList<MyObject> items)
+        {
+            AssertEx.ThrowsException<IOException>(() =>
+                ExportReport(new FailAfterMagicStream(), items, nameof(MyObject.FloatArray)));
+        }
+
+        /// <summary>
+        /// Accepts the "PAR1" magic which creating the ParquetWriter writes, and fails the first
+        /// write after that, which is the first row group.
+        /// </summary>
+        private class FailAfterMagicStream : MemoryStream
+        {
+            private const int MAGIC_LENGTH = 4;
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                if (Length + count > MAGIC_LENGTH)
+                {
+                    throw new IOException(@"Simulated disk full");
+                }
+                base.Write(buffer, offset, count);
+            }
+
+            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                Write(buffer, offset, count);
+                return Task.CompletedTask;
+            }
         }
 
         class MyObject
@@ -81,6 +178,11 @@ namespace pwiz.SkylineTestFunctional
                 get;
                 set;
             }
+        }
+
+        class TimestampObject
+        {
+            public DateTime? Time { get; set; }
         }
     }
 }

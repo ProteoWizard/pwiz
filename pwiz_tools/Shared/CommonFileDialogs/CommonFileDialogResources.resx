@@ -94,6 +94,12 @@
   <data name="OpenDataSourceDialog_populateListViewFromDirectory_Network_Share" xml:space="preserve">
     <value>Network Share</value>
   </data>
+  <data name="BaseFileDialogNE_populateListViewFromDirectory_Scanning___" xml:space="preserve">
+    <value>Scanning...</value>
+  </data>
+  <data name="BaseFileDialogNE_populateListViewFromDirectory_Scanning____0__items" xml:space="preserve">
+    <value>Scanning... {0} items</value>
+  </data>
   <data name="OpenDataSourceDialog_populateListViewFromDirectory_access_failure" xml:space="preserve">
     <value>access failure</value>
   </data>
@@ -123,5 +129,14 @@
   </data>
   <data name="OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources" xml:space="preserve">
     <value>Please select one or more data sources.</value>
+  </data>
+  <data name="BaseFileDialogNE_NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="BaseFileDialogNE_BeginCreateNewFolder_New_folder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="BaseFileDialogNE_Refresh" xml:space="preserve">
+    <value>Refresh</value>
   </data>
 </root>

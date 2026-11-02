@@ -741,6 +741,7 @@ namespace pwiz.Skyline.Model.Results
             string cachePath, MsDataFileUri msDataFileUri, IProgressStatus status, ILoadMonitor loader,
             Action<ChromatogramCache, IProgressStatus> complete)
         {
+            ChromCacheBuilder builder = null;
             try
             {
                 if (Program.MultiProcImport && Program.ImportProgressPipe == null)
@@ -755,12 +756,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // Import using threads in this process.
                     status = ((ChromatogramLoadingStatus) status).ChangeFilePath(msDataFileUri);
-                    var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
+                    builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
                     builder.BuildCache();
                 }
             }
             catch (Exception x)
             {
+                // Only Complete() disposes the builder, and nothing reached it on this path.
+                // It holds a FileSaver for each cache file, three of them with open streams,
+                // which stay locked for the life of the process if they are not released.
+                builder?.Dispose();
                 complete(null, status.ChangeErrorException(x));
             }
         }
@@ -769,7 +774,12 @@ namespace pwiz.Skyline.Model.Results
         {
             // Arguments for child Skyline process.
             string importProgressPipe = @"SkylineImportProgress-" + Guid.NewGuid();
-            var argsText =
+            // The child must write in the parent's language, which may have been set by --culture, because
+            // RunProcess recognizes errors by the localized error prefix.
+            var cultureArgText = Equals(LocalizationHelper.CurrentUICulture, LocalizationHelper.OriginalUICulture)
+                ? string.Empty
+                : @"--culture=" + LocalizationHelper.CurrentUICulture.Name + @" ";
+            var argsText = cultureArgText +
                 // ReSharper disable LocalizableElement
                 "--in=\"" + documentFilePath + "\" " +
                 "--import-file=\"" + msDataFileUri.GetFilePath() + "\" " +
@@ -1012,10 +1022,10 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 DateTime modifiedTime = DateTime.FromBinary(cachedFileStruct.modified);
-                DateTime? runstartTime = cachedFileStruct.runstart != 0 ? DateTime.FromBinary(cachedFileStruct.runstart) : (DateTime?)null;
+                DateTime? runstartTime = cachedFileStruct.runstart != 0 ? DateTime.FromBinary(cachedFileStruct.runstart) : null;
                 DateTime? importTime = cachedFileStruct.importTime != 0
                     ? DateTime.FromBinary(cachedFileStruct.importTime)
-                    : (DateTime?)null;
+                    : null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
                 yield return new ChromCachedFile(filePath,
                     cachedFileStruct.flags,
@@ -1026,7 +1036,7 @@ namespace pwiz.Skyline.Model.Results
                     cachedFileStruct.maxIntensity,
                     cachedFileStruct.sizeScanIds,
                     cachedFileStruct.locationScanIds,
-                    cachedFileStruct.ticArea == 0 ? (float?)null : cachedFileStruct.ticArea,
+                    cachedFileStruct.ticArea == 0 ? null : cachedFileStruct.ticArea,
                     ChromCachedFile.IonMobilityUnitsFromFlags(cachedFileStruct.flags),
                     sampleId,
                     serialNumber,

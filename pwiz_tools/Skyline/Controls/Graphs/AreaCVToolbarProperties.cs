@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 double result;
-                return double.TryParse(textQValueCutoff.Text, out result) ? result : (double?)null;
+                return double.TryParse(textQValueCutoff.Text, out result) ? result : null;
             }
             set { textQValueCutoff.Text = value?.ToString(CultureInfo.CurrentCulture) ?? string.Empty; }
         }

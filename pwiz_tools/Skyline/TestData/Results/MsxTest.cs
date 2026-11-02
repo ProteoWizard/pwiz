@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Pwiz.Analysis;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -34,6 +35,7 @@ namespace pwiz.SkylineTestData.Results
     public class MsxTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestData\Results\MsxTest.zip";
+        private const string ASYM_DIA_ZIP_FILE = @"TestData\Results\AsymDIA.zip";
 
         private const int TEST_SPECTRUM = 105;
         private const int TEST_SPECTRUM_OVERLAP = 67;
@@ -86,6 +88,76 @@ namespace pwiz.SkylineTestData.Results
             var fullScanInitialOverlap = docMsx.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitialOverlap.IsEnabledMsMs);
             TestOverlap(docOverlap,dataPathOverlap);
+        }
+
+        [TestMethod]
+        public void TestMsDataFileImplDemultiplex()
+        {
+            TestFilesDirs = new[]
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, ASYM_DIA_ZIP_FILE)
+            };
+            var demultiplex = new SpectrumListDemux.Params();
+
+            // Staggered windows: detected and demultiplexed into twice as many MS2 spectra
+            var overlapPath = TestFilesDirs[0].GetTestPath("OverlapTest.mzML");
+            var overlapScheme = ValidateDemultiplexed(overlapPath, demultiplex);
+            Assert.AreEqual(1, overlapScheme.PrecursorsPerSpectrum);
+            Assert.AreEqual(2, overlapScheme.OverlapsPerSpectrum);
+            Assert.AreEqual(SpectrumListDemux.Optimization.OverlapOnly, overlapScheme.Optimization);
+
+            // MSX: detected as MSX
+            var msxScheme = ValidateDemultiplexed(TestFilesDirs[0].GetTestPath("MsxTest.mzML"), demultiplex);
+            Assert.AreEqual(5, msxScheme.PrecursorsPerSpectrum);
+            Assert.AreEqual(SpectrumListDemux.Optimization.None, msxScheme.Optimization);
+
+            // Ordinary DIA: passed through unchanged
+            var diaPath = TestFilesDirs[1].GetTestPath("Asym_DIA_data.mzML");
+            int diaCount;
+            using (var raw = new MsDataFileImpl(diaPath))
+            {
+                diaCount = raw.SpectrumCount;
+                Assert.IsNull(raw.DetectDemultiplexScheme());
+            }
+            using (var dia = new MsDataFileImpl(diaPath, demultiplex: demultiplex))
+            {
+                Assert.IsNull(dia.DemultiplexScheme);
+                Assert.AreEqual(diaCount, dia.SpectrumCount);
+            }
+        }
+
+        /// <summary>
+        /// Opens a multiplexed run with and without demultiplex settings, checks the demultiplexed
+        /// run has more spectra and serves metadata past the end of the raw run, and returns its scheme.
+        /// </summary>
+        private static SpectrumListDemux.Scheme ValidateDemultiplexed(string path, SpectrumListDemux.Params demultiplex)
+        {
+            int rawCount;
+            SpectrumListDemux.Scheme detected;
+            using (var raw = new MsDataFileImpl(path))
+            {
+                rawCount = raw.SpectrumCount;
+                detected = raw.DetectDemultiplexScheme();
+                Assert.IsNotNull(detected);
+                Assert.IsNull(raw.DemultiplexScheme);   // Detecting does not demultiplex
+                Assert.AreEqual(rawCount, raw.SpectrumCount);
+            }
+            using var demuxed = new MsDataFileImpl(path, demultiplex: demultiplex);
+            var scheme = demuxed.DemultiplexScheme;
+            Assert.IsNotNull(scheme);
+            Assert.AreEqual(detected, scheme);
+            Assert.AreEqual(scheme, demuxed.DetectDemultiplexScheme());
+            int demuxedCount = demuxed.SpectrumCount;
+            int expansion = scheme.PrecursorsPerSpectrum * scheme.OverlapsPerSpectrum;
+            // MS2 spectra multiply by the expansion, less any edge windows; MS1 spectra pass through
+            Assert.IsTrue(demuxedCount > rawCount * (expansion + 1) / 2,
+                string.Format(@"{0} demultiplexed spectra from {1}", demuxedCount, rawCount));
+            Assert.IsTrue(demuxedCount <= rawCount * expansion);
+            // Metadata is indexed by demultiplexed spectrum, past the raw run's last index
+            int lastIndex = demuxedCount - 1;
+            Assert.AreEqual(demuxed.GetSpectrum(lastIndex).Id, demuxed.GetSpectrumMetadata(lastIndex).Id);
+            return scheme;
         }
 
         public void TestOverlap(SrmDocument doc, string dataPath)

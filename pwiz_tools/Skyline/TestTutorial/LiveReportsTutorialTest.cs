@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
@@ -81,11 +82,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            RunUI(()=>
-            {
-                SkylineWindow.OpenFile(GetTestPath("Rat_plasma.sky"));
-                SkylineWindow.ShowAuditLog();
-            });
+            FileOpen(GetTestPath("Rat_plasma.sky"));
+            RunUI(() => SkylineWindow.ShowAuditLog());
             var auditLogForm = FindOpenForm<AuditLogForm>();
             Assert.IsNotNull(auditLogForm);
             PauseForScreenShot(auditLogForm, "Audit log view empty");

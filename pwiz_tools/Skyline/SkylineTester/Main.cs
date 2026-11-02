@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -41,10 +42,19 @@ namespace SkylineTester
             // Stop running task.
             if (_runningTab != null && (_runningTab.IsRunning() || _runningTab.IsWaiting()))
             {
+                // StopByUser disables the buttons before it kills anything. Stopping is otherwise
+                // asynchronous - _runningTab is not cleared until Done() - and until then this same
+                // button means Run again, which is how a nine-hour log was lost.
                 if (StopByUser())
                     AcceptButton = DefaultButton;   // Only change if the stop is successful
                 return;
             }
+
+            // Only on the path a person started. Run(TabBase) is also reached unattended -
+            // SkylineNightly launching a .skytr, the run-again timer, and the restart after a
+            // failure - and a modal prompt on any of those hangs the pass with nobody to answer
+            // it. A dialog is not an exception, so no catch around the detection would help.
+            OfferToStopLeftoverWorkers();
 
             Run();
         }
@@ -55,7 +65,7 @@ namespace SkylineTester
         }
 
         private void Run(TabBase fromTab)
-        { 
+        {
             commandShell.ClearLog();
 
             // Prepare to start task.
@@ -65,8 +75,15 @@ namespace SkylineTester
             if (_runningTab == null)    // note: may be cleared by Run() (e.g., Cancel in DeleteWindow)
                 return;
 
+            // A restart can arrive while a "Stopped" hold is still pending; drop it so the button
+            // is not restored to "&Run" a second into the run that just started.
+            CancelStoppedTimer();
+            _stoppingByUser = false;
             foreach (var runButton in _runButtons)
+            {
                 runButton.Text = "&Stop";
+                runButton.Enabled = true;
+            }
             buttonStop.Enabled = true;
             EnableButtonSelectFailedTests(false); // Until we have failures to select
             AcceptButton = null;
@@ -86,6 +103,71 @@ namespace SkylineTester
                 statusRunTime.Text = "{0}:{1:D2}:{2:D2}".With(elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds);
             };
             _runTimer.Start();
+        }
+
+        /// <summary>
+        /// Tells the user about worker containers left running by an earlier run, and offers to stop
+        /// them before this run starts.
+        /// <para>No run of THIS window has started yet, so these belong to something else. Usually
+        /// that is an earlier run of ours stopped before it could clean up, but it can also be a run
+        /// in progress from another checkout on the same machine - containers are listed by image,
+        /// which cannot tell those apart. Hence a prompt rather than a silent kill, and wording that
+        /// does not claim more than that.</para>
+        /// <para>They are invisible to a developer - they are containers, so they are not in the task
+        /// bar and nothing reports them - while holding the mounted checkout open, which wedges a
+        /// later build with a file lock that names vmwp.exe rather than anything recognizable.</para>
+        /// <para>This exists because one exit cannot be cleaned up from inside the process that
+        /// leaked: stopping a run kills TestRunner outright, which runs no teardown of any kind. The
+        /// next run is the first moment anything is in a position to notice, and a person is here to
+        /// ask.</para>
+        /// </summary>
+        private void OfferToStopLeftoverWorkers()
+        {
+            IList<string> leftovers;
+            try
+            {
+                // Fully qualified: "RunTests" alone binds to the Run Tests button on this window.
+                leftovers = TestRunnerLib.RunTests.GetRunningWorkerNames().ToList();
+            }
+            catch (Exception)
+            {
+                // Docker absent, not running, or wedged. Never block a run that may not need it at all
+                // - most runs are not parallel, and this is a convenience, not a gate.
+                return;
+            }
+
+            if (leftovers.Count == 0)
+                return;
+
+            var message = string.Join(Environment.NewLine,
+                string.Format("There are {0} test worker containers running that this run did not start.",
+                    leftovers.Count),
+                string.Empty,
+                string.Join(Environment.NewLine, leftovers),
+                string.Empty,
+                "They are probably left over from an earlier run that was stopped before it could clean",
+                "up. They hold the source directory open and can make a later build fail with a file lock.",
+                string.Empty,
+                "Check that no other test run is using them - they are listed by image, so a run from",
+                "another checkout on this machine would appear here too.",
+                string.Empty,
+                "Stop them now?");
+
+            if (MessageBox.Show(this, message, "Leftover test workers",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                TestRunnerLib.RunTests.KillWorkers(leftovers);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Could not stop the leftover workers: " + ex.Message, "Leftover test workers",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -150,6 +232,18 @@ namespace SkylineTester
                 Program.UserKilledTestRun = true;
             }
 
+            // The confirmation above pumps the message loop, so the run can finish and Done() can
+            // run while it is up. Without this the buttons would be disabled for a run that no
+            // longer exists, with no Done() left to restore them, and Stop() would dereference a
+            // null _runningTab.
+            if (_runningTab == null)
+                return false;
+
+            // Before Stop(), not after: Cancel() kills the process tree on this thread and takes
+            // long enough to see, and until it returns the button is still live and still reads
+            // "Stop". Every caller of StopByUser gets this, including the Output tab's own button.
+            ShowStopInProgress();
+
             Stop();
 
             return true;
@@ -169,8 +263,10 @@ namespace SkylineTester
         {
             _runningTab = null;
 
-            foreach (var runButton in _runButtons)
-                runButton.Text = "&Run";
+            if (_stoppingByUser)
+                ShowStopped();      // Holds a disabled "Stopped" briefly, then restores "&Run"
+            else
+                ShowReadyToRun();
             buttonStop.Enabled = false;
             AcceptButton = DefaultButton;
 
@@ -188,6 +284,65 @@ namespace SkylineTester
                 _restart = false;
                 Run();
             }
+        }
+
+        private bool _stoppingByUser;
+        private Timer _stoppedTimer;
+
+        /// <summary>
+        /// Disables the Run/Stop buttons and shows "Stopping..." for the window between a stop
+        /// request and <see cref="Done"/>, during which the toggle would otherwise start a new run.
+        /// </summary>
+        private void ShowStopInProgress()
+        {
+            _stoppingByUser = true;
+            CancelStoppedTimer();
+            foreach (var runButton in _runButtons)
+            {
+                runButton.Text = "Stopping...";
+                runButton.Enabled = false;
+                runButton.Update();     // Paint now - the caller is about to block killing processes
+            }
+            buttonStop.Enabled = false;
+            buttonStop.Update();
+        }
+
+        /// <summary>
+        /// Holds a disabled "Stopped" for a second so the click that ended the run is visibly
+        /// finished before the same button can start another one.
+        /// </summary>
+        private void ShowStopped()
+        {
+            foreach (var runButton in _runButtons)
+            {
+                runButton.Text = "Stopped";
+                runButton.Enabled = false;
+            }
+
+            CancelStoppedTimer();
+            _stoppedTimer = new Timer { Interval = 1000 };
+            _stoppedTimer.Tick += (s, a) => ShowReadyToRun();
+            _stoppedTimer.Start();
+        }
+
+        private void ShowReadyToRun()
+        {
+            CancelStoppedTimer();
+            _stoppingByUser = false;
+            foreach (var runButton in _runButtons)
+            {
+                runButton.Text = "&Run";
+                runButton.Enabled = true;
+            }
+        }
+
+        private void CancelStoppedTimer()
+        {
+            if (_stoppedTimer == null)
+                return;
+            _stoppedTimer.Stop();
+            _stoppedTimer.Dispose();
+            _stoppedTimer = null;
         }
 
         public string GetBuildRoot()
@@ -237,6 +392,27 @@ namespace SkylineTester
 
         public void AddTestRunner(string args)
         {
+            // Running tests needs a build directory that contains TestRunner.exe. Nothing is staged
+            // after a clean build, so fall back to the directory the staging step below will create
+            // rather than refusing: demanding a staged directory in order to stage one is a deadlock
+            // a developer cannot get out of except by running something else first.
+            var selectedBuildDir = GetRunBuildDir();
+            if (string.IsNullOrEmpty(selectedBuildDir))
+            {
+                ReportOrShow(string.Join(Environment.NewLine,
+                    "No Skyline build containing TestRunner.exe was found, and none could be staged.",
+                    string.Empty,
+                    "Build the solution in " + PreferredConfiguration() +
+                    ", the configuration this program was built as, or use the Build menu to select a build directory."));
+                return;
+            }
+
+            // Tests run from a staged directory, not from what the IDE just built, so stage first.
+            // Queued ahead of the test commands below so it streams progress to the log; running
+            // stale binaries silently is how a fixed bug keeps "reproducing".
+            if (!AddStagingCommand(selectedBuildDir))
+                return;
+
             //MemoryChartWindow.Start("TestRunnerMemory.log");
             TestsRun = 0;
             if (Directory.Exists(_resultsDir))
@@ -245,7 +421,9 @@ namespace SkylineTester
             if (!args.Contains("pause=") || args.Contains("pause=0"))
                 DeleteTestRunnerConfigFiles();
 
-            var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
+            // The resolved directory, not another lookup: when staging is bootstrapping it,
+            // the directory does not exist yet at the time these commands are queued.
+            var testRunner = Path.Combine(selectedBuildDir, "TestRunner.exe");
             _testRunnerIndex = new List<int>();
 
             //
@@ -341,11 +519,17 @@ namespace SkylineTester
             {
                 _testRunnerIndex = new List<int>(new[]{int.MaxValue});
 
-                // Report test results.
-                var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
-                commandShell.NextCommand = commandShell.Add("{0} report={1}", testRunner.Quote(), commandShell.LogFile.Quote());
-                RunCommands();
-                return;
+                // Report test results. Resolved the same way the run was, because the UI selection
+                // can still read as "no build" here even though the run just staged one.
+                var reportBuildDir = GetRunBuildDir();
+                if (!string.IsNullOrEmpty(reportBuildDir))
+                {
+                    var testRunner = Path.Combine(reportBuildDir, "TestRunner.exe");
+                    commandShell.NextCommand = commandShell.Add("{0} report={1}", testRunner.Quote(), commandShell.LogFile.Quote());
+                    RunCommands();
+                    return;
+                }
+                // No directory to report from: finish normally rather than throwing on the way out
             }
 
             commandShell.Done(success);
@@ -364,10 +548,14 @@ namespace SkylineTester
         {
             foreach (var language in GetLanguages())
             {
-                yield return _languageNames
+                // Skip any language discovered in the build dir that has no display-name mapping
+                // (e.g. a newly added culture) rather than throwing on First().
+                var name = _languageNames
                     .Where(lang => lang.Key.StartsWith(language))
                     .Select(lang => lang.Value)
-                    .First();
+                    .FirstOrDefault();
+                if (name != null)
+                    yield return name;
             }
         }
 
@@ -377,7 +565,7 @@ namespace SkylineTester
         /// </summary>
         private IEnumerable<string> GetLanguages()
         {
-            return (new FindLanguages(GetSelectedBuildDir(), "en", "fr", "tr").Enumerate());
+            return (new FindLanguages(GetRunBuildDir(), "en", "fr", "tr").Enumerate());
         }
 
         public void InitLanguages(ComboBox comboBox)
@@ -460,7 +648,12 @@ namespace SkylineTester
             var file = GetSelectedLog(combo);
             if (File.Exists(file))
             {
-                var editLogFile = new Process { StartInfo = { FileName = file } };
+                // UseShellExecute must be explicit: it defaults to true on .NET Framework but
+                // FALSE on net8, where Process.Start then tries to CreateProcess the .log itself
+                // and throws Win32Exception 193 ("not a valid application for this OS platform")
+                // instead of opening it in the associated editor.
+                var editLogFile = new Process
+                    { StartInfo = { FileName = file, UseShellExecute = true } };
                 editLogFile.Start();
             }
         }

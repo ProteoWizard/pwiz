@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="1bc5e980-b4bf-4327-8dbd-43d423c49bbe" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Bumbershoot update bioconda</name>
+  <description />
+  <settings>
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="*-src-without-t*.tar.bz2&#xA;recipes/bumbershoot/meta.yaml =&gt; meta.yaml" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="BUILD_EXT_487" />
+      <setting-ref ref="TRIGGER_793" />
+    </disabled-settings>
+    <parameters>
+      <param name="chambm_github_pw" value="credentialsJSON:1e898dc8-6070-4785-8f31-54ebfd3d5a2c" spec="password label='password' display='hidden'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_1620" name="" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.deployerUsername" value="tchad" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content"><![CDATA[version=$(cat VERSION | tr '.' '_')
+metafile=recipes/bumbershoot/meta.yaml
+sha256=$(sha256sum bumbershoot-src-without-t-$version.tar.bz2 | cut -d " " -f 1)
+
+sed -r -i.bak 's/(version = ")([^"]+)"/\1'$version'"/' $metafile
+sed -r -i.bak 's/(buildid = ")([^"]+)"/\1%dep.BumbershootSubsetSourceTarball.teamcity.build.id%"/' $metafile
+sed -r -i.bak 's~(url: http://teamcity.labkey.org/guestAuth/repository/download/).*~\1ProteoWizard_BumbershootUpdateBioconda/{{ buildid }}:id/bumbershoot-src-without-t-{{ version }}.tar.bz2~' $metafile
+sed -r -i.bak 's/sha[0-9]+: .*/sha256: '$sha256'/' $metafile
+
+cat $metafile
+
+#cat << EOF > github.key
+#%secure:teamcity.password.chambm_github_pw%
+#EOF
+#chmod 600 github.key
+
+#GIT_SSH_COMMAND='ssh -i github.key' git push origin master
+#shred -f github.key]]></param>
+          <param name="secure:org.jfrog.artifactory.selectedDeployableServer.deployerPassword" value="credentialsJSON:fe5923fb-920b-47ed-8f3c-d28be5daf6d0" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_HttpsGithubComBiocondaBiocondaRecipes" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1592" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <equals id="RQ_1593" name="teamcity.agent.jvm.os.arch" value="amd64" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="TRIGGER_793" type="buildDependencyTrigger">
+        <parameters>
+          <param name="afterSuccessfulBuildOnly" value="true" />
+          <param name="dependsOn" value="ProteoWizard_Bumbershoot_Linux_X86_64" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_487" type="AutoMergeFeature">
+        <parameters>
+          <param name="teamcity.automerge.buildStatusCondition" value="successful" />
+          <param name="teamcity.automerge.dstBranch" value="refs/heads/master" />
+          <param name="teamcity.automerge.message" value="Merge updated Bumbershoot recipe" />
+          <param name="teamcity.automerge.srcBranchFilter" value="refs/heads/master" />
+          <param name="teamcity.merge.policy" value="alwaysCreateMergeCommit" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_1755" sourceBuildTypeId="BumbershootSubsetSourceTarball" cleanDestination="false">
+        <revisionRule name="lastSuccessful" revision="latest.lastSuccessful" />
+        <artifact sourcePath="bumbershoot-src-without-t-*.tar.bz2&#xD;&#xA;VERSION" />
+      </dependency>
+    </artifact-dependencies>
+  </settings>
+</build-type>
+

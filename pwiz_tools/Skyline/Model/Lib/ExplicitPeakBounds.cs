@@ -21,7 +21,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
@@ -88,25 +87,79 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public class ExplicitPeakBoundsDict<TKey> : Immutable, IReadOnlyDictionary<TKey, ExplicitPeakBounds> where TKey : IComparable
+    /// <summary>
+    /// The explicit peak boundaries that a library holds for one spectrum, at most one per file,
+    /// indexed by the position of the file in the library's <see cref="LibraryFiles"/> list. A
+    /// file which has none reads as null, as does an index which is out of range.
+    /// The <see cref="Results.ReplicatePositions"/> says which file indexes have boundaries, and
+    /// is shared between the spectra which have them in the same files.
+    /// </summary>
+    public class ExplicitPeakBoundsList : Immutable, IReadOnlyList<ExplicitPeakBounds>
     {
-        public static readonly ExplicitPeakBoundsDict<TKey> EMPTY =
-            new ExplicitPeakBoundsDict<TKey>(Array.Empty<KeyValuePair<TKey, ExplicitPeakBounds>>());
-        private ImmutableList<TKey> _keys;
+        public static readonly ExplicitPeakBoundsList EMPTY =
+            new ExplicitPeakBoundsList(Array.Empty<ExplicitPeakBounds>());
+        private ReplicatePositions _positions;
         private float[] _startTimes;
         private float[] _endTimes;
         private float[] _scores;
 
-        public ExplicitPeakBoundsDict(IEnumerable<KeyValuePair<TKey, ExplicitPeakBounds>> entries)
+        /// <summary>
+        /// Takes the boundaries of each file in file index order, with a null for each file which
+        /// has none.
+        /// </summary>
+        public ExplicitPeakBoundsList(IEnumerable<ExplicitPeakBounds> peakBoundsByFileIndex)
         {
-            var list = entries.OrderBy(entry => entry.Key).ToList();
-            _keys = ImmutableList.ValueOf(list.Select(e => e.Key));
-            _startTimes = list.Select(e => (float) e.Value.StartTime).ToArray();
-            _endTimes = list.Select(e => (float)e.Value.EndTime).ToArray();
-            if (list.Any(entry=>!ExplicitPeakBounds.UNKNOWN_SCORE.Equals(entry.Value.Score)))
+            var list = peakBoundsByFileIndex.ToList();
+            while (list.Count > 0 && list[list.Count - 1] == null)
             {
-                _scores = list.Select(e => (float) e.Value.Score).ToArray();
+                list.RemoveAt(list.Count - 1);
             }
+            _positions = ReplicatePositions.FromCounts(list.Select(peakBounds => peakBounds == null ? 0 : 1));
+            var peakBoundsList = list.Where(peakBounds => peakBounds != null).ToList();
+            _startTimes = peakBoundsList.Select(peakBounds => (float) peakBounds.StartTime).ToArray();
+            _endTimes = peakBoundsList.Select(peakBounds => (float) peakBounds.EndTime).ToArray();
+            if (peakBoundsList.Any(peakBounds => !ExplicitPeakBounds.UNKNOWN_SCORE.Equals(peakBounds.Score)))
+            {
+                _scores = peakBoundsList.Select(peakBounds => (float) peakBounds.Score).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// One more than the highest file index which has boundaries. Indexing past this returns
+        /// null, the same as a file in range which has none.
+        /// </summary>
+        public int Count
+        {
+            get { return _positions.ReplicateCount; }
+        }
+
+        public bool IsEmpty
+        {
+            get { return _startTimes.Length == 0; }
+        }
+
+        /// <summary>
+        /// The boundaries in a file, or null if it has none. Indexes which are out of range
+        /// return null rather than throwing.
+        /// </summary>
+        public ExplicitPeakBounds this[int fileIndex]
+        {
+            get
+            {
+                if (_positions.GetCount(fileIndex) == 0)
+                {
+                    return null;
+                }
+
+                int index = _positions.GetStart(fileIndex);
+                return new ExplicitPeakBounds(_startTimes[index], _endTimes[index],
+                    _scores == null ? ExplicitPeakBounds.UNKNOWN_SCORE : _scores[index]);
+            }
+        }
+
+        public IEnumerator<ExplicitPeakBounds> GetEnumerator()
+        {
+            return Enumerable.Range(0, Count).Select(fileIndex => this[fileIndex]).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -114,92 +167,21 @@ namespace pwiz.Skyline.Model.Lib
             return GetEnumerator();
         }
 
-        public IEnumerator<KeyValuePair<TKey, ExplicitPeakBounds>> GetEnumerator()
+        public ExplicitPeakBoundsList Merge(IReadOnlyList<ExplicitPeakBounds> other)
         {
-            return Keys.Zip(Values, (k, v) => new KeyValuePair<TKey, ExplicitPeakBounds>(k, v)).GetEnumerator();
+            var count = Math.Max(Count, other.Count);
+            return new ExplicitPeakBoundsList(Enumerable.Range(0, count).Select(i => this[i] ?? other[i]));
         }
 
-        public int Count
+        public ExplicitPeakBoundsList ValueFromCache(ValueCache valueCache)
         {
-            get
-            {
-                return _keys.Count;
-            }
-        }
-
-        public bool ContainsKey(TKey key)
-        {
-            return IndexOfKey(key) >= 0;
-        }
-
-        public bool TryGetValue(TKey key, out ExplicitPeakBounds value)
-        {
-            int index = IndexOfKey(key);
-            if (index < 0)
-            {
-                value = null;
-                return false;
-            }
-
-            value = GetExplicitPeakBoundsAt(index);
-            return true;
-        }
-
-        public ExplicitPeakBounds this[TKey key]
-        {
-            get
-            {
-                if (TryGetValue(key, out var value))
-                {
-                    return value;
-                }
-
-                throw new KeyNotFoundException();
-            }
-        }
-
-        public KeyValuePair<TKey, ExplicitPeakBounds> this[int index]
-        {
-            get
-            {
-                return new KeyValuePair<TKey, ExplicitPeakBounds>(_keys[index], GetExplicitPeakBoundsAt(index));
-            }
-        }
-
-        public IEnumerable<TKey> Keys
-        {
-            get { return _keys; }
-        }
-
-        public IEnumerable<ExplicitPeakBounds> Values
-        {
-            get
-            {
-                return Enumerable.Range(0, Count).Select(GetExplicitPeakBoundsAt);
-            }
-        }
-
-        private int IndexOfKey(TKey key)
-        {
-            int i = CollectionUtil.BinarySearch(_keys, key);
-            return i < 0 ? -1 : i;
-        }
-
-        private ExplicitPeakBounds GetExplicitPeakBoundsAt(int index)
-        {
-            return new ExplicitPeakBounds(_startTimes[index], _endTimes[index],
-                _scores == null ? ExplicitPeakBounds.UNKNOWN_SCORE : _scores[index]);
-        }
-
-        public ExplicitPeakBoundsDict<TKey> ValueFromCache(ValueCache valueCache)
-        {
-            var newKeys = valueCache.CacheValue(_keys);
-            if (ReferenceEquals(newKeys, _keys))
+            var positions = valueCache.CacheValue(_positions);
+            if (ReferenceEquals(positions, _positions))
             {
                 return this;
             }
 
-            return ChangeProp(ImClone(this), im => im._keys = newKeys);
+            return ChangeProp(ImClone(this), im => im._positions = positions);
         }
     }
 }

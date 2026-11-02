@@ -20,10 +20,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
 using SharedBatch.Properties;
+using SharedBatchTest;
 using System.Text.RegularExpressions;
 
 namespace SkylineBatchTest
@@ -77,18 +79,33 @@ namespace SkylineBatchTest
 
         public static string GetTestFilePath(string fileName)
         {
-            var currentPath = Directory.GetCurrentDirectory();
-            if (File.Exists(Path.Combine(currentPath, "SkylineCmd.exe")))
-                currentPath = Path.Combine(currentPath, "..", "..", "..", "Executables", "SkylineBatch", "SkylineBatchTest");
-            else
-            {
-                currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
-            }
+            return Path.Combine(FindTestDataDir(), fileName);
+        }
 
-            var batchTestPath = Path.Combine(currentPath ?? string.Empty, "Test");
-            if (!Directory.Exists(batchTestPath))
-                throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
-            return Path.Combine(batchTestPath, fileName);
+        // The "Test" data folder lives in the SkylineBatchTest source dir. Walk up from the test
+        // assembly to find it: the number of intermediate output dirs differs between net472
+        // (bin\<config>) and net8 (bin\<config>\net8.0-windows), and when the tests run from a Skyline
+        // build dir the folder sits under Executables\SkylineBatch\SkylineBatchTest - so search for it
+        // (keyed on a known data file) rather than assuming a fixed depth.
+        private static string FindTestDataDir()
+        {
+            var dir = Path.GetDirectoryName(typeof(TestUtils).Assembly.Location) ?? Directory.GetCurrentDirectory();
+            while (dir != null)
+            {
+                foreach (var candidate in new[]
+                         {
+                             Path.Combine(dir, "Test"),
+                             Path.Combine(dir, "Executables", "SkylineBatch", "SkylineBatchTest", "Test")
+                         })
+                {
+                    if (Directory.Exists(candidate) && File.Exists(Path.Combine(candidate, "emptyTemplate.sky")))
+                        return candidate;
+                }
+                dir = Path.GetDirectoryName(dir);
+            }
+            throw new DirectoryNotFoundException(
+                "Unable to find the SkylineBatchTest 'Test' data directory above " +
+                (Path.GetDirectoryName(typeof(TestUtils).Assembly.Location) ?? Directory.GetCurrentDirectory()));
         }
 
         public static SkylineBatchConfig GetChangedConfig(SkylineBatchConfig baseConfig, Dictionary<string, object> changedVariables)
@@ -274,16 +291,16 @@ namespace SkylineBatchTest
         }
 
         /// <summary>
-        /// Creates a FileSaver for a temporary copy of a .bcfg file with all R version references
+        /// Creates a SimpleFileSaver for a temporary copy of a .bcfg file with all R version references
         /// replaced with the most recent installed R version.
-        /// The caller should dispose the FileSaver when done (auto-cleanup on dispose).
+        /// The caller should dispose the SimpleFileSaver when done (auto-cleanup on dispose).
         /// </summary>
-        public static FileSaver CreateBcfgWithCurrentRVersion(string originalBcfgPath)
+        public static SimpleFileSaver CreateBcfgWithCurrentRVersion(string originalBcfgPath)
         {
             // Create temp file in the same folder as the original
-            // In theory, this FileSaver would overwrite the original if it were ever committed,
+            // In theory, this SimpleFileSaver would overwrite the original if it were ever committed,
             // but it will never be committed.
-            var fileSaver = new FileSaver(originalBcfgPath);
+            var fileSaver = new SimpleFileSaver(originalBcfgPath);
             
             // Apply R version replacement using the general-purpose transform function
             CopyFileWithLineTransformAbsolute(originalBcfgPath, ReplaceRVersionWithCurrent, fileSaver.SafeName);
@@ -348,9 +365,15 @@ namespace SkylineBatchTest
             return configList;
         }
 
+        /// <summary>
+        /// The directory of a Skyline build in this checkout, for the tests that need a real
+        /// SkylineCmd.exe to point a configuration at. With no build at all, returns the default
+        /// Release location so the tests fail naming a path a developer would recognize.
+        /// </summary>
         public static string GetSkylineDir()
         {
-            return GetProjectDirectory("bin\\x64\\Release");
+            return ExtensionTestContext.GetSkylineBinDirectory()
+                   ?? GetProjectDirectory("bin\\Release\\net10.0-windows");
         }
 
         public static string GetProjectDirectory(string relativePath)

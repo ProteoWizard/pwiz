@@ -83,9 +83,9 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         _formulaBox.MonoMass = (_loss.MonoisotopicMass != 0 ?
-                            _loss.MonoisotopicMass : (double?)null);
+                            _loss.MonoisotopicMass : null);
                         _formulaBox.AverageMass = (_loss.AverageMass != 0 ?
-                            _loss.AverageMass : (double?)null);
+                            _loss.AverageMass : null);
                     }
                     Inclusion = _loss.Inclusion;
                     tbxCharge.Text = _loss.Charge.ToString();

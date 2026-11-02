@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Windows.Forms;
 using SharedBatch.Properties;
 
@@ -70,7 +69,7 @@ namespace SharedBatch
             else
             {
                 var saveFileDialog = _pathDialogOptions.Contains(PathDialogOptions.Save);
-                FileDialog dialog = saveFileDialog ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
+                FileDialog dialog = saveFileDialog ? new SaveFileDialog() : new OpenFileDialog();
                 dialog.CheckFileExists = !saveFileDialog && !_pathDialogOptions.Contains(PathDialogOptions.ExistingOptional);
                 dialog.Filter = _filter;
                 dialog.InitialDirectory = initialDirectory;

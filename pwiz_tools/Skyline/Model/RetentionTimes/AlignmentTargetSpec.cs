@@ -61,6 +61,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return ChangeProp(ImClone(this), im => im.Name = value);
         }
 
+        /// <summary>
+        /// Returns this spec with a target which names the library <paramref name="oldName"/> changed
+        /// to name <paramref name="newName"/> instead. Specs which target something else, or a
+        /// different library, are returned unchanged.
+        /// </summary>
+        public AlignmentTargetSpec ChangeLibraryName(string oldName, string newName)
+        {
+            if (Type != Library.Type || !Equals(Name, oldName) || Equals(oldName, newName))
+            {
+                return this;
+            }
+
+            return ChangeName(newName);
+        }
+
         [Track(defaultValues: typeof(DefaultValuesNull))]
         public string RegressionMethod { get; private set; }
 

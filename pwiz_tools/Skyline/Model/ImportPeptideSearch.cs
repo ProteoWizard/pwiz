@@ -167,6 +167,23 @@ namespace pwiz.Skyline.Model
                 stream.CloseStream();
         }
 
+        /// <summary>
+        /// Delete the document library so a search can write it afresh: the document's read streams
+        /// on it are closed and the cached <see cref="Library"/> is evicted from
+        /// <paramref name="libraryManager"/> first, since without both the delete fails or the next
+        /// load is served from the cache; then the .blib and its redundant library go.
+        /// </summary>
+        public static void DeleteDocumentLibrary(SrmDocument doc, LibraryManager libraryManager, string docBlibPath)
+        {
+            ClosePeptideSearchLibraryStreams(doc);
+            var docLibSpecs = doc.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .Where(s => s != null && s.IsDocumentLibrary).ToArray();
+            if (docLibSpecs.Length > 0)
+                libraryManager.ReleaseLibraries(docLibSpecs);
+            FileEx.SafeDelete(docBlibPath, true);
+            FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+        }
+
         public bool LoadPeptideSearchLibrary(LibraryManager libraryManager, LibrarySpec libSpec, IProgressMonitor monitor)
         {
             if (libSpec == null)
@@ -312,19 +329,35 @@ namespace pwiz.Skyline.Model
                 foreach (var dataFile in DocLib.LibraryFiles.FilePaths)
                 {
                     var msDataFilePath = new MsDataFilePath(dataFile);
-                    SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(msDataFilePath.GetFileNameWithoutExtension());
+                    var noExtName = msDataFilePath.GetFileNameWithoutExtension();
+
+                    // A caller may have pre-populated SpectrumSourceFiles (e.g. DiannSearchDlg
+                    // seeds the files it just searched). The pre-population key may not match
+                    // the blib's storage form — DIA-NN libraries store ".raw" filenames with
+                    // extension but ".mzML" filenames without — so accept either as a match.
+                    string lookupKey;
+                    if (SpectrumSourceFiles.ContainsKey(dataFile))
+                        lookupKey = dataFile;
+                    else if (SpectrumSourceFiles.ContainsKey(noExtName))
+                        lookupKey = noExtName;
+                    else
+                    {
+                        SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(noExtName);
+                        lookupKey = dataFile;
+                    }
 
                     // If a matching file is already in the document, then don't include
                     // this library spectrum source in the set of files to find.
                     if (measuredResults != null && measuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) != null)
                         continue;
 
-                    if (File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
+                    if (SpectrumSourceFiles[lookupKey].ExactMatch == null &&
+                        File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
                     {
                         // We've found the dataFile in the exact location
                         // specified in the document library, so just add it
                         // to the "FOUND" list.
-                        SpectrumSourceFiles[dataFile].ExactMatch = msDataFilePath.ToString();
+                        SpectrumSourceFiles[lookupKey].ExactMatch = msDataFilePath.ToString();
                     }
                 }
                 DocLib.ReadStream.CloseStream();
@@ -408,7 +441,7 @@ namespace pwiz.Skyline.Model
                     if (longWaitBroker != null && longWaitBroker.IsCanceled)
                         return;
 
-                    if (entry != null && DataSourceUtil.IsDataSource(entry))
+                    if (DataSourceUtil.IsDataSource(entry))
                         TryMatch(entry, overwrite);
                 }
             }
@@ -429,7 +462,7 @@ namespace pwiz.Skyline.Model
                 if (spectrumSourceFile == null || (!overwrite && SpectrumSourceFiles[spectrumSourceFile].HasMatches))
                     continue;
 
-                if (Path.GetFileName(spectrumSourceFile).Equals(Path.GetFileName(potentialMatch)))
+                if (string.Equals(Path.GetFileName(spectrumSourceFile), Path.GetFileName(potentialMatch), StringComparison.OrdinalIgnoreCase))
                 {
                     if (overwrite || !SpectrumSourceFiles[spectrumSourceFile].HasExactMatch)
                     {

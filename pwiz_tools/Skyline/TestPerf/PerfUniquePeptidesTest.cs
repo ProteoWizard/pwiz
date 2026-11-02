@@ -89,7 +89,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
-            scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb", true);
+            scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb",
+                verbose: false); // Set true to log the step-by-step progress used to chase down UniProt-related hangs
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -126,10 +127,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
+            // This test resolves protein metadata against the live UniProt, so it is among the first
+            // places a change there will be felt. Report one on the console, rather than leaving a
+            // reader of the log to wonder why the expected metadata moved.
+            UniprotApiVersionCheck.WarnIfChanged(AllowInternetAccess);
+
             // This perf test drives live web lookups against real servers. Opt into the give-up
             // seam so a slow or unresponsive service makes the test fail fast rather than hang;
             // normal Skyline use leaves the seam off and retries a timed-out lookup later.
-            RunUI(() => SkylineWindow.BackgroundProteomeManager.FastaImporter.GiveUpOnRepeatedTimeout = true);
+            RunUI(() => SkylineWindow.BackgroundProteomeManager.FastaImporter.GiveUpOnUnresponsiveWebService = true);
             runScenario(_cancellationCheckType,
                 (_initialBackgroundProteome == null) ? null : TestFilesDir.GetTestPath(_initialBackgroundProteome),
                 (_newBackgroundProteome == null) ? null : TestFilesDir.GetTestPath(_newBackgroundProteome));

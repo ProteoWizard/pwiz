@@ -305,19 +305,31 @@ namespace pwiz.Skyline.Model.Results
             {
                 string documentFilePath = _container.DocumentFilePath;
                 if (documentFilePath == null)
+                {
+                    _manager.LoaderTrace(@"chrom Load doc={0} -> no document path, nothing to do", _docCurrent);
                     return;
+                }
 
                 var results = _docCurrent.Settings.MeasuredResults;
                 if (results.IsLoaded)
+                {
+                    _manager.LoaderTrace(@"chrom Load doc={0} -> results already loaded", _docCurrent);
                     return;
+                }
 
                 Assume.IsNull(_loadMonitor);
                 _loadMonitor = new MultiFileLoadMonitor(_manager, _container, results) {HasUI = _manager.SupportAllGraphs};
+                // FinishLoad is a CALLBACK. results.Load returns once the work is handed off, so
+                // "Load returned" says nothing about whether the commit ever ran - which is the
+                // whole question when an import reaches 100% and the document stays unloaded.
+                _manager.LoaderTrace(@"chrom Load doc={0} -> handing off to MeasuredResults.Load", _docCurrent);
                 results.Load(_docCurrent, documentFilePath, _loadMonitor, _multiFileLoader, FinishLoad);
+                _manager.LoaderTrace(@"chrom Load doc={0} -> MeasuredResults.Load returned (FinishLoad may still be pending)", _docCurrent);
             }
 
             private void CancelLoad(MeasuredResults results)
             {
+                _manager.LoaderTrace(@"chrom CancelLoad doc={0} -> posting a cancelled status", _document);
                 _manager.CancelProgress();
                 _manager.EndProcessing(_document);
             }
@@ -341,6 +353,12 @@ namespace pwiz.Skyline.Model.Results
                         {
                             throw;
                         }
+                        // Terminal line, and the trace is useless without it: swallowing this into
+                        // an error status and returning would leave the trace showing the hand-off
+                        // followed by silence - identical to the callback never running at all,
+                        // which is the one distinction the trace exists to make.
+                        _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> THREW, converted to an error status: " + ex.GetType().Name,
+                            _document);
                         foreach (var chromatogramStatus in _multiFileLoader.Status.ProgressList)
                         {
                             _multiFileLoader.ChangeStatus((ChromatogramLoadingStatus)chromatogramStatus.ChangeErrorException(ex));
@@ -356,24 +374,31 @@ namespace pwiz.Skyline.Model.Results
                 if (resultsLoad == null)
                 {
                     // Loading was cancelled
+                    _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> resultsLoad null, load was cancelled", _document);
                     _manager.EndProcessing(_document);
                     return;
                 }
 
+                int iteration = 0;
                 SrmDocument docNew, docCurrent;
                 do
                 {
+                    iteration++;
                     docCurrent = _container.Document;
+                    _manager.LoaderTrace(@"chrom FinishLoad doc={0} against current={1}, iteration {2}",
+                        _document, docCurrent, iteration);
                     var results = docCurrent.Settings.MeasuredResults;
                     // If current document has no results, then cancel
                     if (results == null)
                     {
+                        _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> current has NO results, cancelling", _document);
                         CancelLoad(resultsLoad);
                         return;
                     }
                     else if (results.IsLoaded)
                     {
                         // No need to continue
+                        _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> current already loaded, nothing to commit", _document);
                         _manager.EndProcessing(_document);
                         return;
                     }
@@ -409,6 +434,7 @@ namespace pwiz.Skyline.Model.Results
                         catch (OperationCanceledException)
                         {
                             // Restart the processing form the top
+                            _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> settings change cancelled, retrying", _document);
                             docNew = null;
                         }
                     }
@@ -417,6 +443,8 @@ namespace pwiz.Skyline.Model.Results
                     _manager.WaitIfProgressFrozen();
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
+
+                _manager.LoaderTrace(@"chrom FinishLoad doc={0} -> COMMITTED after {2} iteration(s)", _document, null, iteration);
             }
         }
 

@@ -27,7 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Controls;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
@@ -210,6 +210,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _spectrum;
         private NodeTip _toolTip;
+        private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        // Identity of the precursor whose pinned rulers _pinnedSeriesKeys currently holds.
+        // Used to preserve pins across graph redraws (e.g. annotation-toggle context menu
+        // clicks) and only reset them when the user navigates to a different precursor.
+        private object _lastPrecursorId;
+        private bool _contextMenuOpen;
                 
         private string _userSelectedSpectrum;
         private SpectrumDisplayInfo _mirrorSpectrum;
@@ -228,6 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMove += GraphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
@@ -786,60 +793,32 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (!Settings.PeptideSettings.Libraries.HasLibraries || !Settings.PeptideSettings.Libraries.IsLoaded)
                         return null;
 
-                    var spectra = new List<SpectrumDisplayInfo>(Settings
-                        .GetBestSpectra(LookupTarget, DocNode.PrecursorAdduct, LookupMods)
-                        .Select(s => new SpectrumDisplayInfo(s, DocNode)));
+                    if (Peptide.IsCustomMolecule)
+                        return _spectra = GetExactPrecursorSpectra();
+
+                    // All charges and label types of a peptide are evidence for each of its precursors,
+                    // so list the spectra of all of them, the exact precursor first
+                    var libraryPrecursors = Settings.GetLibraryPrecursors(LookupTarget, LookupMods, DocNode.PrecursorAdduct, true)
+                        .OrderBy(p => p.IsPrecursor(DocNode) ? 0 : 1)
+                        .ThenBy(p => p.Adduct.AdductCharge == DocNode.PrecursorCharge ? 0 : 1)
+                        .ThenBy(p => p.Adduct.AdductCharge)
+                        .ToList();
+                    var libraries = Settings.PeptideSettings.Libraries;
+                    var spectra = new List<SpectrumDisplayInfo>(libraryPrecursors.SelectMany(p =>
+                        libraries.GetSpectra(p.Key, p.LabelType, true)
+                            .Select(s => new SpectrumDisplayInfo(s, DocNode, null, p.Adduct))));
 
                     // Showing redundant spectra is only supported for full-scan filtering when
                     // the document has results files imported.
-                    if ((Settings.TransitionSettings.FullScan.IsEnabled || Settings.PeptideSettings.Libraries.HasMidasLibrary) && Settings.HasResults)
+                    if (IsShowingRedundantSpectra)
                     {
                         try
                         {
-                            var spectraRedundant = new List<SpectrumDisplayInfo>();
-                            var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                            foreach (var spectrumInfo in Settings.GetRedundantSpectra(Peptide, LookupTarget, DocNode.PrecursorAdduct, DocNode.LabelType, LookupMods))
+                            foreach (var precursor in libraryPrecursors)
                             {
-                                var matchingFile = Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
-                                if (matchingFile == null)
-                                    continue;
-
-                                var replicateName = matchingFile.Chromatograms.Name;
-                                spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo, DocNode, replicateName,
-                                    matchingFile.FilePath, matchingFile.FileOrder, spectrumInfo.RetentionTime, false));
-
-                                // Include the best spectrum twice, once displayed in the normal
-                                // way and once displayed with its replicate and retention time.
-                                if (spectrumInfo.IsBest)
-                                {
-                                    var iBest = spectra.IndexOf(s =>
-                                        Equals(s.Name, spectrumInfo.Name) &&
-                                        Equals(s.LabelType, spectrumInfo.LabelType));
-                                    if (iBest != -1)
-                                    {
-                                        spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo, DocNode,
-                                            replicateName, matchingFile.FilePath, 0, spectrumInfo.RetentionTime, true);
-                                    }
-                                }
-
-                                if (!dictReplicateNameFiles.TryGetValue(replicateName, out var setFiles))
-                                {
-                                    setFiles = new HashSet<string>();
-                                    dictReplicateNameFiles.Add(replicateName, setFiles);
-                                }
-
-                                setFiles.Add(spectrumInfo.FilePath);
+                                AddRedundantSpectra(spectra, libraries.GetSpectra(precursor.Key, precursor.LabelType, false),
+                                    precursor.Adduct);
                             }
-
-                            // Determine if replicate name is sufficient to uniquely identify the file
-                            foreach (var spectrumInfo in spectraRedundant)
-                            {
-                                var replicateName = spectrumInfo.ReplicateName;
-                                if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
-                                    spectrumInfo.IsReplicateUnique = true;
-                            }
-                            spectraRedundant.Sort();
-                            spectra.AddRange(spectraRedundant);
                         }
                         catch (Exception)
                         {
@@ -850,6 +829,88 @@ namespace pwiz.Skyline.Controls.Graphs
                     _spectra = ImmutableList<SpectrumDisplayInfo>.ValueOf(spectra);
                     return _spectra;
                 }
+            }
+
+            private bool IsShowingRedundantSpectra
+            {
+                get
+                {
+                    return (Settings.TransitionSettings.FullScan.IsEnabled || Settings.PeptideSettings.Libraries.HasMidasLibrary) &&
+                           Settings.HasResults;
+                }
+            }
+
+            private ImmutableList<SpectrumDisplayInfo> GetExactPrecursorSpectra()
+            {
+                var spectra = new List<SpectrumDisplayInfo>(Settings
+                    .GetBestSpectra(LookupTarget, DocNode.PrecursorAdduct, LookupMods)
+                    .Select(s => new SpectrumDisplayInfo(s, DocNode)));
+                if (IsShowingRedundantSpectra)
+                {
+                    try
+                    {
+                        AddRedundantSpectra(spectra, Settings.GetRedundantSpectra(Peptide, LookupTarget,
+                            DocNode.PrecursorAdduct, DocNode.LabelType, LookupMods), DocNode.PrecursorAdduct);
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                }
+                return ImmutableList<SpectrumDisplayInfo>.ValueOf(spectra);
+            }
+
+            /// <summary>
+            /// Adds the spectra of one library precursor in each replicate, sorted by file and time.
+            /// </summary>
+            private void AddRedundantSpectra(List<SpectrumDisplayInfo> spectra, IEnumerable<SpectrumInfoLibrary> spectrumInfos, Adduct adduct)
+            {
+                var spectraRedundant = new List<SpectrumDisplayInfo>();
+                var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
+                foreach (var spectrumInfo in spectrumInfos)
+                {
+                    var matchingFile = Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
+                    if (matchingFile == null)
+                        continue;
+
+                    var replicateName = matchingFile.Chromatograms.Name;
+                    spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo, DocNode, replicateName,
+                        matchingFile.FilePath, matchingFile.FileOrder, spectrumInfo.RetentionTime, false, adduct));
+
+                    // Include the best spectrum twice, once displayed in the normal
+                    // way and once displayed with its replicate and retention time.
+                    if (spectrumInfo.IsBest)
+                    {
+                        var iBest = spectra.IndexOf(s =>
+                            s.IsBest &&
+                            Equals(s.Name, spectrumInfo.Name) &&
+                            Equals(s.LabelType, spectrumInfo.LabelType) &&
+                            s.Adduct.AdductCharge == adduct.AdductCharge);
+                        if (iBest != -1)
+                        {
+                            spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo, DocNode,
+                                replicateName, matchingFile.FilePath, 0, spectrumInfo.RetentionTime, true, adduct);
+                        }
+                    }
+
+                    if (!dictReplicateNameFiles.TryGetValue(replicateName, out var setFiles))
+                    {
+                        setFiles = new HashSet<string>();
+                        dictReplicateNameFiles.Add(replicateName, setFiles);
+                    }
+
+                    setFiles.Add(spectrumInfo.FilePath);
+                }
+
+                // Determine if replicate name is sufficient to uniquely identify the file
+                foreach (var spectrumInfo in spectraRedundant)
+                {
+                    var replicateName = spectrumInfo.ReplicateName;
+                    if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
+                        spectrumInfo.IsReplicateUnique = true;
+                }
+                spectraRedundant.Sort();
+                spectra.AddRange(spectraRedundant);
             }
 
             public bool TryGetKoinaSpectrum(IsotopeLabelType labelType, int nce, out SpectrumDisplayInfo spectrum)
@@ -945,7 +1006,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var precursor = selection.NodeTranGroup ?? SelectedPrecursor.DocNode;
                 var koinaRequest = new KoinaHelpers.KoinaRequest(
                     settings, selection.GetPeptide(precursor), precursor, labelType, nce,
-                    () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
+                    () => ControlUtil.SafeBeginInvoke(this, () => UpdateUI()));
 
                 if (_koinaRequest == null || !_koinaRequest.Equals(koinaRequest))
                 {
@@ -977,6 +1038,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
         {
             var precursor = selection.NodeTranGroup ?? SelectedPrecursor.DocNode;
+            // Reset pinned rulers whenever the user navigates to a different precursor.
+            // Same pattern used by GraphFullScan and ViewLibraryDlg. Idempotent for the
+            // mirror-spectrum call right after main, since both share the same selection.
+            if (!Equals(_lastPrecursorId, precursor.Id))
+            {
+                _pinnedSeriesKeys.Clear();
+                _lastPrecursorId = precursor.Id;
+            }
             var peptide = selection.GetPeptide(precursor);
 
             var group = precursor.TransitionGroup;
@@ -1035,6 +1104,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             return new SpectrumGraphItem(peptide, precursor, selection.NodeTran, spectrumInfoR, spectrum.Name)
             {
+                SpectrumLabelType = spectrum.LabelType,
+                SpectrumAdduct = spectrum.Adduct,
                 ShowTypes = types,
                 ShowCharges = charges,
                 ShowLosses = losses,
@@ -1044,7 +1115,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowMassError = Settings.Default.ShowFullScanMassError,
                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                 FontSize = Settings.Default.SpectrumFontSize,
-                LineWidth = Settings.Default.SpectrumLineWidth
+                LineWidth = Settings.Default.SpectrumLineWidth,
+                SrmSettings = settings
             };
         }
 
@@ -1178,6 +1250,9 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.GraphObjList.Clear();
             GraphItem = null;
             AllowDisplayTip = false;
+            // Don't clear _pinnedSeriesKeys here — annotation-toggle context-menu commands
+            // also rebuild the graph and the user's pinned rulers should survive. The
+            // pinned list is reset only when MakeGraphItem detects a new precursor.
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane, Settings.Default.SpectrumFontSize);
@@ -1383,6 +1458,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (spectrum != null)
                     {
                         GraphItem = MakeGraphItem(spectrum, selection, settings);
+                        // Re-apply pinned rulers to the freshly-built item so they survive
+                        // annotation-toggle redraws on the same precursor.
+                        SyncPinnedSeriesToGraphItems();
                         AllowDisplayTip = true;
                     }
 
@@ -1420,6 +1498,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                 : mirrorSpectrum.SpectrumPeaksInfo;
                             MirrorGraphItem = MakeGraphItem(mirrorSpectrum, selection, settings, peaksInfo);
                             MirrorGraphItem.Invert = true;
+                            // Only the top item renders the ruler ladder; cross-link the
+                            // mirror so its matched peaks can extend the drop-line lookup.
+                            if (GraphItem != null)
+                                GraphItem.MirrorItem = MirrorGraphItem;
 
                             _graphHelper.AddSpectrum(MirrorGraphItem, false);
 
@@ -1690,6 +1772,22 @@ namespace pwiz.Skyline.Controls.Graphs
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildSpectrumMenu(IsNotSmallMolecule, sender, menuStrip);
+
+            // Rulers don't apply to small molecules / crosslinks — offer no ruler items.
+            if (GraphItem?.RulersApplicable != true)
+                return;
+
+            SpectrumGraphItem.AddRulerMenuItems(
+                menuStrip,
+                GraphItem?.HoveredSeriesKey,
+                _pinnedSeriesKeys,
+                graphControl,
+                open => _contextMenuOpen = open,
+                () => UpdateHoveredPeak(null),
+                ToggleRulersEnabled,
+                PinRuler,
+                UnpinRuler,
+                UnpinAllRulers);
         }
 
         public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
@@ -1727,10 +1825,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 Settings.Default.ViewLibraryPropertiesSorted = true;
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _updateManager.Dispose();
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnFormClosed(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -1864,6 +1963,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            UpdateHoveredPeak(peakRmi);
+
             if (peakRmi != null)
             {
                 if (_toolTip == null)
@@ -1871,9 +1972,92 @@ namespace pwiz.Skyline.Controls.Graphs
                 _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi), new Rectangle(e.Location, new Size()), e.Location);
                 return;
             }
+            // No Invalidate here: UpdateHoveredPeak above already invalidates when the
+            // ruler series actually changes, and hiding the tooltip popup doesn't need a
+            // graph repaint.
             _toolTip?.HideTip();
             _toolTip = null;
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            // No hover ruler when the feature is disabled, or for small molecules / crosslinks.
+            if (!SpectrumGraphItem.RulersEnabled || (GraphItem != null && !GraphItem.RulersApplicable))
+                peakRmi = null;
+
+            var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
+
+            // Only redraw when the hovered ion series actually changes.
+            // Stable comparison prevents a repaint loop: Invalidate → drawLabels rebuilds
+            // TextObjs → FindNearestObject may miss the label for one frame → null key →
+            // Invalidate → … (PointInBox=false breaks this, but the guard still avoids noise).
+            if (Equals(newKey, GraphItem?.HoveredSeriesKey))
+                return;
+
+            // Only the top item owns the ruler — the mirror item shares matched-peak data
+            // via GraphItem.MirrorItem and does not render its own ladder.
+            if (GraphItem != null)
+                GraphItem.HoveredSeriesKey = newKey;
+
             graphControl.Invalidate();
+        }
+
+        // Pins the ruler for a single ion series (the body of the "Pin Ruler" menu command).
+        private void PinRuler(IonSeriesKey key)
+        {
+            if (_pinnedSeriesKeys.Contains(key))
+                return;
+            _pinnedSeriesKeys.Add(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinRuler(IonSeriesKey key)
+        {
+            _pinnedSeriesKeys.Remove(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinAllRulers()
+        {
+            _pinnedSeriesKeys.Clear();
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        // Flips the global ruler on/off preference (the Enable/Disable menu command).
+        // Turning the feature off clears this host's pinned rulers so they don't reappear
+        // when it is turned back on. Public so the functional test can drive the same path
+        // the context-menu item invokes.
+        public void ToggleRulersEnabled()
+        {
+            SpectrumGraphItem.RulersEnabled = !SpectrumGraphItem.RulersEnabled;
+            if (!SpectrumGraphItem.RulersEnabled)
+                UnpinAllRulers();
+            UpdateHoveredPeak(null);
+            graphControl.Invalidate();
+        }
+
+        private void SyncPinnedSeriesToGraphItems()
+        {
+            // Only the top item owns the ruler — pinned keys live on GraphItem; the mirror
+            // contributes matched-peak data via GraphItem.MirrorItem.
+            if (GraphItem != null)
+                GraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+        }
+
+        // The sequence ruler is driven by mouse-over and context-menu commands, neither of
+        // which a functional test can synthesize. These public seams invoke the same code
+        // paths so SpectrumSequenceRulerTest can verify hover resolution and pin/unpin
+        // without a physical mouse. See ai/todos TODO-20260416_spectrumSequenceRuler.
+        public SpectrumGraphItem RulerGraphItem => GraphItem;
+        public void HoverRulerPeak(LibraryRankedSpectrumInfo.RankedMI peak) => UpdateHoveredPeak(peak);
+        public void PinHoveredRuler()
+        {
+            var key = GraphItem?.HoveredSeriesKey;
+            if (key.HasValue)
+                PinRuler(key.Value);
         }
 
         public void GraphControl_MouseMove(object sender, MouseEventArgs e)

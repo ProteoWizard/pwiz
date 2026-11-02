@@ -30,75 +30,127 @@ using pwiz.Osprey.IO;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Loads the per-file CWT candidate lists the Stage 6 reconciliation planner
+    /// Streams the per-file CWT candidate lists the Stage 6 reconciliation planner
     /// indexes by <see cref="FdrEntry.ParquetIndex"/> (mirrors Rust
-    /// reconciliation.rs:672). For each file it reads the stored Stage-4 CWT rows
-    /// from the parquet cache and validates that every post-compaction stub's
-    /// ParquetIndex falls within the loaded row count; a file whose parquet is
-    /// missing, fails to load, or has an out-of-range max index is omitted (with a
-    /// warning), which the caller treats as "no reconciliation planning for this
-    /// file".
-    ///
-    /// Extracted verbatim from <c>FirstJoinTask.PlanStage6</c> as pure code motion
-    /// so the planning block reads as a sequencer; behavior is unchanged.
+    /// reconciliation.rs:672). <see cref="ValidateFileInRange"/> confirms up front --
+    /// via a footer-only metadata probe, nothing held resident -- that every
+    /// post-compaction stub's ParquetIndex is in range of its file's parquet row
+    /// count (the reconciliation all-or-nothing gate); the planner then pulls each
+    /// file's candidates on demand through <see cref="LoadOneFile"/> and releases
+    /// them before the next file. This replaces the former eager <c>Load</c> that
+    /// decoded and held EVERY file's candidate lists at once -- the all-runs buffer
+    /// that OOM'd the 82-file Stage-6 planning phase on a 64 GB box. A file whose
+    /// parquet is missing, fails to decode, or has an out-of-range max index ABORTS the
+    /// run (fail-fast) with a clear error naming the file to delete + regenerate: a
+    /// corrupt Stage-4 output must stop the pipeline, never silently produce partial or
+    /// feature-degraded reconciliation. Byte-identical on valid inputs.
     /// </summary>
     internal static class CwtCandidateLoader
     {
         /// <summary>
-        /// Load and bounds-validate the per-file CWT candidate lists. Returns the
-        /// map keyed by file name; only files that loaded cleanly and passed the
-        /// ParquetIndex bounds check are present. Logging is via
-        /// <paramref name="logWarning"/> so this can run without a live context.
+        /// Fail-fast validation via a footer-only metadata probe, decoding no CWT blobs and
+        /// holding nothing resident: probe ONE file and append a
+        /// description to <paramref name="invalid"/> if it is missing, unreadable, or has a
+        /// stub whose <see cref="FdrEntry.ParquetIndex"/> is out of range. Nothing is thrown
+        /// here - the caller collects every offending file first and then calls
+        /// <see cref="ThrowIfAnyInvalid"/>, so one corrupt parquet does not hide the others.
+        ///
+        /// <para>Split out so a caller that already walks the files one at a time can validate
+        /// as it goes, instead of needing every file's stubs resident to validate them
+        /// together.</para>
         /// </summary>
-        internal static Dictionary<string, IReadOnlyList<IReadOnlyList<CwtCandidate>>> Load(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+        internal static void ValidateFileInRange(
+            string fileName,
+            IReadOnlyList<FdrEntry> entries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            Action<string> logWarning)
+            List<string> invalid)
         {
-            var perFileCwtCandidates =
-                new Dictionary<string, IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
-            foreach (var kvp in perFileEntries)
+            if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
+                !File.Exists(parquetPath))
             {
-                if (perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
-                    File.Exists(parquetPath))
-                {
-                    try
-                    {
-                        var cwtRows = ParquetScoreCache
-                            .LoadCwtCandidatesFromParquet(parquetPath);
-                        // The planner indexes CWT lists by
-                        // entry.ParquetIndex (mirrors Rust at
-                        // reconciliation.rs:672). cwtRows.Count is
-                        // the parquet's raw Stage-4 row count;
-                        // kvp.Value.Count is the post-first-pass-
-                        // compaction stub count. They are not
-                        // equal by design — what we actually need
-                        // to validate is that every stub's
-                        // ParquetIndex falls within cwtRows.
-                        uint maxIdx = MaxParquetIndex(kvp.Value);
-                        if (kvp.Value.Count > 0 && maxIdx >= cwtRows.Count)
-                        {
-                            logWarning(string.Format(
-                                @"CWT candidate row count out of range for {0}: " +
-                                @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
-                                @"skipping reconciliation planning for this file",
-                                kvp.Key, maxIdx, cwtRows.Count));
-                            continue;
-                        }
-                        var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
-                        foreach (var row in cwtRows)
-                            converted.Add(row);
-                        perFileCwtCandidates[kvp.Key] = converted;
-                    }
-                    catch (Exception ex)
-                    {
-                        logWarning(string.Format(
-                            @"Failed to load CWT candidates for {0}: {1}",
-                            kvp.Key, ex.Message));
-                    }
-                }
+                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_, fileName,
+                    ParquetScoreCache.EXT_SCORES));
+                return;
             }
-            return perFileCwtCandidates;
+
+            long effectiveRowCount;
+            try
+            {
+                var probe = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath);
+                // LoadCwtCandidatesFromParquet yields an empty list (count 0) when
+                // the cwt_candidates column is absent, so a file lacking it reads as
+                // zero rows here -- and thus fails the in-range check below.
+                effectiveRowCount = probe.HasCwtCandidatesField ? probe.RowCount : 0L;
+            }
+            catch (Exception ex)
+            {
+                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__, fileName, ex.Message));
+                return;
+            }
+
+            // The planner indexes CWT lists by entry.ParquetIndex (mirrors Rust at
+            // reconciliation.rs:672). effectiveRowCount is the parquet's raw Stage-4
+            // row count; the stub count is the post-compaction one -- unequal by design.
+            // What must hold is that every stub's ParquetIndex is in range.
+            uint maxIdx = MaxParquetIndex(entries);
+            if (entries.Count > 0 && maxIdx >= effectiveRowCount)
+            {
+                invalid.Add(string.Format(
+                    OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_,
+                    fileName, maxIdx, effectiveRowCount, ParquetScoreCache.EXT_SCORES));
+            }
+        }
+
+        /// <summary>
+        /// Throw naming every file <see cref="ValidateFileInRange"/> rejected, or return when
+        /// none was. A corrupt Stage-4 output stops the run before Stage 6 rather than
+        /// silently reconciling only the good files.
+        /// </summary>
+        internal static void ThrowIfAnyInvalid(List<string> invalid, int fileCount)
+        {
+            if (invalid.Count == 0)
+                return;
+            throw new InvalidDataException(string.Format(
+                OspreyTasksResources.CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__,
+                invalid.Count, fileCount, string.Join(@"; ", invalid), ParquetScoreCache.EXT_SCORES));
+        }
+
+        /// <summary>
+        /// Load and convert ONE file's CWT candidate lists (indexed by
+        /// <see cref="FdrEntry.ParquetIndex"/>) for the planner to consume and release
+        /// before moving to the next file -- the streaming replacement for the former
+        /// eager all-files load. THROWS <see cref="InvalidDataException"/> if the parquet
+        /// is missing or its CWT blob column fails to decode (a corrupt Stage-4 output),
+        /// so the run fails fast rather than silently reconciling with this file's peaks
+        /// kept. The cheap missing / out-of-range cases are already caught up front by
+        /// <see cref="ValidateFileInRange"/>; this catches a footer-clean-but-corrupt blob.
+        /// </summary>
+        internal static IReadOnlyList<IReadOnlyList<CwtCandidate>> LoadOneFile(
+            string fileName,
+            IReadOnlyDictionary<string, string> perFileParquetPaths)
+        {
+            if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
+                !File.Exists(parquetPath))
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_, fileName,
+                    ParquetScoreCache.EXT_SCORES));
+            }
+
+            try
+            {
+                var cwtRows = ParquetScoreCache.LoadCwtCandidatesFromParquet(parquetPath);
+                var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
+                foreach (var row in cwtRows)
+                    converted.Add(row);
+                return converted;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__,
+                    parquetPath, ex.Message, ParquetScoreCache.EXT_SCORES));
+            }
         }
 
         /// <summary>
@@ -111,8 +163,8 @@ namespace pwiz.Osprey.Tasks
             uint maxIdx = 0;
             foreach (var entry in entries)
             {
-                if (entry.ParquetIndex > maxIdx)
-                    maxIdx = entry.ParquetIndex;
+                if (entry.ParquetIndex.HasValue && entry.ParquetIndex.Value > maxIdx)
+                    maxIdx = entry.ParquetIndex.Value;
             }
             return maxIdx;
         }

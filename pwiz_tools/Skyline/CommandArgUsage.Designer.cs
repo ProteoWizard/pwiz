@@ -286,6 +286,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Runs the command line in the specified language and number and date formats, regardless of the operating system settings. Numbers in the arguments that follow must then use that culture&apos;s decimal separator. Because arguments are processed in the order given, this must come before the arguments it affects..
+        /// </summary>
+        public static string _culture {
+            get {
+                return ResourceManager.GetString("_culture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add decoys to a template document for reintegrate model generation with mProphet. (decoy generation method is optional and defaults to “reverse”).
         /// </summary>
         public static string _decoys_add {
@@ -1866,6 +1875,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reorder results replicates using a UTF-8 text file containing one existing replicate name per line. Listed replicates are placed first; unlisted replicates retain their relative order..
+        /// </summary>
+        public static string _reorder_replicates {
+            get {
+                return ResourceManager.GetString("_reorder_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add reports from a saved report template file to the running program..
         /// </summary>
         public static string _report_add {
@@ -2573,11 +2591,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Removing results replicates.
+        ///   Looks up a localized string similar to Managing results replicates.
         /// </summary>
-        public static string CommandArgs_GROUP_REMOVE_Removing_results_replicates {
+        public static string CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates {
             get {
-                return ResourceManager.GetString("CommandArgs_GROUP_REMOVE_Removing_results_replicates", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_GROUP_MANAGE_REPLICATES_Managing_results_replicates", resourceCulture);
             }
         }
         

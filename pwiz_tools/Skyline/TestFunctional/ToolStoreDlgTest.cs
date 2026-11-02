@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestFunctional
                 return tools;
             foreach (var toolDir in _toolDir.GetFiles())
             {
-                if (toolDir == null || string.IsNullOrEmpty(toolDir.DirectoryName))
+                if (string.IsNullOrEmpty(toolDir.DirectoryName))
                     continue;
 
                 string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);

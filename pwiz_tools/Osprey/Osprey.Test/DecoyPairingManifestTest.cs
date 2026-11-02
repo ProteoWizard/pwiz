@@ -23,6 +23,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -313,6 +314,74 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void ManifestNeverPairsADecoyAsTheTargetSide()
+        {
+            // Carafe can merge a decoy with an identical real target into one row whose
+            // ProteinID starts "decoy_" (SEA-AD 07-27 library: AQLKDTR, "decoy_...LZTR1...;
+            // sp|Q9Y250|LZTS1"). The prefix marker makes it a decoy, but the manifest lists
+            // AQLKDTR as the TARGET of pair 5, so pairing its reversed decoy TDKLQAR to it
+            // copied an id that already carried the decoy bit: two decoys, one entry_id.
+            // At 82 files first-pass FDR then aborts on the experiment-scope check.
+            string path = WriteManifest(new[]
+            {
+                @"AQLKDTR	No	protT	target	5",
+                @"TDKLQAR	Yes	decoy_protT	decoy	5",
+            });
+            try
+            {
+                var m = DecoyPairingManifest.FromTsv(path);
+                var lib = new List<LibraryEntry>
+                {
+                    MakeEntry(10, @"AQLKDTR", 2, true),
+                    MakeEntry(11, @"TDKLQAR", 2, true),
+                };
+                // As LibraryDecoyMarker leaves prefix-marked decoys.
+                lib[0].Id |= LibraryEntry.DECOY_ID_BIT;
+                lib[1].Id |= LibraryEntry.DECOY_ID_BIT;
+
+                var state = new PairingState();
+                var stats = m.ApplyToLibrary(lib, state);
+
+                Assert.AreNotEqual(lib[0].Id, lib[1].Id, @"two decoys must not share an entry_id");
+                Assert.AreEqual(0, stats.NPaired, @"a decoy is not a target to pair against");
+                Assert.AreEqual(10u, lib[0].Id & 0x7FFFFFFFu);
+                Assert.AreEqual(11u, lib[1].Id & 0x7FFFFFFFu);
+                // The disagreement is reported, which the loader turns into an error listing it.
+                CollectionAssert.AreEqual(new[] { 0 }, stats.DecoysListedAsTargets);
+                Assert.AreEqual(0, LibraryDecoyPairing.FindSharedDecoyIds(lib).Count);
+
+                // The backstop finds the state the old pairing produced, so any other route to it
+                // fails at load rather than in first-pass FDR - and reports every group whole.
+                lib[1].Id = lib[0].Id;
+                lib.Add(MakeEntry(12, @"LQKDTAR", 2, true));
+                lib[2].Id = lib[0].Id;
+                lib.Add(MakeEntry(13, @"TARGETK", 2, false));
+                lib[3].Id = lib[0].Id & 0x7FFFFFFFu;
+                var shared = LibraryDecoyPairing.FindSharedDecoyIds(lib);
+                Assert.AreEqual(1, shared.Count, @"one id shared, reported once");
+                CollectionAssert.AreEqual(new[] { 0, 1, 2 }, shared[0], @"targets are not decoys");
+
+                // Several groups come back ordered by first member, as Rust reports them:
+                // interleaved ids A, B, B, A give [0, 3] before [1, 2].
+                var interleaved = new List<LibraryEntry>
+                {
+                    MakeEntry(20, @"PEPA", 2, true), MakeEntry(21, @"PEPB", 2, true),
+                    MakeEntry(22, @"PEPC", 2, true), MakeEntry(23, @"PEPD", 2, true),
+                };
+                interleaved[0].Id = interleaved[3].Id = 20u | LibraryEntry.DECOY_ID_BIT;
+                interleaved[1].Id = interleaved[2].Id = 21u | LibraryEntry.DECOY_ID_BIT;
+                var groups = LibraryDecoyPairing.FindSharedDecoyIds(interleaved);
+                Assert.AreEqual(2, groups.Count);
+                CollectionAssert.AreEqual(new[] { 0, 3 }, groups[0]);
+                CollectionAssert.AreEqual(new[] { 1, 2 }, groups[1]);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
         public void ManifestReplacesProteinIdsWithCleanAccessions()
         {
             // Cross-impl port of Rust `manifest_replaces_protein_ids_with_clean_accessions`
@@ -330,9 +399,9 @@ namespace pwiz.Osprey.Test
             {
                 var m = DecoyPairingManifest.FromTsv(path);
                 var libEntry1 = MakeEntry(1, @"PEPTIDE", 2, false);
-                libEntry1.ProteinIds.Add(@"sp|P12345_pep00001|GENE_A");
+                libEntry1.ProteinIds = new[] { @"sp|P12345_pep00001|GENE_A" };
                 var libEntry2 = MakeEntry(2, @"AEPTPID", 2, false);
-                libEntry2.ProteinIds.Add(@"decoy_sp|P12345_pep00001|GENE_A");
+                libEntry2.ProteinIds = new[] { @"decoy_sp|P12345_pep00001|GENE_A" };
                 var lib = new List<LibraryEntry> { libEntry1, libEntry2 };
 
                 var state = new PairingState();
@@ -342,10 +411,10 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(2, stats.NProteinsReplaced);
                 CollectionAssert.AreEqual(
                     new[] { @"sp|P12345|GENE_A", @"sp|Q67890|GENE_B" },
-                    libEntry1.ProteinIds);
+                    libEntry1.ProteinIds.ToArray());
                 CollectionAssert.AreEqual(
                     new[] { @"decoy_sp|P12345|GENE_A", @"decoy_sp|Q67890|GENE_B" },
-                    libEntry2.ProteinIds);
+                    libEntry2.ProteinIds.ToArray());
             }
             finally
             {
@@ -367,17 +436,17 @@ namespace pwiz.Osprey.Test
             {
                 var m = DecoyPairingManifest.FromTsv(path);
                 var libEntry1 = MakeEntry(1, @"PEPTIDE", 2, false);
-                libEntry1.ProteinIds.Add(@"sp|original|FROM_LIB");
+                libEntry1.ProteinIds = new[] { @"sp|original|FROM_LIB" };
                 var libEntry2 = MakeEntry(2, @"AEPTPID", 2, false);
-                libEntry2.ProteinIds.Add(@"sp|orig_decoy|FROM_LIB");
+                libEntry2.ProteinIds = new[] { @"sp|orig_decoy|FROM_LIB" };
                 var lib = new List<LibraryEntry> { libEntry1, libEntry2 };
                 var state = new PairingState();
                 var stats = m.ApplyToLibrary(lib, state);
                 Assert.AreEqual(0, stats.NProteinsReplaced);
                 CollectionAssert.AreEqual(
-                    new[] { @"sp|original|FROM_LIB" }, libEntry1.ProteinIds);
+                    new[] { @"sp|original|FROM_LIB" }, libEntry1.ProteinIds.ToArray());
                 CollectionAssert.AreEqual(
-                    new[] { @"sp|orig_decoy|FROM_LIB" }, libEntry2.ProteinIds);
+                    new[] { @"sp|orig_decoy|FROM_LIB" }, libEntry2.ProteinIds.ToArray());
                 // The second manifest row classifies AEPTPID as `decoy`
                 // and the library entry is loaded as a target, so the
                 // manifest's sequence-based classification flips IsDecoy
@@ -441,8 +510,9 @@ namespace pwiz.Osprey.Test
 
         private static LibraryEntry AddProteins(LibraryEntry e, params string[] proteins)
         {
-            foreach (var p in proteins)
-                e.ProteinIds.Add(p);
+            var ids = new List<string>(e.ProteinIds);
+            ids.AddRange(proteins);
+            e.ProteinIds = ids;
             return e;
         }
 

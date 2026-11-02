@@ -21,7 +21,10 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -71,13 +74,16 @@ namespace pwiz.Osprey.Test
             double area = OspreyFeatureCalculators.Get(4).Calculate(context, peakData);
             double sharpness = OspreyFeatureCalculators.Get(5).Calculate(context, peakData);
 
-            // peak_apex: reference XIC (frag1) intensity at apex index 3 = 90.
-            Assert.AreEqual(90.0, apex, TOLERANCE);
+            // The three intensity-scale features are log-conditioned (log10(x + 1))
+            // so a heavy intensity tail cannot dominate the experiment-wide Percolator
+            // standardizer; raw values below are the pre-log quantities.
+            // peak_apex: reference XIC (frag1) intensity at apex index 3 = 90 -> log10(91).
+            Assert.AreEqual(Math.Log10(91.0), apex, TOLERANCE);
             // peak_area: trapezoid over [1,5) with dt = 1:
-            // (10+50)/2 + (50+90)/2 + (90+50)/2 + (50+10)/2 = 30+70+70+30 = 200.
-            Assert.AreEqual(200.0, area, TOLERANCE);
-            // peak_sharpness: left (90-10)/(3-1)=40, right (90-10)/(5-3)=40, mean 40.
-            Assert.AreEqual(40.0, sharpness, TOLERANCE);
+            // (10+50)/2 + (50+90)/2 + (90+50)/2 + (50+10)/2 = 30+70+70+30 = 200 -> log10(201).
+            Assert.AreEqual(Math.Log10(201.0), area, TOLERANCE);
+            // peak_sharpness: left (90-10)/(3-1)=40, right (90-10)/(5-3)=40, mean 40 -> log10(41).
+            Assert.AreEqual(Math.Log10(41.0), sharpness, TOLERANCE);
 
             // The three calculators expose the parity-critical PIN names.
             Assert.AreEqual("peak_apex", OspreyFeatureCalculators.Get(3).Name);
@@ -90,6 +96,37 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(3).Calculate(context, empty), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(4).Calculate(context, empty), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, empty), TOLERANCE);
+
+            // Negative sharpness: the supplied apex (index 3, value 10) sits BELOW both
+            // edges (90) -- possible because the apex is a CWT/override lookup, not the
+            // XIC max. Raw mean slope = ((10-90)/2 + (10-90)/2) / 2 = -40. peak_sharpness
+            // floors that at 0 before the log (log10(max(-40,0)+1) = 0) rather than
+            // producing a non-finite value from log10 of a negative argument.
+            var invFrag = new double[] { 0, 90, 50, 10, 50, 90, 2, 0, 0, 0 };
+            var invPeak = new FakePeakData(
+                new List<XicData> { new XicData(0, rts, invFrag) }, bounds);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, invPeak), TOLERANCE);
+
+            // An all-zero XIC is a VALID peak (the reference exists) whose three features
+            // all condition to exactly 0.0 -- log10(0 + 1) -- which is the same value the
+            // invalid-peak sentinel above produces. That collision is intended: "no signal"
+            // and "no peak" are the same thing to the SVM. Pinned here so a future change to
+            // the sentinel (or to the +1 offset) has to face the question deliberately.
+            var zeroFrag = new double[10];
+            var zeroPeak = new FakePeakData(
+                new List<XicData> { new XicData(0, rts, zeroFrag) }, bounds);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(3).Calculate(context, zeroPeak), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(4).Calculate(context, zeroPeak), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, zeroPeak), TOLERANCE);
+
+            // The three log-conditioned features carry "(log10)" in their display label, so
+            // the feature-contribution report cannot present a per-decade weight as though
+            // it were per intensity unit.
+            Assert.AreEqual(OspreyScoringResources.PeakApexCalc_DisplayName_Peak_apex_intensity__log10_, OspreyFeatureCalculators.Get(3).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakAreaCalc_DisplayName_Peak_area__log10_, OspreyFeatureCalculators.Get(4).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_, OspreyFeatureCalculators.Get(5).DisplayName);
         }
 
         /// <summary>
@@ -430,6 +467,19 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(calc.IsReversedScore, infos[i].IsReversedScore,
                     string.Format("IsReversedScore[{0}] should be calculator {1}'s direction", i, calc.Name));
             }
+
+            // The model-diagnostics report label is the invariant (English) one in every UI language,
+            // while the console label follows the language.
+            OspreyFeatureInfo[] invariant;
+            using (new CultureScope(CultureInfo.InvariantCulture))
+                invariant = OspreyFeatureCalculators.BuildFeatureInfos(names);
+            OspreyFeatureInfo[] japanese;
+            using (new CultureScope(CultureInfo.GetCultureInfo(@"ja")))
+                japanese = OspreyFeatureCalculators.BuildFeatureInfos(names);
+            for (int i = 0; i < japanese.Length; i++)
+                Assert.AreEqual(invariant[i].Label, japanese[i].ReportLabel, names[i]);
+            Assert.IsTrue(Enumerable.Range(0, japanese.Length).Any(i => japanese[i].Label != japanese[i].ReportLabel),
+                "the ja display labels should be translated");
         }
 
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
@@ -437,7 +487,7 @@ namespace pwiz.Osprey.Test
             return new LibraryFragment
             {
                 Mz = mz,
-                Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal },
+                Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal, Charge = 1 },
             };
         }
 

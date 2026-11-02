@@ -249,7 +249,7 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 double result;
-                return double.TryParse(textQVal.Text, out result) ? result : (double?) null;
+                return double.TryParse(textQVal.Text, out result) ? result : null;
             }
             set
             {
@@ -517,7 +517,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textPValue.Text))
             {
                 double adjustedPval;
-                if (!helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?) null : 1.0, out adjustedPval, checkBoxLog.Checked))
+                if (!helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? null : 1.0, out adjustedPval, checkBoxLog.Checked))
                     return;
                 adjustedPValueCutoff = checkBoxLog.Checked ? Math.Pow(10, -adjustedPval) : adjustedPval;
             }
@@ -526,7 +526,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textFoldChange.Text))
             {
                 double foldChange;
-                if (!helper.ValidateDecimalTextBox(textFoldChange, checkBoxLog.Checked ? (double?) null : 0.0, null, out foldChange, false))
+                if (!helper.ValidateDecimalTextBox(textFoldChange, checkBoxLog.Checked ? null : 0.0, null, out foldChange, false))
                     return;
                 foldChangeCutoff = Math.Abs(checkBoxLog.Checked ? foldChange : Math.Log(foldChange, 2));
             }

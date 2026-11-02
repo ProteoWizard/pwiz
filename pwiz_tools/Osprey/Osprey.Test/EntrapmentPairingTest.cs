@@ -21,20 +21,23 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Unit tests for <see cref="EntrapmentPairing"/> -- the reconciliation of the
-    /// searched library against the entrapment pairing manifest. Verifies that the
-    /// ONLY entrapment peptides dropped are the understood N-terminal-Met-clip
-    /// artifacts (a clipped entrapment whose manifest-paired target cannot be
-    /// clipped, so no matching clipped target can exist), that legitimate matched
-    /// clip pairs are kept and paired, covered peptides keep their manifest pairing,
-    /// and anything unexplained is surfaced rather than silently dropped.
+    /// Unit tests for <see cref="PairingIds.Assign"/> and <see cref="EntrapmentPairing"/> - the
+    /// reconciliation of the searched library against the entrapment pairing manifest.
+    /// Verifies that the ONLY entrapment peptides dropped are the understood
+    /// N-terminal-Met-clip artifacts (a clipped entrapment whose manifest-paired target
+    /// cannot be clipped, so no matching clipped target can exist), that legitimate matched
+    /// clip pairs are kept and paired, covered peptides keep their manifest pairing, and
+    /// anything unexplained is surfaced rather than silently dropped. Every entry gets an id;
+    /// an orphan is one whose group holds no original target.
     /// </summary>
     [TestClass]
     public class EntrapmentPairingTest
@@ -75,7 +78,9 @@ namespace pwiz.Osprey.Test
                 Add(lib, ref id, "ENTD4K",  target: false);  //   its manifest partner (idx 4 is a valid covered pair)
                 Add(lib, ref id, "WEIRDK",  target: false);  // UNEXPLAINED: M+WEIRDK not in the manifest
 
-                var pairing = EntrapmentPairing.Build(lib, manifestPath);
+                // The ids are assigned at load, from the manifest; the pairing then reads the entries.
+                var summary = PairingIds.Assign(lib.Values.ToList(), DecoyPairingManifest.FromTsv(manifestPath));
+                var pairing = EntrapmentPairing.Build(lib);
 
                 // Only orphans and the unexplained entrapment are excluded.
                 Assert.IsTrue(pairing.ExcludedEntrapment.Contains("ENTBK"), "orphan must be dropped");
@@ -86,9 +91,9 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(3, pairing.ExcludedEntrapment.Count);
 
                 // The two orphans are Met-clip artifacts; WEIRDK is surfaced, not silently dropped.
-                Assert.AreEqual(2, pairing.MetClipDroppedCount);
-                Assert.AreEqual(1, pairing.UnexplainedEntrapment.Count);
-                Assert.AreEqual("WEIRDK", pairing.UnexplainedEntrapment[0]);
+                Assert.AreEqual(2, summary.MetClipDropped);
+                Assert.AreEqual(1, summary.Unexplained.Count);
+                Assert.AreEqual("WEIRDK", summary.Unexplained[0]);
                 // The covered collision pair keeps its own manifest index.
                 Assert.AreEqual(4u, pairing.PairIndexBySeq["TGTDK"]);
                 Assert.AreEqual(4u, pairing.PairIndexBySeq["ENTD4K"]);
@@ -104,14 +109,21 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(pairing.PairIndexBySeq["ENTCK"], pairing.PairIndexBySeq["TGTCK"]);
                 Assert.IsTrue(pairing.PairIndexBySeq["ENTCK"] > 2u, "clip index must sit above the manifest range");
 
-                // Dropped peptides get no pair index.
+                // Excluded peptides are not in the pairing, though each has an id of its own.
                 Assert.IsFalse(pairing.PairIndexBySeq.ContainsKey("ENTBK"));
                 Assert.IsFalse(pairing.PairIndexBySeq.ContainsKey("WEIRDK"));
+                Assert.AreEqual(3, lib.Values.Where(e => pairing.ExcludedEntrapment.Contains(e.Sequence)).Select(e => e.PairingId).Distinct().Count());
 
-                // No manifest -> nothing is classified as a Met-clip artifact (no reference to reconcile against).
-                var noManifest = EntrapmentPairing.Build(lib, null);
+                // No manifest and no entrapment (the loader refuses an entrapment library without
+                // its pairing): every peptide its own group, nothing excluded.
+                var plain = lib.Where(kv => !EntrapmentLibraryClassifier.IsEntrapment(kv.Value.ProteinIds))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                var noManifestSummary = PairingIds.Assign(plain.Values.ToList(), null);
+                var noManifest = EntrapmentPairing.Build(plain);
                 Assert.AreEqual(0, noManifest.ExcludedEntrapment.Count);
-                Assert.AreEqual(0, noManifest.MetClipDroppedCount);
+                Assert.AreEqual(0, noManifestSummary.MetClipDropped);
+                Assert.AreEqual(plain.Count, noManifest.PairIndexBySeq.Count);
+                Assert.AreEqual(plain.Count, noManifest.PairIndexBySeq.Values.Distinct().Count());
             }
             finally
             {

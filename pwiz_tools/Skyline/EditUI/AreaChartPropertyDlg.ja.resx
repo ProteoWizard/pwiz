@@ -184,7 +184,7 @@
     <value>107, 20</value>
   </data>
   <data name="textMaxArea.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;textMaxArea.Name" xml:space="preserve">
     <value>textMaxArea</value>
@@ -307,7 +307,7 @@
     <value>150, 17</value>
   </data>
   <data name="cbDecimalCvs.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="cbDecimalCvs.Text" xml:space="preserve">
     <value>十進数のCV値を表示(&amp;D)</value>
@@ -334,7 +334,7 @@
     <value>104, 20</value>
   </data>
   <data name="textMaxCv.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>3</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -373,7 +373,7 @@
     <value>97, 21</value>
   </data>
   <data name="textSizeComboBox.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;textSizeComboBox.Name" xml:space="preserve">
     <value>textSizeComboBox</value>
@@ -400,7 +400,7 @@
     <value>52, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>フォントサイズ(&amp;F)：</value>
@@ -430,7 +430,7 @@
     <value>71, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>タイプを表示(&amp;T)：</value>
@@ -457,7 +457,7 @@
     <value>112, 17</value>
   </data>
   <data name="cbShowDotpCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>2</value>
   </data>
   <data name="cbShowDotpCutoff.Text" xml:space="preserve">
     <value>カットオフ値を表示(&amp;S)</value>
@@ -490,7 +490,7 @@
     <value>99, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>3</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
     <value>カットオフ値(&amp;V)：</value>
@@ -520,7 +520,7 @@
     <value>184, 109</value>
   </data>
   <data name="dataGridDotpCutoffValues.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;dataGridDotpCutoffValues.Name" xml:space="preserve">
     <value>dataGridDotpCutoffValues</value>
@@ -541,7 +541,7 @@
     <value>121, 21</value>
   </data>
   <data name="comboDotpDisplayType.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboDotpDisplayType.Name" xml:space="preserve">
     <value>comboDotpDisplayType</value>

@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using pwiz.Common.Collections;
-using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
 namespace pwiz.CommonMsData.RemoteApi
@@ -28,7 +28,10 @@ namespace pwiz.CommonMsData.RemoteApi
         public static readonly RemoteAccountType UNIFI = new Unifi();
         public static readonly RemoteAccountType ARDIA = new Ardia();
         public static readonly RemoteAccountType WATERS_CONNECT = new WatersConnect();
-        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {ARDIA, UNIFI, WATERS_CONNECT});
+        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {
+            ARDIA,
+            UNIFI, WATERS_CONNECT,
+        });
 
         public abstract string Name { get;  }
         public abstract string Label { get; }

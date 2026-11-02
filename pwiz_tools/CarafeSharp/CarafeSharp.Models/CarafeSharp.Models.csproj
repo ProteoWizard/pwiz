@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Models</RootNamespace>
+    <AssemblyName>CarafeSharp.Models</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Managed TorchSharp only; the libtorch native runtime is added by the executable and
+         test projects (UseLibTorch, see Directory.Build.targets). 0.106.0, not 0.107.0:
+         0.107.0 fails to load on Windows x64 (dotnet/TorchSharp#1567) and needs glibc 2.34
+         on Linux. -->
+    <PackageReference Include="TorchSharp" Version="$(TorchSharpVersion)" />
+    <!-- Unpickles the data.pkl inside peptdeep's zip-format torch.save(state_dict) .pth
+         files (PthReader). TorchSharp.PyBridge wraps the same library but cannot read the
+         RT checkpoint's shared LSTM storage. -->
+    <PackageReference Include="Razorvine.Pickle" Version="1.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

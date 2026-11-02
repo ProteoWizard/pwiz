@@ -586,7 +586,34 @@ namespace pwiz.Skyline.ToolsUI {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_Verifying_server_information", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Do you want to import settings from one of these previous versions?.
+        /// </summary>
+        public static string ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_ {
+            get {
+                return ResourceManager.GetString("ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t Import.
+        /// </summary>
+        public static string ImportSettingsDlg_ImportSettingsDlg_Don_t_Import {
+            get {
+                return ResourceManager.GetString("ImportSettingsDlg_ImportSettingsDlg_Don_t_Import", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the installation to import settings from..
+        /// </summary>
+        public static string ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_ {
+            get {
+                return ResourceManager.GetString("ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Add spectral library.
         /// </summary>
@@ -602,106 +629,6 @@ namespace pwiz.Skyline.ToolsUI {
         public static string LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_ {
             get {
                 return ResourceManager.GetString("LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to set up Nvidia libraries.
-        /// </summary>
-        public static string NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Successfully set up Nvidia libraries.
-        /// </summary>
-        public static string NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Setting up Nvidia GPU Computation.
-        /// </summary>
-        public static string NvidiaInstaller_Setup_Nvidia_Libraries {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_Setup_Nvidia_Libraries", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Python {0} set up is required for {1}, click &apos;OK&apos; to proceed..
-        /// </summary>
-        public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required {
-            get {
-                return ResourceManager.GetString("PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Python {0} set up is required for {1}, please wait for python to install and configure ....
-        /// </summary>
-        public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait {
-            get {
-                return ResourceManager.GetString("PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading Nvidia Cuda Toolkit and Deep Neural Network software..
-        /// </summary>
-        public static string PythonInstaller_Downloading_Nvidia_Library {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Downloading_Nvidia_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature..
-        /// </summary>
-        public static string PythonInstaller_Install_Nvidia_Library {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Install_Nvidia_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Installing Nvidia Cuda Toolkit and Deep Neural Network software..
-        /// </summary>
-        public static string PythonInstaller_Installing_Nvidia_Library {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Installing_Nvidia_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to set up Python virtual environment.
-        /// </summary>
-        public static string PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment {
-            get {
-                return ResourceManager.GetString("PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Successfully set up Python virtual environment.
-        /// </summary>
-        public static string PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment {
-            get {
-                return ResourceManager.GetString("PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?.
-        /// </summary>
-        public static string PythonInstaller_Requesting_Administrator_elevation {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Requesting_Administrator_elevation", resourceCulture);
             }
         }
         
@@ -846,7 +773,34 @@ namespace pwiz.Skyline.ToolsUI {
                         "_be_undone_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to import settings from {0}.
+        /// </summary>
+        public static string ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Importing settings.
+        /// </summary>
+        public static string ToolOptionsUI_ImportSettings_Importing_settings {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ImportSettings_Importing_settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No other installed Skyline with saved settings was found..
+        /// </summary>
+        public static string ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Default ({0}).
         /// </summary>

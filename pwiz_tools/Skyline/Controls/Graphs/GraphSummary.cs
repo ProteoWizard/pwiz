@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             UpdateGraph(selectionChanged);
             // Set title with awareness of UI mode (may translate "peptide" to "molecule" etc)
-            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
+            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(Controller), _documentContainer.Document.DocumentType);
         }
 
         private bool SplitterDistanceValid(double distance)
@@ -446,11 +446,12 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             foreach (var summaryGraphPane in GraphPanes)
                 summaryGraphPane.OnClose(e);
+            base.OnFormClosed(e);
         }
 
         private void GraphSummary_Resize(object sender, EventArgs e)

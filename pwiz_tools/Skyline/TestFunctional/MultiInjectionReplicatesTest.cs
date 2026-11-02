@@ -62,7 +62,13 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog,
                 importResultsNameDlg => importResultsNameDlg.NoDialog());
             WaitForConditionUI(() => SkylineWindow.Document.Settings.HasResults);
-            WaitForDocumentLoaded();
+
+            // 30 seconds, not the 3-minute default (12 minutes in Debug, from GetWaitCycles), for
+            // an import of 4 small files that takes under 3 seconds when it works. The failure
+            // this bounds is a document that never finishes loading, so the default turned each
+            // occurrence into a 12-minute stall - which is what makes soaking for a 1-in-6,000
+            // failure impractical rather than merely slow.
+            WaitForDocumentLoaded(30 * 1000);
 
             // Verify that the two molecules have the expected number of chromatograms
             var firstMolecule = SkylineWindow.Document.Molecules.First();

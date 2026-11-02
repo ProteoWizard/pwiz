@@ -84,8 +84,13 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestFormatF64RoundtripMatchesRustOnRealStdsValue()
         {
-            // Real Stellar Stage 5 peak_sharpness std value; Rust's ryu
-            // emits this as "6354533.401694356" (16 sig digits). On .NET
+            // A wide-magnitude f64 with a 16-significant-digit shortest form. It was
+            // captured from a real Stellar Stage 5 peak_sharpness std back when that
+            // feature was raw intensity/minute; peak_sharpness is log10-conditioned now,
+            // so a value this large can no longer arise from it. The constant is kept
+            // as-is anyway -- this test is about ryu-vs-"R" formatting, and the bit
+            // pattern is what makes it a good probe. Rust's ryu emits this as
+            // "6354533.401694356" (16 sig digits). On .NET
             // Core 3+, ToString("R") matches byte-for-byte. On .NET
             // Framework 4.7.2, "R" falls back to G17 (17 digits) because
             // of the long-standing "R" bug. We only require round-trip

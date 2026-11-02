@@ -70,7 +70,6 @@ namespace pwiz.Skyline.SettingsUI
                     if (Equals(Combo.Items[i].ToString(), selectedItemLast))
                         Combo.SelectedIndex = i;
                 }
-                // If nothing was added, add a blank to avoid starting with "Add..." selected.
                 if (Combo.Items.Count == 0)
                     Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)
@@ -164,7 +163,8 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(itemNew, default(TItem)))
             {
                 List.Add(itemNew);
-                LoadList(itemNew.GetKey());
+                // By display name: LoadList matches the combo's text, which a list may make more than the key
+                LoadList(List.GetDisplayName(itemNew));
             }
             else
             {
@@ -200,8 +200,9 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
                 List[i] = itemNew;
+                // By display name: LoadList matches the combo's text, which a list may make more than the key
                 // ReSharper disable once PossibleNullReferenceException
-                LoadList(itemNew.GetKey());
+                LoadList(List.GetDisplayName(itemNew));
             }
             else
             {

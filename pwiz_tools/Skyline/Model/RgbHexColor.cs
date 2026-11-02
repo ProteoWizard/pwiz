@@ -35,15 +35,17 @@ namespace pwiz.Skyline.Model
 
         public RgbHexColor()
         {
-            Color = Color.Empty;
+            // Assign the backing field directly: Color is virtual and there are no subscribers during
+            // construction, so going through the property would only risk a virtual call in the constructor.
+            _color = Color.Empty;
         }
 
         public RgbHexColor(Color color)
         {
-            Color = color;
+            _color = color;
         }
 
-        public Color Color
+        public virtual Color Color
         {
             get { return _color; }
             set { _color = value; NotifyPropertyChanged(); }

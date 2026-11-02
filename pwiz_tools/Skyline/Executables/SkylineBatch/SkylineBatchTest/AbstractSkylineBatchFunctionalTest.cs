@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using SharedBatch;
 using SkylineBatch;
 using SharedBatchTest;
@@ -57,10 +59,26 @@ namespace SkylineBatchTest
         protected override void ResetSettings()
         {
             Settings.Default.Reset();
+
+            // SkylineBatch's Settings.Reset() also resets SharedBatch's, which wipes the Skyline
+            // installation paths FindSkyline() discovered - SkylineLocalCommandPath,
+            // SkylineAdminCmdPath, SkylineRunnerPath. Nothing re-discovers them, so an imported
+            // configuration is typed from its XML instead of being retyped Local, and validates
+            // against a CmdPath of null: "Could not find a Skyline installation on this computer".
+            // Re-running discovery restores the state the application has after its own startup.
+            SkylineInstallations.FindSkyline();
         }
 
         protected override void InitProgram()
         {
+        }
+
+        [TestCleanup]
+        public void CleanupHttpTestBehavior()
+        {
+            // Defensive: a test that installed an HttpClientWithProgress.TestBehavior (e.g.
+            // RemoteFileSourceFunctionalTest's Panorama mock) must not leak it to later tests.
+            HttpClientWithProgress.TestBehavior = null;
         }
 
         protected override void StartProgram()

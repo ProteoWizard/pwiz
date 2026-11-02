@@ -1,1 +1,0 @@
-generate_msvc.py %*

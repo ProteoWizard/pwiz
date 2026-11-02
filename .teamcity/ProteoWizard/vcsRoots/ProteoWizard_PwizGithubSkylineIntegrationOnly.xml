@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vcs-root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="10a95c52-317d-470c-8693-45a6d0034ab7" type="jetbrains.git" modification-check-interval="60" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>pwiz Github Skyline_Integration_Only</name>
+  <param name="agentCleanFilesPolicy" value="ALL_UNTRACKED" />
+  <param name="agentCleanPolicy" value="NEVER" />
+  <param name="authMethod" value="ACCESS_TOKEN" />
+  <param name="branch" value="refs/heads/Skyline/work/20260612_net8_port" />
+  <param name="ignoreKnownHosts" value="true" />
+  <param name="submoduleCheckout" value="CHECKOUT" />
+  <param name="teamcity:branchSpec"><![CDATA[+:refs/heads/(Skyline/work/20260612_net8_port)
++:refs/(pull/*)/head]]></param>
+  <param name="tokenId" value="tc_token_id:CID_2c0e75d7e804d2e5c4aea406dff78212:-1:3e6cdadb-90ad-473a-a1c6-7e86c4ad3ea8" />
+  <param name="url" value="https://github.com/ProteoWizard/pwiz.git" />
+  <param name="useAlternates" value="USE_MIRRORS" />
+  <param name="username" value="mchambers" />
+  <param name="usernameStyle" value="EMAIL" />
+</vcs-root>
+

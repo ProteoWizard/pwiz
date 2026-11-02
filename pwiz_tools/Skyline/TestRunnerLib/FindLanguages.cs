@@ -34,8 +34,6 @@ namespace TestRunnerLib
             foreach (var resourcesDll in Directory.EnumerateFiles(executingDirectory, "*.resources.dll", SearchOption.AllDirectories))
             {
                 var file = Path.GetFileName(resourcesDll);
-                if (file == null)
-                    continue;
                 if (file.ToLowerInvariant().StartsWith("skyline"))
                 {
                     var language = Path.GetFileName(Path.GetDirectoryName(resourcesDll));

@@ -1051,15 +1051,17 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.Peaks = value; }
         }
 
+        public CheckBox CbIncludeMinusOnePrecursor => FullScanSettingsControl.CbIncludeMinusOnePrecursor;
+
         public double? MinTime
         {
-            get { return string.IsNullOrEmpty(textMinTime.Text) ? (double?)null : double.Parse(textMinTime.Text); }
+            get { return string.IsNullOrEmpty(textMinTime.Text) ? null : double.Parse(textMinTime.Text); }
             set { textMinTime.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
         public double? MaxTime
         {
-            get { return string.IsNullOrEmpty(textMaxTime.Text) ? (double?)null : double.Parse(textMaxTime.Text); }
+            get { return string.IsNullOrEmpty(textMaxTime.Text) ? null : double.Parse(textMaxTime.Text); }
             set { textMaxTime.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 

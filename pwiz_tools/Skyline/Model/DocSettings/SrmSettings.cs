@@ -560,13 +560,17 @@ namespace pwiz.Skyline.Model.DocSettings
             var libs = new Library[specs.Length];
             BiblioSpecLiteLibrary oldDocumentLibrary = null;
             BiblioSpecLiteLibrary newDocumentLibrary = null;
+            string oldDocumentLibraryName = null;
+            string newDocumentLibraryName = null;
             for (int i = 0; i < specs.Length; i++)
             {
                 if (peptideLibraries.LibrarySpecs[i].IsDocumentLibrary)
                 {
                     var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newPath);
+                    oldDocumentLibraryName = peptideLibraries.LibrarySpecs[i].Name;
+                    newDocumentLibraryName = newDocumentLibrarySpec.Name;
                     specs[i] = newDocumentLibrarySpec;
-                    oldDocumentLibrary = libs[i] as BiblioSpecLiteLibrary;
+                    oldDocumentLibrary = peptideLibraries.Libraries[i] as BiblioSpecLiteLibrary;
                     if (oldDocumentLibrary != null)
                     {
                         newDocumentLibrary = oldDocumentLibrary.ChangeLibrarySpec(newDocumentLibrarySpec, FileStreamManager.Default.ConnectionPool);
@@ -580,8 +584,24 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            var result = ChangePeptideSettings(PeptideSettings.ChangeLibraries(
-                peptideLibraries.ChangeLibraries(specs, libs)));
+            var newPeptideSettings = PeptideSettings.ChangeLibraries(peptideLibraries.ChangeLibraries(specs, libs));
+            // An alignment target which names the document library has to follow it to its new name.
+            // Otherwise it no longer matches any library in the document, and retention time alignment
+            // silently stops working. This is keyed off the library spec rather than the loaded library,
+            // since the spec is renamed even when the library itself is not loaded.
+            var imputation = newPeptideSettings.Imputation;
+            if (imputation?.AlignmentTarget != null && oldDocumentLibraryName != null)
+            {
+                var newAlignmentTarget =
+                    imputation.AlignmentTarget.ChangeLibraryName(oldDocumentLibraryName, newDocumentLibraryName);
+                if (!ReferenceEquals(newAlignmentTarget, imputation.AlignmentTarget))
+                {
+                    newPeptideSettings = newPeptideSettings.ChangeImputation(
+                        imputation.ChangeAlignmentTarget(newAlignmentTarget));
+                }
+            }
+
+            var result = ChangePeptideSettings(newPeptideSettings);
             if (newDocumentLibrary != null)
             {
                 result = result.ChangeDocumentRetentionTimes(
@@ -1192,17 +1212,59 @@ namespace pwiz.Skyline.Model.DocSettings
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
             var targets = GetTargets(nodePep).ToList();
-            
+
             if (filePath != null)
             {
+                // IDs from this file, or aligned to it, share its time scale, where a stray ID can be judged.
+                // Unaligned IDs from other files do not, so they are not filtered.
                 var times = GetRetentionTimes(filePath, targets);
+                if (times.Length == 0)
+                    times = GetAlignedRetentionTimes(chromatogramSet, filePath, targets);
                 if (times.Length > 0)
-                    return times;
-                times = GetAlignedRetentionTimes(chromatogramSet, filePath, targets);
-                if (times.Length > 0)
-                    return times;
+                    return TransitionSettings.FullScan.RemoveOutlierIdTimes(times);
             }
             return GetUnalignedRetentionTimes(targets);
+        }
+
+        /// <summary>
+        /// Returns the MS/MS ID times in a file for each library precursor of a peptide, at every charge
+        /// and label type, all of which are pooled as retention time evidence for each of its precursors.
+        /// </summary>
+        public IEnumerable<PrecursorIdTimes> GetPrecursorIdTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
+        {
+            var libraries = PeptideSettings.Libraries;
+            foreach (var precursor in GetLibraryPrecursors(nodePep.SourceUnmodifiedTarget, nodePep.SourceExplicitMods,
+                         Adduct.EMPTY, nodePep.IsProteomic))
+            {
+                if (libraries.TryGetRetentionTimes(precursor.Key, filePath, out var times) && times.Length > 0)
+                    yield return new PrecursorIdTimes(precursor, times);
+            }
+        }
+
+        /// <summary>
+        /// Returns the library precursors of a peptide, at every charge and label type. Those at the
+        /// charge of a given precursor adduct come first, whether or not any library holds them.
+        /// </summary>
+        public IList<LibraryPrecursor> GetLibraryPrecursors(Target sequence, ExplicitMods mods,
+            Adduct precursorAdduct, bool isProteomic)
+        {
+            var precursors = new List<LibraryPrecursor>();
+            if (!precursorAdduct.IsEmpty)
+            {
+                precursors.AddRange(GetTypedSequences(sequence, mods, precursorAdduct).Select(typedSequence =>
+                    new LibraryPrecursor(typedSequence.LabelType, typedSequence.ModifiedSequence.GetLibKey(typedSequence.Adduct))));
+            }
+            var libraries = PeptideSettings.Libraries.Libraries.Where(lib => true == lib?.IsLoaded).ToList();
+            foreach (var typedSequence in GetTypedSequences(sequence, mods, Adduct.EMPTY, isProteomic))
+            {
+                var keys = libraries.SelectMany(lib => lib.GetKeysWithSequence(typedSequence.ModifiedSequence)).Distinct();
+                foreach (var precursor in keys.Select(key => new LibraryPrecursor(typedSequence.LabelType, key)))
+                {
+                    if (!precursors.Any(p => p.IsSameForm(precursor)))
+                        precursors.Add(precursor);
+                }
+            }
+            return precursors;
         }
 
         /// <summary>
@@ -1362,7 +1424,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
+                result.AddRange(library.GetRetentionTimesWithSequences(targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
@@ -2479,6 +2541,48 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     /// <summary>
+    /// A precursor of a peptide as a library may hold it: a label type and a library key,
+    /// whose adduct gives the charge.
+    /// </summary>
+    public class LibraryPrecursor
+    {
+        public LibraryPrecursor(IsotopeLabelType labelType, LibKey key)
+        {
+            LabelType = labelType;
+            Key = key;
+        }
+
+        public IsotopeLabelType LabelType { get; }
+        public LibKey Key { get; }
+        public Adduct Adduct { get { return Key.Adduct; } }
+
+        public bool IsPrecursor(TransitionGroupDocNode nodeGroup)
+        {
+            return Equals(LabelType, nodeGroup.LabelType) && Adduct.AdductCharge == nodeGroup.PrecursorCharge;
+        }
+
+        public bool IsSameForm(LibraryPrecursor other)
+        {
+            return Equals(LabelType, other.LabelType) && Adduct.AdductCharge == other.Adduct.AdductCharge;
+        }
+    }
+
+    /// <summary>
+    /// The MS/MS ID times in one file for one library precursor of a peptide.
+    /// </summary>
+    public class PrecursorIdTimes
+    {
+        public PrecursorIdTimes(LibraryPrecursor precursor, double[] times)
+        {
+            Precursor = precursor;
+            Times = times;
+        }
+
+        public LibraryPrecursor Precursor { get; }
+        public double[] Times { get; }
+    }
+
+    /// <summary>
     /// Enum used to specify the representation of modifications in a sequence
     /// </summary>
     public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision, lib_precision }
@@ -2960,6 +3064,7 @@ namespace pwiz.Skyline.Model.DocSettings
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
                               newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
+                              newTran.FullScan.IncludeMinusOnePrecursor != oldTran.FullScan.IncludeMinusOnePrecursor ||
                               (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged) ||
                               !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
                               !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz);
@@ -3055,9 +3160,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
-                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                var chromatogramSetNewSource = measuredResultsNew.Chromatograms[i];
+                var chromatogramSetOldSource = measuredResultsOld.Chromatograms[i];
+                // The comparison below ignores the name, and everything else it compares can be
+                // identical for two replicates measuring the same file. Without this check,
+                // reordering them looks like no change, DiffResults stays false, and the node
+                // results are left on their old indexes while the ChromatogramSet list moves.
+                if (!ReferenceEquals(chromatogramSetNewSource.Id, chromatogramSetOldSource.Id))
+                {
+                    return false;
+                }
+                var chromatogramSetNew = chromatogramSetNewSource.ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
                     .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT).ChangeName(string.Empty);
-                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
+                var chromatogramSetOld = chromatogramSetOldSource.ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false)
                     .ChangeAnalyteConcentration(null).ChangeSampleType(SampleType.DEFAULT).ChangeName(string.Empty);
                 if (!chromatogramSetNew.Equals(chromatogramSetOld))
                 {

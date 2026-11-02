@@ -112,9 +112,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public IDictionary<IdentityPath, PeptideQuantifier.Quantity> GetTransitionQuantities(CalibrationPoint calibrationPoint)
         {
-            ImmutableList<PeptideQuantifier.Quantity> quantities;
-            if (!_replicateQuantities.TryGetValue(calibrationPoint, out quantities))
+            lock (_replicateQuantities)
             {
+                if (_replicateQuantities.TryGetValue(calibrationPoint, out var quantities))
+                {
+                    return MakeQuantityDictionary(quantities);
+                }
                 IDictionary<IdentityPath, PeptideQuantifier.Quantity> quantityDictionary;
                 if (calibrationPoint.LabelType == null)
                 {
@@ -149,8 +152,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
                 quantities = ImmutableList.ValueOf(quantityList);
                 _replicateQuantities.Add(calibrationPoint, quantities);
+                return MakeQuantityDictionary(quantities);
             }
-            return MakeQuantityDictionary(quantities);
         }
 
         public double? GetPeptideConcentration(int replicateIndex)

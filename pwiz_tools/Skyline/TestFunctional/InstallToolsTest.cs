@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -78,6 +79,8 @@ namespace pwiz.SkylineTestFunctional
                 TestLocateFileDlg();
 
                 TestToolVersioning();
+
+                TestSharedToolCannotBeReinstalled();
 
                 TestPackageVersioning();
 
@@ -296,6 +299,59 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
             }
             //Settings.Default.ToolList.Clear();
+        }
+
+        /// <summary>
+        /// A tool installed outside the current user's Tools folder, such as one an administrator
+        /// installed for all users, cannot be reinstalled or updated, because that would delete the
+        /// installed copy.
+        /// </summary>
+        private void TestSharedToolCannotBeReinstalled()
+        {
+            string counterZip = TestFilesDir.GetTestPath("TestToolVersioning\\1.0\\Counter.zip");
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+            {
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.SaveTools();
+                configureToolsDlg.InstallZipTool(counterZip);
+                configureToolsDlg.OkDialog();
+            });
+
+            var sharedToolDir = TestFilesDir.GetTestPath(Path.Combine("SharedTools", "Counter"));
+            var sharedFile = Path.Combine(sharedToolDir, "NumberWriter.exe");
+            Directory.CreateDirectory(sharedToolDir);
+            File.WriteAllText(sharedFile, string.Empty);
+            string installedToolDir = null;
+            RunUI(() =>
+            {
+                var tool = Settings.Default.ToolList.Single();
+                installedToolDir = tool.ToolDirPath;
+                tool.ToolDirPath = sharedToolDir;
+                Assert.IsTrue(tool.IsReadOnly);
+            });
+
+            RunLongDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, dlg =>
+            {
+                RunDlg<MessageDlg>(() => dlg.InstallZipTool(counterZip), messageDlg =>
+                {
+                    Assert.AreEqual(string.Format(ToolsResources.ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyline_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_update_it_,
+                        "Counter"), messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+                RunUI(() =>
+                {
+                    Assert.AreEqual(1, dlg.ToolList.Count);
+                    Assert.AreEqual(sharedToolDir, Settings.Default.ToolList.Single().ToolDirPath);
+                });
+            }, dlg => dlg.Cancel());
+            Assert.IsTrue(File.Exists(sharedFile));
+
+            RunUI(() => Settings.Default.ToolList.Single().ToolDirPath = installedToolDir);
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+            {
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.OkDialog();
+            });
         }
 
 

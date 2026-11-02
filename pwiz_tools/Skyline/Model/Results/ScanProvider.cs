@@ -69,8 +69,11 @@ namespace pwiz.Skyline.Model.Results
         double? SonarBinToPrecursorMz(int bin); // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
         double? CCSFromIonMobility(double ionMobility, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
-        eIonMobilityUnits IonMobilityUnits { get; } 
+        eIonMobilityUnits IonMobilityUnits { get; }
         bool Adopt(IScanProvider scanProvider);
+        // When true, the reader also collects each scan's uninterpreted mzML CV/user parameters
+        // (for the full-scan viewer). Off for non-display users of ScanProvider (e.g. ion mobility finding).
+        bool CaptureOtherParams { get; set; }
     }
 
     public class ScanProvider : IScanProvider
@@ -189,6 +192,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromSource Source { get; private set; }
         public IList<float> Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
+        public bool CaptureOtherParams { get; set; }
 
         /// <summary>
         /// Retrieve a run of raw spectra with common retention time and changing ion mobility, or a single raw spectrum if no drift info
@@ -311,7 +315,16 @@ namespace pwiz.Skyline.Model.Results
                     _dataFile = dataFile;
                 _dataFileCentroidedMap.Add(centroidedMapKey, dataFile);
             }
-            return _dataFileCentroidedMap[centroidedMapKey];
+            var openDataFile = _dataFileCentroidedMap[centroidedMapKey];
+            if (openDataFile != null)
+            {
+                // Only collect the uninterpreted mzML CV/user parameters when a display consumer asked
+                // for them (see CaptureOtherParams); other ScanProvider users must not pay the cost.
+                // Applied on every call rather than at open, since a consumer may set the flag after the
+                // file is open, or adopt a reader that another provider opened with it off.
+                openDataFile.CaptureOtherParams = CaptureOtherParams;
+            }
+            return openDataFile;
         }
 
         public string FindDataFilePath()

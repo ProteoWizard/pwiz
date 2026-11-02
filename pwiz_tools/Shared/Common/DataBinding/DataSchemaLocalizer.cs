@@ -79,5 +79,14 @@ namespace pwiz.Common.DataBinding
                 Thread.CurrentThread.CurrentCulture = oldCulture;
             }
         }
+
+        public void CallWithCultureInfo(Action action)
+        {
+            CallWithCultureInfo(() =>
+            {
+                action();
+                return true;
+            });
+        }
     }
 }

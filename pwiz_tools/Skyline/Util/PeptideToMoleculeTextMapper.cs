@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Util
                 // NB this assumes that localized versions of Skyline are non-western, and don't attempt to embed keyboard accelerators in control texts
                 var currentUICulture = Thread.CurrentThread.CurrentUICulture;
                 var cultureNames = (extender == null) // This is only true in the case where we're constructing our static object
-                    ? new[] {@"zh-CHS", @"ja" }  // Culture can change in lifetime of a static object in our test system, so include all
+                    ? new[] {@"zh-Hans", @"ja" }  // Culture can change in lifetime of a static object in our test system, so include all
                     : new[] {currentUICulture.Name};
                 foreach (var cultureName in cultureNames)
                 {
