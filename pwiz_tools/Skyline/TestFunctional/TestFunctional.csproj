@@ -337,6 +337,7 @@
     <Compile Include="McpConnectorDisconnectTest.cs" />
     <Compile Include="McpConnectorBackgroundDialogTest.cs" />
     <Compile Include="McpConnectorFormThreadingTest.cs" />
+    <Compile Include="McpConnectorShowFormTest.cs" />
     <Compile Include="NativeMessageBoxTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
