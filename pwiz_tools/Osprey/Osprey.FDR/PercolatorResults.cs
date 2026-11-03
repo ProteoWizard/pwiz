@@ -127,6 +127,13 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public FeatureContributions FeatureContributions { get; set; }
 
+        /// <summary>
+        /// What training did with each feature on its own training subset, computed when
+        /// <see cref="PercolatorConfig.CollectTrainingAnalysis"/> is set and persisted with the
+        /// first-pass model; null otherwise. Never used for scoring.
+        /// </summary>
+        public TrainingSetAnalysis TrainingAnalysis { get; set; }
+
         /// <summary>Feature standardizer used during training.</summary>
         public FeatureStandardizer Standardizer { get; set; }
 

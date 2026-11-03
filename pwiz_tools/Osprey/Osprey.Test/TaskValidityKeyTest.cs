@@ -95,6 +95,10 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
+                // The TSV term is a literal (an int does not concatenate into a const string), so
+                // hold it to the reader's version here.
+                Assert.AreEqual(@";tsvreader=" + DiannTsvLoader.READER_VERSION.ToString(CultureInfo.InvariantCulture),
+                    OspreyTask.TSV_READER_TERM);
                 Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
                     @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)

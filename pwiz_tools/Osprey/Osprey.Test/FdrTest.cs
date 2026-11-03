@@ -1196,7 +1196,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Issue #4355 struct-shrink S3, Stage B (the FLAT-memory win): the 1st-pass-only
         /// streaming Percolator that holds NO resident row buffer
-        /// (<see cref="PercolatorScorer.RunStreamingFirstPass"/>) must produce byte-identical
+        /// (<see cref="PercolatorEngine.RunStreamingFirstPass"/>) must produce byte-identical
         /// Score + five q-values + identity (entry_id / charge / peptide / is_decoy) to the
         /// resident projection streaming path
         /// (<see cref="PercolatorEngine.RunStreamingIntoProjection"/>) -- the byte-identity
@@ -1387,7 +1387,7 @@ namespace pwiz.Osprey.Test
             var sinkFlush = new CapturingSink();
             var flushes = new RunScopeFlushes();
             PercolatorResults model = null;
-            bool abortFlush = PercolatorScorer.RunStreamingFirstPass(
+            bool abortFlush = PercolatorEngine.RunStreamingFirstPass(
                 fileNames, StreamRowsFrom(fixtureFlush), f => featuresFlush[f], percConfig, OspreyLog.None,
                 "First-pass", sinkFlush, captureModel: m => model = m, flushFileRunScope: flushes.Flush);
             Assert.IsFalse(abortFlush);
@@ -1444,7 +1444,7 @@ namespace pwiz.Osprey.Test
         /// <c>OSPREY_FDR_MODEL=gbdt</c> through the DEFAULT first pass. <see cref="PerFileScoringTask"/>
         /// takes the lean counts-only path for gbdt exactly as it does for percolator - both are
         /// the Percolator framework - so FirstPassFDR runs
-        /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>. That path hand-copied its
+        /// <see cref="PercolatorEngine.RunStreamingFirstPass"/>. That path hand-copied its
         /// training config without the classifier choice, so it trained the linear SVM under the
         /// gbdt flag and then scored every row with the averaged SVM weights.
         ///
@@ -1502,7 +1502,7 @@ namespace pwiz.Osprey.Test
             FeatureContributions streamedContributions = null;
             var flushes = new RunScopeFlushes();
             var sinkStr = new CapturingSink();
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fileNames, streamRows, f => featuresStr[f], treeConfig, OspreyLog.None, "First-pass",
                 sinkStr, c => streamedContributions = c, m => streamedModel = m,
                 flushFileRunScope: flushes.Flush));
@@ -1530,7 +1530,7 @@ namespace pwiz.Osprey.Test
             // trees must reproduce the fresh run exactly, or resumed and re-scored files would
             // disagree about the same discriminant.
             var sinkResumed = new CapturingSink();
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fileNames, streamRows, f => featuresStr[f], treeConfig, OspreyLog.None, "First-pass",
                 sinkResumed, pretrainedModel: streamedModel));
             Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkStr, sinkResumed));
@@ -1540,7 +1540,7 @@ namespace pwiz.Osprey.Test
             // or trained beside (two discriminants in one run), in both directions.
             PercolatorResults linearModel = null;
             var linearConfig = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fileNames, streamRows, f => featuresStr[f], linearConfig, OspreyLog.None, "First-pass",
                 new CapturingSink(), captureModel: m => linearModel = m));
             Assert.IsNotNull(linearModel);
@@ -1587,7 +1587,7 @@ namespace pwiz.Osprey.Test
             {
                 PercolatorResults captured = null;
                 var sink = new CapturingSink();
-                Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                     fileNames, streamRows, f => features[f], config, log, "First-pass",
                     sink, captureModel: m => captured = m, pretrainedModel: pretrained));
                 model = captured;
@@ -1736,12 +1736,12 @@ namespace pwiz.Osprey.Test
                     filesStreamed++;
                     streamRows(name, columns, onRow);
                 };
-            var refusal = Assert.ThrowsException<InvalidOperationException>(() => PercolatorScorer.RunStreamingFirstPass(
+            var refusal = Assert.ThrowsException<InvalidOperationException>(() => PercolatorEngine.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), countingRows, f => features[f], config, OspreyLog.None,
                 "First-pass", new CapturingSink(), pretrainedModel: otherClassifier));
             Assert.AreEqual(0, filesStreamed, "the classifier refusal must precede the ingest");
             Assert.AreNotEqual(config.UseGradientBoostedTrees, otherClassifier.IsGradientBoostedTrees);
-            Assert.AreEqual(PercolatorScorer.ClassifierMismatchMessage(
+            Assert.AreEqual(PercolatorEngine.ClassifierMismatchMessage(
                 otherClassifier.IsGradientBoostedTrees, config.UseGradientBoostedTrees), refusal.Message);
         }
 
@@ -1764,7 +1764,7 @@ namespace pwiz.Osprey.Test
             var flushes = new RunScopeFlushes();
             var sink = new CapturingSink();
             FeatureContributions resumedContributions = null;
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture),
                 f =>
                 {
@@ -1780,7 +1780,7 @@ namespace pwiz.Osprey.Test
             // The feature report covers the resumed file too, from its sidecar's share: the same
             // report as scoring every file. It once covered only the files scored in the process.
             FeatureContributions scoredContributions = null;
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f],
                 config, OspreyLog.None, "First-pass", new CapturingSink(), c => scoredContributions = c,
                 pretrainedModel: model));
@@ -1788,7 +1788,7 @@ namespace pwiz.Osprey.Test
             // A resumed file with no share leaves no honest report rather than a partial one.
             bool captured = false;
             FeatureContributions withoutShare = null;
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f],
                 config, OspreyLog.None, "First-pass", new CapturingSink(), c =>
                 {
@@ -1954,7 +1954,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A <see cref="PercolatorScorer.RunStreamingFirstPass"/> row source over a resident
+        /// A <see cref="PercolatorEngine.RunStreamingFirstPass"/> row source over a resident
         /// fixture, in its (file, row) order - the stand-in for the per-file parquet scalar reader.
         ///
         /// <para>Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
@@ -2016,7 +2016,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Runs <see cref="PercolatorScorer.RunStreamingFirstPass"/> over a fixture the way the
+        /// Runs <see cref="PercolatorEngine.RunStreamingFirstPass"/> over a fixture the way the
         /// parquet row source serves it, optionally writing pass 1's output to a sidecar stand-in
         /// and reading it back in pass 2, and returns what reached the sink.
         /// </summary>
@@ -2026,7 +2026,7 @@ namespace pwiz.Osprey.Test
             Action<FeatureContributions> captureContributions = null, bool foldRows = false)
         {
             var sink = new CapturingSink(foldRows);
-            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+            Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f], config, OspreyLog.None,
                 "First-pass", sink, captureContributions, null, sidecar?.Read, null, sidecar?.Write,
                 fileLanes));

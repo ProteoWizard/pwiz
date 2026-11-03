@@ -1358,6 +1358,12 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// OSPREY_VERSION_OVERRIDE, as <see cref="OspreyVersion.Current"/> reads it: through the
+        /// test seam, on each access, so a test can run one in-process command as another build.
+        /// </summary>
+        internal static string VersionOverride => GetVariable(OspreyVersion.ENV_OVERRIDE);
+
+        /// <summary>
         /// Replace the named variables with <paramref name="values"/> until the returned object
         /// is disposed; a null value reads as unset. Every other variable still reads the
         /// process environment. Only the values that re-read on each access see the override -
