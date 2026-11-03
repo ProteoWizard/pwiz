@@ -18,7 +18,6 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Localization;
@@ -278,7 +277,7 @@ namespace pwiz.SkylineTest
 
             // Unmodified peptide.
             var pep1 = new Peptide("SASASAK");
-            var analyzer1 = new SiteDeterminingIonAnalyzer(settings, new PeptideDocNode(pep1, (ExplicitMods) null));
+            var analyzer1 = new SiteDeterminingIonAnalyzer(settings, new PeptideDocNode(pep1));
             AssertEx.IsTrue(!analyzer1.CanLocalize);
             AssertEx.IsNull(analyzer1.LocalizationGroupKey);
             AssertEx.AreEqual(1L, analyzer1.IsomerCount);

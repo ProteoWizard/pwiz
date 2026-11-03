@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.Localization
         /// </summary>
         private static long Binomial(int n, int k)
         {
-            if (k < 0 || k > n || n < 0)
+            if (k < 0 || k > n)
                 return 0;
             if (k == 0 || k == n)
                 return 1;
