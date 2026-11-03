@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls
             this.colDescription = new System.Windows.Forms.ColumnHeader();
             this.colMessage = new System.Windows.Forms.ColumnHeader();
             this.colProgress = new System.Windows.Forms.ColumnHeader();
-            this.btnCancelJob = new System.Windows.Forms.Button();
+            this.btnStopJob = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
             this.timerRefresh = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
@@ -66,12 +66,12 @@ namespace pwiz.Skyline.Controls
             //
             resources.ApplyResources(this.colProgress, "colProgress");
             //
-            // btnCancelJob
+            // btnStopJob
             //
-            resources.ApplyResources(this.btnCancelJob, "btnCancelJob");
-            this.btnCancelJob.Name = "btnCancelJob";
-            this.btnCancelJob.UseVisualStyleBackColor = true;
-            this.btnCancelJob.Click += new System.EventHandler(this.btnCancelJob_Click);
+            resources.ApplyResources(this.btnStopJob, "btnStopJob");
+            this.btnStopJob.Name = "btnStopJob";
+            this.btnStopJob.UseVisualStyleBackColor = true;
+            this.btnStopJob.Click += new System.EventHandler(this.btnStopJob_Click);
             //
             // btnClose
             //
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnClose;
             this.Controls.Add(this.listJobs);
-            this.Controls.Add(this.btnCancelJob);
+            this.Controls.Add(this.btnStopJob);
             this.Controls.Add(this.btnClose);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Controls
         private System.Windows.Forms.ColumnHeader colDescription;
         private System.Windows.Forms.ColumnHeader colMessage;
         private System.Windows.Forms.ColumnHeader colProgress;
-        private System.Windows.Forms.Button btnCancelJob;
+        private System.Windows.Forms.Button btnStopJob;
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Timer timerRefresh;
     }

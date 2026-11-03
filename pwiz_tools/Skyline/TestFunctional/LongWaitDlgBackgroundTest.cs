@@ -177,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// The user's way to the job: Tools &gt; Running Jobs lists it and its Cancel Job button stops it. The same
+        /// The user's way to the job: Tools &gt; Running Jobs lists it and its Stop Job button stops it. The same
         /// dialog opens on a double-click of the status bar, where the job's progress is showing.
         /// </summary>
         private void TestCancelFromRunningJobsDlg(JobProgressStatus job)
@@ -187,7 +187,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 AssertEx.AreEqual(1, runningJobsDlg.JobCount);
                 AssertEx.AreEqual(job.JobId, runningJobsDlg.SelectedJobId);
-                runningJobsDlg.CancelSelectedJob();
+                runningJobsDlg.StopSelectedJob();
             });
 
             // The work stops at its next cancellation check, and the job goes when it does.

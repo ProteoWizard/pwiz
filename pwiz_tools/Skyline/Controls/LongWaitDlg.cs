@@ -434,9 +434,11 @@ namespace pwiz.Skyline.Controls
                     return;
                 _backgroundJob = BackgroundJobs.Start(_jobDescription);
                 _backgrounded = true;
+                // Inside the lock: once it is released the work can finish and dispose the job, after which its
+                // token cannot be read and a progress report would put it back on the status bar.
+                _backgroundJob.CancellationToken.Register(() => _cancellationTokenSource.Cancel());
+                ReportBackgroundJobProgress();
             }
-            _backgroundJob.CancellationToken.Register(() => _cancellationTokenSource.Cancel());
-            ReportBackgroundJobProgress();
             Close();
         }
 

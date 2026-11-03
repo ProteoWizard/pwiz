@@ -29,7 +29,6 @@ namespace pwiz.Skyline.Controls
     /// <summary>
     /// Shows what is running in the background and lets the user stop it: the operations they sent there with a
     /// LongWaitDlg's "Run in Background", and the ones a tool left running when it stopped waiting for them.
-    /// Reached from Tools > Running Jobs, or by double-clicking the status bar where their progress shows.
     /// </summary>
     public partial class RunningJobsDlg : FormEx
     {
@@ -50,7 +49,6 @@ namespace pwiz.Skyline.Controls
             listJobs.BeginUpdate();
             try
             {
-                // Drop the rows of jobs that have finished.
                 foreach (var item in listJobs.Items.Cast<ListViewItem>().ToArray())
                 {
                     if (jobs.All(job => !Equals(job.JobId, item.Tag)))
@@ -77,7 +75,7 @@ namespace pwiz.Skyline.Controls
                     item.SubItems[2].Text = GetProgressText(job);
                 }
 
-                // Keep a job selected, so Cancel Job always has an obvious target - most of the time there is only
+                // Keep a job selected, so Stop Job always has an obvious target - most of the time there is only
                 // the one, and the user came here to stop it.
                 if (listJobs.SelectedItems.Count == 0 && listJobs.Items.Count > 0)
                 {
@@ -104,7 +102,7 @@ namespace pwiz.Skyline.Controls
 
         private void UpdateButtons()
         {
-            btnCancelJob.Enabled = SelectedJobId.HasValue;
+            btnStopJob.Enabled = SelectedJobId.HasValue;
         }
 
         public Guid? SelectedJobId
@@ -118,10 +116,9 @@ namespace pwiz.Skyline.Controls
 
         /// <summary>
         /// Asks the selected job to stop. It stops at its next cancellation check, so the row stays until it has -
-        /// reading "Stopping" in the meantime. Called Stop in the UI, where "Cancel" would be read as cancelling
-        /// the dialog; it is cancellation underneath, which is all a job can be asked for.
+        /// reading "Stopping" in the meantime. Named Stop because "Cancel" would read as cancelling the dialog.
         /// </summary>
-        public void CancelSelectedJob()
+        public void StopSelectedJob()
         {
             var jobId = SelectedJobId;
             if (jobId.HasValue)
@@ -146,9 +143,9 @@ namespace pwiz.Skyline.Controls
             UpdateButtons();
         }
 
-        private void btnCancelJob_Click(object sender, EventArgs e)
+        private void btnStopJob_Click(object sender, EventArgs e)
         {
-            CancelSelectedJob();
+            StopSelectedJob();
         }
     }
 }
