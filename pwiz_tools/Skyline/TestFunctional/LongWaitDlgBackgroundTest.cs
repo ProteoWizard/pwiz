@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
