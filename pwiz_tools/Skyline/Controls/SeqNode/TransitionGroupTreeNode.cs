@@ -214,24 +214,28 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override ITipProvider GetPickTip(DocNode child)
         {
-            return new PickTransitionTip((TransitionDocNode) child);
+            var nodeTran = (TransitionDocNode) child;
+            return new PickTransitionTip(nodeTran,
+                SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(nodeTran.Transition));
         }
 
         private sealed class PickTransitionTip : ITipProvider
         {
             private readonly TransitionDocNode _nodeTran;
+            private readonly string _localizedModNames;
 
-            public PickTransitionTip(TransitionDocNode nodeTran)
+            public PickTransitionTip(TransitionDocNode nodeTran, string localizedModNames)
             {
                 _nodeTran = nodeTran;
+                _localizedModNames = localizedModNames;
             }
 
-            // Not enough useful information in this tip yet
-            public bool HasTip { get { return _nodeTran.HasLoss; } }
+            // Only losses and localization add information beyond the pick-list label itself
+            public bool HasTip { get { return _nodeTran.HasLoss || _localizedModNames != null; } }
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
-                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw);
+                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw, _localizedModNames);
             }
         }
 

@@ -152,17 +152,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var analyzer = GetSiteDeterminingIonAnalyzer();
-                if (analyzer == null || !analyzer.CanLocalize)
-                    return null;
-                return analyzer.IsomerCount;
+                return GetSiteDeterminingIonAnalyzer()?.IsomerCount;
             }
         }
 
         /// <summary>
         /// Returns the <see cref="SiteDeterminingIonAnalyzer"/> for this peptide so the localization
         /// columns can share a single analytic precompute. The value is cached per document, so it is
-        /// rebuilt whenever the document changes. Returns null for small molecules.
+        /// rebuilt whenever the document changes. Returns null when there is nothing to localize.
         /// </summary>
         private SiteDeterminingIonAnalyzer GetSiteDeterminingIonAnalyzer()
         {
@@ -171,7 +168,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private SiteDeterminingIonAnalyzer MakeSiteDeterminingIonAnalyzer()
         {
-            return IsSmallMolecule() ? null : new SiteDeterminingIonAnalyzer(SrmDocument.Settings, DocNode);
+            return SiteDeterminingIonAnalyzer.CreateIfLocalizable(DocNode);
         }
 
         /// <summary>

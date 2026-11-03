@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
-        private SrmSettings _siteDeterminingSettings;
+        private PeptideDocNode _siteDeterminingNode;
 
 // ReSharper disable SuggestBaseTypeForParameter
         public PeptideTreeNode(SequenceTree tree, PeptideDocNode nodePeptide)
@@ -61,20 +61,19 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         /// <summary>
         /// The <see cref="SiteDeterminingIonAnalyzer"/> for this peptide, shared by its precursor and
-        /// transition nodes for the uniquely localizing ion badge, tooltip and pick-list filter. Null
-        /// when the peptide carries no ambiguously placed modification. Rebuilt whenever the model of
-        /// this node or the document settings change.
+        /// transition nodes for the uniquely localizing ion badge, tooltip and pick-list icon. Null
+        /// when the peptide carries no ambiguously placed modification. Rebuilt when the model of
+        /// this node changes, which is the only input the analyzer depends on.
         /// </summary>
         public SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
         {
             get
             {
-                var settings = DocSettings;
-                if (!ReferenceEquals(settings, _siteDeterminingSettings))
+                var nodePep = DocNode;
+                if (!ReferenceEquals(nodePep, _siteDeterminingNode))
                 {
-                    var analyzer = new SiteDeterminingIonAnalyzer(settings, DocNode);
-                    _siteDeterminingAnalyzer = analyzer.CanLocalize ? analyzer : null;
-                    _siteDeterminingSettings = settings;
+                    _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(nodePep);
+                    _siteDeterminingNode = nodePep;
                 }
                 return _siteDeterminingAnalyzer;
             }
@@ -97,9 +96,6 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         protected override void OnModelChanged()
         {
-            // The modification placement may have changed, so the analyzer is rebuilt on demand.
-            _siteDeterminingSettings = null;
-
             int typeImageIndex = TypeImageIndex;
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;

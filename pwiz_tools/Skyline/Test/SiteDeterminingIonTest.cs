@@ -62,10 +62,9 @@ namespace pwiz.SkylineTest
         {
             // A0 A1 S2 S3 S4 A5 K6 - run of three candidate serines (2,3,4); phospho on the middle one.
             const string seq = "AASSSAK";
-            var settings = SrmSettingsList.GetDefault();
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 3)));
-            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -90,10 +89,9 @@ namespace pwiz.SkylineTest
         {
             // S0 A1 A2 A3 A4 A5 T6 A7 A8 K9 - candidates: serine 0 and threonine 6; phospho on S0.
             const string seq = "SAAAAATAAK";
-            var settings = SrmSettingsList.GetDefault();
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0)));
-            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -130,7 +128,7 @@ namespace pwiz.SkylineTest
             var peptide = new Peptide(seq);
             var modsAt0 = MakeMods(peptide, (PHOSPHO, 0));
             var nodePep = new PeptideDocNode(peptide, modsAt0);
-            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -185,10 +183,9 @@ namespace pwiz.SkylineTest
         {
             // S0 A1 S2 A3 S4 A5 K6 - candidate serines at 0, 2, 4; phospho on the middle one.
             const string seq = "SASASAK";
-            var settings = SrmSettingsList.GetDefault();
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 2)));
-            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -222,10 +219,9 @@ namespace pwiz.SkylineTest
         {
             // S0 A1 S2 A3 S4 A5 S6 A7 K8 - four candidate serines; phospho on the first two.
             const string seq = "SASASASAK";
-            var settings = SrmSettingsList.GetDefault();
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0), (PHOSPHO, 2)));
-            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -247,10 +243,9 @@ namespace pwiz.SkylineTest
         {
             // S0 S1 A2 A3 M4 M5 K6 - two candidate serines, two candidate methionines.
             const string seq = "SSAAMMK";
-            var settings = SrmSettingsList.GetDefault();
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0), (OXIDATION, 4)));
-            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -273,18 +268,17 @@ namespace pwiz.SkylineTest
         /// </summary>
         private void TestNonLocalizable()
         {
-            var settings = SrmSettingsList.GetDefault();
 
             // Unmodified peptide.
             var pep1 = new Peptide("SASASAK");
-            var analyzer1 = new SiteDeterminingIonAnalyzer(settings, new PeptideDocNode(pep1));
+            var analyzer1 = new SiteDeterminingIonAnalyzer(new PeptideDocNode(pep1));
             AssertEx.IsTrue(!analyzer1.CanLocalize);
             AssertEx.IsNull(analyzer1.LocalizationGroupKey);
             AssertEx.AreEqual(1L, analyzer1.IsomerCount);
 
             // Only one candidate serine, so the phospho is fully determined - not ambiguous.
             var pep2 = new Peptide("SAAAAK");
-            var analyzer2 = new SiteDeterminingIonAnalyzer(settings, new PeptideDocNode(pep2, MakeMods(pep2, (PHOSPHO, 0))));
+            var analyzer2 = new SiteDeterminingIonAnalyzer(new PeptideDocNode(pep2, MakeMods(pep2, (PHOSPHO, 0))));
             AssertEx.IsTrue(!analyzer2.CanLocalize);
             AssertEx.IsNull(analyzer2.LocalizationGroupKey);
         }

@@ -236,13 +236,9 @@ namespace pwiz.Skyline.Model
 
             // Product ions that uniquely localize an ambiguously placed modification may be
             // selected outside the fragment range, when the filter asks for them.
-            SiteDeterminingIonAnalyzer localizingAnalyzer = null;
-            if (useFilter && filter.IncludeLocalizingIons && IsProteomic)
-            {
-                var analyzer = new SiteDeterminingIonAnalyzer(settings, Peptide, mods);
-                if (analyzer.CanLocalize)
-                    localizingAnalyzer = analyzer;
-            }
+            var localizingAnalyzer = useFilter && filter.IncludeLocalizingIons && IsProteomic
+                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(Peptide, mods)
+                : null;
 
             // A start m/z will need to be calculated if the start fragment
             // finder uses m/z and their are losses to consider.  If the filter
@@ -391,7 +387,6 @@ namespace pwiz.Skyline.Model
                         var massH = massesPredict[type, i];
                         Assume.IsTrue(massH.IsMassH());
                         Assume.IsTrue(massH.IsMonoIsotopic() == calcPredict.MassType.IsMonoisotopic());
-                        bool localizingIon = localizingAnalyzer != null && localizingAnalyzer.IsUniqueToPrecursor(type, i);
                         foreach (var losses in CalcTransitionLosses(type, i, massType, potentialLosses))
                         {
                             if (!ensureMassesAreMeasurable)
@@ -433,13 +428,13 @@ namespace pwiz.Skyline.Model
                                     }
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
-                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingIon))
+                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer))
                                     {
                                         nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
                                     }
                                 }
                             }
-                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingIon))
+                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer))
                             {
                                 if (pick == TransitionLibraryPick.none)
                                     nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
@@ -452,7 +447,7 @@ namespace pwiz.Skyline.Model
                             if (nodeTranReturn != null)
                             {
                                 if (IsAvoidMismatchedIsotopeTransitions &&
-                                    !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept, localizingIon,
+                                    !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept, localizingAnalyzer,
                                         groupDocNode, nodeTranReturn, listOtherTypes))
                                 {
                                     continue;
@@ -466,7 +461,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private bool OtherLabelTypesAllowed(SrmSettings settings, double minMz, double maxMz, int start, int end, double startMz, bool accept, bool localizingIon,
+        private bool OtherLabelTypesAllowed(SrmSettings settings, double minMz, double maxMz, int start, int end, double startMz, bool accept, SiteDeterminingIonAnalyzer localizingAnalyzer,
                                             TransitionGroupDocNode nodeGroupMatching,
                                             TransitionDocNode nodeTran,
                                             IEnumerable<Tuple<TransitionGroupDocNode, IFragmentMassCalc>> listOtherTypes)
@@ -487,7 +482,7 @@ namespace pwiz.Skyline.Model
                     start,
                     end,
                     startMz,
-                    localizingIon))
+                    localizingAnalyzer))
                 {
                     return false;
                 }

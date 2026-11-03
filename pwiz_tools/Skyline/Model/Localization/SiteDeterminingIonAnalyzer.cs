@@ -56,20 +56,19 @@ namespace pwiz.Skyline.Model.Localization
         /// Performs the cheap analytic precompute (candidate positions per ambiguous modification
         /// via prefix arrays) for a single peptide placement.
         /// </summary>
-        /// <param name="settings">Document settings (reserved for future mass cross-checks; the
-        /// span analysis itself is purely combinatorial).</param>
         /// <param name="nodePep">The peptide, including its explicit (light) modification placement.</param>
-        public SiteDeterminingIonAnalyzer(SrmSettings settings, PeptideDocNode nodePep)
-            : this(settings, nodePep.Peptide, nodePep.ExplicitMods)
+        public SiteDeterminingIonAnalyzer(PeptideDocNode nodePep)
+            : this(nodePep.Peptide, nodePep.ExplicitMods)
         {
         }
 
         /// <summary>
         /// The same precompute for a peptide and an explicit modification placement, for callers
-        /// that have no <see cref="PeptideDocNode"/> yet, such as transition auto-selection.
+        /// that have no <see cref="PeptideDocNode"/>, such as transition auto-selection.
         /// </summary>
-        public SiteDeterminingIonAnalyzer(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods)
+        public SiteDeterminingIonAnalyzer(Peptide peptide, ExplicitMods explicitMods)
         {
+            _ambiguousMods = new List<AmbiguousMod>();
             _ambiguousMods = new List<AmbiguousMod>();
 
             if (peptide == null || peptide.IsCustomMolecule)
@@ -114,6 +113,24 @@ namespace pwiz.Skyline.Model.Localization
                     _ambiguousMods.Add(new AmbiguousMod(mod, k, n, prefixCandidates, placedPositions));
                 }
             }
+        }
+
+        /// <summary>
+        /// The analyzer for a peptide placement, or null when there is nothing to localize, so
+        /// callers can keep a single null check instead of testing <see cref="CanLocalize"/>.
+        /// </summary>
+        public static SiteDeterminingIonAnalyzer CreateIfLocalizable(Peptide peptide, ExplicitMods explicitMods)
+        {
+            var analyzer = new SiteDeterminingIonAnalyzer(peptide, explicitMods);
+            return analyzer.CanLocalize ? analyzer : null;
+        }
+
+        /// <summary>
+        /// <see cref="CreateIfLocalizable(Peptide, ExplicitMods)"/> for a peptide node.
+        /// </summary>
+        public static SiteDeterminingIonAnalyzer CreateIfLocalizable(PeptideDocNode nodePep)
+        {
+            return CreateIfLocalizable(nodePep.Peptide, nodePep.ExplicitMods);
         }
 
         /// <summary>
@@ -177,25 +194,25 @@ namespace pwiz.Skyline.Model.Localization
         }
 
         /// <summary>
-        /// Returns the (primary) ambiguous modification that the given ion resolves, for tooltip /
-        /// reporting use, or null when the ion is not site-determining. When an ion resolves more
-        /// than one modification, the first (in precompute order) is returned.
+        /// Returns the (primary) ambiguous modification that the given ion resolves, or null when
+        /// the ion is not site-determining. When an ion resolves more than one modification, the
+        /// first (in precompute order) is returned; see <see cref="GetResolvedModifications"/>.
         /// </summary>
         public StaticMod GetResolvedModification(Transition transition)
         {
             if (!IsFragment(transition))
                 return null;
-            return GetResolvedModification(transition.IonType, transition.CleavageOffset);
+            return GetResolvedModifications(transition.IonType, transition.CleavageOffset).FirstOrDefault();
         }
 
         /// <summary>
-        /// <see cref="GetResolvedModification(Transition)"/> for a product ion given by its type and
-        /// cleavage offset.
+        /// Returns every ambiguous modification that a product ion, given by its type and cleavage
+        /// offset, resolves: those whose in-span occupancy can vary across positional placements.
         /// </summary>
-        public StaticMod GetResolvedModification(IonType type, int cleavageOffset)
+        public IEnumerable<StaticMod> GetResolvedModifications(IonType type, int cleavageOffset)
         {
             if (!TryGetSpan(type, cleavageOffset, out int lo, out int hi))
-                return null;
+                yield break;
 
             foreach (var mod in _ambiguousMods)
             {
@@ -204,9 +221,30 @@ namespace pwiz.Skyline.Model.Localization
                 // In-span occupancy ranges over [max(0, k - outside) .. min(k, inside)]. It can
                 // vary (the ion is site-determining) iff that range is non-degenerate.
                 if (Math.Min(mod.Count, inside) > Math.Max(0, mod.Count - outside))
-                    return mod.Mod;
+                    yield return mod.Mod;
             }
-            return null;
+        }
+
+        /// <summary>
+        /// The names of the modifications this ion uniquely localizes, comma separated for
+        /// display, or null when the ion is not unique to the current placement.
+        /// </summary>
+        public string GetUniquelyLocalizedModificationNames(Transition transition)
+        {
+            if (!IsFragment(transition))
+                return null;
+            return GetUniquelyLocalizedModificationNames(transition.IonType, transition.CleavageOffset);
+        }
+
+        /// <summary>
+        /// <see cref="GetUniquelyLocalizedModificationNames(Transition)"/> for a product ion given by
+        /// its type and cleavage offset.
+        /// </summary>
+        public string GetUniquelyLocalizedModificationNames(IonType type, int cleavageOffset)
+        {
+            if (!IsUniqueToPrecursor(type, cleavageOffset))
+                return null;
+            return string.Join(@", ", GetResolvedModifications(type, cleavageOffset).Select(mod => mod.Name));
         }
 
         /// <summary>
@@ -214,15 +252,6 @@ namespace pwiz.Skyline.Model.Localization
         /// modification masses) as the placement this analyzer was built from. A value of 1 means
         /// the ion is unique to this isomer. Returns 0 for precursor / custom / non-proteomic
         /// transitions. Clamped to <see cref="MAX_COUNT"/>.
-        /// </summary>
-        public int GetProducingSetSizeAsInt(Transition transition)
-        {
-            long size = GetProducingSetSize(transition);
-            return size > int.MaxValue ? int.MaxValue : (int) size;
-        }
-
-        /// <summary>
-        /// <see cref="GetProducingSetSizeAsInt"/> as a (clamped) <see cref="long"/>.
         /// </summary>
         public long GetProducingSetSize(Transition transition)
         {
@@ -273,13 +302,6 @@ namespace pwiz.Skyline.Model.Localization
         private static bool IsFragment(Transition transition)
         {
             return transition != null && !transition.IsPrecursor() && !transition.IsCustom();
-        }
-
-        private bool TryGetSpan(Transition transition, out int lo, out int hi)
-        {
-            lo = 0;
-            hi = -1;
-            return IsFragment(transition) && TryGetSpan(transition.IonType, transition.CleavageOffset, out lo, out hi);
         }
 
         private bool TryGetSpan(IonType type, int cleavageOffset, out int lo, out int hi)

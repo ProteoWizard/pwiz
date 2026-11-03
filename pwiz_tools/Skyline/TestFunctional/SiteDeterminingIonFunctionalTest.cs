@@ -112,6 +112,7 @@ namespace pwiz.SkylineTestFunctional
             TestUniquelyLocalizingColumn();
             TestIncludeLocalizingIonsSetting();
             TestLibraryMatchTooltip();
+            TestLibraryFilteredRanking();
         }
 
         /// <summary>
@@ -128,13 +129,7 @@ namespace pwiz.SkylineTestFunctional
                 var tgPath = FindTransitionGroupPath(doc, RESOLVABLE_SEQ);
                 var nodePep = (PeptideDocNode) doc.FindNode(tgPath.Parent);
                 var nodeGroup = (TransitionGroupDocNode) doc.FindNode(tgPath);
-                var mzUnique = nodeGroup.Transitions.First(t => IsIon(t, IonType.b, UNIQUE_B_ORDINAL)).Mz;
-                var mzShared = nodeGroup.Transitions.First(t => IsIon(t, IonType.b, SHARED_B_ORDINAL)).Mz;
-                var peaks = new SpectrumPeaksInfo(new[]
-                {
-                    new SpectrumPeaksInfo.MI { Mz = mzUnique, Intensity = 100 },
-                    new SpectrumPeaksInfo.MI { Mz = mzShared, Intensity = 50 }
-                });
+                var peaks = MakeSyntheticSpectrum(nodeGroup);
                 var spectrumInfo = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(peaks,
                     IsotopeLabelType.light, nodeGroup, doc.Settings, nodePep.ExplicitMods, false, -1);
                 var graphItem = new SpectrumGraphItem(nodePep, nodeGroup, null, spectrumInfo, string.Empty)
@@ -149,6 +144,61 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(tipShared.Contains(GraphsResources.GraphSpectrum_ToolTip_Uniquely_localizes),
                     "b7 tooltip should not claim to localize, got:\n{0}", tipShared);
             });
+        }
+
+        /// <summary>
+        /// With library pick set to "filter", the spectrum ranker applies the transition filter and
+        /// the auto-pick takes only ranked ions, so a uniquely localizing ion outside the fragment
+        /// range must rank when the setting is on, or it could never be selected in that mode.
+        /// </summary>
+        private void TestLibraryFilteredRanking()
+        {
+            var doc = SkylineWindow.Document;
+            var tgPath = FindTransitionGroupPath(doc, RESOLVABLE_SEQ);
+            var nodePep = (PeptideDocNode) doc.FindNode(tgPath.Parent);
+            var nodeGroup = (TransitionGroupDocNode) doc.FindNode(tgPath);
+            var peaks = MakeSyntheticSpectrum(nodeGroup);
+
+            var tranSettings = doc.Settings.TransitionSettings;
+            var settingsOn = doc.Settings.ChangeTransitionSettings(
+                tranSettings.ChangeLibraries(tranSettings.Libraries.ChangePick(TransitionLibraryPick.filter)));
+            Assert.IsTrue(settingsOn.TransitionSettings.Filter.IncludeLocalizingIons);
+            var settingsOff = settingsOn.ChangeTransitionSettings(
+                settingsOn.TransitionSettings.ChangeFilter(tranSettings.Filter.ChangeIncludeLocalizingIons(false)));
+
+            Assert.IsTrue(IsRanked(peaks, nodeGroup, nodePep, settingsOn, IonType.b, UNIQUE_B_ORDINAL),
+                "b3 should rank past the fragment range when localizing ions are included");
+            Assert.IsFalse(IsRanked(peaks, nodeGroup, nodePep, settingsOff, IonType.b, UNIQUE_B_ORDINAL),
+                "b3 lies outside the fragment range and should not rank without the setting");
+            Assert.IsTrue(IsRanked(peaks, nodeGroup, nodePep, settingsOff, IonType.b, SHARED_B_ORDINAL),
+                "b7 lies inside the fragment range and should rank regardless");
+        }
+
+        /// <summary>
+        /// A two-peak spectrum at the b3 and b7 m/z of the precursor, standing in for a library
+        /// spectrum so no library file is needed.
+        /// </summary>
+        private static SpectrumPeaksInfo MakeSyntheticSpectrum(TransitionGroupDocNode nodeGroup)
+        {
+            var mzUnique = nodeGroup.Transitions.First(t => IsIon(t, IonType.b, UNIQUE_B_ORDINAL)).Mz;
+            var mzShared = nodeGroup.Transitions.First(t => IsIon(t, IonType.b, SHARED_B_ORDINAL)).Mz;
+            return new SpectrumPeaksInfo(new[]
+            {
+                new SpectrumPeaksInfo.MI { Mz = mzUnique, Intensity = 100 },
+                new SpectrumPeaksInfo.MI { Mz = mzShared, Intensity = 50 }
+            });
+        }
+
+        /// <summary>
+        /// True when ranking the spectrum with the transition filter applied gives the ion a rank.
+        /// </summary>
+        private static bool IsRanked(SpectrumPeaksInfo peaks, TransitionGroupDocNode nodeGroup, PeptideDocNode nodePep,
+            SrmSettings settings, IonType type, int ordinal)
+        {
+            var spectrumInfo = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(peaks,
+                IsotopeLabelType.light, nodeGroup, settings, nodePep.ExplicitMods, true, -1);
+            return spectrumInfo.PeaksRanked.Any(rmi =>
+                rmi.MatchedIons.Any(mfi => mfi.IonType == type && mfi.Ordinal == ordinal));
         }
 
         /// <summary>
@@ -209,7 +259,7 @@ namespace pwiz.SkylineTestFunctional
             // Every selected product ion outside the range (below the precursor m/z) must be unique.
             var tgPath = FindTransitionGroupPath(docLocalizing, RESOLVABLE_SEQ);
             var tranGroupNode = (TransitionGroupDocNode) docLocalizing.FindNode(tgPath);
-            var analyzer = new SiteDeterminingIonAnalyzer(docLocalizing.Settings, FindPeptide(docLocalizing, RESOLVABLE_SEQ));
+            var analyzer = new SiteDeterminingIonAnalyzer(FindPeptide(docLocalizing, RESOLVABLE_SEQ));
             int countAdded = 0;
             foreach (var nodeTran in tranGroupNode.Transitions.Where(t => !t.Transition.IsPrecursor()))
             {
@@ -257,7 +307,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(tgPath, "Could not find precursor for sequence {0}", RESOLVABLE_SEQ);
             var tranGroupNode = (TransitionGroupDocNode) doc.FindNode(tgPath);
             var pepNode = FindPeptide(doc, RESOLVABLE_SEQ);
-            var analyzer = new SiteDeterminingIonAnalyzer(doc.Settings, pepNode);
+            var analyzer = new SiteDeterminingIonAnalyzer(pepNode);
 
             bool sawUnique = false, sawShared = false;
             foreach (var tranNode in tranGroupNode.Transitions)

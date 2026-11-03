@@ -96,17 +96,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         /// <summary>
-        /// The name of the modification this ion uniquely localizes, or null.
+        /// The names of the modifications this ion uniquely localizes, or null.
         /// </summary>
         private string LocalizedModificationName
         {
-            get
-            {
-                var analyzer = SiteDeterminingAnalyzer;
-                if (analyzer == null || !analyzer.IsUniqueToPrecursor(DocNode.Transition))
-                    return null;
-                return analyzer.GetResolvedModification(DocNode.Transition)?.Name;
-            }
+            get { return SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(DocNode.Transition); }
         }
 
         public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree, bool uniquelyLocalizing)

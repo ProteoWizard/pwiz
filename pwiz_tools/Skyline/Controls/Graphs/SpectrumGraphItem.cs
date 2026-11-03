@@ -355,19 +355,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _siteDeterminingAnalyzerBuilt = true;
                     if (RulersApplicable)
-                    {
-                        var analyzer = new SiteDeterminingIonAnalyzer(SrmSettings, PeptideDocNode);
-                        if (analyzer.CanLocalize)
-                            _siteDeterminingAnalyzer = analyzer;
-                    }
+                        _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(PeptideDocNode);
                 }
                 return _siteDeterminingAnalyzer;
             }
         }
 
         /// <summary>
-        /// The name of the modification that a matched ion uniquely localizes, or null when it
-        /// does not (or the peptide has nothing to localize).
+        /// The names of the modifications that a matched ion uniquely localizes, or null when it
+        /// localizes none (or the peptide has nothing to localize).
         /// </summary>
         public string GetLocalizedModificationName(MatchedFragmentIon mfi)
         {
@@ -375,9 +371,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (analyzer == null || Transition.IsPrecursor(mfi.IonType) || mfi.IonType == IonType.custom)
                 return null;
             int offset = Transition.OrdinalToOffset(mfi.IonType, mfi.Ordinal, PeptideDocNode.Peptide.Sequence.Length);
-            if (!analyzer.IsUniqueToPrecursor(mfi.IonType, offset))
-                return null;
-            return analyzer.GetResolvedModification(mfi.IonType, offset)?.Name;
+            return analyzer.GetUniquelyLocalizedModificationNames(mfi.IonType, offset);
         }
 
         protected override bool IsProteomic()

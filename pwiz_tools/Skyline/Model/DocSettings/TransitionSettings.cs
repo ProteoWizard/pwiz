@@ -31,6 +31,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -90,7 +91,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
         }
 
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, bool localizingIon = false)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null)
         {
             if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme != null &&
                 FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return false;
             }
 
-            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz, localizingIon);
+            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz, localizingAnalyzer);
         }
 
         public bool HasOptimizationLibrary
@@ -890,17 +891,21 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Decides whether a product ion is selected by the filter: inside the fragment range, a
-        /// special ion, or (when <see cref="IncludeLocalizingIons"/> is on) an ion that uniquely
-        /// localizes a modification. The precursor exclusion window applies in every case.
+        /// special ion, or (when <see cref="IncludeLocalizingIons"/> is on and the caller passes
+        /// the peptide's analyzer) an ion that uniquely localizes a modification. The precursor
+        /// exclusion window applies in every case.
         /// </summary>
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, bool localizingIon = false)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null)
         {
             if (IsExcluded(ionMz, precursorMz))
                 return false;
             if (start <= cleavageOffset && cleavageOffset <= end && startMz <= ionMz)
                 return true;
-            if (localizingIon && IncludeLocalizingIons)
+            if (IncludeLocalizingIons && localizingAnalyzer != null &&
+                localizingAnalyzer.IsUniqueToPrecursor(type, cleavageOffset))
+            {
                 return true;
+            }
             return IsSpecialFragment(sequence, type, cleavageOffset);
         }
 
