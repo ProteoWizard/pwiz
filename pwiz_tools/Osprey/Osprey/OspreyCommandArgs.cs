@@ -61,6 +61,11 @@ namespace pwiz.Osprey
     {
         private const int USAGE_WIDTH = 78;
 
+        // The --resolution values. auto, the default, measures the resolution from the data.
+        public const string RESOLUTION_AUTO = @"auto";
+        public const string RESOLUTION_HRAM = @"hram";
+        public const string RESOLUTION_UNIT = @"unit";
+
         /// <summary>
         /// Osprey's grammar: the standard <c>--name</c> with <c>-x</c> short aliases, a value
         /// as the next token, any dash-prefixed token ending a value (<c>-o -l x</c> fails
@@ -110,7 +115,7 @@ namespace pwiz.Osprey
         private string _workDir;
         private string _outputDir;
         private string _cacheDir;
-        private string _resolution = @"hram";
+        private string _resolution = RESOLUTION_AUTO;
         private double? _fragmentTolerance;
         private string _fragmentUnit;
         private readonly OspreyConfig _config = new OspreyConfig();
@@ -345,8 +350,8 @@ namespace pwiz.Osprey
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(OspreyArgNames.RESOLUTION,
-            new[] { @"hram", @"unit" }, (c, p) => c._resolution = p.Value.ToLowerInvariant())
-            { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => @"hram"), DescriptionArgs = () => new object[] { @"hram", @"unit" } };
+            new[] { RESOLUTION_AUTO, RESOLUTION_HRAM, RESOLUTION_UNIT }, (c, p) => c._resolution = p.Value.ToLowerInvariant())
+            { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => RESOLUTION_AUTO), DescriptionArgs = () => new object[] { RESOLUTION_HRAM, RESOLUTION_UNIT, RESOLUTION_AUTO } };
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(OspreyArgNames.FRAGMENT_TOLERANCE,
             NUM_VALUE, (c, p) => c._fragmentTolerance = ParseDouble(p))
             { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, MinValue = 0, DescriptionArgs = () => new object[] { ARG_FRAGMENT_UNIT.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
@@ -868,28 +873,12 @@ namespace pwiz.Osprey
             // before the pipeline runs.
             _config.FdrClassifier = fdrModel;
 
-            switch (_resolution)
-            {
-                case @"unit":
-                    _config.ResolutionMode = ResolutionMode.UnitResolution;
-                    break;
-                default:
-                    _config.ResolutionMode = ResolutionMode.HRAM;
-                    break;
-            }
-
-            if (_config.ResolutionMode == ResolutionMode.UnitResolution)
-            {
-                if (_fragmentUnit == null)
-                {
-                    _config.FragmentTolerance.Unit = ToleranceUnit.Mz;
-                    if (!_fragmentTolerance.HasValue)
-                        _config.FragmentTolerance.Tolerance = 0.5;
-                }
-                _config.PrecursorTolerance.Unit = ToleranceUnit.Mz;
-                _config.PrecursorTolerance.Tolerance = 1.0;
-            }
-
+            // The explicit fragment tolerance and unit first, then the resolution, whose defaults
+            // fill in only what the command line left out. A detected resolution reaches the same
+            // ApplyResolutionMode later, once the host has measured the data, so the two routes
+            // cannot differ in what they configure.
+            _config.FragmentToleranceGiven = _fragmentTolerance.HasValue;
+            _config.FragmentUnitGiven = _fragmentUnit != null;
             if (_fragmentTolerance.HasValue)
                 _config.FragmentTolerance.Tolerance = _fragmentTolerance.Value;
 
@@ -910,6 +899,19 @@ namespace pwiz.Osprey
                             OspreyResources.OspreyCommandArgs_Unknown_fragment_unit___0____defaulting_to__1_, _fragmentUnit, @"ppm"));
                         break;
                 }
+            }
+
+            switch (_resolution)
+            {
+                case RESOLUTION_UNIT:
+                    _config.ApplyResolutionMode(ResolutionMode.UnitResolution);
+                    break;
+                case RESOLUTION_HRAM:
+                    _config.ApplyResolutionMode(ResolutionMode.HRAM);
+                    break;
+                default:
+                    _config.DetectResolution = true;
+                    break;
             }
 
             if (!_config.LibrarySuppliesDecoys &&

@@ -112,10 +112,24 @@ namespace pwiz.Osprey.Core
         public string CacheDir { get; set; }
 
         /// <summary>
-        /// Resolution mode for binning. HRAM unless the command line says unit: there is no
-        /// detection from the data yet, so the default is the instruments most searches use.
+        /// Resolution mode for binning. Set through <see cref="ApplyResolutionMode"/>, from an
+        /// explicit <c>--resolution</c> or, when <see cref="DetectResolution"/> is set, from the
+        /// data before the analysis starts. HRAM until then.
         /// </summary>
         public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.HRAM;
+
+        /// <summary>
+        /// True when the command line did not choose the resolution (<c>--resolution auto</c>,
+        /// the default): the host measures it from the data and passes the result to
+        /// <see cref="ApplyResolutionMode"/> before anything reads <see cref="ResolutionMode"/>.
+        /// </summary>
+        public bool DetectResolution { get; set; }
+
+        /// <summary>True when the command line gave <c>--fragment-tolerance</c>, which the resolution's default does not replace.</summary>
+        public bool FragmentToleranceGiven { get; set; }
+
+        /// <summary>True when the command line gave <c>--fragment-unit</c>, which the resolution's default does not replace.</summary>
+        public bool FragmentUnitGiven { get; set; }
 
         /// <summary>Fragment tolerance for LibCosine scoring.</summary>
         public FragmentToleranceConfig FragmentTolerance { get; set; } = FragmentToleranceConfig.Default();
@@ -556,6 +570,31 @@ namespace pwiz.Osprey.Core
         public OspreyConfig ShallowClone()
         {
             return (OspreyConfig)this.MemberwiseClone();
+        }
+
+        /// <summary>
+        /// Sets the resolution mode and the tolerances it implies. The one route by which both an
+        /// explicit <c>--resolution</c> and a detected one reach the configuration, so the two
+        /// produce the same search settings and the same <see cref="SearchIdentity"/>. Unit
+        /// resolution matches fragments within 0.5 m/z unless <c>--fragment-unit</c> or
+        /// <c>--fragment-tolerance</c> said otherwise, and precursors within 1.0 m/z. The
+        /// tolerances are replaced, never changed in place, because a shallow clone shares them.
+        /// </summary>
+        public void ApplyResolutionMode(ResolutionMode mode)
+        {
+            ResolutionMode = mode;
+            DetectResolution = false;
+            if (mode != ResolutionMode.UnitResolution)
+                return;
+            if (!FragmentUnitGiven)
+            {
+                FragmentTolerance = new FragmentToleranceConfig
+                {
+                    Tolerance = FragmentToleranceGiven ? FragmentTolerance.Tolerance : 0.5,
+                    Unit = ToleranceUnit.Mz
+                };
+            }
+            PrecursorTolerance = FragmentToleranceConfig.UnitResolution(1.0);
         }
 
         /// <summary>

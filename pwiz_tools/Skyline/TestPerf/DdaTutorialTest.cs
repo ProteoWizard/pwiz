@@ -403,6 +403,9 @@ namespace TestPerf
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             }
 
+            if (!isNotAmanda && IsFullData)
+                VerifyOutlierIdIgnored();
+
             FindNode(string.Format("{0:F04}++", IsFullData ? 835.914 : 699.3566));
             RunUI(() =>
             {
@@ -452,6 +455,35 @@ namespace TestPerf
 
             // Verify the preset can be loaded in a new wizard with all settings restored
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME, searchEngine);
+        }
+
+        /// <summary>
+        /// MS Amanda 3.0 reports a false charge 3 ID of TGEGFLCVFAINNTK at 20.79 min in 2_UPS1_300fmol,
+        /// far from its other IDs near 138 min. That ID must neither extend chromatogram extraction for
+        /// the charge 2 precursor nor, once aligned into 1_UPS1_100fmol, choose its peak.
+        /// </summary>
+        private void VerifyOutlierIdIgnored()
+        {
+            const double outlierIdTime = 20.79;
+            var doc = SkylineWindow.Document;
+            var nodePep = doc.Peptides.First(p => p.Peptide.Sequence == "TGEGFLCVFAINNTK");
+            var nodeGroup = nodePep.TransitionGroups.First(g => g.IsLight && g.PrecursorCharge == 2);
+            var results = doc.Settings.MeasuredResults;
+            float tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            double minTime = outlierIdTime + doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterLength;
+            for (int i = 0; i < results.Chromatograms.Count; i++)
+            {
+                string replicateName = results.Chromatograms[i].Name;
+                AssertEx.IsTrue(results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, out var chromGroupInfos));
+                foreach (var chromGroupInfo in chromGroupInfos)
+                {
+                    float startTime = chromGroupInfo.TimeIntensitiesGroup.MinTime;
+                    AssertEx.IsTrue(startTime > minTime,
+                        string.Format(@"{0} extraction starts at {1:F02}", replicateName, startTime));
+                }
+                var peakTime = nodeGroup.Results[i].First().RetentionTime;
+                AssertEx.IsTrue(peakTime > minTime, string.Format(@"{0} peak at {1:F02}", replicateName, peakTime));
+            }
         }
 
         private void VerifyPresetInNewWizard(string presetName, SearchEngine expectedEngine)

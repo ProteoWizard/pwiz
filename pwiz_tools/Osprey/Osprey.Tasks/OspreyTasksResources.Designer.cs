@@ -934,6 +934,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Across {0:N0} files: {1:N0} of {2:N0} target precursors at {3:P1} experiment-level {4} FDR.
+        /// </summary>
+        public static string FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_precursors_at__3__experiment_level__4__FDR {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_prec" +
+                        "ursors_at__3__experiment_level__4__FDR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: {1:N0} precursors at {2:P1} run-level FDR.
         /// </summary>
         public static string FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR {
@@ -950,16 +960,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__fir" +
                         "st_pass_intermediate_files_could_not_be_written__so_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Total: {0:N0} precursors pass run-level FDR across {1:N0} files.
-        /// </summary>
-        public static string FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across" +
-                        "__1__files", resourceCulture);
             }
         }
         

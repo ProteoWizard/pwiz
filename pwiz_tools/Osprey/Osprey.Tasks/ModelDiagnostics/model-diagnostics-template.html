@@ -507,6 +507,15 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       A large gap means the pool the decoys are drawn from has been selected - read it as a
       warning about the pool, <b>not</b> as a bar to lower: the target+entrapment and decoy counts
       beside it rise together, so a lower score buys IDs at the error rate it buys decoys.</div>
+    <div id="caRunCutWrap" style="margin-top:14px">
+      <h2 style="font-size:14px;margin:0 0 3px">Run-level acceptance boundary, per run</h2>
+      <p class="desc">The composite score of the worst precursor each run accepts at its run-level
+        q - the bar that run's decoy row is counted against. The decoy row is the only one gated by
+        score rather than by its own q, so a boundary that drifts shows up here as an outlier rather
+        than as an implausible rate. The dashed line is the experiment-wide boundary.</p>
+      <div class="legend" id="caRunCutLegend"></div>
+      <div class="chartbox" id="caRunCut"></div>
+    </div>
     <p class="note" id="caNote"></p>
     <div class="grid2" style="margin-top:16px">
       <div>
@@ -1777,6 +1786,8 @@ function renderCoAssignment(ca){
     }
   }
 
+  drawCaRunCutoffs(ca);
+
   // ---- per-class table ----
   const host=document.getElementById("caTable");host.innerHTML="";
   const tb=H(host,"table"),th=H(H(tb,"thead"),"tr");
@@ -1823,6 +1834,57 @@ function renderCoAssignment(ca){
   drawCaHist(ca,s);
   drawCaLadder(ca,s);
   drawCaOffenders(s);
+}
+
+// The run-scope acceptance boundary of every run on the run axis, with the experiment boundary as
+// a reference line (issue #4672). These were one log line per run, which at cohort scale hid the
+// outlier they existed to expose; a gap in the line is a run that accepted nothing.
+function drawCaRunCutoffs(ca){
+  const wrap=document.getElementById("caRunCutWrap");
+  if(!wrap)return;
+  const v=ca.runCutoffs||[],names=ca.runNames||[];
+  const fin=v.filter(x=>x!=null&&isFinite(x));
+  if(!fin.length){wrap.style.display="none";return;}
+  wrap.style.display="";
+  const host=document.getElementById("caRunCut");host.innerHTML="";
+  const N=v.length,W=1000,Hh=240,box={l:62,t:14,w:W-82,h:Hh-58};
+  const ref=isFinite(ca.experimentCutoff)?ca.experimentCutoff:null;
+  let lo=Math.min(...fin),hi=Math.max(...fin);
+  if(ref!=null){lo=Math.min(lo,ref);hi=Math.max(hi,ref);}
+  const pad=(hi-lo)*0.08||Math.abs(hi)*0.1||1;
+  const xd=N>1?[1,N]:[0,2];
+  const step=Math.max(1,Math.round(nice((N-1)/6)));
+  const xt=[];for(let i=1;i<=N;i+=step)xt.push(i);
+  const sv=svg(W,Hh);host.appendChild(sv);
+  const sc=axes(sv,box,xd,[lo-pad,hi+pad],{xticks:xt,xlab:"run (input order)",ylab:"composite score",
+    xfmt:x=>fmt(x,0)});
+  if(ref!=null){
+    E(sv,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(ref),y2:sc.y(ref),stroke:COL.warn,"stroke-width":1.5,
+      "stroke-dasharray":"5 4"});
+  }
+  let path="",started=false;
+  for(let i=0;i<N;i++){
+    if(v[i]==null||!isFinite(v[i])){started=false;continue;}
+    path+=(started?"L":"M")+sc.x(i+1).toFixed(1)+" "+sc.y(v[i]).toFixed(1)+" ";started=true;
+  }
+  E(sv,"path",{d:path,fill:"none",stroke:COL.decoy,"stroke-width":1.3});
+  if(N<=120){
+    for(let i=0;i<N;i++){
+      if(v[i]!=null&&isFinite(v[i]))E(sv,"circle",{cx:sc.x(i+1),cy:sc.y(v[i]),r:2.4,fill:COL.decoy});
+    }
+  }
+  const ov=E(sv,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+  ov.addEventListener("mousemove",ev=>{const rb=sv.getBoundingClientRect();
+    const xv=xd[0]+((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*(xd[1]-xd[0]);
+    const i=Math.max(0,Math.min(N-1,Math.round(xv)-1));
+    let html="<b>run "+(i+1)+"</b>"+(names[i]?" &middot; "+esc(names[i]):"")+
+      "<br>boundary: "+(v[i]!=null&&isFinite(v[i])?fmt(v[i],4):"none (no accepted precursor)");
+    if(ref!=null)html+="<br>experiment: "+fmt(ref,4);
+    showTip(ev,html);});
+  ov.addEventListener("mouseleave",hideTip);
+  const items=[{name:"run boundary",color:COL.decoy}];
+  if(ref!=null)items.push({name:"experiment boundary",color:COL.warn,line:true});
+  legend(document.getElementById("caRunCutLegend"),items);
 }
 
 // |dRT| histogram over the FULL scanned window, each class normalized to its own total.
