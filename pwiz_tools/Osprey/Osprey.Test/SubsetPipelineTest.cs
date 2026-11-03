@@ -146,6 +146,7 @@ namespace pwiz.Osprey.Test
             string straightLog = RunAnalysis(straightDir, DataInputs(), Verifier(true));
             string log = straightLog;
             ValidateStraightThrough(straightDir, log);
+            AssertFirstPassExperimentTotal(straightDir, log, DataInputs().Count());
             AssertNoZeroApexUnderArea(straightDir);
             // The DIA-NN-shaped reports are written only under OSPREY_DIANN_REPORTS.
             Assert.IsFalse(File.Exists(Path.Combine(straightDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS))));
@@ -1891,6 +1892,26 @@ namespace pwiz.Osprey.Test
         {
             Assert.IsTrue(File.Exists(path), @"missing " + path);
             Assert.IsTrue(File.ReadLines(path).Skip(1).Any(), @"no rows in " + path);
+        }
+
+        /// <summary>
+        /// The first-pass total under the per-file run-level counts counts each target precursor
+        /// once, at experiment level, as the first-pass experiment intermediate file records it:
+        /// not the sum of the per-file counts, which counts a precursor once per file it passes in
+        /// (issue #4463).
+        /// </summary>
+        private static void AssertFirstPassExperimentTotal(string dir, string log, int nFiles)
+        {
+            string pattern = @"*." + FdrScoresSidecar.PassLabel(FdrScoresSidecar.Pass.FirstPass) + FdrExperimentSidecar.EXT;
+            string path = Directory.GetFiles(dir, pattern, SearchOption.AllDirectories).Single();
+            var config = new OspreyConfig();
+            var targets = FdrExperimentSidecar.ReadMap(path, FdrScoresSidecar.Pass.FirstPass).Values
+                .Where(record => !record.IsDecoy).ToList();
+            int passing = targets.Count(record => record.EffectiveExperimentQvalue(config.FdrLevel) <= config.ExperimentFdr);
+            Assert.IsTrue(passing > 0, path);
+            AssertHasLine(log, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_precursors_at__3__experiment_level__4__FDR,
+                nFiles, passing, targets.Count, config.ExperimentFdr, config.FdrLevel.GetLocalizedString()));
         }
 
         private static void AssertHasLine(string log, string text)
