@@ -1371,6 +1371,7 @@ public static class SkylineTools
         });
     }
 
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetRunningJobs))]
     [McpServerTool(Name = "skyline_get_running_jobs"),
      Description("List the background jobs Skyline is still working on. " +
         "A call that timed out keeps running as a job, so this is how to see whether it is still going, " +
@@ -1402,6 +1403,7 @@ public static class SkylineTools
         });
     }
 
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.CancelJob))]
     [McpServerTool(Name = "skyline_cancel_job"),
      Description("Ask a running job to stop, by the id skyline_get_running_jobs reports. " +
         "The job stops at its next cancellation check, so call skyline_get_running_jobs again to see it go.")]

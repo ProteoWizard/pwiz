@@ -211,16 +211,16 @@ namespace pwiz.Skyline
             // statusGeneral
             // 
             this.statusGeneral.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.statusGeneral.DoubleClickEnabled = true;
             this.statusGeneral.Name = "statusGeneral";
             resources.ApplyResources(this.statusGeneral, "statusGeneral");
             this.statusGeneral.Spring = true;
-            this.statusGeneral.DoubleClick += new System.EventHandler(this.statusProgress_DoubleClick);
-            //
+            this.statusGeneral.DoubleClick += new System.EventHandler(this.statusGeneral_DoubleClick);
+            // 
             // statusProgress
-            //
+            // 
             this.statusProgress.Name = "statusProgress";
             resources.ApplyResources(this.statusProgress, "statusProgress");
-            this.statusProgress.DoubleClick += new System.EventHandler(this.statusProgress_DoubleClick);
             // 
             // buttonShowAllChromatograms
             // 

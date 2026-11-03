@@ -588,13 +588,23 @@ namespace pwiz.Skyline.ToolsUI
             bool stopIfAbandoned = false)
         {
             using var job = BackgroundJobs.Start(description);
-            if (!stopIfAbandoned)
+            try
             {
-                return work(job.Status, job.CancellationToken);
+                if (!stopIfAbandoned)
+                {
+                    return work(job.Status, job.CancellationToken);
+                }
+                using var cancellation =
+                    CancellationTokenSource.CreateLinkedTokenSource(job.CancellationToken, RequestCancellation);
+                return work(job.Status, cancellation.Token);
             }
-            using var cancellation =
-                CancellationTokenSource.CreateLinkedTokenSource(job.CancellationToken, RequestCancellation);
-            return work(job.Status, cancellation.Token);
+            catch (Exception x) when (RequestCancellation.IsCancellationRequested && !(x is OperationCanceledException))
+            {
+                // The caller has gone, so the error response this becomes reaches no one. Reporting it on the job is
+                // what shows the user that work they may have been waiting on failed (a full disk, a locked file).
+                job.Failed(x);
+                throw;
+            }
         }
 
         /// <summary>
@@ -618,7 +628,10 @@ namespace pwiz.Skyline.ToolsUI
 
             public UpdateProgressResponse UpdateProgress(IProgressStatus status)
             {
-                var response = _progressMonitor.UpdateProgress(status);
+                // A final status would take the job out of the progress list while the operation still has work
+                // left after it: the exporter reports Complete before the file is committed. The job's end is
+                // reported once the whole operation is over, when RunJob disposes it (or by Failed).
+                var response = status.IsFinal ? UpdateProgressResponse.normal : _progressMonitor.UpdateProgress(status);
                 return _cancellationToken.IsCancellationRequested ? UpdateProgressResponse.cancel : response;
             }
 
