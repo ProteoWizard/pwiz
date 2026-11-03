@@ -95,6 +95,10 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
+                // The TSV term is a literal (an int does not concatenate into a const string), so
+                // hold it to the reader's version here.
+                Assert.AreEqual(@";tsvreader=" + DiannTsvLoader.READER_VERSION.ToString(CultureInfo.InvariantCulture),
+                    OspreyTask.TSV_READER_TERM);
                 Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
                     @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
@@ -393,7 +397,15 @@ namespace pwiz.Osprey.Test
                 @";fdrmodel=gbdt;gbtobjective=LogisticBinary;gbttrees=200;gbtdepth=6;gbtlr=0.1" +
                 @";gbtminchild=1;gbtsubsample=0.8;gbtcolsample=0.8;gbtgamma=0;gbtlambda=1;gbtalpha=0" +
                 @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5",
-                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(),
+                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams { UseDeterministicMath = true },
+                    OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5));
+            // OSPREY_DETERMINISTIC_MATH=0 appends one term and leaves the rest alone, so the
+            // default key above - every existing gbdt directory - did not move when it arrived.
+            Assert.AreEqual(
+                @";fdrmodel=gbdt;gbtobjective=LogisticBinary;gbttrees=200;gbtdepth=6;gbtlr=0.1" +
+                @";gbtminchild=1;gbtsubsample=0.8;gbtcolsample=0.8;gbtgamma=0;gbtlambda=1;gbtalpha=0" +
+                @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5;gbtmath=system",
+                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams { UseDeterministicMath = false },
                     OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5));
 
             // The term is the ONLY difference: a percolator key is the gbdt key without it.
@@ -450,6 +462,8 @@ namespace pwiz.Osprey.Test
                 return d + 0.5;
             if (value is ulong u)
                 return u + 1;
+            if (value is bool b)
+                return !b;
             if (value is GbtObjective objective)
                 return objective == GbtObjective.LogisticBinary ? GbtObjective.SquaredError : GbtObjective.LogisticBinary;
             Assert.Fail(@"no alternative value for a GbtParams field of type " + value.GetType().Name);

@@ -34,6 +34,10 @@ public class UnimodDataTests
         Assert.IsNotNull(phospho);
         Assert.AreEqual("Phospho", phospho.Name);
         Assert.AreEqual(79.966331, phospho.DeltaMonoisotopicMass, 1e-5);
+
+        // The UniMod accession number, as libraries name a modification (UniMod:21).
+        Assert.AreEqual(21, phospho.Id);
+        Assert.AreEqual(1, acetyl.Id);
     }
 
     [TestMethod]

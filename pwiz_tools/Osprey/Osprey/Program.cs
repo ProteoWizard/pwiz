@@ -530,6 +530,18 @@ namespace pwiz.Osprey
                     return EXIT_CODE_FAILURE_TO_START;
                 }
 
+                // --resolution auto: measured here, before anything reads the resolution (the
+                // settings lines below, the search settings hash, scoring), and applied through the
+                // same ApplyResolutionMode an explicit value takes, so the two configure identical
+                // searches. A library phase reads no input and scores nothing, so measures nothing.
+                bool resolutionDetected = config.DetectResolution && config.LibraryBuild.Phase == null;
+                ResolutionDetection resolutionDetection = null;
+                if (resolutionDetected)
+                {
+                    resolutionDetection = ResolutionDetector.Detect(config);
+                    config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
+                }
+
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
                 LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
@@ -592,7 +604,7 @@ namespace pwiz.Osprey
                     config.LibraryBuild.Phase != null
                         ? LibraryBuildWorkflow.PhaseOutput(config)
                         : config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
-                LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
+                LogResolution(config, resolutionDetected, resolutionDetection);
                 LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
                     config.FragmentTolerance.Unit.GetLocalizedString()));
@@ -667,6 +679,22 @@ namespace pwiz.Osprey
                         OspreyEnvironment.SvmCSelectionToleranceSetting,
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
+                }
+                // Abort for the same reason: a mistyped value would train with the default arm
+                // and key its directories as the default, so a System.Math timing or parity arm
+                // would report the deterministic arm's numbers under its own name.
+                if (OspreyEnvironment.DeterministicMathUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_DETERMINISTIC_MATH must be '0' (System.Math Exp/Log) or '1' (the default, " +
+                        @"platform-independent fdlibm Exp/Log), not '{0}'. Unset it for the default.",
+                        OspreyEnvironment.DeterministicMathSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                if (!OspreyEnvironment.UseDeterministicMath)
+                {
+                    LogInfo(@"Exp/Log: System.Math (OSPREY_DETERMINISTIC_MATH=0) - gbdt training is not " +
+                            @"bit-identical across operating systems");
                 }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
@@ -1273,6 +1301,56 @@ namespace pwiz.Osprey
         {
             return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2),
                 OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// The resolution settings line and, when it was detected, the evidence: the measurement
+        /// and the threshold it was compared with, or the scores file it was read from, and every
+        /// input whose own spectra measure as the other resolution.
+        /// </summary>
+        private static void LogResolution(OspreyConfig config, bool detected, ResolutionDetection detection)
+        {
+            LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
+            if (!detected)
+            {
+                // A library phase scores nothing, so an auto resolution there is never resolved.
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, config.DetectResolution ? @"unused" : @"explicit"));
+                return;
+            }
+            string choose = OspreyCommandArgs.ARG_RESOLUTION.ArgumentText + @" " +
+                            OspreyCommandArgs.RESOLUTION_HRAM + @"|" + OspreyCommandArgs.RESOLUTION_UNIT;
+            string modeText = config.ResolutionMode.GetLocalizedString();
+            if (detection?.Mode == null)
+            {
+                var measurement = detection?.Measurement;
+                LogWarning(measurement == null
+                    ? string.Format(OspreyResources.Program_LogResolution_No_spectra_or_scores_file_of_the_inputs_shows_the_resolution__searching_at__0___Give__1__to_choose_it_yourself_,
+                        modeText, choose)
+                    : string.Format(OspreyResources.Program_LogResolution_The_MS2_spectra_of__0__hold_too_few_peaks_to_measure_the_resolution___1__adjacent_peaks_in__2__spectra___searching_at__3___Give__4__to_choose_it_yourself_,
+                        detection.InputFile, measurement.SpacingCount, measurement.SpectrumCount, modeText, choose));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"undecided"));
+                return;
+            }
+            if (detection.Measurement == null)
+            {
+                LogInfo(string.Format(OspreyResources.Program_LogResolution_Read_from_the_search_settings_recorded_in__0___since_no_spectra_of_the_inputs_are_at_hand_to_measure__Give__1__to_choose_it_yourself_,
+                    detection.ScoresPath, choose));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"scores-file"));
+                return;
+            }
+            var evidence = detection.Measurement;
+            LogInfo(string.Format(config.ResolutionMode == ResolutionMode.HRAM
+                    ? OspreyResources.Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1____2__of_adjacent_peaks_are_within__3__m_z_of_each_other__closer_than_the__4__m_z_a_unit_resolution_analyzer_separates__Give__5__to_choose_it_yourself_
+                    : OspreyResources.Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1___the_closest__2__of_adjacent_peaks_are__3__m_z_apart__no_closer_than__4__m_z__as_at_unit_resolution__Give__5__to_choose_it_yourself_,
+                evidence.SpectrumCount, detection.InputFile, ResolutionDetector.SPACING_QUANTILE.ToString(@"0.#%"),
+                evidence.SpacingQuantile, ResolutionDetector.HRAM_MAX_SPACING, choose));
+            LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"spectra {0}", config.ResolutionMode));
+            foreach (var disagreement in detection.Disagreements)
+            {
+                LogWarning(string.Format(OspreyResources.Program_LogResolution__0__measures_as__1____2__m_z___unlike__3___it_is_searched_at__4__with_the_other_inputs__Search_runs_of_different_resolution_separately_,
+                    disagreement.Key, disagreement.Value.Mode.GetLocalizedString(), disagreement.Value.SpacingQuantile,
+                    detection.InputFile, modeText));
+            }
         }
 
         /// <summary>

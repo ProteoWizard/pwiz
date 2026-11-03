@@ -188,7 +188,7 @@
     <value>Peptide q-value threshold for keeping first-pass peptides for cross-run reconciliation and the second pass (default: 0.01 = {0}; loosen e.g. to 0.05 to broaden the reconciliation pool)</value>
   </data>
   <data name="_resolution" xml:space="preserve">
-    <value>How spectra are scored: {0} (the default; Orbitrap, Astral and TOF instruments) bins them finely, uses the MS1 precursor features, and matches fragments and precursors within 10 ppm; {1} (ion traps such as Stellar) bins them coarsely, without MS1 features, and matches fragments within 0.5 m/z and precursors within 1.0 m/z. The resolution is not detected from the data: a search of unit-resolution data must give {1}.</value>
+    <value>How spectra are scored: {0} (Orbitrap, Astral and TOF instruments) bins them finely, uses the MS1 precursor features, and matches fragments and precursors within 10 ppm; {1} (ion traps such as Stellar) bins them coarsely, without MS1 features, and matches fragments within 0.5 m/z and precursors within 1.0 m/z. The default, {2}, chooses between them by measuring how closely spaced the peaks of the first input's MS2 spectra are, and logs the measurement; give {0} or {1} to choose yourself. All inputs of one search are scored the same way.</value>
   </data>
   <data name="_run_fdr" xml:space="preserve">
     <value>The run-level FDR threshold (default: 0.01). A reported precursor gets an identification in Skyline in each run where its q-value in that run is at most this, or in its best run when it is in none; the scoring model is also trained and tested at it.</value>
