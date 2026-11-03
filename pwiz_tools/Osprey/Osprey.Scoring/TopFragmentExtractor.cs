@@ -44,10 +44,10 @@ namespace pwiz.Osprey.Scoring
         public const int CAL_TOP_N_FRAGMENTS = 6;
 
         /// <summary>
-        /// How many top fragments the search extracts XICs for: <see cref="CAL_TOP_N_FRAGMENTS"/>, or
-        /// OSPREY_XIC_FRAGMENTS for an experiment (<see cref="OspreyEnvironment.XicFragments"/>).
+        /// How many top fragments the search extracts XICs for: 6, or OSPREY_XIC_FRAGMENTS for an
+        /// experiment (<see cref="OspreyEnvironment.SearchXicFragments"/>).
         /// </summary>
-        public static readonly int SearchTopNFragments = OspreyEnvironment.XicFragments ?? CAL_TOP_N_FRAGMENTS;
+        public static readonly int SearchTopNFragments = OspreyEnvironment.SearchXicFragments;
 
         /// <summary>
         /// Extract XICs for the top N most intense library fragments across the

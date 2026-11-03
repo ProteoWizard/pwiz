@@ -2712,6 +2712,80 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The XIC count is not in the search hash, so a FDR task pointed at existing scores
+        /// (--task FirstPassFDR / SecondPassFDR) must check the count the scores record, or it
+        /// adopts scores from another count and labels its output with its own. Covers where the
+        /// count is read from (footer entry, validity stamp, neither) and that a scores file
+        /// recording another count is refused, naming the file. The test process leaves
+        /// OSPREY_XIC_FRAGMENTS unset, so this run's count is the default.
+        /// </summary>
+        [TestMethod]
+        public void TestScoresXicCountValidatedOnLoad()
+        {
+            int current = OspreyEnvironment.SearchXicFragments;
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, current);
+            string stampOf12 = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
+                @"search=s;library=l;xic=12;featmask=default").ToString();
+            string stampWithoutXic = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
+                @"search=s;library=l").ToString();
+
+            // Where the count comes from: the footer entry wins over the stamp; a stamp written
+            // before the entry still carries the count; a file older than both used the default.
+            Assert.AreEqual(12, ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ParquetScoreCache.META_XIC_FRAGMENTS, @"12" }, { ArtifactStamp.PARQUET_KEY, stampWithoutXic } }));
+            Assert.AreEqual(12, ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ArtifactStamp.PARQUET_KEY, stampOf12 } }));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, ParquetScoreCache.RecordedXicFragments(
+                new Dictionary<string, string> { { ArtifactStamp.PARQUET_KEY, stampWithoutXic } }));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, ParquetScoreCache.RecordedXicFragments(
+                new Dictionary<string, string>()));
+            Assert.IsNull(ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ParquetScoreCache.META_XIC_FRAGMENTS, @"twelve" } }));
+
+            // The load-time gate: same count accepted, another count refused with the file named.
+            var config = new OspreyConfig();
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_xicload_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string matching = WriteScoresWithXic(dir, @"matching", config, current);
+                string other = WriteScoresWithXic(dir, @"other", config, current * 2);
+                Assert.IsNull(ParquetScoreCache.ValidateScoresParquetGroup(new[] { matching }, config, OspreyVersion.Current, null));
+                string error = ParquetScoreCache.ValidateScoresParquetGroup(new[] { matching, other }, config, OspreyVersion.Current, null);
+                Assert.IsNotNull(error, "scores from another XIC count must be refused");
+                StringAssert.Contains(error, other);
+                StringAssert.Contains(error, @"OSPREY_XIC_FRAGMENTS");
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        private static string WriteScoresWithXic(string dir, string stem, OspreyConfig config, int xicCount)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            var entries = new List<FdrEntry>
+            {
+                new FdrEntry { EntryId = 1, Charge = 2, ScanNumber = 10, ModifiedSequence = "PEPTIDE", Features = features },
+            };
+            var metadata = new Dictionary<string, string>
+            {
+                { @"osprey.version", OspreyVersion.Current },
+                { ParquetScoreCache.META_SEARCH_HASH, config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(xicCount) },
+            };
+            string path = Path.Combine(dir, stem + @".scores.parquet");
+            using (var saver = new SimpleFileSaver(path))
+            {
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata, null, stem + @".mzML");
+                saver.Commit();
+            }
+            return path;
+        }
+
+        /// <summary>
         /// Bounded row-group write: a parquet written as several row groups (forced via the
         /// test-only <see cref="ParquetScoreCache.RowGroupRowCapForTest"/> cap) reads back
         /// logically identical -- same rows in the same global (entry_id, charge, scan_number)

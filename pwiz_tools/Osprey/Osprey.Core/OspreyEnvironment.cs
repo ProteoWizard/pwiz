@@ -748,6 +748,15 @@ namespace pwiz.Osprey.Core
         public static readonly int? XicFragments = ParseXicFragments(
             Environment.GetEnvironmentVariable(@"OSPREY_XIC_FRAGMENTS"));
 
+        /// <summary>The XIC count when OSPREY_XIC_FRAGMENTS is unset - the only count before it existed.</summary>
+        public const int DEFAULT_XIC_FRAGMENTS = 6;
+
+        private const int MIN_XIC_FRAGMENTS = 2;
+        private const int MAX_XIC_FRAGMENTS = 20;
+
+        /// <summary>The XIC count in effect: <see cref="XicFragments"/>, else <see cref="DEFAULT_XIC_FRAGMENTS"/>.</summary>
+        public static int SearchXicFragments => XicFragments ?? DEFAULT_XIC_FRAGMENTS;
+
         /// <summary>
         /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (read as 0 when the
         /// FDR stage loads features, so the classifier cannot use them), as comma-separated feature
@@ -757,6 +766,9 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
+
+        /// <summary>The OSPREY_FEATURE_MASK value that masks nothing.</summary>
+        public const string FEATURE_MASK_NONE = @"none";
 
         /// <summary>
         /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
@@ -780,7 +792,9 @@ namespace pwiz.Osprey.Core
             string mode = value.Trim().ToLowerInvariant();
             if (mode == RECONCILIATION_SYMMETRIC_DECOYS)
                 return mode;
-            throw new InvalidOperationException(@"OSPREY_RECONCILIATION must be symmetric-decoys: " + value);
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
+                @"OSPREY_RECONCILIATION", RECONCILIATION_SYMMETRIC_DECOYS, value));
         }
 
         /// <summary>
@@ -807,14 +821,16 @@ namespace pwiz.Osprey.Core
                 return false;
             if (string.Equals(value.Trim(), @"ratio", StringComparison.OrdinalIgnoreCase))
                 return true;
-            throw new InvalidOperationException(@"OSPREY_PEP_FORMULA must be ratio: " + value);
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
+                @"OSPREY_PEP_FORMULA", @"ratio", value));
         }
 
         private static string[] ParseFeatureMask(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return null;
-            if (string.Equals(value.Trim(), @"none", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(value.Trim(), FEATURE_MASK_NONE, StringComparison.OrdinalIgnoreCase))
                 return Array.Empty<string>();
             return value.Split(',').Select(name => name.Trim()).Where(name => name.Length > 0).ToArray();
         }
@@ -829,9 +845,11 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrEmpty(value))
                 return null;
             if (int.TryParse(value.Trim(), System.Globalization.NumberStyles.None,
-                    System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 2 && n <= 20)
+                    System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= MIN_XIC_FRAGMENTS && n <= MAX_XIC_FRAGMENTS)
                 return n;
-            throw new InvalidOperationException(@"OSPREY_XIC_FRAGMENTS must be a whole number from 2 to 20: " + value);
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___,
+                @"OSPREY_XIC_FRAGMENTS", MIN_XIC_FRAGMENTS, MAX_XIC_FRAGMENTS, value));
         }
 
         /// <summary>

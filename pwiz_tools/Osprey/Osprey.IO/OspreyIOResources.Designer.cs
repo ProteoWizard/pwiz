@@ -754,6 +754,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} was scored with {1} XIC fragments, but this run uses {2} ({3}). Score the files again with this setting, or set {3} to match them..
+        /// </summary>
+        public static string ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not read the scores file {0}: {1}.
         /// </summary>
         public static string ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_ {

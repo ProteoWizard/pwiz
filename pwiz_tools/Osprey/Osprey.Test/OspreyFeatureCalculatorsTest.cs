@@ -482,6 +482,285 @@ namespace pwiz.Osprey.Test
                 "the ja display labels should be translated");
         }
 
+        /// <summary>
+        /// Runner-up family (peak_coelution_margin / peak_rank_margin / peak_candidate_count),
+        /// read from the <see cref="PeakCandidatesByproduct"/> the extractor publishes. Covers a
+        /// chosen peak that leads, one that trails (the boundary-override path, where margins go
+        /// negative), the floor at 0 on the runner-up's coelution, a lone candidate, no published
+        /// candidates at all, and that the chosen peak is found by its bounds, not its apex.
+        /// </summary>
+        [TestMethod]
+        public void TestRunnerUpCalculators()
+        {
+            var coelutionMargin = Calc(@"peak_coelution_margin");
+            var rankMargin = Calc(@"peak_rank_margin");
+            var count = Calc(@"peak_candidate_count");
+            var peakData = new FakePeakData(new List<XicData>(), new XICPeakBounds());
+            var chosen = Bounds(10, 14, 12);
+            // The extractor recomputes the chosen apex after the pick, so only the bounds agree.
+            var chosenAsListed = Bounds(10, 14, 11);
+
+            // Leading: margins against the best OTHER value of each score (0.6 coelution, 1.5 rank).
+            var context = ContextWith(chosen, (chosenAsListed, 0.8, 2.0), (Bounds(20, 24, 22), 0.5, 1.5),
+                (Bounds(30, 34, 32), 0.6, 1.0));
+            Assert.AreEqual(0.8 - 0.6, coelutionMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(2.0 - 1.5, rankMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(3.0, count.Calculate(context, peakData), TOLERANCE);
+
+            // Trailing (an imposed peak moved off a stronger candidate): both margins negative.
+            context = ContextWith(chosen, (Bounds(30, 34, 32), 0.7, 1.8), (chosenAsListed, 0.4, 1.0));
+            Assert.AreEqual(0.4 - 0.7, coelutionMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(1.0 - 1.8, rankMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(2.0, count.Calculate(context, peakData), TOLERANCE);
+
+            // A runner-up anti-correlated over its peak counts as uncorrelated noise (floored at 0).
+            context = ContextWith(chosen, (chosenAsListed, 0.3, 1.0), (Bounds(30, 34, 32), -0.2, 0.4));
+            Assert.AreEqual(0.3, coelutionMargin.Calculate(context, peakData), TOLERANCE);
+
+            // Lone candidate: coelution competes with noise (0), the rank margin is 0, count 1.
+            context = ContextWith(chosen, (chosenAsListed, 0.8, 2.0));
+            Assert.AreEqual(0.8, coelutionMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(0.0, rankMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(1.0, count.Calculate(context, peakData), TOLERANCE);
+
+            // Nothing published (an override peak with the runner-up features masked): a lone
+            // candidate with nothing known about it.
+            context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, coelutionMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(0.0, rankMargin.Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(1.0, count.Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Context family: the candidate's own length, charge and precursor m/z.
+        /// </summary>
+        [TestMethod]
+        public void TestContextCalculators()
+        {
+            var candidate = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 3, 456.789, 10.0);
+            var peakData = new FakePeakData(new List<XicData>(), new XICPeakBounds(), candidate: candidate);
+            var context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+            Assert.AreEqual(8.0, Calc(@"context_peptide_length").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(3.0, Calc(@"context_precursor_charge").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(456.789, Calc(@"context_precursor_mz").Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Per-fragment-rank family: the six most intense library fragments, ranked by library
+        /// intensity (not list order), each matched to the CLOSEST apex peak within tolerance.
+        /// An unmatched rank, and every rank past the library's fragment count, falls back to the
+        /// tolerance for its mass error and 0 for its share; a fragment ranked 7th never counts,
+        /// however intense its peak.
+        /// </summary>
+        [TestMethod]
+        public void TestFragmentRankCalculators()
+        {
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5) };
+            // Ranks by relative intensity: 100 (1), 200 (2), 300 (3), 400 (4), 500 (5), 600 (6), 700 (7).
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment>
+                {
+                    RelFrag(700.0, 0.1), RelFrag(300.0, 0.8), RelFrag(100.0, 1.0), RelFrag(600.0, 0.5),
+                    RelFrag(200.0, 0.9), RelFrag(500.0, 0.6), RelFrag(400.0, 0.7),
+                },
+            };
+            // 100.3 is in tolerance of rank 1 but farther than 100.0; nothing near 300 (rank 3);
+            // 700 (rank 7) is the most intense peak and must not count.
+            var apex = new Spectrum
+            {
+                Mzs = new[] { 100.0, 100.3, 200.1, 400.0, 500.2, 600.0, 700.0 },
+                Intensities = new[] { 40f, 99f, 30f, 10f, 15f, 5f, 1000f },
+            };
+            var peakData = new FakePeakData(new List<XicData>(), new XICPeakBounds(), candidate: candidate, apexSpectrum: apex);
+            var context = new OspreyScoringContext(config);
+            context.ClearByproducts();
+
+            var expectedErrors = new[] { 0.0, 0.1, 0.5, 0.0, 0.2, 0.0 };
+            // Matched top-6 intensity 40 + 30 + 10 + 15 + 5 = 100.
+            var expectedShares = new[] { 0.40, 0.30, 0.0, 0.10, 0.15, 0.05 };
+            for (int rank = 1; rank <= 6; rank++)
+            {
+                string r = rank.ToString(CultureInfo.InvariantCulture);
+                Assert.AreEqual(expectedErrors[rank - 1], Calc(@"frag_rank" + r + @"_abs_mass_error").Calculate(context, peakData), TOLERANCE, r);
+                Assert.AreEqual(expectedShares[rank - 1], Calc(@"frag_rank" + r + @"_intensity_share").Calculate(context, peakData), TOLERANCE, r);
+            }
+
+            // A library with two fragments: ranks 3-6 do not exist, so they read as unmatched.
+            var shortCandidate = new LibraryEntry(2, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment> { RelFrag(100.0, 1.0), RelFrag(200.0, 0.5) },
+            };
+            var shortData = new FakePeakData(new List<XicData>(), new XICPeakBounds(), candidate: shortCandidate, apexSpectrum: apex);
+            context.ClearByproducts();
+            Assert.AreEqual(40.0 / 70.0, Calc(@"frag_rank1_intensity_share").Calculate(context, shortData), TOLERANCE);
+            Assert.AreEqual(30.0 / 70.0, Calc(@"frag_rank2_intensity_share").Calculate(context, shortData), TOLERANCE);
+            Assert.AreEqual(0.5, Calc(@"frag_rank3_abs_mass_error").Calculate(context, shortData), TOLERANCE);
+            Assert.AreEqual(0.0, Calc(@"frag_rank6_intensity_share").Calculate(context, shortData), TOLERANCE);
+
+            // Nothing matched: every share is 0 (no division by zero) and every error the tolerance.
+            var noneData = new FakePeakData(new List<XicData>(), new XICPeakBounds(), candidate: shortCandidate,
+                apexSpectrum: new Spectrum { Mzs = new[] { 900.0 }, Intensities = new[] { 50f } });
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, Calc(@"frag_rank1_intensity_share").Calculate(context, noneData), TOLERANCE);
+            Assert.AreEqual(0.5, Calc(@"frag_rank1_abs_mass_error").Calculate(context, noneData), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Spectrum-across-the-peak family: the per-scan library cosine at every scan from the
+        /// peak's start to its end, reduced to a mean and a POPULATION standard deviation. The
+        /// window starts at a nonzero scan, so the candidate-local bounds must be mapped to window
+        /// scans, and the peak's last scan falls past the window's end and is skipped.
+        /// </summary>
+        [TestMethod]
+        public void TestPeakSpectrumCalculators()
+        {
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5) };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment> { RelFrag(300.0, 1.0), RelFrag(500.0, 1.0) },
+            };
+            var full = new Spectrum { Mzs = new[] { 300.0, 500.0 }, Intensities = new[] { 100f, 100f } };     // cosine 1
+            var half = new Spectrum { Mzs = new[] { 300.0, 600.0 }, Intensities = new[] { 100f, 50f } };      // 1/sqrt(2)
+            var none = new Spectrum { Mzs = new[] { 250.0, 600.0 }, Intensities = new[] { 10f, 10f } };       // 0
+            var windowSpectra = new List<Spectrum>();
+            for (int i = 0; i < 20; i++)
+                windowSpectra.Add(none);
+            windowSpectra[12] = full;
+            windowSpectra[13] = half;
+            windowSpectra[14] = full;
+            windowSpectra[15] = none;
+            windowSpectra[16] = full;   // the peak's end scan, outside the 6-scan window: skipped
+
+            // Window scans 10..15; peak local 2..6 with its apex at local 4 (window scan 14).
+            var peakData = new FakePeakData(new List<XicData>(), Bounds(2, 6, 4), candidate: candidate,
+                apexSpectrum: windowSpectra[14], apexGlobalIndex: 14, apexLocalIndex: 4,
+                windowStartIndex: 10, windowLength: 6, windowSpectra: windowSpectra);
+            var context = new OspreyScoringContext(config);
+            context.ClearByproducts();
+
+            var cosines = new[] { 1.0, 1.0 / Math.Sqrt(2.0), 1.0, 0.0 };
+            double mean = cosines.Average();
+            double sd = Math.Sqrt(cosines.Select(c => (c - mean) * (c - mean)).Average());
+            Assert.AreEqual(mean, Calc(@"peak_spectrum_cosine_mean").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(sd, Calc(@"peak_spectrum_cosine_sd").Calculate(context, peakData), TOLERANCE);
+
+            // No scan of the peak inside the window: both 0.
+            var outside = new FakePeakData(new List<XicData>(), Bounds(7, 9, 8), candidate: candidate,
+                apexSpectrum: full, apexGlobalIndex: 18, apexLocalIndex: 8,
+                windowStartIndex: 10, windowLength: 6, windowSpectra: windowSpectra);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, Calc(@"peak_spectrum_cosine_mean").Calculate(context, outside), TOLERANCE);
+            Assert.AreEqual(0.0, Calc(@"peak_spectrum_cosine_sd").Calculate(context, outside), TOLERANCE);
+        }
+
+        /// <summary>
+        /// The runner-up candidates for a peak rescored at imposed bounds
+        /// (<see cref="PeakDataExtractor.OverrideRunnerUpCandidates"/>): the imposed peak first,
+        /// then the candidates first-pass detection finds in the normal search window, except
+        /// any whose apex the imposed bounds cover. A window that fails the first pass's signal
+        /// prefilter gives the first pass nothing to choose among, so the imposed peak stands alone.
+        /// </summary>
+        [TestMethod]
+        public void TestOverrideRunnerUpCandidates()
+        {
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5) };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 3.0)
+            {
+                Fragments = new List<LibraryFragment>
+                {
+                    RelFrag(300.0, 1.0), RelFrag(400.0, 0.8), RelFrag(500.0, 0.6), RelFrag(600.0, 0.4),
+                },
+            };
+            // 60 scans, 0.1 min apart: a weak elution at 2.0 min and one ten times stronger at 4.0.
+            var rts = Enumerable.Range(0, 60).Select(i => i * 0.1).ToArray();
+            var spectra = rts.Select(rt => ElutionSpectrum(candidate, rt, (2.0, 100.0), (4.0, 1000.0))).ToList();
+            var imposed = (Apex: 2.0, Start: 1.7, End: 2.3);
+            var chosen = Bounds(17, 23, 20);
+
+            // A wide RT penalty (2 sigma^2 = 50 min^2), so the pick score follows the intensity.
+            var result = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, spectra, rts, 3.0, 1.5,
+                50.0, null, config, imposed, chosen, 0.9, 1.0);
+            Assert.AreSame(chosen, result[0].peak, "the imposed peak comes first");
+            Assert.AreEqual(0.9, result[0].coelutionScore, 0.0);
+            Assert.AreEqual(1.0, result[0].rankScore, 0.0);
+            var others = result.Skip(1).ToList();
+            Assert.AreEqual(1, others.Count, "the 2.0 min elution is the imposed peak; only the 4.0 min one competes");
+            Assert.AreEqual(4.0, rts[others[0].peak.ApexIndex], 0.15);
+            Assert.IsTrue(others[0].rankScore > 1.0, "the stronger elution outranks the imposed peak");
+
+            // Only one top-6 fragment elutes: the first pass's prefilter (2 of the top 6 in 3 of 4
+            // consecutive scans) rejects the window, so the imposed peak stands alone - although
+            // peak detection alone would find the elution at 4.0 min.
+            var oneFragment = rts.Select(rt => ElutionSpectrum(candidate, rt, 300.0, (4.0, 1000.0))).ToList();
+            result = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, oneFragment, rts, 3.0, 1.5,
+                50.0, null, config, imposed, chosen, 0.9, 1.0);
+            Assert.AreEqual(1, result.Count, "a window the prefilter rejects has no runner-up candidates");
+            var noPrefilter = new OspreyConfig { FragmentTolerance = config.FragmentTolerance, PrefilterEnabled = false };
+            result = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, oneFragment, rts, 3.0, 1.5,
+                50.0, null, noPrefilter, imposed, chosen, 0.9, 1.0);
+            Assert.IsTrue(result.Count > 1, "without the prefilter, detection finds the one-fragment elution");
+        }
+
+        private static Spectrum ElutionSpectrum(LibraryEntry candidate, double rt, params (double Rt, double Height)[] elutions)
+        {
+            return ElutionSpectrum(candidate, rt, null, elutions);
+        }
+
+        /// <summary>A spectrum at <paramref name="rt"/> holding each fragment's share of the Gaussian
+        /// elutions (sigma 0.2 min), only <paramref name="onlyFragmentMz"/>'s when that is given.</summary>
+        private static Spectrum ElutionSpectrum(LibraryEntry candidate, double rt, double? onlyFragmentMz,
+            params (double Rt, double Height)[] elutions)
+        {
+            var mzs = new List<double> { 250.0 };
+            var intensities = new List<float> { 1f };
+            foreach (var frag in candidate.Fragments.OrderBy(f => f.Mz))
+            {
+                if (onlyFragmentMz.HasValue && frag.Mz != onlyFragmentMz.Value)
+                    continue;
+                double signal = elutions.Sum(e => e.Height * Math.Exp(-(rt - e.Rt) * (rt - e.Rt) / (2 * 0.2 * 0.2)));
+                if (signal * frag.RelativeIntensity < 1.0)
+                    continue;
+                mzs.Add(frag.Mz);
+                intensities.Add((float)(signal * frag.RelativeIntensity));
+            }
+            mzs.Add(900.0);
+            intensities.Add(1f);
+            return new Spectrum { Mzs = mzs.ToArray(), Intensities = intensities.ToArray() };
+        }
+
+        private static IOspreyFeatureCalculator Calc(string name)
+        {
+            return Enumerable.Range(0, OspreyFeatureCalculators.FeatureCount)
+                .Select(OspreyFeatureCalculators.Get).Single(c => c.Name == name);
+        }
+
+        private static XICPeakBounds Bounds(int start, int end, int apex)
+        {
+            return new XICPeakBounds { StartIndex = start, EndIndex = end, ApexIndex = apex };
+        }
+
+        private static OspreyScoringContext ContextWith(XICPeakBounds chosen,
+            params (XICPeakBounds peak, double coelutionScore, double rankScore)[] candidates)
+        {
+            var context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+            context.AddInfo(new PeakCandidatesByproduct(candidates, chosen));
+            return context;
+        }
+
+        private static LibraryFragment RelFrag(double mz, double relativeIntensity)
+        {
+            return new LibraryFragment
+            {
+                Mz = mz,
+                RelativeIntensity = (float)relativeIntensity,
+                Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 },
+            };
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment

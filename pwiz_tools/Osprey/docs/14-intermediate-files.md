@@ -772,6 +772,14 @@ per-file scores and re-run only the FDR stage. Both terms are emitted for every 
 defaults included. Scores written before them carry neither, and were computed under an XIC count
 and a mask (then applied at scoring) that nothing recorded, so no such directory may be adopted.
 
+The validity key decides only whether a task adopts its OWN earlier output. A FDR task pointed at
+scores another run wrote (`--task FirstPassFDR` / `SecondPassFDR` with `--input-scores`) does not
+compare keys - the search hash, which leaves the XIC count out, is all it checks - so the scores
+carry the count themselves: every `.scores.parquet` and reconciled parquet records it in the
+`osprey.xic_fragments` footer entry, and `ParquetScoreCache.ValidateScoresParquetGroup` refuses
+scores whose count differs from the run's. A file without the entry is read by the `;xic=` term of
+its validity stamp, and a file with neither by the default 6, the only count before the switch.
+
 `;blibreader=2` sits in the base for the same reason, on every search of a blib library: the
 reader types every peak from m/z and reads modification text residue- and precision-aware
 ([13](13-blib-output-schema.md)), so a blib's entries carry ion types and masses they did not

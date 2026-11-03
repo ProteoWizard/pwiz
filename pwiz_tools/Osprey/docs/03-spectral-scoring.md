@@ -446,11 +446,14 @@ demultiplexing interference from signal.
 
 Recommendations from these measurements:
 - **Features: use all 41 (`OSPREY_FEATURE_MASK=none`) on every kind of data.** They gain on all
-  three datasets with every classifier and keep the reported q calibrated or conservative.
-- **XIC count: 6 at unit resolution; 12 on HRAM data with GBDT.** 12 XICs cost Stellar 15-16%
-  with either feature set and gain Astral 8%. With the SVM on HRAM data the answer depends on the data: 12 gains on Astral
-  but loses on ZT Scan (-7% at FDP 1% under the same C rule) and makes its first pass optimistic
-  there (1.18% at q 1%), so 6 is the safer choice for the SVM until that is understood.
+  three datasets with every classifier. At 6 XICs, and at 12 on Astral, the reported q stays
+  calibrated or conservative; the two 12-XIC arms on ZT Scan do not (1.19% and 1.14% FDP at
+  reported q 1%, SVM and GBDT), which is the XIC count's doing, not the features' (below).
+- **XIC count: 12 on Astral with GBDT; 6 everywhere else measured.** 12 XICs cost Stellar 15-16%
+  with either feature set and gain Astral 8%. ZT Scan is HRAM too, but there 12 XICs make the
+  reported q optimistic with either classifier (above), and with the SVM they also lose (-7% at
+  FDP 1% under the same C rule). So "HRAM" alone does not pick the count: 6 is the safer choice
+  on any HRAM data other than Astral until the ZT Scan behavior is understood.
 - **Classifier: GBDT (`OSPREY_FDR_MODEL=gbdt`, `07-fdr-control.md`) where it has enough
   confident training targets, the SVM where it does not.** GBDT adds 6-13% over the 41-feature
   SVM on Astral and Stellar, calibrated. On ZT Scan the very large library leaves only about 900
@@ -494,7 +497,7 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 | `--parallel-files [N]` | off (sequential) | OUTER parallelism across files; no effect on per-candidate feature values. |
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
 | `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
-| `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key. 6 for unit resolution, 12 for HRAM with GBDT (B.7). |
+| `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key, and checked against the scores' own record when an FDR task loads existing scores. 12 on Astral with GBDT, 6 elsewhere (B.7). |
 | `OSPREY_FEATURE_MASK` (env) | unset = features 21-40 masked | PIN features the FDR classifier must not use (comma-separated names, or `none`). Applied when the FDR stage loads features, so it does not change the scores parquet; in the FDR tasks' validity keys. `none` recommended on every dataset measured (B.7). |
 
 Diagnostic env vars for this stage (shared with Rust for cross-impl bisection):
