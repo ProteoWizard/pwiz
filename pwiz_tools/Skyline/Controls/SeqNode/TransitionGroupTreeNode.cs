@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             var nodeTran = (TransitionDocNode) child;
             return new PickTransitionTip(nodeTran,
-                SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(nodeTran.Transition));
+                SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(nodeTran));
         }
 
         private sealed class PickTransitionTip : ITipProvider
@@ -378,8 +378,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         public bool IsUniquelyLocalizing(DocNode choice)
         {
             var analyzer = SiteDeterminingAnalyzer;
-            return analyzer != null && choice.Id is Transition transition &&
-                   analyzer.IsUniqueToPrecursor(transition);
+            return analyzer != null && choice is TransitionDocNode nodeTran && analyzer.IsUniqueToPrecursor(nodeTran);
         }
 
         #region ITipProvider Members

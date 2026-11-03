@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -38,6 +39,13 @@ namespace pwiz.SkylineTest
             LabelAtoms.None, RelativeRT.Matching, null, null, null);
         private static readonly StaticMod OXIDATION = new StaticMod("Oxidation", "M", null, true, "O",
             LabelAtoms.None, RelativeRT.Matching, null, null, null);
+        private static readonly StaticMod PHOSPHO_LOSS = new StaticMod("Phospho loss", "S,T,Y", null, true, "PO3H",
+            LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("H3PO4") });
+        private static readonly StaticMod PHOSPHO_ST = new StaticMod("Phospho (ST)", "S, T", null, true, "HO3P",
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
+        private static readonly StaticMod PHOSPHO_Y = new StaticMod("Phospho (Y)", "Y", null, true, "HO3P",
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
+        private static readonly SrmSettings SETTINGS = SrmSettingsList.GetDefault();
 
         [TestMethod]
         public void TestSiteDeterminingIonAnalyzer()
@@ -49,6 +57,69 @@ namespace pwiz.SkylineTest
             TestTwoPhosphoAmongFour();
             TestTwoModTypes();
             TestNonLocalizable();
+            TestPhosphoLossNotUnique();
+            TestSiblingModsShareAmbiguity();
+        }
+
+        /// <summary>
+        /// A fragment that has lost the phosphate as a neutral loss is never uniquely localizing:
+        /// b4-98 of the S0 form has the composition of b4-H2O of every other isomer, so every
+        /// isomer produces its m/z. The intact b4 stays unique.
+        /// </summary>
+        private void TestPhosphoLossNotUnique()
+        {
+            const string seq = "SAAAAATAAK"; // candidates S0 and T6
+            var peptide = new Peptide(seq);
+            var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO_LOSS, 0)));
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
+            var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var b4 = B(group, 3);
+            var loss = new TransitionLosses(new List<TransitionLoss>
+                { new TransitionLoss(PHOSPHO_LOSS, PHOSPHO_LOSS.Losses[0], MassType.Monoisotopic) }, MassType.Monoisotopic);
+
+            AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b4, null));
+            AssertEx.AreEqual(PHOSPHO_LOSS.Name, analyzer.GetUniquelyLocalizedModificationNames(b4, null));
+            AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b4, loss));
+            AssertEx.IsTrue(!analyzer.IsSiteDetermining(b4, loss));
+            AssertEx.AreEqual(analyzer.IsomerCount, analyzer.GetProducingSetSize(b4, loss));
+            AssertEx.IsNull(analyzer.GetUniquelyLocalizedModificationNames(b4, loss));
+        }
+
+        /// <summary>
+        /// "Phospho (ST)" and "Phospho (Y)" are one ambiguity: a Y-form and an S-form of the same
+        /// sequence are positional isomers of one precursor, so they share a group key and an
+        /// isomer count over all five candidate residues, and an ion spanning T2 and Y5 is not
+        /// unique although the placed entry alone would make it so. With only "Phospho (ST)" in
+        /// the settings, the S-form keeps its three candidates.
+        /// </summary>
+        private void TestSiblingModsShareAmbiguity()
+        {
+            const string seq = "VGTCLYASPEQLEGSEYDAK"; // S/T candidates T2, S7, S14; Y candidates Y5, Y16
+            var peptide = new Peptide(seq);
+            var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var b6 = B(group, 5); // [V G T C L Y]: T2 and Y5
+
+            var settingsBoth = ChangeStaticMods(SETTINGS, PHOSPHO_ST, PHOSPHO_Y);
+            var analyzerY = new SiteDeterminingIonAnalyzer(settingsBoth, new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO_Y, 5))));
+            var analyzerS = new SiteDeterminingIonAnalyzer(settingsBoth, new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO_ST, 7))));
+            AssertEx.AreEqual(5L, analyzerY.IsomerCount);
+            AssertEx.AreEqual(5L, analyzerS.IsomerCount);
+            AssertEx.AreEqual(analyzerY.LocalizationGroupKey, analyzerS.LocalizationGroupKey);
+            AssertEx.IsTrue(analyzerY.LocalizationGroupKey.Contains("Phospho (ST)/Phospho (Y)*1"));
+            AssertEx.IsTrue(!analyzerY.IsUniqueToPrecursor(b6, null));
+            AssertEx.AreEqual(2L, analyzerY.GetProducingSetSize(b6, null)); // the T2 and Y5 placements
+
+            var settingsOnlyST = ChangeStaticMods(SETTINGS, PHOSPHO_ST);
+            var analyzerOnlyST = new SiteDeterminingIonAnalyzer(settingsOnlyST, new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO_ST, 7))));
+            AssertEx.AreEqual(3L, analyzerOnlyST.IsomerCount);
+            AssertEx.IsTrue(analyzerOnlyST.LocalizationGroupKey.Contains("Phospho (ST)*1"));
+            AssertEx.IsTrue(!analyzerOnlyST.LocalizationGroupKey.Contains("Phospho (Y)"));
+        }
+
+        private static SrmSettings ChangeStaticMods(SrmSettings settings, params StaticMod[] mods)
+        {
+            return settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(
+                settings.PeptideSettings.Modifications.ChangeStaticModifications(mods)));
         }
 
         /// <summary>
@@ -64,7 +135,7 @@ namespace pwiz.SkylineTest
             const string seq = "AASSSAK";
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 3)));
-            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -75,7 +146,7 @@ namespace pwiz.SkylineTest
             for (int offset = 0; offset <= len - 2; offset++)
             {
                 foreach (var ion in new[] { B(group, offset), Y(group, offset) })
-                    AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(ion));
+                    AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(ion, null));
             }
         }
 
@@ -91,7 +162,7 @@ namespace pwiz.SkylineTest
             const string seq = "SAAAAATAAK";
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0)));
-            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -99,18 +170,18 @@ namespace pwiz.SkylineTest
 
             // b1 (offset 0) spans only the modified serine, not the later threonine -> unique.
             var b1 = B(group, 0);
-            AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b1));
-            AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b1));
+            AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b1, null));
+            AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b1, null));
 
             // b7 (offset 6) spans BOTH candidate residues -> can no longer localize, not unique.
             var b7 = B(group, 6);
-            AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b7));
-            AssertEx.IsTrue(analyzer.GetProducingSetSize(b7) > 1);
+            AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b7, null));
+            AssertEx.IsTrue(analyzer.GetProducingSetSize(b7, null) > 1);
 
             // At least one unique b-ion exists among the prefixes that stop before the threonine.
             bool anyUnique = false;
             for (int offset = 0; offset <= 5; offset++)
-                anyUnique |= analyzer.IsUniqueToPrecursor(B(group, offset));
+                anyUnique |= analyzer.IsUniqueToPrecursor(B(group, offset), null);
             AssertEx.IsTrue(anyUnique);
         }
 
@@ -128,7 +199,7 @@ namespace pwiz.SkylineTest
             var peptide = new Peptide(seq);
             var modsAt0 = MakeMods(peptide, (PHOSPHO, 0));
             var nodePep = new PeptideDocNode(peptide, modsAt0);
-            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -139,23 +210,23 @@ namespace pwiz.SkylineTest
             for (int offset = 0; offset <= 3; offset++)
             {
                 var b = B(group, offset);
-                AssertEx.IsTrue(analyzer.IsSiteDetermining(b));
-                AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b));
-                AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b));
-                Assert.AreSame(PHOSPHO, analyzer.GetResolvedModification(b));
+                AssertEx.IsTrue(analyzer.IsSiteDetermining(b, null));
+                AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b, null));
+                AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b, null));
+                Assert.AreSame(PHOSPHO, analyzer.GetResolvedModification(b, null));
             }
             // b5, b6 (offsets 4, 5) span both candidate serines - can no longer localize.
             for (int offset = 4; offset <= 5; offset++)
             {
                 var b = B(group, offset);
-                AssertEx.IsTrue(!analyzer.IsSiteDetermining(b));
-                AssertEx.IsTrue(analyzer.GetProducingSetSize(b) > 1);
-                AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b));
+                AssertEx.IsTrue(!analyzer.IsSiteDetermining(b, null));
+                AssertEx.IsTrue(analyzer.GetProducingSetSize(b, null) > 1);
+                AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b, null));
             }
             // Precursor is never site-determining.
             var precursor = new Transition(group, 0, Adduct.SINGLY_PROTONATED);
-            AssertEx.IsTrue(!analyzer.IsSiteDetermining(precursor));
-            AssertEx.AreEqual(0L, analyzer.GetProducingSetSize(precursor));
+            AssertEx.IsTrue(!analyzer.IsSiteDetermining(precursor, null));
+            AssertEx.AreEqual(0L, analyzer.GetProducingSetSize(precursor, null));
 
             // Cross-check the span logic against real fragment m/z: compare phospho@0 vs phospho@4.
             var modsAt4 = MakeMods(peptide, (PHOSPHO, 4));
@@ -185,7 +256,7 @@ namespace pwiz.SkylineTest
             const string seq = "SASASAK";
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 2)));
-            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -193,9 +264,9 @@ namespace pwiz.SkylineTest
 
             // b3 (offset 2) spans two of the three candidate serines - site-determining, not unique.
             var b3 = B(group, 2);
-            AssertEx.IsTrue(analyzer.IsSiteDetermining(b3));
-            AssertEx.AreEqual(2L, analyzer.GetProducingSetSize(b3));
-            AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b3));
+            AssertEx.IsTrue(analyzer.IsSiteDetermining(b3, null));
+            AssertEx.AreEqual(2L, analyzer.GetProducingSetSize(b3, null));
+            AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b3, null));
 
             // No fragment ion (b or y) is unique to this placement, yet at least one is site-determining.
             bool anySiteDetermining = false;
@@ -204,8 +275,8 @@ namespace pwiz.SkylineTest
             {
                 foreach (var ion in new[] { B(group, offset), Y(group, offset) })
                 {
-                    AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(ion));
-                    anySiteDetermining |= analyzer.IsSiteDetermining(ion);
+                    AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(ion, null));
+                    anySiteDetermining |= analyzer.IsSiteDetermining(ion, null);
                 }
             }
             AssertEx.IsTrue(anySiteDetermining);
@@ -221,16 +292,16 @@ namespace pwiz.SkylineTest
             const string seq = "SASASASAK";
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0), (PHOSPHO, 2)));
-            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
             AssertEx.AreEqual(6L, analyzer.IsomerCount); // C(4,2)
 
             var b3 = B(group, 2); // span [0..2] captures exactly serines 0 and 2
-            AssertEx.IsTrue(analyzer.IsSiteDetermining(b3));
-            AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b3));
-            AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b3));
+            AssertEx.IsTrue(analyzer.IsSiteDetermining(b3, null));
+            AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b3, null));
+            AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b3, null));
         }
 
         /// <summary>
@@ -245,7 +316,7 @@ namespace pwiz.SkylineTest
             const string seq = "SSAAMMK";
             var peptide = new Peptide(seq);
             var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0), (OXIDATION, 4)));
-            var analyzer = new SiteDeterminingIonAnalyzer(nodePep);
+            var analyzer = new SiteDeterminingIonAnalyzer(SETTINGS, nodePep);
             var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
 
             AssertEx.IsTrue(analyzer.CanLocalize);
@@ -253,13 +324,13 @@ namespace pwiz.SkylineTest
 
             // b1 span [0..0] separates the two serines but not the methionines -> resolves phospho.
             var b1 = B(group, 0);
-            AssertEx.IsTrue(analyzer.IsSiteDetermining(b1));
-            Assert.AreSame(PHOSPHO, analyzer.GetResolvedModification(b1));
+            AssertEx.IsTrue(analyzer.IsSiteDetermining(b1, null));
+            Assert.AreSame(PHOSPHO, analyzer.GetResolvedModification(b1, null));
 
             // b5 span [0..4] separates the two methionines but not the serines -> resolves oxidation.
             var b5 = B(group, 4);
-            AssertEx.IsTrue(analyzer.IsSiteDetermining(b5));
-            Assert.AreSame(OXIDATION, analyzer.GetResolvedModification(b5));
+            AssertEx.IsTrue(analyzer.IsSiteDetermining(b5, null));
+            Assert.AreSame(OXIDATION, analyzer.GetResolvedModification(b5, null));
         }
 
         /// <summary>
@@ -271,14 +342,14 @@ namespace pwiz.SkylineTest
 
             // Unmodified peptide.
             var pep1 = new Peptide("SASASAK");
-            var analyzer1 = new SiteDeterminingIonAnalyzer(new PeptideDocNode(pep1));
+            var analyzer1 = new SiteDeterminingIonAnalyzer(SETTINGS, new PeptideDocNode(pep1));
             AssertEx.IsTrue(!analyzer1.CanLocalize);
             AssertEx.IsNull(analyzer1.LocalizationGroupKey);
             AssertEx.AreEqual(1L, analyzer1.IsomerCount);
 
             // Only one candidate serine, so the phospho is fully determined - not ambiguous.
             var pep2 = new Peptide("SAAAAK");
-            var analyzer2 = new SiteDeterminingIonAnalyzer(new PeptideDocNode(pep2, MakeMods(pep2, (PHOSPHO, 0))));
+            var analyzer2 = new SiteDeterminingIonAnalyzer(SETTINGS, new PeptideDocNode(pep2, MakeMods(pep2, (PHOSPHO, 0))));
             AssertEx.IsTrue(!analyzer2.CanLocalize);
             AssertEx.IsNull(analyzer2.LocalizationGroupKey);
         }

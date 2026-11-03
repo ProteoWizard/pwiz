@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             get
             {
                 var analyzer = SiteDeterminingAnalyzer;
-                return analyzer != null && analyzer.IsUniqueToPrecursor(DocNode.Transition);
+                return analyzer != null && analyzer.IsUniqueToPrecursor(DocNode);
             }
         }
 
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// </summary>
         private string LocalizedModificationName
         {
-            get { return SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(DocNode.Transition); }
+            get { return SiteDeterminingAnalyzer?.GetUniquelyLocalizedModificationNames(DocNode); }
         }
 
         public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree, bool uniquelyLocalizing)

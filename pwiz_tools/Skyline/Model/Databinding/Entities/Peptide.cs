@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private SiteDeterminingIonAnalyzer MakeSiteDeterminingIonAnalyzer()
         {
-            return SiteDeterminingIonAnalyzer.CreateIfLocalizable(DocNode);
+            return SiteDeterminingIonAnalyzer.CreateIfLocalizable(SrmDocument.Settings, DocNode);
         }
 
         /// <summary>
@@ -177,10 +177,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         /// <see cref="SiteDeterminingIonAnalyzer"/>. Returns false for small molecules / peptides
         /// that are not localizable.
         /// </summary>
-        public bool IsUniquelyLocalizing(Model.Transition transition)
+        public bool IsUniquelyLocalizing(TransitionDocNode nodeTran)
         {
             var analyzer = GetSiteDeterminingIonAnalyzer();
-            return analyzer != null && analyzer.IsUniqueToPrecursor(transition);
+            return analyzer != null && analyzer.IsUniqueToPrecursor(nodeTran);
         }
 
         [Obsolete("use MoleculeName instead")]  // It's a molecule, not an ion

@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _siteDeterminingAnalyzerBuilt = true;
                     if (RulersApplicable)
-                        _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(PeptideDocNode);
+                        _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(SrmSettings, PeptideDocNode);
                 }
                 return _siteDeterminingAnalyzer;
             }
@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (analyzer == null || Transition.IsPrecursor(mfi.IonType) || mfi.IonType == IonType.custom)
                 return null;
             int offset = Transition.OrdinalToOffset(mfi.IonType, mfi.Ordinal, PeptideDocNode.Peptide.Sequence.Length);
-            return analyzer.GetUniquelyLocalizedModificationNames(mfi.IonType, offset);
+            return analyzer.GetUniquelyLocalizedModificationNames(mfi.IonType, offset, mfi.Losses);
         }
 
         protected override bool IsProteomic()

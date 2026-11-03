@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
         private PeptideDocNode _siteDeterminingNode;
+        private SrmSettings _siteDeterminingSettings;
 
 // ReSharper disable SuggestBaseTypeForParameter
         public PeptideTreeNode(SequenceTree tree, PeptideDocNode nodePeptide)
@@ -63,17 +64,20 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// The <see cref="SiteDeterminingIonAnalyzer"/> for this peptide, shared by its precursor and
         /// transition nodes for the uniquely localizing ion badge, tooltip and pick-list icon. Null
         /// when the peptide carries no ambiguously placed modification. Rebuilt when the model of
-        /// this node changes, which is the only input the analyzer depends on.
+        /// this node or the document settings change, since sibling modifications with the same
+        /// mass shift come from the settings.
         /// </summary>
         public SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
         {
             get
             {
                 var nodePep = DocNode;
-                if (!ReferenceEquals(nodePep, _siteDeterminingNode))
+                var settings = DocSettings;
+                if (!ReferenceEquals(nodePep, _siteDeterminingNode) || !ReferenceEquals(settings, _siteDeterminingSettings))
                 {
-                    _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(nodePep);
+                    _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(settings, nodePep);
                     _siteDeterminingNode = nodePep;
+                    _siteDeterminingSettings = settings;
                 }
                 return _siteDeterminingAnalyzer;
             }

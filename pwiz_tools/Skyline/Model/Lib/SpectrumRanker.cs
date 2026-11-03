@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.Lib
             // Product ions that uniquely localize a modification rank past the fragment range when
             // the filter asks for them, so library-filtered picking agrees with TransitionGroup.GetTransitions.
             LocalizingAnalyzer = isProteomic && TransitionSettings.Filter.IncludeLocalizingIons
-                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(group.Peptide, lookupMods)
+                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(settings, group.Peptide, lookupMods)
                 : null;
 
             // Get potential losses to all fragments in this peptide
@@ -888,7 +888,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (TargetInfoObj.LookupMods == null || !TargetInfoObj.LookupMods.HasCrosslinks)
                     {
                         if (!TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start,
-                            end, startMz, LocalizingAnalyzer))
+                            end, startMz, LocalizingAnalyzer, match.Losses))
                         {
                             return false;
                         }

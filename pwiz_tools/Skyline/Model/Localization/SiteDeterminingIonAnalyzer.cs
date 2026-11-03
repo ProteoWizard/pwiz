@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Localization
 {
@@ -48,6 +49,8 @@ namespace pwiz.Skyline.Model.Localization
         /// </summary>
         public const long MAX_COUNT = 1_000_000_000_000_000L; // 1e15, well within long range
 
+        private static readonly SequenceMassCalc MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);
+
         private readonly int _length;
         private readonly string _unmodifiedSequence;
         private readonly IList<AmbiguousMod> _ambiguousMods;
@@ -56,19 +59,23 @@ namespace pwiz.Skyline.Model.Localization
         /// Performs the cheap analytic precompute (candidate positions per ambiguous modification
         /// via prefix arrays) for a single peptide placement.
         /// </summary>
+        /// <param name="settings">Document settings, whose structural modifications supply the
+        /// candidate sites of sibling modifications with the same mass shift.</param>
         /// <param name="nodePep">The peptide, including its explicit (light) modification placement.</param>
-        public SiteDeterminingIonAnalyzer(PeptideDocNode nodePep)
-            : this(nodePep.Peptide, nodePep.ExplicitMods)
+        public SiteDeterminingIonAnalyzer(SrmSettings settings, PeptideDocNode nodePep)
+            : this(settings, nodePep.Peptide, nodePep.ExplicitMods)
         {
         }
 
         /// <summary>
         /// The same precompute for a peptide and an explicit modification placement, for callers
         /// that have no <see cref="PeptideDocNode"/>, such as transition auto-selection.
+        /// Ambiguity is grouped by monoisotopic mass shift rather than by modification entry, so
+        /// "Phospho (ST)" and "Phospho (Y)" compete for one set of sites: the positional isomers of
+        /// a precursor are the placements with the same mass, whatever the residue specificity.
         /// </summary>
-        public SiteDeterminingIonAnalyzer(Peptide peptide, ExplicitMods explicitMods)
+        public SiteDeterminingIonAnalyzer(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods)
         {
-            _ambiguousMods = new List<AmbiguousMod>();
             _ambiguousMods = new List<AmbiguousMod>();
 
             if (peptide == null || peptide.IsCustomMolecule)
@@ -84,53 +91,77 @@ namespace pwiz.Skyline.Model.Localization
             if (staticMods == null || staticMods.Count == 0)
                 return;
 
-            // Group the peptide's explicit static (light) modifications by their StaticMod, so a
-            // modification present on several residues collapses to a single (mod, count) pair.
-            foreach (var group in staticMods.GroupBy(em => em.Modification))
+            // Structural modifications known to the document, the source of sibling modifications
+            // with the same mass shift as a placed one (e.g. "Phospho (Y)" next to "Phospho (ST)").
+            var documentMods = settings?.PeptideSettings.Modifications.StaticModifications ?? new StaticMod[0];
+
+            // Group the peptide's explicit static (light) modifications by mass shift, so a
+            // modification present on several residues collapses to a single (shift, count) pair.
+            foreach (var group in staticMods.Where(em => IsLocalizableMod(em.Modification))
+                         .GroupBy(em => GetMassShiftKey(em.Modification)))
             {
-                var mod = group.Key;
-                // Skip isotope-label modifications and crosslinkers - fixed context, not localizable.
-                if (mod.LabelAtoms != LabelAtoms.None || mod.CrosslinkerSettings != null)
-                    continue;
+                long massShiftKey = group.Key;
+                var placedMods = group.Select(em => em.Modification).Distinct().ToArray();
+                var siblingMods = placedMods
+                    .Concat(documentMods.Where(mod => IsLocalizableMod(mod) && GetMassShiftKey(mod) == massShiftKey))
+                    .GroupBy(mod => mod.Name).Select(g => g.First())
+                    .OrderBy(mod => mod.Name, StringComparer.Ordinal)
+                    .ToArray();
 
                 var placedPositions = group.Select(em => em.IndexAA).OrderBy(i => i).ToArray();
                 int k = placedPositions.Length;
-                if (k == 0)
-                    continue;
 
-                // prefixCandidates[i] = number of specificity-matching residues with index < i.
+                // prefixCandidates[i] = number of residues with index < i that some sibling can occupy.
                 var prefixCandidates = new int[_length + 1];
                 for (int i = 0; i < _length; i++)
                 {
-                    prefixCandidates[i + 1] = prefixCandidates[i] +
-                                              (mod.IsApplicableMod(sequence, i) ? 1 : 0);
+                    bool candidate = siblingMods.Any(mod => mod.IsApplicableMod(sequence, i));
+                    prefixCandidates[i + 1] = prefixCandidates[i] + (candidate ? 1 : 0);
                 }
 
                 int n = prefixCandidates[_length];
                 // Ambiguous iff C(n, k) > 1, i.e. n > k > 0. Fully determined mods (n == k) excluded.
                 if (n > k)
                 {
-                    _ambiguousMods.Add(new AmbiguousMod(mod, k, n, prefixCandidates, placedPositions));
+                    string name = string.Join(@"/", siblingMods.Select(mod => mod.Name));
+                    _ambiguousMods.Add(new AmbiguousMod(placedMods[0], name, massShiftKey, k, n, prefixCandidates, placedPositions));
                 }
             }
+        }
+
+        /// <summary>
+        /// Isotope-label modifications and crosslinkers are fixed context, never localized.
+        /// </summary>
+        private static bool IsLocalizableMod(StaticMod mod)
+        {
+            return mod.LabelAtoms == LabelAtoms.None && mod.CrosslinkerSettings == null;
+        }
+
+        /// <summary>
+        /// The monoisotopic mass shift of a modification in thousandths of a dalton, the identity
+        /// under which modifications with different residue specificity are the same ambiguity.
+        /// </summary>
+        private static long GetMassShiftKey(StaticMod mod)
+        {
+            return (long) Math.Round(MASS_CALC.GetModMass('\0', mod) * 1000);
         }
 
         /// <summary>
         /// The analyzer for a peptide placement, or null when there is nothing to localize, so
         /// callers can keep a single null check instead of testing <see cref="CanLocalize"/>.
         /// </summary>
-        public static SiteDeterminingIonAnalyzer CreateIfLocalizable(Peptide peptide, ExplicitMods explicitMods)
+        public static SiteDeterminingIonAnalyzer CreateIfLocalizable(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods)
         {
-            var analyzer = new SiteDeterminingIonAnalyzer(peptide, explicitMods);
+            var analyzer = new SiteDeterminingIonAnalyzer(settings, peptide, explicitMods);
             return analyzer.CanLocalize ? analyzer : null;
         }
 
         /// <summary>
-        /// <see cref="CreateIfLocalizable(Peptide, ExplicitMods)"/> for a peptide node.
+        /// <see cref="CreateIfLocalizable(SrmSettings, Peptide, ExplicitMods)"/> for a peptide node.
         /// </summary>
-        public static SiteDeterminingIonAnalyzer CreateIfLocalizable(PeptideDocNode nodePep)
+        public static SiteDeterminingIonAnalyzer CreateIfLocalizable(SrmSettings settings, PeptideDocNode nodePep)
         {
-            return CreateIfLocalizable(nodePep.Peptide, nodePep.ExplicitMods);
+            return CreateIfLocalizable(settings, nodePep.Peptide, nodePep.ExplicitMods);
         }
 
         /// <summary>
@@ -172,7 +203,7 @@ namespace pwiz.Skyline.Model.Localization
                     return null;
 
                 var entries = _ambiguousMods
-                    .Select(mod => mod.Mod.Name + @"*" + mod.Count)
+                    .Select(mod => mod.Name + @"*" + mod.Count)
                     .OrderBy(s => s, StringComparer.Ordinal);
 
                 var sb = new StringBuilder(_unmodifiedSequence ?? string.Empty);
@@ -186,11 +217,12 @@ namespace pwiz.Skyline.Model.Localization
         /// <summary>
         /// True iff this product ion's in-span occupancy of some ambiguous modification can vary
         /// across positional placements, i.e. the ion helps localize that modification. False for
-        /// precursor, custom, and non-proteomic transitions.
+        /// precursor, custom, and non-proteomic transitions, and for ions that have lost an
+        /// ambiguous modification as a neutral loss.
         /// </summary>
-        public bool IsSiteDetermining(Transition transition)
+        public bool IsSiteDetermining(Transition transition, TransitionLosses losses)
         {
-            return GetResolvedModification(transition) != null;
+            return GetResolvedModification(transition, losses) != null;
         }
 
         /// <summary>
@@ -198,20 +230,27 @@ namespace pwiz.Skyline.Model.Localization
         /// the ion is not site-determining. When an ion resolves more than one modification, the
         /// first (in precompute order) is returned; see <see cref="GetResolvedModifications"/>.
         /// </summary>
-        public StaticMod GetResolvedModification(Transition transition)
+        public StaticMod GetResolvedModification(Transition transition, TransitionLosses losses)
         {
             if (!IsFragment(transition))
                 return null;
-            return GetResolvedModifications(transition.IonType, transition.CleavageOffset).FirstOrDefault();
+            return GetResolvedModifications(transition.IonType, transition.CleavageOffset, losses).FirstOrDefault();
         }
 
         /// <summary>
-        /// Returns every ambiguous modification that a product ion, given by its type and cleavage
-        /// offset, resolves: those whose in-span occupancy can vary across positional placements.
+        /// Returns every ambiguous modification that a product ion, given by its type, cleavage
+        /// offset and neutral losses, resolves: those whose in-span occupancy can vary across
+        /// positional placements. Each is the modification entry placed on the peptide; sibling
+        /// entries with the same mass shift are folded into it.
         /// </summary>
-        public IEnumerable<StaticMod> GetResolvedModifications(IonType type, int cleavageOffset)
+        public IEnumerable<StaticMod> GetResolvedModifications(IonType type, int cleavageOffset, TransitionLosses losses)
         {
-            if (!TryGetSpan(type, cleavageOffset, out int lo, out int hi))
+            return GetResolvingMods(type, cleavageOffset, losses).Select(mod => mod.Mod);
+        }
+
+        private IEnumerable<AmbiguousMod> GetResolvingMods(IonType type, int cleavageOffset, TransitionLosses losses)
+        {
+            if (HasAmbiguousLoss(losses) || !TryGetSpan(type, cleavageOffset, out int lo, out int hi))
                 yield break;
 
             foreach (var mod in _ambiguousMods)
@@ -221,53 +260,87 @@ namespace pwiz.Skyline.Model.Localization
                 // In-span occupancy ranges over [max(0, k - outside) .. min(k, inside)]. It can
                 // vary (the ion is site-determining) iff that range is non-degenerate.
                 if (Math.Min(mod.Count, inside) > Math.Max(0, mod.Count - outside))
-                    yield return mod.Mod;
+                    yield return mod;
             }
+        }
+
+        /// <summary>
+        /// True when a neutral loss of the ion comes from an ambiguous modification. Such an ion
+        /// has shed the very group it would localize, and its m/z coincides with a common loss
+        /// from the other placements: a phospho fragment minus H3PO4 is the unmodified fragment
+        /// minus H2O, so every isomer produces it.
+        /// </summary>
+        private bool HasAmbiguousLoss(TransitionLosses losses)
+        {
+            if (losses == null)
+                return false;
+            foreach (var loss in losses.Losses)
+            {
+                if (loss.PrecursorMod == null)
+                    continue;
+                long massShiftKey = GetMassShiftKey(loss.PrecursorMod);
+                if (_ambiguousMods.Any(mod => mod.MassShiftKey == massShiftKey))
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>
         /// The names of the modifications this ion uniquely localizes, comma separated for
         /// display, or null when the ion is not unique to the current placement.
         /// </summary>
-        public string GetUniquelyLocalizedModificationNames(Transition transition)
+        public string GetUniquelyLocalizedModificationNames(TransitionDocNode nodeTran)
         {
-            if (!IsFragment(transition))
-                return null;
-            return GetUniquelyLocalizedModificationNames(transition.IonType, transition.CleavageOffset);
+            return GetUniquelyLocalizedModificationNames(nodeTran.Transition, nodeTran.Losses);
         }
 
         /// <summary>
-        /// <see cref="GetUniquelyLocalizedModificationNames(Transition)"/> for a product ion given by
-        /// its type and cleavage offset.
+        /// <see cref="GetUniquelyLocalizedModificationNames(TransitionDocNode)"/> for a transition
+        /// identity and its neutral losses.
         /// </summary>
-        public string GetUniquelyLocalizedModificationNames(IonType type, int cleavageOffset)
+        public string GetUniquelyLocalizedModificationNames(Transition transition, TransitionLosses losses)
         {
-            if (!IsUniqueToPrecursor(type, cleavageOffset))
+            if (!IsFragment(transition))
                 return null;
-            return string.Join(@", ", GetResolvedModifications(type, cleavageOffset).Select(mod => mod.Name));
+            return GetUniquelyLocalizedModificationNames(transition.IonType, transition.CleavageOffset, losses);
+        }
+
+        /// <summary>
+        /// <see cref="GetUniquelyLocalizedModificationNames(TransitionDocNode)"/> for a product ion
+        /// given by its type, cleavage offset and neutral losses.
+        /// </summary>
+        public string GetUniquelyLocalizedModificationNames(IonType type, int cleavageOffset, TransitionLosses losses)
+        {
+            if (!IsUniqueToPrecursor(type, cleavageOffset, losses))
+                return null;
+            return string.Join(@", ", GetResolvingMods(type, cleavageOffset, losses).Select(mod => mod.Name));
         }
 
         /// <summary>
         /// Number of positional isomers that produce this exact ion (with the same in-span
         /// modification masses) as the placement this analyzer was built from. A value of 1 means
         /// the ion is unique to this isomer. Returns 0 for precursor / custom / non-proteomic
-        /// transitions. Clamped to <see cref="MAX_COUNT"/>.
+        /// transitions, and <see cref="IsomerCount"/> for an ion that has lost an ambiguous
+        /// modification as a neutral loss, since every isomer then produces its m/z. Clamped to
+        /// <see cref="MAX_COUNT"/>.
         /// </summary>
-        public long GetProducingSetSize(Transition transition)
+        public long GetProducingSetSize(Transition transition, TransitionLosses losses)
         {
             if (!IsFragment(transition))
                 return 0;
-            return GetProducingSetSize(transition.IonType, transition.CleavageOffset);
+            return GetProducingSetSize(transition.IonType, transition.CleavageOffset, losses);
         }
 
         /// <summary>
-        /// <see cref="GetProducingSetSize(Transition)"/> for a product ion given by its type and
-        /// cleavage offset, before any <see cref="Transition"/> exists.
+        /// <see cref="GetProducingSetSize(Transition, TransitionLosses)"/> for a product ion given by
+        /// its type, cleavage offset and neutral losses, before any <see cref="Transition"/> exists.
         /// </summary>
-        public long GetProducingSetSize(IonType type, int cleavageOffset)
+        public long GetProducingSetSize(IonType type, int cleavageOffset, TransitionLosses losses)
         {
             if (!TryGetSpan(type, cleavageOffset, out int lo, out int hi))
                 return 0;
+            if (HasAmbiguousLoss(losses))
+                return IsomerCount;
 
             long product = 1;
             foreach (var mod in _ambiguousMods)
@@ -285,18 +358,27 @@ namespace pwiz.Skyline.Model.Localization
         /// True iff this ion is produced by exactly one positional isomer (the placement this
         /// analyzer was built from) and localization is meaningful for the peptide.
         /// </summary>
-        public bool IsUniqueToPrecursor(Transition transition)
+        public bool IsUniqueToPrecursor(TransitionDocNode nodeTran)
         {
-            return CanLocalize && GetProducingSetSize(transition) == 1;
+            return IsUniqueToPrecursor(nodeTran.Transition, nodeTran.Losses);
         }
 
         /// <summary>
-        /// <see cref="IsUniqueToPrecursor(Transition)"/> for a product ion given by its type and
-        /// cleavage offset.
+        /// <see cref="IsUniqueToPrecursor(TransitionDocNode)"/> for a transition identity and its
+        /// neutral losses.
         /// </summary>
-        public bool IsUniqueToPrecursor(IonType type, int cleavageOffset)
+        public bool IsUniqueToPrecursor(Transition transition, TransitionLosses losses)
         {
-            return CanLocalize && GetProducingSetSize(type, cleavageOffset) == 1;
+            return CanLocalize && GetProducingSetSize(transition, losses) == 1;
+        }
+
+        /// <summary>
+        /// <see cref="IsUniqueToPrecursor(TransitionDocNode)"/> for a product ion given by its type,
+        /// cleavage offset and neutral losses.
+        /// </summary>
+        public bool IsUniqueToPrecursor(IonType type, int cleavageOffset, TransitionLosses losses)
+        {
+            return CanLocalize && GetProducingSetSize(type, cleavageOffset, losses) == 1;
         }
 
         private static bool IsFragment(Transition transition)
@@ -374,16 +456,21 @@ namespace pwiz.Skyline.Model.Localization
             private readonly int[] _prefixCandidates; // prefixCandidates[i] = # candidate sites with index < i
             private readonly int[] _placedPositions;  // residue indices where this mod is actually placed
 
-            public AmbiguousMod(StaticMod mod, int count, int siteCount, int[] prefixCandidates, int[] placedPositions)
+            public AmbiguousMod(StaticMod mod, string name, long massShiftKey, int count, int siteCount,
+                int[] prefixCandidates, int[] placedPositions)
             {
                 Mod = mod;
+                Name = name;
+                MassShiftKey = massShiftKey;
                 Count = count;
                 SiteCount = siteCount;
                 _prefixCandidates = prefixCandidates;
                 _placedPositions = placedPositions;
             }
 
-            public StaticMod Mod { get; }
+            public StaticMod Mod { get; }      // The entry placed on the peptide
+            public string Name { get; }        // Sibling entry names joined, for keys and tooltips
+            public long MassShiftKey { get; }  // Identity of the ambiguity
             public int Count { get; }      // k_m
             public int SiteCount { get; }  // n_m
 

@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
         }
 
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null, TransitionLosses losses = null)
         {
             if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme != null &&
                 FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return false;
             }
 
-            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz, localizingAnalyzer);
+            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz, localizingAnalyzer, losses);
         }
 
         public bool HasOptimizationLibrary
@@ -895,14 +895,14 @@ namespace pwiz.Skyline.Model.DocSettings
         /// the peptide's analyzer) an ion that uniquely localizes a modification. The precursor
         /// exclusion window applies in every case.
         /// </summary>
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, SiteDeterminingIonAnalyzer localizingAnalyzer = null, TransitionLosses losses = null)
         {
             if (IsExcluded(ionMz, precursorMz))
                 return false;
             if (start <= cleavageOffset && cleavageOffset <= end && startMz <= ionMz)
                 return true;
             if (IncludeLocalizingIons && localizingAnalyzer != null &&
-                localizingAnalyzer.IsUniqueToPrecursor(type, cleavageOffset))
+                localizingAnalyzer.IsUniqueToPrecursor(type, cleavageOffset, losses))
             {
                 return true;
             }

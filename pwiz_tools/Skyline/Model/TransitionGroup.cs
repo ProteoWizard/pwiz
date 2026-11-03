@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model
             // Product ions that uniquely localize an ambiguously placed modification may be
             // selected outside the fragment range, when the filter asks for them.
             var localizingAnalyzer = useFilter && filter.IncludeLocalizingIons && IsProteomic
-                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(Peptide, mods)
+                ? SiteDeterminingIonAnalyzer.CreateIfLocalizable(settings, Peptide, mods)
                 : null;
 
             // A start m/z will need to be calculated if the start fragment
@@ -428,13 +428,13 @@ namespace pwiz.Skyline.Model
                                     }
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
-                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer))
+                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer, losses))
                                     {
                                         nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
                                     }
                                 }
                             }
-                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer))
+                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, localizingAnalyzer, losses))
                             {
                                 if (pick == TransitionLibraryPick.none)
                                     nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
@@ -482,7 +482,8 @@ namespace pwiz.Skyline.Model
                     start,
                     end,
                     startMz,
-                    localizingAnalyzer))
+                    localizingAnalyzer,
+                    nodeTranMatching.Losses))
                 {
                     return false;
                 }

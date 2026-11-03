@@ -70,8 +70,11 @@ namespace pwiz.SkylineTestFunctional
 
         private const string UNMODIFIED_SEQ = "ELVIK"; // No candidate residue -> not localizable
 
+        // Always-included phosphate loss, so the -98 ions are auto-picked and must be excluded from
+        // the localizing ions.
         private static readonly StaticMod PHOSPHO = new StaticMod("Phospho", "S,T,Y", null, false, "PO3H",
-            LabelAtoms.None, RelativeRT.Matching, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null,
+            new[] { new FragmentLoss("H3PO4", null, null, LossInclusion.Always) });
 
         [TestMethod]
         public void TestSiteDeterminingIonFunctional()
@@ -259,17 +262,19 @@ namespace pwiz.SkylineTestFunctional
             // Every selected product ion outside the range (below the precursor m/z) must be unique.
             var tgPath = FindTransitionGroupPath(docLocalizing, RESOLVABLE_SEQ);
             var tranGroupNode = (TransitionGroupDocNode) docLocalizing.FindNode(tgPath);
-            var analyzer = new SiteDeterminingIonAnalyzer(FindPeptide(docLocalizing, RESOLVABLE_SEQ));
+            var analyzer = new SiteDeterminingIonAnalyzer(docLocalizing.Settings, FindPeptide(docLocalizing, RESOLVABLE_SEQ));
             int countAdded = 0;
             foreach (var nodeTran in tranGroupNode.Transitions.Where(t => !t.Transition.IsPrecursor()))
             {
                 if (nodeTran.Mz >= tranGroupNode.PrecursorMz)
                     continue;
-                Assert.IsTrue(analyzer.IsUniqueToPrecursor(nodeTran.Transition),
+                Assert.IsTrue(analyzer.IsUniqueToPrecursor(nodeTran),
                     "{0} is outside the ion range and should only be selected because it uniquely localizes the modification", nodeTran.Transition);
                 countAdded++;
             }
             Assert.IsTrue(countAdded > 0, "Expected uniquely localizing ions below the precursor m/z to be added");
+            Assert.IsFalse(tranGroupNode.Transitions.Any(t => t.HasLoss && t.Mz < tranGroupNode.PrecursorMz),
+                "A fragment that has lost the phosphate never localizes it, so no loss ion may be added below the precursor m/z");
             Assert.AreEqual(countRunBefore, CountTransitions(docLocalizing, SERINE_RUN_SEQ),
                 "No ion uniquely localizes a serine inside a run, so nothing should be added");
 
@@ -295,7 +300,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Verifies the reporting <see cref="pwiz.Skyline.Model.Databinding.Entities.Transition"/>
         /// column <c>UniquelyLocalizing</c>: for every transition of the resolvable precursor it
-        /// must match <see cref="SiteDeterminingIonAnalyzer.IsUniqueToPrecursor(Transition)"/>, and in
+        /// must match <see cref="SiteDeterminingIonAnalyzer.IsUniqueToPrecursor(TransitionDocNode)"/>, and in
         /// particular it is TRUE for the hand-picked uniquely-localizing b3 ion and FALSE for the
         /// shared b7 ion. Assertions are on booleans only.
         /// </summary>
@@ -307,7 +312,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(tgPath, "Could not find precursor for sequence {0}", RESOLVABLE_SEQ);
             var tranGroupNode = (TransitionGroupDocNode) doc.FindNode(tgPath);
             var pepNode = FindPeptide(doc, RESOLVABLE_SEQ);
-            var analyzer = new SiteDeterminingIonAnalyzer(pepNode);
+            var analyzer = new SiteDeterminingIonAnalyzer(doc.Settings, pepNode);
 
             bool sawUnique = false, sawShared = false;
             foreach (var tranNode in tranGroupNode.Transitions)
@@ -315,17 +320,17 @@ namespace pwiz.SkylineTestFunctional
                 var tran = tranNode.Transition;
                 var tranPath = new IdentityPath(tgPath, tran);
                 var entity = new pwiz.Skyline.Model.Databinding.Entities.Transition(dataSchema, tranPath);
-                bool expected = analyzer.IsUniqueToPrecursor(tran);
+                bool expected = analyzer.IsUniqueToPrecursor(tranNode);
                 Assert.AreEqual(expected, entity.UniquelyLocalizing,
                     "UniquelyLocalizing column should match the analyzer for {0}", tran);
 
-                if (tran.IonType == IonType.b && tran.Ordinal == UNIQUE_B_ORDINAL)
+                if (!tranNode.HasLoss && tran.IonType == IonType.b && tran.Ordinal == UNIQUE_B_ORDINAL)
                 {
                     Assert.IsTrue(entity.UniquelyLocalizing,
                         "b3 spans only the modified serine and should be uniquely localizing");
                     sawUnique = true;
                 }
-                if (tran.IonType == IonType.b && tran.Ordinal == SHARED_B_ORDINAL)
+                if (!tranNode.HasLoss && tran.IonType == IonType.b && tran.Ordinal == SHARED_B_ORDINAL)
                 {
                     Assert.IsFalse(entity.UniquelyLocalizing,
                         "b7 spans both candidates and should not be uniquely localizing");
@@ -426,7 +431,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static bool IsIon(TransitionDocNode nodeTran, IonType type, int ordinal)
         {
-            return nodeTran.Transition.IonType == type && nodeTran.Transition.Ordinal == ordinal;
+            return !nodeTran.HasLoss && nodeTran.Transition.IonType == type && nodeTran.Transition.Ordinal == ordinal;
         }
 
         /// <summary>
@@ -450,7 +455,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static DocNode FindIon(IEnumerable<DocNode> choices, IonType type, int ordinal)
         {
-            var choice = choices.FirstOrDefault(c => c.Id is Transition t && t.IonType == type && t.Ordinal == ordinal);
+            var choice = choices.FirstOrDefault(c => c is TransitionDocNode nodeTran && IsIon(nodeTran, type, ordinal));
             Assert.IsNotNull(choice, "Choices did not contain {0}{1}", type, ordinal);
             return choice;
         }

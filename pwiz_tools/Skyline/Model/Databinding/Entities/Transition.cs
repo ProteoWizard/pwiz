@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public bool UniquelyLocalizing
         {
-            get { return Precursor.Peptide.IsUniquelyLocalizing(DocNode.Transition); }
+            get { return Precursor.Peptide.IsUniquelyLocalizing(DocNode); }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
