@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void StartLongWait(string jobDescription)
         {
-            SkylineWindow.BeginInvoke(new Action(() =>
+            SkylineWindow.BeginInvoke(() =>
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
@@ -219,7 +219,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 _performWorkReturned.Set();
-            }));
+            });
         }
 
         private void DoWork(IProgressMonitor progressMonitor)
