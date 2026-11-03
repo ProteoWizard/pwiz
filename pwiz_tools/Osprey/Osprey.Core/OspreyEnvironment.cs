@@ -87,7 +87,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
             @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
-            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DETERMINISTIC_MATH", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
             @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
@@ -736,6 +736,29 @@ namespace pwiz.Osprey.Core
         /// <summary>The first-pass SVM C-selection tolerance in effect.</summary>
         public static readonly double SvmCSelectionTolerance =
             ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
+
+        /// <summary>OSPREY_DETERMINISTIC_MATH exactly as set, or null when unset. Unset (or
+        /// <c>1</c>) selects the managed fdlibm Exp and Log in <see cref="DeterministicMath"/>,
+        /// which return the same bits on every OS; <c>0</c> selects <see cref="Math.Exp"/> and
+        /// <see cref="Math.Log(double)"/>, which come from the OS C library and differ in the
+        /// last bit between Windows and Linux. An A/B switch, for measuring what determinism
+        /// costs and for reproducing a model trained before it.</summary>
+        public static readonly string DeterministicMathSetting =
+            Environment.GetEnvironmentVariable(@"OSPREY_DETERMINISTIC_MATH");
+
+        /// <summary>True when OSPREY_DETERMINISTIC_MATH is set to anything but <c>0</c> or
+        /// <c>1</c>. Program startup ABORTS on this, as it does for
+        /// <see cref="SvmCSelectionToleranceUnrecognized"/>: falling back to the default would
+        /// file the default arm's numbers under the name of the arm the caller asked for.</summary>
+        public static readonly bool DeterministicMathUnrecognized =
+            !string.IsNullOrEmpty(DeterministicMathSetting) &&
+            !ParseDeterministicMath(DeterministicMathSetting).HasValue;
+
+        /// <summary>Whether <see cref="DeterministicMath"/> computes Exp and Log with its
+        /// platform-independent fdlibm arm (the default) rather than <see cref="Math"/>. Read
+        /// once into a static, so the JIT folds the dispatch to a constant; code that must
+        /// exercise both arms in one process passes the arm explicitly instead.</summary>
+        public static readonly bool UseDeterministicMath = ParseDeterministicMath(DeterministicMathSetting) ?? true;
 
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
@@ -1400,6 +1423,25 @@ namespace pwiz.Osprey.Core
             // -0 passes the range check but formats as "-0" in the validity key on .NET Core, so
             // it would key apart from the 0 it selects.
             return tolerance == 0 ? 0 : tolerance;
+        }
+
+        /// <summary>
+        /// An OSPREY_DETERMINISTIC_MATH value as the arm it selects: true for <c>1</c>, false
+        /// for <c>0</c>, null for anything else including unset - the null that
+        /// <see cref="DeterministicMathUnrecognized"/> reports for a set variable. Surrounding
+        /// whitespace is ignored. Internal so a test can pin what is accepted.
+        /// </summary>
+        internal static bool? ParseDeterministicMath(string raw)
+        {
+            switch (raw?.Trim())
+            {
+                case @"1":
+                    return true;
+                case @"0":
+                    return false;
+                default:
+                    return null;
+            }
         }
 
         private static bool IsSet(string name)
