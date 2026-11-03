@@ -571,6 +571,9 @@ Here are the last 3 errors:
   <data name="GraphSpectrum_ToolTip_Rank">
     <value>Rank:</value>
   </data>
+  <data name="GraphSpectrum_ToolTip_Uniquely_localizes" xml:space="preserve">
+    <value>Uniquely localizes:</value>
+  </data>
   <data name="GraphValues_Log_AxisTitle" xml:space="preserve">
     <value>Log {0}</value>
   </data>

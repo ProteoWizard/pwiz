@@ -183,7 +183,18 @@ namespace pwiz.Skyline.Model.Localization
         /// </summary>
         public StaticMod GetResolvedModification(Transition transition)
         {
-            if (!TryGetSpan(transition, out int lo, out int hi))
+            if (!IsFragment(transition))
+                return null;
+            return GetResolvedModification(transition.IonType, transition.CleavageOffset);
+        }
+
+        /// <summary>
+        /// <see cref="GetResolvedModification(Transition)"/> for a product ion given by its type and
+        /// cleavage offset.
+        /// </summary>
+        public StaticMod GetResolvedModification(IonType type, int cleavageOffset)
+        {
+            if (!TryGetSpan(type, cleavageOffset, out int lo, out int hi))
                 return null;
 
             foreach (var mod in _ambiguousMods)

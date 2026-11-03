@@ -23,11 +23,13 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -109,6 +111,61 @@ namespace pwiz.SkylineTestFunctional
             TestNonLocalizablePeptide();
             TestUniquelyLocalizingColumn();
             TestIncludeLocalizingIonsSetting();
+            TestLibraryMatchTooltip();
+        }
+
+        /// <summary>
+        /// The Library Match peak tooltip names the modification an ion uniquely localizes. Uses a
+        /// synthetic spectrum with peaks at the b3 and b7 m/z of the resolvable precursor, ranked
+        /// the way the Library Match window ranks a library spectrum, so no library file is needed:
+        /// the b3 tooltip carries the row and the b7 tooltip does not.
+        /// </summary>
+        private void TestLibraryMatchTooltip()
+        {
+            RunUI(() =>
+            {
+                var doc = SkylineWindow.Document;
+                var tgPath = FindTransitionGroupPath(doc, RESOLVABLE_SEQ);
+                var nodePep = (PeptideDocNode) doc.FindNode(tgPath.Parent);
+                var nodeGroup = (TransitionGroupDocNode) doc.FindNode(tgPath);
+                var mzUnique = nodeGroup.Transitions.First(t => IsIon(t, IonType.b, UNIQUE_B_ORDINAL)).Mz;
+                var mzShared = nodeGroup.Transitions.First(t => IsIon(t, IonType.b, SHARED_B_ORDINAL)).Mz;
+                var peaks = new SpectrumPeaksInfo(new[]
+                {
+                    new SpectrumPeaksInfo.MI { Mz = mzUnique, Intensity = 100 },
+                    new SpectrumPeaksInfo.MI { Mz = mzShared, Intensity = 50 }
+                });
+                var spectrumInfo = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(peaks,
+                    IsotopeLabelType.light, nodeGroup, doc.Settings, nodePep.ExplicitMods, false, -1);
+                var graphItem = new SpectrumGraphItem(nodePep, nodeGroup, null, spectrumInfo, string.Empty)
+                {
+                    SrmSettings = doc.Settings
+                };
+                var rowUnique = GraphsResources.GraphSpectrum_ToolTip_Uniquely_localizes + "\t" + PHOSPHO.Name;
+                var tipUnique = GetPeakTooltipText(graphItem, spectrumInfo, IonType.b, UNIQUE_B_ORDINAL);
+                Assert.IsTrue(tipUnique.Contains(rowUnique),
+                    "b3 tooltip should name the localized modification, got:\n{0}", tipUnique);
+                var tipShared = GetPeakTooltipText(graphItem, spectrumInfo, IonType.b, SHARED_B_ORDINAL);
+                Assert.IsFalse(tipShared.Contains(GraphsResources.GraphSpectrum_ToolTip_Uniquely_localizes),
+                    "b7 tooltip should not claim to localize, got:\n{0}", tipShared);
+            });
+        }
+
+        /// <summary>
+        /// Renders the Library Match tooltip for the matched peak of the given ion, off screen, and
+        /// returns its text with cells separated by tabs and rows by newlines.
+        /// </summary>
+        private static string GetPeakTooltipText(SpectrumGraphItem graphItem, LibraryRankedSpectrumInfo spectrumInfo,
+            IonType type, int ordinal)
+        {
+            var rmi = spectrumInfo.PeaksMatched.FirstOrDefault(r =>
+                r.MatchedIons.Any(mfi => mfi.IonType == type && mfi.Ordinal == ordinal));
+            Assert.IsNotNull(rmi, "Spectrum did not match {0}{1}", type, ordinal);
+            var tip = new GraphSpectrum.ToolTipImplementation(rmi, graphItem);
+            using var bitmap = new Bitmap(1, 1);
+            using var g = Graphics.FromImage(bitmap);
+            tip.RenderTip(g, new Size(1000, 1000), false);
+            return tip.ToolTipText;
         }
 
         /// <summary>
