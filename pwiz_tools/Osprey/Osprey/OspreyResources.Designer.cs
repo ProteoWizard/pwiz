@@ -1066,7 +1066,61 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_LogError_Error_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} measures as {1} ({2:0.###} m/z), unlike {3}; it is searched at {4} with the other inputs. Search runs of different resolution separately..
+        /// </summary>
+        public static string Program_LogResolution__0__measures_as__1____2__m_z___unlike__3___it_is_searched_at__4__with_the_other_inputs__Search_runs_of_different_resolution_separately_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution__0__measures_as__1____2__m_z___unlike__3___it_is_searched_at__4__with_the_other_inputs__Search_runs_of_different_resolution_separately_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Measured from the first {0} MS2 spectra of {1}: {2} of adjacent peaks are within {3:0.###} m/z of each other, closer than the {4} m/z a unit-resolution analyzer separates. Give {5} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1____2__of_adjacent_peaks_are_within__3__m_z_of_each_other__closer_than_the__4__m_z_a_unit_resolution_analyzer_separates__Give__5__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1____2__of_adjacent_peaks_are_within__3__m_z_of_each_other__closer_than_the__4__m_z_a_unit_resolution_analyzer_separates__Give__5__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Measured from the first {0} MS2 spectra of {1}: the closest {2} of adjacent peaks are {3:0.###} m/z apart, no closer than {4} m/z, as at unit resolution. Give {5} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1___the_closest__2__of_adjacent_peaks_are__3__m_z_apart__no_closer_than__4__m_z__as_at_unit_resolution__Give__5__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1___the_closest__2__of_adjacent_peaks_are__3__m_z_apart__no_closer_than__4__m_z__as_at_unit_resolution__Give__5__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No spectra or scores file of the inputs shows the resolution; searching at {0}. Give {1} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_No_spectra_or_scores_file_of_the_inputs_shows_the_resolution__searching_at__0___Give__1__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_No_spectra_or_scores_file_of_the_inputs_shows_the_resolution__searching_at__0___Give__1__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Read from the search settings recorded in {0}, since no spectra of the inputs are at hand to measure. Give {1} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_Read_from_the_search_settings_recorded_in__0___since_no_spectra_of_the_inputs_are_at_hand_to_measure__Give__1__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_Read_from_the_search_settings_recorded_in__0___since_no_spectra_of_the_inputs_are_at_hand_to_measure__Give__1__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The MS2 spectra of {0} hold too few peaks to measure the resolution ({1} adjacent peaks in {2} spectra); searching at {3}. Give {4} to choose it yourself..
+        /// </summary>
+        public static string Program_LogResolution_The_MS2_spectra_of__0__hold_too_few_peaks_to_measure_the_resolution___1__adjacent_peaks_in__2__spectra___searching_at__3___Give__4__to_choose_it_yourself_ {
+            get {
+                return ResourceManager.GetString("Program_LogResolution_The_MS2_spectra_of__0__hold_too_few_peaks_to_measure_the_resolution___1__adjacent_peaks_in__2__spectra___searching_at__3___Give__4__to_choose_it_yourself_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Warning:.
         /// </summary>

@@ -312,6 +312,42 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Hands the cache's MS2 spectra to <paramref name="visit"/> in acquisition order, the
+        /// order <see cref="LoadSpectraCache"/> returns them, until it returns false. Reads only
+        /// the index and the records visited, so a sample from the start of a run costs a few
+        /// hundred record reads, not the whole file. False when there is no cache the search
+        /// would accept (absent, refused by its header, or a damaged index), in which case
+        /// nothing was visited.
+        /// </summary>
+        public static bool VisitMs2Spectra(string path, string sourcePath, Func<Spectrum, bool> visit)
+        {
+            if (!File.Exists(path))
+                return false;
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var r = new BinaryReader(fs))
+            {
+                SpectraCacheIndex index;
+                try
+                {
+                    if (!TryReadHeader(r, sourcePath, out uint nMs2, out _, out _))
+                        return false;
+                    index = ReadIndex(fs, r, nMs2);
+                }
+                catch (Exception ex) when (ex is InvalidDataException || ex is EndOfStreamException)
+                {
+                    return false;
+                }
+                for (int i = 0; i < index.RecordOffsets.Length; i++)
+                {
+                    fs.Seek(index.RecordOffsets[i], SeekOrigin.Begin);
+                    if (!visit(ReadMs2Record(r)))
+                        break;
+                }
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Get the spectra cache path for a given input file.
         /// </summary>
         public static string GetCachePath(string inputFile)
