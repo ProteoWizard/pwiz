@@ -41,7 +41,9 @@ namespace pwiz.Osprey.IO
     {
         /// <summary>
         /// The reader's version, in the library composition hash (the derived .blib's).
-        /// 4: one peak per m/z,
+        /// 5: modification ids, titles and masses from unimod.obo (<see cref="UniMod"/>): any
+        /// UniMod id or title is read, a title takes the modification's exact mass rather than
+        /// four decimals, and iTRAQ4plex is 144.102063, not 144.102062. 4: one peak per m/z,
         /// scaled to the base peak (<see cref="FragmentPeaks"/>); the modified sequence in the
         /// blib writer's text (<c>C[+57.0215]</c>) and modifications named by their UniMod
         /// entry, as the blib loader reads them, so an entry reads the same from either file.
@@ -52,7 +54,7 @@ namespace pwiz.Osprey.IO
         /// has (or a modification with no known mass) refuses the whole library, where version 1
         /// read it as a default or dropped it.
         /// </summary>
-        public const int READER_VERSION = 4;
+        public const int READER_VERSION = 5;
 
         /// <summary>
         /// The library composition term of a .tsv read by this reader: its version and
@@ -519,9 +521,9 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Adds the modification <paramref name="modStr"/> names on <paramref name="residue"/> at
         /// <paramref name="position"/>, identified as the blib loader identifies one, so an entry
-        /// reads the same from either file: by UniMod id when the text gives one, else a mass
-        /// bracket (<c>C[+57.0215]</c>, as DIA-NN and BiblioSpec print them) is matched against the
-        /// known modifications allowed on the residue at the precision printed, and takes the
+        /// reads the same from either file: by UniMod id or title when the text gives one, else a
+        /// mass bracket (<c>C[+57.0215]</c>, as DIA-NN and BiblioSpec print them) is matched against
+        /// the known modifications allowed on the residue at the precision printed, and takes the
         /// match's exact mass, id and name. A mass matching nothing is used as printed.
         /// </summary>
         private static void AddModification(List<Modification> modifications, List<string> unrecognized,
@@ -534,9 +536,9 @@ namespace pwiz.Osprey.IO
                 return;
             }
             int? unimodId = ParseUnimodId(modStr);
-            var known = unimodId.HasValue ? UniMod.Find(unimodId.Value) : null;
+            var known = unimodId.HasValue ? UniMod.Find(unimodId.Value) : UniMod.FindByName(modStr);
             string number = modStr.TrimStart('+');
-            if (!unimodId.HasValue && double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            if (known == null && !unimodId.HasValue && double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
                 known = UniMod.Match(mass.Value, BlibLoader.PrintedDecimals(number), residue, isNTerm, isCTerm);
             modifications.Add(new Modification
             {
@@ -607,23 +609,13 @@ namespace pwiz.Osprey.IO
             if (s.StartsWith(UniMod.PREFIX, StringComparison.OrdinalIgnoreCase) &&
                 int.TryParse(s.Substring(UniMod.PREFIX.Length), out int unimodId))
             {
-                double? unimodMass = UnimodIdToMass(unimodId);
-                if (unimodMass.HasValue)
-                    return unimodMass;
+                var byId = UniMod.Find(unimodId);
+                if (byId != null)
+                    return byId.Mass;
             }
 
-            // Known modifications by name
-            switch (s.ToUpperInvariant())
-            {
-                case @"OXIDATION": return 15.9949;
-                case @"CARBAMIDOMETHYL":
-                case @"CAM": return 57.0215;
-                case @"PHOSPHO": return 79.9663;
-                case @"ACETYL": return 42.0106;
-                case @"DEAMIDATED":
-                case @"DEAMIDATION": return 0.9840;
-                default: return null;
-            }
+            // A modification named by its UniMod title (e.g. "Oxidation")
+            return UniMod.FindByName(s)?.Mass;
         }
 
         /// <summary>
@@ -651,14 +643,6 @@ namespace pwiz.Osprey.IO
                 return id;
 
             return null;
-        }
-
-        /// <summary>
-        /// Look up mass delta for a UniMod ID (<see cref="UniMod"/>).
-        /// </summary>
-        public static double? UnimodIdToMass(int id)
-        {
-            return UniMod.Find(id)?.Mass;
         }
 
         /// <summary>
