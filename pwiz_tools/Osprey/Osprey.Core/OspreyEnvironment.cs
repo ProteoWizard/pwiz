@@ -88,7 +88,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
             @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
-            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DETERMINISTIC_MATH", DIAGNOSTICS, @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
             @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
             @"OSPREY_DIANN_REPORTS", @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
@@ -102,7 +102,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_TRAIN_FDR", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
-            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
+            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_OOF", @"OSPREY_GBT_PREFILTER_SIZE", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
             @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_BANDWIDTH", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
@@ -900,6 +900,50 @@ namespace pwiz.Osprey.Core
             throw new InvalidOperationException(@"OSPREY_XIC_FRAGMENTS must be a whole number from 2 to 20: " + value);
         }
 
+        /// <summary>
+        /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
+        /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
+        /// of every fold model (two of which trained on it). Not keyed: run it into its own output directory.
+        /// The held-out folds are not persisted with the first-pass model, so a resumed first pass retrains
+        /// rather than adopt the saved model. Known limitation: the second-pass rescoring and transfer
+        /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
+        /// </summary>
+        public static readonly bool GbtOutOfFold = ParseIntOrNull(@"OSPREY_GBT_OOF") == 1;
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass tree training. Round 1 trains as usual
+        /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
+        /// round 2 retrains on the N rows of the peptide groups that score best. Tree model only; 0 when unset.
+        /// Keyed through the gbdt validity-key term, so a run with it never adopts outputs trained without it.
+        /// Memory: the first pass then loads the features of every best-per-precursor candidate, not only the
+        /// MaxTrainSize subsample - about candidates x features doubles resident during training. Read only
+        /// by the streamed first pass; the projection path ignores it and logs a warning.
+        /// </summary>
+        public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(@"OSPREY_GBT_PREFILTER_SIZE"));
+
+        /// <summary>OSPREY_DETERMINISTIC_MATH exactly as set, or null when unset. Unset (or
+        /// <c>1</c>) selects the managed fdlibm Exp and Log in <see cref="DeterministicMath"/>,
+        /// which return the same bits on every OS; <c>0</c> selects <see cref="Math.Exp"/> and
+        /// <see cref="Math.Log(double)"/>, which come from the OS C library and differ in the
+        /// last bit between Windows and Linux. An A/B switch, for measuring what determinism
+        /// costs and for reproducing a model trained before it.</summary>
+        public static readonly string DeterministicMathSetting =
+            Environment.GetEnvironmentVariable(@"OSPREY_DETERMINISTIC_MATH");
+
+        /// <summary>True when OSPREY_DETERMINISTIC_MATH is set to anything but <c>0</c> or
+        /// <c>1</c>. Program startup ABORTS on this, as it does for
+        /// <see cref="SvmCSelectionToleranceUnrecognized"/>: falling back to the default would
+        /// file the default arm's numbers under the name of the arm the caller asked for.</summary>
+        public static readonly bool DeterministicMathUnrecognized =
+            !string.IsNullOrEmpty(DeterministicMathSetting) &&
+            !ParseDeterministicMath(DeterministicMathSetting).HasValue;
+
+        /// <summary>Whether <see cref="DeterministicMath"/> computes Exp and Log with its
+        /// platform-independent fdlibm arm (the default) rather than <see cref="Math"/>. Read
+        /// once into a static, so the JIT folds the dispatch to a constant; code that must
+        /// exercise both arms in one process passes the arm explicitly instead.</summary>
+        public static readonly bool UseDeterministicMath = ParseDeterministicMath(DeterministicMathSetting) ?? true;
+
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
         /// instead of by its best observation across all runs. ON by default; setting the variable
@@ -1628,6 +1672,25 @@ namespace pwiz.Osprey.Core
                 return null;
             }
             return trainFdr;
+        }
+
+        /// <summary>
+        /// An OSPREY_DETERMINISTIC_MATH value as the arm it selects: true for <c>1</c>, false
+        /// for <c>0</c>, null for anything else including unset - the null that
+        /// <see cref="DeterministicMathUnrecognized"/> reports for a set variable. Surrounding
+        /// whitespace is ignored. Internal so a test can pin what is accepted.
+        /// </summary>
+        internal static bool? ParseDeterministicMath(string raw)
+        {
+            switch (raw?.Trim())
+            {
+                case @"1":
+                    return true;
+                case @"0":
+                    return false;
+                default:
+                    return null;
+            }
         }
 
         private static bool IsSet(string name)
