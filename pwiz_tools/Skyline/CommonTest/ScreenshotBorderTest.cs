@@ -152,7 +152,8 @@ namespace CommonTest
         {
             var corner = cleaned.GetPixel(0, 0);
             AssertEx.AreNotEqual(DIRT_CORNER, corner, @"the corner still shows what lay behind the window");
-            AssertEx.AreEqual(ScreenshotBorder.IsWindows11() ? Color.White.ToArgb() : BORDER_COLOR.ToArgb(), corner.ToArgb());
+            var expected = ScreenshotBorder.IsWindows11() ? Color.White : BORDER_COLOR;
+            AssertEx.AreEqual(expected.ToArgb(), corner.ToArgb());
         }
     }
 }

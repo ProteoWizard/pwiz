@@ -79,7 +79,7 @@ namespace pwiz.Common.GUI
             set
             {
                 _message = value;
-                labelMessage.Text = TruncateMessage(_message);
+                labelMessage.Text = TruncateMessage(PathEx.DisplayPathsInText(_message));
                 UpdateFormHeight();
             }
         }
@@ -105,7 +105,7 @@ namespace pwiz.Common.GUI
             set
             {
                 _detailMessage = value;
-                tbxDetail.Text = TruncateMessage(_detailMessage);
+                tbxDetail.Text = TruncateMessage(PathEx.DisplayPathsInText(_detailMessage));
                 if (string.IsNullOrEmpty(DetailMessage))
                 {
                     if (btnMoreInfo.Parent != null)

@@ -581,16 +581,20 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
             StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
 
-            // --diagnostics writes its dumps to the current directory.
+            // OSPREY_DIAGNOSTICS writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn
             // the dumps on for every later command line in this test host, so restore them.
+            var diagnosticsOn = new Dictionary<string, string>(Verifier(false))
+            {
+                [OspreyEnvironment.DIAGNOSTICS] = @"1"
+            };
             string savedDirectory = Directory.GetCurrentDirectory();
             var savedVariables = SnapshotOspreyVariables();
             try
             {
                 Directory.SetCurrentDirectory(diagnosticsDir);
-                RunAnalysis(diagnosticsDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_DIAGNOSTICS.ArgumentText);
+                RunAnalysis(diagnosticsDir, DataInputs(), diagnosticsOn);
             }
             finally
             {

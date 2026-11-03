@@ -35,6 +35,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
 using Parquet.Schema;
+using Pwiz.Data.MsData.Readers;
 using pwiz.BiblioSpec.IO;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
@@ -1999,13 +2000,16 @@ namespace pwiz.Osprey.Test
             {
                 fromRaw = SpectrumFileReader.LoadAllSpectra(rawPath);
             }
-            catch (NotSupportedException ex)
+            catch (UserMessageException ex) when (ex.InnerException is VendorSupportNotEnabledException)
             {
                 // No vendor SDK in this build. Pin that the message at least NAMES the
                 // file, so a user is not left with a bare format complaint. Asserting on the
-                // file name rather than on wording keeps this translation-proof.
+                // file name rather than on wording keeps this translation-proof. The type
+                // itself is pinned too: it is what makes the top level print this message
+                // alone instead of a stack trace.
                 //
-                // NotSupportedException specifically, NOT Exception: SpectrumFileReader
+                // Only the refusal for missing vendor support, NOT any Exception or any
+                // UserMessageException (the peak-picking refusal is one too): SpectrumFileReader
                 // interpolates the path into its message, so a blanket catch would let an
                 // IOException from a file lock - or a genuine mapping defect that happened to
                 // quote the path - satisfy this assertion and skip every parity check below.

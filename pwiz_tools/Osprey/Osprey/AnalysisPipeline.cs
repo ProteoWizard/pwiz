@@ -71,10 +71,10 @@ namespace pwiz.Osprey
             {
                 // Select the diagnostics sink before any task runs -- the single
                 // chokepoint every invocation reaches the pipeline through
-                // (Program.Main, whatever --task it selected). -d forces the dump
-                // bundle on; otherwise the sink self-enables only if an
+                // (Program.Main, whatever --task it selected). OSPREY_DIAGNOSTICS forces
+                // the dump bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
-                OspreyDiagnostics.Initialize(config.Diagnostics);
+                OspreyDiagnostics.Initialize(OspreyEnvironment.Diagnostics);
                 // An ambient/forgotten OSPREY_KEEP_FAILED_WRITES silently stops EVERY
                 // SimpleFileSaver in the process from cleaning up an abandoned temp, in every
                 // run that inherits it, not just the diagnostic session someone meant to

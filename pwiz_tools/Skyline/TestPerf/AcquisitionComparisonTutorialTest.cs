@@ -288,12 +288,12 @@ namespace TestPerf
 
             WaitForConditionUI(() => SkylineWindow.GraphSpectrum.KoinaNCE == 31);
             RunUI(() => SkylineWindow.GraphSpectrum.KoinaNCE = 18);
-            WaitForGraphs();
+            WaitForKoinaPrediction(18);
             PauseForScreenShot<GraphSpectrum>("Library Match with PROCAL v Koina mirror and 18 NCE");
 
             RunUI(() => SkylineWindow.GraphSpectrum.KoinaNCE = 39);
             RunUI(SkylineWindow.UpdateGraphPanes);
-            WaitForGraphs();
+            WaitForKoinaPrediction(39);
             PauseForScreenShot<GraphSpectrum>("Library Match with PROCAL v Koina mirror and 39 NCE");
 
             RunUI(() =>
@@ -302,6 +302,18 @@ namespace TestPerf
                 Settings.Default.LibMatchMirror = false;
                 SkylineWindow.UpdateGraphPanes();
             });
+        }
+
+        /// <summary>
+        /// Waits for the Koina prediction at the given NCE to replace the "Making predictions..." display,
+        /// which keeps showing the previous mirror spectrum and which WaitForGraphs() does not wait out.
+        /// </summary>
+        private static void WaitForKoinaPrediction(int nce)
+        {
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GraphSpectrum.KoinaSpectrum?.SpectrumInfo is SpectrumInfoKoina info &&
+                                     info.NCE == nce);
+            WaitForGraphs();
         }
 
         private void ProcessPrmData()

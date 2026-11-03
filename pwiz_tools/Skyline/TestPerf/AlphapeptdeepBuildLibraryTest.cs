@@ -19,15 +19,16 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -68,11 +69,11 @@ namespace TestPerf
 
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
-            const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
+            const string answerWithoutIrt = "without_iRT/LibraryWithoutIrt.blib";
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
 
             const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
-            const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
+            const string answerWithIrt = "with_iRT/LibraryWithIrt.blib";
 
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
@@ -175,7 +176,9 @@ namespace TestPerf
 
             var alphaPeptDeepBuilder = (CarafeLibraryBuilder) buildLibraryDlg.Builder;
             Assert.IsNotNull(alphaPeptDeepBuilder);
-            string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
+            // Osprey writes the library itself, moved over the final name only when it is complete
+            string builtLibraryPath = alphaPeptDeepBuilder.LibrarySpec.FilePath;
+            Assert.AreEqual(libraryPath, builtLibraryPath);
             if (iRTtype != null)
             {
                 VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
@@ -204,7 +207,11 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                Assert.AreEqual(6, dlg.PeptidesCount);
+                // Every document peptide the models predicted, the phosphopeptide included: Chronologer,
+                // Carafe's default RT model, encodes phosphorylation and was trained on it, so its RT is
+                // kept, where the peptdeep TSV path zeroed it (the CCS, from the pretrained AlphaPeptDeep
+                // model, is withheld for it - see CarafeSharp's ModelSupport)
+                Assert.AreEqual(7, dlg.PeptidesCount);
                 Assert.AreEqual(1, dlg.RunsConvertedCount); // Libraries now convert through internal alignment to single RT scale
                 Assert.AreEqual(0, dlg.RunsFailedCount);
             });
@@ -231,131 +238,52 @@ namespace TestPerf
             OkDialog(regression, regression.CloseDialog);
         }
 
-        private void TestResultingLibByValues(string answer, string product)
+        /// <summary>
+        /// The built library against the recorded one, spectrum by spectrum: the same precursors,
+        /// each with the same fragments (by m/z) at intensities within 1e-3 of each other, and
+        /// retention times and CCS within tolerance. The predicted intensities differ at the ~7th
+        /// significant figure across machines and between the CPU and the GPU, so the fragments
+        /// are aligned by m/z, not by their intensity order in the library.
+        /// </summary>
+        private static void TestResultingLibByValues(string answer, string product)
         {
-            var sortFields = new List<(int FieldIndex, bool IsAscending)>
+            var answerLibrary = LoadLibrary(answer);
+            var productLibrary = LoadLibrary(product);
+            try
             {
-                (0, true),   // ModifiedPeptideSequence
-                (1, true),   // PrecursorCharge
-                (7, true),   // FragmentType
-                (10, true),  // FragmentCharge
-                // Fragments are written in predicted-intensity order, and the predicted intensities
-                // differ at the ~7th significant figure across machines and between the CPU and the
-                // GPU, which flips the order of near-tied fragments. Sort by the fragment's identity
-                // (series number + loss type) so the row order is deterministic and the field
-                // comparison aligns the same fragment in both files; the tiny per-value drift is then
-                // absorbed by the comparison tolerance.
-                (11, true),  // FragmentSeriesNumber
-                (12, true)   // FragmentLossType
-            };
-            var product_sorted = product + ".sorted";
-            var answer_sorted = answer + ".sorted";
-
-            DelimitedFileSorter.SortDelimitedFile(
-                inputFilePath: product,
-                outputFilePath: product_sorted,
-                delimiter: TextUtil.SEPARATOR_TSV,
-                sortFields: sortFields,
-                hasHeader: true);
-
-            DelimitedFileSorter.SortDelimitedFile(
-                inputFilePath: answer,
-                outputFilePath: answer_sorted,
-                delimiter: TextUtil.SEPARATOR_TSV,
-                sortFields: sortFields,
-                hasHeader: true);
-
-            using (var answerReader = new StreamReader(answer_sorted))
-            using (var productReader = new StreamReader(product_sorted))
-            {
-                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true, 0, 1);
-            }
-        }
-    }
-}
-
-public class DelimitedFileSorter
-{
-    public static void SortDelimitedFile(
-        string inputFilePath,
-        string outputFilePath,
-        char delimiter,
-        List<(int FieldIndex, bool IsAscending)> sortFields,
-        bool hasHeader = true)
-    {
-        try
-        {
-            // Validate inputs
-            if (string.IsNullOrEmpty(inputFilePath) || !File.Exists(inputFilePath))
-                throw new ArgumentException("Input file does not exist or is invalid.");
-            if (string.IsNullOrEmpty(outputFilePath))
-                throw new ArgumentException("Output file path is invalid.");
-            if (sortFields == null || !sortFields.Any())
-                throw new ArgumentException("At least one sort field must be specified.");
-            if (sortFields.Any(sf => sf.FieldIndex < 0))
-                throw new ArgumentException("Field indices must be non-negative.");
-
-            // Read all lines
-            var lines = File.ReadAllLines(inputFilePath);
-            if (lines.Length == 0)
-                throw new InvalidOperationException("Input file is empty.");
-
-            // Store header if present
-            string header = hasHeader ? lines[0] : null;
-            var dataLines = hasHeader ? lines.Skip(1).ToList() : lines.ToList();
-
-            // Sort data
-            var sortedLines = Enumerable.OrderBy(
-                dataLines.Select(line => line.Split(delimiter)),
-                fields => fields, // Use fields as the key
-                new FieldComparer(sortFields)).Select(fields => string.Join(delimiter.ToString(), fields));
-
-            // Write to output file
-            using (var writer = new StreamWriter(outputFilePath))
-            {
-                if (hasHeader)
-                    writer.WriteLine(header);
-                foreach (var line in sortedLines)
-                    writer.WriteLine(line);
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error sorting file: {ex}");
-            throw;
-        }
-    }
-
-    private class FieldComparer : IComparer<string[]>
-    {
-        private readonly List<(int FieldIndex, bool IsAscending)> _sortFields;
-
-        public FieldComparer(List<(int FieldIndex, bool IsAscending)> sortFields)
-        {
-            _sortFields = sortFields;
-        }
-
-        public int Compare(string[] x, string[] y)
-        {
-            foreach ((int fieldIndex, bool isAscending) in _sortFields)
-            {
-                string xValue = x != null && fieldIndex < x.Length ? x[fieldIndex] : string.Empty;
-                string yValue = y != null && fieldIndex < y.Length ? y[fieldIndex] : string.Empty;
-
-                if (double.TryParse(xValue, out double xNum) && double.TryParse(yValue, out double yNum))
+                var answerKeys = answerLibrary.Keys.ToList();
+                CollectionAssert.AreEquivalent(answerKeys, productLibrary.Keys.ToList());
+                foreach (var key in answerKeys)
                 {
-                    int comparison = xNum.CompareTo(yNum);
-                    if (comparison != 0)
-                        return isAscending ? comparison : -comparison;
-                }
-                else
-                {
-                    int comparison = string.Compare(xValue, yValue, StringComparison.OrdinalIgnoreCase);
-                    if (comparison != 0)
-                        return isAscending ? comparison : -comparison;
+                    string label = key.ToString();
+                    var expected = answerLibrary.GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.best).First();
+                    var actual = productLibrary.GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.best).First();
+                    Assert.AreEqual(expected.RetentionTime ?? 0, actual.RetentionTime ?? 0, 0.05, label);
+                    Assert.AreEqual(expected.IonMobilityInfo?.CollisionalCrossSectionSqA ?? 0,
+                        actual.IonMobilityInfo?.CollisionalCrossSectionSqA ?? 0, 1.0, label);
+                    var expectedPeaks = expected.SpectrumPeaksInfo.Peaks.OrderBy(p => p.Mz).ToArray();
+                    var actualPeaks = actual.SpectrumPeaksInfo.Peaks.OrderBy(p => p.Mz).ToArray();
+                    Assert.AreEqual(expectedPeaks.Length, actualPeaks.Length, label);
+                    for (int i = 0; i < expectedPeaks.Length; i++)
+                    {
+                        Assert.AreEqual(expectedPeaks[i].Mz, actualPeaks[i].Mz, 1e-4, label);
+                        Assert.AreEqual(expectedPeaks[i].Intensity, actualPeaks[i].Intensity, 1e-3, label);
+                    }
                 }
             }
-            return 0;
+            finally
+            {
+                answerLibrary.ReadStream.CloseStream();
+                productLibrary.ReadStream.CloseStream();
+            }
+        }
+
+        private static Library LoadLibrary(string path)
+        {
+            var spec = new BiblioSpecLiteSpec(Path.GetFileNameWithoutExtension(path), path);
+            var library = spec.LoadLibrary(new DefaultFileLoadMonitor(new SilentProgressMonitor()));
+            Assert.IsTrue(library.IsLoaded, path);
+            return library;
         }
     }
 }
