@@ -1677,6 +1677,22 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// An OSPREY_FDR_TRAIN_FDR value as a number in (0, 1] (invariant culture), or null when it is
+        /// unset, unparseable or out of range - the null that <see cref="FdrTrainFdrUnrecognized"/>
+        /// reports for a set variable. Internal so a test can pin what is accepted.
+        /// </summary>
+        internal static double? ParseFdrTrainFdr(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) ||
+                !double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ||
+                !(trainFdr > 0 && trainFdr <= 1))
+            {
+                return null;
+            }
+            return trainFdr;
+        }
+
+        /// <summary>
         /// An OSPREY_DETERMINISTIC_MATH value as the arm it selects: true for <c>1</c>, false
         /// for <c>0</c>, null for anything else including unset - the null that
         /// <see cref="DeterministicMathUnrecognized"/> reports for a set variable. Surrounding
@@ -1693,22 +1709,6 @@ namespace pwiz.Osprey.Core
                 default:
                     return null;
             }
-        }
-
-        /// <summary>
-        /// An OSPREY_FDR_TRAIN_FDR value as a number in (0, 1] (invariant culture), or null when it is
-        /// unset, unparseable or out of range - the null that <see cref="FdrTrainFdrUnrecognized"/>
-        /// reports for a set variable. Internal so a test can pin what is accepted.
-        /// </summary>
-        internal static double? ParseFdrTrainFdr(string raw)
-        {
-            if (string.IsNullOrEmpty(raw) ||
-                !double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ||
-                !(trainFdr > 0 && trainFdr <= 1))
-            {
-                return null;
-            }
-            return trainFdr;
         }
 
         private static bool IsSet(string name)

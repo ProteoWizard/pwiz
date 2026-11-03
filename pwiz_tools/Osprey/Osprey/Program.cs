@@ -699,6 +699,13 @@ namespace pwiz.Osprey
                         @"OSPREY_FEATURE_MASK", unknownMaskedFeature, OspreyEnvironment.FEATURE_MASK_NONE));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // A masked feature is absent from the classifier's vectors, so a mask with nothing
+                // left would hand it vectors of no features at all.
+                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
+                {
+                    LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // Abort for the same reason: a mistyped value would train with the default arm
                 // and key its directories as the default, so a System.Math timing or parity arm
                 // would report the deterministic arm's numbers under its own name.
@@ -714,13 +721,6 @@ namespace pwiz.Osprey
                 {
                     LogInfo(@"Exp/Log: System.Math (OSPREY_DETERMINISTIC_MATH=0) - gbdt training is not " +
                             @"bit-identical across operating systems");
-                }
-                // A masked feature is absent from the classifier's vectors, so a mask with nothing
-                // left would hand it vectors of no features at all.
-                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
-                {
-                    LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
-                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
