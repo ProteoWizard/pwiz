@@ -27,6 +27,11 @@ public class CvLookupTests
         Assert.AreEqual(CVID.CVID_Unknown, unknown.Cvid);
         Assert.AreEqual("??:0000000", unknown.Id);
         Assert.AreEqual(CVID.CVID_Unknown, CvLookup.CvTermInfo("XX:9999999").Cvid);
+
+        // Known prefix but a term this build doesn't know (e.g. mzML from a newer msconvert):
+        // still the sentinel, never an exception.
+        Assert.AreEqual(CVID.CVID_Unknown, CvLookup.CvTermInfo("MS:9999999").Cvid);
+        Assert.AreEqual(CVID.CVID_Unknown, CvLookup.CvTermInfo("UO:9999999").Cvid);
     }
 
     [TestMethod]
