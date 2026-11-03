@@ -332,7 +332,7 @@ namespace pwiz.Osprey.FDR
 
             return new PercolatorConfig
             {
-                TrainFdr = config.RunFdr,
+                TrainFdr = OspreyEnvironment.FdrTrainFdr ?? config.RunFdr,
                 TestFdr = config.RunFdr,
                 // The SVM's 10 is unchanged. Trees converge far more slowly and were
                 // still improving when they hit 10, so they get their own (higher) cap --
@@ -390,6 +390,8 @@ namespace pwiz.Osprey.FDR
         private static GbtParams BuildGbtParams()
         {
             var gbtParams = new GbtParams();
+            if (OspreyEnvironment.FdrSeed.HasValue)
+                gbtParams.Seed = OspreyEnvironment.FdrSeed.Value;
             if (OspreyEnvironment.GbtGamma.HasValue)
                 gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
             if (OspreyEnvironment.GbtRegLambda.HasValue)

@@ -61,6 +61,7 @@ namespace pwiz.Osprey.Test
             AssertEachArmKeysDifferently();
             AssertTrainingSampleLeversKeyDifferently();
             AssertFdrExperimentSwitchesKeyDifferently();
+            AssertRecordedFeaturesFollowTheMask();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
@@ -627,6 +628,90 @@ namespace pwiz.Osprey.Test
                 @"the default mask must skip the override-path detection");
             Assert.IsTrue(PinFeatureMask.UsesRunnerUpFeatures(f => f != margin),
                 @"any one runner-up feature unmasked must run the override-path detection");
+
+            // The FDR classifier switches change the draw or the positives the classifier trains on, so each
+            // keys differently too.
+            var classifierKeys = new[]
+            {
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(null, null),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(7, null),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(42, null),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(null, 0.01),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(null, 1.0),
+                OspreyEnvironment.FdrClassifierValidityKeySuffix(7, 1.0),
+            };
+            Assert.AreEqual(string.Empty, classifierKeys[0], @"unset switches must not change existing keys");
+            Assert.AreEqual(classifierKeys.Length, classifierKeys.Distinct().Count(), @"every switch must key differently");
+
+            // OSPREY_FDR_TRAIN_FDR accepts only a q-value in (0, 1]; anything else stops the search at startup.
+            Assert.AreEqual(0.05, OspreyEnvironment.ParseFdrTrainFdr(@"0.05"));
+            Assert.AreEqual(1.0, OspreyEnvironment.ParseFdrTrainFdr(@"1"));
+            foreach (string rejected in new[] { @"0", @"-0.1", @"1.5", @"5%", @"0,05", @"NaN", @"" })
+                Assert.IsNull(OspreyEnvironment.ParseFdrTrainFdr(rejected), rejected);
+        }
+
+        /// <summary>
+        /// Scoring records the core features and each family the mask leaves a feature of, or
+        /// everything under OSPREY_RECORD_ALL_FEATURES=1, and the key term names what is recorded:
+        /// empty for the core alone (the default, so default keys do not change), the same for
+        /// two arms that record the same families, and different whenever a family is added.
+        /// </summary>
+        private static void AssertRecordedFeaturesFollowTheMask()
+        {
+            int n = ParquetScoreCache.NUM_PIN_FEATURES;
+            int core = PinFeatureMask.CORE_FEATURE_COUNT;
+            Assert.AreEqual(21, core, @"the core is the 21 features Osprey had before the families");
+            var starts = PinFeatureMask.FAMILY_FIRST_FEATURES
+                .Select(name => Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name)).ToArray();
+            Assert.IsTrue(starts.All(start => start >= core), @"every family is a PIN feature after the core");
+            CollectionAssert.AreEqual(starts.OrderBy(start => start).Distinct().ToArray(), starts, @"families are in PIN order");
+
+            bool[] byDefault = PinFeatureMask.RecordedFeatures(PinFeatureMask.IsMasked, false);
+            bool[] recordAll = PinFeatureMask.RecordedFeatures(PinFeatureMask.IsMasked, true);
+            bool[] maskNone = PinFeatureMask.RecordedFeatures(f => false, false);
+            bool[] maskAll = PinFeatureMask.RecordedFeatures(f => true, false);
+            for (int f = 0; f < n; f++)
+            {
+                Assert.AreEqual(f < core, byDefault[f], @"the default records the core alone");
+                Assert.AreEqual(f < core, maskAll[f], @"the core is recorded whatever the mask");
+                Assert.IsTrue(recordAll[f] && maskNone[f], @"recording all and masking none record every feature");
+                Assert.AreEqual(byDefault[f], PinFeatureMask.IsRecorded(f), @"the test process records the default set");
+            }
+
+            // Unmasking one feature records its whole family and nothing else.
+            int tcRank3 = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"tc_corr_rank3");
+            int tcFirst = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"tc_sum6");
+            int tcEnd = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, @"heavy_sum6");
+            Func<int, bool> oneUnmasked = f => PinFeatureMask.IsMasked(f) && f != tcRank3;
+            bool[] oneFamily = PinFeatureMask.RecordedFeatures(oneUnmasked, false);
+            for (int f = 0; f < n; f++)
+            {
+                Assert.AreEqual(f < core || (f >= tcFirst && f < tcEnd), oneFamily[f],
+                    ParquetScoreCache.PIN_FEATURE_NAMES[f]);
+            }
+            // Whatever the mask, every feature the classifier reads is recorded.
+            foreach (var isMasked in new[] { PinFeatureMask.IsMasked, oneUnmasked, f => false, f => f % 3 == 0 })
+            {
+                bool[] recorded = PinFeatureMask.RecordedFeatures(isMasked, false);
+                foreach (int f in PinFeatureMask.UnmaskedIndices(isMasked))
+                    Assert.IsTrue(recorded[f], ParquetScoreCache.PIN_FEATURE_NAMES[f]);
+            }
+
+            string defaultKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => byDefault[f]);
+            string allKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => recordAll[f]);
+            string oneKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => oneFamily[f]);
+            Assert.AreEqual(string.Empty, defaultKey, @"the default must not change existing keys");
+            Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix());
+            Assert.AreEqual(@";featrec=all", allKey);
+            Assert.AreEqual(allKey, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => maskNone[f]),
+                @"masking none records what recording all does, so the two share their scores");
+            Assert.AreEqual(@";featrec=tc_sum6", oneKey);
+
+            // Under the default no task carries the term, so no default output directory is invalidated.
+            var tasks = OspreyTasks.Create().Pipeline;
+            var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            foreach (var task in tasks)
+                Assert.IsFalse(task.ValidityKey(ctx).Contains(@";featrec="), task.Name);
         }
 
         /// <summary>
@@ -672,9 +757,10 @@ namespace pwiz.Osprey.Test
         ///
         /// The XIC fragment count follows the pick: it decides the peaks and
         /// features Stage 4 writes, so every task carries it. The feature mask
-        /// follows the training selection: scoring writes every feature and the
-        /// mask is applied when the FDR stage loads them, so per-file scoring must
-        /// NOT key on it - that is what lets a mask arm adopt another arm's scores.
+        /// follows the training selection: the mask is applied when the FDR stage
+        /// loads features, so per-file scoring must NOT key on it. What scoring
+        /// records keys it instead (<see cref="PinFeatureMask.RecordedFeaturesValidityKeySuffix()"/>),
+        /// so a mask arm that records the same families adopts another arm's scores.
         /// </summary>
         private static void AssertEveryTaskCarriesTheSuffixesItNeeds()
         {

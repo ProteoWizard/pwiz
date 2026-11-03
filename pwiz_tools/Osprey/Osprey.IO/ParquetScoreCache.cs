@@ -110,9 +110,73 @@ namespace pwiz.Osprey.IO
             // Spectrum across the peak: library cosine at every scan (2)
             @"peak_spectrum_cosine_mean",
             @"peak_spectrum_cosine_sd",
+            // Median-polish top-k: per-fragment R^2 against the robust elution profile (6)
+            @"mp_fragment_r2_rank2",
+            @"mp_fragment_r2_rank3",
+            @"mp_fragment_r2_rank4",
+            @"mp_fragment_r2_top3_mean",
+            @"mp_fragment_r2_median",
+            @"mp_n_fragments_good_fit",
+            // Reference correlation: fragments against the best-correlated fragment (6)
+            @"ref_corr_rank2",
+            @"ref_corr_rank3",
+            @"ref_corr_rank5",
+            @"ref_n_corr_good",
+            @"ref_minfilt_corr_top3_mean",
+            @"apex_log_intensity_excl_top",
+            // Peak profile: width, shape, local correlation, library context, shares (18)
+            @"peak_width",
+            @"shape_bin1",
+            @"shape_bin2",
+            @"shape_bin3",
+            @"shape_bin4",
+            @"shape_bin5",
+            @"local_corr_top3_mean",
+            @"lib_rel_rank2",
+            @"lib_rel_rank3",
+            @"lib_rel_rank4",
+            @"lib_rel_rank5",
+            @"lib_rel_rank6",
+            @"window_share_rank1",
+            @"window_share_rank2",
+            @"window_share_rank3",
+            @"window_share_rank4",
+            @"window_share_rank5",
+            @"window_share_rank6",
+            // Time correlation: against the smoothed reference over apex +/- 0.15 min (9)
+            @"tc_sum6",
+            @"tc_corr_rank1",
+            @"tc_corr_rank2",
+            @"tc_corr_rank3",
+            @"tc_corr_rank4",
+            @"tc_corr_rank5",
+            @"tc_corr_rank6",
+            @"tc_res_sum",
+            @"tc_res_mean",
+            // Re-extracted correlation: M+1 isotopes and tight tolerances against the same reference (5)
+            @"heavy_sum6",
+            @"heavy_n_good",
+            @"tight45_sum6",
+            @"tight20_sum6",
+            @"tc_best_sum6",
+            // Peak dominance: the chosen peak against the other correlated apexes in the XIC range (4)
+            @"dom_best_corr_delta",
+            @"dom_tot_corr_sum",
+            @"dom_apex_count",
+            @"dom_corr_margin",
+            // Top fragment: the 3 most intense library fragments only (4)
+            @"top3_ref_n_corr_good",
+            @"top3_mp_min_r2",
+            @"top3_mp_r2_median",
+            @"top3_coelution_min",
+            // Wide-span coelution: over max(bounds, apex +/- 0.08 min) (4)
+            @"wide_coelution_sum",
+            @"wide_n_coeluting",
+            @"wide_coelution_margin",
+            @"wide_top3_coelution_min",
         };
 
-        public const int NUM_PIN_FEATURES = 41;
+        public const int NUM_PIN_FEATURES = 97;
 
         #endregion
 
@@ -219,9 +283,14 @@ namespace pwiz.Osprey.IO
                 ReferenceXicRts = new DataField(COLUMN_REFERENCE_XIC_RTS, typeof(byte[]), isNullable: true, isArray: false);
                 ReferenceXicIntensities = new DataField(COLUMN_REFERENCE_XIC_INTENSITIES, typeof(byte[]), isNullable: true, isArray: false);
                 ScoreIndex = includeScoreIndex ? new DataField<uint>(COLUMN_SCORE_INDEX) : null;
+                // A column for each recorded feature only: a feature scoring did not compute has
+                // none, rather than a column of zeros a reader could take for values.
                 Features = new DataField[NUM_PIN_FEATURES];
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                    Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+                {
+                    if (PinFeatureMask.IsRecorded(i))
+                        Features[i] = new DataField<double>(PIN_FEATURE_NAMES[i]);
+                }
 
                 // Order matches Rust's pipeline.rs build of `write_scores_parquet_with_metadata`.
                 // Field order is informational only -- Parquet is name-indexed.
@@ -237,7 +306,7 @@ namespace pwiz.Osprey.IO
                 // informational. Only the reconciled write asks for it.
                 if (ScoreIndex != null)
                     fields.Add(ScoreIndex);
-                fields.AddRange(Features);
+                fields.AddRange(Features.Where(field => field != null));
                 Schema = new ParquetSchema(fields.ToArray());
             }
 
@@ -263,6 +332,7 @@ namespace pwiz.Osprey.IO
             public DataField ReferenceXicIntensities { get; }
             /// <summary>Null unless the write is a reconciled one; see <see cref="COLUMN_SCORE_INDEX"/>.</summary>
             public DataField ScoreIndex { get; }
+            /// <summary>Per PIN feature, its field, or null for a feature that is not recorded (<see cref="PinFeatureMask.IsRecorded"/>).</summary>
             public DataField[] Features { get; }
         }
 
@@ -544,9 +614,7 @@ namespace pwiz.Osprey.IO
                 var fragmentIntensities = new byte[count][];
                 var refXicRts = new byte[count][];
                 var refXicIntensities = new byte[count][];
-                var featureArrays = new double[NUM_PIN_FEATURES][];
-                for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                    featureArrays[f] = new double[count];
+                var featureArrays = NewFeatureArrays(fields, count);
 
                 for (int j = 0; j < count; j++)
                 {
@@ -680,9 +748,7 @@ namespace pwiz.Osprey.IO
             var fragmentIntensities = new byte[count][];
             var refXicRts = new byte[count][];
             var refXicIntensities = new byte[count][];
-            var featureArrays = new double[NUM_PIN_FEATURES][];
-            for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                featureArrays[f] = new double[count];
+            var featureArrays = NewFeatureArrays(fields, count);
 
             for (int j = 0; j < count; j++)
             {
@@ -785,7 +851,10 @@ namespace pwiz.Osprey.IO
                 if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureArrays[f][j] = Finite(featureVec[f]);
+                    {
+                        if (featureArrays[f] != null)
+                            featureArrays[f][j] = Finite(featureVec[f]);
+                    }
                 }
                 // else: leave zeros (entries without features can't drive Stage 5+).
             }
@@ -840,8 +909,23 @@ namespace pwiz.Osprey.IO
             if (scoreIndices != null)
                 columns.Add(Column(fields.ScoreIndex, scoreIndices));
             for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                columns.Add(Column(fields.Features[f], featureArrays[f]));
+            {
+                if (fields.Features[f] != null)
+                    columns.Add(Column(fields.Features[f], featureArrays[f]));
+            }
             return columns;
+        }
+
+        /// <summary>One row group's value array for each recorded feature column, null for the rest.</summary>
+        private static double[][] NewFeatureArrays(WriteFields fields, int count)
+        {
+            var featureArrays = new double[NUM_PIN_FEATURES][];
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+            {
+                if (fields.Features[f] != null)
+                    featureArrays[f] = new double[count];
+            }
+            return featureArrays;
         }
 
         /// <summary>
@@ -1022,7 +1106,10 @@ namespace pwiz.Osprey.IO
             if (f == null)
             {
                 for (int i = 0; i < NUM_PIN_FEATURES; i++)
-                    arrays[i][row] = 0.0;
+                {
+                    if (arrays[i] != null)
+                        arrays[i][row] = 0.0;
+                }
                 return;
             }
 
@@ -2183,11 +2270,17 @@ namespace pwiz.Osprey.IO
                 if (entryIdCol == null || isDecoyCol == null)
                     return entries;
 
+                // The recorded features, which this process would write back; a feature it does
+                // not record stays 0 and is dropped on a rewrite. A file with no feature columns
+                // at all reads as zeros, as it always has.
                 var featureCols = new double[NUM_PIN_FEATURES][];
-                if (!scalarsOnly)
+                if (!scalarsOnly && fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]))
                 {
                     for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
+                    {
+                        if (PinFeatureMask.IsRecorded(f))
+                            featureCols[f] = RequireFeatureColumn(groupReader, fieldsByName, f, path);
+                    }
                 }
 
                 int rowCount = entryIdCol.Length;
@@ -2240,14 +2333,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load only the PIN feature columns from a Parquet cache, for the FDR stage.
-        /// Returns a list of feature vectors (one double[] per row). A feature masked by
-        /// <see cref="PinFeatureMask"/> reads as 0: this is where the mask is applied, so the
-        /// parquet itself always holds every feature.
+        /// Load the FDR classifier's feature vectors from a Parquet cache, one double[] per row.
+        /// Each holds only the features <see cref="PinFeatureMask"/> leaves unmasked, in PIN order
+        /// (<see cref="PinFeatureMask.FdrFeatureNames"/> names its positions): this is where the
+        /// mask is applied. A masked column is not read at all, and a file lacking an unmasked one
+        /// (scored under a narrower recorded set, <see cref="PinFeatureMask.IsRecorded"/>) is refused.
         /// </summary>
         public static List<double[]> LoadPinFeaturesFromParquet(string path)
         {
             var allFeatures = new List<double[]>();
+            int[] featureIndices = PinFeatureMask.FdrFeatureIndices;
+            int nFeatures = featureIndices.Length;
 
             using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
@@ -2257,24 +2353,29 @@ namespace pwiz.Osprey.IO
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
-                        // Read all feature columns
-                        var featureCols = new double[NUM_PIN_FEATURES][];
-                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        {
-                            featureCols[f] = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[f]);
-                        }
-
-                        if (featureCols[0] == null)
+                        // A file without the first PIN column has no features at all, whatever the
+                        // mask: the readability test the per-file stages use (HasPinFeatures).
+                        var firstCol = ReadColumnByName<double>(groupReader, fieldsByName, PIN_FEATURE_NAMES[0]);
+                        if (firstCol == null)
                             continue;
 
-                        int rowCount = featureCols[0].Length;
+                        var featureCols = new double[nFeatures][];
+                        for (int i = 0; i < nFeatures; i++)
+                        {
+                            int f = featureIndices[i];
+                            featureCols[i] = f == 0
+                                ? firstCol
+                                : RequireFeatureColumn(groupReader, fieldsByName, f, path);
+                        }
+
+                        int rowCount = firstCol.Length;
                         for (int row = 0; row < rowCount; row++)
                         {
-                            var features = new double[NUM_PIN_FEATURES];
-                            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            var features = new double[nFeatures];
+                            for (int i = 0; i < nFeatures; i++)
                             {
-                                double v = featureCols[f][row];
-                                features[f] = PinFeatureMask.IsMasked(f) || double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
+                                double v = featureCols[i][row];
+                                features[i] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                             }
                             allFeatures.Add(features);
                         }
@@ -2283,6 +2384,27 @@ namespace pwiz.Osprey.IO
             }
 
             return allFeatures;
+        }
+
+        /// <summary>
+        /// Read PIN feature <paramref name="featureIndex"/>'s column, which the caller needs, from a
+        /// file that holds features. A missing column means the run that scored the file did not
+        /// record that feature (<see cref="PinFeatureMask.IsRecorded"/>), so reading it as zeros
+        /// would hand the classifier or a rewrite values nothing computed: refused, naming the switch
+        /// that records it.
+        /// </summary>
+        private static double[] RequireFeatureColumn(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, int featureIndex, string path)
+        {
+            string name = PIN_FEATURE_NAMES[featureIndex];
+            var column = ReadColumnByName<double>(groupReader, fieldsByName, name);
+            if (column == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyIOResources.ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column,
+                    path, name, @"OSPREY_FEATURE_MASK", @"OSPREY_RECORD_ALL_FEATURES"));
+            }
+            return column;
         }
 
         #endregion

@@ -325,7 +325,7 @@ namespace pwiz.Osprey.Core
         public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
-        public bool PrefilterEnabled { get; set; } = true;
+        public bool PrefilterEnabled { get; set; } = !OspreyEnvironment.NoPrefilter;
 
         /// <summary>
         /// Demultiplex overlapping-window DIA into its narrow bins before searching

@@ -343,6 +343,7 @@ namespace pwiz.Osprey.FDR
                         ? new List<GradientBoostedTrees>(foldGbtModels)
                         : null,
                     Standardizer = standardizer,
+                    FeatureNames = FeatureNamesOf(config),
                     IterationsPerFold = trainIterations,
                     TrainEntryFolds = foldGbtModels != null && config.ReportTrainEntryFolds
                         ? BuildEntryFolds(n, trainSubset, foldAssignments)
@@ -478,10 +479,17 @@ namespace pwiz.Osprey.FDR
                     ? new List<GradientBoostedTrees>(foldGbtModels)
                     : null,
                 Standardizer = standardizer,
+                FeatureNames = FeatureNamesOf(config),
                 IterationsPerFold = iterationsPerFold,
                 FeatureContributions = contributions,
                 TrainingAnalysis = trainingAnalysis
             };
+        }
+
+        /// <summary>The trained features' names, from the config's feature metadata, or null without it.</summary>
+        private static string[] FeatureNamesOf(PercolatorConfig config)
+        {
+            return config.FeatureInfos?.Select(info => info.Name).ToArray();
         }
 
         /// <summary>

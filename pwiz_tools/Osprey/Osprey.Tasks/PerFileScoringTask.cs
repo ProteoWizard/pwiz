@@ -192,11 +192,11 @@ namespace pwiz.Osprey.Tasks
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
-        // ValidityKey is the default: the search and library hashes, plus
-        // the peak-pick arm the base key carries. The pick belongs to THIS
-        // stage - it chooses which candidate peak each precursor's row
-        // describes - so a re-run under a different pick model must not
-        // adopt these parquets.
+        // ValidityKey is the default - the search and library hashes, plus
+        // the peak-pick arm the base key carries - and the recorded features.
+        // The pick belongs to THIS stage - it chooses which candidate peak each
+        // precursor's row describes - so a re-run under a different pick model
+        // must not adopt these parquets.
         //
         // The data file is declared as the input it is, and a node that holds only its
         // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
@@ -208,6 +208,17 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.InputFiles != null)
                 foreach (var input in ctx.Config.InputFiles)
                     yield return input;
+        }
+
+        /// <summary>
+        /// The default key and the recorded-feature term: the scores parquet holds a column for
+        /// each recorded feature only, so a run that needs a feature these scores lack (a wider
+        /// mask, or OSPREY_RECORD_ALL_FEATURES=1) must score again rather than adopt them. Empty
+        /// under the default mask (<see cref="PinFeatureMask.RecordedFeaturesValidityKeySuffix()"/>).
+        /// </summary>
+        public override string ValidityKey(PipelineContext ctx)
+        {
+            return base.ValidityKey(ctx) + PinFeatureMask.RecordedFeaturesValidityKeySuffix();
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)

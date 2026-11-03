@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Osprey.Core;
 
@@ -26,19 +27,29 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// The PIN features the FDR classifier may not use (OSPREY_FEATURE_MASK). A masked feature
-    /// reads as 0 when the FDR stage loads features (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>),
-    /// so the standardizer gives it scale 1 and value 0 and the classifier cannot use it.
+    /// is absent from the vectors the FDR stage loads (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>):
+    /// each holds only the <see cref="FdrFeatureNames"/>, in PIN order, so training costs what the
+    /// unmasked features cost and not what all of them would. A masked feature used to be loaded as
+    /// a column of zeros, which the classifier could not use but still paid for - 97 columns where
+    /// 21 carried information.
     ///
-    /// The mask is applied at load, not at scoring, so the scores parquet always holds every
-    /// feature. A mask arm then needs only the FDR stage: it can adopt another arm's per-file
-    /// scores, and its validity key (<see cref="ValidityKeySuffix"/>) is carried only by the tasks
-    /// from first-pass FDR onward. The training export reads every feature unmasked.
+    /// The mask also decides what scoring computes. Stage 4 computes and records the 21 core
+    /// features and each feature family (<see cref="FAMILY_FIRST_FEATURES"/>) that has a feature
+    /// the mask leaves unmasked (<see cref="IsRecorded"/>); the scores parquet holds a column for
+    /// each recorded feature and none for the rest. Under the default mask that is the 21 core
+    /// features alone, so a default search costs and writes what it did before the masked families
+    /// were added. OSPREY_RECORD_ALL_FEATURES=1, a developer and research switch, records every
+    /// feature, so arms that differ only in the mask can share one scoring and run only the FDR
+    /// stage. The recorded set keys per-file scoring and rescoring
+    /// (<see cref="RecordedFeaturesValidityKeySuffix()"/>), and a reader that needs a column the
+    /// file does not hold refuses it rather than reading zeros.
     /// </summary>
     public static class PinFeatureMask
     {
         /// <summary>
         /// The features masked when OSPREY_FEATURE_MASK is unset: the runner-up, context,
-        /// per-fragment-rank and spectrum-across-peak families, still under evaluation. Masking
+        /// per-fragment-rank, spectrum-across-peak, median-polish top-k,
+        /// reference-correlation and peak-profile families, still under evaluation. Masking
         /// them keeps the default search's results what they were before these features.
         /// </summary>
         public static readonly string[] DEFAULT_MASKED_FEATURES =
@@ -50,11 +61,53 @@ namespace pwiz.Osprey.IO
             @"frag_rank1_intensity_share", @"frag_rank2_intensity_share", @"frag_rank3_intensity_share",
             @"frag_rank4_intensity_share", @"frag_rank5_intensity_share", @"frag_rank6_intensity_share",
             @"peak_spectrum_cosine_mean", @"peak_spectrum_cosine_sd",
+            @"mp_fragment_r2_rank2", @"mp_fragment_r2_rank3", @"mp_fragment_r2_rank4",
+            @"mp_fragment_r2_top3_mean", @"mp_fragment_r2_median", @"mp_n_fragments_good_fit",
+            @"ref_corr_rank2", @"ref_corr_rank3", @"ref_corr_rank5", @"ref_n_corr_good",
+            @"ref_minfilt_corr_top3_mean", @"apex_log_intensity_excl_top",
+            @"peak_width", @"shape_bin1", @"shape_bin2", @"shape_bin3", @"shape_bin4", @"shape_bin5",
+            @"local_corr_top3_mean",
+            @"lib_rel_rank2", @"lib_rel_rank3", @"lib_rel_rank4", @"lib_rel_rank5", @"lib_rel_rank6",
+            @"window_share_rank1", @"window_share_rank2", @"window_share_rank3",
+            @"window_share_rank4", @"window_share_rank5", @"window_share_rank6",
+            @"tc_sum6", @"tc_corr_rank1", @"tc_corr_rank2", @"tc_corr_rank3", @"tc_corr_rank4",
+            @"tc_corr_rank5", @"tc_corr_rank6", @"tc_res_sum", @"tc_res_mean",
+            @"heavy_sum6", @"heavy_n_good", @"tight45_sum6", @"tight20_sum6", @"tc_best_sum6",
+            @"dom_best_corr_delta", @"dom_tot_corr_sum", @"dom_apex_count", @"dom_corr_margin",
+            @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
+            @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
         };
+
+        /// <summary>
+        /// The first PIN feature of each feature family, in PIN order. A family runs from its first
+        /// feature to the next family's, and the last to the end of the PIN features; the features
+        /// before the first family are the 21 core features. Scoring computes or skips a family as
+        /// a unit, because its features share one per-candidate computation (a byproduct of
+        /// <c>OspreyScoringContext</c>): recording one feature of a family costs nearly what
+        /// recording all of them does.
+        /// </summary>
+        public static readonly string[] FAMILY_FIRST_FEATURES =
+        {
+            @"peak_coelution_margin", @"context_peptide_length", @"frag_rank1_abs_mass_error",
+            @"peak_spectrum_cosine_mean", @"mp_fragment_r2_rank2", @"ref_corr_rank2", @"peak_width",
+            @"tc_sum6", @"heavy_sum6", @"dom_best_corr_delta", @"top3_ref_n_corr_good", @"wide_coelution_sum",
+        };
+
+        /// <summary>
+        /// The core features, PIN 0 to 20: the features Osprey had before the families were added.
+        /// Always computed and recorded, whatever the mask, because more than the classifier reads
+        /// them - the coelution sum is every row's first-pass score, and the median-polish
+        /// diagnostics and the training export read core features directly.
+        /// </summary>
+        public static readonly int CORE_FEATURE_COUNT =
+            Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, FAMILY_FIRST_FEATURES[0]);
 
         // Lazy so an unknown name surfaces as its own exception at first use rather than as a
         // TypeInitializationException; Program checks it at startup with UnknownFeatureName.
         private static readonly Lazy<bool[]> _masked = new Lazy<bool[]>(() => CreateMask(MaskedNames));
+        private static readonly Lazy<int[]> _fdrFeatureIndices = new Lazy<int[]>(() => UnmaskedIndices(IsMasked));
+        private static readonly Lazy<bool[]> _recorded =
+            new Lazy<bool[]>(() => RecordedFeatures(IsMasked, OspreyEnvironment.RecordAllFeatures));
 
         /// <summary>The masked feature names in effect: OSPREY_FEATURE_MASK, or the default set when it is unset.</summary>
         private static string[] MaskedNames => OspreyEnvironment.FeatureMask ?? DEFAULT_MASKED_FEATURES;
@@ -63,6 +116,114 @@ namespace pwiz.Osprey.IO
         public static bool IsMasked(int featureIndex)
         {
             return _masked.Value[featureIndex];
+        }
+
+        /// <summary>
+        /// The PIN index of each feature the FDR classifier sees, ascending: position i of an FDR
+        /// feature vector holds PIN feature <c>FdrFeatureIndices[i]</c>. Under the default mask this
+        /// is 0 to 20, the 21 features Osprey had before the masked ones were added, so the default
+        /// classifier sees exactly the matrix it saw then.
+        /// </summary>
+        public static int[] FdrFeatureIndices => _fdrFeatureIndices.Value;
+
+        /// <summary>The PIN names of the FDR feature vector's positions, in its order.</summary>
+        public static string[] FdrFeatureNames => SelectFdrFeatures(ParquetScoreCache.PIN_FEATURE_NAMES);
+
+        /// <summary>
+        /// The FDR classifier's view of a per-PIN-feature array (feature names, feature metadata, a
+        /// full feature vector): its unmasked elements, in PIN order. Use it wherever something
+        /// indexed by PIN feature has to line up with an FDR feature vector, so names and values
+        /// cannot drift apart.
+        /// </summary>
+        public static T[] SelectFdrFeatures<T>(T[] perPinFeature)
+        {
+            return SelectFeatures(perPinFeature, FdrFeatureIndices);
+        }
+
+        /// <summary><see cref="SelectFdrFeatures{T}"/> for explicitly supplied feature indices.</summary>
+        public static T[] SelectFeatures<T>(T[] perPinFeature, int[] featureIndices)
+        {
+            if (perPinFeature == null)
+                throw new ArgumentNullException(nameof(perPinFeature));
+            if (perPinFeature.Length != ParquetScoreCache.NUM_PIN_FEATURES)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new ArgumentException(string.Format(@"Expected {0} PIN features, not {1}",
+                    ParquetScoreCache.NUM_PIN_FEATURES, perPinFeature.Length), nameof(perPinFeature));
+            }
+            var selected = new T[featureIndices.Length];
+            for (int i = 0; i < featureIndices.Length; i++)
+                selected[i] = perPinFeature[featureIndices[i]];
+            return selected;
+        }
+
+        /// <summary>The ascending PIN indices <paramref name="isMasked"/> leaves unmasked.</summary>
+        public static int[] UnmaskedIndices(Func<int, bool> isMasked)
+        {
+            return Enumerable.Range(0, ParquetScoreCache.NUM_PIN_FEATURES).Where(f => !isMasked(f)).ToArray();
+        }
+
+        /// <summary>
+        /// True when Stage 4 computes the PIN feature at <paramref name="featureIndex"/> and the
+        /// scores parquet holds its column: a core feature, a feature of a family the mask leaves
+        /// a feature of, or any feature under OSPREY_RECORD_ALL_FEATURES=1. Every feature the FDR
+        /// classifier reads is recorded.
+        /// </summary>
+        public static bool IsRecorded(int featureIndex)
+        {
+            return _recorded.Value[featureIndex];
+        }
+
+        /// <summary>
+        /// A copy of <see cref="IsRecorded"/> for every PIN feature, for the scorer, which cannot
+        /// see this class.
+        /// </summary>
+        public static bool[] RecordedFeatureFlags()
+        {
+            return (bool[])_recorded.Value.Clone();
+        }
+
+        /// <summary>
+        /// Which PIN features scoring records when <paramref name="isMasked"/> is the mask: the core
+        /// features, and every feature of each family that has an unmasked feature - or every
+        /// feature when <paramref name="recordAll"/>.
+        /// </summary>
+        public static bool[] RecordedFeatures(Func<int, bool> isMasked, bool recordAll)
+        {
+            var recorded = new bool[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < CORE_FEATURE_COUNT; f++)
+                recorded[f] = true;
+            foreach (var (start, end) in FamilyRanges())
+            {
+                bool record = recordAll || Enumerable.Range(start, end - start).Any(f => !isMasked(f));
+                for (int f = start; f < end; f++)
+                    recorded[f] = record;
+            }
+            return recorded;
+        }
+
+        /// <summary>
+        /// The validity-key term for the tasks whose outputs hold the recorded feature columns:
+        /// per-file scoring, which writes the scores parquet, and per-file rescoring, which copies
+        /// its rows into the reconciled parquet. It names the recorded families, or <c>all</c>, so
+        /// a run that needs a family its scores lack rescores instead of adopting them, and two
+        /// arms that record the same families - OSPREY_FEATURE_MASK=none and
+        /// OSPREY_RECORD_ALL_FEATURES=1, say - share their scores. Empty when only the core
+        /// features are recorded, the default, so no default output directory is invalidated.
+        /// </summary>
+        public static string RecordedFeaturesValidityKeySuffix()
+        {
+            return RecordedFeaturesValidityKeySuffix(IsRecorded);
+        }
+
+        /// <summary><see cref="RecordedFeaturesValidityKeySuffix()"/> for an explicitly supplied recorded set.</summary>
+        public static string RecordedFeaturesValidityKeySuffix(Func<int, bool> isRecorded)
+        {
+            var families = FAMILY_FIRST_FEATURES
+                .Where(name => isRecorded(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name))).ToArray();
+            if (families.Length == 0)
+                return string.Empty;
+            return @";featrec=" + (families.Length == FAMILY_FIRST_FEATURES.Length ? @"all" : string.Join(@"+", families));
         }
 
         /// <summary>
@@ -79,6 +240,12 @@ namespace pwiz.Osprey.IO
         /// and everything after it. Emitted for every arm, the default included, because outputs
         /// written before the mask moved to load time carry no term and were computed under a mask
         /// nothing recorded. The names are sorted, so the order they were listed in does not matter.
+        ///
+        /// <para>The <c>fdrcols</c> term records that a masked feature is absent from the FDR
+        /// vectors rather than a column of zeros. The saved first-pass model and each run's
+        /// first-pass feature sums are sized to those vectors, so one written under the zero-column
+        /// layout must not be adopted: a frozen model 97 features wide would decline every 21-wide
+        /// vector it was handed.</para>
         /// </summary>
         public static string ValidityKeySuffix()
         {
@@ -89,7 +256,7 @@ namespace pwiz.Osprey.IO
                 mask = @"none";
             else
                 mask = string.Join(@"+", OspreyEnvironment.FeatureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
-            return @";featmask=" + mask;
+            return @";featmask=" + mask + @";fdrcols=unmasked";
         }
 
         /// <summary>
@@ -152,6 +319,19 @@ namespace pwiz.Osprey.IO
                 masked[index] = true;
             }
             return masked;
+        }
+
+        /// <summary>Each family's PIN index range, [start, end), in PIN order.</summary>
+        private static IEnumerable<(int Start, int End)> FamilyRanges()
+        {
+            for (int i = 0; i < FAMILY_FIRST_FEATURES.Length; i++)
+            {
+                int start = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, FAMILY_FIRST_FEATURES[i]);
+                int end = i + 1 < FAMILY_FIRST_FEATURES.Length
+                    ? Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, FAMILY_FIRST_FEATURES[i + 1])
+                    : ParquetScoreCache.NUM_PIN_FEATURES;
+                yield return (start, end);
+            }
         }
     }
 }

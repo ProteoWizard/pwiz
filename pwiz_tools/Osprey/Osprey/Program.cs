@@ -680,6 +680,15 @@ namespace pwiz.Osprey
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
                 }
+                // Abort for the same reason: an unparseable or out-of-range training q-value
+                // would train under the default and key its directories as the default.
+                if (OspreyEnvironment.FdrTrainFdrUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_FDR_TRAIN_FDR must be a number in (0, 1] such as '0.05', not '{0}'. " +
+                        @"Unset it for the default (the run FDR).", OspreyEnvironment.FdrTrainFdrSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // Abort for the same reason: the mask is resolved when the FDR stage first loads
                 // features, so a mistyped name would otherwise surface only after Stages 1-4.
                 string unknownMaskedFeature = PinFeatureMask.UnknownFeatureName();
@@ -705,6 +714,13 @@ namespace pwiz.Osprey
                 {
                     LogInfo(@"Exp/Log: System.Math (OSPREY_DETERMINISTIC_MATH=0) - gbdt training is not " +
                             @"bit-identical across operating systems");
+                }
+                // A masked feature is absent from the classifier's vectors, so a mask with nothing
+                // left would hand it vectors of no features at all.
+                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
+                {
+                    LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {

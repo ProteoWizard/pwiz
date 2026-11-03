@@ -761,6 +761,384 @@ namespace pwiz.Osprey.Test
             };
         }
 
+        /// <summary>
+        /// Reference-correlation family: the reference is the fragment that correlates best with
+        /// the others, so an interfered fragment that is also the most intense - the peak-shape
+        /// reference - is not chosen, and the clean fragments still correlate with the reference.
+        /// </summary>
+        [TestMethod]
+        public void TestReferenceCorrelationIgnoresInterferedTopFragment()
+        {
+            var rts = new[] { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0 };
+            var profile = new[] { 1.0, 5.0, 20.0, 40.0, 20.0, 5.0, 1.0 };
+            var xics = new List<XicData>();
+            foreach (double scale in new[] { 10.0, 8.0, 6.0, 4.0 })
+                xics.Add(new XicData(xics.Count, rts, profile.Select(v => v * scale + 1.0).ToArray()));
+            // Most intense, but its signal rises across the peak instead of following the profile.
+            xics.Add(new XicData(xics.Count, rts, new[] { 100.0, 300.0, 500.0, 700.0, 900.0, 1100.0, 1300.0 }));
+            var peakData = new FakePeakData(xics, new XICPeakBounds { StartIndex = 0, EndIndex = 6, ApexIndex = 3 });
+
+            var context = new OspreyScoringContext(null);
+            var refCorr = ReferenceCorrelations.GetOrCompute(context, peakData);
+            Assert.AreEqual(4, refCorr.SortedCorrelations.Length);
+            Assert.IsTrue(refCorr.KthBest(3) > 0.99, string.Format("Clean fragments follow the reference, got {0:F4}", refCorr.KthBest(3)));
+            Assert.IsTrue(refCorr.KthBest(4) < 0.5, string.Format("The interfered fragment does not, got {0:F4}", refCorr.KthBest(4)));
+            Assert.AreEqual(3, refCorr.CountGood());
+            Assert.AreEqual(0.0, refCorr.KthBest(5), TOLERANCE);
+            // Apex: 401 + 321 + 241 + 161 + 700; without the top (700) the rest sum to 1124.
+            Assert.AreEqual(Math.Log10(1.0 + 1124.0), refCorr.ApexLogIntensityExcludingTop, TOLERANCE);
+            Assert.AreSame(refCorr, ReferenceCorrelations.GetOrCompute(context, peakData), "Computed once per candidate");
+
+            // A one-scan spike on a clean fragment hurts the raw correlation more than the spike-filtered one.
+            var spiked = xics.Take(4).Select(x => new XicData(x.FragmentIndex, rts, (double[]) x.Intensities.Clone())).ToList();
+            spiked[3].Intensities[5] = 400.0;
+            var spikeData = new FakePeakData(spiked, new XICPeakBounds { StartIndex = 0, EndIndex = 6, ApexIndex = 3 });
+            var spikeCorr = ReferenceCorrelations.GetOrCompute(new OspreyScoringContext(null), spikeData);
+            Assert.IsTrue(spikeCorr.MinFilteredTopMean(3) > spikeCorr.SortedCorrelations.Average(),
+                string.Format("Spike filtering should recover correlation: {0:F4} vs {1:F4}",
+                    spikeCorr.MinFilteredTopMean(3), spikeCorr.SortedCorrelations.Average()));
+        }
+
+        /// <summary>
+        /// Peak-profile family: width, a symmetric 5-bin shape that sums to 1, perfect apex-local
+        /// correlation for fragments that share one profile, library intensities relative to the
+        /// top fragment, and per-rank shares across the peak that follow the XIC scales.
+        /// </summary>
+        [TestMethod]
+        public void TestPeakProfile()
+        {
+            var rts = new[] { 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9 };
+            var profile = new[] { 1.0, 5.0, 20.0, 40.0, 60.0, 60.0, 40.0, 20.0, 5.0, 1.0 };
+            var scales = new[] { 2.0, 8.0, 4.0, 6.0 };   // XIC order differs from library rank order
+            var library = new[] { 25f, 100f, 50f, 75f };  // so rank 1 is fragment 1, rank 2 fragment 3, ...
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+            var xics = scales.Select((s, i) => new XicData(i, rts, profile.Select(v => v * s).ToArray())).ToList();
+            var bounds = new XICPeakBounds { StartIndex = 0, EndIndex = 9, ApexIndex = 4, StartRt = 1.0, EndRt = 1.9 };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate);
+
+            var context = new OspreyScoringContext(null);
+            var peak = PeakProfile.GetOrCompute(context, peakData);
+            Assert.AreEqual(0.9, peak.Width, TOLERANCE);
+            Assert.AreEqual(1.0, peak.Shape.Sum(), TOLERANCE);
+            Assert.AreEqual(peak.Shape[0], peak.Shape[4], TOLERANCE);
+            Assert.AreEqual(peak.Shape[1], peak.Shape[3], TOLERANCE);
+            Assert.IsTrue(peak.Shape[2] > peak.Shape[0]);
+            Assert.AreEqual(1.0, peak.LocalCorrelationTop3Mean, TOLERANCE);
+            CollectionAssert.AreEqual(new[] { 1.0, 0.75, 0.5, 0.25, 0.0, 0.0 }, peak.LibraryRelative);
+            // Shares follow the XIC scales of fragments 1, 3, 2, 0: 8, 6, 4, 2 of 20.
+            var expectedShares = new[] { 0.4, 0.3, 0.2, 0.1, 0.0, 0.0 };
+            for (int r = 0; r < expectedShares.Length; r++)
+                Assert.AreEqual(expectedShares[r], peak.WindowShares[r], TOLERANCE, string.Format("Rank {0}", r + 1));
+            Assert.AreSame(peak, PeakProfile.GetOrCompute(context, peakData), "Computed once per candidate");
+        }
+
+        /// <summary>
+        /// Time-correlation family: over apex +/- 0.15 min (15 scans at 0.01 min), fragments that
+        /// follow one Gaussian profile correlate near 1 with the smoothed reference, a fragment that
+        /// is a flat level with one spike does not, and fragments beyond the top six library ranks
+        /// are summed apart from them.
+        /// </summary>
+        [TestMethod]
+        public void TestTimeCorrelations()
+        {
+            const int n = 61;
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var profile = rts.Select(rt => 1000.0 * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2))).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f, 40f, 30f };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+            var xics = new List<XicData>();
+            for (int f = 0; f < library.Length; f++)
+            {
+                double[] intensities;
+                if (f == 2)
+                {
+                    // Library rank 3: a flat interference level with a one-scan spike far from the apex.
+                    intensities = Enumerable.Repeat(500.0, n).ToArray();
+                    intensities[20] = 900.0;
+                }
+                else
+                    intensities = profile.Select(v => v * (1.0 - 0.05 * f) + 5.0).ToArray();
+                xics.Add(new XicData(f, rts, intensities));
+            }
+            var bounds = new XICPeakBounds { StartIndex = 27, EndIndex = 33, ApexIndex = 30 };
+            var timeCorr = TimeCorrelations.Compute(new FakePeakData(xics, bounds, candidate: candidate),
+                TimeCorrelations.HALF_WINDOW_MINUTES);
+
+            for (int r = 1; r <= TimeCorrelations.RANK_COUNT; r++)
+            {
+                double corr = timeCorr.RankCorrelations[r - 1];
+                if (r == 3)
+                    Assert.IsTrue(corr < 0.3, string.Format("The flat fragment does not follow the reference, got {0:F4}", corr));
+                else
+                    Assert.IsTrue(corr > 0.98, string.Format("Rank {0} follows the reference, got {1:F4}", r, corr));
+            }
+            Assert.AreEqual(timeCorr.RankCorrelations.Sum(), timeCorr.TopSum, TOLERANCE);
+            Assert.IsTrue(timeCorr.ResidualSum > 1.96, string.Format("Two clean residual fragments, got {0:F4}", timeCorr.ResidualSum));
+            Assert.AreEqual(timeCorr.ResidualSum / 2, timeCorr.ResidualMean, TOLERANCE);
+        }
+
+        /// <summary>
+        /// Re-extracted-correlation family over synthetic window spectra: the M+1 isotopes of the top
+        /// three fragments (one of them doubly charged) co-elute and score near 1, the absent ones 0;
+        /// rank 6 is missing at its own m/z but has a co-eluting interferer 0.6 x tolerance away, which
+        /// the full-tolerance XIC picks up and the 0.45 x and 0.2 x re-extractions do not.
+        /// </summary>
+        [TestMethod]
+        public void TestReextractedCorrelations()
+        {
+            const int n = 61;
+            const int apex = 30;
+            var tolerance = FragmentToleranceConfig.Hram(10.0);
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var profile = rts.Select(rt => 1000.0 * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2)) + 5.0).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            var charges = new byte[] { 1, 2, 1, 1, 1, 1 };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment
+                {
+                    Mz = 300 + 100 * i,
+                    RelativeIntensity = v,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = (byte) (3 + i), Charge = charges[i] },
+                }).ToList(),
+            };
+            const int interfered = 5;
+            double interfererMz = candidate.Fragments[interfered].Mz + 0.6 * tolerance.ToleranceDa(candidate.Fragments[interfered].Mz);
+
+            var spectra = new List<Spectrum>();
+            var xicIntensities = library.Select(_ => new double[n]).ToArray();
+            for (int i = 0; i < n; i++)
+            {
+                var peaks = new List<KeyValuePair<double, double>>();
+                for (int f = 0; f < library.Length; f++)
+                {
+                    var fragment = candidate.Fragments[f];
+                    double intensity = profile[i] * (1.0 - 0.1 * f);
+                    xicIntensities[f][i] = intensity;
+                    peaks.Add(new KeyValuePair<double, double>(f == interfered ? interfererMz : fragment.Mz, intensity));
+                    if (f < 3)
+                        peaks.Add(new KeyValuePair<double, double>(fragment.Mz + ReextractedCorrelations.C13_DELTA / charges[f], 0.3 * intensity));
+                }
+                var sorted = peaks.OrderBy(p => p.Key).ToArray();
+                spectra.Add(new Spectrum
+                {
+                    RetentionTime = rts[i],
+                    Mzs = sorted.Select(p => p.Key).ToArray(),
+                    Intensities = sorted.Select(p => (float) p.Value).ToArray(),
+                });
+            }
+            var xics = xicIntensities.Select((v, f) => new XicData(f, rts, v)).ToList();
+            var bounds = new XICPeakBounds { StartIndex = 25, EndIndex = 35, ApexIndex = apex };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate, apexSpectrum: spectra[apex],
+                apexGlobalIndex: apex, apexLocalIndex: apex, windowStartIndex: 0, windowLength: n, windowSpectra: spectra);
+
+            var context = new OspreyScoringContext(new OspreyConfig { FragmentTolerance = tolerance });
+            var timeCorr = TimeCorrelations.GetOrCompute(context, peakData);
+            Assert.IsTrue(timeCorr.RankCorrelations[interfered] > 0.98,
+                string.Format("The full-tolerance XIC holds the interferer, got {0:F4}", timeCorr.RankCorrelations[interfered]));
+            var reextracted = ReextractedCorrelations.GetOrCompute(context, peakData);
+            Assert.AreEqual(3, reextracted.HeavyGoodCount);
+            Assert.IsTrue(reextracted.HeavySum > 2.94 && reextracted.HeavySum <= 3.0 + TOLERANCE,
+                string.Format("Three co-eluting isotopes and three absent ones, got {0:F4}", reextracted.HeavySum));
+            Assert.IsTrue(reextracted.TightWideSum > 4.9 && reextracted.TightWideSum <= 5.0 + TOLERANCE,
+                string.Format("The interferer drops out at 0.45x, got {0:F4}", reextracted.TightWideSum));
+            Assert.IsTrue(reextracted.TightNarrowSum > 4.9 && reextracted.TightNarrowSum <= 5.0 + TOLERANCE,
+                string.Format("The interferer drops out at 0.2x, got {0:F4}", reextracted.TightNarrowSum));
+            Assert.IsTrue(reextracted.BestSum > 5.9, string.Format("The best of each keeps the full XIC, got {0:F4}", reextracted.BestSum));
+            Assert.AreSame(reextracted, ReextractedCorrelations.GetOrCompute(context, peakData), "Computed once per candidate");
+            Assert.AreEqual(reextracted.HeavySum, OspreyFeatureCalculators.Get(80).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(3.0, OspreyFeatureCalculators.Get(81).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(reextracted.TightWideSum, OspreyFeatureCalculators.Get(82).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(reextracted.TightNarrowSum, OspreyFeatureCalculators.Get(83).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(reextracted.BestSum, OspreyFeatureCalculators.Get(84).Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Peak-dominance family over two apexes: all six fragments co-elute at scan 30, only the top three
+        /// at scan 90, the rest absent there. Each is accepted once, scoring about 5 and 2. Choosing the full
+        /// peak gives a positive best-delta and margin; choosing the partial one makes both negative.
+        /// </summary>
+        [TestMethod]
+        public void TestPeakDominance()
+        {
+            const int n = 121;
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+            var xics = new List<XicData>();
+            for (int f = 0; f < library.Length; f++)
+            {
+                double scale = 1.0 - 0.05 * f;
+                var intensities = rts.Select(rt =>
+                    1000.0 * scale * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2)) +
+                    (f < 3 ? 500.0 * scale * Math.Exp(-Math.Pow((rt - 10.9) / 0.04, 2)) : 0.0)).ToArray();
+                xics.Add(new XicData(f, rts, intensities));
+            }
+
+            var fullPeak = new FakePeakData(xics, new XICPeakBounds { StartIndex = 25, EndIndex = 35, ApexIndex = 30 }, candidate: candidate);
+            var full = PeakDominance.Compute(fullPeak, TimeCorrelations.Compute(fullPeak, TimeCorrelations.HALF_WINDOW_MINUTES));
+            Assert.AreEqual(2, full.ApexCount);
+            Assert.IsTrue(full.BestCorrSum > 4.9 && full.BestCorrSum <= 5.0 + TOLERANCE,
+                string.Format("Five partners co-elute at the full apex, got {0:F4}", full.BestCorrSum));
+            Assert.IsTrue(full.TotalCorrSum > 6.8 && full.TotalCorrSum <= 7.0 + TOLERANCE,
+                string.Format("The partial apex adds about 2, got {0:F4}", full.TotalCorrSum));
+            Assert.IsTrue(full.BestCorrDelta > 0.8, string.Format("Six time correlations over five partners, got {0:F4}", full.BestCorrDelta));
+            Assert.AreEqual(Math.Log(full.TimeCorrSum / (full.TotalCorrSum + 1.0)), full.TotCorrSum, TOLERANCE);
+            Assert.IsTrue(full.CorrMargin > 2.8, string.Format("The full apex dominates, got {0:F4}", full.CorrMargin));
+
+            var partialPeak = new FakePeakData(xics, new XICPeakBounds { StartIndex = 85, EndIndex = 95, ApexIndex = 90 }, candidate: candidate);
+            var partial = PeakDominance.Compute(partialPeak, TimeCorrelations.Compute(partialPeak, TimeCorrelations.HALF_WINDOW_MINUTES));
+            Assert.AreEqual(2, partial.ApexCount);
+            Assert.AreEqual(full.BestCorrSum, partial.BestCorrSum, TOLERANCE);
+            Assert.IsTrue(partial.BestCorrDelta < -1.8, string.Format("Three time correlations under the full apex, got {0:F4}", partial.BestCorrDelta));
+            Assert.IsTrue(partial.CorrMargin < -2.8, string.Format("The full apex elsewhere dominates, got {0:F4}", partial.CorrMargin));
+
+            var lonePeak = new FakePeakData(xics.Take(1).ToList(), fullPeak.PeakBounds, candidate: candidate);
+            var lone = PeakDominance.Compute(lonePeak, TimeCorrelations.Compute(lonePeak, TimeCorrelations.HALF_WINDOW_MINUTES));
+            Assert.AreEqual(0, lone.ApexCount);
+            Assert.AreEqual(0.0, lone.CorrMargin, TOLERANCE);
+
+            var context = new OspreyScoringContext(new OspreyConfig());
+            var dominance = PeakDominance.GetOrCompute(context, fullPeak);
+            Assert.AreSame(dominance, PeakDominance.GetOrCompute(context, fullPeak), "Computed once per candidate");
+            Assert.AreEqual(dominance.BestCorrDelta, OspreyFeatureCalculators.Get(85).Calculate(context, fullPeak), TOLERANCE);
+            Assert.AreEqual(dominance.TotCorrSum, OspreyFeatureCalculators.Get(86).Calculate(context, fullPeak), TOLERANCE);
+            Assert.AreEqual(dominance.ApexCount, OspreyFeatureCalculators.Get(87).Calculate(context, fullPeak), TOLERANCE);
+            Assert.AreEqual(dominance.CorrMargin, OspreyFeatureCalculators.Get(88).Calculate(context, fullPeak), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Top-fragment family: the three most intense library fragments co-elute while the other
+        /// three are noise. Restricted to the top three, the reference count, median-polish R^2 and
+        /// pairwise minimum stay high where the all-fragment minimum R^2 does not; a top-3 fragment
+        /// without an XIC counts as not following.
+        /// </summary>
+        [TestMethod]
+        public void TestTopFragments()
+        {
+            var rts = Enumerable.Range(0, 61).Select(i => 10.0 + 0.01 * i).ToArray();
+            var candidate = SixFragmentCandidate();
+            var xics = TopThreeCoelutingXics(rts, 10.3);
+            var bounds = new XICPeakBounds { StartIndex = 22, EndIndex = 38, ApexIndex = 30 };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate);
+            var polish = PolishOverBounds(xics, bounds);
+
+            var context = new OspreyScoringContext(new OspreyConfig());
+            var top = TopFragments.Compute(peakData, ReferenceCorrelations.GetOrCompute(context, peakData), polish);
+            Assert.AreEqual(2, top.RefGoodCount, "The two top fragments besides the reference follow it");
+            Assert.IsTrue(top.CoelutionMin > 0.99, string.Format("The top three co-elute, got {0:F4}", top.CoelutionMin));
+            var topR2 = Enumerable.Range(0, 3).Select(row => Math.Max(0.0, TukeyMedianPolish.FragmentR2(polish.Overall,
+                polish.RowEffects[row], polish.ColEffects, polish.Residuals[row]))).OrderBy(r2 => r2).ToArray();
+            Assert.AreEqual(topR2[0], top.MpMinR2, TOLERANCE);
+            Assert.AreEqual(topR2[1], top.MpMedianR2, TOLERANCE);
+            Assert.IsTrue(top.MpMinR2 > TukeyMedianPolish.MinFragmentR2(polish),
+                string.Format("Top 3 min R2 {0:F4} above the all-fragment min {1:F4}", top.MpMinR2, TukeyMedianPolish.MinFragmentR2(polish)));
+            Assert.AreEqual(0.0, TopFragments.Compute(peakData, ReferenceCorrelations.GetOrCompute(context, peakData), null).MpMinR2,
+                "No median-polish fit");
+
+            // Library fragment 1 (a top-3 fragment) without an XIC.
+            var missing = xics.Where(x => x.FragmentIndex != 1).ToList();
+            var missingPeak = new FakePeakData(missing, bounds, candidate: candidate);
+            var missingContext = new OspreyScoringContext(new OspreyConfig());
+            var gapped = TopFragments.Compute(missingPeak, ReferenceCorrelations.GetOrCompute(missingContext, missingPeak),
+                PolishOverBounds(missing, bounds));
+            Assert.AreEqual(1, gapped.RefGoodCount);
+            Assert.AreEqual(0.0, gapped.CoelutionMin, TOLERANCE);
+            Assert.AreEqual(0.0, gapped.MpMinR2, TOLERANCE);
+
+            context.AddInfo(new MedianPolishByproduct(polish, null));
+            var cached = TopFragments.GetOrCompute(context, peakData);
+            Assert.AreSame(cached, TopFragments.GetOrCompute(context, peakData), "Computed once per candidate");
+            Assert.AreEqual(top.RefGoodCount, OspreyFeatureCalculators.Get(89).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(top.MpMinR2, OspreyFeatureCalculators.Get(90).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(top.MpMedianR2, OspreyFeatureCalculators.Get(91).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(top.CoelutionMin, OspreyFeatureCalculators.Get(92).Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
+        /// Wide-span coelution family: narrow bounds of apex +/- 1 scan widen to apex +/- 0.08 min
+        /// (8 scans at 0.01 min spacing), wide bounds stay as they are, and over the widened span each
+        /// feature equals its bounds counterpart computed with the bounds set to that span. The margin
+        /// widens a second candidate peak around its own apex.
+        /// </summary>
+        [TestMethod]
+        public void TestWideSpanCoelution()
+        {
+            var rts = Enumerable.Range(0, 121).Select(i => 10.0 + 0.01 * i).ToArray();
+            var candidate = SixFragmentCandidate();
+            var xics = TopThreeCoelutingXics(rts, 10.3);
+            var narrow = new XICPeakBounds { StartIndex = 29, EndIndex = 31, ApexIndex = 30 };
+            var narrowPeak = new FakePeakData(xics, narrow, candidate: candidate);
+            var wide = WideSpanCoelution.Compute(narrowPeak, null, WideSpanCoelution.HALF_WINDOW_MINUTES);
+            Assert.AreEqual(22, wide.SpanStart);
+            Assert.AreEqual(38, wide.SpanEnd);
+            Assert.AreEqual(0.0, wide.Margin, TOLERANCE, "No candidate peaks");
+
+            var broad = new XICPeakBounds { StartIndex = 10, EndIndex = 50, ApexIndex = 30 };
+            var broadWide = WideSpanCoelution.Compute(new FakePeakData(xics, broad, candidate: candidate), null,
+                WideSpanCoelution.HALF_WINDOW_MINUTES);
+            Assert.AreEqual(10, broadWide.SpanStart);
+            Assert.AreEqual(50, broadWide.SpanEnd);
+
+            var spanBounds = new XICPeakBounds { StartIndex = 22, EndIndex = 38, ApexIndex = 30 };
+            var spanPeak = new FakePeakData(xics, spanBounds, candidate: candidate);
+            var spanContext = new OspreyScoringContext(new OspreyConfig());
+            Assert.AreEqual(FeatureByName(@"fragment_coelution_sum").Calculate(spanContext, spanPeak), wide.Sum, TOLERANCE);
+            Assert.AreEqual(FeatureByName(@"n_coeluting_fragments").Calculate(spanContext, spanPeak), wide.NCoeluting, TOLERANCE);
+            Assert.AreEqual(TopFragments.Compute(spanPeak, ReferenceCorrelations.GetOrCompute(spanContext, spanPeak), null).CoelutionMin,
+                wide.Top3Min, TOLERANCE);
+            Assert.IsTrue(wide.Top3Min > 0.99, string.Format("The top three co-elute over the span, got {0:F4}", wide.Top3Min));
+
+            // A second candidate in noise at scan 90 (narrow bounds too), widened to 82-98 around its apex.
+            var other = new XICPeakBounds { StartIndex = 89, EndIndex = 91, ApexIndex = 90 };
+            var otherSpanPeak = new FakePeakData(xics, new XICPeakBounds { StartIndex = 82, EndIndex = 98, ApexIndex = 90 }, candidate: candidate);
+            const int pairs = 15;
+            double otherMean = FeatureByName(@"fragment_coelution_sum").Calculate(new OspreyScoringContext(new OspreyConfig()), otherSpanPeak) / pairs;
+            var candidates = new PeakCandidatesByproduct(new[] { (narrow, 0.5, 2.0), (other, 0.1, 1.0) }, narrow);
+            var withMargin = WideSpanCoelution.Compute(narrowPeak, candidates, WideSpanCoelution.HALF_WINDOW_MINUTES);
+            Assert.AreEqual(wide.Sum / pairs - Math.Max(0.0, otherMean), withMargin.Margin, TOLERANCE);
+            var notChosen = new PeakCandidatesByproduct(new[] { (other, 0.1, 1.0) }, narrow);
+            Assert.AreEqual(0.0, WideSpanCoelution.Compute(narrowPeak, notChosen, WideSpanCoelution.HALF_WINDOW_MINUTES).Margin,
+                TOLERANCE, "The chosen peak is not among the candidates");
+
+            var context = new OspreyScoringContext(new OspreyConfig());
+            context.AddInfo(candidates);
+            var cached = WideSpanCoelution.GetOrCompute(context, narrowPeak);
+            Assert.AreSame(cached, WideSpanCoelution.GetOrCompute(context, narrowPeak), "Computed once per candidate");
+            Assert.AreEqual(withMargin.Sum, OspreyFeatureCalculators.Get(93).Calculate(context, narrowPeak), TOLERANCE);
+            Assert.AreEqual(withMargin.NCoeluting, OspreyFeatureCalculators.Get(94).Calculate(context, narrowPeak), TOLERANCE);
+            Assert.AreEqual(withMargin.Margin, OspreyFeatureCalculators.Get(95).Calculate(context, narrowPeak), TOLERANCE);
+            Assert.AreEqual(withMargin.Top3Min, OspreyFeatureCalculators.Get(96).Calculate(context, narrowPeak), TOLERANCE);
+        }
+
+        /// <summary>
+        /// The parquet feature columns and the calculators are two hand-kept lists in lockstep:
+        /// each new feature adds to both, so a calculator whose name differs from its column
+        /// would write one feature under another's name. The default FDR mask resolves names
+        /// against the columns, so each of its names must be a C#-only column, never one of the
+        /// 21 Rust features.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureNamesAndDefaultMask()
+        {
+            var names = ParquetScoreCache.PIN_FEATURE_NAMES;
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, names.Length);
+            for (int i = 0; i < names.Length; i++)
+                Assert.AreEqual(names[i], OspreyFeatureCalculators.Get(i).Name, string.Format("Feature {0}", i));
+
+            foreach (string name in PinFeatureMask.DEFAULT_MASKED_FEATURES)
+                Assert.IsTrue(Array.IndexOf(names, name) >= 21, name);
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment
@@ -768,6 +1146,48 @@ namespace pwiz.Osprey.Test
                 Mz = mz,
                 Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal, Charge = 1 },
             };
+        }
+
+        // Six library fragments, intensities 100 down to 50, so fragments 0-2 are the top three.
+        private static LibraryEntry SixFragmentCandidate()
+        {
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            return new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment { Mz = 200 + 100 * i, RelativeIntensity = v }).ToList(),
+            };
+        }
+
+        // Fragments 0-2 share one Gaussian elution at apexRt over a small baseline; fragments 3-5 are positive
+        // noise with no peak.
+        private static List<XicData> TopThreeCoelutingXics(double[] rts, double apexRt)
+        {
+            var xics = new List<XicData>();
+            for (int f = 0; f < 6; f++)
+            {
+                int fragment = f;
+                double scale = 1.0 - 0.1 * f;
+                var intensities = rts.Select((rt, i) => fragment < 3
+                    ? scale * (1000.0 * Math.Exp(-Math.Pow((rt - apexRt) / 0.04, 2)) + 1.0)
+                    : 50.0 + 40.0 * Math.Sin(1.3 * i + 2.1 * fragment)).ToArray();
+                xics.Add(new XicData(f, rts, intensities));
+            }
+            return xics;
+        }
+
+        // The median-polish fit the harness publishes: every XIC cropped to the peak bounds.
+        private static TukeyMedianPolishResult PolishOverBounds(IReadOnlyList<XicData> xics, XICPeakBounds bounds)
+        {
+            int len = bounds.EndIndex - bounds.StartIndex + 1;
+            var peakXics = xics.Select(x => new KeyValuePair<int, double[]>(x.FragmentIndex,
+                x.Intensities.Skip(bounds.StartIndex).Take(len).ToArray())).ToList();
+            var peakRts = xics[0].RetentionTimes.Skip(bounds.StartIndex).Take(len).ToArray();
+            return TukeyMedianPolish.Compute(peakXics, peakRts, TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
+        }
+
+        private static IOspreyFeatureCalculator FeatureByName(string name)
+        {
+            return OspreyFeatureCalculators.Get(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name));
         }
 
         private sealed class FakePeakData : IOspreyApexSpectraPeakData

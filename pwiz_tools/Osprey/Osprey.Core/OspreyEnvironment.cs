@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 
@@ -98,23 +99,23 @@ namespace pwiz.Osprey.Core
             @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_RUN_PEP", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
             @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
-            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_FDR_SEED", @"OSPREY_FDR_TRAIN_FDR", @"OSPREY_FEATURE_MASK", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
             @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_OOF", @"OSPREY_GBT_PREFILTER_SIZE", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
-            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_BANDWIDTH", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
-            @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_NO_PREFILTER", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RECORD_ALL_FEATURES", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
-            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TC_HALF_WINDOW", @"OSPREY_TRAIN_PICK_RUN",
             @"OSPREY_VERSION_OVERRIDE", @"OSPREY_XIC_FRAGMENTS"
         };
 
@@ -758,17 +759,82 @@ namespace pwiz.Osprey.Core
         public static int SearchXicFragments => XicFragments ?? DEFAULT_XIC_FRAGMENTS;
 
         /// <summary>
-        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (read as 0 when the
-        /// FDR stage loads features, so the classifier cannot use them), as comma-separated feature
+        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (left out of the
+        /// vectors the FDR stage loads, so the classifier never sees them), as comma-separated feature
         /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
-        /// under evaluation, is masked. Scoring writes every feature either way, so arms that differ
-        /// only in the mask share their per-file scores. An unknown name stops the search at startup.
+        /// under evaluation, is masked. Scoring computes and records only the feature families the
+        /// mask leaves a feature of (and the 21 core features always), so arms share their per-file
+        /// scores only when they record the same families - see <see cref="RecordAllFeatures"/>.
+        /// An unknown name stops the search at startup.
         /// </summary>
         public static readonly string[] FeatureMask = ParseFeatureMask(
             Environment.GetEnvironmentVariable(@"OSPREY_FEATURE_MASK"));
 
         /// <summary>The OSPREY_FEATURE_MASK value that masks nothing.</summary>
         public const string FEATURE_MASK_NONE = @"none";
+
+        /// <summary>
+        /// OSPREY_RECORD_ALL_FEATURES=1 (developer and research switch, not for release use): Stage 4
+        /// computes every PIN feature and records it in the scores parquet, whatever the mask hides
+        /// from the classifier. Unset, scoring computes only the features the FDR stage will read
+        /// (<c>PinFeatureMask.IsRecorded</c>), so a default search costs what it did before the
+        /// features under evaluation were added. Recording everything once lets a researcher compare
+        /// masks on the FDR stage alone. Keyed into the per-file scoring and rescoring validity keys
+        /// through the recorded-feature term, so a run that needs a feature its scores lack rescores.
+        /// </summary>
+        public static readonly bool RecordAllFeatures = ParseIntOrNull(@"OSPREY_RECORD_ALL_FEATURES") == 1;
+
+        /// <summary>
+        /// OSPREY_FDR_SEED (experiment): the Percolator seed in place of 42 (fold split, training subsample, GBDT
+        /// row and column sampling), to measure how much a feature-set comparison owes to the draw. Null when unset.
+        /// </summary>
+        public static readonly ulong? FdrSeed = ulong.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_FDR_SEED"),
+            NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) ? seed : null;
+
+        /// <summary>OSPREY_FDR_TRAIN_FDR exactly as set, or null when unset.</summary>
+        public static readonly string FdrTrainFdrSetting = Environment.GetEnvironmentVariable(@"OSPREY_FDR_TRAIN_FDR");
+
+        /// <summary>True when OSPREY_FDR_TRAIN_FDR is set to anything but a number in (0, 1]. Program startup
+        /// aborts on this rather than training under the default and keying the directories as the default.</summary>
+        public static readonly bool FdrTrainFdrUnrecognized =
+            !string.IsNullOrEmpty(FdrTrainFdrSetting) && !ParseFdrTrainFdr(FdrTrainFdrSetting).HasValue;
+
+        /// <summary>
+        /// OSPREY_FDR_TRAIN_FDR (experiment): the q-value under which Percolator takes targets as positives, in
+        /// place of 0.01. 1 trains on every target against the decoys, as DIA-NN 1.7.12's neural network does.
+        /// Keyed into the FDR validity keys when set. Null when unset or not a number in (0, 1].
+        /// </summary>
+        public static readonly double? FdrTrainFdr = ParseFdrTrainFdr(FdrTrainFdrSetting);
+
+        /// <summary>
+        /// OSPREY_NO_PREFILTER=1 (experiment): turns off the coelution signal pre-filter, as --no-prefilter does, for
+        /// runners that cannot pass Osprey arguments. It enters the search identity, so every task keys on it.
+        /// </summary>
+        public static readonly bool NoPrefilter = ParseIntOrNull(@"OSPREY_NO_PREFILTER") == 1;
+
+        /// <summary>
+        /// OSPREY_LOESS_BANDWIDTH (experiment): the RT calibration LOESS bandwidth (fraction of points per local fit)
+        /// in place of 0.3, to let the curve follow a library whose RTs bend at the gradient end, as DIA-NN 1.7.12's
+        /// 20-segment spline does. It enters the search identity, so every task keys on it. Null when unset.
+        /// </summary>
+        public static readonly double? LoessBandwidth = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_LOESS_BANDWIDTH"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double loessBandwidth) ? loessBandwidth : null;
+
+        /// <summary>
+        /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the configured
+        /// 0.5, to price precursors whose library RT the calibration maps badly (the SEA-AD gradient tail). It
+        /// enters the search identity, so every task keys on it. Null when unset.
+        /// </summary>
+        public static readonly double? MinRtTolerance = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_MIN_RT_TOLERANCE"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double minRtTolerance) ? minRtTolerance : null;
+
+        /// <summary>
+        /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
+        /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? TcHalfWindowMinutes = double.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_TC_HALF_WINDOW"),
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double halfWindow) ? halfWindow : null;
 
         /// <summary>
         /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
@@ -844,8 +910,8 @@ namespace pwiz.Osprey.Core
         {
             if (string.IsNullOrEmpty(value))
                 return null;
-            if (int.TryParse(value.Trim(), System.Globalization.NumberStyles.None,
-                    System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= MIN_XIC_FRAGMENTS && n <= MAX_XIC_FRAGMENTS)
+            if (int.TryParse(value.Trim(), NumberStyles.None,
+                    CultureInfo.InvariantCulture, out int n) && n >= MIN_XIC_FRAGMENTS && n <= MAX_XIC_FRAGMENTS)
                 return n;
             throw new InvalidOperationException(string.Format(
                 OspreyCoreResources.OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___,
@@ -1129,7 +1195,7 @@ namespace pwiz.Osprey.Core
         public static string ExperimentAgg =>
             MeanBestN >= 2
                 ? EXPERIMENT_AGG_MEAN_BEST_PREFIX +
-                  MeanBestN.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                  MeanBestN.ToString(CultureInfo.InvariantCulture)
                 : EXPERIMENT_AGG_MAX;
 
         /// <summary>True when <see cref="MeanBestN"/> selects a mean(best-N) reproducibility score
@@ -1233,7 +1299,7 @@ namespace pwiz.Osprey.Core
                 return string.Format(
                     @"OSPREY_MEANBEST2_FLOOR_PCT={0} is outside the valid range [0, 100]. It names a " +
                     @"percentile of the decoy score distribution to use as the missing-run floor.",
-                    pct.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    pct.Value.ToString(CultureInfo.InvariantCulture));
             }
             if (fileCount > 0 && MeanBestN > fileCount)
             {
@@ -1273,7 +1339,7 @@ namespace pwiz.Osprey.Core
             return @";expagg=" + ExperimentAgg
                    + @";floormean=" + MeanBest2FloorMean
                    + @";floorpct=" + (MeanBest2FloorPercentile?.ToString(
-                       System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+                       CultureInfo.InvariantCulture) ?? @"none");
         }
 
         /// <summary>
@@ -1301,7 +1367,8 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string PickValidityKeySuffix()
         {
-            return PickValidityKeySuffix(PickLda, PickLdaModelPath);
+            return PickValidityKeySuffix(PickLda, PickLdaModelPath)
+                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
@@ -1343,10 +1410,12 @@ namespace pwiz.Osprey.Core
         /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
         /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
         /// every FDR output after it. Empty when both are unset, so default outputs keep their key.
+        /// The FDR classifier switches follow (<see cref="FdrClassifierValidityKeySuffix(ulong?, double?)"/>).
         /// </summary>
         public static string FdrExperimentValidityKeySuffix()
         {
-            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm);
+            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm)
+                   + FdrClassifierValidityKeySuffix(FdrSeed, FdrTrainFdr);
         }
 
         /// <summary>
@@ -1360,6 +1429,22 @@ namespace pwiz.Osprey.Core
                 suffix += @";recon=" + reconciliationMode;
             if (pepRatioForm)
                 suffix += @";pep=ratio";
+            return suffix;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the FDR classifier switches <see cref="FdrSeed"/> and
+        /// <see cref="FdrTrainFdr"/>: each changes the draw or the positives the classifier trains
+        /// on, and so every FDR output. A switch emits nothing when unset, so default outputs keep
+        /// their key.
+        /// </summary>
+        public static string FdrClassifierValidityKeySuffix(ulong? seed, double? trainFdr)
+        {
+            string suffix = string.Empty;
+            if (seed.HasValue)
+                suffix += @";fdrseed=" + seed.Value.ToString(CultureInfo.InvariantCulture);
+            if (trainFdr.HasValue)
+                suffix += @";fdrtrain=" + trainFdr.Value.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
         }
 
@@ -1405,9 +1490,9 @@ namespace pwiz.Osprey.Core
             if (maxTrainSizeOverride.HasValue)
             {
                 suffix += @";maxtrain=" +
-                          maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                          maxTrainSizeOverride.Value.ToString(CultureInfo.InvariantCulture);
             }
-            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", System.Globalization.CultureInfo.InvariantCulture);
+            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
         }
 
@@ -1435,7 +1520,7 @@ namespace pwiz.Osprey.Core
             if (pct.HasValue)
             {
                 return string.Format(@"decoy {0} percentile (OSPREY_MEANBEST2_FLOOR_PCT)",
-                    pct.Value.ToString(@"0.###", System.Globalization.CultureInfo.InvariantCulture));
+                    pct.Value.ToString(@"0.###", CultureInfo.InvariantCulture));
             }
             return @"decoy MEDIAN (default)";
         }
@@ -1455,8 +1540,8 @@ namespace pwiz.Osprey.Core
             // NumberStyles.None, not Integer: Integer also accepts a leading sign and surrounding
             // whitespace, so "mean-best-+3" and "mean-best- 3" parsed as 3 - two spellings of the
             // same arm that an A/B log could not tell apart from the canonical one.
-            return int.TryParse(tail, System.Globalization.NumberStyles.None,
-                       System.Globalization.CultureInfo.InvariantCulture, out int n) &&
+            return int.TryParse(tail, NumberStyles.None,
+                       CultureInfo.InvariantCulture, out int n) &&
                    n >= 2 && n <= MEAN_BEST_N_MAX
                 ? n
                 : 0;
@@ -1566,8 +1651,8 @@ namespace pwiz.Osprey.Core
             string v = GetVariable(name);
             if (string.IsNullOrEmpty(v))
                 return null;
-            return double.TryParse(v, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out double result)
+            return double.TryParse(v, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out double result)
                 ? result : null;
         }
 
@@ -1580,8 +1665,8 @@ namespace pwiz.Osprey.Core
         internal static double? ParseSvmCSelectionTolerance(string raw)
         {
             if (string.IsNullOrEmpty(raw) ||
-                !double.TryParse(raw, System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture, out double tolerance) ||
+                !double.TryParse(raw, NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out double tolerance) ||
                 !(tolerance >= 0 && tolerance < 1))
             {
                 return null;
@@ -1608,6 +1693,22 @@ namespace pwiz.Osprey.Core
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// An OSPREY_FDR_TRAIN_FDR value as a number in (0, 1] (invariant culture), or null when it is
+        /// unset, unparseable or out of range - the null that <see cref="FdrTrainFdrUnrecognized"/>
+        /// reports for a set variable. Internal so a test can pin what is accepted.
+        /// </summary>
+        internal static double? ParseFdrTrainFdr(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) ||
+                !double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ||
+                !(trainFdr > 0 && trainFdr <= 1))
+            {
+                return null;
+            }
+            return trainFdr;
         }
 
         private static bool IsSet(string name)

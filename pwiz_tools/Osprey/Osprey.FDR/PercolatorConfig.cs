@@ -172,7 +172,7 @@ namespace pwiz.Osprey.FDR
             TestFdr = 0.01;
             MaxIterations = 10;
             NFolds = 3;
-            Seed = 42;
+            Seed = OspreyEnvironment.FdrSeed ?? 42;
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             CSelectionTolerance = OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE;
             MaxTrainSize = 300000;

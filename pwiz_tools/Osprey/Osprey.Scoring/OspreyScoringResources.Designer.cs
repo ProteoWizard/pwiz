@@ -467,7 +467,79 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("PeakSpectrumCosineSdCalc_DisplayName_Library_cosine_across_peak__SD_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragment R^2 (rank {0}).
+        /// </summary>
+        public static string MedianPolishKthFragmentR2Calc_DisplayName_Median_polish_fragment_R2__rank__0__ {
+            get {
+                return ResourceManager.GetString("MedianPolishKthFragmentR2Calc_DisplayName_Median_polish_fragment_R2__rank__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragment R^2 (top 3 mean).
+        /// </summary>
+        public static string MedianPolishTop3MeanR2Calc_DisplayName_Median_polish_fragment_R2__top_3_mean_ {
+            get {
+                return ResourceManager.GetString("MedianPolishTop3MeanR2Calc_DisplayName_Median_polish_fragment_R2__top_3_mean_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragment R^2 (median).
+        /// </summary>
+        public static string MedianPolishMedianR2Calc_DisplayName_Median_polish_fragment_R2__median_ {
+            get {
+                return ResourceManager.GetString("MedianPolishMedianR2Calc_DisplayName_Median_polish_fragment_R2__median_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish fragments with good fit.
+        /// </summary>
+        public static string MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit {
+            get {
+                return ResourceManager.GetString("MedianPolishGoodFitCountCalc_DisplayName_Median_polish_fragments_with_good_fit", resourceCulture);
+            }
+        }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Reference fragment correlation (rank {0}).
+        /// </summary>
+        public static string ReferenceKthCorrelationCalc_DisplayName_Reference_fragment_correlation__rank__0__ {
+            get {
+                return ResourceManager.GetString("ReferenceKthCorrelationCalc_DisplayName_Reference_fragment_correlation__rank__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragments correlating with reference.
+        /// </summary>
+        public static string ReferenceGoodCountCalc_DisplayName_Fragments_correlating_with_reference {
+            get {
+                return ResourceManager.GetString("ReferenceGoodCountCalc_DisplayName_Fragments_correlating_with_reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spike-filtered reference correlation (top 3 mean).
+        /// </summary>
+        public static string ReferenceMinFilteredTop3Calc_DisplayName_Spike_filtered_reference_correlation__top_3_mean_ {
+            get {
+                return ResourceManager.GetString("ReferenceMinFilteredTop3Calc_DisplayName_Spike_filtered_reference_correlation__top_3_mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex intensity without top fragment.
+        /// </summary>
+        public static string ApexIntensityExcludingTopCalc_DisplayName_Apex_intensity_without_top_fragment {
+            get {
+                return ResourceManager.GetString("ApexIntensityExcludingTopCalc_DisplayName_Apex_intensity_without_top_fragment", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Peptide length.
         /// </summary>
@@ -605,6 +677,239 @@ namespace pwiz.Osprey.Scoring {
         public static string XcorrCalc_DisplayName_Cross_correlation__xcorr_ {
             get {
                 return ResourceManager.GetString("XcorrCalc_DisplayName_Cross_correlation__xcorr_", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   Looks up a localized string similar to Peak width.
+        /// </summary>
+        public static string PeakWidthCalc_DisplayName_Peak_width {
+            get {
+                return ResourceManager.GetString("PeakWidthCalc_DisplayName_Peak_width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Elution shape (bin {0} of 5).
+        /// </summary>
+        public static string ElutionShapeBinCalc_DisplayName_Elution_shape__bin__0__of_5_ {
+            get {
+                return ResourceManager.GetString("ElutionShapeBinCalc_DisplayName_Elution_shape__bin__0__of_5_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex-local reference correlation (top 3 mean).
+        /// </summary>
+        public static string LocalCorrelationTop3Calc_DisplayName_Apex_local_reference_correlation__top_3_mean_ {
+            get {
+                return ResourceManager.GetString("LocalCorrelationTop3Calc_DisplayName_Apex_local_reference_correlation__top_3_mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library intensity of fragment {0} relative to fragment 1.
+        /// </summary>
+        public static string LibraryRelativeIntensityCalc_DisplayName_Library_intensity_of_fragment__0__relative_to_fragment_1 {
+            get {
+                return ResourceManager.GetString("LibraryRelativeIntensityCalc_DisplayName_Library_intensity_of_fragment__0__relative_to_fragment_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment {0} share across peak.
+        /// </summary>
+        public static string WindowShareCalc_DisplayName_Fragment__0__share_across_peak {
+            get {
+                return ResourceManager.GetString("WindowShareCalc_DisplayName_Fragment__0__share_across_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation with reference (top 6 sum).
+        /// </summary>
+        public static string TimeCorrelationSumCalc_DisplayName_Time_correlation_with_reference__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationSumCalc_DisplayName_Time_correlation_with_reference__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation of fragment {0}.
+        /// </summary>
+        public static string TimeCorrelationRankCalc_DisplayName_Time_correlation_of_fragment__0_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationRankCalc_DisplayName_Time_correlation_of_fragment__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation beyond top 6 (sum).
+        /// </summary>
+        public static string TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__sum_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation beyond top 6 (mean).
+        /// </summary>
+        public static string TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationResidualCalc_DisplayName_Time_correlation_beyond_top_6__mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment M+1 isotope correlation (top 6 sum).
+        /// </summary>
+        public static string HeavyIsotopeSumCalc_DisplayName_Fragment_M_1_isotope_correlation__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("HeavyIsotopeSumCalc_DisplayName_Fragment_M_1_isotope_correlation__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment M+1 isotopes co-eluting.
+        /// </summary>
+        public static string HeavyIsotopeGoodCountCalc_DisplayName_Fragment_M_1_isotopes_co_eluting {
+            get {
+                return ResourceManager.GetString("HeavyIsotopeGoodCountCalc_DisplayName_Fragment_M_1_isotopes_co_eluting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation at 0.45x tolerance (top 6 sum).
+        /// </summary>
+        public static string TightToleranceSumCalc_DisplayName_Time_correlation_at_0_45x_tolerance__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TightToleranceSumCalc_DisplayName_Time_correlation_at_0_45x_tolerance__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation at 0.2x tolerance (top 6 sum).
+        /// </summary>
+        public static string TightToleranceSumCalc_DisplayName_Time_correlation_at_0_2x_tolerance__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TightToleranceSumCalc_DisplayName_Time_correlation_at_0_2x_tolerance__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation, best tolerance (top 6 sum).
+        /// </summary>
+        public static string TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("TimeCorrelationBestSumCalc_DisplayName_Time_correlation_best_tolerance__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation minus best apex correlation sum.
+        /// </summary>
+        public static string DominanceBestCorrDeltaCalc_DisplayName_Time_correlation_minus_best_apex_correlation_sum {
+            get {
+                return ResourceManager.GetString("DominanceBestCorrDeltaCalc_DisplayName_Time_correlation_minus_best_apex_correlation_sum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation over total apex correlation sum (log).
+        /// </summary>
+        public static string DominanceTotalCorrSumCalc_DisplayName_Time_correlation_over_total_apex_correlation_sum__log_ {
+            get {
+                return ResourceManager.GetString("DominanceTotalCorrSumCalc_DisplayName_Time_correlation_over_total_apex_correlation_sum__log_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Correlated apexes in XIC range.
+        /// </summary>
+        public static string DominanceApexCountCalc_DisplayName_Correlated_apexes_in_XIC_range {
+            get {
+                return ResourceManager.GetString("DominanceApexCountCalc_DisplayName_Correlated_apexes_in_XIC_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex correlation margin over best other apex.
+        /// </summary>
+        public static string DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex {
+            get {
+                return ResourceManager.GetString("DominanceCorrMarginCalc_DisplayName_Apex_correlation_margin_over_best_other_apex", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Top 3 fragments correlating with reference.
+        /// </summary>
+        public static string TopFragmentRefGoodCountCalc_DisplayName_Top_3_fragments_correlating_with_reference {
+            get {
+                return ResourceManager.GetString("TopFragmentRefGoodCountCalc_DisplayName_Top_3_fragments_correlating_with_reference", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish min R2 (top 3 fragments).
+        /// </summary>
+        public static string TopFragmentMpMinR2Calc_DisplayName_Median_polish_min_R2__top_3_fragments_ {
+            get {
+                return ResourceManager.GetString("TopFragmentMpMinR2Calc_DisplayName_Median_polish_min_R2__top_3_fragments_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Median polish median R2 (top 3 fragments).
+        /// </summary>
+        public static string TopFragmentMpMedianR2Calc_DisplayName_Median_polish_median_R2__top_3_fragments_ {
+            get {
+                return ResourceManager.GetString("TopFragmentMpMedianR2Calc_DisplayName_Median_polish_median_R2__top_3_fragments_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment co-elution min (top 3 fragments).
+        /// </summary>
+        public static string TopFragmentCoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments_ {
+            get {
+                return ResourceManager.GetString("TopFragmentCoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment co-elution (sum, widened span).
+        /// </summary>
+        public static string WideCoelutionSumCalc_DisplayName_Fragment_co_elution__sum__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideCoelutionSumCalc_DisplayName_Fragment_co_elution__sum__widened_span_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Co-eluting fragment count (widened span).
+        /// </summary>
+        public static string WideCoelutingCountCalc_DisplayName_Co_eluting_fragment_count__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideCoelutingCountCalc_DisplayName_Co_eluting_fragment_count__widened_span_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Coelution margin over runner-up peak (widened span).
+        /// </summary>
+        public static string WideCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideCoelutionMarginCalc_DisplayName_Coelution_margin_over_runner_up_peak__widened_span_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment co-elution min (top 3 fragments, widened span).
+        /// </summary>
+        public static string WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_ {
+            get {
+                return ResourceManager.GetString("WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_", resourceCulture);
             }
         }
     }

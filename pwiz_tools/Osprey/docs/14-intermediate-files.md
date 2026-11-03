@@ -737,7 +737,7 @@ a specific wrong answer:
 | experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
 | pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
 | training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
-| feature mask (`;featmask=`, `PinFeatureMask.ValidityKeySuffix`) | an arm that hides different features from the classifier adopts another arm's model and q-values. Emitted for every mask, the default included |
+| feature mask (`;featmask=`, `PinFeatureMask.ValidityKeySuffix`) | an arm that hides different features from the classifier adopts another arm's model and q-values. Emitted for every mask, the default included. Its `;fdrcols=unmasked` term marks the layout where a masked feature is absent from the FDR vectors: a model or feature sums written when masked features were zero columns are 97 wide where this layout's are 21, and a frozen model of the wrong width declines every vector |
 | library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
 | classifier and tree settings (`OSPREY_FDR_MODEL=gbdt` only, the `;fdrmodel=gbdt` term) | a percolator directory re-run as gbdt, a gbdt directory written while the lean first pass still trained the SVM, or one `OSPREY_GBT_*` sweep point re-run as the next reports "skipping (outputs valid)" and hands back the other arm's results. Empty for the linear SVM, so no existing directory is invalidated (`PercolatorEngine.GbdtValidityKeySuffix`) |
 
@@ -746,7 +746,8 @@ sidecar format version, the experiment-aggregation, pass-2 q and training-sample
 survivor-streaming switch, whose two paths must not adopt each other's output, and the
 classifier term, because its competition scores with the first-pass model. `SecondPassFDR`
 carries the classifier term for the same reason. Both also carry the feature mask, since they
-score with the first-pass model.
+score with the first-pass model. `PerFileRescoring` and `PerFileScoring` carry the recorded-feature
+term `;featrec=` as well, because their parquets hold the recorded feature columns (below).
 
 One output is stamped with more than its task's key: `PerFileRescoring`'s training export
 (`--training-export`). Each run's `<stem>.training.parquet` carries `PerFileRescoring`'s key
@@ -766,10 +767,17 @@ also means a task added later carries it without having to know.
 
 The XIC fragment count (`;xic=`, `OSPREY_XIC_FRAGMENTS`) sits in the base for the same reason: it
 decides the peaks Stage 4 finds and the features it writes for them. The feature mask does not:
-scoring writes every feature, and the mask is applied when the FDR stage loads them
-(`ParquetScoreCache.LoadPinFeaturesFromParquet`), so arms that differ only in the mask share their
-per-file scores and re-run only the FDR stage. Both terms are emitted for every setting, the
-defaults included. Scores written before them carry neither, and were computed under an XIC count
+it is applied when the FDR stage loads features (`ParquetScoreCache.LoadPinFeaturesFromParquet`).
+What the mask changes in Stage 4 is which feature families are computed and recorded - the core
+21 always, a family only when the mask leaves one of its features unmasked - and that is keyed
+instead, by the recorded-feature term `;featrec=` (`PinFeatureMask.RecordedFeaturesValidityKeySuffix`)
+on PerFileScoring and PerFileRescoring, whose outputs hold the feature columns. It is empty for
+the core alone (the default), so arms that differ only in the mask share their per-file scores
+whenever they record the same families. `OSPREY_RECORD_ALL_FEATURES=1`, a developer and research
+switch, records every family (`;featrec=all`, the same as `OSPREY_FEATURE_MASK=none`), so one
+scoring serves every mask arm. An unrecorded feature has no parquet column, and a reader that
+needs one refuses the file rather than reading zeros. The XIC and mask terms are emitted for every
+setting, the defaults included. Scores written before them carry neither, and were computed under an XIC count
 and a mask (then applied at scoring) that nothing recorded, so no such directory may be adopted.
 
 The validity key decides only whether a task adopts its OWN earlier output. A FDR task pointed at
