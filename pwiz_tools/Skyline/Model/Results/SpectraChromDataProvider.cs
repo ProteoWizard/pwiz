@@ -138,6 +138,7 @@ namespace pwiz.Skyline.Model.Results
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
                 _chromatogramSet, _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
+            WriteIonMobilityFilteringNotice();
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
             {
@@ -272,12 +273,28 @@ namespace pwiz.Skyline.Model.Results
             // Start the second pass
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _chromatogramSet, _maxIonMobilityValue,
                 _retentionTimePredictor, false, _globalChromatogramExtractor);
+            WriteIonMobilityFilteringNotice();
             _spectra = null;
             _isSrm = false;
 
             InitSpectrumReader(dataFile);
             InitChromatogramExtraction();
             return true;
+        }
+
+        /// <summary>
+        /// Writes the filter's "ion mobility filtering is disabled" notice, if it has one. The
+        /// notice follows from document settings that every file in an import shares, so only the
+        /// first file in the import to reach a given notice writes it.
+        /// </summary>
+        private void WriteIonMobilityFilteringNotice()
+        {
+            var notice = _filter.IonMobilityFilteringNotice;
+            if (notice == null)
+                return;
+            if (_loader is SingleFileLoadMonitor fileLoadMonitor && !fileLoadMonitor.IsFirstImportNotice(notice))
+                return;
+            Messages.WriteAsyncUserMessage(notice, FileInfo.FilePath.GetFileName());
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }

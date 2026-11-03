@@ -102,6 +102,13 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
         public bool HasRangeRT { get; private set; }
 
+        /// <summary>
+        /// Format, taking the data file name, of a notice naming the settings change that would
+        /// enable ion mobility filtering for this file, or null when no notice is needed (issue 4150).
+        /// Left to the caller to write, since the same notice applies to every file in an import.
+        /// </summary>
+        public string IonMobilityFilteringNotice { get; }
+
         public SpectrumFilter(SrmDocument document) : this(document, null, null, null, null, null,false, null)
         {
 
@@ -153,7 +160,7 @@ namespace pwiz.Skyline.Model.Results
                 // first pass so the warning fires only once and with the complete molecule set.
                 if (!_isIonMobilityFiltered && (retentionTimePredictor == null || !firstPass))
                 {
-                    WarnIfSettingsChangeWouldEnableFiltering(
+                    IonMobilityFilteringNotice = GetSettingsChangeThatWouldEnableFiltering(
                         document.Settings, libKeys, libraryIonMobilityInfo, moleculesThisPass, msDataFileUri, ionMobilityMax);
                 }
             }
@@ -522,9 +529,9 @@ namespace pwiz.Skyline.Model.Results
 
         // Issue 4150: with current settings no precursor produces an ion mobility filter. Probe
         // the obvious setting variations (add a window width, enable spectral-library IM, both)
-        // to see whether a specific change would enable filtering. If one would, emit a
-        // non-blocking notice that tells the user exactly which setting to flip.
-        private void WarnIfSettingsChangeWouldEnableFiltering(SrmSettings settings,
+        // to see whether a specific change would enable filtering. If one would, return the
+        // format of a notice that tells the user exactly which setting to flip; otherwise null.
+        private string GetSettingsChangeThatWouldEnableFiltering(SrmSettings settings,
             LibKey[] libKeys, LibraryIonMobilityInfo libraryIonMobilityInfo,
             IList<PeptideDocNode> molecules, MsDataFileUri msDataFileUri, double ionMobilityMax)
         {
@@ -537,7 +544,7 @@ namespace pwiz.Skyline.Model.Results
             bool hasSpectralLib = imFiltering?.UseSpectralLibraryIonMobilityValues ?? false;
             if (hasWindow && hasSpectralLib)
             {
-                return;
+                return null;
             }
 
             // A probe needs library ion mobility info harvested under its own settings:
@@ -572,39 +579,33 @@ namespace pwiz.Skyline.Model.Results
                 s.TransitionSettings.ChangeIonMobilityFiltering(
                     s.TransitionSettings.IonMobilityFiltering.ChangeUseSpectralLibraryIonMobilityValues(true)));
 
-            string message = null;
             try
             {
                 if (!hasWindow && WouldWith(WithWindow(settings)))
                 {
                     // Window alone is enough: IMSDB or explicit IM is present.
-                    message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow;
+                    return ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow;
                 }
-                else if (hasWindow && WouldWith(WithSpectralLib(settings)))
+                if (hasWindow && WouldWith(WithSpectralLib(settings)))
                 {
                     // Enabling spectral-lib IM alone is enough: window is already configured. Requires
                     // a usable window, since a zero resolving power widens to an unbounded filter and
                     // would otherwise make this probe succeed without any real filtering.
-                    message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary;
+                    return ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary;
                 }
-                else if (!hasWindow && !hasSpectralLib && WouldWith(WithSpectralLib(WithWindow(settings))))
+                if (!hasWindow && !hasSpectralLib && WouldWith(WithSpectralLib(WithWindow(settings))))
                 {
                     // Need both: no IMSDB or explicit IM, but spectral-lib IM is usable once enabled and a window is set.
-                    message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary;
+                    return ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary;
                 }
-                // else: no setting change would enable filtering, so there's no actionable warning.
+                // No setting change would enable filtering, so there's no actionable warning.
+                return null;
             }
             catch (Exception e) when (!CommonExceptionUtil.IsProgrammingDefect(e))
             {
                 // The probes read spectral libraries and deduce units under settings the user has
                 // not chosen. The notice is only advice, so a failure there must not fail the import.
-                return;
-            }
-
-            if (message != null)
-            {
-                var fileName = msDataFileUri?.GetFileName() ?? string.Empty;
-                Messages.WriteAsyncUserMessage(message, fileName);
+                return null;
             }
         }
 

@@ -142,6 +142,11 @@ namespace pwiz.Skyline.Model.Results
             _multiFileLoader.ClearFile(filePath);
         }
 
+        public bool IsFirstImportNotice(string notice)
+        {
+            return _multiFileLoader.IsFirstImportNotice(notice);
+        }
+
         public override bool AnyProcessing()
         {
             return _multiFileLoader.AnyLoading();

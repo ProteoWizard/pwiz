@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
@@ -135,9 +136,10 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// Imports a replicate with the spectral library's ion mobility values disabled and the
-        /// given filter window, then asserts that the expected "filtering is disabled" diagnostic
-        /// was written - and that neither of the other two variants was.
+        /// Imports two replicates in one import with the spectral library's ion mobility values
+        /// disabled and the given filter window, then asserts that the expected "filtering is
+        /// disabled" diagnostic was written exactly once for the whole import - not once per
+        /// file - and that neither of the other two variants was written.
         /// </summary>
         private void AssertFilteringDisabledWarning(TestFilesDir testFilesDir,
             IonMobilityWindowWidthCalculator windowWidthCalculator, string expectedMessageFormat)
@@ -159,12 +161,20 @@ namespace pwiz.SkylineTestData.Results
                     doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
                         ChangeTransitionSettings(t => t.ChangeIonMobilityFiltering(ionMobility)));
 
+                // A second copy of the data file makes this a multi-file import, in which every
+                // file reaches the same conclusion about the settings.
                 const string replicateName = "ID12692_01_UCA168_3727_040714";
+                const string replicateNameCopy = replicateName + "_copy";
                 var fileName = replicateName + ExtensionTestContext.ExtMz5;
+                var fileNameCopy = replicateNameCopy + ExtensionTestContext.ExtMz5;
+                File.Copy(testFilesDir.GetTestPath(fileName), testFilesDir.GetTestPath(fileNameCopy));
+                var fileNames = new[] { fileName, fileNameCopy };
                 var chromSets = new[]
                 {
                     new ChromatogramSet(replicateName, new[]
                         { new MsDataFilePath(testFilesDir.GetTestPath(fileName)) }),
+                    new ChromatogramSet(replicateNameCopy, new[]
+                        { new MsDataFilePath(testFilesDir.GetTestPath(fileNameCopy)) }),
                 };
 
                 List<string> capturedMessages;
@@ -177,9 +187,10 @@ namespace pwiz.SkylineTestData.Results
                 }
 
                 // The diagnostic has to name the one settings change that would restore filtering,
-                // so the variants describing the other changes must not appear.
-                CollectionAssert.Contains(capturedMessages, string.Format(expectedMessageFormat, fileName),
-                    string.Join(Environment.NewLine, capturedMessages));
+                // so the variants describing the other changes must not appear. It is given once
+                // per import, naming whichever file reached it first.
+                var capturedText = string.Join(Environment.NewLine, capturedMessages);
+                Assert.AreEqual(1, CountNotices(capturedMessages, expectedMessageFormat, fileNames), capturedText);
                 foreach (var messageFormat in new[]
                          {
                              ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow,
@@ -189,10 +200,16 @@ namespace pwiz.SkylineTestData.Results
                 {
                     if (!Equals(messageFormat, expectedMessageFormat))
                     {
-                        CollectionAssert.DoesNotContain(capturedMessages, string.Format(messageFormat, fileName));
+                        Assert.AreEqual(0, CountNotices(capturedMessages, messageFormat, fileNames), capturedText);
                     }
                 }
             }
+        }
+
+        private static int CountNotices(IList<string> capturedMessages, string messageFormat, IEnumerable<string> fileNames)
+        {
+            var notices = fileNames.Select(name => string.Format(messageFormat, name)).ToHashSet();
+            return capturedMessages.Count(notices.Contains);
         }
     }
 }
