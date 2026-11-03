@@ -48,6 +48,31 @@ namespace SkylineTool
         /// </summary>
         string GetProcessId();
 
+        // --- Jobs ---
+
+        /// <summary>
+        /// Returns the background jobs Skyline is still working on. A long call whose caller gave up waiting (the
+        /// connection was dropped) goes on running as a job, so this is how to find out what is still going and to
+        /// get the id needed to stop it.
+        ///
+        /// <para>The list is the one Tools > Running Jobs shows: calls to this service from any connection, and
+        /// operations the user sent to the background with "Run in Background". Other work - importing results,
+        /// building a library - is not reported and cannot be cancelled here; it has its own progress UI.</para>
+        /// </summary>
+        JobInfo[] GetRunningJobs();
+
+        /// <summary>
+        /// Asks a running job to stop, and reports in <see cref="ActionResult.Completed"/> whether there was such
+        /// a job to ask. It is a REQUEST: the job stops at its next cancellation check, so call
+        /// <see cref="GetRunningJobs"/> again to see it go.
+        ///
+        /// <para><see cref="ActionResult.Completed"/> is false, with the reason in
+        /// <see cref="ActionResult.Message"/>, when no job has that id - which usually means it had already
+        /// finished.</para>
+        /// </summary>
+        /// <param name="jobId">The <see cref="JobInfo.Id"/> of the job to stop.</param>
+        ActionResult CancelJob(string jobId);
+
         // --- Document info ---
 
         /// <summary>

@@ -1146,7 +1146,21 @@ namespace pwiz.Skyline
         {
             e.Cancel = false;
 
+            // Asked before the offer to save, since it would be worse to ask about saving and only then refuse to
+            // close. The jobs are stopped only after it, so cancelling at the save prompt leaves them running.
+            if (!AskToStopBackgroundJobs())
+            {
+                e.Cancel = true;
+                return;
+            }
+
             if (!CheckSaveDocument())
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            if (!StopBackgroundJobs())
             {
                 e.Cancel = true;
                 return;
@@ -2893,6 +2907,92 @@ namespace pwiz.Skyline
             ShowImmediateWindow();
         }
 
+        private void runningJobsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRunningJobsDlg();
+        }
+
+        // The status bar is where a background job's progress shows, so double-clicking it is the direct way to
+        // the list the progress came from. Only the text: the progress bar is a native control that never sees a
+        // double-click.
+        private void statusGeneral_DoubleClick(object sender, EventArgs e)
+        {
+            ShowRunningJobsDlg();
+        }
+
+        public void ShowRunningJobsDlg()
+        {
+            using (var dlg = new RunningJobsDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        /// <summary>
+        /// Asks whether to stop the background jobs still running, which must happen before the window closes: a
+        /// job goes on writing its file and reporting progress on its own thread, and closing the window out from
+        /// under one would leave it writing into a process being torn down. Stopping them is
+        /// <see cref="StopBackgroundJobs"/>, once nothing else can keep Skyline open.
+        ///
+        /// <para>Returns false to stay in Skyline.</para>
+        /// </summary>
+        private bool AskToStopBackgroundJobs()
+        {
+            // Jobs that have already been asked to stop are not worth asking about again - they are only worth
+            // waiting for.
+            var uncanceled = BackgroundJobs.Running.Where(job => !BackgroundJobs.IsCancelRequested(job.JobId)).ToArray();
+            if (uncanceled.Length == 0)
+            {
+                return true;
+            }
+
+            string message = uncanceled.Length == 1
+                ? string.Format(
+                    SkylineResources.SkylineWindow_AskToStopBackgroundJobs_Background_jobs_must_be_stopped_before_exiting___0__is_still_running__Do_you_want_to_stop_it_,
+                    uncanceled[0].Description)
+                : string.Format(
+                    SkylineResources.SkylineWindow_AskToStopBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
+                    uncanceled.Length);
+            return MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.OK;
+        }
+
+        /// <summary>
+        /// Stops whatever is still running and waits for it to end. Returns false to stay in Skyline: the user gave
+        /// up on the wait, with the jobs still stopping.
+        /// </summary>
+        private bool StopBackgroundJobs()
+        {
+            if (BackgroundJobs.Running.Length == 0)
+            {
+                return true;
+            }
+            BackgroundJobs.CancelAll();
+            return WaitForBackgroundJobs();
+        }
+
+        /// <summary>
+        /// Waits for the stopping jobs to actually end, which they do at their own next cancellation check
+        /// rather than at once. The wait is itself cancellable: giving up on it stays in Skyline, with the jobs
+        /// still stopping.
+        /// </summary>
+        private bool WaitForBackgroundJobs()
+        {
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.Message = SkylineResources.SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end;
+                // The delay is what keeps this invisible in the ordinary case, where the jobs stop long before it
+                // elapses and no dialog is ever shown.
+                longWaitDlg.PerformWork(this, 500, (ILongWaitBroker broker) =>
+                {
+                    while (!broker.IsCanceled && BackgroundJobs.Running.Length > 0)
+                    {
+                        Thread.Sleep(100);
+                    }
+                });
+                return !longWaitDlg.IsCanceled;
+            }
+        }
+
         public void ShowImmediateWindow()
         {
             if (_immediateWindow != null)
@@ -4162,6 +4262,22 @@ namespace pwiz.Skyline
                 }
             }
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
+        }
+
+        /// <summary>
+        /// A snapshot of the progress being reported right now - what the status bar is showing, and everything
+        /// queued behind it. A copy, because the list is written by the threads doing the work, so it must not be
+        /// enumerated outside its lock.
+        /// </summary>
+        public IProgressStatus[] ProgressStatuses
+        {
+            get
+            {
+                lock (_listProgress)
+                {
+                    return _listProgress.ToArray();
+                }
+            }
         }
 
         public int StatusBarHeight { get { return statusStrip.Height; } }

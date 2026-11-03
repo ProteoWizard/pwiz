@@ -158,30 +158,44 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             try
             {
-                using var fileSaver = new FileSaver(filename, true);
-                if (!fileSaver.CanSave(this))
-                {
-                    return false;
-                }
-
                 using var longWaitDlg = new LongWaitDlg();
                 longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
                 IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
                 var dataSchema = GetSkylineDataSchema(true);
-                // ReSharper disable once RedundantLambdaParameterType
-                longWaitDlg.PerformWork(this, 1500, (IProgressMonitor progressMonitor) =>
+                var jobDescription = string.Format(
+                    DatabindingResources.ExportLiveReportDlg_ExportReport_Exporting_report___0__, viewName.Value.Name);
+
+                // Not a using: the file is written by the WORK below, which owns the saver from the moment it
+                // starts. Once the user sends the export to the background there is no caller left to commit it.
+                // Created last, so nothing between here and StartJob can throw and leave it undisposed.
+                var fileSaver = new FileSaver(filename, true);
+                if (!fileSaver.CanSave(this))
                 {
-                    progressMonitor.UpdateProgress(status);
-                    var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
-                    rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
-                });
-                if (longWaitDlg.IsCanceled)
-                {
+                    fileSaver.Dispose();
                     return false;
                 }
 
-                fileSaver.Commit();
-                return true;
+                // StartJob, not PerformWork: the user may leave this export running in the background. It qualifies
+                // because it writes only its own file and reads a snapshot of the document (GetSkylineDataSchema
+                // clones it), so nothing it does depends on what the user does next.
+                // ReSharper disable once RedundantLambdaParameterType
+                var outcome = longWaitDlg.StartJob(this, 1500, jobDescription, (IProgressMonitor progressMonitor) =>
+                {
+                    using (fileSaver)
+                    {
+                        progressMonitor.UpdateProgress(status);
+                        var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
+                        rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
+                        // A cancelled export stops part way through the file, so it must not be committed. The
+                        // saver discards what it wrote as it is disposed.
+                        if (!progressMonitor.IsCanceled)
+                        {
+                            fileSaver.Commit();
+                        }
+                    }
+                });
+                // Backgrounding is not cancelling: the export is running, and this dialog is done with it.
+                return outcome != LongWaitDlg.JobOutcome.canceled;
             }
             catch (Exception x)
             {
