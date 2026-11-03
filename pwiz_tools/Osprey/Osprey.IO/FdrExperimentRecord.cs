@@ -21,6 +21,9 @@
  * limitations under the License.
  */
 
+using System;
+using pwiz.Osprey.Core;
+
 namespace pwiz.Osprey.IO
 {
     /// <summary>
@@ -113,6 +116,32 @@ namespace pwiz.Osprey.IO
             ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
             Pep = pep;
+        }
+
+        /// <summary>True for a decoy entry: the decoy bit is set in the entry_id.</summary>
+        public bool IsDecoy
+        {
+            get { return (EntryId & LibraryEntry.DECOY_ID_BIT) != 0; }
+        }
+
+        /// <summary>
+        /// The experiment q-value at the FDR control level, on the rule of
+        /// <see cref="FdrRowExtensions.EffectiveExperimentQvalue{T}"/>: <see cref="FdrLevel.Both"/>
+        /// is the larger of the two.
+        /// </summary>
+        public double EffectiveExperimentQvalue(FdrLevel level)
+        {
+            switch (level)
+            {
+                case FdrLevel.Precursor:
+                    return ExperimentPrecursorQvalue;
+                case FdrLevel.Peptide:
+                    return ExperimentPeptideQvalue;
+                case FdrLevel.Both:
+                    return Math.Max(ExperimentPrecursorQvalue, ExperimentPeptideQvalue);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(level));
+            }
         }
     }
 }

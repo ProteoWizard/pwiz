@@ -209,45 +209,6 @@ namespace pwiz.Osprey.Scoring
             return record;
         }
 
-        /// <summary>
-        /// How many other rows the double-counting dedup would call a collision with
-        /// <paramref name="entry"/>: same isolation window (the caller's list), apex within
-        /// <paramref name="rtNeighborhood"/>, and top-6 library fragments overlapping per
-        /// <see cref="ScoringPipeline.SharesDoubleCountingFragments"/>, each pair asked in the
-        /// dedup's order (<see cref="ScoringPipeline.CompareDoubleCountingOrder"/>). Entry ids
-        /// are the rows' entry_ids, which a target's library entry shares.
-        /// <paramref name="neighbors"/> must be sorted by apex RT.
-        /// </summary>
-        public static int CountDoubleCountingNeighbors(LibraryEntry entry, double apexRt,
-            IReadOnlyList<(LibraryEntry Entry, double ApexRt)> neighbors, double rtNeighborhood,
-            double tolerance, ToleranceUnit unit)
-        {
-            int count = 0;
-            int lo = 0, hi = neighbors.Count;
-            double from = apexRt - rtNeighborhood;
-            while (lo < hi)
-            {
-                int m = (lo + hi) >> 1;
-                if (neighbors[m].ApexRt < from)
-                    lo = m + 1;
-                else
-                    hi = m;
-            }
-            for (int i = lo; i < neighbors.Count && neighbors[i].ApexRt <= apexRt + rtNeighborhood; i++)
-            {
-                var other = neighbors[i].Entry;
-                if (other.Id == entry.Id)
-                    continue;
-                // The pair as the dedup tests it: the entry first in its order goes first.
-                bool otherFirst = ScoringPipeline.CompareDoubleCountingOrder(neighbors[i].ApexRt, other.Id, apexRt, entry.Id) < 0;
-                var first = otherFirst ? other : entry;
-                var second = otherFirst ? entry : other;
-                if (ScoringPipeline.SharesDoubleCountingFragments(first.Fragments, second.Fragments, tolerance, unit))
-                    count++;
-            }
-            return count;
-        }
-
         private static TrainingRecord NewRecord(LibraryEntry entry, FdrEntry row, int nSlots, double[] ladder)
         {
             var mods = entry.Modifications ?? Array.Empty<Modification>();

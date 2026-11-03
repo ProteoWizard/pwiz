@@ -59,9 +59,6 @@ namespace pwiz.CarafeSharp.Contracts
         public const string MS2_CALIBRATION_MEAN = @"osprey.ms2_calibration.mean";
         public const string MS2_CALIBRATION_SD = @"osprey.ms2_calibration.sd";
         public const string MS2_CALIBRATION_UNIT = @"osprey.ms2_calibration.unit";
-        public const string DDC_TOLERANCE = @"osprey.ddc.tolerance";
-        public const string DDC_TOLERANCE_UNIT = @"osprey.ddc.tolerance_unit";
-        public const string DDC_RT_NEIGHBORHOOD = @"osprey.ddc.rt_neighborhood";
 
         public const string INSTRUMENT_VENDOR = @"osprey.instrument_vendor";
         public const string INSTRUMENT_MODEL = @"osprey.instrument_model";
