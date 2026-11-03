@@ -242,7 +242,9 @@ namespace pwiz.Skyline.Controls
             }
             finally
             {
-                var x = _exception;
+                // Once the work is in the background its failure is the job's to report (FinishBackgroundJob), even
+                // when it failed before this line was reached. StartJob tells the caller only that it was backgrounded.
+                var x = _backgroundJob == null ? _exception : null;
 
                 // Get rid of this window before leaving this function
                 Dispose();

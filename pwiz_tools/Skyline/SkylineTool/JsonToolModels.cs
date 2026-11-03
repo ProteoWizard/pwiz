@@ -441,9 +441,9 @@ namespace SkylineTool
     }
 
     /// <summary>
-    /// One operation Skyline is still working on that was started through this service, returned by
-    /// <see cref="IJsonToolService.GetRunningJobs"/>. Only these can be cancelled: work the user started
-    /// (a results import, a library build) is not reported here and is not a caller's to stop.
+    /// One background job Skyline is still working on, returned by <see cref="IJsonToolService.GetRunningJobs"/>:
+    /// a call to this service that outlived its caller, or an operation the user sent to the background. Only
+    /// these can be cancelled: other work (a results import, a library build) is not reported here.
     /// </summary>
     public class JobInfo
     {

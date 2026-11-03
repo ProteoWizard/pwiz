@@ -331,7 +331,11 @@ namespace pwiz.Skyline.ToolsUI
             var finished = new ManualResetEventSlim(false);
             string response = null;
 
-            ActionUtil.RunAsync(() =>
+            var threadName = @"JsonToolServerRequest-" + _pipeName;
+            // Purposely using new Thread() here: it must be a background thread, as the server thread is. An
+            // abandoned request whose verb never returns (one waiting on a dialog the user closed) must not keep
+            // the process alive after the main window has closed.
+            new Thread(() => CommonActionUtil.RunNow(() =>
             {
                 try
                 {
@@ -346,7 +350,7 @@ namespace pwiz.Skyline.ToolsUI
                     _requestCancellation.Value = null;
                     finished.Set();     // LAST: this is what says the token is no longer being read
                 }
-            }, @"JsonToolServerRequest-" + _pipeName);
+            }, threadName)) { Name = threadName, IsBackground = true }.Start();
 
             // Wait for the request, peeking the pipe as we go -- this thread has nothing else to do until one of
             // the two happens. Waking to peek costs nothing: the wait returns the instant the request finishes,
@@ -576,12 +580,21 @@ namespace pwiz.Skyline.ToolsUI
         /// <see cref="CancelJob"/> trips, which it must watch to be stoppable -- directly, and through a
         /// <see cref="JobProgressMonitor"/> for work that asks its progress monitor instead.</para>
         /// </summary>
-        internal static T RunJob<T>(string description, Func<JobProgressStatus, CancellationToken, T> work)
+        /// <param name="description">What the job is called in the status bar and the job list.</param>
+        /// <param name="work">The work, handed the job's status and the token it must watch.</param>
+        /// <param name="stopIfAbandoned">True for work whose only result is the response, such as reading report
+        /// rows: once the caller has gone there is no one to receive it, so the work stops instead of going on.</param>
+        internal static T RunJob<T>(string description, Func<JobProgressStatus, CancellationToken, T> work,
+            bool stopIfAbandoned = false)
         {
-            using (var job = BackgroundJobs.Start(description))
+            using var job = BackgroundJobs.Start(description);
+            if (!stopIfAbandoned)
             {
                 return work(job.Status, job.CancellationToken);
             }
+            using var cancellation =
+                CancellationTokenSource.CreateLinkedTokenSource(job.CancellationToken, RequestCancellation);
+            return work(job.Status, cancellation.Token);
         }
 
         /// <summary>
@@ -1314,7 +1327,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
                     offset, count, includeMaxLength, columns, reportName, localizer, job, cancellationToken);
-            });
+            }, stopIfAbandoned: true);
         }
 
         public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
@@ -1353,7 +1366,7 @@ namespace pwiz.Skyline.ToolsUI
                 string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
                 return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
                     offset, count, includeMaxLength, null, reportName, localizer, job, cancellationToken);
-            });
+            }, stopIfAbandoned: true);
         }
 
         public string GetSettingsListItem(string listType, string itemName)

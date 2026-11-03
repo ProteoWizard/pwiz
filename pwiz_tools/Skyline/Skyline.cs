@@ -1146,15 +1146,21 @@ namespace pwiz.Skyline
         {
             e.Cancel = false;
 
-            // Before anything else, including the offer to save: it would be worse to ask about saving and only
-            // then refuse to close.
-            if (!CheckBackgroundJobs())
+            // Asked before the offer to save, since it would be worse to ask about saving and only then refuse to
+            // close. The jobs are stopped only after it, so cancelling at the save prompt leaves them running.
+            if (!AskToStopBackgroundJobs())
             {
                 e.Cancel = true;
                 return;
             }
 
             if (!CheckSaveDocument())
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            if (!StopBackgroundJobs())
             {
                 e.Cancel = true;
                 return;
@@ -2922,39 +2928,44 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Sees the background jobs off before the window closes: asks whether to stop what is still running,
-        /// and then waits for it to stop. A job goes on writing its file and reporting progress on its own thread,
-        /// and closing the window out from under one would leave it writing into a process being torn down.
+        /// Asks whether to stop the background jobs still running, which must happen before the window closes: a
+        /// job goes on writing its file and reporting progress on its own thread, and closing the window out from
+        /// under one would leave it writing into a process being torn down. Stopping them is
+        /// <see cref="StopBackgroundJobs"/>, once nothing else can keep Skyline open.
         ///
-        /// <para>Returns false to stay in Skyline - the user said no, or gave up on the wait.</para>
+        /// <para>Returns false to stay in Skyline.</para>
         /// </summary>
-        private bool CheckBackgroundJobs()
+        private bool AskToStopBackgroundJobs()
         {
-            var running = BackgroundJobs.Running;
-            if (running.Length == 0)
+            // Jobs that have already been asked to stop are not worth asking about again - they are only worth
+            // waiting for.
+            var uncanceled = BackgroundJobs.Running.Where(job => !BackgroundJobs.IsCancelRequested(job.JobId)).ToArray();
+            if (uncanceled.Length == 0)
             {
                 return true;
             }
 
-            // Jobs that have already been asked to stop are not worth asking about again - they are only worth
-            // waiting for, which is what happens below.
-            var uncanceled = running.Where(job => !BackgroundJobs.IsCancelRequested(job.JobId)).ToArray();
-            if (uncanceled.Length > 0)
-            {
-                string message = uncanceled.Length == 1
-                    ? string.Format(
-                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_,
-                        uncanceled[0].Description)
-                    : string.Format(
-                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
-                        uncanceled.Length);
-                if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) != DialogResult.OK)
-                {
-                    return false;
-                }
-                BackgroundJobs.CancelAll();
-            }
+            string message = uncanceled.Length == 1
+                ? string.Format(
+                    SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_,
+                    uncanceled[0].Description)
+                : string.Format(
+                    SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
+                    uncanceled.Length);
+            return MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.OK;
+        }
 
+        /// <summary>
+        /// Stops whatever is still running and waits for it to end. Returns false to stay in Skyline: the user gave
+        /// up on the wait, with the jobs still stopping.
+        /// </summary>
+        private bool StopBackgroundJobs()
+        {
+            if (BackgroundJobs.Running.Length == 0)
+            {
+                return true;
+            }
+            BackgroundJobs.CancelAll();
             return WaitForBackgroundJobs();
         }
 

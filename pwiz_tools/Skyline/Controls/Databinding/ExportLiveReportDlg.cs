@@ -158,8 +158,16 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             try
             {
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
+                IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
+                var dataSchema = GetSkylineDataSchema(true);
+                var jobDescription = string.Format(
+                    DatabindingResources.ExportLiveReportDlg_ExportReport_Exporting_report___0__, viewName.Value.Name);
+
                 // Not a using: the file is written by the WORK below, which owns the saver from the moment it
                 // starts. Once the user sends the export to the background there is no caller left to commit it.
+                // Created last, so nothing between here and StartJob can throw and leave it undisposed.
                 var fileSaver = new FileSaver(filename, true);
                 if (!fileSaver.CanSave(this))
                 {
@@ -167,15 +175,9 @@ namespace pwiz.Skyline.Controls.Databinding
                     return false;
                 }
 
-                using var longWaitDlg = new LongWaitDlg();
-                longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
-                IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
-                var dataSchema = GetSkylineDataSchema(true);
                 // StartJob, not PerformWork: the user may leave this export running in the background. It qualifies
                 // because it writes only its own file and reads a snapshot of the document (GetSkylineDataSchema
                 // clones it), so nothing it does depends on what the user does next.
-                var jobDescription = string.Format(
-                    DatabindingResources.ExportLiveReportDlg_ExportReport_Exporting_report___0__, viewName.Value.Name);
                 // ReSharper disable once RedundantLambdaParameterType
                 var outcome = longWaitDlg.StartJob(this, 1500, jobDescription, (IProgressMonitor progressMonitor) =>
                 {

@@ -31,8 +31,8 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Verifies the job verbs a client uses to deal with a call it gave up on: GetRunningJobs, which reports what
-    /// this service started and is still working on, and CancelJob, which stops one by id.
+    /// Verifies the job verbs a client uses to deal with a call it gave up on: GetRunningJobs, which reports the
+    /// background jobs still running, and CancelJob, which stops one by id.
     ///
     /// <para>Everything runs over a real pipe connection, because these two calls only matter to a caller that is
     /// not the one that started the work -- and the wire format they answer in is part of what is being tested.</para>
@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// The main scenario: a job is running, a client that did not start it lists it and stops it by id, and the
         /// job goes away. Progress that is NOT a job runs alongside it throughout, because the point of the
-        /// JobProgressStatus subclass is that only what this service started is reported and cancellable.
+        /// JobProgressStatus subclass is that only jobs are reported and cancellable.
         /// </summary>
         private static void TestJobListedAndCancelled(IJsonToolService client)
         {

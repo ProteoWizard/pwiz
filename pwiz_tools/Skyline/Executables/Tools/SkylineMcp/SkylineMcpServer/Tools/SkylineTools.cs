@@ -1372,10 +1372,12 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_running_jobs"),
-     Description("List the operations THIS connection started that Skyline is still working on. " +
+     Description("List the background jobs Skyline is still working on. " +
         "A call that timed out keeps running as a job, so this is how to see whether it is still going, " +
         "how far along it is, and get the id needed to stop it with skyline_cancel_job. " +
-        "Work the user started (importing results, building a library) is not listed and cannot be cancelled here.")]
+        "The list also includes operations the user sent to the background with 'Run in Background' " +
+        "(the same list as Tools > Running Jobs); do not stop one of those unless the user asks. " +
+        "Other work (importing results, building a library) is not listed and cannot be cancelled here.")]
     public static string GetRunningJobs()
     {
         return Invoke(connection =>

@@ -51,11 +51,12 @@ namespace SkylineTool
         // --- Jobs ---
 
         /// <summary>
-        /// Returns the operations THIS SERVICE started that Skyline is still working on. A long call whose caller
-        /// gave up waiting (the connection was dropped) goes on running as a job, so this is how to find out what
-        /// is still going and to get the id needed to stop it.
+        /// Returns the background jobs Skyline is still working on. A long call whose caller gave up waiting (the
+        /// connection was dropped) goes on running as a job, so this is how to find out what is still going and to
+        /// get the id needed to stop it.
         ///
-        /// <para>Only jobs started through this service are listed. Work the user started - importing results,
+        /// <para>The list is the one Tools > Running Jobs shows: calls to this service from any connection, and
+        /// operations the user sent to the background with "Run in Background". Other work - importing results,
         /// building a library - is not reported and cannot be cancelled here; it has its own progress UI.</para>
         /// </summary>
         JobInfo[] GetRunningJobs();
