@@ -42,6 +42,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.ML
 {
@@ -102,6 +103,12 @@ namespace pwiz.Osprey.ML
         /// training several models concurrently should divide its thread budget between
         /// them.</summary>
         public int MaxDegreeOfParallelism = 1;
+        /// <summary>Whether the sigmoid and the logistic base score use the platform-independent
+        /// fdlibm arm of <see cref="DeterministicMath"/> (true) or <see cref="Math"/> (false).
+        /// Defaults to <see cref="OspreyEnvironment.UseDeterministicMath"/>
+        /// (OSPREY_DETERMINISTIC_MATH); a test sets it to train both arms in one process. Only
+        /// true is bit-identical across operating systems.</summary>
+        public bool UseDeterministicMath = OspreyEnvironment.UseDeterministicMath;
 
         /// <summary>A copy of these parameters, for a caller that needs to vary one field
         /// (typically <see cref="MaxDegreeOfParallelism"/>) without touching a shared
@@ -157,9 +164,16 @@ namespace pwiz.Osprey.ML
     ///
     /// DETERMINISTIC by construction, to the same standard as the linear SVM it stands
     /// in for: identical input produces a bit-identical model and bit-identical scores,
-    /// on every target framework and at any <see cref="GbtParams.MaxDegreeOfParallelism"/>.
-    /// The pieces that guarantee it:
+    /// on every target framework, on Windows and Linux, and at any
+    /// <see cref="GbtParams.MaxDegreeOfParallelism"/>. The pieces that guarantee it:
     /// <list type="bullet">
+    /// <item>the two transcendentals (the logistic base score's log-odds and the sigmoid in
+    /// every round's gradient) come from <see cref="DeterministicMath"/>, not
+    /// <see cref="Math"/>, whose Exp and Log are the OS C library's and differ in the last
+    /// bit between Windows and Linux. Everything else is IEEE addition, subtraction,
+    /// multiplication, division and comparison, which every platform rounds alike.
+    /// <see cref="GbtParams.UseDeterministicMath"/> = false gives up the cross-OS half of
+    /// the guarantee (results stay identical across thread counts on one OS);</item>
     /// <item>subsampling draws from <see cref="XorShift64"/> -- the same seeded,
     /// bit-exact-by-definition PRNG the rest of Osprey.ML uses -- NOT
     /// <c>System.Random</c>, whose seeded sequence is a framework implementation detail
@@ -391,7 +405,7 @@ namespace pwiz.Osprey.ML
             else
             {
                 double frac = tot > 0 ? Math.Min(Math.Max(pos / tot, 1e-6), 1 - 1e-6) : 0.5;
-                baseScore = Math.Log(frac / (1 - frac));
+                baseScore = DeterministicMath.Log(frac / (1 - frac), p.UseDeterministicMath);
             }
 
             var f = new double[n];
@@ -411,6 +425,7 @@ namespace pwiz.Osprey.ML
 
             var workspace = new TreeWorkspace(n, nColUse, maxBins, p, parallelOptions, bin, g, h);
             bool squaredError = p.Objective == GbtObjective.SquaredError;
+            bool deterministicMath = p.UseDeterministicMath;
 
             // --- 3. Boosting rounds ---
             for (int t = 0; t < p.NTrees; t++)
@@ -429,7 +444,7 @@ namespace pwiz.Osprey.ML
                         }
                         else
                         {
-                            double pi = Sigmoid(f[i]);
+                            double pi = Sigmoid(f[i], deterministicMath);
                             g[i] = (pi - y[i]) * wi;
                             h[i] = Math.Max(pi * (1 - pi) * wi, 1e-6);
                         }
@@ -583,10 +598,10 @@ namespace pwiz.Osprey.ML
                 (int[])data.TreeRoot.Clone(), data.BaseScore, data.FeatureCount, data.Objective);
         }
 
-        private static double Sigmoid(double z)
+        private static double Sigmoid(double z, bool deterministicMath)
         {
-            if (z >= 0) { double e = Math.Exp(-z); return 1.0 / (1.0 + e); }
-            double ez = Math.Exp(z); return ez / (1.0 + ez);
+            if (z >= 0) { double e = DeterministicMath.Exp(-z, deterministicMath); return 1.0 / (1.0 + e); }
+            double ez = DeterministicMath.Exp(z, deterministicMath); return ez / (1.0 + ez);
         }
 
         // Per-tree scratch that outlives the recursion. Pooling matters at scale: a fresh

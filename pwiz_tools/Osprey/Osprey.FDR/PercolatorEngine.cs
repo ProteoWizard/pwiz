@@ -259,7 +259,9 @@ namespace pwiz.Osprey.FDR
         /// the arms can be compared without the process-wide environment, which is read once.
         /// <see cref="GbtParams.MaxDegreeOfParallelism"/> is the one field left out: the trained
         /// model is bit-identical at any value, so keying it would invalidate a directory for a
-        /// difference that cannot exist.
+        /// difference that cannot exist. <see cref="GbtParams.UseDeterministicMath"/> keys only
+        /// when false (OSPREY_DETERMINISTIC_MATH=0), so the default term, and every gbdt
+        /// directory written under it, is unchanged.
         /// </summary>
         public static string GbdtValidityKeySuffix(FdrClassifier fdrClassifier, GbtParams gbtParams,
             int maxIterations, int innerFolds)
@@ -270,11 +272,11 @@ namespace pwiz.Osprey.FDR
                 @";fdrmodel=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
                 @";gbtminchild={4:R};gbtsubsample={5:R};gbtcolsample={6:R};gbtgamma={7:R}" +
                 @";gbtlambda={8:R};gbtalpha={9:R};gbtbins={10};gbtseed={11}" +
-                @";gbtiterations={12};gbtinnerfolds={13}",
+                @";gbtiterations={12};gbtinnerfolds={13}{14}",
                 gbtParams.Objective, gbtParams.NTrees, gbtParams.MaxDepth, gbtParams.LearningRate,
                 gbtParams.MinChildWeight, gbtParams.Subsample, gbtParams.ColSample, gbtParams.Gamma,
                 gbtParams.RegLambda, gbtParams.RegAlpha, gbtParams.MaxBins, gbtParams.Seed,
-                maxIterations, innerFolds);
+                maxIterations, innerFolds, gbtParams.UseDeterministicMath ? string.Empty : @";gbtmath=system");
         }
 
         /// <summary>
