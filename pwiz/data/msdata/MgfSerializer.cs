@@ -427,11 +427,12 @@ public sealed class MgfSpectrumList : SpectrumListBase
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Hands back the cached instance as-is. The peak-order repair happens once, as the list is
-    /// built - doing it here instead would mutate an object earlier callers still hold, and two
-    /// threads could interleave their permutations of the same arrays.
+    /// Returns a copy of the cached spectrum, because the analysis wrappers modify the spectrum
+    /// they read in place and would otherwise apply their change again on every later read, as a
+    /// writer's count-repair rewrite does. The peak-order repair happens once, as the list is
+    /// built - doing it here instead would repeat it on every read.
     /// </remarks>
-    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => _spectra[index];
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => _spectra[index].DeepCopy();
 
     /// <inheritdoc/>
     public override IReadOnlyList<int> FindSpotId(string spotId)

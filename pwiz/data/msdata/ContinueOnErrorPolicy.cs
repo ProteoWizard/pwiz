@@ -54,12 +54,13 @@ internal static class ContinueOnErrorPolicy
 
     /// <summary>
     /// <see cref="WriteUntilNothingNewIsSkipped"/> into a caller's stream: a rewrite rewinds to
-    /// where the first pass started, which only a seekable stream allows.
+    /// where the first pass started and truncates there, which needs a stream that can both
+    /// seek and be resized.
     /// </summary>
     public static void WriteToStream(Stream stream, Func<Stream, SkippedItems, SkippedItems> writePass,
         bool canRewrite, string countsStillInclude, TextWriter skipLog)
     {
-        canRewrite &= stream.CanSeek;
+        canRewrite = canRewrite && CanTruncate(stream);
         long start = canRewrite ? stream.Position : 0;
         WriteUntilNothingNewIsSkipped(excluded =>
         {
@@ -70,6 +71,28 @@ internal static class ContinueOnErrorPolicy
             }
             return writePass(stream, excluded);
         }, canRewrite, countsStillInclude, skipLog);
+    }
+
+    /// <summary>
+    /// Whether <see cref="Stream.SetLength"/> works on <paramref name="stream"/>. <see
+    /// cref="Stream.CanSeek"/> does not promise it - a memory-mapped view stream seeks but has a
+    /// fixed length - and there is no CanResize, so this asks for the length it already has,
+    /// which changes nothing where it is supported. Probed before the first pass, so a stream
+    /// that refuses keeps that pass's output rather than throwing when a rewrite is needed.
+    /// </summary>
+    private static bool CanTruncate(Stream stream)
+    {
+        if (!stream.CanSeek || !stream.CanWrite)
+            return false;
+        try
+        {
+            stream.SetLength(stream.Length);
+            return true;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
     }
 
     /// <summary>

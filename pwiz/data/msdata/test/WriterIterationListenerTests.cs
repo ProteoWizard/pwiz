@@ -170,10 +170,41 @@ public class WriterIterationListenerTests
 
     private const int BadIndex = 1;
 
-    private static MSData BuildDocWithUnreadableSpectrum(Func<Exception>? failure = null)
+    /// <summary>Adds a constant to the m/z array of the spectrum its inner list returns, in place,
+    /// as <c>SpectrumListMzShift</c> and the other analysis wrappers do.</summary>
+    private sealed class InPlaceMzShiftList : SpectrumListBase
+    {
+        private readonly ISpectrumList _inner;
+        private readonly double _shift;
+
+        public InPlaceMzShiftList(ISpectrumList inner, double shift)
+        {
+            _inner = inner;
+            _shift = shift;
+        }
+
+        public override int Count => _inner.Count;
+
+        public override SpectrumIdentity SpectrumIdentity(int index) => _inner.SpectrumIdentity(index);
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        {
+            var spec = _inner.GetSpectrum(index, getBinaryData);
+            var mz = spec.GetMZArray();
+            if (mz is not null)
+                for (int i = 0; i < mz.Data.Count; i++)
+                    mz.Data[i] += _shift;
+            return spec;
+        }
+    }
+
+    private static MSData BuildDocWithUnreadableSpectrum(Func<Exception>? failure = null, double mzShift = 0)
     {
         var msd = BuildMsnDocWithSpectra(3);
-        msd.Run.SpectrumList = new UnreadableSpectrumList(msd.Run.SpectrumList!, BadIndex, failure);
+        var list = msd.Run.SpectrumList!;
+        if (mzShift != 0)
+            list = new InPlaceMzShiftList(list, mzShift);
+        msd.Run.SpectrumList = new UnreadableSpectrumList(list, BadIndex, failure);
         return msd;
     }
 
@@ -215,15 +246,18 @@ public class WriterIterationListenerTests
     {
         foreach (var format in s_streamedFormats)
         {
-            byte[] bytes = WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(), format, continueOnError: true);
+            // The +1 shift is applied in place to the spectra an in-memory list stores. mzML and
+            // mzXML read every survivor again for the rewrite that corrects their counts, so the
+            // shift must still be applied once, not once per pass.
+            byte[] bytes = WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(mzShift: 1), format, continueOnError: true);
 
             var sl = ReadBack(bytes, format).Run.SpectrumList!;
-            // The fixture's first peak is 100 + index, so it identifies which spectra survived
-            // in every format, including the ones that do not keep the nativeID.
+            // The fixture's first peak is 100 + index, shifted to 101 + index, so it identifies
+            // which spectra survived in every format, including the ones that do not keep the nativeID.
             var firstMzs = Enumerable.Range(0, sl.Count)
                 .Select(i => sl.GetSpectrum(i, getBinaryData: true).GetMZArray()!.Data[0])
                 .ToArray();
-            CollectionAssert.AreEqual(new[] { 100.0, 102.0 }, firstMzs, $"{format}: surviving spectra");
+            CollectionAssert.AreEqual(new[] { 101.0, 103.0 }, firstMzs, $"{format}: surviving spectra, shifted once");
 
             // mzML is the only one of these formats that stores spectrum indices and a list count,
             // so it is the one that has to renumber the survivors and count only them.
@@ -438,26 +472,37 @@ public class WriterIterationListenerTests
     [TestMethod]
     public void MzmlAndMzxml_ContinueOnError_WarnWhenTheStreamCannotBeRewound()
     {
-        using var log = new StringWriter();
-        using var output = new NonSeekableStream();
-        new MzmlWriter { ContinueOnError = true, SkipLog = log }.Write(BuildDocWithUnreadableSpectrum(), output);
+        // A pipe cannot seek at all; a memory-mapped view (and mzMLb's dataset stream) seeks but
+        // has a fixed length, so it cannot be truncated for the rewrite either.
+        var unrewindable = new (string Kind, Func<MemoryStream> Open)[]
+        {
+            ("non-seekable", () => new NonSeekableStream()),
+            ("non-resizable", () => new NonResizableStream()),
+        };
+        foreach (var (kind, open) in unrewindable)
+        {
+            using var log = new StringWriter();
+            using var output = open();
+            new MzmlWriter { ContinueOnError = true, SkipLog = log }.Write(BuildDocWithUnreadableSpectrum(), output);
 
-        var lines = log.ToString().TrimEnd().Split(Environment.NewLine);
-        Assert.AreEqual(2, lines.Length, log.ToString());
-        StringAssert.StartsWith(lines[0], "Skipping spectrum 1 ");
-        Assert.AreEqual(
-            "Warning: the output cannot be rewritten, so the spectrumList and chromatogramList counts still include the 1 item(s) skipped",
-            lines[1]);
-        Assert.AreEqual(3, ListCount(System.Text.Encoding.UTF8.GetString(output.ToArray()), "spectrumList"),
-            "the count written before the skip is left as it was");
+            var lines = log.ToString().TrimEnd().Split(Environment.NewLine);
+            Assert.AreEqual(2, lines.Length, $"{kind}: {log}");
+            StringAssert.StartsWith(lines[0], "Skipping spectrum 1 ");
+            Assert.AreEqual(
+                "Warning: the output cannot be rewritten, so the spectrumList and chromatogramList counts still include the 1 item(s) skipped",
+                lines[1], kind);
+            Assert.AreEqual(3, ListCount(System.Text.Encoding.UTF8.GetString(output.ToArray()), "spectrumList"),
+                $"{kind}: the count written before the skip is left as it was");
 
-        using var mzxmlLog = new StringWriter();
-        using var mzxmlOutput = new NonSeekableStream();
-        new MzxmlWriter { ContinueOnError = true, SkipLog = mzxmlLog }.Write(BuildDocWithUnreadableSpectrum(), mzxmlOutput);
-        Assert.AreEqual(
-            "Warning: the output cannot be rewritten, so the msRun scanCount still includes the 1 item(s) skipped",
-            mzxmlLog.ToString().TrimEnd().Split(Environment.NewLine)[1]);
-        Assert.AreEqual(3, ScanCount(System.Text.Encoding.UTF8.GetString(mzxmlOutput.ToArray())), "mzXML: scanCount left as it was");
+            using var mzxmlLog = new StringWriter();
+            using var mzxmlOutput = open();
+            new MzxmlWriter { ContinueOnError = true, SkipLog = mzxmlLog }.Write(BuildDocWithUnreadableSpectrum(), mzxmlOutput);
+            Assert.AreEqual(
+                "Warning: the output cannot be rewritten, so the msRun scanCount still includes the 1 item(s) skipped",
+                mzxmlLog.ToString().TrimEnd().Split(Environment.NewLine)[1], kind);
+            Assert.AreEqual(3, ScanCount(System.Text.Encoding.UTF8.GetString(mzxmlOutput.ToArray())),
+                $"{kind}: mzXML scanCount left as it was");
+        }
     }
 
     private static int ScanCount(string mzxml)
@@ -518,5 +563,11 @@ public class WriterIterationListenerTests
     private sealed class NonSeekableStream : MemoryStream
     {
         public override bool CanSeek => false;
+    }
+
+    /// <summary>A stream that seeks but whose length cannot be set, like a memory-mapped view.</summary>
+    private sealed class NonResizableStream : MemoryStream
+    {
+        public override void SetLength(long value) => throw new NotSupportedException();
     }
 }

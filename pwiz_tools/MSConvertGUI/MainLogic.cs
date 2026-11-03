@@ -702,6 +702,7 @@ namespace MSConvertGUI
                 var PercentageUpdate = logic.PercentageUpdate;
                 var _info = logic.JobInfo;
                 _info.Started = true;
+                Program.CurrentJob.Value = _info;
 
                 try
                 {
@@ -732,6 +733,10 @@ namespace MSConvertGUI
                     {
                         //probably nothing left to report to
                     }
+                }
+                finally
+                {
+                    Program.CurrentJob.Value = null;
                 }
 
                 _info.Finished = true;

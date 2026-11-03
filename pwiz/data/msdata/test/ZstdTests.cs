@@ -42,7 +42,8 @@ public class ZstdTests
     public void MzmlRoundTrip_EmitsAndHonorsZstdCvParams()
     {
         var msd = ReadFixture();
-        var spectrum = msd.Run.SpectrumList!.GetSpectrum(0);
+        // The stored spectrum, not GetSpectrum's copy, so the arrays added below are written.
+        var spectrum = ((SpectrumListSimple)msd.Run.SpectrumList!).Spectra[0];
         var mobility = new BinaryDataArray();
         mobility.Set(CVID.MS_mean_inverse_reduced_ion_mobility_array);
         for (int i = 0; i < spectrum.DefaultArrayLength; i++)
