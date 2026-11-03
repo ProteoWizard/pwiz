@@ -74,6 +74,7 @@ namespace pwiz.Osprey.Test
         private const string BLIB_FILE = @"output.blib";
         private const string FDR_FILE_LANES = @"OSPREY_FDR_FILE_LANES";
         private const string DIANN_REPORTS = @"OSPREY_DIANN_REPORTS";
+        private const string PASS2_QVALUE = @"OSPREY_PASS2_QVALUE";
         private const string MZML_EXTENSION = SpectrumFileReader.EXT_MZML;
         private const string SPECTRA_CACHE_EXTENSION = SpectraCache.EXT;
         private const double TOLERANCE = 1e-9;
@@ -134,7 +135,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Straight-through, then the three in-place re-runs the regression makes of the same
         /// directory: warm (nothing invalidated), resume (join invalidated) and rehydrate (only
-        /// the second pass invalidated). Each must produce the straight-through library.
+        /// the second pass invalidated). Each must produce the straight-through library. Then the
+        /// same directory re-run under a changed validity key and as another build, where every
+        /// task the change reaches must recompute rather than adopt what is on disk.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetStraightThroughAndReruns()
@@ -220,6 +223,9 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(false),
                 OspreyCommandArgs.ARG_TASK.ArgumentText, FirstPassFdrTask.TASK_NAME);
             CollectionAssert.AreEqual(summaryHash, HashFile(summary), @"the re-run wrote a different retained summary");
+
+            AssertKeyChangeRecomputes(straightDir, coldBlib);
+            AssertOtherBuildRecomputes(straightDir, coldBlib);
         }
 
         /// <summary>
@@ -330,6 +336,8 @@ namespace pwiz.Osprey.Test
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
+            AssertTrainingSetAnalysis(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1)),
+                Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
@@ -1789,6 +1797,51 @@ namespace pwiz.Osprey.Test
         /// The pass-1 product folded later equals the one written with the analysis in every view;
         /// only its generation time may differ.
         /// </summary>
+        /// <summary>
+        /// The pass-1 diagnostics product carries the training-set analysis (#4550, #4467) with
+        /// sane values: one fold entry per trained fold of the model file, every AUROC a
+        /// probability, every curve on the shared FPR grid, a finite permutation drop per feature.
+        /// </summary>
+        private static void AssertTrainingSetAnalysis(string pass1Path, string modelPath)
+        {
+            JToken Get(JToken parent, object key)
+            {
+                var value = parent[key];
+                Assert.IsNotNull(value, key + @" missing");
+                return value;
+            }
+            void AssertProbability(JToken value, string what)
+            {
+                double v = (double)value;
+                Assert.IsTrue(v >= 0 && v <= 1, what + @" = " + v);
+            }
+            var data = JObject.Parse(File.ReadAllText(pass1Path));
+            var training = Get(data, @"trainingSet");
+            int folds = Get(JObject.Parse(File.ReadAllText(modelPath)), @"FoldWeights").Count();
+            Assert.AreEqual(folds, (int)Get(training, @"nFolds"), @"fold count");
+            foreach (string perFold in new[] { @"foldPositives", @"foldDecoys", @"foldIterations" })
+                Assert.AreEqual(folds, Get(training, perFold).Count(), perFold);
+            Assert.IsTrue(Get(training, @"foldPositives").All(n => (int)n > 0), @"a fold trained on no positives");
+            int gridPoints = Get(training, @"rocFpr").Count();
+            foreach (string composite in new[] { @"trainingComposite", @"inSampleComposite", @"heldOutComposite" })
+            {
+                var curve = Get(training, composite);
+                AssertProbability(Get(curve, @"auroc"), composite);
+                Assert.AreEqual(gridPoints, Get(curve, @"tpr").Count(), composite);
+            }
+            var rows = Get(data, @"model").ToArray();
+            var correlation = Get(training, @"correlation");
+            Assert.AreEqual((int)Get(data, @"featureCount"), rows.Length);
+            foreach (var row in rows)
+            {
+                string label = (string)Get(row, @"label");
+                AssertProbability(Get(row, @"auroc"), label + @" auroc");
+                Assert.AreEqual(gridPoints, Get(row, @"rocTpr").Count(), label);
+                Assert.IsFalse(double.IsNaN((double)Get(row, @"permutationDrop")), label + @" permutation drop");
+                Assert.AreEqual(rows.Length, Get(correlation, (int)Get(row, @"index")).Count(), label);
+            }
+        }
+
         private static void AssertSameFirstPassProduct(string expectedPath, string actualPath)
         {
             // No view is exempt (doc 00, P16). Exempting the calibration view once is how every
@@ -1856,6 +1909,92 @@ namespace pwiz.Osprey.Test
             Assert.AreNotEqual(0, files.Length, @"nothing to invalidate matched " + pattern);
             foreach (string file in files)
                 File.Delete(file);
+        }
+
+        /// <summary>
+        /// A validity-key change in one output directory (#4764): a run under the other
+        /// second-pass mode, which keys every task after the first, must recompute those tasks
+        /// rather than adopt their outputs, and a run back under the default must recompute them
+        /// again and report the straight-through library, never a mix of the two modes' files.
+        /// </summary>
+        private void AssertKeyChangeRecomputes(string workDir, string expectedBlib)
+        {
+            var keyed = new[] { FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME };
+            string log = RunAnalysis(workDir, DataInputs(),
+                WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
+            AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            Assert.IsFalse(OtherBuildWarning(null, null, null).IsMatch(log), log);
+
+            log = RunAnalysis(workDir, DataInputs(), Verifier(true));
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
+            AssertBlibsEqual(expectedBlib, Path.Combine(workDir, BLIB_FILE));
+        }
+
+        /// <summary>
+        /// Artifacts another build wrote (#4764, #4373). Every task recomputes rather than adopting
+        /// them, and says so naming both versions; a run pinned to that build's version with
+        /// OSPREY_VERSION_OVERRIDE - what a resume from another day's run does to reuse it -
+        /// adopts them all; and an unpinned run recomputes again and reports the straight-through
+        /// library.
+        /// </summary>
+        private void AssertOtherBuildRecomputes(string workDir, string expectedBlib)
+        {
+            const string otherBuild = @"1.0.0.1";
+            string thisBuild = OspreyVersion.Current;
+            Assert.AreNotEqual(otherBuild, thisBuild);
+            string blib = Path.Combine(workDir, BLIB_FILE);
+            var pinned = WithVariable(Verifier(false), OspreyVersion.ENV_OVERRIDE, otherBuild);
+
+            string log = RunAnalysis(workDir, DataInputs(), pinned);
+            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
+            AssertOtherBuildWarnings(log, thisBuild, otherBuild);
+            Assert.AreEqual(otherBuild, BlibMetadata.Read(blib, OspreyBlibWriter.KEY_VERSION));
+
+            log = RunAnalysis(workDir, DataInputs(), pinned);
+            AssertTasks(log, ALL_TASKS, Array.Empty<string>());
+            AssertNoRecompute(log);
+
+            log = RunAnalysis(workDir, DataInputs(), Verifier(true));
+            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
+            AssertOtherBuildWarnings(log, otherBuild, thisBuild);
+            AssertBlibsEqual(expectedBlib, blib);
+        }
+
+        /// <summary>
+        /// Every task warned that its outputs were written by <paramref name="writtenBy"/>, not
+        /// <paramref name="thisBuild"/>, before recomputing them.
+        /// </summary>
+        private static void AssertOtherBuildWarnings(string log, string writtenBy, string thisBuild)
+        {
+            foreach (string task in ALL_TASKS)
+            {
+                Assert.IsTrue(OtherBuildWarning(task, writtenBy, thisBuild).IsMatch(log),
+                    task + @" did not warn about another build's outputs" + Environment.NewLine + log);
+            }
+        }
+
+        /// <summary>
+        /// The driver's warning about outputs another build wrote, with any file counts; a null
+        /// argument matches any value.
+        /// </summary>
+        private static Regex OtherBuildWarning(string task, string writtenBy, string thisBuild)
+        {
+            const string count = "\u0001";
+            const string any = "\u0002";
+            string text = string.Format(
+                OspreyResources.AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__,
+                task ?? any, count, count, writtenBy ?? any, thisBuild ?? any, OspreyVersion.ENV_OVERRIDE);
+            return new Regex(Regex.Escape(text).Replace(count, @"\d+").Replace(any, @"\S+"));
+        }
+
+        /// <summary><paramref name="variables"/> with <paramref name="name"/> set to <paramref name="value"/>.</summary>
+        private static IReadOnlyDictionary<string, string> WithVariable(IReadOnlyDictionary<string, string> variables,
+            string name, string value)
+        {
+            var result = variables.ToDictionary(kv => kv.Key, kv => kv.Value);
+            result[name] = value;
+            return result;
         }
 
         /// <summary>
