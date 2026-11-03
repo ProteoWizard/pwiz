@@ -22,6 +22,7 @@ using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -69,21 +70,63 @@ namespace pwiz.Skyline.Controls.SeqNode
         
         public int TypeImageIndex
         {
-            get { return GetTypeImageIndex(DocNode); }
+            get { return GetTypeImageIndex(DocNode, IsUniquelyLocalizing); }
         }
 
-        public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree)
+        /// <summary>
+        /// The site-determining ion analyzer of the parent peptide, or null when the peptide carries
+        /// no ambiguously placed modification.
+        /// </summary>
+        private SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
         {
-            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodeTran)];
+            get { return ((PeptideTreeNode) Parent?.Parent)?.SiteDeterminingAnalyzer; }
         }
 
-        private static int GetTypeImageIndex(TransitionDocNode nodeTran)
+        /// <summary>
+        /// True when this product ion is produced only by the current modification placement of
+        /// its peptide, so it uniquely localizes an ambiguously placed modification.
+        /// </summary>
+        public bool IsUniquelyLocalizing
+        {
+            get
+            {
+                var analyzer = SiteDeterminingAnalyzer;
+                return analyzer != null && analyzer.IsUniqueToPrecursor(DocNode.Transition);
+            }
+        }
+
+        /// <summary>
+        /// The name of the modification this ion uniquely localizes, or null.
+        /// </summary>
+        private string LocalizedModificationName
+        {
+            get
+            {
+                var analyzer = SiteDeterminingAnalyzer;
+                if (analyzer == null || !analyzer.IsUniqueToPrecursor(DocNode.Transition))
+                    return null;
+                return analyzer.GetResolvedModification(DocNode.Transition)?.Name;
+            }
+        }
+
+        public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree, bool uniquelyLocalizing)
+        {
+            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodeTran, uniquelyLocalizing)];
+        }
+
+        private static int GetTypeImageIndex(TransitionDocNode nodeTran, bool uniquelyLocalizing)
         {
             if (nodeTran.IsDecoy)
             {
                 return (int)(nodeTran.HasLibInfo
                     ? SequenceTree.ImageId.fragment_lib_decoy
                     : SequenceTree.ImageId.fragment_decoy);
+            }
+            if (uniquelyLocalizing)
+            {
+                return (int)(nodeTran.HasLibInfo
+                    ? SequenceTree.ImageId.fragment_lib_unique
+                    : SequenceTree.ImageId.fragment_unique);
             }
             return (int)(nodeTran.HasLibInfo
                 ? SequenceTree.ImageId.fragment_lib
@@ -183,11 +226,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (draw)
                 g.TranslateTransform(0, size.Height);
             Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
-            var sizeNew = RenderTip(DocNode, g, sizeMaxNew, draw);
+            var sizeNew = RenderTip(DocNode, g, sizeMaxNew, draw, LocalizedModificationName);
             return new Size(Math.Max(size.Width, sizeNew.Width), size.Height + sizeNew.Height);
         }
 
-        public static Size RenderTip(TransitionDocNode nodeTran, Graphics g, Size sizeMax, bool draw)
+        public static Size RenderTip(TransitionDocNode nodeTran, Graphics g, Size sizeMax, bool draw, string localizedModName = null)
         {
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
@@ -195,6 +238,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                 table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, FormatAdductTip(nodeTran.Transition.Adduct), rt);
                 table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Product_m_z, string.Format(@"{0:F04}", nodeTran.Mz), rt);
+                if (!string.IsNullOrEmpty(localizedModName))
+                    table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Uniquely_localizes, localizedModName, rt);
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
                     table.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Decoy_Mass_Shift, decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);

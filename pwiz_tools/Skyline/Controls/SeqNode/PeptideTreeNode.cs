@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -44,6 +45,9 @@ namespace pwiz.Skyline.Controls.SeqNode
            return nodeTree;
         }
 
+        private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
+        private SrmSettings _siteDeterminingSettings;
+
 // ReSharper disable SuggestBaseTypeForParameter
         public PeptideTreeNode(SequenceTree tree, PeptideDocNode nodePeptide)
 // ReSharper restore SuggestBaseTypeForParameter
@@ -54,6 +58,27 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public PeptideDocNode DocNode => (PeptideDocNode)Model;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent)?.DocNode;
+
+        /// <summary>
+        /// The <see cref="SiteDeterminingIonAnalyzer"/> for this peptide, shared by its precursor and
+        /// transition nodes for the uniquely localizing ion badge, tooltip and pick-list filter. Null
+        /// when the peptide carries no ambiguously placed modification. Rebuilt whenever the model of
+        /// this node or the document settings change.
+        /// </summary>
+        public SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
+        {
+            get
+            {
+                var settings = DocSettings;
+                if (!ReferenceEquals(settings, _siteDeterminingSettings))
+                {
+                    var analyzer = new SiteDeterminingIonAnalyzer(settings, DocNode);
+                    _siteDeterminingAnalyzer = analyzer.CanLocalize ? analyzer : null;
+                    _siteDeterminingSettings = settings;
+                }
+                return _siteDeterminingAnalyzer;
+            }
+        }
 
         public override string Heading
         {
@@ -72,6 +97,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         protected override void OnModelChanged()
         {
+            // The modification placement may have changed, so the analyzer is rebuilt on demand.
+            _siteDeterminingSettings = null;
+
             int typeImageIndex = TypeImageIndex;
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;

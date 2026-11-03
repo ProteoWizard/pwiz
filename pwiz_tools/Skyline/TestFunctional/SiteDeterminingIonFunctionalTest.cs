@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
@@ -34,16 +36,17 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// End-to-end test of the "site-determining ions" filter button on the
-    /// <see cref="PopupPickList"/>. Rather than checking the filter against the analyzer (which
+    /// End-to-end test of uniquely localizing ion support in the Targets tree, the
+    /// <see cref="PopupPickList"/> icons, the UniquelyLocalizing report column and the
+    /// Transition Settings - Filter setting. Rather than checking against the analyzer (which
     /// would be circular), it uses three peptides with hand-computed expectations:
     ///  - a RESOLVABLE peptide (two well-separated candidates, one modified) where a specific
     ///    short prefix ion is uniquely localizing and a specific ion spanning both candidates is
-    ///    not - the filtered set must be a strict, non-empty subset containing the former and not
-    ///    the latter, with no empty-state hint;
+    ///    not - the unique set must be a strict, non-empty subset containing the former and not
+    ///    the latter;
     ///  - an UNRESOLVABLE peptide (modified serine inside a contiguous run of candidate serines)
-    ///    where no ion is unique, so the filtered set is empty and the empty-state hint shows;
-    ///  - a NON-LOCALIZABLE peptide (no candidate residue) where the toggle button is hidden.
+    ///    where no ion is unique;
+    ///  - a NON-LOCALIZABLE peptide (no candidate residue) where nothing is unique.
     ///
     /// Assertions are made on transition identities (ion type + ordinal) and booleans/counts,
     /// never on localized labels, so the test is translation-proof.
@@ -56,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
         private const int RESOLVABLE_PHOSPHO_INDEX = 0;
         // b3 spans [S0 A1 A2] - only the modified serine -> uniquely localizing (must be present).
         private const int UNIQUE_B_ORDINAL = 3;
-        // b7 spans [S0..T6] - both candidates -> not localizing (must be absent when filtered).
+        // b7 spans [S0..T6] - both candidates -> not localizing (never badged or added).
         private const int SHARED_B_ORDINAL = 7;
 
         // Unresolvable: A0 A1 S2 S3 S4 A5 K6 - a run of three candidate serines; phospho on the middle one.
@@ -65,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
 
         private const string UNMODIFIED_SEQ = "ELVIK"; // No candidate residue -> not localizable
 
-        private static readonly StaticMod PHOSPHO = new StaticMod("Phospho", "S,T,Y", null, true, "PO3H",
+        private static readonly StaticMod PHOSPHO = new StaticMod("Phospho", "S,T,Y", null, false, "PO3H",
             LabelAtoms.None, RelativeRT.Matching, null, null, null);
 
         [TestMethod]
@@ -105,12 +108,87 @@ namespace pwiz.SkylineTestFunctional
             TestUnresolvablePeptide();
             TestNonLocalizablePeptide();
             TestUniquelyLocalizingColumn();
+            TestIncludeLocalizingIonsSetting();
+        }
+
+        /// <summary>
+        /// The Transition Settings - Filter checkbox selects uniquely localizing ions document-wide.
+        /// With the ion range starting above the precursor m/z, b3 of the resolvable peptide is not
+        /// selected by the range alone; turning the setting on adds it to the auto-managed precursor
+        /// (every added ion below the precursor m/z is uniquely localizing), while b7, which spans
+        /// both candidates, stays a plain range pick and the serine-run peptide, where no ion is
+        /// unique, gains nothing. The Targets tree marks the unique ions with the badged icon.
+        /// </summary>
+        private void TestIncludeLocalizingIonsSetting()
+        {
+            var docBefore = SkylineWindow.Document;
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.SelectedTab = TransitionSettingsUI.TABS.Filter;
+                dlg.RangeFrom = DocSettingsResources.TransitionFilter_FragmentStartFinders_m_z_precursor;
+                Assert.IsFalse(dlg.IncludeLocalizingIons, "Localizing ions should be off by default");
+                dlg.OkDialog();
+            });
+            var docRange = WaitForDocumentChange(docBefore);
+            Assert.IsFalse(HasTransition(docRange, RESOLVABLE_SEQ, IonType.b, UNIQUE_B_ORDINAL),
+                "b3 lies below the precursor m/z and should not be selected by the range alone");
+            Assert.IsTrue(HasTransition(docRange, RESOLVABLE_SEQ, IonType.b, SHARED_B_ORDINAL),
+                "b7 lies above the precursor m/z and should be selected by the range");
+            int countRunBefore = CountTransitions(docRange, SERINE_RUN_SEQ);
+
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.SelectedTab = TransitionSettingsUI.TABS.Filter;
+                dlg.IncludeLocalizingIons = true;
+                dlg.OkDialog();
+            });
+            var docLocalizing = WaitForDocumentChange(docRange);
+            Assert.IsTrue(docLocalizing.Settings.TransitionSettings.Filter.IncludeLocalizingIons);
+            Assert.IsTrue(HasTransition(docLocalizing, RESOLVABLE_SEQ, IonType.b, UNIQUE_B_ORDINAL),
+                "b3 uniquely localizes the phospho and should be selected once localizing ions are included");
+            Assert.IsTrue(HasTransition(docLocalizing, RESOLVABLE_SEQ, IonType.b, SHARED_B_ORDINAL),
+                "b7 should still be selected by the range");
+
+            // Every selected product ion outside the range (below the precursor m/z) must be unique.
+            var tgPath = FindTransitionGroupPath(docLocalizing, RESOLVABLE_SEQ);
+            var tranGroupNode = (TransitionGroupDocNode) docLocalizing.FindNode(tgPath);
+            var analyzer = new SiteDeterminingIonAnalyzer(docLocalizing.Settings, FindPeptide(docLocalizing, RESOLVABLE_SEQ));
+            int countAdded = 0;
+            foreach (var nodeTran in tranGroupNode.Transitions.Where(t => !t.Transition.IsPrecursor()))
+            {
+                if (nodeTran.Mz >= tranGroupNode.PrecursorMz)
+                    continue;
+                Assert.IsTrue(analyzer.IsUniqueToPrecursor(nodeTran.Transition),
+                    "{0} is outside the ion range and should only be selected because it uniquely localizes the modification", nodeTran.Transition);
+                countAdded++;
+            }
+            Assert.IsTrue(countAdded > 0, "Expected uniquely localizing ions below the precursor m/z to be added");
+            Assert.AreEqual(countRunBefore, CountTransitions(docLocalizing, SERINE_RUN_SEQ),
+                "No ion uniquely localizes a serine inside a run, so nothing should be added");
+
+            // The Targets tree marks unique ions with the badged fragment icon and plain range picks without it.
+            SelectPrecursor(RESOLVABLE_SEQ);
+            RunUI(() =>
+            {
+                var tgNode = (TransitionGroupTreeNode) SkylineWindow.SequenceTree.SelectedNode;
+                tgNode.Expand();
+                var tranNodes = tgNode.Nodes.OfType<TransitionTreeNode>().ToList();
+                var nodeUnique = tranNodes.First(n => IsIon(n.DocNode, IonType.b, UNIQUE_B_ORDINAL));
+                Assert.IsTrue(nodeUnique.IsUniquelyLocalizing);
+                Assert.AreEqual((int) SequenceTree.ImageId.fragment_unique, nodeUnique.ImageIndex);
+                var nodeShared = tranNodes.First(n => IsIon(n.DocNode, IonType.b, SHARED_B_ORDINAL));
+                Assert.IsFalse(nodeShared.IsUniquelyLocalizing);
+                Assert.AreEqual((int) SequenceTree.ImageId.fragment, nodeShared.ImageIndex);
+            });
+
+            // The setting round-trips through the document XML and validates against the schema.
+            AssertEx.Serializable(docLocalizing);
         }
 
         /// <summary>
         /// Verifies the reporting <see cref="pwiz.Skyline.Model.Databinding.Entities.Transition"/>
         /// column <c>UniquelyLocalizing</c>: for every transition of the resolvable precursor it
-        /// must match <see cref="SiteDeterminingIonAnalyzer.IsUniqueToPrecursor"/>, and in
+        /// must match <see cref="SiteDeterminingIonAnalyzer.IsUniqueToPrecursor(Transition)"/>, and in
         /// particular it is TRUE for the hand-picked uniquely-localizing b3 ion and FALSE for the
         /// shared b7 ion. Assertions are on booleans only.
         /// </summary>
@@ -152,9 +230,8 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Resolvable peptide: the toggle is offered, and turning it on leaves a strict, non-empty
-        /// subset that includes the hand-picked uniquely-localizing b-ion (b3) and excludes the
-        /// hand-picked shared b-ion (b7). No empty-state hint.
+        /// Resolvable peptide: the hand-picked uniquely-localizing b-ion (b3) is badged in the
+        /// pick list and the hand-picked shared b-ion (b7) is not.
         /// </summary>
         private void TestResolvablePeptide()
         {
@@ -162,98 +239,59 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var tgNode = (TransitionGroupTreeNode) SkylineWindow.SequenceTree.SelectedNode;
-                Assert.IsTrue(tgNode.CanShowSiteDeterminingIons,
-                    "Picker should offer site-determining ions for the resolvable precursor");
-            });
-
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
-            {
-                dlg.ApplyFilter(false);
-                Assert.IsTrue(dlg.SiteDeterminingButtonVisible,
-                    "Site-determining button should be visible for a localizable precursor");
-
-                var fullChoices = dlg.VisibleChoices.ToArray();
-                Assert.IsTrue(fullChoices.All(c => c.Id is Transition),
+                var choices = tgNode.GetChoices(false).ToArray();
+                Assert.IsTrue(choices.All(c => c.Id is Transition),
                     "All transition-group children should carry a Transition identity");
-                var fullIndexes = new HashSet<int>(fullChoices.Select(c => c.Id.GlobalIndex));
-                // Both hand-picked ions must exist in the full (unfiltered) set for the test to mean anything.
-                Assert.IsTrue(HasIon(fullChoices, IonType.b, UNIQUE_B_ORDINAL), "Full set should contain b3");
-                Assert.IsTrue(HasIon(fullChoices, IonType.b, SHARED_B_ORDINAL), "Full set should contain b7");
+                var choiceUnique = FindIon(choices, IonType.b, UNIQUE_B_ORDINAL);
+                var choiceShared = FindIon(choices, IonType.b, SHARED_B_ORDINAL);
+                Assert.IsTrue(tgNode.IsUniquelyLocalizing(choiceUnique),
+                    "b3 spans only the modified serine, so it should uniquely localize");
+                Assert.IsFalse(tgNode.IsUniquelyLocalizing(choiceShared),
+                    "b7 spans both candidates, so it should not uniquely localize");
+                int countUnique = choices.Count(tgNode.IsUniquelyLocalizing);
+                Assert.IsTrue(0 < countUnique && countUnique < choices.Length,
+                    "Uniquely-localizing ions should be a strict, non-empty subset of all ions");
 
-                dlg.SiteDeterminingFilter = true;
-                var filteredChoices = dlg.VisibleChoices.ToArray();
-                var filteredIndexes = new HashSet<int>(filteredChoices.Select(c => c.Id.GlobalIndex));
-
-                Assert.IsTrue(filteredIndexes.Count > 0, "Expected at least one uniquely-localizing transition");
-                Assert.IsTrue(filteredIndexes.Count < fullIndexes.Count,
-                    "Uniquely-localizing set should be a strict subset of all transitions");
-                Assert.IsTrue(filteredIndexes.IsSubsetOf(fullIndexes),
-                    "Uniquely-localizing set should be a subset of all transitions");
-
-                // Hand-picked expectations: b3 (spans only the modified S0) present; b7 (spans both
-                // S0 and T6) absent.
-                Assert.IsTrue(HasIon(filteredChoices, IonType.b, UNIQUE_B_ORDINAL),
-                    "Filtered set should contain the uniquely-localizing b3 ion");
-                Assert.IsFalse(HasIon(filteredChoices, IonType.b, SHARED_B_ORDINAL),
-                    "Filtered set should not contain the shared b7 ion (spans both candidates)");
-
-                Assert.IsFalse(dlg.SiteDeterminingEmptyHintVisible,
-                    "Empty-state hint should be hidden when the filtered set is non-empty");
-
-                dlg.SiteDeterminingFilter = false;
-                dlg.OnCancel();
+                // The pick list draws the same badged icon as the tree for a uniquely localizing ion
+                var imageList = SkylineWindow.SequenceTree.ImageList;
+                AssertSameImage(imageList.Images[(int) SequenceTree.ImageId.fragment_unique],
+                    tgNode.GetPickTypeImage(choiceUnique));
+                AssertSameImage(imageList.Images[(int) SequenceTree.ImageId.fragment],
+                    tgNode.GetPickTypeImage(choiceShared));
             });
         }
 
         /// <summary>
         /// Unresolvable peptide: the modified serine sits inside a contiguous run of candidate
-        /// serines, so no ion uniquely localizes it. Turning the filter on empties the list and
-        /// shows the empty-state hint, even though the peptide is localizable.
+        /// serines, so no ion uniquely localizes it and nothing is badged, even though the
+        /// peptide is localizable.
         /// </summary>
         private void TestUnresolvablePeptide()
         {
             SelectPrecursor(SERINE_RUN_SEQ);
-            RunUI(() =>
-            {
-                var tgNode = (TransitionGroupTreeNode) SkylineWindow.SequenceTree.SelectedNode;
-                Assert.IsTrue(tgNode.CanShowSiteDeterminingIons,
-                    "Serine-run peptide is still localizable, so the toggle should be offered");
-            });
-
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
-            {
-                dlg.ApplyFilter(false);
-                Assert.IsTrue(dlg.SiteDeterminingButtonVisible);
-
-                dlg.SiteDeterminingFilter = true;
-                var filteredChoices = dlg.VisibleChoices.ToArray();
-                Assert.AreEqual(0, filteredChoices.Length,
-                    "No ion uniquely localizes a serine inside a run - filtered set must be empty");
-                Assert.IsTrue(dlg.SiteDeterminingEmptyHintVisible,
-                    "Empty-state hint should show when the filter leaves no visible ions");
-
-                dlg.SiteDeterminingFilter = false;
-                dlg.OnCancel();
-            });
+            AssertNoUniquelyLocalizingIons("No ion uniquely localizes a serine inside a run");
         }
 
         /// <summary>
-        /// Non-localizable peptide: no candidate residue, so the toggle button is hidden.
+        /// Non-localizable peptide: no candidate residue, so nothing is badged.
         /// </summary>
         private void TestNonLocalizablePeptide()
         {
             SelectPrecursor(UNMODIFIED_SEQ);
+            AssertNoUniquelyLocalizingIons("Unmodified peptide should not be localizable");
+        }
+
+        private void AssertNoUniquelyLocalizingIons(string message)
+        {
             RunUI(() =>
             {
                 var tgNode = (TransitionGroupTreeNode) SkylineWindow.SequenceTree.SelectedNode;
-                Assert.IsFalse(tgNode.CanShowSiteDeterminingIons,
-                    "Unmodified peptide should not be localizable");
-            });
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
-            {
-                Assert.IsFalse(dlg.SiteDeterminingButtonVisible,
-                    "Site-determining button should be hidden for a non-localizable peptide");
-                dlg.OnCancel();
+                var choices = tgNode.GetChoices(false).ToArray();
+                Assert.IsTrue(choices.Length > 0, "Expected at least one ion choice");
+                Assert.IsFalse(choices.Any(tgNode.IsUniquelyLocalizing), message);
+                var imagePlain = SkylineWindow.SequenceTree.ImageList.Images[(int) SequenceTree.ImageId.fragment];
+                foreach (var choice in choices)
+                    AssertSameImage(imagePlain, tgNode.GetPickTypeImage(choice));
             });
         }
 
@@ -279,12 +317,51 @@ namespace pwiz.SkylineTestFunctional
             return docMod;
         }
 
-        /// <summary>
-        /// True when the given choices include a transition of the given ion type and ordinal.
-        /// </summary>
-        private static bool HasIon(IEnumerable<DocNode> choices, IonType type, int ordinal)
+        private static bool IsIon(TransitionDocNode nodeTran, IonType type, int ordinal)
         {
-            return choices.Any(c => c.Id is Transition t && t.IonType == type && t.Ordinal == ordinal);
+            return nodeTran.Transition.IonType == type && nodeTran.Transition.Ordinal == ordinal;
+        }
+
+        /// <summary>
+        /// True when the document's precursor for the sequence holds a transition of the given ion
+        /// type and ordinal.
+        /// </summary>
+        private static bool HasTransition(SrmDocument doc, string sequence, IonType type, int ordinal)
+        {
+            var tgPath = FindTransitionGroupPath(doc, sequence);
+            Assert.IsNotNull(tgPath, "Could not find precursor for sequence {0}", sequence);
+            var tranGroupNode = (TransitionGroupDocNode) doc.FindNode(tgPath);
+            return tranGroupNode.Transitions.Any(t => IsIon(t, type, ordinal));
+        }
+
+        private static int CountTransitions(SrmDocument doc, string sequence)
+        {
+            var tgPath = FindTransitionGroupPath(doc, sequence);
+            Assert.IsNotNull(tgPath, "Could not find precursor for sequence {0}", sequence);
+            return ((TransitionGroupDocNode) doc.FindNode(tgPath)).TransitionCount;
+        }
+
+        private static DocNode FindIon(IEnumerable<DocNode> choices, IonType type, int ordinal)
+        {
+            var choice = choices.FirstOrDefault(c => c.Id is Transition t && t.IonType == type && t.Ordinal == ordinal);
+            Assert.IsNotNull(choice, "Choices did not contain {0}{1}", type, ordinal);
+            return choice;
+        }
+
+        /// <summary>
+        /// Pixel-level comparison, because <see cref="ImageList.ImageCollection"/> hands out a
+        /// fresh copy on every access, so reference equality cannot be used.
+        /// </summary>
+        private static void AssertSameImage(Image expected, Image actual)
+        {
+            Assert.AreEqual(expected.Size, actual.Size);
+            using var bmpExpected = new Bitmap(expected);
+            using var bmpActual = new Bitmap(actual);
+            for (int x = 0; x < bmpExpected.Width; x++)
+            {
+                for (int y = 0; y < bmpExpected.Height; y++)
+                    Assert.AreEqual(bmpExpected.GetPixel(x, y), bmpActual.GetPixel(x, y), "Pixel ({0}, {1}) differs", x, y);
+            }
         }
 
         /// <summary>

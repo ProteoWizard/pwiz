@@ -253,4 +253,7 @@
   <data name="TransitionTreeNode_RenderTip_Product_m_z" xml:space="preserve">
     <value>Product m/z</value>
   </data>
+  <data name="TransitionTreeNode_RenderTip_Uniquely_localizes" xml:space="preserve">
+    <value>Uniquely localizes</value>
+  </data>
 </root>

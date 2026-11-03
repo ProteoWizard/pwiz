@@ -38,9 +38,8 @@ using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class TransitionGroupTreeNode : SrmTreeNodeParent, ISiteDeterminingIonPicker
+    public class TransitionGroupTreeNode : SrmTreeNodeParent
     {
-        private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
         public static TransitionGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is TransitionGroupDocNode);
@@ -204,7 +203,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override Image GetPickTypeImage(DocNode child)
         {
-            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree);
+            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree, IsUniquelyLocalizing(child));
         }
 
         public override Image GetPickPeakImage(DocNode child)
@@ -358,52 +357,26 @@ namespace pwiz.Skyline.Controls.SeqNode
         
         #endregion
 
-        #region ISiteDeterminingIonPicker Members
-
+        /// <summary>
+        /// The analyzer of the parent peptide, or null when the peptide carries no ambiguously
+        /// placed modification. The peptide node owns and invalidates it.
+        /// </summary>
         private SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
         {
-            get
-            {
-                var nodePep = PepNode;
-                if (nodePep == null)
-                    return null;
-                return _siteDeterminingAnalyzer ??
-                       (_siteDeterminingAnalyzer = new SiteDeterminingIonAnalyzer(DocSettings, nodePep));
-            }
-        }
-
-        public bool CanShowSiteDeterminingIons
-        {
-            get
-            {
-                var analyzer = SiteDeterminingAnalyzer;
-                return analyzer != null && analyzer.CanLocalize;
-            }
+            get { return ((PeptideTreeNode) Parent)?.SiteDeterminingAnalyzer; }
         }
 
         /// <summary>
-        /// True when the given choice is an ion that <em>uniquely localizes</em> the modification,
-        /// i.e. no other positional placement produces it (producing-set size == 1). For placements
-        /// that cannot be resolved (e.g. the interior of a serine run) no ion is unique, so the
-        /// filtered list is legitimately empty.
+        /// True when the given choice is a product ion that <em>uniquely localizes</em> the
+        /// modification, i.e. no other positional placement produces it. Drives the badge on the
+        /// pick list icon, matching <see cref="TransitionTreeNode.IsUniquelyLocalizing"/> in the tree.
         /// </summary>
-        public bool IsSiteDeterminingChoice(DocNode choice)
+        public bool IsUniquelyLocalizing(DocNode choice)
         {
             var analyzer = SiteDeterminingAnalyzer;
             return analyzer != null && choice.Id is Transition transition &&
                    analyzer.IsUniqueToPrecursor(transition);
         }
-
-        public string GetSiteDeterminingTip(DocNode choice)
-        {
-            var analyzer = SiteDeterminingAnalyzer;
-            if (analyzer == null || !(choice.Id is Transition transition))
-                return null;
-            var mod = analyzer.GetResolvedModification(transition);
-            return mod?.Name;
-        }
-
-        #endregion
 
         #region ITipProvider Members
 

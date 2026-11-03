@@ -60,10 +60,18 @@ namespace pwiz.Skyline.Model.Localization
         /// span analysis itself is purely combinatorial).</param>
         /// <param name="nodePep">The peptide, including its explicit (light) modification placement.</param>
         public SiteDeterminingIonAnalyzer(SrmSettings settings, PeptideDocNode nodePep)
+            : this(settings, nodePep.Peptide, nodePep.ExplicitMods)
+        {
+        }
+
+        /// <summary>
+        /// The same precompute for a peptide and an explicit modification placement, for callers
+        /// that have no <see cref="PeptideDocNode"/> yet, such as transition auto-selection.
+        /// </summary>
+        public SiteDeterminingIonAnalyzer(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods)
         {
             _ambiguousMods = new List<AmbiguousMod>();
 
-            var peptide = nodePep.Peptide;
             if (peptide == null || peptide.IsCustomMolecule)
                 return; // Small molecule / non-proteomic - nothing to localize
 
@@ -73,7 +81,6 @@ namespace pwiz.Skyline.Model.Localization
             _length = sequence.Length;
             _unmodifiedSequence = sequence;
 
-            var explicitMods = nodePep.ExplicitMods;
             var staticMods = explicitMods?.StaticModifications;
             if (staticMods == null || staticMods.Count == 0)
                 return;
@@ -208,7 +215,18 @@ namespace pwiz.Skyline.Model.Localization
         /// </summary>
         public long GetProducingSetSize(Transition transition)
         {
-            if (!TryGetSpan(transition, out int lo, out int hi))
+            if (!IsFragment(transition))
+                return 0;
+            return GetProducingSetSize(transition.IonType, transition.CleavageOffset);
+        }
+
+        /// <summary>
+        /// <see cref="GetProducingSetSize(Transition)"/> for a product ion given by its type and
+        /// cleavage offset, before any <see cref="Transition"/> exists.
+        /// </summary>
+        public long GetProducingSetSize(IonType type, int cleavageOffset)
+        {
+            if (!TryGetSpan(type, cleavageOffset, out int lo, out int hi))
                 return 0;
 
             long product = 1;
@@ -232,26 +250,44 @@ namespace pwiz.Skyline.Model.Localization
             return CanLocalize && GetProducingSetSize(transition) == 1;
         }
 
+        /// <summary>
+        /// <see cref="IsUniqueToPrecursor(Transition)"/> for a product ion given by its type and
+        /// cleavage offset.
+        /// </summary>
+        public bool IsUniqueToPrecursor(IonType type, int cleavageOffset)
+        {
+            return CanLocalize && GetProducingSetSize(type, cleavageOffset) == 1;
+        }
+
+        private static bool IsFragment(Transition transition)
+        {
+            return transition != null && !transition.IsPrecursor() && !transition.IsCustom();
+        }
+
         private bool TryGetSpan(Transition transition, out int lo, out int hi)
         {
             lo = 0;
             hi = -1;
-            if (transition == null || _length == 0)
-                return false;
-            if (transition.IsPrecursor() || transition.IsCustom())
+            return IsFragment(transition) && TryGetSpan(transition.IonType, transition.CleavageOffset, out lo, out hi);
+        }
+
+        private bool TryGetSpan(IonType type, int cleavageOffset, out int lo, out int hi)
+        {
+            lo = 0;
+            hi = -1;
+            if (_length == 0)
                 return false;
 
-            var type = transition.IonType;
             if (type.IsNTerminal())
             {
                 // a/b/c: residues [0 .. cleavageOffset]
                 lo = 0;
-                hi = transition.CleavageOffset;
+                hi = cleavageOffset;
             }
             else if (type.IsCTerminal())
             {
                 // x/y/z/zh/zhh: residues [cleavageOffset+1 .. len-1]
-                lo = transition.CleavageOffset + 1;
+                lo = cleavageOffset + 1;
                 hi = _length - 1;
             }
             else

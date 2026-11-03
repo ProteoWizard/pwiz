@@ -465,5 +465,14 @@ namespace pwiz.Skyline.Controls.SeqNode {
                 return ResourceManager.GetString("TransitionTreeNode_RenderTip_Product_m_z", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uniquely localizes.
+        /// </summary>
+        public static string TransitionTreeNode_RenderTip_Uniquely_localizes {
+            get {
+                return ResourceManager.GetString("TransitionTreeNode_RenderTip_Uniquely_localizes", resourceCulture);
+            }
+        }
     }
 }
