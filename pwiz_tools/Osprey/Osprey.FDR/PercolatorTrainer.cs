@@ -50,6 +50,9 @@ namespace pwiz.Osprey.FDR
         // iteration keeps the previous set rather than collapsing.
         private static readonly int MIN_POSITIVE = 50;
 
+        /// <summary>Fewest rows a parallel tree-scoring slice gets; fewer rows are scored serially.</summary>
+        private const int MIN_ROWS_PER_SCORE_SLICE = 20000;
+
         /// <summary>
         /// Run the Percolator algorithm on a collection of entries.
         /// </summary>
@@ -589,6 +592,11 @@ namespace pwiz.Osprey.FDR
                 OspreyFDRResources.PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_,
                 config.NFolds, subN, subTargets));
 
+            // The folds train concurrently, so each gets an equal share of the thread budget
+            // for its trees' histograms and re-scoring. The trained model is bit-identical at
+            // any thread count, so this changes only the wall clock.
+            int threadsPerFold = Math.Max(1, config.NThreads / Math.Max(1, config.NFolds));
+
             var swTrain = Stopwatch.StartNew();
             var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr);
             OspreyParallel.For(0, config.NFolds, config.NFolds, fold =>
@@ -603,7 +611,7 @@ namespace pwiz.Osprey.FDR
                     foldGbtModels[fold] = TrainFoldGbt(
                         subFeatures, subLabels, subEntryIds, subPeptides,
                         foldTrainIndices[fold], initialScores, config, trainFdr,
-                        fold, trainProgress, foldTrainingSets, out iters);
+                        threadsPerFold, fold, trainProgress, foldTrainingSets, out iters);
                     // No C to sweep: the trees are regularized by depth / gamma /
                     // lambda / min-child-weight, all fixed by GbtParams.
                     foldBestC[fold] = double.NaN;
@@ -951,12 +959,15 @@ namespace pwiz.Osprey.FDR
             double[] initialScores,
             PercolatorConfig config,
             double trainFdr,
+            int threads,
             int foldIndex,
             TrainProgressReporter progress,
             FoldTrainingSet[] trainingSets,
             out int bestIteration)
         {
             var currentScores = (double[])initialScores.Clone();
+            var gbtParams = config.GbtParams.Clone();
+            gbtParams.MaxDegreeOfParallelism = threads;
             GradientBoostedTrees bestModel = null;
             bestIteration = 0;
             // -1, where TrainFold uses 0: the SVM seeds bestModel with a degenerate
@@ -1022,31 +1033,35 @@ namespace pwiz.Osprey.FDR
                 valLocal = fitLocal;
             }
 
+            // Rows of stdFeatures behind each fit / validation position, for re-scoring.
+            var fitRows = new int[fitLocal.Count];
             var fitLabels = new bool[fitLocal.Count];
             var fitEntryIds = new uint[fitLocal.Count];
             for (int i = 0; i < fitLocal.Count; i++)
             {
+                fitRows[i] = trainIndices[fitLocal[i]];
                 fitLabels[i] = trainLabels[fitLocal[i]];
                 fitEntryIds[i] = trainEntryIds[fitLocal[i]];
             }
+            var valRows = new int[valLocal.Count];
             var valLabels = new bool[valLocal.Count];
             var valEntryIds = new uint[valLocal.Count];
             int nValTargets = 0;
             for (int i = 0; i < valLocal.Count; i++)
             {
+                valRows[i] = trainIndices[valLocal[i]];
                 valLabels[i] = trainLabels[valLocal[i]];
                 valEntryIds[i] = trainEntryIds[valLocal[i]];
                 if (!valLabels[i]) nValTargets++;
             }
 
-            var rowBuf = new double[stdFeatures.Cols];
             for (int iteration = 0; iteration < config.MaxIterations; iteration++)
             {
                 // i. Select positive training set under the CURRENT score -- from the FIT
                 //    rows only, so the validation rows never influence what the trees fit.
                 var fitCurrentScores = new double[fitLocal.Count];
                 for (int i = 0; i < fitLocal.Count; i++)
-                    fitCurrentScores[i] = currentScores[trainIndices[fitLocal[i]]];
+                    fitCurrentScores[i] = currentScores[fitRows[i]];
 
                 var selectedFitTargets = SelectPositiveTrainingSet(
                     fitCurrentScores, fitLabels, fitEntryIds, trainFdr, MIN_POSITIVE);
@@ -1067,27 +1082,20 @@ namespace pwiz.Osprey.FDR
                 var gbtLabels = new bool[gbtLocal.Count];
                 for (int i = 0; i < gbtLocal.Count; i++)
                 {
-                    gbtRows[i] = MatrixRows.ExtractRow(stdFeatures, trainIndices[fitLocal[gbtLocal[i]]]);
+                    gbtRows[i] = MatrixRows.ExtractRow(stdFeatures, fitRows[gbtLocal[i]]);
                     gbtLabels[i] = fitLabels[gbtLocal[i]];
                 }
 
                 // ii. Train. No grid search: capacity is bounded by depth / gamma /
                 //     lambda / min-child-weight, all fixed up front.
-                var model = GradientBoostedTrees.Train(gbtRows, gbtLabels, config.GbtParams);
+                var model = GradientBoostedTrees.Train(gbtRows, gbtLabels, gbtParams);
 
                 // iii. Re-score the FIT rows (drives the next iteration's positive
                 //      selection) and the VALIDATION rows (drives model selection).
-                for (int i = 0; i < fitLocal.Count; i++)
-                {
-                    MatrixRows.CopyRow(stdFeatures, trainIndices[fitLocal[i]], rowBuf);
-                    currentScores[trainIndices[fitLocal[i]]] = model.ScoreSingle(rowBuf);
-                }
-                var valScores = new double[valLocal.Count];
-                for (int i = 0; i < valLocal.Count; i++)
-                {
-                    MatrixRows.CopyRow(stdFeatures, trainIndices[valLocal[i]], rowBuf);
-                    valScores[i] = model.ScoreSingle(rowBuf);
-                }
+                var fitScores = ScoreRows(model, stdFeatures, fitRows, threads);
+                for (int i = 0; i < fitRows.Length; i++)
+                    currentScores[fitRows[i]] = fitScores[i];
+                var valScores = ScoreRows(model, stdFeatures, valRows, threads);
 
                 // iv. Keep the iteration that passes the most targets on the HELD-OUT rows.
                 int nPassing = PercolatorQValues.CountPassing(valScores, valLabels, valEntryIds, trainFdr);
@@ -1131,6 +1139,31 @@ namespace pwiz.Osprey.FDR
 
             bestIteration = Math.Max(bestIteration, 1);
             return bestModel;
+        }
+
+        /// <summary>
+        /// Score the <paramref name="rows"/> of <paramref name="stdFeatures"/> with
+        /// <paramref name="model"/>, in parallel over contiguous slices. Bit-identical to the
+        /// serial loop: a tree score depends only on its own row.
+        /// </summary>
+        private static double[] ScoreRows(GradientBoostedTrees model, Matrix stdFeatures,
+            int[] rows, int threads)
+        {
+            var scores = new double[rows.Length];
+            // Below a slice of MIN_ROWS_PER_SCORE_SLICE rows, starting a thread costs more than it saves.
+            int slices = Math.Max(1, Math.Min(threads, rows.Length / MIN_ROWS_PER_SCORE_SLICE));
+            int slice = (rows.Length + slices - 1) / slices;
+            OspreyParallel.For(0, slices, slices, c =>
+            {
+                var rowBuf = new double[stdFeatures.Cols];   // per-slice: never shared
+                int hi = Math.Min(rows.Length, (c + 1) * slice);
+                for (int i = c * slice; i < hi; i++)
+                {
+                    MatrixRows.CopyRow(stdFeatures, rows[i], rowBuf);
+                    scores[i] = model.ScoreSingle(rowBuf);
+                }
+            });
+            return scores;
         }
 
         // ============================================================
