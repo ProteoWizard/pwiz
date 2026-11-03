@@ -111,11 +111,7 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char* id)
                 CVID cvid = (CVID)(o*enumBlockSize_ + strtoul(ip,NULL,10));
                 map<CVID, CVTermInfo>::const_iterator find = infoMap.find(cvid);
                 if (find == infoMap.end())
-                {
-                    if (bal::equals("UNIMOD", oboPrefixes_[o]))
-                        return infoMap.find(CVID_Unknown)->second;
-                    throw out_of_range("Invalid cvParam accession \"" + lexical_cast<string>(cvid) + "\"");
-                }
+                    return infoMap.find(CVID_Unknown)->second; // e.g. a term from a newer CV than this build knows
                 return find->second;
             }
         }
