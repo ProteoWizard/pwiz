@@ -353,6 +353,9 @@ namespace pwiz.Osprey.FDR
                 // (#4377). The score passes collect theirs on every run: each run's share is
                 // persisted in its first-pass sidecar (FeatureSums).
                 CollectFeatureHistograms = config.ModelDiagnostics,
+                // The training-set analysis (#4550, #4467) on every run: it is persisted with the
+                // model, since the fold training sets it reads cannot be rebuilt later (doc 00, P16).
+                CollectTrainingAnalysis = true,
                 Diagnostics = diagnostics
             };
         }
@@ -1476,7 +1479,7 @@ namespace pwiz.Osprey.FDR
             // A report over only the files this process scored would describe a different
             // population than the run's, with nothing on the page to say so.
             var contributions = sharesComplete
-                ? PercolatorScorer.BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig)
+                ? PercolatorScorer.BuildContributions(contribAcc, gbtModels, trainResults, percConfig)
                 : null;
             captureContributions?.Invoke(contributions);
 

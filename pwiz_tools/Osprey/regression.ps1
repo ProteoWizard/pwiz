@@ -188,6 +188,13 @@
     so mode 1 asks whether a search through the shared BiblioSpec.IO reader is byte-identical to
     one through the TSV parser; the only gate on the .blib read path, since every dataset's
     library is a .tsv. Opt-in; TeamCity does not pass it. Refused with -CreateGolden.
+.PARAMETER DetectResolution
+    Leave --resolution off every leg's command line, so Osprey measures it from the data
+    (--resolution auto, the default) instead of taking the dataset table's value. The goldens
+    are the explicit searches', so mode 1 asks whether the detected search is byte-identical to
+    the explicit one on every route the dataset runs, the HPC chain's FDR nodes (which read the
+    mode from the scores files) included. Opt-in; TeamCity does not pass it, so the goldens never
+    depend on detection. Refused with -CreateGolden.
 .PARAMETER Threads
     --threads for each run (default 16).
 
@@ -307,12 +314,24 @@ param(
     [string]$Culture,
     # Every leg searches an exported .blib of the dataset's library instead of the .tsv; see
     # the parameter help.
-    [switch]$LibraryAsBlib
+    [switch]$LibraryAsBlib,
+    # Every leg leaves --resolution to be measured from the data; see the parameter help.
+    [switch]$DetectResolution
 )
 
 $ErrorActionPreference = 'Stop'
 if ($LibraryAsBlib -and $CreateGolden) {
     throw "-LibraryAsBlib and -CreateGolden do not mix: the goldens are the .tsv search's, and a .blib run is compared against them."
+}
+if ($DetectResolution -and $CreateGolden) {
+    throw "-DetectResolution and -CreateGolden do not mix: the goldens are the explicit --resolution searches', and a detected run is compared against them."
+}
+
+# The --resolution arguments of a leg: the dataset table's value, or none with -DetectResolution.
+function Get-ResolutionArgs {
+    param([string]$Resolution)
+    if ($DetectResolution) { return @() }
+    return @('--resolution', $Resolution)
 }
 
 # Clean BEFORE a run, not after. Stated ONCE here; every other comment on cleanup points
@@ -885,9 +904,8 @@ function Invoke-OspreyRun {
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
     foreach ($m in $Mzmls) { $cliArgs += @('-i', $m) }
-    $cliArgs += @('-l', $Library, '-o', 'output.blib',
-                  '--resolution', $Resolution, '--protein-fdr', '0.01',
-                  '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
+    $cliArgs += @('-l', $Library, '-o', 'output.blib') + (Get-ResolutionArgs $Resolution) +
+                @('--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
     $cliArgs += $memStampArgs
     if ($FdrBench) { $cliArgs += @('--fdrbench', 'bench.tsv', '--fdrbench-pass', 'both') }
@@ -1145,6 +1163,8 @@ function Resolve-DatasetInputs {
         $exportDir = Join-Path $derivedDir 'export'
         $exportLog = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.export.log')
         Remove-Item $blib, $blibTmp -Force -ErrorAction SilentlyContinue
+        # Always the table's --resolution, even with -DetectResolution: the export reads no
+        # inputs, so it has nothing to measure, and the library must be typed as the search's is.
         $exportArgs = @('-l', $library, '--export-library', $blibTmp, '--resolution', $Spec.Resolution,
                         '--threads', $Threads.ToString(), '--work-dir', $exportDir)
         if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
@@ -1987,8 +2007,8 @@ function Invoke-HpcChain {
     # Stable, file-order stem list (NOT hashtable key order) so the -i
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
-    $commonArgs = @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-                    '--protein-fdr', '0.01', '--threads', $Threads.ToString()) + $extraArgs + $memStampArgs
+    $commonArgs = @('-l', $libName, '-o', 'output.blib') + (Get-ResolutionArgs $Resolution) +
+                  @('--protein-fdr', '0.01', '--threads', $Threads.ToString()) + $extraArgs + $memStampArgs
 
     # EVERY PHASE IS STAGED FROM ITS TASK'S DECLARATIONS (Invoke-HpcNode): what the node is given
     # is what `--task-files` says it reads, found in the earlier phases' dirs. Nothing here lists
