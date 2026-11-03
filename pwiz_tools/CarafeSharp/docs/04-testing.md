@@ -21,7 +21,7 @@ The data packages are listed in `testdata.json`, which the tests and the packagi
 | `-Torch cuda` | The CUDA 12.8 libtorch (about 4 GB of native files) instead of the CPU one; runs the `Cuda` test category. |
 | `-NoTests`, `-NoBuild` | Build only, or test the existing build. |
 | `-TestName <text>` | Run the tests whose name contains the text, whatever their category. |
-| `-TestCategory <name>` | Run one category (`Astral`, `Cuda`). |
+| `-TestCategory <name>` | Run one category (`FullParity`, `Astral`, `Cuda`). |
 | `-RequireData` | Fail when any test did not run (see "Test data"). |
 | `-Coverage` | Run the tests under dotCover and print each assembly's statement coverage (Windows). |
 | `-TeamCity` | TeamCity service messages; imports the test results and coverage. |
@@ -58,9 +58,9 @@ repository. They come as zips with one top folder each:
 
 | Package | Holds | Extracted | Tests |
 |---|---|---|---|
-| `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 1.5 GB zip, 5.6 GB extracted | the default pass |
-| `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 4.8 GB zip, 22 GB extracted | category `Astral` |
-| `carafesharp-export-v1` | Osprey's training export of the Stellar run, searching Carafe's starting library | 67 MB zip, 67 MB extracted | masking parity |
+| `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 1.5 GB zip, 5.6 GB extracted | the parity script, `regression.ps1` |
+| `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 4.8 GB zip, 22 GB extracted | the parity script's `-Dataset Astral` |
+| `carafesharp-export-v1` | Osprey's training export of the Stellar run, searching Carafe's starting library | 67 MB zip, 67 MB extracted | the parity script (masking) |
 | `carafesharp-export-v2` | Osprey's training export of the Stellar run, searching CarafeSharp's Chronologer starting library | 60 MB zip, 60 MB extracted | `regression.ps1` |
 | `carafesharp-export-astral-v2` | Osprey's training export of the Astral run, searching CarafeSharp's Chronologer starting library | 144 MB zip, 144 MB extracted | `regression.ps1 -Dataset Astral` |
 
@@ -85,8 +85,10 @@ The packages go in `<Downloads>/Perftests/`, where the Skyline and Osprey perf t
 
 **Fetching and verifying:** `build.ps1 -TestData Fetch` (or `ai/scripts/CarafeSharp/Build-CarafeSharp.ps1
 -TestData Fetch`) downloads the packages the run reads that are not there yet, before it builds:
-- By default those of the default test pass (`testfiles`, `export`), plus `-TestCategory`'s (`Astral` adds
-  `astral` and `astral-export`); `-TestDataPackage all`, or a comma-separated list of ids, picks others.
+- By default the Stellar packages (`testfiles`, `export`, `regression-export`, the `testCategory`-less
+  entries of `testdata.json`), plus `-TestCategory`'s (`Astral` adds `astral` and `astral-export`);
+  `-TestDataPackage all`, or a comma-separated list of ids, picks others. The default test pass itself
+  reads none of them.
 - Each zip is checked against its size and SHA-256 in `testdata.json` and kept beside the packages. A zip
   already there is checked rather than downloaded again, and downloaded again only if it is wrong.
 - It is extracted to a temporary folder that is renamed into place when complete, and its files are then
@@ -101,8 +103,8 @@ above and extract it there yourself.
 
 This works from Visual Studio or ReSharper too, where no script sets variables.
 
-**Committed subsets.** Each parity test also runs on a committed subset of its packages, in the default pass
-and so on every commit, with no download. The zips are in `CarafeSharp.Test/TestData`, each under 5 MB,
+**Committed subsets.** Each full-size parity comparison has a twin on a committed subset of its packages,
+which runs in the default pass and so on every commit, with no download. The zips are in `CarafeSharp.Test/TestData`, each under 5 MB,
 holding package folders laid out as the full packages are, each with its `MANIFEST.sha256`. A test opens one
 with `TestData.UseSubset`, which makes it the data root and ignores the variables below. The scripts that cut
 them, byte-identically, are in `ai/scripts/CarafeSharp/SubsetData` (its README has the rules).
@@ -116,11 +118,12 @@ them, byte-identically, are in `ai/scripts/CarafeSharp/SubsetData` (its README h
 
 What stays download-only: prediction with Carafe's fine-tuned models (16 MB of weights, which do not
 compress), the two builds that need the 14 MB mouse FASTA, the full fine-tune of
-`CARAFESHARP_FINETUNE_FULL`, and the full-scale versions of every check.
+`CARAFESHARP_FINETUNE_FULL`, and the full-scale versions of every check, which the parity script runs
+(see "Full-size parity").
 
 **What the tests do with the data:**
-- **Nothing present:** with no package and no variable set, the full-scale parity tests are Inconclusive,
-  and their subset versions run.
+- **Nothing present:** with no package and no variable set, a full-scale parity test run on its own
+  (`-TestName`, or from Visual Studio) is Inconclusive. The default pass leaves them out.
 - **Anything present:** once any data is there, a missing file fails, naming its path. So does a package
   folder without `MANIFEST.sha256`, the checksum list that is the zip's last entry; an extraction that
   stopped part way has none. An item a test reads with no data of its own fails too, as does a variable
@@ -153,9 +156,8 @@ new version.
 
 | Pass | Command | Tests | Time (i9-14900) |
 |---|---|---|---|
-| CPU, no data | `build.ps1` | 105, of which the 8 full-scale parity tests are Inconclusive; the subset tests and `TestRegressionSubset` run | about 2 min |
-| CPU, with data | `build.ps1 -RequireData` | all 105 | about 4 min |
-| Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
+| CPU | `build.ps1` | 108, with no test data: the subset parity twins and `TestRegressionSubset` run | about 2 min |
+| Full-size parity | `scripts/Compare-CarafeParity.ps1 [-Dataset Astral\|All]` | the `FullParity` category, 8 on the Stellar packages, or the `Astral` category, 4 on the Astral package (see "Full-size parity") | Stellar about 4 min, Astral about 12 min, after the fetch |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU, and the subset fine-tuned twice on the GPU | about 2 min |
 | Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral about 36 min on the CPU |
 
@@ -169,18 +171,49 @@ new version.
 CarafeSharp has no TeamCity configuration of its own: Osprey's build it, since it trains the libraries Osprey
 searches, and their scripts are in the repository (`pwiz_tools/Osprey`).
 - **Every commit** (`tcbuild.bat`, Osprey Windows .NET; `tcbuild.sh`, Osprey Linux .NET): `build.ps1 -TeamCity`
-  after Osprey's, with dotCover on Windows. No test data: the committed subsets and `TestRegressionSubset` run, the
-  full-scale parity tests are Inconclusive. It adds about 1.5-2 min on TCA1 or Linux, and about 5 min on a slower
+  after Osprey's, with dotCover on Windows. No test data: the committed subsets and `TestRegressionSubset` run, and
+  nothing is skipped. It adds about 1.5-2 min on TCA1 or Linux, and about 5 min on a slower
   Windows cloud agent. `scripts/misc/vcs_trigger_and_paths_config.py` routes `pwiz_tools/CarafeSharp` (and
   `Shared/Lib/Parquet`) changes to both configs.
 - **Nightly** (`tctest.bat`, Osprey Windows .NET Perf/Regression, after Osprey's lanes): `tcregression.ps1` runs
-  `build.ps1 -TestData Fetch -RequireData`, `regression.ps1 -Dataset Stellar`, and
-  `regression.ps1 -Dataset StellarSubset` twice, whose models and training tables must be the same bytes (a rerun on
-  the agent repeats), about 19 minutes on an i9-14900. Its test data goes in `<Downloads>/Perftests/carafesharp`, not the default
-  folder, so a per-commit build on the same agent does not find it and run the full-scale tests every commit.
-- **Parity coverage:** the Stellar parity checks compare every precursor. The Astral run is ten times
-  larger, so its two whole-set checks compare one hash partition of the precursor keys, a sixteenth, the
-  same on both sides. `CARAFESHARP_FULL_PARITY=1` compares them all, at about 13 GB of memory.
+  `build.ps1 -NoTests -TestData Fetch` for the packages `regression.ps1` reads, `regression.ps1 -Dataset Stellar`,
+  and `regression.ps1 -Dataset StellarSubset` twice, whose models and training tables must be the same bytes (a
+  rerun on the agent repeats). Its test data goes in `<Downloads>/Perftests/carafesharp`, not the default folder.
+- **Not on TeamCity:** the full-size parity comparisons (see "Full-size parity").
+
+## Full-size parity
+
+The full-size comparisons with Carafe 2.2.0 are a developer-run check, not a test pass: no TeamCity
+configuration runs them, as none runs Osprey's comparison with its Rust version. Run them after a change to
+what they compare (peptidoforms, fragment m/z, library assembly, prediction, fine-tuning, the stage-1
+FASTA builds, masking); their subset twins catch most regressions on every commit, and these confirm it on
+every precursor of the reference runs.
+
+```
+pwsh -File scripts/Compare-CarafeParity.ps1                    # the 8 Stellar comparisons
+pwsh -File scripts/Compare-CarafeParity.ps1 -Dataset All       # and the 4 Astral ones
+pwsh -File scripts/Compare-CarafeParity.ps1 -NoBuild -TestName FineTune
+```
+
+The script fetches the packages the comparisons read (`build.ps1 -TestData Fetch`, so the zips are checked
+against `testdata.json` and the files against each `MANIFEST.sha256`), builds, runs the `FullParity` category
+(or `Astral`) with `-RequireData`, so a comparison that did not run fails, and prints each comparison's outcome,
+time and failure message, then `OVERALL: PASS` or `FAIL` with exit code 0 or 1.
+
+| Comparison (`FullParity`) | Checks | Subset twin, every commit |
+|---|---|---|
+| `TestPeptideFormsMatchCarafe` | peptidoforms and precursor m/z | `TestLibraryParitySubset` |
+| `TestFragmentMzMatchesCarafe` | fragment m/z against Carafe's float32 values | `TestLibraryParitySubset` |
+| `TestLibraryAssemblyMatchesCarafe` | library rows assembled from Carafe's own predictions | `TestLibraryParitySubset` |
+| `TestPredictedLibraryMatchesCarafe` | the predicted library and .blib, end to end | `TestLibraryParitySubset` |
+| `TestPredictionsMatchCarafe` | pretrained and fine-tuned MS2 and RT predictions | `TestPretrainedPredictionsMatchCarafeSubset` |
+| `TestFineTuneMatchesCarafe` | fine-tuning on Carafe's training tables | `TestFineTuneMatchesCarafeSubset` |
+| `TestFullFastaBuildsMatchCarafe` | the 12 stage-1 entrapment FASTA builds | `TestSubsetFastaBuildsMatchCarafe` |
+| `TestMaskingAgreesWithCarafe` | Osprey export masking against Carafe's training | `TestMaskingAgreesWithCarafeSubset` |
+
+The Stellar comparisons compare every precursor. The Astral run is ten times larger, so its two whole-set
+checks compare one hash partition of the precursor keys, a sixteenth, the same on both sides.
+`CARAFESHARP_FULL_PARITY=1` compares them all, at about 13 GB of memory.
 
 ## Regression
 
@@ -362,7 +395,8 @@ DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 t
 ## Coverage
 
 Statement coverage from `build.ps1 -Coverage`, with no test data (what CI sees; the pretrained archive
-is bundled, so its tests run) and with the data (`-RequireData`); and, merged with them, `regression.ps1`'s
+is bundled, so its tests run) and with the data (measured when the full-size parity tests were still in that
+pass; they are now the `FullParity` category); and, merged with them, `regression.ps1`'s
 isolated and (since retired) chained legs, measured by `ai/scripts/CarafeSharp/Measure-CumulativeCoverage.ps1`
 (2026-10-12, before the committed subsets).
 

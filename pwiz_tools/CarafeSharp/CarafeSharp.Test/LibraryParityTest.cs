@@ -87,7 +87,7 @@ namespace pwiz.CarafeSharp.Test
         public TestContext TestContext { get; set; }
 
         /// <summary>Requirement 1: the peptidoforms and precursors, with their m/z.</summary>
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestPeptideFormsMatchCarafe()
         {
             foreach (var run in ReferenceRuns())
@@ -95,7 +95,7 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>Requirement 2: alphabase fragment m/z against the _ms2_mz_df float32 values.</summary>
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestFragmentMzMatchesCarafe()
         {
             foreach (var run in ReferenceRuns())
@@ -106,7 +106,7 @@ namespace pwiz.CarafeSharp.Test
         /// Requirement 3, assembly alone: a sample of precursors built from Carafe's own
         /// predictions must reproduce Carafe's TSV rows character for character.
         /// </summary>
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestLibraryAssemblyMatchesCarafe()
         {
             foreach (var run in LibraryRuns(TestData.PretrainedLibraries, TestData.FineTunedLibraries, TestData.LibraryReferences))
@@ -118,7 +118,7 @@ namespace pwiz.CarafeSharp.Test
         /// every 50th FASTA record) and compares it with Carafe's, and with Carafe's .blib where
         /// the reference has one.
         /// </summary>
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestPredictedLibraryMatchesCarafe()
         {
             var runs = LibraryRuns(TestData.PretrainedLibraries, TestData.FineTunedLibraries, TestData.LibraryReferences);

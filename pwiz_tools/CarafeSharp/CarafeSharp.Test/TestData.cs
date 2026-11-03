@@ -96,6 +96,13 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>The category of the tests that read the Astral package, which is optional.</summary>
         public const string ASTRAL_CATEGORY = @"Astral";
 
+        /// <summary>
+        /// The category of the full-size Stellar parity tests, which read the downloaded packages
+        /// and run only from <c>scripts/Compare-CarafeParity.ps1</c>, never in a test pass. Each has
+        /// a committed subset twin that runs on every commit.
+        /// </summary>
+        public const string FULL_PARITY_CATEGORY = @"FullParity";
+
         /// <summary>The category of the GPU tests, which the CPU pass leaves out.</summary>
         public const string CUDA_CATEGORY = @"Cuda";
 

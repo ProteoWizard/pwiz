@@ -63,7 +63,7 @@ namespace pwiz.CarafeSharp.Test
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestPredictionsMatchCarafe()
         {
             ComparePredictions(TestData.PretrainedLibraries, TestData.FineTunedLibraries);
