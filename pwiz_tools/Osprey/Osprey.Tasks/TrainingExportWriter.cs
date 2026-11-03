@@ -157,6 +157,7 @@ namespace pwiz.Osprey.Tasks
                         out observed[w]);
                     progress.Report(Interlocked.Increment(ref nDone));
                 });
+                progress.Complete();
             }
 
             var records = perWindow.Where(list => list != null).SelectMany(list => list)

@@ -46,6 +46,7 @@ namespace CommonTest
         {
             TestHeartbeat();
             TestHeadingAlwaysPrints();
+            TestOnlySuccessCompletes();
         }
 
         private static void TestHeartbeat()
@@ -111,13 +112,61 @@ namespace CommonTest
         }
 
         /// <summary>
+        /// Success is declared, not inferred (#4583): Dispose runs the same way whether a scope
+        /// finished, threw or returned early, so only <see cref="ProgressReporter.Complete"/>
+        /// closes a step with 100%. A step that fails after showing a percent must not log
+        /// completion on its way out.
+        /// </summary>
+        private static void TestOnlySuccessCompletes()
+        {
+            // Past MinPercentTime with no percent shown: the same case that closes with 100% when
+            // completed (above) ends at its heading when the scope is left without Complete.
+            var abandoned = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
+                act: p => p.Report(50), minPercentSeconds: 0.0, complete: false);
+            AssertEx.AreEqual(1, abandoned.Count, "a step left without Complete prints no completion line");
+            AssertEx.Contains(abandoned[0], Heading("phase"));
+
+            // A step that showed 50% and then threw: the exception passes through the using, and
+            // the last line is still the 50%.
+            var writer = new StringWriter();
+            AssertEx.ThrowsException<InvalidOperationException>(() => FailHalfway(writer));
+            var failed = writer.ToString()
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+            AssertEx.Contains(failed[failed.Count - 1], "50%");
+            AssertEx.IsFalse(failed.Any(line => line.Contains("100%")),
+                "a step that threw must not log completion");
+
+            // Complete is idempotent: a second call does not print a second 100%.
+            var twice = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
+                act: p => p.Complete(), minPercentSeconds: 0.0);
+            AssertEx.AreEqual(1, twice.Count(line => line.Contains("100%")),
+                "Complete called twice should close the step once");
+        }
+
+        /// <summary>
+        /// A step that shows 50% and then throws out of its <c>using</c>, writing to
+        /// <paramref name="writer"/>.
+        /// </summary>
+        private static void FailHalfway(TextWriter writer)
+        {
+            using (CommandOutput.PushScopedOut(writer))
+            using (var reporter = new ProgressReporter("phase", 100, string.Empty, 0.0, 60.0, 0.0))
+            {
+                reporter.Report(50);
+                throw new InvalidOperationException();
+            }
+        }
+
+        /// <summary>
         /// Run <paramref name="act"/> against a <see cref="ProgressReporter"/> whose output is
         /// captured through a scoped writer (AsyncLocal, so no cross-test static leak) and
-        /// return the non-empty output lines.
+        /// return the non-empty output lines. The step is declared successful afterwards unless
+        /// <paramref name="complete"/> is false, which stands for a scope left early.
         /// </summary>
         private static List<string> CaptureLines(long total, double intervalSeconds,
             double heartbeatSeconds, Action<ProgressReporter> act,
-            double minPercentSeconds = 0.0)
+            double minPercentSeconds = 0.0, bool complete = true)
         {
             var writer = new StringWriter();
             using (CommandOutput.PushScopedOut(writer))
@@ -128,6 +177,8 @@ namespace CommonTest
                 intervalSeconds, heartbeatSeconds, minPercentSeconds))
             {
                 act(reporter);
+                if (complete)
+                    reporter.Complete();
             }
             return writer.ToString()
                 .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)

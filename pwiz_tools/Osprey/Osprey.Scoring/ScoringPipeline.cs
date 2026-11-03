@@ -290,6 +290,7 @@ namespace pwiz.Osprey.Scoring
                         progress.Report(windowsProcessed);
                     }
                 });
+                progress.Complete();
             }
 
             // Flatten in deterministic window-index order.

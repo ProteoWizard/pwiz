@@ -274,6 +274,7 @@ namespace pwiz.Osprey.Tasks
                         if (libraryById.TryGetValue(blibEntries[i].Value.EntryId, out var libEntry))
                             spectra[i] = BlibSpectrum.FromLibraryEntry(libEntry, Array.Empty<string>());
                     });
+                progress.Complete();
             }
             return spectra;
         }
@@ -354,6 +355,7 @@ namespace pwiz.Osprey.Tasks
 
                     refIdByPrecursor[lookupKey] = refId;
                 }
+                progress.Complete();
             }
             return refIdByPrecursor;
         }
@@ -463,6 +465,7 @@ namespace pwiz.Osprey.Tasks
                         runQ,
                         isBest);
                 }
+                progress.Complete();
             }
         }
 

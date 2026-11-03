@@ -570,6 +570,7 @@ namespace pwiz.Osprey.FDR
                             percConfig.FeatureInfos.Length).Clone();
                     }
                 }
+                loadProgress.Complete();
             }
 
             var trainConfig = percConfig.CloneForTrainOnly();

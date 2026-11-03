@@ -1086,6 +1086,8 @@ namespace pwiz.Osprey.Tasks
                             sink.Add(runName, row);
                         return true;
                     });
+                    if (error == null)
+                        progress.Complete();
                 }
                 if (error != null)
                 {
@@ -2437,6 +2439,8 @@ namespace pwiz.Osprey.Tasks
                     accumulator.Merge(file.Accumulator);
                     return true;
                 });
+                if (reduceError == null)
+                    reduceProgress.Complete();
             }
             if (reduceError != null)
             {
@@ -2709,6 +2713,8 @@ namespace pwiz.Osprey.Tasks
                     firstPassBaseIds.UnionWith(file.Passing);
                     return true;
                 });
+                if (compactError == null)
+                    compactProgress.Complete();
             }
             if (compactError != null)
             {

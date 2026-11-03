@@ -878,6 +878,7 @@ namespace pwiz.Osprey.IO
                     }
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
+                    progress.Complete();
                 }
                 saver.Commit();
             }
@@ -2000,6 +2001,7 @@ namespace pwiz.Osprey.IO
                     nWritten = written;
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
+                    progress?.Complete();
                 }
                 saver.Commit();
             }

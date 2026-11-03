@@ -226,6 +226,7 @@ namespace pwiz.Osprey.IO
                                 WriteMs2Record(w, ms2Spectra[i]);
                             }
                         }
+                        progress.Complete();
                     }
 
                     // MS1 records (acquisition order; every consumer reads them in full)

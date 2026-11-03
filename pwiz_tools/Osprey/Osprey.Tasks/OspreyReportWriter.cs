@@ -199,6 +199,7 @@ namespace pwiz.Osprey.Tasks
                         string.Join(@";", libUnique),
                     });
                 }
+                progress.Complete();
             }
 
             // Deterministic order: passing first, then most confident, then by accessions
@@ -302,6 +303,7 @@ namespace pwiz.Osprey.Tasks
                         proteins.ToString(CultureInfo.InvariantCulture),
                     });
                 }
+                progress.Complete();
             }
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a
