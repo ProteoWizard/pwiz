@@ -26,15 +26,14 @@ using System.Xml.Serialization;
 namespace UniModCompiler
 {
     /// <summary>
-    /// Takes an XML file of modifications,
-    /// We use: http://www.unimod.org/xml/unimod.xml
-    /// From: ..\..\..\..\pwiz\data\common
+    /// Takes the UniMod obo file of modifications,
+    /// We use: pwiz\data\common\unimod.obo (http://www.unimod.org/obo/unimod.obo)
     /// Takes an XML file with short-names,
     /// We use: ProteinPilot.DataDictionary.xml supplied by AB SCIEX
     /// Takes a set of text files that contain line separated lists of modifications.
     /// We use: http://www.matrixscience.com/cgi/get_params.pl
     /// 
-    /// UniModCompiler matches the modification names in the text files to the modification definitions in the XML.
+    /// UniModCompiler matches the modification names in the text files to the modification definitions in the obo.
     /// Modifications are then compiled into lists of static modifications for Skyline, which are output to UniMod.cs
     /// </summary>
     class Program
@@ -44,6 +43,8 @@ namespace UniModCompiler
         private static List<Mod> _listedMods;
         private static List<Mod> _listedHiddenMods;
         private static List<string> _impossibleMods;
+        private static readonly HashSet<long> _writtenIds = new HashSet<long>();
+        private static readonly HashSet<string> _writtenNames = new HashSet<string>();
         private static Dictionary<string, ThreeLetterCodeUsed> _dictModNameToThreeLetterCode;
 
         private class ThreeLetterCodeUsed
@@ -57,28 +58,27 @@ namespace UniModCompiler
             public bool Used { get; set; }
         }
 
-        private const string PROJECT_PATH = @"..\..";
+        private static readonly string PROJECT_PATH = FindProjectPath();
         private static readonly string INPUT_FILES_PATH = Path.Combine(PROJECT_PATH, "InputFiles");
-        private const string PWIZ_ROOT_PATH = @"..\..\..\..\..\..";
+        private static readonly string PWIZ_ROOT_PATH = Path.Combine(PROJECT_PATH, @"..\..\..\..\..");
         private static readonly string UNIMOD_FOLDER_PATH = Path.Combine(PWIZ_ROOT_PATH, @"pwiz\data\common");
-        private const string UNIMOD_XML = "unimod.xml";
+        private static readonly string OUTPUT_PATH = Path.Combine(PROJECT_PATH, @"..\..\..\Model\DocSettings\UniModData.cs");
+        private const string UNIMOD_OBO = "unimod.obo";
         private const string PROTEIN_PILOT_XML = "ProteinPilot.DataDictionary.xml";
 
-        static void Main()
+        static int Main()
         {
             try
             {
+                Console.WriteLine("Writing " + Path.GetFullPath(OUTPUT_PATH));
                 SequenceMassCalc();
 
                 _dictStructuralMods = new Dictionary<string, mod_t>();
                 _dictIsotopeMods = new Dictionary<string, mod_t>();
                 _dictModNameToThreeLetterCode = LoadShortNames(Path.Combine(INPUT_FILES_PATH, PROTEIN_PILOT_XML));                
 
-                // Read in XML, creating a dictionary of mod titles to mods.
-                var reader = new StreamReader(Path.Combine(UNIMOD_FOLDER_PATH, UNIMOD_XML));
-                var serializer = new XmlSerializer(typeof (Modification));
-                var modifications = ((Modification) serializer.Deserialize(reader)).modifications;
-                reader.Close();
+                // Read in the obo, creating a dictionary of mod titles to mods.
+                var modifications = UniModOboReader.Read(Path.Combine(UNIMOD_FOLDER_PATH, UNIMOD_OBO));
                 foreach (mod_t mod in modifications)
                 {
                     // Only add to the dictionary of isotope mods it is truly an isotope mod.
@@ -89,7 +89,7 @@ namespace UniModCompiler
                     {
                         // If the title contains a colon, see if it references a root structural modification
                         int iColon = mod.title.IndexOf(':');
-                        if (iColon != -1)
+                        if (iColon != -1 && !KEEP_STRUCTURAL_TITLES.Contains(mod.title))
                         {
                             string rootTitle = mod.title.Remove(iColon);
                             mod_t modParent;
@@ -118,7 +118,7 @@ namespace UniModCompiler
                 foreach(var textFilePath in Directory.GetFiles(INPUT_FILES_PATH, "*.txt"))
                 {
                     // Read in line seperated list, creating lists of the modifications we are looking for.
-                    reader = new StreamReader(textFilePath);
+                    var reader = new StreamReader(textFilePath);
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -132,7 +132,7 @@ namespace UniModCompiler
                 _impossibleMods = new List<string>();
 
                 // Writing the output file.
-                var writer = new StreamWriter(Path.Combine(PROJECT_PATH, @"..\..\Model\DocSettings\UniModData.cs"));
+                var writer = new StreamWriter(OUTPUT_PATH);
                 var templateStream =
                     typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
                 if (templateStream == null)
@@ -149,6 +149,9 @@ namespace UniModCompiler
                         WriteMods(writer, false, true);
                         WriteMods(writer, true, false);
                         WriteMods(writer, true, true);
+                        // Every other obo modification, hidden, so Skyline can name every UniMod id
+                        WriteUnlistedMods(writer, modifications, false);
+                        WriteUnlistedMods(writer, modifications, true);
                     }
                 }
 
@@ -164,7 +167,11 @@ namespace UniModCompiler
                 {
                     writer.WriteLine("//Unable to match: " + listedMod.Name);
                 }
-                foreach (var unusedSciex in _dictModNameToThreeLetterCode.Where(p => !p.Value.Used).OrderBy(p => p.Key))
+                foreach (var mod in modifications.Where(m => !_writtenIds.Contains(m.record_id)))
+                {
+                    writer.WriteLine("//Not in table: UNIMOD:{0} {1}", mod.record_id, mod.title);
+                }
+                foreach (var unusedSciex in _dictModNameToThreeLetterCode.Where(p => !p.Value.Used).OrderBy(p => p.Key, StringComparer.Ordinal))
                 {
                     writer.WriteLine("//Unused code: {0} = {1}", unusedSciex.Key, unusedSciex.Value.ThreeLetterCode);
                 }
@@ -173,11 +180,24 @@ namespace UniModCompiler
             }
             catch(Exception x)
             {
-                Console.Error.WriteLine("ERROR: " + x.Message);
+                Console.Error.WriteLine("ERROR: " + x);
+                return 1;
             }
+            return 0;
+        }
 
-            Console.Error.WriteLine("Press enter to continue...");
-            Console.ReadLine();
+        /// <summary>
+        /// Walks up from the executable's folder to the folder holding UniModCompiler.csproj,
+        /// so the tool runs the same from any build output folder.
+        /// </summary>
+        private static string FindProjectPath()
+        {
+            for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
+            {
+                if (File.Exists(Path.Combine(dir.FullName, "UniModCompiler.csproj")))
+                    return dir.FullName;
+            }
+            throw new DirectoryNotFoundException("Failed to find UniModCompiler.csproj above " + AppContext.BaseDirectory);
         }
 
         private static elem_ref_t[] DiffMod(elem_ref_t[] element, elem_ref_t[] elementParent)
@@ -387,14 +407,68 @@ namespace UniModCompiler
         /// </summary>
         private static void WriteMods(StreamWriter writer, bool hidden, bool isotopic)
         {
+            WriteMods(writer, hidden ? _listedHiddenMods : _listedMods, hidden, isotopic);
+        }
+
+        /// <summary>
+        /// Writes hidden entries for the obo modifications no Mascot list entry matched, named the
+        /// way Mascot names its own: one entry per UniMod site group for the residues it allows
+        /// anywhere ("Title (ST)"), and one per terminal specificity ("Title (N-term)",
+        /// "Title (N-term Q)"). Protein-terminal specificities have no Skyline equivalent and are
+        /// skipped, as they are for the Mascot list. A site group whose residues disagree on
+        /// neutral losses falls back to one entry per residue.
+        /// </summary>
+        private static void WriteUnlistedMods(StreamWriter writer, IEnumerable<mod_t> modifications, bool isotopic)
+        {
+            var dict = isotopic ? _dictIsotopeMods : _dictStructuralMods;
+            var unlisted = modifications.Where(m => !_writtenIds.Contains(m.record_id) &&
+                                                    dict.TryGetValue(m.title, out var dictMod) && ReferenceEquals(dictMod, m)).ToArray();
+            var candidates = unlisted.SelectMany(GetUnlistedCandidates).ToList();
+            WriteMods(writer, candidates, true, isotopic);
+            var singles = candidates.Where(c => c.AAs.Length > 1)
+                .SelectMany(c => c.AAs.Select(aa => new Mod
+                {
+                    Name = string.Format("{0} ({1})", c.Title, aa), Title = c.Title, AAs = new[] { aa }
+                })).ToList();
+            WriteMods(writer, singles, true, isotopic);
+        }
+
+        private static IEnumerable<Mod> GetUnlistedCandidates(mod_t mod)
+        {
+            var groups = mod.specificity.GroupBy(s => int.Parse(s.spec_group, CultureInfo.InvariantCulture)).OrderBy(g => g.Key);
+            foreach (var group in groups)
+            {
+                var aas = group.Where(s => s.position == position_t.Anywhere && s.site.Length == 1)
+                    .Select(s => s.site[0]).Distinct().OrderBy(aa => aa).ToArray();
+                if (aas.Length > 0)
+                    yield return new Mod { Name = string.Format("{0} ({1})", mod.title, new string(aas)), Title = mod.title, AAs = aas };
+                foreach (var spec in group.Where(s => s.position == position_t.AnyNterm || s.position == position_t.AnyCterm))
+                {
+                    var terminus = spec.position == position_t.AnyNterm ? Terminal.N : Terminal.C;
+                    bool residue = spec.site.Length == 1;
+                    yield return new Mod
+                    {
+                        Name = residue
+                            ? string.Format("{0} ({1}-term {2})", mod.title, terminus, spec.site)
+                            : string.Format("{0} ({1}-term)", mod.title, terminus),
+                        Title = mod.title,
+                        AAs = residue ? spec.site.ToCharArray() : new char[0],
+                        Terminus = terminus
+                    };
+                }
+            }
+        }
+
+        private static void WriteMods(StreamWriter writer, List<Mod> listedMods, bool hidden, bool isotopic)
+        {
             var dict = isotopic ? _dictIsotopeMods : _dictStructuralMods;
 
-            IList<Mod> listedModsCopy = hidden ? new List<Mod>(_listedHiddenMods) : new List<Mod>(_listedMods);
+            IList<Mod> listedModsCopy = new List<Mod>(listedMods);
             // Look for the listed mods in the given dictionary.
             foreach (Mod mod in listedModsCopy)
             {
                 mod_t dictMod;
-                if (!dict.TryGetValue(mod.Title, out dictMod))
+                if (!dict.TryGetValue(mod.Title, out dictMod) || _writtenNames.Contains(mod.Name))
                     continue;
 
                 // For each AA in the listed modification, make sure the dictionary mod contains it.
@@ -443,10 +517,7 @@ namespace UniModCompiler
                 if (hasLabelAtoms && !CheckLabelAtoms(dictMod, mod.AAs, out labelAtoms))
                 {
                     _impossibleMods.Add(mod.Name);
-                    if (hidden)
-                        _listedHiddenMods.Remove(mod);
-                    else
-                        _listedMods.Remove(mod);
+                    listedMods.Remove(mod);
                     continue;
                 }
 
@@ -494,16 +565,16 @@ namespace UniModCompiler
                 writer.WriteLine("Hidden = {0}, ", hidden.ToString().ToLower());
                 writer.WriteLine("            },");
 
-                
-                if (hidden)
-                    _listedHiddenMods.Remove(mod);
-                else
-                    _listedMods.Remove(mod);
+                _writtenIds.Add(dictMod.record_id);
+                _writtenNames.Add(mod.Name);
+                listedMods.Remove(mod);
             }
         }
 
         private static bool ListEquals(List<string> list1, List<string> list2)
         {
+            if (list2.Count < list1.Count)
+                return false;
             for (int i = 0; i < list1.Count; i++)
             {
                 if (!Equals(list1[i], list2[i]))
@@ -650,7 +721,21 @@ namespace UniModCompiler
 // ReSharper restore InconsistentNaming
         }
 
-        private static readonly Dictionary<string, char> DICT_HEAVY_LABELS 
+        /// <summary>
+        /// Labeled variants that stay structural modifications with their full formula instead of
+        /// becoming isotope labels of their parent. unimod.xml listed these before their parent,
+        /// so the parent was not yet known when they were read and earlier tables carried them as
+        /// structural. The obo lists every modification in record order, which would turn them
+        /// into isotope labels (dropping their own neutral losses) and reorder the parent's
+        /// formula; keeping them structural keeps existing documents matching.
+        /// </summary>
+        private static readonly HashSet<string> KEEP_STRUCTURAL_TITLES = new HashSet<string>
+        {
+            "NEIAA:2H(5)",
+            "TMAB:2H(9)",
+        };
+
+        private static readonly Dictionary<string, char> DICT_HEAVY_LABELS
             = new Dictionary<string, char> {{"15N", 'N'}, {"13C", 'C'}, {"18O", 'O'}, {"2H", 'H'}};
 
         private static readonly string[] AMINO_FORMULAS = new string[128];
