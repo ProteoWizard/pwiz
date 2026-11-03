@@ -114,6 +114,12 @@ namespace pwiz.Osprey.Test
             SecondPassFdrTask.TASK_NAME
         };
 
+        // The tasks a search-level key change reaches: every task after the per-file scoring.
+        private static readonly string[] KEYED_TASKS =
+        {
+            FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME
+        };
+
         private string _testDir;
         private string _dataDir;
 
@@ -229,7 +235,7 @@ namespace pwiz.Osprey.Test
             AssertKeyChangeRecomputes(straightDir, coldBlib);
             AssertOtherBuildRecomputes(straightDir, coldBlib);
             // Last, because it leaves the directory holding a one-run analysis.
-            AssertShrinkingWorkSetRecomputes(straightDir, CountRescoredRuns(straightLog));
+            AssertShrinkingWorkSetRecomputes(straightDir, straightLog);
         }
 
         /// <summary>
@@ -1931,41 +1937,50 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private void AssertKeyChangeRecomputes(string workDir, string expectedBlib)
         {
-            var keyed = new[] { FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME };
             string log = RunAnalysis(workDir, DataInputs(),
                 WithVariable(Verifier(true), PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
-            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, KEYED_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             Assert.IsFalse(OtherBuildWarning(null, null, null).IsMatch(log), log);
 
             log = RunAnalysis(workDir, DataInputs(), Verifier(true));
-            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, KEYED_TASKS);
             AssertBlibsEqual(expectedBlib, Path.Combine(workDir, BLIB_FILE));
         }
 
         /// <summary>
         /// A validity-key change in one output directory that SHRINKS the Stage 6 work set (#4601):
         /// the same directory searched again with one of its runs, which keys every task after the
-        /// first on the new input set and leaves that run with no cross-run consensus to reconcile
-        /// against, so it has no Stage 6 work where the full analysis re-scored it. Its reconciled
-        /// parquet from the full analysis must not survive: the library must equal a clean
-        /// directory's one-run library, and a warm re-run must then adopt everything and change
-        /// nothing.
+        /// first on the new input set and leaves that run with no cross-run reconciliation (and,
+        /// on this subset, no multi-charge consensus target of its own), so it has no Stage 6 work
+        /// where the full analysis re-scored it. Its reconciled parquet from the full analysis
+        /// must not survive: it is rewritten under the new key, the library equals a clean
+        /// directory's one-run library, and a warm re-run then adopts everything and changes
+        /// nothing - the third run in the directory, where an adopted stale file would stick.
         /// </summary>
-        private void AssertShrinkingWorkSetRecomputes(string workDir, int fullRescoredRuns)
+        private void AssertShrinkingWorkSetRecomputes(string workDir, string fullLog)
         {
-            var keyed = new[] { FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME };
-            var oneRun = RunNames(_dataDir, MZML_EXTENSION, RUN_NAMES[0]).ToArray();
+            string run = RUN_NAMES[0];
+            var oneRun = RunNames(_dataDir, MZML_EXTENSION, run).ToArray();
             string blib = Path.Combine(workDir, BLIB_FILE);
-            Assert.AreNotEqual(0, fullRescoredRuns, @"the full analysis had no Stage 6 work to lose");
+            string reconciled = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES_RECONCILED);
+            Assert.IsTrue(Enumerable.Range(1, RUN_NAMES.Length).Any(fileNum => HasLine(fullLog, string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_TryAssembleRescoreTargets_Re_scoring_file__0___1____2_,
+                    fileNum, RUN_NAMES.Length, run))),
+                run + @" had no Stage 6 work in the full analysis, so there is none to lose" + Environment.NewLine + fullLog);
+            var fullStamp = ParquetScoreCache.ReadStamp(reconciled);
+            Assert.IsNotNull(fullStamp, reconciled);
 
             string log = RunAnalysis(workDir, oneRun, Verifier(true));
-            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
-            AssertRescoredOnly(log, 0);
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, KEYED_TASKS);
+            Assert.AreEqual(0, CountRescoredRuns(log),
+                run + @" searched alone still has Stage 6 work, so this is no longer the no-work case" + Environment.NewLine + log);
+            var shrunkStamp = ParquetScoreCache.ReadStamp(reconciled);
+            Assert.IsNotNull(shrunkStamp, reconciled);
+            Assert.AreNotEqual(fullStamp.Key, shrunkStamp.Key, @"the full analysis's reconciled parquet survived the key change");
 
             string cleanDir = CreateDir(@"onerun-clean");
-            string cleanLog = RunAnalysis(cleanDir, oneRun, Verifier(true));
-            AssertRescoredOnly(cleanLog, 0);
+            RunAnalysis(cleanDir, oneRun, Verifier(true));
             AssertBlibsEqual(Path.Combine(cleanDir, BLIB_FILE), blib);
 
             byte[] shrunkHash = HashFile(blib);
