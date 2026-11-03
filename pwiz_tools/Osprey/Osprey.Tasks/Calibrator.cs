@@ -1337,7 +1337,6 @@ namespace pwiz.Osprey.Tasks
                     MinPoints = minLoessPoints,
                     RobustnessIterations = 2,
                     OutlierRetention = 1.0, // LDA + S/N already filtered
-                    ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust,
                     LinearFit = plan.LinearFit
                 };
 

@@ -52,15 +52,13 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// The totals as one log fragment, or null when block reads are off.
+        /// The totals as one log fragment.
         /// </summary>
         public static string Text()
         {
-            if (OspreyEnvironment.BlockReadMb <= 0)
-                return null;
             return string.Format(CultureInfo.InvariantCulture,
                 @"block reads (block {0} MB, gate {1}) so far: {2:N0} reads, {3:F1} GB ({6:F1} GB parquet), read {4:F1}s, gate wait {5:F1}s",
-                OspreyEnvironment.BlockReadMb, OspreyEnvironment.BlockReadGate ? @"on" : @"off",
+                OspreyEnvironment.BlockReadMb, @"on",
                 Interlocked.Read(ref _reads), Interlocked.Read(ref _bytes) / 1e9,
                 Interlocked.Read(ref _readTicks) / (double)Stopwatch.Frequency,
                 Interlocked.Read(ref _gateWaitTicks) / (double)Stopwatch.Frequency,

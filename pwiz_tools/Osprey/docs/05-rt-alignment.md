@@ -31,9 +31,9 @@ Both the initial (Stage 3) and refined (Stage 6) calibrations are fitted by the 
 
 Cross-impl determinism details that are load-bearing for bit-identity: the outer sort in `RTCalibrator.Fit` is a stable `OrderBy(x).ThenBy(y)` (`RTCalibration.cs:126`) rather than an unstable `Array.Sort`, so duplicate library RTs (multi-charge peptides share a library RT) do not scramble the paired y-values; the bisquare weight is computed as `t*t` not `Math.Pow(t,2)` (`LoessRegression.cs:315`) to match Rust `powi(2)` at the last ULP; and `PercentileValue` rounds half-away-from-zero (`LoessRegression.cs:377`) to match Rust `f64::round`.
 
-### Robustness-iteration mode flag
+### Robustness iterations
 
-`RTCalibratorConfig.ClassicalRobustIterations` (`RTCalibration.cs:63`) selects between two robustness behaviors: when `true` (the shipped default), absolute residuals are recomputed from the current fit each iteration (classical Cleveland 1979); when `false`, residuals from the initial fit are reused. Both the initial calibration (`Calibrator.cs:508`) and the refit (`CalibrationRefit.cs:97`) read `OspreyEnvironment.LoessClassicalRobust` for this flag so the two calibrations use the same mode. Default is `true`, matching Rust `calibration_ml.rs` v26.3.1+; override with `OSPREY_LOESS_CLASSICAL_ROBUST=0` on both tools together.
+Every LOESS fit recomputes the absolute residuals from the current fit at each robustness iteration (classical Cleveland 1979), so the initial calibration and the refit use the same mode, matching Rust `calibration_ml.rs` v26.3.1+. The legacy arm that reused the initial fit's residuals (`OSPREY_LOESS_CLASSICAL_ROBUST=0`) was retired.
 
 ## Step 1 — Initial calibration (Stage 3)
 
@@ -161,7 +161,6 @@ The per-run steps used to run in FirstPassFDR as a second pass over every run. S
 | `ReconciliationPlanner.FALLBACK_GLOBAL_MAD_LIB` (const) | `0.05` min (`ReconciliationPlanner.cs:44`) | Within-peptide MAD fallback when no peptide has `>= 3` detections. |
 | `ReconciliationPlanner.MIN_RT_TOLERANCE` (const) | `0.1` min (`ReconciliationPlanner.cs:40`) | Floor on the reconciliation RT tolerance. |
 | `ReconciliationPlanner.SIGMA_CLIP_MIN_SURVIVORS` (const) | `20` (`ReconciliationPlanner.cs:54`) | Minimum survivors before the sigma-clipped ceiling falls back to the unclipped median. |
-| `OSPREY_LOESS_CLASSICAL_ROBUST` (env) | `1`/true (`OspreyEnvironment.cs:72`) | Robustness-iteration mode for all LOESS fits. Set to `0` on both tools together to validate legacy behavior. |
 | `OSPREY_DUMP_INV_PREDICT` (`+ _ONLY`) (env) | off | Dumps the per-detection `(apex_rt, library_rt, weight)` inverse-prediction trace (`Stage6Planner.BuildConsensus`). `_ONLY` exits after the dump. |
 | `OSPREY_DUMP_CONSENSUS` (`+ _ONLY`) | off | Dumps the consensus RT table (`Stage6Planner.BuildConsensus`). |
 | `OSPREY_DUMP_REFIT` / `OSPREY_DUMP_LOESS_FIT` (`+ _ONLY`) | - | Removed from C# on 2026-10-16 (each wrote every run's refit at once, and the refit now runs per run in PerFileRescoring). Each run's refit is in its own `<stem>.reconciliation.json` as `refined_rt_calibration`. Setting either name now fails at startup like any unknown `OSPREY_*` name. |
