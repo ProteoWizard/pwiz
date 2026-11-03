@@ -415,16 +415,17 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The q-value sidecar a run's export selects on, and which pass it is. The second-pass
-        /// sidecar when the per-run second pass in PerFileRescoring wrote it; otherwise the
-        /// first-pass sidecar - a run with no Stage 6 work, or a PerFileRescoring with no
-        /// readable saved first-pass model, whose second pass SecondPassFDR computes after the
-        /// export. Deciding by who wrote the file, which never changes once it is written, makes
-        /// an export written while re-scoring and one written later from disk agree.
+        /// sidecar when the per-run second pass in PerFileRescoring wrote it, which it does for
+        /// every run, the one with no Stage 6 work included (#4665); otherwise the first-pass
+        /// sidecar - a run whose complete answer is not on disk. Deciding by who wrote the file,
+        /// which never changes once it is written, makes an export written while re-scoring and
+        /// one written later from disk agree.
         ///
         /// <para>Who wrote it is the test SecondPassFDR folds by,
-        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar AND the worker's decoys
-        /// file both carry the stamp of the reconciled parquet beside them. A worker sidecar
-        /// without its decoys is not the worker's complete answer.</para>
+        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar, the run's plan and, under
+        /// protein-compact, the worker's decoys file all carry the stamp of the reconciled
+        /// parquet beside them. A sidecar an earlier run left beside a parquet since rewritten
+        /// under another key or build carries a different stamp, so it is not selected.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
