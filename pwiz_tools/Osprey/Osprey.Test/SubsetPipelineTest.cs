@@ -330,6 +330,8 @@ namespace pwiz.Osprey.Test
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
+            AssertTrainingSetAnalysis(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1)),
+                Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
@@ -1789,6 +1791,51 @@ namespace pwiz.Osprey.Test
         /// The pass-1 product folded later equals the one written with the analysis in every view;
         /// only its generation time may differ.
         /// </summary>
+        /// <summary>
+        /// The pass-1 diagnostics product carries the training-set analysis (#4550, #4467) with
+        /// sane values: one fold entry per trained fold of the model file, every AUROC a
+        /// probability, every curve on the shared FPR grid, a finite permutation drop per feature.
+        /// </summary>
+        private static void AssertTrainingSetAnalysis(string pass1Path, string modelPath)
+        {
+            JToken Get(JToken parent, object key)
+            {
+                var value = parent[key];
+                Assert.IsNotNull(value, key + @" missing");
+                return value;
+            }
+            void AssertProbability(JToken value, string what)
+            {
+                double v = (double)value;
+                Assert.IsTrue(v >= 0 && v <= 1, what + @" = " + v);
+            }
+            var data = JObject.Parse(File.ReadAllText(pass1Path));
+            var training = Get(data, @"trainingSet");
+            int folds = Get(JObject.Parse(File.ReadAllText(modelPath)), @"FoldWeights").Count();
+            Assert.AreEqual(folds, (int)Get(training, @"nFolds"), @"fold count");
+            foreach (string perFold in new[] { @"foldPositives", @"foldDecoys", @"foldIterations" })
+                Assert.AreEqual(folds, Get(training, perFold).Count(), perFold);
+            Assert.IsTrue(Get(training, @"foldPositives").All(n => (int)n > 0), @"a fold trained on no positives");
+            int gridPoints = Get(training, @"rocFpr").Count();
+            foreach (string composite in new[] { @"trainingComposite", @"inSampleComposite", @"heldOutComposite" })
+            {
+                var curve = Get(training, composite);
+                AssertProbability(Get(curve, @"auroc"), composite);
+                Assert.AreEqual(gridPoints, Get(curve, @"tpr").Count(), composite);
+            }
+            var rows = Get(data, @"model").ToArray();
+            var correlation = Get(training, @"correlation");
+            Assert.AreEqual((int)Get(data, @"featureCount"), rows.Length);
+            foreach (var row in rows)
+            {
+                string label = (string)Get(row, @"label");
+                AssertProbability(Get(row, @"auroc"), label + @" auroc");
+                Assert.AreEqual(gridPoints, Get(row, @"rocTpr").Count(), label);
+                Assert.IsFalse(double.IsNaN((double)Get(row, @"permutationDrop")), label + @" permutation drop");
+                Assert.AreEqual(rows.Length, Get(correlation, (int)Get(row, @"index")).Count(), label);
+            }
+        }
+
         private static void AssertSameFirstPassProduct(string expectedPath, string actualPath)
         {
             // No view is exempt (doc 00, P16). Exempting the calibration view once is how every
