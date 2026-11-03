@@ -343,6 +343,15 @@ namespace pwiz.Osprey.Test
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
+            // Mode 2 with the report on: a resume that re-runs the first pass rewrites its q-value
+            // sidecars bit-identically, which must leave the fragment mass-error summaries current,
+            // so PerFileRescoring still skips.
+            DeleteFiles(workDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
+            DeleteSecondPassOutputs(blib);
+            string resumeLog = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            AssertTasks(resumeLog, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
+                new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
+
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
             string log = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false),

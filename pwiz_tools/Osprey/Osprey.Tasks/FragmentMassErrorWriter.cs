@@ -202,14 +202,17 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The identities of the per-run artifacts one run's summary reads - its first-pass
-        /// q-value sidecar, calibration and spectra cache - so a rewritten input redoes that
-        /// run's summary and no other.
+        /// The identities of the per-run artifacts one run's summary reads from earlier stages -
+        /// its calibration and spectra cache - so a rewritten input redoes that run's summary and
+        /// no other. Not its first-pass q-value sidecar: FirstPassFDR rewrites that file whenever
+        /// it runs, bit-identically under the same key, so a file identity (size and time) would
+        /// redo every summary, and run PerFileRescoring, on each resume that re-runs the first
+        /// pass. What the sidecar holds is keyed through the task key, as for the reconciled
+        /// parquets.
         /// </summary>
         public static string RunInputIdentities(string input)
         {
             return @";fragmasserr=" + FORMAT_VERSION.ToString(CultureInfo.InvariantCulture)
-                + @";runq1=" + IdentityOrAbsent(FdrScoresSidecar.Pass1Path(input))
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
                 + (File.Exists(SpectraCache.GetDemuxCachePath(input))
