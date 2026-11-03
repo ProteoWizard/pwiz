@@ -26,6 +26,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Test
@@ -511,12 +512,16 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestGbtSquaredErrorObjective()
         {
-            AssertLogisticGoldenUnchanged(1);
-
             // The class documents bit-identity "at any MaxDegreeOfParallelism", and the FDR
             // path is what that promise protects. Asserting it only under squared error
-            // would leave the logistic path unverified against the parallel branch.
-            AssertLogisticGoldenUnchanged(4);
+            // would leave the logistic path unverified against the parallel branch. Odd
+            // and over-subscribed counts too, since they split row ranges unevenly.
+            foreach (int threads in new[] { 1, 2, 3, 4, 7, 16 })
+            {
+                AssertLogisticGoldenUnchanged(threads);
+                AssertLogisticGoldenUnchangedAtScale(threads);
+            }
+            AssertSystemMathArmReproducesPlatformResults();
 
             AssertRegressionFitsContinuousTarget();
             AssertRegressionThreadInvariant();
@@ -532,11 +537,20 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Golden logistic scores, captured from the implementation that predates the
-        /// objective switch (pwiz commit dd9e84581). Exact equality, not a tolerance: the
-        /// guarantee being protected is bit-identity, and a tolerance would let real
-        /// numerical drift through.
+        /// objective switch (pwiz commit dd9e84581) and re-baselined once when the sigmoid
+        /// and base score moved from <see cref="Math"/> to <see cref="DeterministicMath"/>
+        /// (probe 2 moved one ulp, from -0.8225901814943258). Exact equality, not a
+        /// tolerance: the guarantee being protected is bit-identity, and a tolerance would let
+        /// real numerical drift through. The values are the same on Windows and Linux: the
+        /// only transcendentals in training are managed, and everything else is IEEE
+        /// arithmetic that every platform rounds alike.
         /// </summary>
         private static void AssertLogisticGoldenUnchanged(int threads)
+        {
+            AssertLogisticGolden(threads, true, LogisticGolden());
+        }
+
+        private static void AssertLogisticGolden(int threads, bool deterministicMath, double[] expected)
         {
             double[][] x = GoldenFeatures();
             var isDecoy = new bool[x.Length];
@@ -545,13 +559,25 @@ namespace pwiz.Osprey.Test
 
             var parameters = GoldenGbt();
             parameters.MaxDegreeOfParallelism = threads;
+            parameters.UseDeterministicMath = deterministicMath;
             var model = GradientBoostedTrees.Train(x, isDecoy, parameters);
 
-            var expected = new[]
+            double[][] probes = GoldenProbes();
+            for (int k = 0; k < probes.Length; k++)
+            {
+                Assert.AreEqual(expected[k], model.ScoreSingle(probes[k]), string.Format(
+                    @"logistic score for probe {0} at {1} thread(s) moved: the shared boosting code is no longer bit-identical",
+                    k, threads));
+            }
+        }
+
+        private static double[] LogisticGolden()
+        {
+            return new[]
             {
                 -2.4677282578605486,
                 4.097252275267094,
-                -0.8225901814943258,
+                -0.8225901814943256,
                 3.5439334614396674,
                 2.610757110470939,
                 2.677520123143121,
@@ -560,12 +586,30 @@ namespace pwiz.Osprey.Test
                 1.7584981803881718,
                 1.4031884801190766
             };
-            double[][] probes = GoldenProbes();
-            for (int k = 0; k < probes.Length; k++)
+        }
+
+        /// <summary>
+        /// OSPREY_DETERMINISTIC_MATH=0 must really switch the transcendentals back to
+        /// <see cref="Math"/>: the System.Math arm reproduces, bit for bit, what training gave
+        /// before <see cref="DeterministicMath"/> existed - the pre-change Windows goldens (probe
+        /// 2 one ulp from the fdlibm value) on Windows, and the pre-change Linux value at scale
+        /// row 15000 on Linux, where glibc and the Universal CRT round one sigmoid differently.
+        /// Those values belong to the C libraries (measured with glibc 2.39), so elsewhere the
+        /// arm is only trained, not pinned.
+        /// </summary>
+        private static void AssertSystemMathArmReproducesPlatformResults()
+        {
+            var small = LogisticGolden();
+            small[2] = -0.8225901814943258;
+            var atScale = LogisticGoldenAtScale();
+            if (OperatingSystem.IsLinux())
+                atScale[3] = -0.1633077986331921;
+            else if (!OperatingSystem.IsWindows())
+                return;
+            foreach (int threads in new[] { 1, 4 })
             {
-                Assert.AreEqual(expected[k], model.ScoreSingle(probes[k]), string.Format(
-                    @"logistic score for probe {0} at {1} thread(s) moved: the shared boosting code is no longer bit-identical",
-                    k, threads));
+                AssertLogisticGolden(threads, false, small);
+                AssertLogisticGoldenAtScale(threads, false, atScale);
             }
         }
 
@@ -656,6 +700,85 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < x.Length; i++)
                 x[i] = new[] { (i % 7) * 0.5, (i % 3) * 1.3, i * 0.1, ((i * 13) % 11) * 0.4 };
             return x;
+        }
+
+        /// <summary>
+        /// The golden above is far too small to reach any of the threaded or chunked
+        /// training paths, which only engage on tens of thousands of rows. This one is big
+        /// enough to take every one of them (binning, gradients, the per-tree gather,
+        /// chunked and subtracted histograms, partitioning and margin updates). Its scores
+        /// were captured from the single-threaded implementation that predates them, which
+        /// summed every histogram row by row; chunking and subtraction change only the last
+        /// bits of a histogram, so this pins that they did not move a split here, and that
+        /// the result does not depend on the thread count. Exact equality, for the reason
+        /// given on <see cref="AssertLogisticGoldenUnchanged"/>, and platform-independent for
+        /// the same reason. These were Windows values, and Linux once differed at row 15000
+        /// (-0.1633077986331921) because <see cref="Math.Exp"/> comes from the C library;
+        /// with <see cref="DeterministicMath"/> both platforms produce the Windows values,
+        /// so the constants did not need to change.
+        /// </summary>
+        private static void AssertLogisticGoldenUnchangedAtScale(int threads)
+        {
+            AssertLogisticGoldenAtScale(threads, true, LogisticGoldenAtScale());
+        }
+
+        private static void AssertLogisticGoldenAtScale(int threads, bool deterministicMath, double[] expected)
+        {
+            var isDecoy = new bool[SCALE_ROWS];
+            double[][] x = ScaleFeatures(isDecoy);
+            var parameters = new GbtParams
+            {
+                NTrees = 8, MaxDepth = 6, Seed = 42, MaxDegreeOfParallelism = threads,
+                UseDeterministicMath = deterministicMath
+            };
+            var model = GradientBoostedTrees.Train(x, isDecoy, parameters);
+
+            for (int k = 0; k < expected.Length; k++)
+            {
+                Assert.AreEqual(expected[k], model.ScoreSingle(x[k * (SCALE_ROWS / expected.Length)]), string.Format(
+                    @"logistic score for row {0} at {1} thread(s) moved from the pre-parallel implementation",
+                    k * (SCALE_ROWS / expected.Length), threads));
+            }
+        }
+
+        private static double[] LogisticGoldenAtScale()
+        {
+            return new[]
+            {
+                -0.6454043439669905,
+                -1.269109625741499,
+                -0.9601137810120767,
+                -0.16330779863319206,
+                0.4031808297692782,
+                -1.1287905194111332,
+                -0.03899105982350992,
+                0.28802524333844753
+            };
+        }
+
+        private const int SCALE_ROWS = 40000;
+
+        // A noisy non-linear boundary over six uniform features, from the bit-exact PRNG so
+        // the fixture is identical on every framework.
+        private static double[][] ScaleFeatures(bool[] isDecoy)
+        {
+            var rng = new XorShift64(12345);
+            var x = new double[isDecoy.Length][];
+            for (int i = 0; i < x.Length; i++)
+            {
+                var row = new double[6];
+                for (int j = 0; j < row.Length; j++)
+                    row[j] = 4 * UnitDouble(rng) - 2;
+                x[i] = row;
+                double noise = UnitDouble(rng) - 0.5;
+                isDecoy[i] = row[0] * row[1] + Math.Sin(row[2]) + 0.5 * row[3] + noise < 0.3;
+            }
+            return x;
+        }
+
+        private static double UnitDouble(XorShift64 rng)
+        {
+            return (rng.Next() >> 11) * (1.0 / (1UL << 53));
         }
 
         /// <summary>
