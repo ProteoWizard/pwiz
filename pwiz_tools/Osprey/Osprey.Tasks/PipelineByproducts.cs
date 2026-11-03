@@ -492,8 +492,8 @@ namespace pwiz.Osprey.Tasks
 
         private IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamSourcedFiles(string label)
         {
-            // Disposed by the enumerator's own finally, so an abandoned fold closes its
-            // reporter rather than leaving the heading as the last line in the log.
+            // Completed only when the walk reaches the last file: a fold abandoned early, or one
+            // whose consumer threw, did not finish, and its log must not say it did.
             using (var progress = label == null
                        ? null
                        : new ProgressReporter(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
@@ -523,6 +523,7 @@ namespace pwiz.Osprey.Tasks
                         kv.Value.TrimExcess();
                         consumed++;
                     }
+                    progress?.Complete();
                 }
                 finally
                 {

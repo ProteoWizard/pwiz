@@ -100,7 +100,6 @@ namespace pwiz.CarafeSharp.Contracts
         // ---- Competing precursors --------------------------------------------------------
         public int NCoelutingClaimants { get; set; }
         public int NSameApexClaimants { get; set; }
-        public int DdcNeighborCount { get; set; }
 
         // ---- Per ion (NSlots each) -------------------------------------------------------
         /// <summary>Theoretical m/z of each slot, NaN when not applicable.</summary>
