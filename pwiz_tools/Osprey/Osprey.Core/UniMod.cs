@@ -20,21 +20,27 @@
 
 using System;
 using System.Collections.Generic;
+using Pwiz.Data.Common.Unimod;
 
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// The UniMod modifications Osprey knows by id or recognizes by mass: one table for every
-    /// library reader and writer. Masses are the monoisotopic mass deltas Skyline computes from
-    /// the formulas in its <c>UniModData.cs</c>, until Osprey shares that table with Skyline.
+    /// The UniMod modifications every Osprey library reader and writer resolves modification
+    /// text against. Ids, names and monoisotopic masses all come from <c>unimod.obo</c>, read by
+    /// ProteoWizard's <see cref="Unimod"/> (<c>pwiz/data/common</c>), the one copy of UniMod in
+    /// the repository the other tools read too. Osprey keeps no masses of its own: a hand-typed
+    /// table here once gave six ids another modification's mass.
     ///
-    /// <para>A mass printed with limited precision (BiblioSpec's <c>C[+57.0]</c>) is matched as
-    /// Skyline's <c>MassModification.Matches</c> does: equal when both round to the same value
-    /// at the printed precision, capped at <see cref="MAX_PRECISION_TO_MATCH"/> decimals, or
-    /// within <see cref="MATCH_WITHIN"/> of each other. Only a modification allowed on the
-    /// residue or terminus matches, and the table's order is the preference when two do (at one
-    /// decimal, Acetyl and Trimethyl are both <c>K[+42.0]</c>): Skyline's common modifications
-    /// first, then the hidden ones libraries also carry.</para>
+    /// <para>A UniMod id (<c>UniMod:21</c>) or title (<c>Phospho</c>) may name any modification
+    /// in the file. A mass printed with limited precision (BiblioSpec's <c>C[+57.0]</c>) is
+    /// matched only against the modifications and specificities Skyline lists, as Skyline's
+    /// <c>MassModification.Matches</c> does: equal when both round to the same value at the
+    /// printed precision, capped at <see cref="MAX_PRECISION_TO_MATCH"/> decimals, or within
+    /// <see cref="MATCH_WITHIN"/> of each other. Only a modification allowed on the residue or
+    /// terminus matches, and the list's order is the preference when two do (at one decimal,
+    /// Acetyl and Trimethyl are both <c>K[+42.0]</c>): Skyline's common modifications first, then
+    /// the hidden ones libraries also carry. Matching against all of UniMod instead would make a
+    /// one-decimal mass ambiguous among dozens of entries.</para>
     /// </summary>
     public static class UniMod
     {
@@ -47,67 +53,92 @@ namespace pwiz.Osprey.Core
         /// <summary>Masses this close match whatever their printed precision, as in Skyline.</summary>
         public const double MATCH_WITHIN = 1e-4;
 
-        private static readonly UniModEntry[] ENTRIES =
+        // Every modification in unimod.obo, by id and by title. Before MATCHED, which reads them.
+        private static readonly Dictionary<int, UniModEntry> BY_ID = new Dictionary<int, UniModEntry>();
+        private static readonly Dictionary<string, UniModEntry> BY_NAME = IndexAll();
+
+        // Names some libraries use for a modification that are not its UniMod title.
+        private static readonly Dictionary<string, string> TITLE_BY_ALIAS =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { @"CAM", @"Carbamidomethyl" },
+                { @"Deamidation", @"Deamidated" },
+            };
+
+        // The specificities a printed mass is matched against, in order of preference. Only ids
+        // and sites: the names and masses are unimod.obo's.
+        private static readonly Specificity[] MATCHED =
         {
             // Skyline's common (not hidden) modifications
-            new UniModEntry(4, @"Carbamidomethyl", 57.021464, @"C"),
-            new UniModEntry(4, @"Carbamidomethyl", 57.021464, null, ModSite.NTerm),
-            new UniModEntry(35, @"Oxidation", 15.994915, @"MHW"),
-            new UniModEntry(1, @"Acetyl", 42.010565, @"K"),
-            new UniModEntry(1, @"Acetyl", 42.010565, null, ModSite.NTerm),
-            new UniModEntry(21, @"Phospho", 79.966331, @"STY"),
-            new UniModEntry(40, @"Sulfo", 79.956815, @"STY"),
-            new UniModEntry(7, @"Deamidated", 0.984016, @"NQR"),
-            new UniModEntry(5, @"Carbamyl", 43.005814, @"K"),
-            new UniModEntry(5, @"Carbamyl", 43.005814, null, ModSite.NTerm),
-            new UniModEntry(26, @"Pyro-carbamidomethyl", 39.994915, @"C", ModSite.NTerm),
-            new UniModEntry(27, @"Glu->pyro-Glu", -18.010565, @"E", ModSite.NTerm),
-            new UniModEntry(28, @"Gln->pyro-Glu", -17.026549, @"Q", ModSite.NTerm),
-            new UniModEntry(385, @"Ammonia-loss", -17.026549, @"C", ModSite.NTerm),
-            new UniModEntry(34, @"Methyl", 14.015650, @"DE"),
-            new UniModEntry(34, @"Methyl", 14.015650, null, ModSite.CTerm),
-            new UniModEntry(122, @"Formyl", 27.994915, null, ModSite.NTerm),
-            new UniModEntry(214, @"iTRAQ4plex", 144.102062, @"KY"),
-            new UniModEntry(214, @"iTRAQ4plex", 144.102062, null, ModSite.NTerm),
-            new UniModEntry(737, @"TMT6plex", 229.162932, @"K"),
-            new UniModEntry(737, @"TMT6plex", 229.162932, null, ModSite.NTerm),
-            new UniModEntry(2016, @"TMTpro", 304.207146, @"K"),
-            new UniModEntry(2016, @"TMTpro", 304.207146, null, ModSite.NTerm),
+            new Specificity(4, @"C"),
+            new Specificity(4, null, ModSite.NTerm),
+            new Specificity(35, @"MHW"),
+            new Specificity(1, @"K"),
+            new Specificity(1, null, ModSite.NTerm),
+            new Specificity(21, @"STY"),
+            new Specificity(40, @"STY"),
+            new Specificity(7, @"NQR"),
+            new Specificity(5, @"K"),
+            new Specificity(5, null, ModSite.NTerm),
+            new Specificity(26, @"C", ModSite.NTerm),
+            new Specificity(27, @"E", ModSite.NTerm),
+            new Specificity(28, @"Q", ModSite.NTerm),
+            new Specificity(385, @"C", ModSite.NTerm),
+            new Specificity(34, @"DE"),
+            new Specificity(34, null, ModSite.CTerm),
+            new Specificity(122, null, ModSite.NTerm),
+            new Specificity(214, @"KY"),
+            new Specificity(214, null, ModSite.NTerm),
+            new Specificity(737, @"K"),
+            new Specificity(737, null, ModSite.NTerm),
+            new Specificity(2016, @"K"),
+            new Specificity(2016, null, ModSite.NTerm),
             // Hidden in Skyline, but carried by libraries: SILAC labels, ubiquitination and
             // other lysine and arginine chemistry
-            new UniModEntry(188, @"Label:13C(6)", 6.020129, @"KR"),
-            new UniModEntry(259, @"Label:13C(6)15N(2)", 8.014199, @"K"),
-            new UniModEntry(267, @"Label:13C(6)15N(4)", 10.008269, @"R"),
-            new UniModEntry(121, @"GG", 114.042927, @"K"),
-            new UniModEntry(34, @"Methyl", 14.015650, @"KR"),
-            new UniModEntry(36, @"Dimethyl", 28.031300, @"KR"),
-            new UniModEntry(36, @"Dimethyl", 28.031300, null, ModSite.NTerm),
-            new UniModEntry(37, @"Trimethyl", 42.046950, @"KR"),
-            new UniModEntry(312, @"Cysteinyl", 119.004099, @"C"),
-            new UniModEntry(354, @"Nitro", 44.985078, @"FWY"),
-            new UniModEntry(747, @"Malonyl", 86.000394, @"CKS"),
+            new Specificity(188, @"KR"),
+            new Specificity(259, @"K"),
+            new Specificity(267, @"R"),
+            new Specificity(121, @"K"),
+            new Specificity(34, @"KR"),
+            new Specificity(36, @"KR"),
+            new Specificity(36, null, ModSite.NTerm),
+            new Specificity(37, @"KR"),
+            new Specificity(312, @"C"),
+            new Specificity(354, @"FWY"),
+            new Specificity(747, @"CKS"),
         };
 
-        private static readonly Dictionary<int, UniModEntry> BY_ID = IndexById();
-
-        /// <summary>The modification with UniMod id <paramref name="id"/>, or null when Osprey does not know it.</summary>
+        /// <summary>The modification with UniMod id <paramref name="id"/>, or null when UniMod has none.</summary>
         public static UniModEntry Find(int id)
         {
             return BY_ID.TryGetValue(id, out var entry) ? entry : null;
         }
 
         /// <summary>
-        /// The preferred known modification allowed on <paramref name="residue"/> - the first
-        /// residue when <paramref name="isNTerm"/>, the last when <paramref name="isCTerm"/> -
+        /// The modification titled <paramref name="name"/> in UniMod (<c>Oxidation</c>), in any
+        /// case, or under one of the few other names libraries use (<c>CAM</c>); null when none is.
+        /// </summary>
+        public static UniModEntry FindByName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return null;
+            if (TITLE_BY_ALIAS.TryGetValue(name, out var title))
+                name = title;
+            return BY_NAME.TryGetValue(name, out var entry) ? entry : null;
+        }
+
+        /// <summary>
+        /// The preferred modification Skyline lists allowed on <paramref name="residue"/> - the
+        /// first residue when <paramref name="isNTerm"/>, the last when <paramref name="isCTerm"/> -
         /// whose mass matches <paramref name="mass"/> printed with <paramref name="precision"/>
         /// decimals, or null.
         /// </summary>
         public static UniModEntry Match(double mass, int precision, char residue, bool isNTerm, bool isCTerm)
         {
-            foreach (var entry in ENTRIES)
+            foreach (var specificity in MATCHED)
             {
-                if (entry.AllowedOn(residue, isNTerm, isCTerm) && MassMatches(entry.Mass, mass, precision))
-                    return entry;
+                if (specificity.AllowedOn(residue, isNTerm, isCTerm) && MassMatches(specificity.Entry.Mass, mass, precision))
+                    return specificity.Entry;
             }
             return null;
         }
@@ -124,58 +155,80 @@ namespace pwiz.Osprey.Core
             return Math.Abs(knownMass - mass) < MATCH_WITHIN;
         }
 
-        private static Dictionary<int, UniModEntry> IndexById()
+        /// <summary>
+        /// Fills <see cref="BY_ID"/> from the modifications in unimod.obo and returns the same
+        /// entries by title. A title two entries share in different case is kept for the first.
+        /// </summary>
+        private static Dictionary<string, UniModEntry> IndexAll()
         {
-            var byId = new Dictionary<int, UniModEntry>();
-            foreach (var entry in ENTRIES)
+            var byName = new Dictionary<string, UniModEntry>(StringComparer.OrdinalIgnoreCase);
+            foreach (var modification in Unimod.Modifications)
             {
-                if (!byId.ContainsKey(entry.Id))
-                    byId.Add(entry.Id, entry);
+                // The ontology root (UNIMOD:0) is a term with no composition, not a modification.
+                if (string.IsNullOrEmpty(modification.DeltaComposition))
+                    continue;
+                var entry = new UniModEntry(modification.Id, modification.Name, modification.DeltaMonoisotopicMass);
+                BY_ID.Add(entry.Id, entry);
+                byName.TryAdd(entry.Name, entry);
             }
-            return byId;
+            return byName;
+        }
+
+        /// <summary>Where on a peptide a <see cref="Specificity"/> is allowed besides its residues.</summary>
+        private enum ModSite
+        {
+            /// <summary>On its residues, anywhere in the peptide.</summary>
+            Residue,
+            /// <summary>On the peptide N-terminus: on the first residue when it has residues.</summary>
+            NTerm,
+            /// <summary>On the peptide C-terminus: on the last residue when it has residues.</summary>
+            CTerm
+        }
+
+        /// <summary>One UniMod modification with one specificity, as Skyline lists them.</summary>
+        private sealed class Specificity
+        {
+            public Specificity(int id, string residues, ModSite site = ModSite.Residue)
+            {
+                Entry = Find(id) ?? throw new InvalidOperationException($@"UniMod:{id} is not in unimod.obo");
+                Residues = residues;
+                Site = site;
+            }
+
+            public UniModEntry Entry { get; }
+
+            /// <summary>The residues it modifies, or null for any residue at its terminus.</summary>
+            private string Residues { get; }
+
+            private ModSite Site { get; }
+
+            /// <summary>Whether it is allowed on <paramref name="residue"/> at that place in a peptide.</summary>
+            public bool AllowedOn(char residue, bool isNTerm, bool isCTerm)
+            {
+                if (Site == ModSite.NTerm && !isNTerm || Site == ModSite.CTerm && !isCTerm)
+                    return false;
+                return Residues == null || Residues.IndexOf(residue) >= 0;
+            }
         }
     }
 
-    /// <summary>Where on a peptide a <see cref="UniModEntry"/> is allowed besides its residues.</summary>
-    public enum ModSite
-    {
-        /// <summary>On its residues, anywhere in the peptide.</summary>
-        Residue,
-        /// <summary>On the peptide N-terminus: on the first residue when it has residues.</summary>
-        NTerm,
-        /// <summary>On the peptide C-terminus: on the last residue when it has residues.</summary>
-        CTerm
-    }
-
-    /// <summary>One UniMod modification with one specificity, as Skyline lists them.</summary>
+    /// <summary>A UniMod modification: its id, title and monoisotopic mass delta, as unimod.obo gives them.</summary>
     public sealed class UniModEntry
     {
-        public UniModEntry(int id, string name, double mass, string residues, ModSite site = ModSite.Residue)
+        public UniModEntry(int id, string name, double mass)
         {
             Id = id;
             Name = name;
             Mass = mass;
-            Residues = residues;
-            Site = site;
         }
 
+        /// <summary>The UniMod accession number (4 for <c>UniMod:4</c>).</summary>
         public int Id { get; }
+
+        /// <summary>The UniMod title (<c>Carbamidomethyl</c>).</summary>
         public string Name { get; }
 
         /// <summary>The monoisotopic mass delta.</summary>
         public double Mass { get; }
-
-        /// <summary>The residues it modifies, or null for any residue at its terminus.</summary>
-        public string Residues { get; }
-
-        public ModSite Site { get; }
-
-        /// <summary>Whether it is allowed on <paramref name="residue"/> at that place in a peptide.</summary>
-        public bool AllowedOn(char residue, bool isNTerm, bool isCTerm)
-        {
-            if (Site == ModSite.NTerm && !isNTerm || Site == ModSite.CTerm && !isCTerm)
-                return false;
-            return Residues == null || Residues.IndexOf(residue) >= 0;
-        }
     }
 }
