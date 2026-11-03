@@ -980,11 +980,11 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document" xml:space="preserve">
     <value>Failure attempting to modify the document.</value>
   </data>
-  <data name="SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_" xml:space="preserve">
+  <data name="SkylineWindow_AskToStopBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_" xml:space="preserve">
     <value>Background jobs must be stopped before exiting. Do you want to stop the {0} jobs that are still running?</value>
   </data>
-  <data name="SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_" xml:space="preserve">
-    <value>Background jobs must be stopped before exiting. The job '{0}' is still running. Do you want to stop it?</value>
+  <data name="SkylineWindow_AskToStopBackgroundJobs_Background_jobs_must_be_stopped_before_exiting___0__is_still_running__Do_you_want_to_stop_it_" xml:space="preserve">
+    <value>Background jobs must be stopped before exiting. {0} is still running. Do you want to stop it?</value>
   </data>
   <data name="SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end" xml:space="preserve">
     <value>Waiting for background jobs to end</value>

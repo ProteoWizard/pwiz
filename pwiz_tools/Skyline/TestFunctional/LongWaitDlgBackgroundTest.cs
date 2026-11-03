@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var messageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
             RunUI(() => AssertEx.AreEqual(string.Format(
-                    SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_,
+                    SkylineResources.SkylineWindow_AskToStopBackgroundJobs_Background_jobs_must_be_stopped_before_exiting___0__is_still_running__Do_you_want_to_stop_it_,
                     job.Description),
                 messageDlg.Message));
             OkDialog(messageDlg, messageDlg.BtnCancelClick);
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var messageDlgTwo = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
                 RunUI(() => AssertEx.AreEqual(string.Format(
-                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
+                        SkylineResources.SkylineWindow_AskToStopBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
                         2),
                     messageDlgTwo.Message));
                 OkDialog(messageDlgTwo, messageDlgTwo.BtnCancelClick);
