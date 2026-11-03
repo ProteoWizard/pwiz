@@ -120,6 +120,9 @@ void testIDTranslation()
     unit_assert(cvTermInfo("UO:0000231").cvid == UO_information_unit);
     unit_assert(cvTermInfo("XX:0000231").cvid == CVID_Unknown);
     unit_assert(cvTermInfo("UNIMOD:915").cvid == CVID_Unknown);
+    // known prefix, but a term this build doesn't know (e.g. written by a newer msconvert)
+    unit_assert(cvTermInfo("MS:9999999").cvid == CVID_Unknown);
+    unit_assert(cvTermInfo("UO:9999999").cvid == CVID_Unknown);
     unit_assert(cvTermInfo("FOO:").cvid == CVID_Unknown);
     unit_assert(cvTermInfo(":FOO").cvid == CVID_Unknown);
     unit_assert(cvTermInfo("MS").cvid == CVID_Unknown);
