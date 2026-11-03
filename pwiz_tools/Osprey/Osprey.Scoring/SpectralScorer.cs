@@ -36,6 +36,10 @@ namespace pwiz.Osprey.Scoring
         private const int XCORR_WINDOW_OFFSET = 75;
         private const double XCORR_SCALING = 0.005;
 
+        private static readonly EnvVar ENV_DIAG_XCORR_SCAN = new EnvVar(@"OSPREY_DIAG_XCORR_SCAN", EnvVarGroup.diagnostic,
+            @"Append the XCorr computation for this MS2 scan to cs_xcorr_diag.txt.")
+            { ValueExample = @"<scan>" };
+
         private readonly BinConfig _binConfig;
 
         /// <summary>
@@ -400,7 +404,7 @@ namespace pwiz.Osprey.Scoring
             // call and do not need zeroing.
 
             // XCorr diagnostic for bisection
-            string diagXcorrScan = Environment.GetEnvironmentVariable(@"OSPREY_DIAG_XCORR_SCAN");
+            string diagXcorrScan = ENV_DIAG_XCORR_SCAN.Value;
             if (!string.IsNullOrEmpty(diagXcorrScan) &&
                 spectrum.ScanNumber.ToString(System.Globalization.CultureInfo.InvariantCulture) == diagXcorrScan)
             {
