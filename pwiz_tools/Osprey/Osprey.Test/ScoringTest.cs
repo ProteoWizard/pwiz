@@ -28,6 +28,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Test
@@ -2034,6 +2035,22 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(40, nCorrelation);
             Assert.IsTrue(corrScored.Features[0] > searched.Features[0] + 1.0,
                 @"the recovered fragment adds its pairs to the coelution sum");
+
+            // Recording one family at a time, each family scores what it scores with every feature
+            // computed: the wider-XIC median polish and runner-up coelution a family reads are
+            // published whenever it is computed, and skipped otherwise.
+            foreach (var family in PinFeatureMask.FAMILY_FIRST_FEATURES)
+            {
+                int first = Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, family);
+                var recorded = PinFeatureMask.RecordedFeatures(f => f != first, false);
+                var familyScored = ScoreCorrToleranceWindow(entry, spectra, tight, corrConfig, recorded);
+                for (int f = 0; f < OspreyFeatureCalculators.FeatureCount; f++)
+                {
+                    double expected = recorded[f] ? corrScored.Features[f] : 0.0;
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(familyScored.Features[f]),
+                        string.Format(@"family {0}, feature {1} ({2})", family, f, OspreyFeatureCalculators.Get(f).Name));
+                }
+            }
         }
 
         private const double CORR_RT0 = 10.0;
@@ -2088,12 +2105,12 @@ namespace pwiz.Osprey.Test
         }
 
         private static FdrEntry ScoreCorrToleranceWindow(LibraryEntry entry, List<Spectrum> spectra,
-            OspreyConfig config, OspreyConfig corrConfig)
+            OspreyConfig config, OspreyConfig corrConfig, bool[] recordedFeatures = null)
         {
             var context = new ScoringContext(config, @"synthetic") { CorrelationConfig = corrConfig };
             var scorer = context.Resolution.CreateScorer();
             context.EnsureXcorrScratchPool(scorer.BinConfig.NBins);
-            return new CoelutionScorer(null).ScoreWindow(new IsolationWindow(500.0, 2.0, 2.0),
+            return new CoelutionScorer(null, recordedFeatures).ScoreWindow(new IsolationWindow(500.0, 2.0, 2.0),
                 new List<LibraryEntry> { entry }, new List<Spectrum>(spectra), new List<MS1Spectrum>(),
                 null, MzCalibrationResult.Uncalibrated(), 0.3, 0.2, scorer, context).Single();
         }
