@@ -369,6 +369,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const string META_RECONCILED = @"osprey.reconciled";
 
+        /// <summary>The footer metadata key holding the search settings hash the scores were written under.</summary>
+        public const string META_SEARCH_HASH = @"osprey.search_hash";
+
         // Score parquets whose charge column a library-identity walk has already checked
         // (RequireFileCharges) in this process. The check costs a seek per row group on a
         // spinning disk, and first-pass FDR walks each file six or more times, so each file is
@@ -987,6 +990,7 @@ namespace pwiz.Osprey.IO
                     }
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
+                    progress.Complete();
                 }
                 saver.Commit();
             }
@@ -2112,6 +2116,7 @@ namespace pwiz.Osprey.IO
                     nWritten = written;
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
+                    progress?.Complete();
                 }
                 saver.Commit();
             }

@@ -1318,6 +1318,7 @@ namespace pwiz.Osprey.Tasks
                             passingPeptides.Add(e.ModifiedSequence);
                     }
                 }
+                progress.Complete();
             }
             return passingPeptides;
         }
@@ -1359,6 +1360,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
+                progress.Complete();
             }
             // Fallback: peptides with no precursor-passing charge state keep their best.
             nFallback = 0;
@@ -1440,6 +1442,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
+                progress.Complete();
             }
             return passingEntries;
         }
@@ -1472,6 +1475,7 @@ namespace pwiz.Osprey.Tasks
                         bestExpPrecursorQ[keyExp] = obs.ExperimentPrecursorQvalue;
                     }
                 }
+                progress.Complete();
             }
             return bestExpPrecursorQ;
         }
@@ -1519,6 +1523,7 @@ namespace pwiz.Osprey.Tasks
                         sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
                     }
                 }
+                progress.Complete();
             }
             return sharedBounds;
         }

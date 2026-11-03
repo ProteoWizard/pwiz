@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
@@ -114,6 +115,15 @@ namespace pwiz.Osprey.Tasks
             /// null.</summary>
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string[] FeatureNames { get; set; }
+
+            /// <summary>The <see cref="TrainingSetAnalysis"/> of the trained folds, which a report
+            /// written by a later process reads back because the fold training sets exist nowhere
+            /// else (doc 00, P16). Optional and additive like <see cref="ExperimentAgg"/>: omitted
+            /// when null, ignored by an older reader, null from an older file. Held as a token
+            /// because its undefined values (a constant feature's correlation) are NaN, which the
+            /// round-trip converter refuses; they are written as the string "NaN".</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public JToken TrainingAnalysis { get; set; }
         }
 
         /// <summary>Serializable form of the protein-compact stratum: the base ids of every
@@ -245,6 +255,9 @@ namespace pwiz.Osprey.Tasks
                 Stds = model.Standardizer.Stds,
                 ExperimentAgg = experimentAgg,
                 FeatureNames = model.FeatureNames,
+                TrainingAnalysis = model.TrainingAnalysis == null ? null
+                    : JToken.Parse(JsonConvert.SerializeObject(model.TrainingAnalysis,
+                        new JsonSerializerSettings { FloatFormatHandling = FloatFormatHandling.String })),
             };
             if (model.IsGradientBoostedTrees)
             {
@@ -368,6 +381,7 @@ namespace pwiz.Osprey.Tasks
                 if (model == null)
                     return null;
                 model.FeatureNames = dto.FeatureNames;
+                model.TrainingAnalysis = ReadTrainingAnalysis(dto.TrainingAnalysis);
                 if (!HasFdrFeatureLayout(model))
                     return null;
 
@@ -480,6 +494,25 @@ namespace pwiz.Osprey.Tasks
         {
             return model.FeatureNames == null ||
                    model.FeatureNames.SequenceEqual(PinFeatureMask.FdrFeatureNames, StringComparer.Ordinal);
+        }
+
+        /// <summary>
+        /// The persisted training-set analysis, or null when absent or unreadable. A report view
+        /// must not make the model it rides with unloadable, so a bad analysis is dropped rather
+        /// than failing <see cref="Load"/>.
+        /// </summary>
+        private static TrainingSetAnalysis ReadTrainingAnalysis(JToken token)
+        {
+            if (token == null)
+                return null;
+            try
+            {
+                return token.ToObject<TrainingSetAnalysis>();
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
 
         /// <summary>

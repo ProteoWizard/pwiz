@@ -208,8 +208,8 @@ namespace pwiz.Osprey.Test
         /// was re-scored anywhere. Now the worker answers every run, so the run's second pass
         /// comes from PerFileRescoring like any other: the analysis finishes, the run's
         /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export
-        /// selects on the second-pass run q. Two more invocations of the same command leave the
-        /// export as it is.</para>
+        /// selects on the second-pass run q. Two more invocations of the same command skip every
+        /// task and leave the export as it is.</para>
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetTrainingExportSingleRun()
@@ -240,6 +240,9 @@ namespace pwiz.Osprey.Test
                     Assert.IsFalse(HasLine(log, ExportLine(run)),
                         string.Format(@"{0}: invocation {1} of the same command wrote the export again", mode, invocation) +
                         Environment.NewLine + log);
+                    // The run with no Stage 6 work has every PerFileRescoring output, so the task
+                    // counts as finished; it once re-ran on every invocation (#4732).
+                    AssertTasks(log, ALL_TASKS, Array.Empty<string>());
                     AssertExportsEqual(hashes, workDir);
                 }
             }

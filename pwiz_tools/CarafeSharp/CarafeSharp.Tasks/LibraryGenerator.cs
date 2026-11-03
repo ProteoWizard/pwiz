@@ -495,6 +495,7 @@ namespace pwiz.CarafeSharp.Tasks
                         writer.Written, _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
                         _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds, ccsTime));
                 }
+                progress.Complete();
             }
         }
 

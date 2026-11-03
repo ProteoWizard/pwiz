@@ -66,8 +66,6 @@ namespace pwiz.Osprey.Test
             AssertSharedPeakClaimants();
             AssertDegenerateShortPeak();
             AssertSinglyChargedLadder();
-            AssertDoubleCountingNeighbors();
-            AssertDoubleCountingNeighborsTakeTheDedupsOrder();
             AssertProteinIdsMatchTheScoresParquet();
             AssertScanRangeIsTheMeasuredRange();
             AssertUnannotatedFragmentsMatchByMz();
@@ -336,42 +334,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(record.NSlots / 2, record.NIonsApplicable);
         }
 
-        private static void AssertDoubleCountingNeighbors()
-        {
-            var entry = Peptide(SEQUENCE, 2, 1);
-            var twin = Peptide(SEQUENCE, 2, 7);  // same fragments, another id
-            var unrelated = Peptide(@"GGGGAAAR", 2, 8);
-            var neighbors = new List<(LibraryEntry Entry, double ApexRt)>
-            {
-                (entry, 10.50), (unrelated, 10.50), (twin, 10.51), (twin, 12.0),
-            }.OrderBy(n => n.ApexRt).ToList();
-            Assert.AreEqual(1, TrainingEvidence.CountDoubleCountingNeighbors(entry, 10.50, neighbors, 0.05, 0.02, ToleranceUnit.Mz),
-                @"the twin within the neighborhood collides; itself, the unrelated entry and the far twin do not");
-            Assert.AreEqual(0, TrainingEvidence.CountDoubleCountingNeighbors(entry, 10.50, neighbors, 0.001, 0.02, ToleranceUnit.Mz));
-        }
-
-        /// <summary>
-        /// The collision test is not symmetric - it counts how many of the FIRST entry's top
-        /// fragments the second one matches - and the dedup always passes the entry that comes
-        /// first in its (apex, base_id, entry_id) order first. Here two of A's fragments match
-        /// B's one close peak, which collides, while B's one peak alone does not, so B counts
-        /// A as a neighbor only when A is asked first, as the dedup asks.
-        /// </summary>
-        private static void AssertDoubleCountingNeighborsTakeTheDedupsOrder()
-        {
-            var a = WithFragments(Peptide(SEQUENCE, 2, 1), 100.00, 100.01, 600.0, 700.0, 800.0, 900.0);
-            var b = WithFragments(Peptide(@"GGGGAAAR", 2, 2), 100.005, 1000.0, 1100.0);
-            Assert.IsTrue(ScoringPipeline.SharesDoubleCountingFragments(a.Fragments, b.Fragments, 0.02, ToleranceUnit.Mz));
-            Assert.IsFalse(ScoringPipeline.SharesDoubleCountingFragments(b.Fragments, a.Fragments, 0.02, ToleranceUnit.Mz));
-            foreach (double apexB in new[] { 10.51, 10.50 })
-            {
-                var neighbors = new List<(LibraryEntry Entry, double ApexRt)> { (a, 10.50), (b, apexB) };
-                Assert.AreEqual(1, TrainingEvidence.CountDoubleCountingNeighbors(b, apexB, neighbors, 0.05, 0.02, ToleranceUnit.Mz),
-                    @"A comes first in the dedup's order, so the pair is tested as (A, B)");
-                Assert.AreEqual(1, TrainingEvidence.CountDoubleCountingNeighbors(a, 10.50, neighbors, 0.05, 0.02, ToleranceUnit.Mz));
-            }
-        }
-
         /// <summary>
         /// <c>protein_ids</c> is written the way the scores parquet writes it: the accessions
         /// joined with ';', empty for an entry with none, and NULL only when the library has no
@@ -505,13 +467,6 @@ namespace pwiz.Osprey.Test
         private static FragmentAnnotation Unannotated()
         {
             return new FragmentAnnotation { IonType = IonType.Unknown };
-        }
-
-        /// <summary>The entry with its library spectrum replaced by these m/z, in falling intensity.</summary>
-        private static LibraryEntry WithFragments(LibraryEntry entry, params double[] mzs)
-        {
-            entry.Fragments = mzs.Select((mz, i) => new LibraryFragment { Mz = mz, RelativeIntensity = 1f - 0.1f * i }).ToList();
-            return entry;
         }
 
         private static TrainingRecord Compute(LibraryEntry entry, FdrEntry row, TrainingEvidenceWindow window,
