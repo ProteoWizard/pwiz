@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Model.Results
                 return;
             if (_loader is SingleFileLoadMonitor fileLoadMonitor && !fileLoadMonitor.IsFirstImportNotice(notice))
                 return;
-            Messages.WriteAsyncUserMessage(notice, FileInfo.FilePath.GetFileName());
+            Messages.WriteAsyncUserMessage(notice);
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }

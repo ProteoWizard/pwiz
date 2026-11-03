@@ -103,8 +103,8 @@ namespace pwiz.Skyline.Model.Results
         public bool HasRangeRT { get; private set; }
 
         /// <summary>
-        /// Format, taking the data file name, of a notice naming the settings change that would
-        /// enable ion mobility filtering for this file, or null when no notice is needed (issue 4150).
+        /// A notice naming the settings change that would enable ion mobility filtering for this
+        /// file, or null when no notice is needed (issue 4150).
         /// Left to the caller to write, since the same notice applies to every file in an import.
         /// </summary>
         public string IonMobilityFilteringNotice { get; }
@@ -529,8 +529,8 @@ namespace pwiz.Skyline.Model.Results
 
         // Issue 4150: with current settings no precursor produces an ion mobility filter. Probe
         // the obvious setting variations (add a window width, enable spectral-library IM, both)
-        // to see whether a specific change would enable filtering. If one would, return the
-        // format of a notice that tells the user exactly which setting to flip; otherwise null.
+        // to see whether a specific change would enable filtering. If one would, return a
+        // notice that tells the user exactly which setting to flip; otherwise null.
         private string GetSettingsChangeThatWouldEnableFiltering(SrmSettings settings,
             LibKey[] libKeys, LibraryIonMobilityInfo libraryIonMobilityInfo,
             IList<PeptideDocNode> molecules, MsDataFileUri msDataFileUri, double ionMobilityMax)

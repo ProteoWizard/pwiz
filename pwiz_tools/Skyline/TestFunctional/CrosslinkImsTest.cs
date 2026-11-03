@@ -131,8 +131,7 @@ namespace pwiz.SkylineTestFunctional
 
             // The IMSDB is populated at this point, so setting a filter window alone would enable
             // filtering. The diagnostic should pick the SetWindow-specific message, not a generic one.
-            var expected = string.Format(
-                ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow, fileName);
+            var expected = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow;
             // The notice is appended asynchronously, so wait for it rather than reading the text once
             if (!TryWaitForConditionUI(() => immediateWindow.TextContent.Contains(expected)))
             {

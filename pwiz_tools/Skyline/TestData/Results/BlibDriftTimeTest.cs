@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestData.Results
         /// file - and that neither of the other two variants was written.
         /// </summary>
         private void AssertFilteringDisabledWarning(TestFilesDir testFilesDir,
-            IonMobilityWindowWidthCalculator windowWidthCalculator, string expectedMessageFormat)
+            IonMobilityWindowWidthCalculator windowWidthCalculator, string expectedMessage)
         {
             var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
             SrmDocument docOriginal = ResultsUtil.DeserializeDocument(docPath);
@@ -168,7 +168,6 @@ namespace pwiz.SkylineTestData.Results
                 var fileName = replicateName + ExtensionTestContext.ExtMz5;
                 var fileNameCopy = replicateNameCopy + ExtensionTestContext.ExtMz5;
                 File.Copy(testFilesDir.GetTestPath(fileName), testFilesDir.GetTestPath(fileNameCopy));
-                var fileNames = new[] { fileName, fileNameCopy };
                 var chromSets = new[]
                 {
                     new ChromatogramSet(replicateName, new[]
@@ -188,28 +187,22 @@ namespace pwiz.SkylineTestData.Results
 
                 // The diagnostic has to name the one settings change that would restore filtering,
                 // so the variants describing the other changes must not appear. It is given once
-                // per import, naming whichever file reached it first.
+                // per import, since every file in the import reaches the same conclusion.
                 var capturedText = string.Join(Environment.NewLine, capturedMessages);
-                Assert.AreEqual(1, CountNotices(capturedMessages, expectedMessageFormat, fileNames), capturedText);
-                foreach (var messageFormat in new[]
+                Assert.AreEqual(1, capturedMessages.Count(m => Equals(m, expectedMessage)), capturedText);
+                foreach (var message in new[]
                          {
                              ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow,
                              ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary,
                              ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary
                          })
                 {
-                    if (!Equals(messageFormat, expectedMessageFormat))
+                    if (!Equals(message, expectedMessage))
                     {
-                        Assert.AreEqual(0, CountNotices(capturedMessages, messageFormat, fileNames), capturedText);
+                        CollectionAssert.DoesNotContain(capturedMessages, message, capturedText);
                     }
                 }
             }
-        }
-
-        private static int CountNotices(IList<string> capturedMessages, string messageFormat, IEnumerable<string> fileNames)
-        {
-            var notices = fileNames.Select(name => string.Format(messageFormat, name)).ToHashSet();
-            return capturedMessages.Count(notices.Contains);
         }
     }
 }
