@@ -120,24 +120,27 @@ namespace pwiz.Osprey.IO
             // tests load). The reader's buffer is what must be large - at the BCL default of 1 KB
             // this issues a ProgressStream.Read, and therefore a locking Report, once per KB:
             // ~13.6M calls on the 13 GB entrapment library to print about a dozen lines.
+            var precursorMap = new Dictionary<string, PrecursorData>();
+            var errors = new LibraryLineErrors();
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 1))
             {
-                // This reporter measures the READ, which finishes partway through ParseReader, so
-                // ParseReader completes it when the stream is exhausted rather than at the end of
-                // this scope - after phase 2 and the interning summary, a completion line for a
-                // phase that ended minutes earlier.
-                using (var readProgress = new ProgressReporter(
-                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
-                using (var progressStream = new ProgressStream(stream, readProgress))
-                // leaveOpen so ownership of progressStream is explicit rather than resting on
-                // ProgressStream declining to override Dispose (it does not own the inner stream).
-                using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
+                // This reporter measures the READ alone, so it completes when the rows have been
+                // read rather than after phase 2 and the interning summary - a completion line
+                // for a phase that ended minutes earlier.
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length, readProgress =>
                 {
-                    return ParseReader(reader, logInfo, readProgress);
-                }
+                    using (var progressStream = new ProgressStream(stream, readProgress))
+                    // leaveOpen so ownership of progressStream is explicit rather than resting on
+                    // ProgressStream declining to override Dispose (it does not own the inner stream).
+                    using (var reader = new StreamReader(progressStream, Encoding.UTF8, true, 1 << 20, true))
+                    {
+                        ReadRows(reader, precursorMap, errors);
+                    }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             }
+            return BuildEntries(precursorMap, errors, logInfo);
         }
 
         /// <summary>
@@ -145,16 +148,19 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo = null)
         {
-            return ParseReader(reader, logInfo, null);
+            var precursorMap = new Dictionary<string, PrecursorData>();
+            var errors = new LibraryLineErrors();
+            ReadRows(reader, precursorMap, errors);
+            return BuildEntries(precursorMap, errors, logInfo);
         }
 
         /// <summary>
-        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but completes
-        /// <paramref name="readProgress"/> when the READ finishes rather than when the caller's
-        /// scope ends - the row loop below is only the first half of this method.
+        /// Phase 1 of a parse: read the header and every row into <paramref name="precursorMap"/>,
+        /// collecting the invalid lines in <paramref name="errors"/>. This is the whole of the
+        /// READ, which the byte progress of <see cref="Load"/> measures.
         /// </summary>
-        private List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo,
-            ProgressReporter readProgress)
+        private void ReadRows(TextReader reader, Dictionary<string, PrecursorData> precursorMap,
+            LibraryLineErrors errors)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -162,9 +168,6 @@ namespace pwiz.Osprey.IO
 
             string[] headers = headerLine.Split(TextUtil.SEPARATOR_TSV);
             var cols = ColumnIndices.FromHeaders(headers);
-
-            var precursorMap = new Dictionary<string, PrecursorData>();
-            var errors = new LibraryLineErrors();
 
             // 1-based line numbers of the file, the header being line 1, so the first data line
             // a message names is line 2 - the number a text editor or a spreadsheet shows.
@@ -180,9 +183,15 @@ namespace pwiz.Osprey.IO
                 string[] fields = line.Split(TextUtil.SEPARATOR_TSV);
                 ParseRow(fields, cols, lineNum, precursorMap, errors);
             }
-            // Stream exhausted: the byte progress is complete and must say so HERE.
-            readProgress?.Complete();
+        }
 
+        /// <summary>
+        /// Phase 2 of a parse: refuse a library with any invalid line, then materialize the
+        /// precursors read by <see cref="ReadRows"/> as library entries.
+        /// </summary>
+        private List<LibraryEntry> BuildEntries(Dictionary<string, PrecursorData> precursorMap,
+            LibraryLineErrors errors, Action<string> logInfo)
+        {
             // A library with any invalid line is refused whole, after every line has been read, so
             // one run names every line to fix. Searching with a value guessed for a bad cell
             // would produce results that look valid and are not.
@@ -201,8 +210,7 @@ namespace pwiz.Osprey.IO
 
             // Phase 2. The byte progress above ends when the stream is exhausted, so without this
             // the console sat at 100% through the whole materialization pass.
-            using (var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count, progress =>
             {
                 long nBuilt = 0;
 
@@ -243,9 +251,7 @@ namespace pwiz.Osprey.IO
                     entries.Add(entry);
                     id++;
                 }
-
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             interner.LogSummary(logInfo);
             return entries;
         }

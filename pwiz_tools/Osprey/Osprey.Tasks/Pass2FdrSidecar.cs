@@ -957,10 +957,10 @@ namespace pwiz.Osprey.Tasks
             // rewrites one 8-byte field per record over every file's whole 2nd-pass sidecar, so
             // it is per-file work and reports as such.
             int patchIdx = 0;
-            using (var progress = new ProgressReporter(
-                       CountText.Format(fileNames.Count, OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_Writing_protein_q_values_for_1_file,
-                           OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_Writing_protein_q_values_for__0__files),
-                       fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                CountText.Format(fileNames.Count, OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_Writing_protein_q_values_for_1_file,
+                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_Writing_protein_q_values_for__0__files),
+                fileNames.Count, progress =>
             {
                 foreach (string fileName in fileNames)
                 {
@@ -1022,8 +1022,7 @@ namespace pwiz.Osprey.Tasks
                     filesPatched++;
                     nPatched += byEntryId.Count;
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's
             // protein column, so a failed patch cannot corrupt this run's output. It DOES leave
@@ -1393,7 +1392,6 @@ namespace pwiz.Osprey.Tasks
             //    sidecar as it finishes; experiment q and PEP are patched into those sidecars
             //    afterwards from the bounded state this returns, so no (file, entry_id)-keyed
             //    result map is ever built and no file is held for a later pass over the pool.
-            StreamingFdr.StreamedCompetitionState competition;
             long nScored = 0;
             // The file the competition is working on. StreamingFdr reads a file and hands back
             // its run q within one iteration, so exactly one file is live here at a time; the
@@ -1419,10 +1417,10 @@ namespace pwiz.Osprey.Tasks
             // file, so counting calls here is an honest per-file progress signal without threading
             // a callback through the FDR layer. It now covers the frozen-model feature reload too
             // (folded in below), which is the expensive half and used to have its own reporter.
-            using (var progress = new ProgressReporter(
+            var competition = ProgressReporter.Run(
                 CountText.Format(fileKeys.Count, OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_for_1_file,
                     OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_across__0__files),
-                fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileKeys.Count, progress =>
             {
                 long nRead = 0;
                 // One file's 1st-pass records and survivor ids, reused across files rather than
@@ -1560,7 +1558,7 @@ namespace pwiz.Osprey.Tasks
 
                 try
                 {
-                    competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                    return StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
                         fileKeys, ReadFile, survivorEntryIds, ApplyFileRunQ, stratumBaseIds,
                         // The rescore worker's answer is what gets folded; the streaming pass
                         // recomputes only to assert against it (#4486).
@@ -1592,8 +1590,7 @@ namespace pwiz.Osprey.Tasks
                     DumpRecomputedForDiff(ctx, writer, currentKey, currentEntries);
                     throw;
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             // Once, after the stream, rather than per file: the counts are run-wide and a
             // missing 1st-pass sidecar is a run-wide conclusion.
             seeder.LogSummary(ctx);
@@ -1752,10 +1749,10 @@ namespace pwiz.Osprey.Tasks
         {
             long survivorObservations = 0;
             int fileCount = rescored.FileCount;
-            using (var mergeProgress = new ProgressReporter(
+            ProgressReporter.Run(
                 CountText.Format(fileCount, OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Collecting_second_pass_precursor_candidates_from_1_file,
                     OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Collecting_second_pass_precursor_candidates_from__0__files),
-                fileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileCount, mergeProgress =>
             {
                 int mergeIdx = 0;
                 foreach (var kvp in rescored.StreamFiles())
@@ -1769,8 +1766,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     floors.ObserveIdentities(kvp.Value);
                 }
-                mergeProgress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return survivorObservations;
         }
 
@@ -1803,10 +1799,10 @@ namespace pwiz.Osprey.Tasks
             int nMapped = 0;
             var unpatched = new List<string>();
             var experiment = new FdrExperimentAccumulator();
-            using (var patchProgress = new ProgressReporter(
+            ProgressReporter.Run(
                 CountText.Format(fileKeys.Count, OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Writing_experiment_level_q_values_for_1_file,
                     OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Writing_experiment_level_q_values_for__0__files),
-                fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileKeys.Count, patchProgress =>
             {
                 int patchIdx = 0;
                 foreach (string fileKey in fileKeys)
@@ -1839,8 +1835,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     nMapped += staged.Count;
                 }
-                patchProgress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
             ctx.LogInfo(string.Format(
