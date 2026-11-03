@@ -149,6 +149,9 @@ $modes = @(
     @{ Id = '3+'; Title = 'chain report is two-pass'
        Proves = 'The HPC chain''s diagnostics report carries both passes.'
        Lines = @('mode3 (chain report is two-pass)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 3) }; Gate = 'ModelDiagnostics and mode 3' }
+    @{ Id = '3fdp'; Title = 'chain FDP curves == straight-through'
+       Proves = 'Every entrapment FDP view of both passes in the chain''s report (q, lower bound, combined, paired, accepted counts) equals the straight-through report''s at the gate tolerance. The blib and sidecars cannot see the estimators'' library-derived inputs; issue #4645. Free: reads both reports.'
+       Lines = @('mode3 (chain FDP curves==straight)'); When = { param($s) [bool]$s.ModelDiagnostics -and [bool]$s.Manifest -and -not (Skipped $s 3) }; Gate = 'ModelDiagnostics, entrapment (Manifest) and mode 3' }
     @{ Id = '4';  Cost = '4'; Title = 'warm re-run: every task reports a cache hit'
        Proves = 'An identical second invocation runs no task and rewrites nothing - the only leg that can see a cache-invalidation regression. Seconds.'
        Lines = @('mode4 (warm re-run all cached)'); When = { param($s) $true }; Gate = 'every dataset (-SkipWarmRerun)' }

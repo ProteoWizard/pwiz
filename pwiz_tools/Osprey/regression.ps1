@@ -2626,6 +2626,31 @@ foreach ($name in $selected) {
                         "not reach the SecondPassFDR node")
                     $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (pass-1 only)")
                 }
+
+                # The chain's entrapment FDP curves must be the straight-through ones (issue
+                # #4645). The blib and sidecar compares above cannot see them: the estimators
+                # read the library-derived classification and pairing, not anything those files
+                # carry. That is how the paired curve once differed by up to 9% while every other
+                # leg was green - SecondPassFDR skips decoy generation, and the classification
+                # walked straight-through's generated DECOY_ entries as targets (until #4860
+                # tested the decoy flag), giving each target its decoy's pair index.
+                #
+                # Every view of both passes, every array, within the gate tolerance; the routes
+                # are byte-identical today. No line on a dataset with no entrapment (no views on
+                # either side); whether views exist at all is pinned by the mode-1b golden.
+                $m3fdp = Compare-FdpViews -Expected (Get-DiagnosticsPayload -HtmlPath $diagHtml) `
+                    -Actual $chainDiag -Tolerance $Tolerance
+                if ($m3fdp.Pass -and $m3fdp.Views -gt 0) {
+                    # Formatted before the call: inside Add(...) the comma would end the -f list.
+                    $m3fdpLine = "$name mode3 (chain FDP curves==straight): PASS ({0} views, {1:N0} paired points)" -f
+                        $m3fdp.Views, $m3fdp.PairedPoints
+                    $summaryLines.Add($m3fdpLine)
+                } elseif (-not $m3fdp.Pass) {
+                    $overallFail = $true
+                    Write-Problem-Tc "$name mode3 (chain FDP curves==straight): FAIL - $($m3fdp.Issues.Count) issue(s)"
+                    $m3fdp.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                    $summaryLines.Add("$name mode3 (chain FDP curves==straight): FAIL ($($m3fdp.Issues.Count) issues)")
+                }
             }
         }
     }
