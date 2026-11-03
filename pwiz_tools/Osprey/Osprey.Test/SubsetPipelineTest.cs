@@ -137,7 +137,9 @@ namespace pwiz.Osprey.Test
         /// directory: warm (nothing invalidated), resume (join invalidated) and rehydrate (only
         /// the second pass invalidated). Each must produce the straight-through library. Then the
         /// same directory re-run under a changed validity key and as another build, where every
-        /// task the change reaches must recompute rather than adopt what is on disk.
+        /// task the change reaches must recompute rather than adopt what is on disk. Last, the
+        /// same directory searched with one of its runs, a key change that leaves that run with
+        /// no Stage 6 work, which must report a clean directory's library.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetStraightThroughAndReruns()
@@ -226,6 +228,8 @@ namespace pwiz.Osprey.Test
 
             AssertKeyChangeRecomputes(straightDir, coldBlib);
             AssertOtherBuildRecomputes(straightDir, coldBlib);
+            // Last, because it leaves the directory holding a one-run analysis.
+            AssertShrinkingWorkSetRecomputes(straightDir, CountRescoredRuns(straightLog));
         }
 
         /// <summary>
@@ -1898,9 +1902,17 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertRescoredOnly(string log, int count)
         {
-            Assert.AreEqual(count, SplitLines(log).Count(line =>
-                    line.StartsWith(PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty), StringComparison.Ordinal)),
-                @"re-scored runs" + Environment.NewLine + log);
+            Assert.AreEqual(count, CountRescoredRuns(log), @"re-scored runs" + Environment.NewLine + log);
+        }
+
+        /// <summary>
+        /// How many runs Stage 6 re-scored from spectra: the runs with consensus, reconciliation
+        /// or gap-fill work. A run without any is written unchanged and logs no such line.
+        /// </summary>
+        private static int CountRescoredRuns(string log)
+        {
+            return SplitLines(log).Count(line =>
+                line.StartsWith(PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty), StringComparison.Ordinal));
         }
 
         private static void DeleteFiles(string dir, string pattern)
@@ -1929,6 +1941,38 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, DataInputs(), Verifier(true));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
             AssertBlibsEqual(expectedBlib, Path.Combine(workDir, BLIB_FILE));
+        }
+
+        /// <summary>
+        /// A validity-key change in one output directory that SHRINKS the Stage 6 work set (#4601):
+        /// the same directory searched again with one of its runs, which keys every task after the
+        /// first on the new input set and leaves that run with no cross-run consensus to reconcile
+        /// against, so it has no Stage 6 work where the full analysis re-scored it. Its reconciled
+        /// parquet from the full analysis must not survive: the library must equal a clean
+        /// directory's one-run library, and a warm re-run must then adopt everything and change
+        /// nothing.
+        /// </summary>
+        private void AssertShrinkingWorkSetRecomputes(string workDir, int fullRescoredRuns)
+        {
+            var keyed = new[] { FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME };
+            var oneRun = RunNames(_dataDir, MZML_EXTENSION, RUN_NAMES[0]).ToArray();
+            string blib = Path.Combine(workDir, BLIB_FILE);
+            Assert.AreNotEqual(0, fullRescoredRuns, @"the full analysis had no Stage 6 work to lose");
+
+            string log = RunAnalysis(workDir, oneRun, Verifier(true));
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME }, keyed);
+            AssertRescoredOnly(log, 0);
+
+            string cleanDir = CreateDir(@"onerun-clean");
+            string cleanLog = RunAnalysis(cleanDir, oneRun, Verifier(true));
+            AssertRescoredOnly(cleanLog, 0);
+            AssertBlibsEqual(Path.Combine(cleanDir, BLIB_FILE), blib);
+
+            byte[] shrunkHash = HashFile(blib);
+            log = RunAnalysis(workDir, oneRun, Verifier(false));
+            AssertTasks(log, ALL_TASKS, Array.Empty<string>());
+            AssertNoRecompute(log);
+            CollectionAssert.AreEqual(shrunkHash, HashFile(blib), @"warm re-run rewrote the library");
         }
 
         /// <summary>
