@@ -341,6 +341,7 @@ namespace pwiz.Osprey.IO
                     // reported as the file problem it is, as a one-thread read reported it.
                     ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
                 }
+                progress.Complete();
             }
             _scan.Stop();
 

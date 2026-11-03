@@ -163,6 +163,7 @@ namespace pwiz.Osprey.IO
                                 ref unsortedCount);
                             progress.Report(i + 1);
                         }
+                        progress.Complete();
                     }
                 }
             }

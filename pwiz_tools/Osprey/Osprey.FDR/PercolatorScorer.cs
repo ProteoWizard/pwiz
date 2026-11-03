@@ -196,6 +196,7 @@ namespace pwiz.Osprey.FDR
                         contribAcc.Add(share.ToFeatureSums());
                     scoreProgress.Report(gi);
                 }
+                scoreProgress.Complete();
             }
 
             var contributions = reportContributions
@@ -290,6 +291,7 @@ namespace pwiz.Osprey.FDR
                     off += count;
                     floorProgress?.Report(++floorFile);
                 }
+                floorProgress?.Complete();
             }
 
             // Emit pass: recompute each file's per-run q-values, assign every row's five q-values

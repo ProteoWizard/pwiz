@@ -142,7 +142,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 foreach (var action in fileActions)
                     actions[(fileKvp.Key, action.Key)] = action.Value;
             }
-            planProgress.Dispose();
+            planProgress.Complete();
 
             return actions;
         }

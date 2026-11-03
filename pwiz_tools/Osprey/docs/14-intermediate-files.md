@@ -816,7 +816,7 @@ parquet's blobs, and the same encoders (`ParquetBlobCodec`, in the same shared a
 slot order and every footer key are [22-training-export](22-training-export.md), which is the
 contract; `TrainingExportParquetTest` fails when the writer emits a column that document does not
 name (it checks names only - not types, and not a documented column the writer lacks). Footer
-`osprey.training_export.format_version` is 2.
+`osprey.training_export.format_version` is 3.
 
 ---
 
