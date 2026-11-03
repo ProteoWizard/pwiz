@@ -190,12 +190,22 @@ public class MzxmlRoundTripTests
             CVID.MS_number_of_detector_counts);
         sl.Spectra.Add(spec2);
 
+        string mzxml = new MzxmlWriter().Write(msd);
+
+        // The eager path must number spectra by position, as the lazy path does.
+        var eager = ReparseMzxml(mzxml).Run.SpectrumList!;
+        for (int i = 0; i < 2; i++)
+        {
+            Assert.AreEqual(i, eager.GetSpectrum(i, getBinaryData: false).Index, $"eager spectrum {i}");
+            Assert.AreEqual(i, eager.SpectrumIdentity(i).Index, $"eager identity {i}");
+        }
+
         string path = Path.Combine(Path.GetTempPath(), $"lazy-mzxml-{System.Guid.NewGuid():N}.mzXML");
         try
         {
             using (var fs = File.Create(path))
             {
-                byte[] xml = System.Text.Encoding.UTF8.GetBytes(new MzxmlWriter().Write(msd));
+                byte[] xml = System.Text.Encoding.UTF8.GetBytes(mzxml);
                 fs.Write(xml, 0, xml.Length);
             }
 
@@ -215,6 +225,7 @@ public class MzxmlRoundTripTests
             // Out-of-order access exercises the seek path properly.
             var s1 = rt.Run.SpectrumList.GetSpectrum(1, getBinaryData: true);
             Assert.AreEqual("scan=2", s1.Id);
+            Assert.AreEqual(1, s1.Index);
             Assert.AreEqual(2, s1.Params.CvParam(CVID.MS_ms_level).ValueAs<int>());
             CollectionAssert.AreEqual(new[] { 250.0, 350.0 }, s1.GetMZArray()!.Data);
 

@@ -593,7 +593,17 @@ namespace MSConvertGUI
                         msg = String.Format("Writing \"{0}\"...", deduplicatedFilename);
                         LogUpdate?.Invoke(msg, JobInfo);
                         StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, JobInfo);
-                        MSDataFile.Write(msd, deduplicatedFilename, config.WriteConfig, ilr.Inner);
+                        try
+                        {
+                            MSDataFile.Write(msd, deduplicatedFilename, config.WriteConfig, ilr.Inner);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Closing the progress window stops the write part way through;
+                            // don't leave the truncated file behind under the output name.
+                            try { File.Delete(deduplicatedFilename); } catch { }
+                            throw;
+                        }
                         ilr.removeListener(this);
                     }
                     finally
@@ -692,6 +702,7 @@ namespace MSConvertGUI
                 var PercentageUpdate = logic.PercentageUpdate;
                 var _info = logic.JobInfo;
                 _info.Started = true;
+                Program.CurrentJob.Value = _info;
 
                 try
                 {
@@ -722,6 +733,10 @@ namespace MSConvertGUI
                     {
                         //probably nothing left to report to
                     }
+                }
+                finally
+                {
+                    Program.CurrentJob.Value = null;
                 }
 
                 _info.Finished = true;

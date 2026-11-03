@@ -88,7 +88,10 @@ public sealed class MzxmlReader
                         FillInMetadata(msd);
                         return;
                     }
-                    spectra!.Spectra.Add(ReadOneScan(reader, getBinaryData: true));
+                    // Number by position, as SpectrumList_Mzxml does for the lazy path.
+                    var spec = ReadOneScan(reader, getBinaryData: true);
+                    spec.Index = spectra!.Spectra.Count;
+                    spectra.Spectra.Add(spec);
                     break;
                 case "index":
                 case "indexOffset":
