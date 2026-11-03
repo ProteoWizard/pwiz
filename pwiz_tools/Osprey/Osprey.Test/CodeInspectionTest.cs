@@ -269,7 +269,7 @@ namespace pwiz.Osprey.Test
         {
             string sourceRoot = FindOspreySourceRoot();
             const string accessorFile = "Osprey.Core/EnvVar.cs";
-            var rawAccess = new Regex(@"\bEnvironment\s*\.\s*(Get|Set)EnvironmentVariables?\s*\(");
+            var rawAccess = new Regex(@"\b((Get|Set)EnvironmentVariables?|ExpandEnvironmentVariables)\s*\(");
             var nameLiteral = new Regex("@?\"(OSPREY_[A-Z0-9_]+)\"");
             var catalog = EnvVarUsage.Catalog;
             var catalogued = new HashSet<string>(catalog.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);

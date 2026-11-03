@@ -416,7 +416,7 @@ namespace pwiz.Osprey.Core
         /// It covers only those block reads, not mzML parsing, cache writes or parallel window reads.
         /// </summary>
         public static bool SerialReadsProcessWide { get; set; } =
-            string.Equals(ENV_SERIAL_READ_SCOPE.Value, @"process", StringComparison.OrdinalIgnoreCase);
+            string.Equals(ENV_SERIAL_READ_SCOPE.Value?.Trim(), @"process", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
         /// The log line naming the window-read switches when either is set, so a timing run records
@@ -960,7 +960,7 @@ namespace pwiz.Osprey.Core
         /// still being recorded by the operator as a distinct A/B arm. 64 is far above any
         /// plausible reproducibility frontier for a DIA experiment and well inside both
         /// failures. Values above it are rejected as unrecognized, so
-        /// <see cref="ExperimentAggUnrecognized"/> warns instead of the run silently
+        /// <see cref="ExperimentAggUnrecognized"/> stops the run at startup instead of it silently
         /// proceeding on the max default.</summary>
         public const int MEAN_BEST_N_MAX = 64;
 
@@ -1128,7 +1128,7 @@ namespace pwiz.Osprey.Core
         /// <summary>True when OSPREY_EXPERIMENT_AGG was set to something that is neither
         /// <see cref="EXPERIMENT_AGG_MAX"/> nor a well-formed
         /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt; with N&gt;=2, and was therefore
-        /// normalized to the max default. The consuming site logs a one-line warning, mirroring
+        /// normalized to the max default. Program startup ABORTS on it, mirroring
         /// <see cref="Pass2QValueUnrecognized"/>. This matters more here than for most flags: the
         /// whole point of this one is A/B measurement, so a typo (mean-best-1, meanbest2) that
         /// silently ran the DEFAULT would be recorded by the operator as a mean(best-N) result and

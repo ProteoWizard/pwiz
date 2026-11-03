@@ -212,7 +212,7 @@ namespace pwiz.Osprey.Core
                 if (AcceptsValue != null ? AcceptsValue(Value) : IsListedValue(Value))
                     return null;
                 return string.Format(@"{0}='{1}' is not a recognized value. Use {2}, or unset it for the default.",
-                    Name, Value, Values != null ? string.Join(@" or ", Values.Select(v => @"'" + v + @"'")) : ValueExample);
+                    Name, Value, Values != null ? string.Join(@" or ", Values.Select(v => @"'" + v + @"'")) : Usage);
             }
         }
 
@@ -280,7 +280,7 @@ namespace pwiz.Osprey.Core
             var entries = new List<EnvVar>();
             foreach (var assembly in OspreyAssemblies(root))
             {
-                foreach (var type in assembly.GetTypes())
+                foreach (var type in LoadableTypes(assembly))
                 {
                     if (type.IsGenericTypeDefinition)
                         continue;
@@ -359,6 +359,21 @@ namespace pwiz.Osprey.Core
                         continue;
                     pending.Enqueue(Assembly.Load(reference));
                 }
+            }
+        }
+
+        // The types of an assembly that load. A type whose dependency is missing (an optional
+        // runtime) cannot declare a variable anyone reads in this process, and must not stop
+        // startup.
+        private static IEnumerable<Type> LoadableTypes(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types.Where(t => t != null);
             }
         }
 

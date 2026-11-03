@@ -39,6 +39,8 @@ namespace pwiz.Osprey.Scoring
         private static readonly EnvVar ENV_DIAG_XCORR_SCAN = new EnvVar(@"OSPREY_DIAG_XCORR_SCAN", EnvVarGroup.diagnostic,
             @"Append the XCorr computation for this MS2 scan to cs_xcorr_diag.txt.")
             { ValueExample = @"<scan>" };
+        // Read once: the XCorr below runs per candidate in the main search.
+        private static readonly string DiagXcorrScan = ENV_DIAG_XCORR_SCAN.Value;
 
         private readonly BinConfig _binConfig;
 
@@ -404,7 +406,7 @@ namespace pwiz.Osprey.Scoring
             // call and do not need zeroing.
 
             // XCorr diagnostic for bisection
-            string diagXcorrScan = ENV_DIAG_XCORR_SCAN.Value;
+            string diagXcorrScan = DiagXcorrScan;
             if (!string.IsNullOrEmpty(diagXcorrScan) &&
                 spectrum.ScanNumber.ToString(System.Globalization.CultureInfo.InvariantCulture) == diagXcorrScan)
             {
