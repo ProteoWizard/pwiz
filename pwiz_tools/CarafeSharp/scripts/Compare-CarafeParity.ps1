@@ -12,10 +12,10 @@
     configuration runs them.
 
     The script:
-      1. Fetches the reference packages the comparisons read that are not there yet
+      1. Builds CarafeSharp (Release, CPU) unless -NoBuild, and stops if the build fails.
+      2. Fetches the reference packages the comparisons read that are not there yet
          (build.ps1 -TestData Fetch: testdata.json's URL, size and SHA-256, then each package's
          MANIFEST.sha256), into <Downloads>/Perftests or CARAFESHARP_TESTDATA.
-      2. Builds CarafeSharp (Release, CPU) unless -NoBuild.
       3. Runs the comparisons, which are CarafeSharp.Test methods in a test category of their own
          (FullParity for Stellar, Astral for Astral), with every one required to run to a result.
       4. Reports each comparison: what it checks, its outcome and time, and the failure message.
@@ -42,7 +42,7 @@
     Stellar (default), Astral, or All (Stellar, then Astral).
 
 .PARAMETER TestName
-    Run only the comparisons whose name contains this text.
+    Run only the comparisons whose name contains this text. Needs -Dataset Stellar or Astral.
 
 .PARAMETER NoBuild
     Use the existing Release CPU build.
@@ -71,22 +71,32 @@ $datasets = [ordered]@{
     Astral  = @{ Category = 'Astral'; Packages = 'astral' }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
+# build.ps1 fails a run whose filter matches nothing, and most names exist in one dataset only.
+if ($TestName -and $selected.Count -gt 1) {
+    Write-Host 'OVERALL: FAIL - -TestName needs -Dataset Stellar or Astral, not All' -ForegroundColor Red
+    exit 1
+}
 
 $trxPath = Join-Path (Join-Path $carafeRoot 'TestResults') 'CarafeSharp.Test-Release-cpu.trx'
 $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
 $rows = @()
 $problems = @()
 $clock = [Diagnostics.Stopwatch]::StartNew()
-$built = $NoBuild
+# Build once, up front, and stop if it fails: a dataset run after a failed build would compare
+# the binaries already on disk.
+if (-not $NoBuild) {
+    & pwsh -NoProfile -File $buildScript -NoTests
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ("OVERALL: FAIL - the build failed (build.ps1 exit {0})" -f $LASTEXITCODE) -ForegroundColor Red
+        exit 1
+    }
+}
 foreach ($name in $selected) {
     $spec = $datasets[$name]
     Write-Host ''
     Write-Host ("=== {0}: TestCategory={1}, packages {2} ===" -f $name, $spec.Category, $spec.Packages) -ForegroundColor Cyan
-    $buildArgs = @('-NoProfile', '-File', $buildScript, '-TestCategory', $spec.Category, '-RequireData',
+    $buildArgs = @('-NoProfile', '-File', $buildScript, '-NoBuild', '-TestCategory', $spec.Category, '-RequireData',
         '-TestData', 'Fetch', '-TestDataPackage', $spec.Packages)
-    if ($built) {
-        $buildArgs += '-NoBuild'
-    }
     if ($TestName) {
         $buildArgs += @('-TestName', $TestName)
     }
@@ -95,7 +105,6 @@ foreach ($name in $selected) {
     }
     & pwsh @buildArgs
     $exitCode = $LASTEXITCODE
-    $built = $true
     if (-not (Test-Path -LiteralPath $trxPath)) {
         $problems += "${name}: build.ps1 exited $exitCode with no test results (see its output above)"
         continue
@@ -107,7 +116,7 @@ foreach ($name in $selected) {
             Dataset  = $name
             Test     = $result.testName
             Outcome  = $result.outcome
-            Duration = [TimeSpan]::Parse($result.duration)
+            Duration = $(if ($result.duration) { [TimeSpan]::Parse($result.duration) } else { [TimeSpan]::Zero })
             Message  = $message
         }
     }

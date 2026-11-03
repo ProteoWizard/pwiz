@@ -81,7 +81,7 @@
 .EXAMPLE
     ./build.ps1 -NoBuild -TestCategory Astral  # the Astral parity tests on the existing build
 .EXAMPLE
-    ./build.ps1 -NoTests -TestData Fetch       # build, and fetch the default packages (regression.ps1 reads them)
+    ./build.ps1 -NoTests -TestData Fetch       # build, and fetch the Stellar packages (regression.ps1, the parity script)
 .EXAMPLE
     ./build.ps1 -NoBuild -NoTests -TestData Verify -TestDataPackage all  # check every package
 #>
