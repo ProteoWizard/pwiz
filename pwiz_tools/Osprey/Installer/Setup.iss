@@ -59,6 +59,8 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 UninstallDisplayName={code:InstallTypeDisplayName}
 UninstallDisplayIcon={app}\Osprey.exe
+; The installer's own icon: the one Osprey.exe carries (Osprey.csproj ApplicationIcon).
+SetupIconFile=..\Osprey\Osprey.ico
 ; See InstallType.iss for why these three are what they are.
 DisableDirPage=no
 UsePreviousLanguage=no

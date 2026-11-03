@@ -87,7 +87,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(ModifiedPeptideStyle.dia_nn, outputs.TsvStyle);
 
             // Carafe's code defaults, not its help text's.
-            settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta" }).LibrarySettings;
+            settings = CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta" }).LibrarySettings;
             CollectionAssert.AreEqual(new[] { 2, 3, 4 }, settings.Charges);
             Assert.AreEqual(300.0, settings.MinPrecursorMz);
             Assert.AreEqual(2000.0, settings.MaxPrecursorMz);
@@ -99,96 +99,96 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(@"./", settings.OutputDirectory);
             Assert.AreEqual(@"gpu", settings.Device);
             Assert.IsFalse(settings.PredictIonMobility);
-            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ccs" }).LibrarySettings.PredictIonMobility);
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--ccs" }).LibrarySettings.PredictIonMobility);
 
             // -model_dir reads the folder's meta.json and -tf; -tf is ignored without it.
-            settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model_dir", @"m", @"-tf", @"rt", @"-I2L", @"-pretrained", @"p.zip" })
+            settings = CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model-dir", @"m", @"--tf", @"rt", @"--i2l", @"--pretrained", @"p.zip" })
                 .LibrarySettings;
             Assert.AreEqual(@"m", settings.ModelDirectory);
             Assert.IsTrue(settings.ApplyModelDirectoryMeta);
             Assert.AreEqual(@"rt", settings.TrainingType);
             Assert.IsTrue(settings.Digest.ConvertIToL);
             Assert.AreEqual(@"p.zip", settings.PretrainedModels);
-            Assert.AreEqual(@"all", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-tf", @"rt" }).LibrarySettings.TrainingType);
+            Assert.AreEqual(@"all", CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--tf", @"rt" }).LibrarySettings.TrainingType);
 
             // -model names a saved model, which takes no meta.json window; -nce and -rt_max given
             // are marked, so the saved model's own do not replace them.
-            settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-tf", @"ms2", @"-nce", @"25" })
+            settings = CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--tf", @"ms2", @"--nce", @"25" })
                 .LibrarySettings;
             Assert.AreEqual(@"m.carafemodel", settings.ModelFile);
             Assert.IsFalse(settings.ApplyModelDirectoryMeta);
             Assert.AreEqual(@"ms2", settings.TrainingType);
             Assert.IsTrue(settings.UserNce);
             Assert.IsFalse(settings.UserRtMax);
-            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-rt_max", @"30" }).LibrarySettings.UserRtMax);
-            var infoCommand = CarafeCommandLine.Parse(new[] { @"-model_info", @"m.carafemodel" });
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--rt-max", @"30" }).LibrarySettings.UserRtMax);
+            var infoCommand = CarafeCommandLine.Parse(new[] { @"--model-info", @"m.carafemodel" });
             Assert.AreEqual(CarafeCommandMode.model_info, infoCommand.Mode);
             Assert.AreEqual(@"m.carafemodel", infoCommand.ModelInfoPath);
             // -activation and -analyzer name known values, whatever their case, and are marked as given.
-            settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-activation", @"RECID", @"-analyzer", @"lit" }).LibrarySettings;
+            settings = CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--activation", @"RECID", @"--analyzer", @"lit" }).LibrarySettings;
             Assert.AreEqual(AcquisitionVocabulary.RE_CID, settings.Activation);
             Assert.AreEqual(AcquisitionVocabulary.LIT, settings.Analyzer);
             Assert.IsTrue(settings.UserActivation && settings.UserAnalyzer);
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-activation", @"CID" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-analyzer", @"FTICR" }));
-            var training = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-activation", @"beam-cid", @"-analyzer", @"ToF" }).TrainingSettings;
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--activation", @"CID" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--analyzer", @"FTICR" }));
+            var training = CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet", @"--activation", @"beam-cid", @"--analyzer", @"ToF" }).TrainingSettings;
             Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, training.Activation);
             Assert.AreEqual(AcquisitionVocabulary.TOF, training.Analyzer);
             // -rt_model names an RT model, whatever its case: in training the one to fine-tune, and for the library
             // after training the one to predict with. Without it, none is named, so a saved model's own can apply,
             // and an explicit alphapeptdeep is not taken for the default.
-            Assert.IsNull(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta" }).LibrarySettings.RtModelType);
-            Assert.IsNull(CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet" }).TrainingSettings.RtModelType);
+            Assert.IsNull(CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta" }).LibrarySettings.RtModelType);
+            Assert.IsNull(CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet" }).TrainingSettings.RtModelType);
             Assert.AreEqual(RtModelType.alphapeptdeep,
-                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"alphapeptdeep" }).LibrarySettings.RtModelType);
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--rt-model", @"alphapeptdeep" }).LibrarySettings.RtModelType);
             Assert.AreEqual(RtModelType.chronologer,
-                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"Chronologer" }).LibrarySettings.RtModelType);
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"prosit" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"1" }));
-            var fineTuned = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-db", @"x.fasta", @"-rt_model", @"chronologer" });
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--rt-model", @"Chronologer" }).LibrarySettings.RtModelType);
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--rt-model", @"prosit" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--rt-model", @"1" }));
+            var fineTuned = CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet", @"--db", @"x.fasta", @"--rt-model", @"chronologer" });
             Assert.AreEqual(RtModelType.chronologer, fineTuned.TrainingSettings.RtModelType);
             Assert.AreEqual(RtModelType.chronologer, fineTuned.TrainingSettings.Library.RtModelType);
-            var ms2Only = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-db", @"x.fasta", @"-tf", @"ms2", @"-rt_model", @"chronologer" });
+            var ms2Only = CarafeCommandLine.Parse(new[] { @"--i", @"a.training.parquet", @"--db", @"x.fasta", @"--tf", @"ms2", @"--rt-model", @"chronologer" });
             Assert.AreEqual(RtModelType.chronologer, ms2Only.TrainingSettings.Library.RtModelType);
             // It is refused with -model_dir, with -ms2_model, and without -db or training.
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-model_dir", @"d" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-ms2_model", @"s.safetensors" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-o", @"out" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--model-dir", @"d" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--ms2-model", @"s.safetensors" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--model", @"m.carafemodel", @"--o", @"out" }));
             // With training, -model is the saved model to fine-tune further, with -tf all only;
             // the library after training predicts with the run's own models, not the saved one.
-            var further = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-i", @"a.training.parquet" });
+            var further = CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--model", @"m.carafemodel", @"--i", @"a.training.parquet" });
             Assert.AreEqual(CarafeCommandMode.train, further.Mode);
             Assert.AreEqual(@"m.carafemodel", further.TrainingSettings.BaseModel);
             Assert.IsNull(further.TrainingSettings.Library.ModelFile);
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-i", @"a.training.parquet", @"-tf", @"rt" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--model", @"m.carafemodel", @"--i", @"a.training.parquet", @"--tf", @"rt" }));
 
             // -ms is training, which reads Osprey's results (-i) rather than the raw data.
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ms", @"a.mzML" }));
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type", @"mzSpecLib", @"-fast" }));
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.tsv" }));
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-mode", @"phosphorylation" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-min_pep_charge", @"3", @"-max_pep_charge", @"2" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--ms", @"a.mzML" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--lf-type", @"mzSpecLib", @"--fast" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.tsv" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--mode", @"phosphorylation" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--min-pep-charge", @"3", @"--max-pep-charge", @"2" }));
 
             // The device and the modifications are checked with the other options, before any work.
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-device", @"tpu" }));
-            var badIds = Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"2, 7" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--device", @"tpu" }));
+            var badIds = Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"2, 7" }));
             Assert.IsInstanceOfType(badIds.InnerException, typeof(FormatException));
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"99" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--fix-mod", @"99" }));
             // TMT (11) has no alphabase name, so Carafe's library prediction cannot use it.
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"11" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"11" }));
             // Only the DIA-NN notation can write a protein N-term acetyl in a TSV; a .blib can too.
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"EncyclopeDIA" }));
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"5", @"-lf_type", @"Skyline" }));
-            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"DIA-NN" });
-            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"Skyline", @"-fast" });
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"5", @"--lf-type", @"EncyclopeDIA" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--fix-mod", @"5", @"--lf-type", @"Skyline" }));
+            CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"5", @"--lf-type", @"DIA-NN" });
+            CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"5", @"--lf-type", @"Skyline", @"--fast" });
             // pyro-Glu (27, 28) is predicted into a .blib; no TSV notation can write it.
-            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"28", @"-lf_type", @"blib" });
-            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"27", @"-lf_type", @"Skyline", @"-fast" });
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"28" }));
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"28", @"-lf_type", @"blib,DIA-NN" }));
+            CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"28", @"--lf-type", @"blib" });
+            CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--fix-mod", @"27", @"--lf-type", @"Skyline", @"--fast" });
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"28" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--var-mod", @"28", @"--lf-type", @"blib,DIA-NN" }));
             // Stage 1 reads ids 11 to 26 (no alphabase name) for its m/z filter, so its command line accepts them.
             Assert.AreEqual(CarafeCommandMode.build_entrapment_fasta, CarafeCommandLine.Parse(new[]
-                { @"-build_entrapment_fasta", @"out.fasta", @"-db", @"x.fasta", @"-varMod", @"11", @"-mz_filter" }).Mode);
+                { @"--build-entrapment-fasta", @"out.fasta", @"--db", @"x.fasta", @"--var-mod", @"11", @"--mz-filter" }).Mode);
         }
 
         [TestMethod]
@@ -410,7 +410,8 @@ namespace pwiz.CarafeSharp.Test
                 foreach (var row in mobilities)
                 {
                     Assert.AreEqual(BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0, row.Type, row.Label);
-                    Assert.IsTrue(double.IsNaN(row.Ccs), row.Label);
+                    // The CCS beside the 1/K0 converted from it, for Skyline's own conversion
+                    Assert.IsTrue(row.Ccs > 200 && row.Ccs < 1000, row.Label);
                     Assert.IsTrue(row.InverseK0 > 0.4 && row.InverseK0 < 2.0, row.Label);
                 }
                 // The unmodified precursors' 1/K0 is the pretrained model's CCS, converted.
@@ -803,10 +804,10 @@ namespace pwiz.CarafeSharp.Test
         public void TestLibraryContract()
         {
             var refused = Assert.ThrowsException<ArgumentException>(() =>
-                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type", @"blib", @"-library_contract" }));
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--lf-type", @"blib", @"--library-contract" }));
             StringAssert.Contains(refused.Message, @"--pairing-manifest");
             refused = Assert.ThrowsException<ArgumentException>(() =>
-                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-pairing_manifest", @"m.tsv", @"-library_contract" }));
+                CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--pairing-manifest", @"m.tsv", @"--library-contract" }));
             StringAssert.Contains(refused.Message, @"--lf-type blib");
 
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Contract_" + Guid.NewGuid().ToString(@"N"));

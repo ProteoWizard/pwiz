@@ -42,7 +42,7 @@ namespace pwiz.CarafeSharp.Tasks
         {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
-            if (path.EndsWith(CarafeModelFile.EXTENSION, StringComparison.OrdinalIgnoreCase))
+            if (CarafeModelFile.IsModelFileName(path))
                 return CarafeModelFile.ReadStamp(path);
             if (path.EndsWith(BLIB_EXT, StringComparison.OrdinalIgnoreCase))
                 return ReadBlib(path);

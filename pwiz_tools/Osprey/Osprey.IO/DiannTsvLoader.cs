@@ -40,8 +40,10 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         /// <summary>
-        /// The reader's version, in the library composition hash (the derived .blib's and the
-        /// <c>.libcache</c>'s). 4: one peak per m/z,
+        /// The reader's version, in the library composition hash (the derived .blib's).
+        /// 5: modification ids, titles and masses from unimod.obo (<see cref="UniMod"/>): any
+        /// UniMod id or title is read, a title takes the modification's exact mass rather than
+        /// four decimals, and iTRAQ4plex is 144.102063, not 144.102062. 4: one peak per m/z,
         /// scaled to the base peak (<see cref="FragmentPeaks"/>); the modified sequence in the
         /// blib writer's text (<c>C[+57.0215]</c>) and modifications named by their UniMod
         /// entry, as the blib loader reads them, so an entry reads the same from either file.
@@ -52,7 +54,7 @@ namespace pwiz.Osprey.IO
         /// has (or a modification with no known mass) refuses the whole library, where version 1
         /// read it as a default or dropped it.
         /// </summary>
-        public const int READER_VERSION = 4;
+        public const int READER_VERSION = 5;
 
         /// <summary>
         /// The library composition term of a .tsv read by this reader: its version and
@@ -121,13 +123,13 @@ namespace pwiz.Osprey.IO
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 1))
             {
-                // NOT a using: this reporter measures the READ, which finishes partway through
-                // ParseReader. Disposing it with the stack would force its 100% out after phase 2
-                // and after the interning summary - a completion line for a phase that ended
-                // minutes earlier. ParseReader disposes it when the stream is exhausted.
-                var readProgress = new ProgressReporter(
+                // This reporter measures the READ, which finishes partway through ParseReader, so
+                // ParseReader completes it when the stream is exhausted rather than at the end of
+                // this scope - after phase 2 and the interning summary, a completion line for a
+                // phase that ended minutes earlier.
+                using (var readProgress = new ProgressReporter(
                     string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 using (var progressStream = new ProgressStream(stream, readProgress))
                 // leaveOpen so ownership of progressStream is explicit rather than resting on
                 // ProgressStream declining to override Dispose (it does not own the inner stream).
@@ -147,12 +149,12 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but disposes
+        /// As <see cref="ParseReader(TextReader,Action{string})"/>, but completes
         /// <paramref name="readProgress"/> when the READ finishes rather than when the caller's
         /// scope ends - the row loop below is only the first half of this method.
         /// </summary>
         private List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo,
-            IDisposable readProgress)
+            ProgressReporter readProgress)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -179,7 +181,7 @@ namespace pwiz.Osprey.IO
                 ParseRow(fields, cols, lineNum, precursorMap, errors);
             }
             // Stream exhausted: the byte progress is complete and must say so HERE.
-            readProgress?.Dispose();
+            readProgress?.Complete();
 
             // A library with any invalid line is refused whole, after every line has been read, so
             // one run names every line to fix. Searching with a value guessed for a bad cell
@@ -198,52 +200,52 @@ namespace pwiz.Osprey.IO
             uint id = 0;
 
             // Phase 2. The byte progress above ends when the stream is exhausted, so without this
-            // the console sat at 100% through the whole materialization pass. Constructed rather
-            // than `using`d so the loop needs no re-indent and so an exception here does not print
-            // a completed-looking 100% while unwinding.
-            var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
-                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
-            long nBuilt = 0;
-
-            foreach (var data in precursorMap.Values)
+            // the console sat at 100% through the whole materialization pass.
+            using (var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
+                    string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                progress.Report(++nBuilt);
-                if (data.Fragments.Count < _minFragments)
-                    continue;
+                long nBuilt = 0;
 
-                // Checked here, after the min-fragment filter, so a row that is not going
-                // into the library at all cannot fail the run.
-                LibraryValidation.ValidatePeptideLength(data.Sequence);
+                foreach (var data in precursorMap.Values)
+                {
+                    progress.Report(++nBuilt);
+                    if (data.Fragments.Count < _minFragments)
+                        continue;
 
-                var modifications = BuildInternedModifications(data.Modifications, interner);
+                    // Checked here, after the min-fragment filter, so a row that is not going
+                    // into the library at all cannot fail the run.
+                    LibraryValidation.ValidatePeptideLength(data.Sequence);
 
-                // The modified sequence in the one text every loader gives it, built from the
-                // modification masses as the blib writer builds it (C[+57.0215], not
-                // C[UniMod:4]), so an entry reads the same from a .tsv and from its .blib.
-                var entry = new LibraryEntry(id,
-                    interner.Intern(data.Sequence),
-                    interner.Intern(BlibSpectrum.FormatModifiedSequence(data.Sequence,
-                        PeptideFragmentMass.ModMassesByPosition(modifications))),
-                    data.Charge, data.PrecursorMz, data.RetentionTime);
-                entry.Modifications = modifications;
-                // In m/z order, as a .blib stores peaks and the blib loader reads them, so the
-                // library is the same object whichever file it came from: the order of an entry's
-                // fragments reaches the search (the top-fragment selection returns a short entry
-                // in it), and a .tsv's row order is the writer's, not a property of the library.
-                // Then one peak per m/z, as a spectrum has (FragmentPeaks).
-                var fragments = FragmentPeaks.MergeEqualMz(data.Fragments.OrderBy(f => f.Mz).ToArray());
-                if (_fragmentTolerance != null)
-                    ApplyTyping(entry, fragments, _fragmentTolerance, TypeCheck);
-                entry.Fragments = fragments;
-                entry.ProteinIds = interner.InternToArray(data.ProteinIds);
-                entry.GeneNames = interner.InternToArray(data.GeneNames);
-                entry.IsDecoy = data.IsDecoy;
+                    var modifications = BuildInternedModifications(data.Modifications, interner);
 
-                entries.Add(entry);
-                id++;
+                    // The modified sequence in the one text every loader gives it, built from the
+                    // modification masses as the blib writer builds it (C[+57.0215], not
+                    // C[UniMod:4]), so an entry reads the same from a .tsv and from its .blib.
+                    var entry = new LibraryEntry(id,
+                        interner.Intern(data.Sequence),
+                        interner.Intern(BlibSpectrum.FormatModifiedSequence(data.Sequence,
+                            PeptideFragmentMass.ModMassesByPosition(modifications))),
+                        data.Charge, data.PrecursorMz, data.RetentionTime);
+                    entry.Modifications = modifications;
+                    // In m/z order, as a .blib stores peaks and the blib loader reads them, so the
+                    // library is the same object whichever file it came from: the order of an entry's
+                    // fragments reaches the search (the top-fragment selection returns a short entry
+                    // in it), and a .tsv's row order is the writer's, not a property of the library.
+                    // Then one peak per m/z, as a spectrum has (FragmentPeaks).
+                    var fragments = FragmentPeaks.MergeEqualMz(data.Fragments.OrderBy(f => f.Mz).ToArray());
+                    if (_fragmentTolerance != null)
+                        ApplyTyping(entry, fragments, _fragmentTolerance, TypeCheck);
+                    entry.Fragments = fragments;
+                    entry.ProteinIds = interner.InternToArray(data.ProteinIds);
+                    entry.GeneNames = interner.InternToArray(data.GeneNames);
+                    entry.IsDecoy = data.IsDecoy;
+
+                    entries.Add(entry);
+                    id++;
+                }
+
+                progress.Complete();
             }
-
-            progress.Dispose();
             interner.LogSummary(logInfo);
             return entries;
         }
@@ -519,9 +521,9 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Adds the modification <paramref name="modStr"/> names on <paramref name="residue"/> at
         /// <paramref name="position"/>, identified as the blib loader identifies one, so an entry
-        /// reads the same from either file: by UniMod id when the text gives one, else a mass
-        /// bracket (<c>C[+57.0215]</c>, as DIA-NN and BiblioSpec print them) is matched against the
-        /// known modifications allowed on the residue at the precision printed, and takes the
+        /// reads the same from either file: by UniMod id or title when the text gives one, else a
+        /// mass bracket (<c>C[+57.0215]</c>, as DIA-NN and BiblioSpec print them) is matched against
+        /// the known modifications allowed on the residue at the precision printed, and takes the
         /// match's exact mass, id and name. A mass matching nothing is used as printed.
         /// </summary>
         private static void AddModification(List<Modification> modifications, List<string> unrecognized,
@@ -534,9 +536,9 @@ namespace pwiz.Osprey.IO
                 return;
             }
             int? unimodId = ParseUnimodId(modStr);
-            var known = unimodId.HasValue ? UniMod.Find(unimodId.Value) : null;
+            var known = unimodId.HasValue ? UniMod.Find(unimodId.Value) : UniMod.FindByName(modStr);
             string number = modStr.TrimStart('+');
-            if (!unimodId.HasValue && double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            if (known == null && !unimodId.HasValue && double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
                 known = UniMod.Match(mass.Value, BlibLoader.PrintedDecimals(number), residue, isNTerm, isCTerm);
             modifications.Add(new Modification
             {
@@ -607,23 +609,13 @@ namespace pwiz.Osprey.IO
             if (s.StartsWith(UniMod.PREFIX, StringComparison.OrdinalIgnoreCase) &&
                 int.TryParse(s.Substring(UniMod.PREFIX.Length), out int unimodId))
             {
-                double? unimodMass = UnimodIdToMass(unimodId);
-                if (unimodMass.HasValue)
-                    return unimodMass;
+                var byId = UniMod.Find(unimodId);
+                if (byId != null)
+                    return byId.Mass;
             }
 
-            // Known modifications by name
-            switch (s.ToUpperInvariant())
-            {
-                case @"OXIDATION": return 15.9949;
-                case @"CARBAMIDOMETHYL":
-                case @"CAM": return 57.0215;
-                case @"PHOSPHO": return 79.9663;
-                case @"ACETYL": return 42.0106;
-                case @"DEAMIDATED":
-                case @"DEAMIDATION": return 0.9840;
-                default: return null;
-            }
+            // A modification named by its UniMod title (e.g. "Oxidation")
+            return UniMod.FindByName(s)?.Mass;
         }
 
         /// <summary>
@@ -651,14 +643,6 @@ namespace pwiz.Osprey.IO
                 return id;
 
             return null;
-        }
-
-        /// <summary>
-        /// Look up mass delta for a UniMod ID (<see cref="UniMod"/>).
-        /// </summary>
-        public static double? UnimodIdToMass(int id)
-        {
-            return UniMod.Find(id)?.Mass;
         }
 
         /// <summary>

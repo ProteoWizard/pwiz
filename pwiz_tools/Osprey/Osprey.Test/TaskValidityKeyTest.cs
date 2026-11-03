@@ -73,11 +73,11 @@ namespace pwiz.Osprey.Test
         /// <list type="bullet">
         /// <item>every blib is read differently since the reader started typing its peaks from
         /// m/z (and reading modification text residue- and precision-aware), so every task of a
-        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the
-        /// <c>.libcache</c> composition carries the reader version with the fragment tolerance
-        /// the cached types were computed within;</item>
+        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the derived
+        /// library's composition carries the reader version with the fragment tolerance the
+        /// typed peaks were computed within;</item>
         /// <item>a DIA-NN TSV search keys exactly as before - its columns are still the typing -
-        /// while its <c>.libcache</c> is re-read once through the validating reader;</item>
+        /// while its derived library is rebuilt once through the validating reader;</item>
         /// <item>the output blib's rows changed for every library, so SecondPassFDR keys on
         /// <c>;blibout</c> for both.</item>
         /// </list>
@@ -95,6 +95,10 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
+                // The TSV term is a literal (an int does not concatenate into a const string), so
+                // hold it to the reader's version here.
+                Assert.AreEqual(@";tsvreader=" + DiannTsvLoader.READER_VERSION.ToString(CultureInfo.InvariantCulture),
+                    OspreyTask.TSV_READER_TERM);
                 Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
                     @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)

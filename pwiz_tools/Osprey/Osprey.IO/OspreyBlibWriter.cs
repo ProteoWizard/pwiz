@@ -50,6 +50,8 @@ namespace pwiz.Osprey.IO
         public const string KEY_VERSION = @"osprey.version";
         /// <summary>The full command line of the run that wrote the library.</summary>
         public const string KEY_COMMAND = @"osprey.command";
+        /// <summary>A one-command output's tuning runs (<c>--training-input</c>), separated by <c>;</c>.</summary>
+        public const string KEY_TRAINING_INPUT = @"osprey.training_input";
         /// <summary>A search output's search mode (<c>coelution</c>).</summary>
         public const string KEY_SEARCH_MODE = @"osprey.search_mode";
         /// <summary>A search output's run-level FDR threshold.</summary>

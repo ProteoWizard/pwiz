@@ -512,6 +512,26 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The inputs every task of a search declares: the library, and the
+        /// <c>--decoy-pairing-manifest</c> when the search names one. Every task loads the library
+        /// - <see cref="PerFileScoringTask"/> to score, every later task through that task's
+        /// rehydrate, which is how a join node gets the entries its sidecars index into - and the
+        /// manifest pairs the library's supplied decoys on that same load. Its identity is also in
+        /// the search hash, so a node without it computes another key for every artifact.
+        ///
+        /// <para>The derived <c>&lt;library-leaf&gt;.blib</c> is NOT declared: it is a cache of the
+        /// library (doc 00, "The sidecar file contract"), so a node without one rebuilds it, and a
+        /// harness may relay it to save that rebuild.</para>
+        /// </summary>
+        internal static IEnumerable<string> LibraryInputs(OspreyConfig config)
+        {
+            if (!string.IsNullOrEmpty(config.LibrarySource?.Path))
+                yield return config.LibrarySource.Path;
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+                yield return config.DecoyPairingManifestPath;
+        }
+
+        /// <summary>
         /// Whether this run's Stage-6 rescore hydrates each run from that run's own artifacts.
         /// TRUE means the <c>--input-scores</c> load must NOT build the all-runs bundle: the
         /// rescore loop hydrates per run, and anything the load pre-built would be discarded and

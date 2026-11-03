@@ -98,7 +98,7 @@ namespace pwiz.CarafeSharp.Test
             }
 
             // Exactly Carafe's options, by name, each declared in the standard spelling.
-            var expected = CARAFE_OPTIONS.Split(' ').Select(n => n.Replace('_', '-')).OrderBy(n => n, StringComparer.Ordinal).ToArray();
+            var expected = CARAFE_OPTIONS.Split(' ').Select(CommandLineGrammar.StandardName).OrderBy(n => n, StringComparer.Ordinal).ToArray();
             var declaredNames = declared.Select(a => a.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray();
             CollectionAssert.AreEqual(expected, declaredNames);
             Assert.AreEqual(@"-h", CarafeCommandLine.ARG_HELP.ShortArgumentText);
@@ -117,10 +117,35 @@ namespace pwiz.CarafeSharp.Test
                     Assert.IsTrue(compatibility.Contains(arg.Name), string.Format(@"Argument {0} has no usage text {1} in CarafeCommandArgUsage.resx", arg.Name, key));
                 Assert.IsFalse(string.IsNullOrEmpty(ArgUsage.Provider.GetDescription(arg.Name)), string.Format(@"Argument {0} has no description", arg.Name));
             }
+            // A hosted argument that is a property of a host's settings page has its label under
+            // its usage key with the property suffix, and nothing else does.
+            var propertyKeys = new HashSet<string>();
+            var hosted = CarafeCommandLine.HostedDigestArguments.Concat(CarafeCommandLine.HostedPredictionArguments)
+                .Concat(CarafeCommandLine.HostedTrainingArguments).ToList();
+            foreach (var arg in declared)
+            {
+                string key = CarafeCommandLine.UsageKey(arg.Name) + CarafeCommandLine.PROPERTY_SUFFIX;
+                if (arg.PropertyName != null)
+                {
+                    Assert.IsTrue(hosted.Contains(arg), string.Format(@"Property {0} is not a hosted argument", arg.Name));
+                    Assert.AreEqual(CarafeCommandLine.GetPropertyName(arg.Name), arg.PropertyName(), arg.Name);
+                    Assert.IsFalse(string.IsNullOrEmpty(arg.PropertyName()), string.Format(@"Property {0} has no label {1} in CarafeCommandArgUsage.resx", arg.Name, key));
+                    propertyKeys.Add(key);
+                }
+                else
+                {
+                    Assert.IsNull(CarafeCommandArgUsage.ResourceManager.GetString(key), string.Format(@"{0} is labeled as a property but is none", arg.Name));
+                }
+            }
             var resourceSet = CarafeCommandArgUsage.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(resourceSet);
             foreach (DictionaryEntry entry in resourceSet)
-                Assert.IsTrue(usageKeys.Contains((string)entry.Key), string.Format(@"CarafeCommandArgUsage.resx key {0} matches no argument", entry.Key));
+            {
+                string key = (string)entry.Key;
+                bool isLabel = key.EndsWith(CarafeCommandLine.PROPERTY_SUFFIX);
+                Assert.IsTrue(isLabel ? propertyKeys.Contains(key) : usageKeys.Contains(key),
+                    string.Format(@"CarafeCommandArgUsage.resx key {0} matches no argument", key));
+            }
         }
 
         /// <summary>
@@ -154,15 +179,24 @@ namespace pwiz.CarafeSharp.Test
             Assert.ThrowsException<ValueInvalidException>(() => CarafeCommandLine.ARG_TF + @"bogus");
             // A name with words is hyphenated in the help and the tokens, and Carafe's underscore
             // spelling names the same declaration in either dash form, so a recorded Carafe command
-            // line runs unchanged. A hyphen in Carafe's spelling, or an underscore where the name has
-            // none, matches nothing.
+            // line runs unchanged. So does its camel case: -maxVar is --max-var. A separator where
+            // the name has none, or one too many, matches nothing.
             Assert.AreEqual(@"--miss-c", CarafeCommandLine.ARG_MISS_C.ArgumentText);
             Assert.AreEqual(@"--lf-type blib", CarafeCommandLine.ARG_LF_TYPE + @"blib");
             foreach (var spelling in new[] { @"--miss-c", @"-miss-c", @"-miss_c", @"--miss_c" })
-                Assert.AreEqual(3, CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", spelling, @"3" }).LibrarySettings.Digest.MaxMissedCleavages, spelling);
+                Assert.AreEqual(3, CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", spelling, @"3" }).LibrarySettings.Digest.MaxMissedCleavages, spelling);
+            Assert.AreEqual(@"--max-var", CarafeCommandLine.ARG_MAX_VAR.ArgumentText);
+            Assert.AreEqual(@"--i2l", CarafeCommandLine.ARG_I2L.ArgumentText);
+            foreach (var spelling in new[] { @"--max-var", @"-maxVar", @"-max_Var", @"--MaxVar" })
+                Assert.AreEqual(3, CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", spelling, @"3" }).LibrarySettings.Modifications.MaxVariableModifications, spelling);
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"-I2L" }).LibrarySettings.Digest.ConvertIToL);
+            // --enzyme takes the index Carafe takes or any name in the table, in any case.
+            foreach (var enzyme in new[] { @"7", @"Lys-C", @"lys-c" })
+                Assert.AreEqual(7, CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"--enzyme", enzyme }).LibrarySettings.Digest.EnzymeIndex, enzyme);
+            Assert.AreEqual(@"Lys-C", EnzymeTable.GetByIndex(7).Name);
             Assert.AreEqual(@"blib", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type=blib" }).LibrarySettings.LibraryFormat);
-            Assert.AreEqual(@"-miss-c-", Assert.ThrowsException<UnknownArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-miss-c-", @"3" })).ArgumentText);
-            Assert.AreEqual(@"-max_Var", Assert.ThrowsException<UnknownArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-max_Var", @"3" })).ArgumentText);
+            Assert.AreEqual(@"-miss-c-", Assert.ThrowsException<UnknownArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"-miss-c-", @"3" })).ArgumentText);
+            Assert.AreEqual(@"-maxvar", Assert.ThrowsException<UnknownArgumentException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"x.fasta", @"-maxvar", @"3" })).ArgumentText);
 
             // A value may start with a dash when it names no option: -mode - is Carafe's default
             // mode, and a negative seed is a number (refused later, by training, as Carafe does).

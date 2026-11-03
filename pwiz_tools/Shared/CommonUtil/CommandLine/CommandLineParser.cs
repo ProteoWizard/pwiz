@@ -40,7 +40,9 @@ namespace pwiz.Common.CommandLine
         /// <summary>
         /// A parser over <paramref name="arguments"/> under the process-wide grammar: a host
         /// installs its grammar on <see cref="ArgUsage.Grammar"/> before it declares or parses
-        /// anything, the way it installs its <see cref="ArgUsage.Provider"/>.
+        /// anything, the way it installs its <see cref="ArgUsage.Provider"/>
+        /// (<see cref="ArgUsage.Install"/>); declarations hosted in another program's process
+        /// parse under that program's grammar.
         /// </summary>
         public CommandLineParser(IEnumerable<Argument<TContext>> arguments)
         {

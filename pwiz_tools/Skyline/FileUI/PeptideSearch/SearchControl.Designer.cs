@@ -22,6 +22,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblProgress = new System.Windows.Forms.Label();
             this.progressBar = new pwiz.Common.Controls.CustomTextProgressBar();
             this.showTimestampsCheckbox = new System.Windows.Forms.CheckBox();
+            this.btnOpenLog = new System.Windows.Forms.Button();
             this.txtSearchProgress = new pwiz.Common.Controls.AutoScrollTextBox();
             this.panelTextBoxBorder = new System.Windows.Forms.Panel();
             this.progressSplitContainer = new System.Windows.Forms.SplitContainer();
@@ -57,7 +58,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.showTimestampsCheckbox.Name = "showTimestampsCheckbox";
             this.showTimestampsCheckbox.UseVisualStyleBackColor = true;
             this.showTimestampsCheckbox.CheckedChanged += new System.EventHandler(this.showTimestampsCheckbox_CheckedChanged);
-            // 
+            //
+            // btnOpenLog
+            //
+            resources.ApplyResources(this.btnOpenLog, "btnOpenLog");
+            this.btnOpenLog.Name = "btnOpenLog";
+            this.btnOpenLog.UseVisualStyleBackColor = true;
+            this.btnOpenLog.Click += new System.EventHandler(this.btnOpenLog_Click);
+            //
             // txtSearchProgress
             // 
             this.txtSearchProgress.AcceptsReturn = true;
@@ -92,6 +100,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.lblProgress);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.btnOpenLog);
             this.DoubleBuffered = true;
             this.Name = "SearchControl";
             this.panelTextBoxBorder.ResumeLayout(false);
@@ -107,6 +116,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         #endregion
         private System.Windows.Forms.Label lblProgress;
         private System.Windows.Forms.CheckBox showTimestampsCheckbox;
+        private System.Windows.Forms.Button btnOpenLog;
         protected System.Windows.Forms.Button btnCancel;
         protected CustomTextProgressBar progressBar;
         protected AutoScrollTextBox txtSearchProgress;

@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;

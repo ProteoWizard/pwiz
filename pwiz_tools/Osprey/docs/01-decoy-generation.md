@@ -344,10 +344,8 @@ manifest-paired target (`LibraryLoader.cs`).
 
 The breakdown is logged as
 `Library-decoy pairing: paired A/B decoys (P%); manifest=M, composition=C; U unpaired decoys, V unpaired targets`
-(`LibraryLoader.cs`). A load served from a `.libcache` did no pairing work - the cache
-holds the finished library - so it reports the same TOTAL from a separate line that omits
-the manifest/composition split, which a finished library does not record. A load served
-from the derived `.blib` pairs from its `DecoyPairs` table and reports that table's line. If `PairingStats.PairedFraction <
+(`LibraryLoader.cs`). A load served from the derived `.blib` pairs from its `DecoyPairs`
+table and reports that table's line. If `PairingStats.PairedFraction <
 config.DecoyPairMinFraction` (default **0.80**), Osprey logs an error and exits with
 code 1 rather than run with broken competition (`LibraryLoader.cs`).
 `PairedFraction` returns 1.0 when there are no decoys

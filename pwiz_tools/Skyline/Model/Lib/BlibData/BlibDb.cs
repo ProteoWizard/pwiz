@@ -1129,6 +1129,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             librarySpecMin =
                                 librarySpecMin.ChangeName(librarySpecMin.Name + BiblioSpecLiteSpec.DotConvertedToSmallMolecules) as BiblioSpecLiteSpec;
                         }
+                        // The minimized library's spectrum ids and peak counts are those of the
+                        // file written here, so its spec must name that file, even for a
+                        // document library
+                        // ReSharper disable once PossibleNullReferenceException
+                        if (!Equals(librarySpecMin.FilePath, blibDb.FilePath))
+                            librarySpecMin = (BiblioSpecLiteSpec)librarySpecMin.ChangeFilePath(blibDb.FilePath);
 
                         listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
                             pepLibraries.Libraries[i], document, smallMoleculeConversionInfo));

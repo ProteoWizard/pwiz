@@ -60,7 +60,10 @@ targets['Skyline'] = targets['SkylineWindowsNet']
 # checks on GitHub; nothing here changes that for the standalone config.)
 extraStatuses = \
 {
-    "bt209": ["Skyline code inspection"]
+    "bt209": ["Skyline code inspection"],
+    # tcinspect.ps1's build-warnings status, posted by tcbuild.bat in vendor builds only, so
+    # bt143 (no vendor DLLs) has none.
+    "bt83": ["Core code inspection"]
 }
 
 targets['SkylineWithTestConnected'] = \
@@ -118,6 +121,8 @@ matchPaths = [
     (".*/smartBuildTrigger.py", {}),
     (".*/nightly_trigger_and_paths_config.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
+    # Run only by the "Publish monthly release" config, which no build depends on
+    (".*/publish_monthly_release.py", {}),
     (".*/ai/.*", {}),
     # TeamCity versioned settings: every UI edit to a config in the Versioned Configs
     # subproject is committed back to this branch by TeamCity itself, and those commits carry
@@ -199,5 +204,7 @@ matchPaths = [
     ("pwiz_tools/CarafeSharp/.*", targets['Osprey']),
     ("pwiz_tools/.*", targets['All']),
     (".*\\.bat", targets['Windows']),
+    # Root .ps1 scripts (tcinspect.ps1) run from the Windows tcbuild.bat files.
+    (".*\\.ps1", targets['Windows']),
     (".*\\.sh", targets['Linux'])
 ]

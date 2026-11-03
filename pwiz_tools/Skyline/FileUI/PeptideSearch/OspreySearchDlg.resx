@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>697, 527</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="btnBack.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnBack.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnBack.Location" type="System.Drawing.Point, System.Drawing">
+    <value>535, 527</value>
+  </data>
+  <data name="btnBack.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBack.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnBack.Text" xml:space="preserve">
+    <value>&lt; &amp;Back</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Name" xml:space="preserve">
+    <value>btnBack</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
+    <value>616, 527</value>
+  </data>
+  <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnNext.Text" xml:space="preserve">
+    <value>&amp;Next &gt;</value>
+  </data>
+  <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
+    <value>btnNext</value>
+  </data>
+  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="lblTitle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblTitle.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 12pt</value>
+  </data>
+  <data name="lblTitle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 9</value>
+  </data>
+  <data name="lblTitle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 20</value>
+  </data>
+  <data name="lblTitle.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lblTitle.Name" xml:space="preserve">
+    <value>lblTitle</value>
+  </data>
+  <data name="&gt;&gt;lblTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblTitle.Parent" xml:space="preserve">
+    <value>titlePanel</value>
+  </data>
+  <data name="titlePanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="titlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="titlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>784, 43</value>
+  </data>
+  <data name="titlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;titlePanel.Name" xml:space="preserve">
+    <value>titlePanel</value>
+  </data>
+  <data name="&gt;&gt;titlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;titlePanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="wizardPages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="wizardPages.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 46</value>
+  </data>
+  <data name="wizardPages.Size" type="System.Drawing.Size, System.Drawing">
+    <value>784, 475</value>
+  </data>
+  <data name="wizardPages.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;wizardPages.Name" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="&gt;&gt;wizardPages.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;wizardPages.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="dataFilesPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="dataFilesPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="dataFilesPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="dataFilesPage.Text" xml:space="preserve">
+    <value>Data Files</value>
+  </data>
+  <data name="&gt;&gt;dataFilesPage.Name" xml:space="preserve">
+    <value>dataFilesPage</value>
+  </data>
+  <data name="&gt;&gt;dataFilesPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataFilesPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblDataFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblDataFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblDataFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>299, 39</value>
+  </data>
+  <data name="lblDataFiles.Text" xml:space="preserve">
+    <value>Add one or more DIA data files to search with Osprey.
+Supported formats: Thermo .raw, Bruker .d, Sciex .wiff, .mzML</value>
+  </data>
+  <data name="&gt;&gt;lblDataFiles.Name" xml:space="preserve">
+    <value>lblDataFiles</value>
+  </data>
+  <data name="&gt;&gt;lblDataFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblDataFiles.Parent" xml:space="preserve">
+    <value>dataFilesPage</value>
+  </data>
+  <data name="fastaPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="fastaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="fastaPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="fastaPage.Text" xml:space="preserve">
+    <value>FASTA</value>
+  </data>
+  <data name="&gt;&gt;fastaPage.Name" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="&gt;&gt;fastaPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fastaPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblFasta.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>420, 26</value>
+  </data>
+  <data name="lblFasta.Text" xml:space="preserve">
+    <value>Select the FASTA protein database to search.
+Osprey predicts a spectral library for its peptides with Carafe, then searches the data files against it.</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
+    <value>lblFasta</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="cbUseExistingLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbUseExistingLibrary.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbUseExistingLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 436</value>
+  </data>
+  <data name="cbUseExistingLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>380, 17</value>
+  </data>
+  <data name="cbUseExistingLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="cbUseExistingLibrary.Text" xml:space="preserve">
+    <value>Search an existing spectral &amp;library instead of predicting one from the FASTA:</value>
+  </data>
+  <data name="&gt;&gt;cbUseExistingLibrary.Name" xml:space="preserve">
+    <value>cbUseExistingLibrary</value>
+  </data>
+  <data name="&gt;&gt;cbUseExistingLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseExistingLibrary.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="tbxLibraryPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="tbxLibraryPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 459</value>
+  </data>
+  <data name="tbxLibraryPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>650, 20</value>
+  </data>
+  <data name="tbxLibraryPath.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
+    <value>tbxLibraryPath</value>
+  </data>
+  <data name="&gt;&gt;tbxLibraryPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxLibraryPath.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="btnBrowseLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnBrowseLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>688, 457</value>
+  </data>
+  <data name="btnBrowseLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnBrowseLibrary.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseLibrary.Name" xml:space="preserve">
+    <value>btnBrowseLibrary</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseLibrary.Parent" xml:space="preserve">
+    <value>fastaPage</value>
+  </data>
+  <data name="libraryModelPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="libraryModelPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="libraryModelPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="libraryModelPage.Text" xml:space="preserve">
+    <value>Library Model</value>
+  </data>
+  <data name="&gt;&gt;libraryModelPage.Name" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="&gt;&gt;libraryModelPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;libraryModelPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblLibraryModel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblLibraryModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblLibraryModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>540, 26</value>
+  </data>
+  <data name="lblLibraryModel.Text" xml:space="preserve">
+    <value>Choose the model Osprey predicts the spectral library with.
+A model fine-tuned on runs like these predicts them better; a model this search fine-tunes is saved for later searches.</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryModel.Name" xml:space="preserve">
+    <value>lblLibraryModel</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryModel.Parent" xml:space="preserve">
+    <value>libraryModelPage</value>
+  </data>
+  <data name="modificationsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="modificationsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="modificationsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="modificationsPage.Text" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Name" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modificationsPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblModifications.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblModifications.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblModifications.Size" type="System.Drawing.Size, System.Drawing">
+    <value>420, 26</value>
+  </data>
+  <data name="lblModifications.Text" xml:space="preserve">
+    <value>The fixed and variable modifications the predicted library carries.
+They start as the document's, and the ones the search uses are added to the document.</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Name" xml:space="preserve">
+    <value>lblModifications</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblModifications.Parent" xml:space="preserve">
+    <value>modificationsPage</value>
+  </data>
+  <data name="searchSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="searchSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="searchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="searchSettingsPage.Text" xml:space="preserve">
+    <value>Search Settings</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsPage.Name" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <data name="lblSearchSettings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSearchSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 15</value>
+  </data>
+  <data name="lblSearchSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>420, 13</value>
+  </data>
+  <data name="lblSearchSettings.Text" xml:space="preserve">
+    <value>Configure the Osprey search. Peptide length, precursor charges and the modification limit come from the document settings.</value>
+  </data>
+  <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
+    <value>lblSearchSettings</value>
+  </data>
+  <data name="&gt;&gt;lblSearchSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSearchSettings.Parent" xml:space="preserve">
+    <value>searchSettingsPage</value>
+  </data>
+  <data name="runSearchPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="runSearchPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="runSearchPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>776, 495</value>
+  </data>
+  <data name="runSearchPage.Text" xml:space="preserve">
+    <value>Run Search</value>
+  </data>
+  <data name="&gt;&gt;runSearchPage.Name" xml:space="preserve">
+    <value>runSearchPage</value>
+  </data>
+  <data name="&gt;&gt;runSearchPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runSearchPage.Parent" xml:space="preserve">
+    <value>wizardPages</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>784, 561</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Osprey Search</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>OspreySearchDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

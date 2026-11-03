@@ -1022,6 +1022,7 @@ namespace pwiz.Osprey.Tasks
                     filesPatched++;
                     nPatched += byEntryId.Count;
                 }
+                progress.Complete();
             }
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's
@@ -1116,8 +1117,10 @@ namespace pwiz.Osprey.Tasks
                 ctx.TryGet<FirstPassPercolatorModel>(out var frozen) && frozen?.Results != null;
             if (haveInputs && OspreyEnvironment.Pass2ProteinCompact)
             {
+                // An empty stratum is an input (no protein had 2 or more detected peptides);
+                // only a missing one is not. If nothing passes, the .blib write says so.
                 haveInputs = ctx.TryGet<ProteinCompactStratum>(out var pcStratum) &&
-                             pcStratum?.BaseIds != null && pcStratum.BaseIds.Count > 0;
+                             pcStratum?.BaseIds != null;
                 if (haveInputs)
                     stratum = pcStratum.BaseIds;
             }
@@ -1589,6 +1592,7 @@ namespace pwiz.Osprey.Tasks
                     DumpRecomputedForDiff(ctx, writer, currentKey, currentEntries);
                     throw;
                 }
+                progress.Complete();
             }
             // Once, after the stream, rather than per file: the counts are run-wide and a
             // missing 1st-pass sidecar is a run-wide conclusion.
@@ -1765,6 +1769,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     floors.ObserveIdentities(kvp.Value);
                 }
+                mergeProgress.Complete();
             }
             return survivorObservations;
         }
@@ -1834,6 +1839,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     nMapped += staged.Count;
                 }
+                patchProgress.Complete();
             }
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));

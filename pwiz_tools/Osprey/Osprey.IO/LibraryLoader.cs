@@ -40,10 +40,11 @@ namespace pwiz.Osprey.IO
     /// and keeps a .tsv library's FINISHED form beside its other caches as a <c>.blib</c> - the
     /// derived library, written once from the parse and read on every later run through the
     /// same reader a .blib source takes (<see cref="BlibLoader"/>). The binary <c>.libcache</c>
-    /// it replaces is still read, for one release, when a valid one is present; none is written.
+    /// it replaced is neither read nor written: a cache is rebuilt from its source, never
+    /// carried forward, so one left at the path this loader wrote it is deleted once the
+    /// derived library is in place (<see cref="RETIRED_CACHE_EXT"/>).
     /// Relocated out of <c>AbstractScoringTask</c> - all of its collaborators
-    /// (<see cref="LibraryCache"/>, the format loaders, <see cref="LibraryDeduplicator"/>)
-    /// already live in this assembly.
+    /// (the format loaders, <see cref="LibraryDeduplicator"/>) already live in this assembly.
     ///
     /// Logging is injected via callbacks rather than read from a pipeline
     /// context, so this stays in the I/O layer with no dependency on the
@@ -53,13 +54,25 @@ namespace pwiz.Osprey.IO
     {
         /// <summary>
         /// The extension of the library derived from a .tsv source, appended to the source's file
-        /// name (<c>lib.tsv.blib</c>) in the cache directory the <c>.libcache</c> used.
+        /// name (<c>lib.tsv.blib</c>) in the cache directory.
         /// </summary>
         public const string DERIVED_LIBRARY_EXT = LibrarySource.EXT_BLIB;
 
         /// <summary>
-        /// Load spectral library from the configured source, using the derived library (or a
-        /// binary cache of an earlier release) when available.
+        /// The extension of the reload cache the derived library replaced, appended to the
+        /// source's file name in the same cache directory. Never read or written: a cache is
+        /// rebuilt from its source, never upgraded or imported in place, and a renamed cache
+        /// format removes its predecessor - so one found at exactly that path is deleted once
+        /// the derived library is in place, as an overwrite would have removed it had the format
+        /// kept its name. The constant and the delete go after Osprey's first public release,
+        /// which no <c>.libcache</c> will predate; until then they cost one existence check per
+        /// .tsv load.
+        /// </summary>
+        public const string RETIRED_CACHE_EXT = @".libcache";
+
+        /// <summary>
+        /// Load spectral library from the configured source, using the derived library when
+        /// available.
         /// </summary>
         public static List<LibraryEntry> Load(OspreyConfig config,
             IOspreyLog log, Action<string> logWarning)
@@ -68,14 +81,13 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load spectral library from the configured source, using the derived library (or a
-        /// binary cache of an earlier release) when available.
+        /// Load spectral library from the configured source, using the derived library when
+        /// available.
         ///
         /// With <see cref="LibraryLoadOptions.OmitFragments"/>, the returned
         /// entries carry their six identity scalars but no fragment peaks - the
         /// dead weight for a FirstPassFDR / <c>StopAfterStage5</c> worker. The
-        /// cache-read path skips retaining the fragment blocks, the derived-library read never
-        /// touches the peak blobs, and the source-parse
+        /// derived-library read never touches the peak blobs, and the source-parse
         /// path loads fragments in full (the min-fragment filter and
         /// <see cref="LibraryDeduplicator"/> both need the counts), writes the
         /// derived library in full, then drops the retained arrays. So the
@@ -125,97 +137,9 @@ namespace pwiz.Osprey.IO
             // Route the library's derived files through ArtifactPaths (like the spectra
             // cache) so they follow --cache-dir / --work-dir and need not be
             // written beside a read-only library. Filename form preserved
-            // ("<library-leaf>.libcache", "<library-leaf>.blib"); only the directory is redirected.
+            // ("<library-leaf>.blib"); only the directory is redirected.
             string cacheDir = ArtifactPaths.ResolveCacheDir(path);
-            string cachePath = Path.Combine(cacheDir, Path.GetFileName(path) + LibraryCache.EXT);
-
-            // Reuse the binary cache only when it was built from the SAME
-            // version of the source library. The library's identity hash
-            // (file name + size + mtime, the same recipe .scores.parquet uses)
-            // is stamped into the cache header on write and checked here on
-            // read. A cache built from a different build at this path - an
-            // in-place rebuild, or a timestamp-preserving swap that a mtime
-            // check would miss - is ignored, since its decoys and
-            // pairing no longer match the current manifest.
-            // A null hash (source missing) skips the check and trusts the
-            // cache, since it is then the only copy available.
             bool sourceExists = !string.IsNullOrEmpty(path) && File.Exists(path);
-            // COMPOSITION, not just the source file. The cache holds a FINISHED library -
-            // decoys marked, paired, and their protein_ids rewritten from the pairing manifest -
-            // so the things that decide those bytes have to be in the key that admits the cache.
-            // Keyed on the library alone, a cache built with one manifest would be reused under
-            // another and silently supply the first manifest's accessions to protein parsimony
-            // and protein FDR: a wrong answer with nothing in the run to show for it. This is
-            // the same failure the library-identity check already existed to prevent, one input
-            // wider. An old v2 cache also hashes differently here and is ignored, which is the
-            // intended outcome - its contents are a half-built library.
-            //
-            // READ ONLY, for one release: the derived library below replaced it, and no new
-            // .libcache is written. A valid one left by an earlier release is still honoured
-            // first, so an upgrade does not re-parse every library once; its hash recipe is
-            // unchanged for that reason.
-            string libraryHash = sourceExists ? LibraryCompositionHash(config) : null;
-            if (File.Exists(cachePath))
-            {
-                try
-                {
-                    LibraryCache.LibraryCacheStatus status;
-                    // The cache reader interns the repeated strings as it builds
-                    // each entry's arrays and logs a one-line collapse summary.
-                    // OmitFragments has it read-and-discard the fragment blocks so
-                    // the returned entries stay lean (no ~3.2 GB of peak arrays).
-                    var swCache = Stopwatch.StartNew();
-                    var cached = LibraryCache.LoadCache(
-                        cachePath, libraryHash, options.OmitFragments, log.LogInfo, out status,
-                        options.RetainFragmentsFor);
-                    swCache.Stop();
-                    if (cached != null && cached.Count > 0)
-                    {
-                        log.LogInfo(string.Format(
-                            OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__,
-                            cached.Count, cachePath));
-                        // The number a library read has to reach for the cache to be unnecessary.
-                        log.LogInfo(LogTag.TIMING, @"Library cache read: {0:F2}s ({1:N0} precursors)",
-                            swCache.Elapsed.TotalSeconds, cached.Count);
-                        // Caches written before the normalizer existed still hold Carafe's
-                        // per-peptide accessions, and the cache is keyed on the SOURCE hash, so
-                        // nothing else would invalidate them. Normalizing here keeps a cached
-                        // load identical to a fresh parse instead of making the protein report
-                        // depend on whether a cache happened to be present.
-                        CarafeProteinIdNormalizer.Normalize(cached, logWarning);
-                        LogSkippedFragments(cached, options, log);
-                        // ALREADY FINISHED. A v3+ cache was written after marking and pairing, so
-                        // re-running them here would redo work whose result is in the bytes -
-                        // and, for the manifest arm, re-read a file the composition hash has
-                        // already proven unchanged. The summary is still reported, recovered
-                        // from the finished library, so a cached run is not silent about the
-                        // pairing fraction (issue #4650).
-                        if (config.LibrarySuppliesDecoys)
-                        {
-                            LogCachedPairingSummary(RecoverPairingStats(cached), log);
-                            error = DescribeSharedDecoyIds(cached);
-                        }
-                        else
-                        {
-                            error = DescribeUnflaggedDecoys(cached, config);
-                        }
-                        if (error != null)
-                            return null;
-                        return cached;
-                    }
-                    if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
-                    {
-                        log.LogInfo(string.Format(
-                            OspreyIOResources.LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_,
-                            cachePath));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logWarning(string.Format(
-                        OspreyIOResources.LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_, ex.Message));
-                }
-            }
 
             // THE DERIVED LIBRARY. A .tsv source is parsed once and its finished form - deduplicated,
             // decoys marked and paired, pairing ids assigned - is written beside its other caches
@@ -225,15 +149,19 @@ namespace pwiz.Osprey.IO
             // (both no-ops on a finished library), the finish from the table, PairingIds.Assign.
             // That is the regression's -LibraryAsBlib route, proven golden-identical to the parse.
             // Its validity is the composition hash of the source plus the blib reader's own term
-            // (the file is read by that reader, so a reader change rebuilds it); the .libcache
-            // recipe above is deliberately not widened, so existing caches are still accepted.
-            // A .blib source gets no derived file: it is read directly each run.
+            // (the file is read by that reader, so a reader change rebuilds it). A derived library
+            // built from a different version of the source at this path - an in-place rebuild, or
+            // a timestamp-preserving swap - or under a different composition is rebuilt, since its
+            // decoys and pairing no longer match. A .blib source gets no derived file: it is read
+            // directly each run.
             string derivedPath = null;
             string derivedHash = null;
+            string retiredCachePath = null;
             bool fromDerived = false;
             if (format == LibraryFormat.DiannTsv && sourceExists)
             {
                 derivedPath = Path.Combine(cacheDir, Path.GetFileName(path) + DERIVED_LIBRARY_EXT);
+                retiredCachePath = Path.Combine(cacheDir, Path.GetFileName(path) + RETIRED_CACHE_EXT);
                 derivedHash = DerivedLibraryHash(config);
                 if (File.Exists(derivedPath))
                 {
@@ -290,9 +218,8 @@ namespace pwiz.Osprey.IO
                     catch (Exception ex) when (fromDerived && !(ex is OutOfMemoryException))
                     {
                         // The derived library's read faulted (a damaged blob, a partly relayed
-                        // file whose metadata row still matches): warn and parse the source, as
-                        // a failed .libcache read always fell back to the file. A derived library
-                        // exists only for a .tsv source.
+                        // file whose metadata row still matches): warn and parse the source,
+                        // which rebuilds it. A derived library exists only for a .tsv source.
                         logWarning(string.Format(
                             OspreyIOResources.LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_,
                             path, ex.Message));
@@ -431,12 +358,13 @@ namespace pwiz.Osprey.IO
             // library, the export and every consumer read the entry rather than the manifest file.
             LogPairingIds(PairingIds.Assign(entries, manifest, blibPairs), log);
 
-            // Write the derived library for the next run, where SaveCache wrote the .libcache:
-            // the finished entries through the library export's writer, with the validity hash
-            // in its metadata, to a temporary name moved over the final one when complete. Gene
-            // names are not in a .blib: the TSV loader and the deduplicator carry them, but no
-            // output reads them, so a later run's empty GeneNames change nothing. A failure is
-            // a warning, as the cache's was: the run has its library either way.
+            // Write the derived library for the next run: the finished entries through the
+            // library export's writer, with the validity hash in its metadata, to a temporary
+            // name moved over the final one when complete. Gene names are not in a .blib: the
+            // TSV loader and the deduplicator carry them, but no output reads them, so a later
+            // run's empty GeneNames change nothing. A failure is a warning: the run has its
+            // library either way.
+            bool derivedWritten = false;
             if (derivedPath != null && !fromDerived)
             {
                 try
@@ -446,13 +374,19 @@ namespace pwiz.Osprey.IO
                     log.LogInfo(string.Format(
                         OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
                         entries.Count, derivedPath));
+                    derivedWritten = true;
                 }
                 catch (Exception ex)
                 {
                     logWarning(string.Format(OspreyIOResources.LibraryLoader_Load_Failed_to_save_the_derived_library___0_, ex.Message));
                 }
             }
-            // The derived read took the retain set at load; claim the saving as the cache read does.
+            // The reload cache the derived library replaced goes once the derived library is in
+            // place (written now, or read above): at the one path it was written to, nothing
+            // else touched, as an overwrite would have removed it had the format kept its name.
+            if (retiredCachePath != null && (fromDerived || derivedWritten))
+                DeleteRetiredCache(retiredCachePath, log, logWarning);
+            // The derived read took the retain set at load; claim the saving here.
             if (fromDerived)
                 LogSkippedFragments(entries, options, log);
 
@@ -478,6 +412,30 @@ namespace pwiz.Osprey.IO
             // same set, and the two paths converge on the state every later reader sees.
 
             return entries;
+        }
+
+        /// <summary>
+        /// Delete the retired reload cache at <paramref name="retiredCachePath"/> when one is
+        /// there, logging the file; a failure to delete is a warning, since the run has its
+        /// library either way.
+        /// </summary>
+        private static void DeleteRetiredCache(string retiredCachePath, IOspreyLog log, Action<string> logWarning)
+        {
+            if (!File.Exists(retiredCachePath))
+                return;
+            try
+            {
+                File.Delete(retiredCachePath);
+                log.LogInfo(string.Format(
+                    OspreyIOResources.LibraryLoader_DeleteRetiredCache_Removed_the_library_cache___0____the_derived_library_replaces_it_,
+                    retiredCachePath));
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                logWarning(string.Format(
+                    OspreyIOResources.LibraryLoader_DeleteRetiredCache_Failed_to_remove_the_library_cache___0____1_,
+                    retiredCachePath, ex.Message));
+            }
         }
 
         /// <summary>The .tsv parse: the DIA-NN reader, with its report on the fragment types the file states.</summary>
@@ -591,14 +549,14 @@ namespace pwiz.Osprey.IO
         /// as a target, two decoys sharing an entry_id, and a paired fraction below the
         /// configured threshold.
         ///
-        /// <para>INSIDE the load, and ahead of the cache write, deliberately (issue #4650).
-        /// Pairing REWRITES a decoy's Id to <c>target_id | DECOY_ID_BIT</c>, and marking
+        /// <para>INSIDE the load, and ahead of the derived library's write, deliberately (issue
+        /// #4650). Pairing REWRITES a decoy's Id to <c>target_id | DECOY_ID_BIT</c>, and marking
         /// completes <c>IsDecoy</c> for the rows whose protein accessions carry a decoy prefix
-        /// but no Decoy column. While both ran at the CALLER, a <c>.libcache</c> held neither -
-        /// so the cached ids were parse-order ids and the cached <c>IsDecoy</c> was incomplete,
-        /// and "the library cache" was a cache of a half-built library that every caller had to
-        /// finish the same way. Anything keyed on a FINAL base_id - the retained-set skip this
-        /// issue exists to enable - could not address those rows at all.</para>
+        /// but no Decoy column. While both ran at the CALLER, the reload cache of the time held
+        /// neither - so the cached ids were parse-order ids and the cached <c>IsDecoy</c> was
+        /// incomplete, and "the library cache" was a cache of a half-built library that every
+        /// caller had to finish the same way. Anything keyed on a FINAL base_id - the
+        /// retained-set skip this issue exists to enable - could not address those rows at all.</para>
         ///
         /// <para>The caller keeps the failure semantics it always had: these faults are
         /// errors that stop the run, not warnings, because FDR estimates without proper
@@ -814,24 +772,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The same summary for a library that arrived ALREADY paired from the cache. Its own
-        /// line, and not the one above, because the manifest / composition split is the one
-        /// thing a finished library does not record: reporting the total under "composition"
-        /// would say the manifest paired nothing, and on the CHS cohort that reads as
-        /// <c>manifest=0, composition=3085757</c> against the cold run's
-        /// <c>manifest=3085756, composition=1</c> - the same 99.9% arrived at, apparently, by a
-        /// different mechanism. An operator diffing two runs would chase that. The total is
-        /// recoverable and is what the threshold is about, so the total is what this reports.
-        /// </summary>
-        private static void LogCachedPairingSummary(PairingStats stats, IOspreyLog log)
-        {
-            log.LogInfo(string.Format(
-                OspreyIOResources.LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__,
-                stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
-                stats.NUnpairedDecoys, stats.NUnpairedTargets));
-        }
-
-        /// <summary>
         /// The load-time error for library entries that are decoys by protein prefix but that the
         /// pairing manifest lists as targets (<see cref="ManifestApplyStats.DecoysListedAsTargets"/>).
         /// Every row is listed, not the first: the provider can then fix them in one pass and see
@@ -897,50 +837,6 @@ namespace pwiz.Osprey.IO
                 string.Join(@";", entry.ProteinIds));
         }
 
-        /// <summary>
-        /// Recover the pairing statistics from a library that is ALREADY paired, so a cache hit
-        /// reports what the cache-miss path reported. Paired-ness is readable from the finished
-        /// library: a decoy is paired exactly when its Id is <c>target | DECOY_ID_BIT</c> for a
-        /// target present in the same library, which is what pairing wrote.
-        ///
-        /// <para>The manifest / composition split is NOT recoverable - the finished library does
-        /// not record which mechanism claimed each pair - so those are reported as the total
-        /// under composition, and the summary line says "from cache" so the two are not confused
-        /// with a fresh pairing's split.</para>
-        /// </summary>
-        private static PairingStats RecoverPairingStats(List<LibraryEntry> library)
-        {
-            var targetIds = new HashSet<uint>();
-            foreach (var entry in library)
-            {
-                if (!entry.IsDecoy)
-                    targetIds.Add(entry.Id);
-            }
-            var stats = new PairingStats();
-            int claimedTargets = 0;
-            var claimed = new HashSet<uint>();
-            foreach (var entry in library)
-            {
-                if (!entry.IsDecoy)
-                {
-                    stats.NTargets++;
-                    continue;
-                }
-                stats.NDecoys++;
-                uint targetId = entry.Id & ~LibraryEntry.DECOY_ID_BIT;
-                if ((entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 && targetIds.Contains(targetId))
-                {
-                    stats.NPaired++;
-                    if (claimed.Add(targetId))
-                        claimedTargets++;
-                }
-            }
-            stats.NPairedViaComposition = stats.NPaired;
-            stats.NUnpairedDecoys = Math.Max(0, stats.NDecoys - stats.NPaired);
-            stats.NUnpairedTargets = Math.Max(0, stats.NTargets - claimedTargets);
-            return stats;
-        }
-
         private static string FormatPrefixList(IList<string> prefixes)
         {
             var sb = new StringBuilder(@"[");
@@ -957,37 +853,27 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Identity of the FINISHED library: the source file (name, size, mtime - the recipe
-        /// <c>.scores.parquet</c> uses) plus everything that decides how the load finishes it.
-        /// Stamped into the <c>.libcache</c> header and checked on read; the derived library's
-        /// hash (<see cref="DerivedLibraryHash"/>) is this composition one term wider.
-        ///
-        /// <para>The decoy terms are here because the cache contains their effects. A
-        /// supplied-decoy library's cached rows carry marked <c>IsDecoy</c>, paired
-        /// <c>Id</c>s and manifest-rewritten <c>ProteinIds</c>; change the prefixes, the
-        /// manifest, or whether decoys come from the library at all, and those bytes are wrong
-        /// for the new configuration while remaining perfectly readable. The manifest is
-        /// identified the same way the library is, so editing it in place invalidates the cache
-        /// without anyone having to remember to.</para>
-        /// </summary>
-        private static string LibraryCompositionHash(OspreyConfig config)
-        {
-            return Sha256Hex(LibraryComposition(config));
-        }
-
-        /// <summary>
         /// The derived library's validity (<see cref="OspreyBlibWriter.KEY_LIBRARY_HASH"/>): the
-        /// composition of <see cref="LibraryCompositionHash"/> plus the blib reader's term
+        /// identity of the FINISHED library - the source file (name, size, mtime - the recipe
+        /// <c>.scores.parquet</c> uses) plus everything that decides how the load finishes it
+        /// (<see cref="LibraryComposition"/>) - plus the blib reader's term
         /// (<see cref="BlibLoader.CacheTerm"/>), since the derived file is read by that reader
-        /// and a change to what it makes of a blib must rebuild the file. Appended rather than
-        /// folded into the composition, so an existing <c>.libcache</c> still matches its hash.
+        /// and a change to what it makes of a blib must rebuild the file.
+        ///
+        /// <para>The decoy terms are there because the derived library contains their effects. A
+        /// supplied-decoy library's rows carry marked <c>IsDecoy</c>, paired <c>Id</c>s and
+        /// manifest-rewritten <c>ProteinIds</c>; change the prefixes, the manifest, or whether
+        /// decoys come from the library at all, and those bytes are wrong for the new
+        /// configuration while remaining perfectly readable. The manifest is identified the same
+        /// way the library is, so editing it in place invalidates the derived library without
+        /// anyone having to remember to.</para>
         /// </summary>
         private static string DerivedLibraryHash(OspreyConfig config)
         {
             return Sha256Hex(LibraryComposition(config) + BlibLoader.CacheTerm(config.FragmentTolerance));
         }
 
-        /// <summary>The text <see cref="LibraryCompositionHash"/> hashes: one labelled term per line.</summary>
+        /// <summary>The composition text <see cref="DerivedLibraryHash"/> hashes: one labelled term per line.</summary>
         private static string LibraryComposition(OspreyConfig config)
         {
             var sb = new StringBuilder();
@@ -1058,8 +944,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The load failure for a library precursor with no fragment peaks, shared by the source
-        /// loaders and <see cref="LibraryCache"/> so both report it in the same words.
+        /// The load failure for a library precursor with no fragment peaks.
         /// </summary>
         internal static InvalidDataException PeaklessPrecursorException(uint id, string modifiedSequence)
         {

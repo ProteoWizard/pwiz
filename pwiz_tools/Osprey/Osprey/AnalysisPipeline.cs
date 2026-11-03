@@ -71,10 +71,10 @@ namespace pwiz.Osprey
             {
                 // Select the diagnostics sink before any task runs -- the single
                 // chokepoint every invocation reaches the pipeline through
-                // (Program.Main, whatever --task it selected). -d forces the dump
-                // bundle on; otherwise the sink self-enables only if an
+                // (Program.Main, whatever --task it selected). OSPREY_DIAGNOSTICS forces
+                // the dump bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
-                OspreyDiagnostics.Initialize(config.Diagnostics);
+                OspreyDiagnostics.Initialize(OspreyEnvironment.Diagnostics);
                 // An ambient/forgotten OSPREY_KEEP_FAILED_WRITES silently stops EVERY
                 // SimpleFileSaver in the process from cleaning up an abandoned temp, in every
                 // run that inherits it, not just the diagnostic session someone meant to
@@ -119,6 +119,11 @@ namespace pwiz.Osprey
                 LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
+            catch (TaskBudgetSpentException)
+            {
+                // The developer stop (OSPREY_STOP_AFTER_TASKS), not a failure: Program ends the run.
+                throw;
+            }
             catch (RehydrateFailedException ex)
             {
                 // The task that could not rehydrate has already logged why, naming the file, and
@@ -162,6 +167,7 @@ namespace pwiz.Osprey
                 // wipe the per-file outputs that <see cref="PerFileScoringTask"/>
                 // relies on for its within-task per-file skip.
                 ((PipelineContext)ctx).LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
+                WarnOtherBuildOutputs(task, ctx);
             }
 
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
@@ -199,6 +205,49 @@ namespace pwiz.Osprey
                 {
                     ospreyCtx.LogInfo(LogTag.STAGE_WALL, @"{0}: {1:F1}s",
                         stageName, elapsed.TotalSeconds);
+                }
+                // Last: the developer stop ends the run between this task and the next.
+                TaskBudget.TaskDone(task.Name, ctx.ExitCode);
+            }
+
+            /// <summary>
+            /// Say so when this task is about to recompute outputs another build of Osprey wrote.
+            /// A stamp from another build is never current, so a resume the day after a run
+            /// started re-runs every stage, which is hours at cohort scale, and nothing said why.
+            /// An operator who meant to reuse those outputs needs both versions and the variable
+            /// that pins this build to the older one.
+            ///
+            /// <para>Only outputs the pin would make current are counted: this task's stamp with
+            /// this run's key, under another version. An output whose key also differs recomputes
+            /// whatever the version, and advising a pin for it would only stamp the recomputed
+            /// file with a version that did not write it. One line per earlier version, since a
+            /// pin reuses only the outputs of the version it names.</para>
+            /// </summary>
+            private static void WarnOtherBuildOutputs(PipelineTask task, TaskContext ctx)
+            {
+                string key = task.ValidityKey(ctx);
+                int outputCount = 0;
+                var countsByVersion = new Dictionary<string, int>();
+                var versions = new List<string>();
+                foreach (string output in task.Outputs(ctx))
+                {
+                    outputCount++;
+                    var stamp = ctx.ReadStamp(output);
+                    if (stamp == null ||
+                        string.Equals(stamp.Version, ctx.Version, StringComparison.Ordinal) ||
+                        !stamp.IsCurrent(task.Name, stamp.Version, task.OutputValidityKey(ctx, key, output)))
+                    {
+                        continue;
+                    }
+                    if (!countsByVersion.TryGetValue(stamp.Version, out int count))
+                        versions.Add(stamp.Version);
+                    countsByVersion[stamp.Version] = count + 1;
+                }
+                foreach (string version in versions)
+                {
+                    ctx.LogWarning(string.Format(
+                        OspreyResources.AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__,
+                        task.Name, countsByVersion[version], outputCount, version, ctx.Version, OspreyVersion.ENV_OVERRIDE));
                 }
             }
         }

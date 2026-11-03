@@ -117,6 +117,23 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Remove an earlier run's .blib at the output name, for a run that writes none. A locked
+        /// file is reported as a <see cref="BlibOutputException"/>, as a failure to replace it is.
+        /// </summary>
+        internal static void RemoveOutput(string outputPath)
+        {
+            try
+            {
+                if (File.Exists(outputPath))
+                    File.Delete(outputPath);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                throw new BlibOutputException(outputPath, ex);
+            }
+        }
+
+        /// <summary>
         /// Open the SQLite writer on the temp file beside the output. A failure here is a
         /// user-correctable condition (the folder is not writable, or the file is locked), so
         /// it becomes a <see cref="BlibOutputException"/> naming the output rather than a raw
@@ -257,6 +274,7 @@ namespace pwiz.Osprey.Tasks
                         if (libraryById.TryGetValue(blibEntries[i].Value.EntryId, out var libEntry))
                             spectra[i] = BlibSpectrum.FromLibraryEntry(libEntry, Array.Empty<string>());
                     });
+                progress.Complete();
             }
             return spectra;
         }
@@ -337,6 +355,7 @@ namespace pwiz.Osprey.Tasks
 
                     refIdByPrecursor[lookupKey] = refId;
                 }
+                progress.Complete();
             }
             return refIdByPrecursor;
         }
@@ -353,6 +372,10 @@ namespace pwiz.Osprey.Tasks
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
             if (config.CommandLine != null)
                 writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
+            // The runs the library's models were tuned on, which SpectrumSourceFiles does not name
+            // when they were searched for the tuning only.
+            if (config.LibraryBuild.Tuning)
+                writer.AddMetadata(OspreyBlibWriter.KEY_TRAINING_INPUT, string.Join(@";", config.LibraryBuild.TrainingInputs));
         }
 
         /// <summary>
@@ -442,6 +465,7 @@ namespace pwiz.Osprey.Tasks
                         runQ,
                         isBest);
                 }
+                progress.Complete();
             }
         }
 

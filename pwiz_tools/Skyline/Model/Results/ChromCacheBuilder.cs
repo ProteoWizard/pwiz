@@ -703,6 +703,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 retentionTimes = _document.Settings.GetAlignedRetentionTimes(_chromatogramSet, MSDataFilePath, targets);
             }
+            // Stray IDs can be judged within the time scale of this file, which the IDs from it, or
+            // aligned to it, share, and only for full-scan data, where the ms2_ids filter applies
+            var fullScan = _document.Settings.TransitionSettings.FullScan;
+            bool isFullScan = fullScan.IsEnabled && !_currentFileInfo.IsSrm;
+            if (isFullScan)
+                retentionTimes = fullScan.RemoveOutlierIdTimes(retentionTimes);
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
 
@@ -715,8 +721,6 @@ namespace pwiz.Skyline.Model.Results
                     _retentionTimePredictor.TimeWindow);
             }
 
-            var fullScan = _document.Settings.TransitionSettings.FullScan;
-            bool isFullScan = fullScan.IsEnabled && !_currentFileInfo.IsSrm;
             if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 if (retentionTimes.Length == 0)

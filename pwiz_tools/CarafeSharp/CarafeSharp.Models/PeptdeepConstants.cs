@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Models
 {
@@ -95,46 +96,13 @@ namespace pwiz.CarafeSharp.Models
         private static readonly string[] INSTRUMENTS = { @"QE", @"Lumos", @"timsTOF", @"SciexTOF", @"ThermoTOF" };
 
         /// <summary>
-        /// peptdeep's instrument grouping (<c>settings['model_mgr']['instrument_group']</c>),
-        /// keyed by upper-case instrument name, with CarafeSharp's names for a Stellar and for
-        /// TribridOT (a Tribrid's Orbitrap). Anything not listed maps to Lumos.
-        /// </summary>
-        private static readonly Dictionary<string, string> INSTRUMENT_GROUPS = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            { @"THERMOTOF", @"ThermoTOF" },
-            { @"ASTRAL", @"Lumos" },
-            { @"LUMOS", @"Lumos" },
-            { @"QE", @"QE" },
-            { @"TIMSTOF", @"timsTOF" },
-            { @"SCIEXTOF", @"SciexTOF" },
-            { @"FUSION", @"Lumos" },
-            { @"ECLIPSE", @"Lumos" },
-            { @"VELOS", @"Lumos" },
-            { @"ELITE", @"Lumos" },
-            { @"ORBITRAPTRIBRID", @"Lumos" },
-            { @"THERMOTRIBRID", @"Lumos" },
-            { @"QE+", @"QE" },
-            { @"QEHF", @"QE" },
-            { @"QEHFX", @"QE" },
-            { @"EXPLORIS", @"QE" },
-            { @"EXPLORIS480", @"QE" },
-            { @"TRIBRIDOT", @"Lumos" },
-            { @"STELLAR", @"Lumos" },
-        };
-
-        private const string DEFAULT_INSTRUMENT_GROUP = @"Lumos";
-
-        /// <summary>
         /// The instrument family peptdeep's ModelManager assigns to an instrument name
-        /// (for example Eclipse and Astral become Lumos, Exploris becomes QE).
+        /// (for example Eclipse and Astral become Lumos, Exploris becomes QE): the
+        /// <see cref="PeptdeepInstruments"/> grouping, which a command line or a settings page offers.
         /// </summary>
         public static string GetInstrumentGroup(string instrumentName)
         {
-            if (string.IsNullOrEmpty(instrumentName))
-                return DEFAULT_INSTRUMENT_GROUP;
-            return INSTRUMENT_GROUPS.TryGetValue(instrumentName.ToUpperInvariant(), out string group)
-                ? group
-                : DEFAULT_INSTRUMENT_GROUP;
+            return PeptdeepInstruments.GetGroup(instrumentName);
         }
 
         /// <summary>

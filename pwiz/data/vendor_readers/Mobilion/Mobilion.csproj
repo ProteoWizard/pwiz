@@ -60,8 +60,8 @@
   <Target Name="ExtractMobilionAssemblies"
           Condition="'$(NativeVendorsAvailable)' == 'true' AND '$(_MobilionShimPrebuilt)' != 'true'"
           BeforeTargets="BuildMobilionShim;ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(MobilionArchive)"
-          Outputs="$(MobilionAssembliesDir)\MBI_SDK.dll;$(MobilionAssembliesDir)\MBIFile.h">
+          Inputs="$(MobilionArchive);$(MobilionAssembliesDir)\MBI_SDK.dll;$(MobilionAssembliesDir)\MBIFile.h"
+          Outputs="$(MobilionAssembliesDir)/.ExtractMobilionAssemblies.stamp">
     <MakeDir Directories="$(MobilionAssembliesDir)" />
     <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(MobilionAssembliesDir)&quot; &quot;$(MobilionArchive)&quot;" StandardOutputImportance="low" />
     <!-- 7za extracts to vendor_api/Mobilion/ inside the dest; flatten so the
@@ -70,6 +70,8 @@
       <_FlattenFiles Include="$(MobilionAssembliesDir)\vendor_api\Mobilion\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_FlattenFiles)" DestinationFolder="$(MobilionAssembliesDir)" SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(MobilionAssembliesDir)/.ExtractMobilionAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <!-- 2. Build MobilionShim.dll. We invoke the full Visual Studio MSBuild via

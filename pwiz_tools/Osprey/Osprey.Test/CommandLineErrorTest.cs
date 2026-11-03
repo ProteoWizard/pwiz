@@ -181,7 +181,7 @@ namespace pwiz.Osprey.Test
             using (new CultureScope(CultureInfo.GetCultureInfo(otherCulture)))
             {
                 AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
-                    Program.USAGE_INPUT));
+                    OspreyCommandArgs.UsageInput));
             }
             // --culture is applied to formatting and resource lookup for the whole run (the scope
             // RunCommand holds), and not only parsed.

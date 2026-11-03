@@ -1,4 +1,4 @@
-# 06. Saved models (.carafemodel)
+# 06. Saved models (.model.zip)
 
 A fine-tuned model saved as one file, to predict libraries of any peptides from later without
 training again, or to fine-tune further on new runs. Every training run writes one, `--model`
@@ -14,16 +14,16 @@ window. `--model-dir` still works as Carafe's does.
 
 ```
 CarafeSharp --i <x.training.parquet|folder> --ms <runs> --o train_out --db proteins.fasta [training options]
-    # also writes train_out/carafe_fine_tuned_model.carafemodel
+    # also writes train_out/carafe_fine_tuned.model.zip
 
-CarafeSharp --model-info train_out/carafe_fine_tuned_model.carafemodel
+CarafeSharp --model-info train_out/carafe_fine_tuned.model.zip
     # what the model was trained on
 
-CarafeSharp --db other_proteins.fasta --model train_out/carafe_fine_tuned_model.carafemodel --o new_library [library options]
+CarafeSharp --db other_proteins.fasta --model train_out/carafe_fine_tuned.model.zip --o new_library [library options]
     # predicts other_proteins.fasta with the fine-tuned model, no training
 
-CarafeSharp --i <new.training.parquet|folder> --ms <new runs> --model train_out/carafe_fine_tuned_model.carafemodel --o more_out [training options]
-    # fine-tunes the saved model further on the new runs; writes more_out/carafe_fine_tuned_model.carafemodel
+CarafeSharp --i <new.training.parquet|folder> --ms <new runs> --model train_out/carafe_fine_tuned.model.zip --o more_out [training options]
+    # fine-tunes the saved model further on the new runs; writes more_out/carafe_fine_tuned.model.zip
 ```
 
 The file can be renamed, copied and shared; CarafeSharp reads it by its content, not its name.
@@ -108,8 +108,10 @@ are the same.
 
 ## The format
 
-For every reader: CarafeSharp itself, its GUI, and Skyline, which lists a folder's `.carafemodel`
-files and shows what each was trained on. A `.carafemodel` file is a zip holding:
+For every reader: CarafeSharp itself, its GUI, and Skyline, which lists a folder's `.model.zip`
+files and shows what each was trained on. A `.model.zip` file is a ZIP archive holding (a file saved before 2026-10 is named
+`.model.zip`; readers recognize the file by its manifest's `format`, not its name, so it still
+opens):
 
 | Entry | Holds | Present |
 |---|---|---|
@@ -123,7 +125,7 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 
 A reader that only lists models, as a model picker does, needs `manifest.json` alone.
 
-`manifest.json` from the chained regression leg's run on the Stellar subset (three runs; only the first
+`manifest.json` from a run of the (since retired) chained regression leg on the Stellar subset (three runs; only the first
 is shown, and hashes and the path are shortened). The runs are Stellar HCD read out in the ion trap,
 so they trained as beam-CID and LIT. The fine-tuned MS2 model lost to the pretrained one there, so the
 file holds only the fine-tuned RT model:
@@ -341,7 +343,7 @@ does not match its SHA-256.
   with training names the model to fine-tune further, with `--tf all` only, and the library after
   training predicts with the new models; `--model` is refused with `--model-dir`, with `--ms2-model`, and
   without `--db` or training.
-- The chained regression leg (`regression.ps1 -Leg Chained`, [04](04-testing.md)): the model a real
-  training run saved predicts a second library with `--model` over a wider precursor window; every
-  precursor of the library training predicted is in it, with the same m/z, retention time and
-  fragments, and intensities within 1e-5.
+- Osprey's `SubsetPipelineTest.TestSubsetLibraryBuildTuned` ([04](04-testing.md), "Osprey's export
+  feeding CarafeSharp"): the model a tuned one-command run saved predicts the library again with
+  `--model`, with the same m/z, retention time and fragments for every shared precursor and
+  intensities within 1e-5; a further tuning from it names it as its base.

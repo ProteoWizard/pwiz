@@ -178,6 +178,10 @@ namespace SkylineNightly
         [STAThread]
         static void Main(string[] args)
         {
+            // An exception on another thread (a finalizer, a timer) ends the process without reaching
+            // the handler below; leave it in the nightly log rather than nowhere.
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Nightly.LogUnhandledException(e.ExceptionObject);
+
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade();

@@ -323,12 +323,29 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
+        ///   Looks up a localized string similar to A reverse-sequence decoy of every peptide, paired with its target in the library..
         /// </summary>
-        public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
+        public static string BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_buil" +
-                        "d_a_library_from_AlphaPeptDeep_predictions_", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryDlg_BuildLibraryDlg_A_reverse_sequence_decoy_of_every_peptide__paired_with_its_target_in_the_library", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides not expected in the sample, flagged as entrapment in the library, to measure the false discovery rate of a search..
+        /// </summary>
+        public static string BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from Carafe predictions..
+        /// </summary>
+        public static string BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_CreateCarafeBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Carafe_predictions_", resourceCulture);
             }
         }
         
@@ -340,7 +357,89 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Digesting {0} with the document settings.
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_Digesting__0__with_the_document_settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Digesting FASTA.
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_Digesting_FASTA", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed digesting the FASTA file {0}..
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_Failed_digesting_the_FASTA_file__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The FASTA file {0} gave no peptides with the document settings..
+        /// </summary>
+        public static string BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_GetDocumentToPredict_The_FASTA_file__0__gave_no_peptides_with_the_document_settings_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Download {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download the NVIDIA CUDA runtime..
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk..
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_ru" +
+                        "ntime", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Limited or no support for: {0}.
+        /// </summary>
+        public static string BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_UpdateModificationWarning_Limited_or_no_support_for__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for an NVIDIA GPU.
+        /// </summary>
+        public static string BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_UpdateUseGpu_Looking_for_an_NVIDIA_GPU", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Access violation attempting to write to {0}..
         /// </summary>
@@ -406,7 +505,70 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the FASTA file of the entrapment peptides..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidatePage_Choose_the_FASTA_file_of_the_entrapment_peptides_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the protein FASTA file to predict the library for..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidatePage_Choose_the_protein_FASTA_file_to_predict_the_library_for_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The FASTA file {0} does not exist..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_ValidateModelPath_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuned Carafe models.
+        /// </summary>
+        public static string EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_GetModelPath_Fine_tuned_Carafe_models", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The model {0} already exists..
+        /// </summary>
+        public static string EditCarafeModelDlg_OkDialog_The_model__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_OkDialog_The_model__0__already_exists_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a valid fine-tuned Carafe model..
+        /// </summary>
+        public static string EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
+            get {
+                return ResourceManager.GetString("EditCarafeModelDlg_ValidateModelPath_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library {0}.
         /// </summary>
@@ -427,6 +589,33 @@ namespace pwiz.Skyline.SettingsUI {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to {0} min gradient.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails__0__min_gradient {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails__0__min_gradient", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NCE {0}.
+        /// </summary>
+        public static string CarafeModelChoice_GetDetails_NCE__0_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails_NCE__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}-{1}.
+        /// </summary>
+        public static string CarafeModelChoice_PrecursorMzRange__0___1_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_PrecursorMzRange__0___1_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Window width must be an integer value when optimize window placement is selected..
         /// </summary>
