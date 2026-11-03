@@ -11,6 +11,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <!-- UniMod, from the unimod.obo the rest of the repository reads (pwiz-sharp's
+         Pwiz.Data.Common), so Osprey keeps no UniMod table of its own. Out of Osprey.sln,
+         like CommonUtil; Osprey.IO already reached it through ProteowizardWrapper. -->
+    <ProjectReference Include="..\..\..\pwiz\data\common\Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

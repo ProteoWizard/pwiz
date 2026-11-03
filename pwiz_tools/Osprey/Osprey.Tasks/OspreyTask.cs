@@ -72,8 +72,9 @@ namespace pwiz.Osprey.Tasks
         /// The TSV counterpart of <see cref="BLIB_READER_TERM"/>: what the reader makes of a .tsv
         /// (peaks merged, typed, the modified sequence's text) changes with its version too, so
         /// outputs scored under an earlier reader are not adopted by a search under this one.
+        /// It is <see cref="DiannTsvLoader.READER_VERSION"/>, which a test holds it to.
         /// </summary>
-        public const string TSV_READER_TERM = @";tsvreader=4";
+        public const string TSV_READER_TERM = @";tsvreader=5";
 
         // ---- The selection contract (ISelectableTask) ------------------------------------
         // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a

@@ -149,6 +149,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// admits targets and entrapment in the same proportion as decoys.</summary>
             public int ExperimentFdrCrossingNonDecoys { get; set; }
 
+            /// <summary>Input-file names in input order, the axis of <see cref="RunCutoffs"/>.</summary>
+            public string[] RunNames { get; set; }
+            /// <summary>
+            /// Each run's run-scope acceptance boundary - the composite score of the worst precursor
+            /// that run accepts at its run-level q, which its decoy row is counted against - aligned
+            /// with <see cref="RunNames"/>; NaN for a run that accepted nothing. A per-run statistic
+            /// in the report rather than a line per run in the log, where at cohort scale the outlier
+            /// it exists to expose was unreadable (issue #4672).
+            /// </summary>
+            public double[] RunCutoffs { get; set; }
+
             /// <summary>Detection gated on the RUN-level q value.</summary>
             public CoAssignmentScope Run { get; set; }
             /// <summary>Detection gated on the EXPERIMENT-wide q value.</summary>
@@ -736,6 +747,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         {
             private readonly CoAssignmentAccumulator _run;
             private readonly CoAssignmentAccumulator _experiment;
+            private readonly string[] _runNames;
             private readonly int _pass;
             private readonly bool _postReconciliation;
             private bool _any;
@@ -754,6 +766,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 _run = new CoAssignmentAccumulator(runNames);
                 _experiment = new CoAssignmentAccumulator(runNames);
+                _runNames = runNames;
                 _pass = pass;
                 _postReconciliation = postReconciliation;
                 // An EMPTY stratum is not the same as no stratum: it means every entry is
@@ -1487,6 +1500,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     ExperimentFdrCrossing = ExperimentFdrCrossing,
                     ExperimentFdrCrossingDecoys = ExperimentFdrCrossingDecoys,
                     ExperimentFdrCrossingNonDecoys = ExperimentFdrCrossingNonDecoys,
+                    RunNames = _runNames,
+                    RunCutoffs = Enumerable.Range(0, _runNames.Length).Select(RunCutoff).ToArray(),
                     Run = _run.Build(),
                     Experiment = _experiment.Build(),
                 };
