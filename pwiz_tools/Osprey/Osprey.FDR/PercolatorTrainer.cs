@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
@@ -230,12 +231,15 @@ namespace pwiz.Osprey.FDR
                 ? new GradientBoostedTrees[config.NFolds]
                 : null;
             var foldIterations = new int[config.NFolds];
+            // Each fold's final training set, for the training-set analysis; null when not asked
+            // for, which leaves the fold loops exactly as they were.
+            var foldTrainingSets = config.CollectTrainingAnalysis ? new FoldTrainingSet[config.NFolds] : null;
 
             // Fold models are trained into the caller-allocated arrays (exactly one
             // of foldModels / foldGbtModels is populated, per config).
             TrainFoldModels(config, subFeatures, subLabels, subEntryIds, subPeptides,
                 foldAssignments, initialScores, subN, subTargets, nFeatures, trainFdr,
-                foldModels, foldGbtModels, foldIterations);
+                foldModels, foldGbtModels, foldIterations, foldTrainingSets);
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
             // a *Only request returns the abort sentinel. Captures per-fold
@@ -252,6 +256,27 @@ namespace pwiz.Osprey.FDR
                 PercolatorDiagnosticsDump.WriteSvmWeightsDump(foldModels, foldIterations, config.FeatureInfos);
                 if (config.Diagnostics.SvmWeightsOnly)
                     return new PercolatorResults { DiagnosticAbort = true };
+            }
+
+            // Training-set analysis (#4550, #4467): a read of the resident subset and the trained
+            // folds that never touches a model or a score the pipeline uses.
+            TrainingSetAnalysis trainingAnalysis = null;
+            if (foldTrainingSets != null)
+            {
+                var swAnalysis = Stopwatch.StartNew();
+                var foldScorers = new Func<double[], double>[config.NFolds];
+                for (int fold = 0; fold < config.NFolds; fold++)
+                {
+                    if (foldGbtModels != null)
+                        foldScorers[fold] = foldGbtModels[fold].ScoreSingle;
+                    else
+                        foldScorers[fold] = foldModels[fold].ScoreSingle;
+                }
+                trainingAnalysis = TrainingSetAnalysis.Compute(subFeatures, subLabels, subEntryIds,
+                    foldAssignments, foldTrainingSets, foldScorers, foldIterations, trainFdr, config.Seed, config.NThreads,
+                    foldGbtModels != null ? TrainingSetAnalysis.TREE_PERMUTATION_ROW_CAP : int.MaxValue);
+                OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator training-set analysis: {0:F1}s",
+                    swAnalysis.Elapsed.TotalSeconds);
             }
 
             // Train-only mode: return fold models + standardizer; skip the
@@ -284,7 +309,8 @@ namespace pwiz.Osprey.FDR
                         ? new List<GradientBoostedTrees>(foldGbtModels)
                         : null,
                     Standardizer = standardizer,
-                    IterationsPerFold = trainIterations
+                    IterationsPerFold = trainIterations,
+                    TrainingAnalysis = trainingAnalysis
                 };
             }
 
@@ -387,7 +413,7 @@ namespace pwiz.Osprey.FDR
                 var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
                 for (int i = 0; i < n; i++)
                     contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
-                contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
+                contributions = contribAcc.Build(foldWeights, config.FeatureInfos, trainingAnalysis);
                 PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
             }
 
@@ -416,7 +442,8 @@ namespace pwiz.Osprey.FDR
                     : null,
                 Standardizer = standardizer,
                 IterationsPerFold = iterationsPerFold,
-                FeatureContributions = contributions
+                FeatureContributions = contributions,
+                TrainingAnalysis = trainingAnalysis
             };
         }
 
@@ -517,7 +544,8 @@ namespace pwiz.Osprey.FDR
             double trainFdr,
             LinearSvmClassifier[] foldModels,
             GradientBoostedTrees[] foldGbtModels,
-            int[] foldIterations)
+            int[] foldIterations,
+            FoldTrainingSet[] foldTrainingSets)
         {
             var foldElapsed = new double[config.NFolds];
             // Selected SVM cost C per fold (chosen by inner CV over config.CValues,
@@ -575,7 +603,7 @@ namespace pwiz.Osprey.FDR
                     foldGbtModels[fold] = TrainFoldGbt(
                         subFeatures, subLabels, subEntryIds, subPeptides,
                         foldTrainIndices[fold], initialScores, config, trainFdr,
-                        fold, trainProgress, out iters);
+                        fold, trainProgress, foldTrainingSets, out iters);
                     // No C to sweep: the trees are regularized by depth / gamma /
                     // lambda / min-child-weight, all fixed by GbtParams.
                     foldBestC[fold] = double.NaN;
@@ -586,7 +614,7 @@ namespace pwiz.Osprey.FDR
                     foldModels[fold] = TrainFold(
                         subFeatures, subLabels, subEntryIds, subPeptides,
                         foldTrainIndices[fold], initialScores, config, trainFdr,
-                        svmScratchPool, fold, trainProgress, out iters, out foldC);
+                        svmScratchPool, fold, trainProgress, foldTrainingSets, out iters, out foldC);
                     foldBestC[fold] = foldC;
                 }
                 foldIterations[fold] = iters;
@@ -731,6 +759,7 @@ namespace pwiz.Osprey.FDR
             SvmTrainScratchPool svmScratchPool,
             int foldIndex,
             TrainProgressReporter progress,
+            FoldTrainingSet[] trainingSets,
             out int bestIteration,
             out double bestC)
         {
@@ -868,6 +897,13 @@ namespace pwiz.Osprey.FDR
                     bestIteration = iteration + 1;
                     bestC = bestC1;
                     consecutiveNoImprove = 0;
+                    // svmGlobalIndices index the training subset: the selected targets, then the decoys.
+                    if (trainingSets != null)
+                    {
+                        int nSelected = selectedTargetIndices.Length;
+                        trainingSets[foldIndex] = new FoldTrainingSet(svmGlobalIndices.Take(nSelected).ToArray(),
+                            svmGlobalIndices.Skip(nSelected).ToArray(), trainIndices);
+                    }
                 }
                 else
                 {
@@ -917,6 +953,7 @@ namespace pwiz.Osprey.FDR
             double trainFdr,
             int foldIndex,
             TrainProgressReporter progress,
+            FoldTrainingSet[] trainingSets,
             out int bestIteration)
         {
             var currentScores = (double[])initialScores.Clone();
@@ -1062,6 +1099,14 @@ namespace pwiz.Osprey.FDR
                     bestPassing = nPassing;
                     bestIteration = iteration + 1;
                     consecutiveNoImprove = 0;
+                    // gbtLocal indexes fitLocal: the selected FIT targets, then the FIT decoys.
+                    if (trainingSets != null)
+                    {
+                        var subsetRows = gbtLocal.Select(local => trainIndices[fitLocal[local]]).ToArray();
+                        int nSelected = selectedFitTargets.Length;
+                        trainingSets[foldIndex] = new FoldTrainingSet(subsetRows.Take(nSelected).ToArray(),
+                            subsetRows.Skip(nSelected).ToArray(), fitLocal.Select(local => trainIndices[local]).ToArray());
+                    }
                 }
                 else
                 {
