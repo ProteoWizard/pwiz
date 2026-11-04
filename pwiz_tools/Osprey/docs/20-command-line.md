@@ -11,12 +11,12 @@ Osprey reads DIA mzML files plus a spectral library and writes a BiblioSpecLite
 runs as a standalone .NET 8 executable on Windows and Linux.
 
 ```
-Osprey -i path/to/file ... -l path/to/file.blib|.tsv -o path/to/file.blib [options]
+Osprey -i path/to/file ... -l path/to/file.blib|.tsv|.parquet -o path/to/file.blib [options]
 Osprey -i path/to/file ... --fasta path/to/file.fasta -o path/to/file.blib [options]
 ```
 
 The three required inputs are `-i`/`--input` (one or more mzML), a library - `-l`/`--library`
-(a DIA-NN TSV or `.blib`) or `--fasta` (a protein FASTA the library is predicted from, see
+(a `.blib`, a DIA-NN TSV, or a DIA-NN 2.x library `.parquet`) or `--fasta` (a protein FASTA the library is predicted from, see
 [Library build](#library-build)) - and `-o`/`--output` (the result `.blib`). Everything else
 has a sensible default, including the resolution: `--resolution auto`, the default, measures
 whether the data is unit resolution (an ion trap such as Stellar) or high resolution (Orbitrap,
@@ -27,6 +27,21 @@ column the library has (a fragment charge of `1.0` or `0`, an ion type other tha
 a/b/c/x/y/z, an unknown loss or decoy flag, an empty cell) or a modification with no known
 mass refuses the library, listing each line and column to fix, as Skyline's transition
 list import does. Nothing is guessed for a bad value.
+
+A DIA-NN 2.x library `.parquet` is searched directly, with no conversion: a search's
+`report-lib.parquet` (written with `--gen-spec-lib --out-lib report-lib.parquet`), or a
+predicted library, which DIA-NN 2.7 writes as a binary `.speclib` and converts with
+`diann --lib x.speclib --gen-spec-lib --out-lib x.parquet`. Osprey refuses a `.speclib` with
+that command; its format is undocumented. The `.parquet` is read row by row into the same
+library entries as a DIA-NN TSV of the same library (one row per fragment; `RT` is the
+retention time a TSV's `NormalizedRetentionTime` gives, DIA-NN's library scale in a predicted
+and an empirical library alike; `Modified.Sequence` carries UniMod ids such as `C(UniMod:4)`
+and a leading `(UniMod:1)`), each value checked as a TSV's is, and it is kept as a derived
+`.blib` the same way (`report-lib.parquet.blib`). `--decoys-in-library` takes the decoys its
+`Decoy` column marks, as for a TSV. An empty library - DIA-NN writes one, with no rows, when
+its search identifies nothing - loads as no entries and the search stops with the library
+reported empty. The column reading is shared with BiblioSpec's DIA-NN import
+(`BiblioSpec.IO`'s `DiannLibraryParquetReader`).
 
 ---
 
@@ -129,7 +144,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | Option | Value | Effect |
 |--------|-------|--------|
 | `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read. Variadic; also accepts positional paths. |
-| `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
+| `-l`, `--library` | `path/to/file.blib\|.tsv\|.parquet` | Spectral library — BiblioSpec `.blib`, DIA-NN TSV, or DIA-NN 2.x library `.parquet` (see the library inputs at the top of this page, [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
 | `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
 | `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `path/to/folder` | Directory for derived artifacts (overrides `--work-dir`). |

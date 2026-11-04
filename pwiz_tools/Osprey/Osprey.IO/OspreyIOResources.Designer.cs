@@ -145,6 +145,33 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (row {0}) Invalid {1} &apos;{2}&apos;.
+        /// </summary>
+        public static string DiannParquetLoader_AddRow___row__0___Invalid__1____2__ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_AddRow___row__0___Invalid__1____2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to (row {0}) Missing {1}.
+        /// </summary>
+        public static string DiannParquetLoader_AddRow___row__0___Missing__1_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_AddRow___row__0___Missing__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The DIA-NN library {0} has no rows: DIA-NN writes an empty library when its search identifies nothing..
+        /// </summary>
+        public static string DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
         public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {

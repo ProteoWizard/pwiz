@@ -106,7 +106,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// <summary>Returns true if <paramref name="path"/> is a DIA-NN spectral library —
     /// either the legacy binary <c>.speclib</c> or a <c>.parquet</c> file (DIA-NN v2+
     /// <c>report-lib.parquet</c>, loaded directly via
-    /// <see cref="LoadSpecLibFromParquetAsync"/>). cpp parity: BlibBuild.cpp:199 (PR #4189).</summary>
+    /// <see cref="LoadSpecLibFromParquet"/>). cpp parity: BlibBuild.cpp:199 (PR #4189).</summary>
     public static bool AcceptsExtension(string path) =>
         path.EndsWith(".speclib", StringComparison.OrdinalIgnoreCase)
         || path.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase);
@@ -157,7 +157,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         if (!string.IsNullOrEmpty(libParquetPath))
         {
             Verbosity.Status($"Reading library entries from parquet {libParquetPath}.");
-            LoadSpecLibFromParquetAsync(libParquetPath).GetAwaiter().GetResult();
+            LoadSpecLibFromParquet(libParquetPath);
         }
         else
         {
@@ -685,57 +685,54 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// loaded. cpp parity: <c>DiaNNSpecLibReader.cpp:loadSpecLibFromParquet</c>
     /// (PR #4189).
     /// </summary>
-    private async Task LoadSpecLibFromParquetAsync(string filepath)
+    private void LoadSpecLibFromParquet(string filepath)
     {
-        using var stream = File.OpenRead(filepath);
-        await using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
-        var schema = reader.Schema;
-
-        var precursorIdField  = MustFindParquetField(schema, "Precursor.Id", filepath);
-        var modSeqField       = MustFindParquetField(schema, "Modified.Sequence", filepath);
-        var chargeField       = MustFindParquetField(schema, "Precursor.Charge", filepath);
-        var precursorMzField  = MustFindParquetField(schema, "Precursor.Mz", filepath);
-        var rtField           = MustFindParquetField(schema, "RT", filepath);
-        var imField           = MustFindParquetField(schema, "IM", filepath);
-        var qValueField       = MustFindParquetField(schema, "Q.Value", filepath);
-        var decoyField        = MustFindParquetField(schema, "Decoy", filepath);
-        var proteotypicField  = MustFindParquetField(schema, "Proteotypic", filepath);
+        // The columns are read through BiblioSpec.IO's DiannLibraryParquetReader, the one
+        // definition of the format, which Osprey's library loader reads it through too.
         // DIA-NN 1.9.1 doesn't emit a Flags column - tolerate it and default the flags to 0 for
         // those rows (the Flags bits aren't consumed downstream in BiblioSpec anyway). Every OTHER
-        // column stays required via MustFindParquetField, so a renamed/dropped field still errors.
-        var flagsField        = FindDataField(schema, "Flags");
-        var productMzField    = MustFindParquetField(schema, "Product.Mz", filepath);
-        var relIntenField     = MustFindParquetField(schema, "Relative.Intensity", filepath);
-        // Fragment.{Type,Charge,Series.Number,Loss.Type} are read by cpp but discarded
-        // by the C# Product class — we only retain (mz, intensity) per fragment. Reading
-        // and ignoring keeps the schema check honest (the columns must be present).
-        var fragTypeField     = MustFindParquetField(schema, "Fragment.Type", filepath);
-        var fragChargeField   = MustFindParquetField(schema, "Fragment.Charge", filepath);
-        var fragSeriesField   = MustFindParquetField(schema, "Fragment.Series.Number", filepath);
-        var fragLossField     = MustFindParquetField(schema, "Fragment.Loss.Type", filepath);
-        _ = fragTypeField; _ = fragChargeField; _ = fragSeriesField; _ = fragLossField;
+        // column stays required, so a renamed/dropped field still errors.
+        const DiannLibraryColumns columns = DiannLibraryColumns.precursor_id | DiannLibraryColumns.modified_sequence |
+            DiannLibraryColumns.precursor_charge | DiannLibraryColumns.precursor_mz | DiannLibraryColumns.rt |
+            DiannLibraryColumns.im | DiannLibraryColumns.q_value | DiannLibraryColumns.decoy |
+            DiannLibraryColumns.proteotypic | DiannLibraryColumns.flags | DiannLibraryColumns.product_mz |
+            DiannLibraryColumns.relative_intensity;
+        DiannLibraryParquetReader reader;
+        try
+        {
+            reader = DiannLibraryParquetReader.Open(filepath, columns, DiannLibraryColumns.flags);
+            // Fragment.{Type,Charge,Series.Number,Loss.Type} are read by cpp but discarded
+            // by the C# Product class - we only retain (mz, intensity) per fragment. Requiring
+            // them unread keeps the schema check honest (the columns must be present).
+            reader.Require(DiannLibraryColumns.fragment_type | DiannLibraryColumns.fragment_charge |
+                DiannLibraryColumns.fragment_series_number | DiannLibraryColumns.fragment_loss_type);
+        }
+        catch (DiannLibraryMissingColumnException ex)
+        {
+            throw new BlibException(false,
+                $"DIA-NN report '{filepath}' is missing required column '{ex.ColumnName}'.");
+        }
+        using var libraryReader = reader;
 
         string lastPrecursorId = string.Empty;
         Entry? currentEntry = null;
 
         for (int rg = 0; rg < reader.RowGroupCount; rg++)
         {
-            using var rgReader = reader.OpenRowGroupReader(rg);
+            var group = reader.ReadRowGroup(rg);
 
-            string[] precursorId = await ReadStringColumn(rgReader, precursorIdField).ConfigureAwait(false);
-            string[] modSeq      = await ReadStringColumn(rgReader, modSeqField).ConfigureAwait(false);
-            long[]   charge      = await ReadLongColumn  (rgReader, chargeField).ConfigureAwait(false);
-            float[]  precMz      = await ReadFloatColumn (rgReader, precursorMzField).ConfigureAwait(false);
-            float[]  rt          = await ReadFloatColumn (rgReader, rtField).ConfigureAwait(false);
-            float[]  im          = await ReadFloatColumn (rgReader, imField).ConfigureAwait(false);
-            float[]  qvalue      = await ReadFloatColumn (rgReader, qValueField).ConfigureAwait(false);
-            long[]   decoy       = await ReadLongColumn  (rgReader, decoyField).ConfigureAwait(false);
-            long[]   proteotypic = await ReadLongColumn  (rgReader, proteotypicField).ConfigureAwait(false);
-            long[]   flags       = flagsField != null
-                ? await ReadLongColumn(rgReader, flagsField).ConfigureAwait(false)
-                : new long[precursorId.Length];
-            float[]  productMz   = await ReadFloatColumn (rgReader, productMzField).ConfigureAwait(false);
-            float[]  relInten    = await ReadFloatColumn (rgReader, relIntenField).ConfigureAwait(false);
+            string[] precursorId = group.PrecursorId;
+            string[] modSeq      = group.ModifiedSequence;
+            long[]   charge      = group.PrecursorCharge;
+            float[]  precMz      = group.PrecursorMz;
+            float[]  rt          = group.RT;
+            float[]  im          = group.IM;
+            float[]  qvalue      = group.QValue;
+            long[]   decoy       = group.Decoy;
+            long[]   proteotypic = group.Proteotypic;
+            long[]   flags       = group.Flags ?? new long[precursorId.Length];
+            float[]  productMz   = group.ProductMz;
+            float[]  relInten    = group.RelativeIntensity;
 
             int n = precursorId.Length;
             for (int i = 0; i < n; i++)
@@ -800,26 +797,6 @@ public sealed class DiaNNSpecLibReader : BuildParser
             _specLib.IRtMin = 0.0;
             _specLib.IRtMax = 0.0;
         }
-    }
-
-    private static async Task<long[]> ReadLongColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
-    {
-        var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
-        var result = new long[arr.Length];
-        for (int i = 0; i < arr.Length; i++)
-        {
-            var v = arr[i];
-            result[i] = v switch
-            {
-                long l => l,
-                int n => n,
-                short s => s,
-                byte b => b,
-                null => 0L,
-                _ => Convert.ToInt64(v, CultureInfo.InvariantCulture),
-            };
-        }
-        return result;
     }
 
     private string FindDiannReport(out string statsFilepath)

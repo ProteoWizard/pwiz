@@ -189,6 +189,18 @@ namespace pwiz.Osprey.IO
             if (errors.Any)
                 throw errors.ToException();
 
+            return BuildEntries(precursorMap, logInfo);
+        }
+
+        /// <summary>
+        /// The library entries of <paramref name="precursorMap"/>, each precursor's fragment rows
+        /// as <see cref="AddFragmentRow"/> grouped them: the min-fragment rule, the peptide length
+        /// check, the modified sequence's text, one peak per m/z in m/z order, the typing check
+        /// and the interning. Shared by the .tsv parse and <see cref="DiannParquetLoader"/>, so
+        /// a DIA-NN library is the same object in either format.
+        /// </summary>
+        internal List<LibraryEntry> BuildEntries(Dictionary<string, PrecursorData> precursorMap, Action<string> logInfo)
+        {
             // Convert to LibraryEntry list. Intern the repeated strings
             // (sequences, modification names, protein / gene accessions) as the
             // interned arrays are filled, so no member is mutated after
@@ -358,13 +370,6 @@ namespace pwiz.Osprey.IO
             if (!fieldReader.IsValid)
                 return;
 
-            string modifiedSequence = StripFlankingChars(modifiedPeptide);
-
-            // Stripped sequence
-            string strippedSequence = GetFieldOrNull(fields, cols.StrippedPeptide);
-            if (string.IsNullOrEmpty(strippedSequence))
-                strippedSequence = StripModifications(modifiedSequence);
-
             var annotation = new FragmentAnnotation
             {
                 IonType = ionType,
@@ -374,20 +379,52 @@ namespace pwiz.Osprey.IO
                 CustomLossMass = lossMass
             };
 
+            var unrecognized = AddFragmentRow(precursorMap, modifiedPeptide, GetFieldOrNull(fields, cols.StrippedPeptide),
+                charge, precursorMz, retentionTime, fragmentMz, relativeIntensity, annotation, isDecoyRow,
+                GetFieldOrNull(fields, cols.ProteinId), GetFieldOrNull(fields, cols.GeneName));
+            if (unrecognized != null)
+            {
+                foreach (string modStr in unrecognized)
+                {
+                    errors.Add(lineNum, InvalidValueMessage(lineNum, cols.ModifiedPeptide,
+                        @"ModifiedPeptide", modStr));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds one fragment row, its values already read, to the precursor it belongs to in
+        /// <paramref name="precursorMap"/> - keyed by modified sequence and charge, created on
+        /// the precursor's first row, which also gives its modifications, sequence, m/z, retention
+        /// time and proteins. Shared by the .tsv parse and <see cref="DiannParquetLoader"/>.
+        /// Returns the modifications of a new precursor whose mass cannot be known, for the caller
+        /// to report as invalid at its row, else null.
+        /// </summary>
+        internal static List<string> AddFragmentRow(Dictionary<string, PrecursorData> precursorMap,
+            string modifiedPeptide, string strippedPeptide, byte charge, double precursorMz, double retentionTime,
+            double fragmentMz, float relativeIntensity, FragmentAnnotation annotation, bool isDecoyRow,
+            string proteinStr, string geneStr)
+        {
+            string modifiedSequence = StripFlankingChars(modifiedPeptide);
+
+            // Stripped sequence
+            string strippedSequence = strippedPeptide;
+            if (string.IsNullOrEmpty(strippedSequence))
+                strippedSequence = StripModifications(modifiedSequence);
+
             // Protein and gene info
             List<string> proteinIds = new List<string>();
-            string proteinStr = GetFieldOrNull(fields, cols.ProteinId);
             if (!string.IsNullOrEmpty(proteinStr))
                 proteinIds = SplitList(proteinStr);
 
             List<string> geneNames = new List<string>();
-            string geneStr = GetFieldOrNull(fields, cols.GeneName);
             if (!string.IsNullOrEmpty(geneStr))
                 geneNames = SplitList(geneStr);
 
             // Group by precursor key
             string key = modifiedSequence + @"_" + charge;
 
+            List<string> unrecognizedResult = null;
             PrecursorData precursor;
             if (!precursorMap.TryGetValue(key, out precursor))
             {
@@ -395,11 +432,8 @@ namespace pwiz.Osprey.IO
                 // whose mass cannot be known is reported once rather than on every fragment line.
                 var unrecognized = new List<string>();
                 var modifications = ParseModifications(modifiedSequence, unrecognized);
-                foreach (string modStr in unrecognized)
-                {
-                    errors.Add(lineNum, InvalidValueMessage(lineNum, cols.ModifiedPeptide,
-                        @"ModifiedPeptide", modStr));
-                }
+                if (unrecognized.Count > 0)
+                    unrecognizedResult = unrecognized;
                 precursor = new PrecursorData
                 {
                     Sequence = strippedSequence,
@@ -427,6 +461,7 @@ namespace pwiz.Osprey.IO
                 RelativeIntensity = relativeIntensity,
                 Annotation = annotation
             });
+            return unrecognizedResult;
         }
 
         /// <summary>
@@ -855,7 +890,7 @@ namespace pwiz.Osprey.IO
         /// <see cref="MAX_LISTED"/> errors and counts the rest, because a column that is wrong
         /// throughout a library would otherwise list every line of it.
         /// </summary>
-        private class LibraryLineErrors
+        internal class LibraryLineErrors
         {
             private const int MAX_LISTED = 100;
 
@@ -973,7 +1008,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Intermediate data for grouping fragments by precursor.
         /// </summary>
-        private class PrecursorData
+        internal class PrecursorData
         {
             public string Sequence;
             public List<Modification> Modifications;
