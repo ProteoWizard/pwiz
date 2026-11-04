@@ -65,6 +65,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | [DIVERGENCES.md](DIVERGENCES.md) | Consolidated cross-implementation parity report — every per-doc "Divergences from the Rust documentation" section in one place, classified (stale-doc / intentional-C# / port-error / unverified). |
 | [peak-model-training.md](peak-model-training.md) | Retraining the opt-in learned peak-pick model (06): feature capture → train → promote, with the score equations. |
 | [fractional-entrapment.md](fractional-entrapment.md) | Entrapment-based FDR-accuracy diagnostics (`--model-diagnostics`): why a fractional entrapment ratio still yields a valid FDP estimate. |
+| [equal-chance-diagnostics.md](equal-chance-diagnostics.md) | The `--model-diagnostics` equal-chance alarms: decoy-independent mixture null, q-band balance, paired coin, decoy support; definitions and thresholds. |
 
 ## Cross-implementation status
 

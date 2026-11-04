@@ -603,6 +603,18 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       regardless of the Pass&nbsp;1&nbsp;/&nbsp;Pass&nbsp;2 switch.</p>
     <div class="kpis" id="sumKpis"></div>
   </div>
+  <div class="card" id="ecCard">
+    <h2>Equal-chance alarms</h2>
+    <p class="desc">Automated checks of the target-decoy <b>equal-chance</b> assumption (an incorrect match is as
+      likely to land on a decoy as on a false target), which fails silently when it fails. <b>Null alignment</b>
+      compares the decoys with <i>f_false</i>, the lower component of a two-Gaussian fit to the <b>target</b>
+      composite scores alone (so decoy-independent); <b>q-band balance</b> is diagFDR's decoy fraction in the
+      low-confidence q band; the <b>paired coin</b> is the entrapment-pair decoy-win fraction; <b>decoy support</b>
+      is the decoys each run accepts at the run FDR. Diagnostic only &mdash; no FDR result reads these.</p>
+    <div class="kpis" id="ecKpis"></div>
+    <div id="ecTable"></div>
+    <p class="note" id="ecNote"></p>
+  </div>
   <div class="card">
     <h2>Per-file passing precursors</h2>
     <p class="desc" id="fileDesc">Precursors passing the run-level FDR, per input file.</p>
@@ -737,7 +749,7 @@ function passBundle(p){
     features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,trainingSet:D.trainingSet||null,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
     fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
-    coAssignment:D.coAssignment};
+    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null};
   const m=D.pass2.model;   // null under confidence-transfer mode
   return {pass:2,label:"2nd pass",desc:"post-reconciliation reported pool",
     hasStructural:!!m,
@@ -745,7 +757,7 @@ function passBundle(p){
     trainingSet:m?(m.trainingSet||null):null,
     densityRatio:D.pass2.densityRatio,winFraction:D.pass2.winFraction,
     fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile,
-    coAssignment:D.pass2.coAssignment};
+    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null};
 }
 const PASSES=[passBundle(1)];
 if(D.pass2)PASSES.push(passBundle(2));
@@ -849,6 +861,7 @@ function renderPass(){
   renderReproTab(b);
   renderCompetitionTab(b);
   renderPerFile(b);
+  renderEqualChance(b);
 }
 
 // Shared feature-contribution table (Feature | Coefficient | Contribution bar).
@@ -2210,6 +2223,64 @@ function renderPerFile(b){
   const fd=document.getElementById("fileDesc");
   if(fd)fd.innerHTML="Precursors passing the run-level FDR, per input file"+
     (PASSES.length>1?" &mdash; <b>"+b.label+"</b> ("+(b.pass===2?"final reported pool":"pre-compaction first-pass pool")+").":".");
+}
+
+// ---------- summary: equal-chance alarms (issue #4464) for the active pass ----------
+// The verdicts are computed in C# (EqualChanceAlarms) and carried in D.equalChance; this only
+// shows them. Each check is ok / alarm / cannot_assess (input present, too weak to judge) /
+// not_applicable (input absent for this pass - e.g. pass 2 has no retrained model).
+const EC_LABEL={ok:"ok",alarm:"ALARM",cannot_assess:"cannot assess",not_applicable:"n/a"};
+const EC_CLASS={ok:"good",alarm:"bad",cannot_assess:"warn",not_applicable:""};
+const EC_GUARD={too_few_targets:"too few targets to fit a mixture",not_converged:"the mixture fit did not converge",
+  component_weight:"one mixture component is negligible",not_separated:"insufficient separation to assess: the two components overlap"};
+function renderEqualChance(b){
+  const card=document.getElementById("ecCard");const ec=b.equalChance;
+  if(!ec){if(card)card.style.display="none";return;}
+  if(card)card.style.display="";
+  const na=ec.nullAlignment,qb=ec.qBandBalance,pc=ec.pairedCoin,ds=ec.decoySupport;
+  const sg=v=>(Number(v)>0?"+":"")+fmt(v,2);
+  const rows=[
+    {name:"Null alignment (decoy vs f_false)",c:na,
+      measured:na.status==="cannot_assess"?(EC_GUARD[na.guard]||"")+
+        (na.fit?" (Ashman D "+fmt(na.fit.separation,2)+")":""):
+        "location "+sg(na.locationShift)+"σ, scale ×"+fmt(na.scaleRatio,2)+", J "+fmt(na.symmetricDivergence,3),
+      threshold:"|location| > "+fmt(na.locationThreshold,1)+"σ or scale beyond ×"+fmt(na.scaleThreshold,1)},
+    {name:"q-band balance (diagFDR)",c:qb,
+      measured:"decoy fraction "+pct(qb.pooledDecoyFraction,1)+" in q "+fmt(qb.pooledLo,1)+" to "+fmt(qb.pooledHi,1)+
+        " (n "+fmt(qb.pooledN,0)+"), Δ "+sg(qb.deltaBalance),
+      threshold:"|Δ| > "+fmt(qb.threshold,2)},
+    {name:"Paired coin (entrapment pairs)",c:pc,
+      measured:pc.status==="not_applicable"?"no entrapment pairs (real-pair coin "+pct(pc.realCoin,1)+", confounded by true hits)":
+        "decoy wins "+pct(pc.entrapmentCoin,1)+" of "+fmt(pc.entrapmentPairs,0)+" null-band pairs",
+      threshold:"|coin - 50%| > "+pct(pc.threshold,0)},
+    {name:"Decoy support at the cutoff",c:ds,
+      measured:ds.status==="not_applicable"?"":
+        "fewest decoys accepted per run "+fmt(ds.minRunDecoys,0)+" ("+ds.minRunFile+"), FDP CV ≈ "+pct(ds.fdpCvBenchmark,0),
+      threshold:"granular below "+fmt(ds.threshold,0)+" decoys at "+pct(ds.alpha,0)+" run FDR"}];
+  const kp=document.getElementById("ecKpis");kp.innerHTML="";
+  kpi(kp,"equal-chance alarms",fmt(ec.alarmCount,0),ec.alarmCount>0?"bad":"good");
+  rows.forEach(r=>kpi(kp,r.name,EC_LABEL[r.c.status]||r.c.status,EC_CLASS[r.c.status]||""));
+  const host=document.getElementById("ecTable");host.innerHTML="";
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  [["Check","l"],["Verdict","l"],["Measured","l"],["Alarm when","l"]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  rows.forEach(r=>{const tr=H(tb,"tr",{});H(tr,"td",{class:"l"},r.name);
+    H(tr,"td",{class:"l"},EC_LABEL[r.c.status]||r.c.status);
+    H(tr,"td",{class:"l"},r.measured);H(tr,"td",{class:"l"},r.threshold);});
+  let note="";
+  if(na.status==="ok"||na.status==="alarm"){
+    note+="f_false = N("+fmt(na.fit.falseMean,2)+", "+fmt(na.fit.falseStd,2)+"), weight "+pct(na.fit.piFalse,1)+
+      "; decoys N("+fmt(na.decoyMean,2)+", "+fmt(na.decoyStd,2)+").";
+    if(isFinite(Number(na.entrapmentLocationShift)))
+      note+=" Entrapment (a pure null) sits at "+sg(na.entrapmentLocationShift)+"σ from f_false, the decoys at "+
+        sg(na.decoyVsEntrapmentShift)+"σ from the entrapment.";
+    note+=" A negative location means decoys score below the false targets: the decoy count undercounts them and q is "+
+      "anti-conservative. ";
+  }
+  if(b.pass===2&&na.status==="not_applicable")
+    note+="The null-alignment and q-band checks read the composite score distribution, which only a retrained pass "+
+      "has; switch to <b>Pass 1</b> for them. ";
+  document.getElementById("ecNote").innerHTML=note;
 }
 
 function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}
