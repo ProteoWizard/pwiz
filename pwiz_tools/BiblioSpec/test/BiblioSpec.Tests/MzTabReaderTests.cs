@@ -16,6 +16,7 @@ public class MzTabReaderTests
         // iST-NHS specific cysteine modification: in the obo, absent from the 2023 unimod.xml
         AssertUnimodMass(2086, 113.084064);
         Assert.IsFalse(MzTabReader.TryGetUnimodMonoMass(999999, out _));
+        Assert.IsFalse(MzTabReader.TryGetUnimodMonoMass(0, out _)); // the obo's root node
     }
 
     private static void AssertUnimodMass(int id, double expected)

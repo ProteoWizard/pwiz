@@ -429,7 +429,8 @@ public sealed class MzTabReader : BuildParser
     /// instead; both carry UniMod's published delta_mono_mass.</remarks>
     internal static bool TryGetUnimodMonoMass(int id, out double mass)
     {
-        var mod = Unimod.Modification((CVID)(id + (int)CVID.UNIMOD_unimod_root_node));
+        // UNIMOD:0 is the obo's root node, not a modification (unimod.xml had no record 0)
+        var mod = id > 0 ? Unimod.Modification((CVID)(id + (int)CVID.UNIMOD_unimod_root_node)) : null;
         mass = mod?.DeltaMonoisotopicMass ?? 0;
         return mod is not null;
     }
