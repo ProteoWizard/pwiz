@@ -280,9 +280,11 @@ namespace pwiz.Osprey.IO
         // Score parquets whose charge column a library-identity walk has already checked
         // (RequireFileCharges) in this process. The check costs a seek per row group on a
         // spinning disk, and first-pass FDR walks each file six or more times, so each file is
-        // checked on its first walk only. A file never changes under a running task.
+        // checked on its first walk only. A file never changes under a running task. Keys are
+        // the paths as given, compared as the file system compares names, so two Linux files
+        // differing only in case are each checked.
         private static readonly ConcurrentDictionary<string, bool> _chargesChecked =
-            new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            new ConcurrentDictionary<string, bool>(PathComparison.Comparer);
 
         /// <summary>
         /// True when <paramref name="path"/> is a reconciled parquet holding the survivor

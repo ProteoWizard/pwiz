@@ -677,8 +677,8 @@ namespace pwiz.Osprey.Tasks
                 // same reason. Without the pass2Path term the arm reads its own missing product
                 // as an outstanding input and declines every time, which is a self-defeating
                 // condition that looks exactly like the fold not working.
-                if (string.Equals(output, reportPath, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(output, pass2Path, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(output, reportPath, PathComparison.Comparison) ||
+                    string.Equals(output, pass2Path, PathComparison.Comparison))
                 {
                     continue;
                 }
