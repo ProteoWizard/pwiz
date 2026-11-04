@@ -42,6 +42,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.ML
 {
@@ -94,12 +95,28 @@ namespace pwiz.Osprey.ML
         /// <see cref="XorShift64"/> -- see the determinism note on
         /// <see cref="GradientBoostedTrees"/>.</summary>
         public ulong Seed = 42;
-        /// <summary>Threads used to accumulate histograms. Parallelism is applied ACROSS
-        /// FEATURES only, so every histogram is still summed in ascending row order by a
-        /// single thread and the trained model is bit-identical at any value. Defaults to
-        /// 1, which keeps the FDR path exactly sequential; raise it only for training sets
-        /// large enough that the accumulation dominates (millions of rows).</summary>
+        /// <summary>Threads used for training: binning, gradients, histograms, partitioning
+        /// and margin updates. Every floating-point sum is taken in an order fixed by the data
+        /// alone (histogram row chunks are sized from the row count, never the thread count),
+        /// and everything else split across threads is per-row or pure data movement, so the
+        /// trained model is bit-identical at any value. Defaults to 1 (sequential); a caller
+        /// training several models concurrently should divide its thread budget between
+        /// them.</summary>
         public int MaxDegreeOfParallelism = 1;
+        /// <summary>Whether the sigmoid and the logistic base score use the platform-independent
+        /// fdlibm arm of <see cref="DeterministicMath"/> (true) or <see cref="Math"/> (false).
+        /// Defaults to <see cref="OspreyEnvironment.UseDeterministicMath"/>
+        /// (OSPREY_DETERMINISTIC_MATH); a test sets it to train both arms in one process. Only
+        /// true is bit-identical across operating systems.</summary>
+        public bool UseDeterministicMath = OspreyEnvironment.UseDeterministicMath;
+
+        /// <summary>A copy of these parameters, for a caller that needs to vary one field
+        /// (typically <see cref="MaxDegreeOfParallelism"/>) without touching a shared
+        /// instance.</summary>
+        public GbtParams Clone()
+        {
+            return (GbtParams)MemberwiseClone();
+        }
     }
 
     /// <summary>
@@ -147,18 +164,30 @@ namespace pwiz.Osprey.ML
     ///
     /// DETERMINISTIC by construction, to the same standard as the linear SVM it stands
     /// in for: identical input produces a bit-identical model and bit-identical scores,
-    /// on every target framework and at any <see cref="GbtParams.MaxDegreeOfParallelism"/>.
-    /// The pieces that guarantee it:
+    /// on every target framework, on Windows and Linux, and at any
+    /// <see cref="GbtParams.MaxDegreeOfParallelism"/>. The pieces that guarantee it:
     /// <list type="bullet">
+    /// <item>the two transcendentals (the logistic base score's log-odds and the sigmoid in
+    /// every round's gradient) come from <see cref="DeterministicMath"/>, not
+    /// <see cref="Math"/>, whose Exp and Log are the OS C library's and differ in the last
+    /// bit between Windows and Linux. Everything else is IEEE addition, subtraction,
+    /// multiplication, division and comparison, which every platform rounds alike.
+    /// <see cref="GbtParams.UseDeterministicMath"/> = false gives up the cross-OS half of
+    /// the guarantee (results stay identical across thread counts on one OS);</item>
     /// <item>subsampling draws from <see cref="XorShift64"/> -- the same seeded,
     /// bit-exact-by-definition PRNG the rest of Osprey.ML uses -- NOT
     /// <c>System.Random</c>, whose seeded sequence is a framework implementation detail
     /// (this builds net472 AND net8.0, so a divergence there would silently train two
     /// different models from one source);</item>
     /// <item>every float accumulation (histograms, leaf gradients/hessians) runs in a fixed
-    /// row order. Histogram work may be spread across threads, but only ACROSS FEATURES:
-    /// one thread owns a feature's histogram and walks the node's rows in ascending order,
-    /// so no summation order can drift with the thread count;</item>
+    /// order. A node's leaf sums walk its rows in partition order on one thread. Its
+    /// histogram is accumulated in row chunks whose count and boundaries depend only on the
+    /// node's row count, each chunk into its own partial, and the partials are added in
+    /// chunk order; a larger child's histogram is its parent's minus the smaller child's.
+    /// Threads only decide WHO computes each partial, never the order inside it, so no sum
+    /// can drift with the thread count. The other threaded steps (binning, gradients,
+    /// margin updates, partitioning, the per-tree gather) compute each row or feature
+    /// independently or only move data, so they cannot drift either;</item>
     /// <item>row partitioning is stable, so each child sees its rows in the same relative
     /// order they had in the parent;</item>
     /// <item>split selection scans features and bins in ascending order and takes a new
@@ -178,6 +207,18 @@ namespace pwiz.Osprey.ML
         // million-row cost the parallel path exists for lives in the handful of wide nodes
         // near the root.
         private const long PARALLEL_WORK_THRESHOLD = 1L << 16;
+
+        // Row range handed to one thread by the per-row loops (gradients, margin updates).
+        private const int ROW_RANGE = 1 << 14;
+
+        // Most features one histogram pass accumulates together; see AccumulateHistograms.
+        private const int HISTOGRAM_GROUP_MAX = 4;
+
+        // Row chunks a node's histogram is accumulated in: one per this many rows, at most
+        // MAX_HISTOGRAM_CHUNKS. Fixed constants, never the thread count, because the chunking
+        // sets the summation order. See AccumulateHistograms.
+        private const int HISTOGRAM_CHUNK_ROWS = 1 << 13;
+        private const int MAX_HISTOGRAM_CHUNKS = 32;
 
         // Flattened node arrays across all trees. Internal node: Feature >= 0, split
         // at Threshold (value &lt;= Threshold -> Left, else Right). Leaf: Feature == -1,
@@ -323,25 +364,30 @@ namespace pwiz.Osprey.ML
             if ((long)n * nFeat > int.MaxValue)
                 throw new ArgumentException(@"GradientBoostedTrees.Train: training matrix exceeds the addressable bin array size");
 
+            // Null keeps every loop below on the calling thread; see ForRanges.
+            int maxDegreeOfParallelism = Math.Max(1, p.MaxDegreeOfParallelism);
+            var parallelOptions = maxDegreeOfParallelism > 1
+                ? new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }
+                : null;
+
             // --- 1. Quantile bin edges per feature; precompute byte bin indices ---
-            // Bins are stored column-major so histogram accumulation for one feature walks
-            // a contiguous run instead of striding across one small array per row.
+            // Bins are stored column-major so the per-tree gather in TreeWorkspace.Reset
+            // streams each sampled feature's column front to back.
             var cuts = new double[nFeat][];
             var bin = new byte[n * nFeat];
-            var col = new double[n];
-            for (int j = 0; j < nFeat; j++)
+            ForEachFeature(parallelOptions, nFeat, n, (j, col) =>
             {
                 for (int i = 0; i < n; i++)
                 {
                     double v = x[i][j];
                     col[i] = double.IsNaN(v) || double.IsInfinity(v) ? 0.0 : v;
                 }
-                cuts[j] = QuantileCuts(col, maxBins);
-                var cj = cuts[j];
+                var cj = QuantileCuts(col, maxBins);
+                cuts[j] = cj;
                 int colStart = j * n;
                 for (int i = 0; i < n; i++)
                     bin[colStart + i] = (byte)BinOf(cj, x[i][j]);
-            }
+            });
 
             // --- 2. Weights and base score ---
             var w = sampleWeight;
@@ -359,7 +405,7 @@ namespace pwiz.Osprey.ML
             else
             {
                 double frac = tot > 0 ? Math.Min(Math.Max(pos / tot, 1e-6), 1 - 1e-6) : 0.5;
-                baseScore = Math.Log(frac / (1 - frac));
+                baseScore = DeterministicMath.Log(frac / (1 - frac), p.UseDeterministicMath);
             }
 
             var f = new double[n];
@@ -377,51 +423,47 @@ namespace pwiz.Osprey.ML
             var allFeat = new int[nFeat];
             for (int j = 0; j < nFeat; j++) allFeat[j] = j;
 
-            var workspace = new TreeWorkspace(n, nColUse, maxBins, p, bin, g, h);
+            var workspace = new TreeWorkspace(n, nColUse, maxBins, p, parallelOptions, bin, g, h);
+            bool squaredError = p.Objective == GbtObjective.SquaredError;
+            bool deterministicMath = p.UseDeterministicMath;
 
             // --- 3. Boosting rounds ---
             for (int t = 0; t < p.NTrees; t++)
             {
-                if (p.Objective == GbtObjective.SquaredError)
+                // Per-row and order-free, so splitting the range across threads cannot
+                // change a single value.
+                ForRanges(parallelOptions, n, (lo, hi) =>
                 {
-                    for (int i = 0; i < n; i++)
+                    for (int i = lo; i < hi; i++)
                     {
                         double wi = w != null ? w[i] : 1.0;
-                        g[i] = (f[i] - y[i]) * wi;
-                        h[i] = wi;
+                        if (squaredError)
+                        {
+                            g[i] = (f[i] - y[i]) * wi;
+                            h[i] = wi;
+                        }
+                        else
+                        {
+                            double pi = Sigmoid(f[i], deterministicMath);
+                            g[i] = (pi - y[i]) * wi;
+                            h[i] = Math.Max(pi * (1 - pi) * wi, 1e-6);
+                        }
                     }
-                }
-                else
-                {
-                    for (int i = 0; i < n; i++)
-                    {
-                        double pi = Sigmoid(f[i]);
-                        double wi = w != null ? w[i] : 1.0;
-                        g[i] = (pi - y[i]) * wi;
-                        h[i] = Math.Max(pi * (1 - pi) * wi, 1e-6);
-                    }
-                }
+                });
 
-                // Row subsample (paired grouping is enforced upstream in fold assignment).
-                var rows = Subsample(n, p.Subsample, rng);
-                // Column subsample for this tree.
+                // Row subsample (paired grouping is enforced upstream in fold assignment),
+                // drawn into the workspace's own row buffer, then the column subsample.
+                int rowCount = workspace.Subsample(p.Subsample, rng);
                 var feats = SampleColumns(allFeat, nColUse, rng);
 
-                workspace.Reset(rows, feats);
-                int root = BuildTree(workspace, 0, rows.Length, 0, cuts, p,
+                workspace.Reset(rowCount, feats);
+                int firstNode = nodesFeature.Count;
+                int root = BuildRoot(workspace, rowCount, cuts, p,
                     nodesFeature, nodesThresh, nodesLeft, nodesRight, nodesLeaf);
                 treeRoots.Add(root);
 
-                // Update margins for ALL samples with the new tree. The walk compares raw
-                // feature values, not bins, so a NaN feature takes the right branch here
-                // even though binning maps it to bin 0.
-                for (int i = 0; i < n; i++)
-                {
-                    int node = root;
-                    while (nodesFeature[node] >= 0)
-                        node = x[i][nodesFeature[node]] <= nodesThresh[node] ? nodesLeft[node] : nodesRight[node];
-                    f[i] += nodesLeaf[node];
-                }
+                UpdateMargins(parallelOptions, x, f, firstNode, root,
+                    nodesFeature, nodesThresh, nodesLeft, nodesRight, nodesLeaf);
             }
 
             return new GradientBoostedTrees(nodesFeature.ToArray(), nodesThresh.ToArray(),
@@ -556,56 +598,79 @@ namespace pwiz.Osprey.ML
                 (int[])data.TreeRoot.Clone(), data.BaseScore, data.FeatureCount, data.Objective);
         }
 
-        private static double Sigmoid(double z)
+        private static double Sigmoid(double z, bool deterministicMath)
         {
-            if (z >= 0) { double e = Math.Exp(-z); return 1.0 / (1.0 + e); }
-            double ez = Math.Exp(z); return ez / (1.0 + ez);
+            if (z >= 0) { double e = DeterministicMath.Exp(-z, deterministicMath); return 1.0 / (1.0 + e); }
+            double ez = DeterministicMath.Exp(z, deterministicMath); return ez / (1.0 + ez);
         }
 
-        // Per-tree scratch that outlives the recursion: the row index permutation being
-        // partitioned in place, the pooled per-depth histograms, and the partition buffer.
-        // Pooling matters at scale. A fresh double[maxBins] pair per feature per node is
-        // millions of short-lived arrays on a multi-million-row training set.
+        // Per-tree scratch that outlives the recursion. Pooling matters at scale: a fresh
+        // double[maxBins] pair per feature per node is millions of short-lived arrays on a
+        // multi-million-row training set, and a fresh row buffer per tree is a
+        // large-object-heap allocation per boosting round.
+        //
+        // The layout is what makes a wide node cheap. At the start of each tree the sampled
+        // rows' bins and gradient/hessian pairs are gathered ONCE into partition order, one
+        // contiguous column per sampled feature, and every partition after that moves them
+        // with the rows. A node's rows are then always one contiguous range of every column,
+        // so a histogram walks memory front to back instead of gathering from a
+        // multi-megabyte column at random positions - the dominant cost once the training set
+        // outgrows the cache. The columns are double-buffered by depth parity: a node at
+        // depth d reads buffer d % 2 and partitions its range into the other, where only its
+        // own subtree will ever look, so no partition needs a copy back.
+        //
+        // The cost is memory held for the whole Train call: per row about 32 bytes of ordered
+        // gradient/hessian pairs, 2 bytes per sampled feature of ordered bins and 8 bytes of
+        // row and position indices (about 30 MB per fold at the default 300k training rows),
+        // plus at most MAX_HISTOGRAM_CHUNKS partial histograms.
         private sealed class TreeWorkspace
         {
-            // Only these two change per boosting round; everything else is fixed for the
-            // whole Train call and is therefore set once, in the constructor.
-            private int[] _rows;
+            // Only this and the row buffer's contents change per boosting round; everything
+            // else is fixed for the whole Train call and is therefore set once, in the
+            // constructor.
             private int[] _feats;
 
+            private readonly int _n;
+            private readonly int _capacity;
+            private readonly int[] _rows;
+            private readonly int[] _position;
             private readonly byte[] _bin;
-            private readonly int _rowStride;
             private readonly double[] _g;
             private readonly double[] _h;
+            private readonly byte[][] _ordered;
+            private readonly double[][] _gh;
+            private readonly byte[] _goLeft;
             private readonly int _maxBins;
-            private readonly int _maxDegreeOfParallelism;
+            private readonly int _histLength;
             private readonly double[][] _gradHist;
             private readonly double[][] _hessHist;
-            private readonly int[] _partition;
+            private readonly double[][] _chunkGradHist;
+            private readonly double[][] _chunkHessHist;
             private readonly ParallelOptions _parallelOptions;
 
             public TreeWorkspace(int n, int nColUse, int maxBins, GbtParams p,
-                byte[] bin, double[] g, double[] h)
+                ParallelOptions parallelOptions, byte[] bin, double[] g, double[] h)
             {
+                _n = n;
+                _capacity = SubsampleCount(n, p.Subsample);
                 _maxBins = maxBins;
-                _maxDegreeOfParallelism = Math.Max(1, p.MaxDegreeOfParallelism);
+                _parallelOptions = parallelOptions;
                 _bin = bin;
-                _rowStride = n;
                 _g = g;
                 _h = h;
-                _partition = new int[n];
+                _rows = new int[n];
+                _position = new int[n];
+                _goLeft = new byte[_capacity];
+                // One spare slot per column (and gradient pair) past the subsample; see Reset.
+                int orderedLength = nColUse * (_capacity + 1);
+                _ordered = new[] { new byte[orderedLength], new byte[orderedLength] };
+                _gh = new[] { new double[2 * (_capacity + 1)], new double[2 * (_capacity + 1)] };
 
-                // Allocated once rather than at every node. A depth-6 tree has up to 63
-                // internal nodes, so per-node allocation would be ~12,600 throwaway objects
-                // per fold per boosting run.
-                _parallelOptions = _maxDegreeOfParallelism > 1
-                    ? new ParallelOptions { MaxDegreeOfParallelism = _maxDegreeOfParallelism }
-                    : null;
-
-                // One histogram buffer per depth that can still split: a node's histogram is
-                // dead once its split is chosen, so the two children share the next level's
-                // buffer in turn, and a node at MaxDepth is always a leaf and never builds one.
-                // Width is nColUse, not nFeat, because only the sampled columns are indexed.
+                // One histogram buffer per depth that can still split: the root's at depth 0,
+                // and at each split the smaller child's at the child depth while the larger
+                // child inherits its parent's (see BuildTree). A node at MaxDepth is always a
+                // leaf and never needs one. Width is nColUse, not nFeat, because only the
+                // sampled columns are indexed.
                 int levels = Math.Max(1, p.MaxDepth);
                 _gradHist = new double[levels][];
                 _hessHist = new double[levels][];
@@ -614,27 +679,108 @@ namespace pwiz.Osprey.ML
                     _gradHist[d] = new double[nColUse * maxBins];
                     _hessHist[d] = new double[nColUse * maxBins];
                 }
+
+                // Partial histograms for a wide node's row chunks, created on first use: a
+                // small training set never has more than one chunk and never needs them.
+                _chunkGradHist = new double[MAX_HISTOGRAM_CHUNKS][];
+                _chunkHessHist = new double[MAX_HISTOGRAM_CHUNKS][];
+                _histLength = nColUse * maxBins;
             }
 
-            public int[] Rows { get { return _rows; } }
             public int[] Feats { get { return _feats; } }
-            public byte[] Bin { get { return _bin; } }
-            public int RowStride { get { return _rowStride; } }
-            public double[] G { get { return _g; } }
-            public double[] H { get { return _h; } }
             public int MaxBins { get { return _maxBins; } }
-            public int MaxDegreeOfParallelism { get { return _maxDegreeOfParallelism; } }
             public ParallelOptions ParallelOptions { get { return _parallelOptions; } }
-            public int[] PartitionBuffer { get { return _partition; } }
 
-            public void Reset(int[] rows, int[] feats)
+            /// <summary>Distance between consecutive sampled-feature columns in
+            /// <see cref="Ordered"/>.</summary>
+            public int ColumnStride { get { return _capacity + 1; } }
+
+            /// <summary>Bins of the sampled features for the rows in partition order, as seen
+            /// by a node at <paramref name="depth"/>: column fi starts at fi *
+            /// <see cref="ColumnStride"/>.</summary>
+            public byte[] Ordered(int depth)
             {
-                _rows = rows; _feats = feats;
+                return _ordered[depth & 1];
             }
 
-            // Indexed directly: AccumulateHistograms is only reached for a node that can
-            // still split, so depth is always below MaxDepth. Clamping instead would let an
-            // out-of-contract depth quietly alias a parent's buffer rather than throw.
+            /// <summary>Gradient and hessian of the row at partition position r, at 2r and
+            /// 2r + 1, as seen by a node at <paramref name="depth"/>.</summary>
+            public double[] Gh(int depth)
+            {
+                return _gh[depth & 1];
+            }
+
+            /// <summary>
+            /// Draw this round's row subsample into the row buffer and return its size. The
+            /// same partial Fisher-Yates over the identity permutation, with the same draws,
+            /// as a fresh array per round would make; reusing the buffer only saves the
+            /// allocation.
+            /// </summary>
+            public int Subsample(double frac, XorShift64 rng)
+            {
+                var idx = _rows;
+                for (int i = 0; i < _n; i++)
+                    idx[i] = i;
+                if (frac >= 0.999)
+                    return _n;
+                int m = SubsampleCount(_n, frac);
+                for (int i = 0; i < m; i++)
+                {
+                    int j = i + (int)(rng.Next() % (ulong)(_n - i));
+                    int tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp;
+                }
+                return m;
+            }
+
+            /// <summary>Gather the subsampled rows' gradients and the sampled features' bins
+            /// into the depth-0 buffers, in subsample order.</summary>
+            public void Reset(int rowCount, int[] feats)
+            {
+                _feats = feats;
+
+                // Scatter rather than gather: walk the source rows in order and write each
+                // selected one to its subsample position, so the reads stream and the random
+                // accesses are stores, which do not stall. A row left out of the subsample
+                // is written to the spare slot past the end of each buffer instead of being
+                // branched around; the spare is never read, so concurrent writes to it from
+                // different row ranges are harmless.
+                var rows = _rows;
+                var position = _position;
+                int spare = _capacity;
+                for (int i = 0; i < _n; i++)
+                    position[i] = spare;
+                for (int r = 0; r < rowCount; r++)
+                    position[rows[r]] = r;
+
+                var g = _g;
+                var h = _h;
+                var gh = _gh[0];
+                ForRanges(_parallelOptions, _n, (lo, hi) =>
+                {
+                    for (int i = lo; i < hi; i++)
+                    {
+                        int r = position[i];
+                        gh[2 * r] = g[i];
+                        gh[2 * r + 1] = h[i];
+                    }
+                });
+
+                var bin = _bin;
+                var ordered = _ordered[0];
+                int stride = ColumnStride;
+                ForEach(_parallelOptions, feats.Length, fi =>
+                {
+                    int src = feats[fi] * _n;
+                    int dst = fi * stride;
+                    for (int i = 0; i < _n; i++)
+                        ordered[dst + position[i]] = bin[src + i];
+                });
+            }
+
+            // Indexed directly: a histogram is only built at a depth where the node or its
+            // sibling can still split, so depth is always below MaxDepth. Clamping instead
+            // would let an out-of-contract depth quietly alias a parent's buffer rather than
+            // throw.
             public double[] GradHist(int depth)
             {
                 return _gradHist[depth];
@@ -644,32 +790,158 @@ namespace pwiz.Osprey.ML
             {
                 return _hessHist[depth];
             }
+
+            /// <summary>Partial gradient histogram for row chunk <paramref name="chunk"/>,
+            /// created by <see cref="EnsureChunks"/> on the calling thread before any parallel
+            /// accumulation reads it.</summary>
+            public double[] ChunkGradHist(int chunk)
+            {
+                return _chunkGradHist[chunk];
+            }
+
+            public double[] ChunkHessHist(int chunk)
+            {
+                return _chunkHessHist[chunk];
+            }
+
+            /// <summary>Create the partial histograms for the first <paramref name="chunks"/>
+            /// row chunks, if not yet created.</summary>
+            public void EnsureChunks(int chunks)
+            {
+                for (int c = 0; c < chunks; c++)
+                {
+                    if (_chunkGradHist[c] == null)
+                    {
+                        _chunkGradHist[c] = new double[_histLength];
+                        _chunkHessHist[c] = new double[_histLength];
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Stable partition of positions [start, start + count) around the chosen
+            /// (sampled-feature index, bin), from the depth-<paramref name="depth"/> buffers
+            /// into the child depth's, returning the left count. Rows keep their relative
+            /// order on both sides, so each child sees exactly the row sequence the parent saw.
+            /// Pure data movement plus an integer count, so it is identical at any thread
+            /// count.
+            /// </summary>
+            public int Partition(int depth, int start, int count, int bestFi, int bestBin)
+            {
+                var srcOrdered = _ordered[depth & 1];
+                var dstOrdered = _ordered[(depth + 1) & 1];
+                var srcGh = _gh[depth & 1];
+                var dstGh = _gh[(depth + 1) & 1];
+                var goLeft = _goLeft;
+                int stride = ColumnStride;
+                int end = start + count;
+
+                // Which side each position goes to, once, for every column's move below.
+                int splitColumn = bestFi * stride;
+                int leftCount = 0;
+                for (int r = start; r < end; r++)
+                {
+                    int k = srcOrdered[splitColumn + r] <= bestBin ? 1 : 0;
+                    goLeft[r] = (byte)k;
+                    leftCount += k;
+                }
+                int rightCount = count - leftCount;
+
+                // Item 0 moves the gradient pairs; item fi + 1 moves sampled column fi.
+                //
+                // Branch-free: every value is written BOTH to the next left slot of the child
+                // buffer and to the next right slot, compacted in place at the front of its own
+                // source range, and only the matching cursor advances. Branching on a split
+                // that sends rows either way at random mispredicts constantly. The spare
+                // writes are harmless: a source slot at or before the one just read is dead,
+                // and a child slot written early is overwritten by the next left value or, at
+                // the end, by the rights copied in behind the lefts.
+                int items = _feats.Length + 1;
+                Action<int> move = item =>
+                {
+                    int li = start, ri = start;
+                    if (item == 0)
+                    {
+                        for (int r = start; r < end; r++)
+                        {
+                            int k = goLeft[r];
+                            double gv = srcGh[2 * r];
+                            double hv = srcGh[2 * r + 1];
+                            dstGh[2 * li] = gv;
+                            dstGh[2 * li + 1] = hv;
+                            srcGh[2 * ri] = gv;
+                            srcGh[2 * ri + 1] = hv;
+                            li += k;
+                            ri += 1 - k;
+                        }
+                        Array.Copy(srcGh, 2 * start, dstGh, 2 * (start + leftCount), 2 * rightCount);
+                        return;
+                    }
+
+                    int column = (item - 1) * stride;
+                    for (int r = start; r < end; r++)
+                    {
+                        int k = goLeft[r];
+                        byte v = srcOrdered[column + r];
+                        dstOrdered[column + li] = v;
+                        srcOrdered[column + ri] = v;
+                        li += k;
+                        ri += 1 - k;
+                    }
+                    Array.Copy(srcOrdered, column + start, dstOrdered, column + start + leftCount, rightCount);
+                };
+                if ((long)count * items < PARALLEL_WORK_THRESHOLD)
+                {
+                    for (int item = 0; item < items; item++)
+                        move(item);
+                }
+                else
+                {
+                    ForEach(_parallelOptions, items, move);
+                }
+                return leftCount;
+            }
         }
 
-        // Recursively build one tree over rows [start, start + count) of the workspace's
-        // row permutation; appends nodes to the shared flat lists and returns the node
+        // Build one tree over rows [start, start + count) of the workspace's row permutation:
+        // the root's sums and histogram, then the recursion. Returns the root's node index.
+        private static int BuildRoot(TreeWorkspace ws, int count, double[][] cuts, GbtParams p,
+            List<int> nFeat, List<double> nThr, List<int> nLeft, List<int> nRight, List<double> nLeaf)
+        {
+            double gSum, hSum;
+            SumRange(ws.Gh(0), 0, count, out gSum, out hSum);
+            double[] hg = null, hh = null;
+            if (!IsLeaf(p, 0, count, hSum))
+            {
+                hg = ws.GradHist(0);
+                hh = ws.HessHist(0);
+                AccumulateHistograms(ws, 0, count, 0, hg, hh);
+            }
+            return BuildTree(ws, 0, count, 0, gSum, hSum, hg, hh, cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
+        }
+
+        // Recursively build the subtree over rows [start, start + count), whose gradient and
+        // hessian sums are gSum and hSum and whose histogram is (hg, hh) - null for a node
+        // that cannot split. Appends nodes to the shared flat lists and returns the node
         // index of this subtree's root.
+        //
+        // Only the SMALLER child's histogram is accumulated from rows; the larger child's is
+        // the parent's minus it, computed in place in the parent's buffer (histogram
+        // subtraction). The parent's histogram is dead once its split is chosen, so the larger
+        // child inherits that buffer and the smaller one takes the next depth's; neither is
+        // touched by the other's subtree, which only ever uses its own buffer and deeper ones.
         private static int BuildTree(TreeWorkspace ws, int start, int count, int depth,
+            double gSum, double hSum, double[] hg, double[] hh,
             double[][] cuts, GbtParams p,
             List<int> nFeat, List<double> nThr, List<int> nLeft, List<int> nRight, List<double> nLeaf)
         {
             int maxBins = ws.MaxBins;
-            var rows = ws.Rows;
-            var g = ws.G;
-            var h = ws.H;
-            double gSum = 0, hSum = 0;
-            for (int r = start; r < start + count; r++) { int i = rows[r]; gSum += g[i]; hSum += h[i]; }
-
-            bool leaf = depth >= p.MaxDepth || count < 2 || hSum < 2 * p.MinChildWeight;
-            int bestFeat = -1, bestBin = -1;
+            bool leaf = IsLeaf(p, depth, count, hSum);
+            int bestFeat = -1, bestFi = -1, bestBin = -1;
             double bestGain = p.Gamma; // require gain strictly above gamma
             if (!leaf)
             {
-                var hg = ws.GradHist(depth);
-                var hh = ws.HessHist(depth);
                 var feats = ws.Feats;
-                AccumulateHistograms(ws, start, count, depth, hg, hh, feats);
-
                 double parentTerm = gSum * gSum / (hSum + p.RegLambda);
                 for (int fi = 0; fi < feats.Length; fi++)
                 {
@@ -679,11 +951,13 @@ namespace pwiz.Osprey.ML
                     for (int b = 0; b < maxBins - 1; b++)
                     {
                         gl += hg[histStart + b]; hl += hh[histStart + b];
-                        if (hl < 1e-12 && gl == 0) continue;
+                        // An empty left side. Tested on the hessian alone: a subtracted histogram leaves
+                        // rounding residue in a bin no row falls in, so its gradient sum need not be 0.
+                        if (hl < 1e-12) continue;
                         double gr = gSum - gl, hr = hSum - hl;
                         if (hl < p.MinChildWeight || hr < p.MinChildWeight) continue;
                         double gain = 0.5 * (gl * gl / (hl + p.RegLambda) + gr * gr / (hr + p.RegLambda) - parentTerm) - p.Gamma;
-                        if (gain > bestGain) { bestGain = gain; bestFeat = j; bestBin = b; }
+                        if (gain > bestGain) { bestGain = gain; bestFeat = j; bestFi = fi; bestBin = b; }
                     }
                 }
                 if (bestFeat < 0) leaf = true;
@@ -697,85 +971,313 @@ namespace pwiz.Osprey.ML
                 return idx;
             }
 
-            int leftCount = Partition(ws, start, count, bestFeat, bestBin);
+            int leftCount = ws.Partition(depth, start, count, bestFi, bestBin);
+            int rightCount = count - leftCount;
+            int childDepth = depth + 1;
+
+            // The children's sums come from their own rows, in partition order, never from
+            // the histograms, so leaf values stay exact sums over the leaf's rows.
+            var childGh = ws.Gh(childDepth);
+            double leftG, leftH, rightG, rightH;
+            SumRange(childGh, start, leftCount, out leftG, out leftH);
+            SumRange(childGh, start + leftCount, rightCount, out rightG, out rightH);
+
+            double[] leftHg = null, leftHh = null, rightHg = null, rightHh = null;
+            bool leftSplits = !IsLeaf(p, childDepth, leftCount, leftH);
+            bool rightSplits = !IsLeaf(p, childDepth, rightCount, rightH);
+            if (leftSplits || rightSplits)
+            {
+                bool leftSmaller = leftCount <= rightCount;
+                var smallHg = ws.GradHist(childDepth);
+                var smallHh = ws.HessHist(childDepth);
+                if (leftSmaller)
+                    AccumulateHistograms(ws, start, leftCount, childDepth, smallHg, smallHh);
+                else
+                    AccumulateHistograms(ws, start + leftCount, rightCount, childDepth, smallHg, smallHh);
+                if (leftSmaller ? rightSplits : leftSplits)
+                    SubtractHistogram(ws, hg, hh, smallHg, smallHh);
+
+                if (leftSmaller)
+                {
+                    leftHg = smallHg; leftHh = smallHh;
+                    rightHg = hg; rightHh = hh;
+                }
+                else
+                {
+                    leftHg = hg; leftHh = hh;
+                    rightHg = smallHg; rightHh = smallHh;
+                }
+            }
 
             int self = nFeat.Count;
             nFeat.Add(bestFeat); nThr.Add(cuts[bestFeat][bestBin]); nLeft.Add(-1); nRight.Add(-1); nLeaf.Add(0);
-            int lc = BuildTree(ws, start, leftCount, depth + 1, cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
-            int rc = BuildTree(ws, start + leftCount, count - leftCount, depth + 1, cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
+            int lc = BuildTree(ws, start, leftCount, childDepth, leftG, leftH, leftHg, leftHh,
+                cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
+            int rc = BuildTree(ws, start + leftCount, rightCount, childDepth, rightG, rightH, rightHg, rightHh,
+                cuts, p, nFeat, nThr, nLeft, nRight, nLeaf);
             nLeft[self] = lc; nRight[self] = rc;
             return self;
         }
 
-        // Fill this depth's pooled histogram with the node's gradient and hessian sums per
-        // (sampled feature, bin). One thread owns a feature and walks the node's rows in
-        // ascending order, so the sums do not depend on the thread count.
-        private static void AccumulateHistograms(TreeWorkspace ws, int start, int count, int depth,
-            double[] hg, double[] hh, int[] feats)
+        // A node that cannot split, whatever its histogram would show.
+        private static bool IsLeaf(GbtParams p, int depth, int count, double hSum)
         {
-            int used = feats.Length * ws.MaxBins;
-            Array.Clear(hg, 0, used);
-            Array.Clear(hh, 0, used);
+            return depth >= p.MaxDepth || count < 2 || hSum < 2 * p.MinChildWeight;
+        }
+
+        // Gradient and hessian sums over partition positions [start, start + count), in order.
+        private static void SumRange(double[] gh, int start, int count, out double gSum, out double hSum)
+        {
+            gSum = 0;
+            hSum = 0;
+            for (int r = start; r < start + count; r++)
+            {
+                gSum += gh[2 * r];
+                hSum += gh[2 * r + 1];
+            }
+        }
+
+        // (hg, hh) -= (sg, sh) over the sampled features' bins: the parent's histogram becomes
+        // the larger child's.
+        private static void SubtractHistogram(TreeWorkspace ws, double[] hg, double[] hh, double[] sg, double[] sh)
+        {
+            int used = ws.Feats.Length * ws.MaxBins;
+            for (int k = 0; k < used; k++)
+            {
+                hg[k] -= sg[k];
+                hh[k] -= sh[k];
+            }
+        }
+
+        // Fill (hg, hh) with the node's gradient and hessian sums per (sampled feature, bin).
+        //
+        // The rows are cut into a number of chunks that depends only on the node's row
+        // count, each chunk accumulates into its own partial histogram, and the partials are
+        // added together in chunk order. So the summation order - and the trained model - is
+        // fixed by the data alone, identical at any thread count, while the threads get both
+        // row chunks and feature groups to work on: a chunk is read once for a group of
+        // features instead of once per feature, which is what bounds the feature-only
+        // split on a memory-bound histogram.
+        private static void AccumulateHistograms(TreeWorkspace ws, int start, int count, int depth,
+            double[] hg, double[] hh)
+        {
+            int nCols = ws.Feats.Length;
+            int maxBins = ws.MaxBins;
+            int used = nCols * maxBins;
+            var ordered = ws.Ordered(depth);
+            var gh = ws.Gh(depth);
+            int stride = ws.ColumnStride;
+            int chunks = Math.Min(MAX_HISTOGRAM_CHUNKS, Math.Max(1, count / HISTOGRAM_CHUNK_ROWS));
+            int chunkRows = (count + chunks - 1) / chunks;
+            if (chunks > 1)
+                ws.EnsureChunks(chunks);
+
+            // Features are accumulated a few at a time in one pass over the rows. A run of
+            // rows landing in the same bin is a chain of dependent read-modify-write adds on
+            // one histogram slot, which stalls a single-feature loop; interleaving
+            // independent features gives the processor other chains to overlap with it. Each
+            // feature still sums its own rows in order, so the grouping changes no value,
+            // only the speed. Groups shrink when needed to give every thread work.
+            var parallelOptions = ws.ParallelOptions;
+            int groupSize = HISTOGRAM_GROUP_MAX;
+            if (parallelOptions != null)
+            {
+                groupSize = Math.Max(1, Math.Min(HISTOGRAM_GROUP_MAX,
+                    nCols * chunks / parallelOptions.MaxDegreeOfParallelism));
+            }
+            int groups = (nCols + groupSize - 1) / groupSize;
+
+            Action<int> accumulate = task =>
+            {
+                int chunk = task / groups;
+                int group = task % groups;
+                var tg = chunks == 1 ? hg : ws.ChunkGradHist(chunk);
+                var th = chunks == 1 ? hh : ws.ChunkHessHist(chunk);
+                int lo = start + chunk * chunkRows;
+                int len = Math.Min(start + count, lo + chunkRows) - lo;
+                int fi = group * groupSize;
+                int fiEnd = Math.Min(nCols, fi + groupSize);
+                Array.Clear(tg, fi * maxBins, (fiEnd - fi) * maxBins);
+                Array.Clear(th, fi * maxBins, (fiEnd - fi) * maxBins);
+                for (; fi + 4 <= fiEnd; fi += 4)
+                    AccumulateFour(ordered, gh, lo, len, fi * stride, stride, fi * maxBins, maxBins, tg, th);
+                for (; fi < fiEnd; fi++)
+                    AccumulateOne(ordered, gh, lo, len, fi * stride, fi * maxBins, tg, th);
+            };
 
             // NOTE on the choice of Parallel.For over this assembly's own OspreyParallel.For:
             // OspreyParallel allocates dedicated Threads per call, which is right at fold
             // granularity (a handful of calls per run) but not here, where a call happens at
             // every internal node. Thread creation would swamp the work it parallelizes.
-            // The trade-off is that this path uses the shared ThreadPool, so it must not be
-            // turned on inside fold-parallel training; MaxDegreeOfParallelism defaults to 1
-            // and the FDR path never enters this branch.
-            if (ws.MaxDegreeOfParallelism <= 1 ||
-                (long)count * feats.Length < PARALLEL_WORK_THRESHOLD)
+            // The ThreadPool this uses instead is shared with any concurrently training fold,
+            // so a caller training folds in parallel should split its thread budget across
+            // them rather than hand each fold every core.
+            int tasks = chunks * groups;
+            if ((long)count * nCols < PARALLEL_WORK_THRESHOLD)
             {
-                for (int fi = 0; fi < feats.Length; fi++)
-                    AccumulateFeature(ws, start, count, fi, hg, hh);
+                for (int task = 0; task < tasks; task++)
+                    accumulate(task);
+            }
+            else
+            {
+                ForEach(parallelOptions, tasks, accumulate);
+            }
+            if (chunks == 1)
+                return;
+
+            ForEach(parallelOptions, nCols, fi =>
+            {
+                int lo = fi * maxBins;
+                Array.Copy(ws.ChunkGradHist(0), lo, hg, lo, maxBins);
+                Array.Copy(ws.ChunkHessHist(0), lo, hh, lo, maxBins);
+                for (int c = 1; c < chunks; c++)
+                {
+                    var cg = ws.ChunkGradHist(c);
+                    var ch = ws.ChunkHessHist(c);
+                    for (int k = lo; k < lo + maxBins; k++)
+                    {
+                        hg[k] += cg[k];
+                        hh[k] += ch[k];
+                    }
+                }
+            });
+        }
+
+        private static void AccumulateOne(byte[] ordered, double[] gh, int start, int count,
+            int column, int histStart, double[] hg, double[] hh)
+        {
+            int end = start + count;
+            for (int r = start; r < end; r++)
+            {
+                int b = histStart + ordered[column + r];
+                hg[b] += gh[2 * r];
+                hh[b] += gh[2 * r + 1];
+            }
+        }
+
+        private static void AccumulateFour(byte[] ordered, double[] gh, int start, int count,
+            int column, int stride, int histStart, int maxBins, double[] hg, double[] hh)
+        {
+            int c1 = column + stride, c2 = c1 + stride, c3 = c2 + stride;
+            int h1 = histStart + maxBins, h2 = h1 + maxBins, h3 = h2 + maxBins;
+            int end = start + count;
+            for (int r = start; r < end; r++)
+            {
+                double gr = gh[2 * r];
+                double hr = gh[2 * r + 1];
+                int b0 = histStart + ordered[column + r];
+                int b1 = h1 + ordered[c1 + r];
+                int b2 = h2 + ordered[c2 + r];
+                int b3 = h3 + ordered[c3 + r];
+                hg[b0] += gr;
+                hh[b0] += hr;
+                hg[b1] += gr;
+                hh[b1] += hr;
+                hg[b2] += gr;
+                hh[b2] += hr;
+                hg[b3] += gr;
+                hh[b3] += hr;
+            }
+        }
+
+        // Add the newest tree's leaf value to every row's margin. Each row's update is
+        // independent of every other's, so the rows are split freely across threads. The
+        // walk compares raw feature values, not bins, so a NaN feature takes the right
+        // branch here even though binning maps it to bin 0.
+        private static void UpdateMargins(ParallelOptions parallelOptions, double[][] x, double[] f,
+            int firstNode, int root,
+            List<int> nFeat, List<double> nThr, List<int> nLeft, List<int> nRight, List<double> nLeaf)
+        {
+            // The tree is the tail of the flat lists from firstNode on, copied out so the
+            // per-row walk indexes plain arrays rather than List indexers.
+            int nodes = nFeat.Count - firstNode;
+            var feature = new int[nodes];
+            var threshold = new double[nodes];
+            var left = new int[nodes];
+            var right = new int[nodes];
+            var leafValue = new double[nodes];
+            for (int k = 0; k < nodes; k++)
+            {
+                feature[k] = nFeat[firstNode + k];
+                threshold[k] = nThr[firstNode + k];
+                left[k] = nLeft[firstNode + k] - firstNode;
+                right[k] = nRight[firstNode + k] - firstNode;
+                leafValue[k] = nLeaf[firstNode + k];
+            }
+            int rootLocal = root - firstNode;
+
+            ForRanges(parallelOptions, x.Length, (lo, hi) =>
+            {
+                for (int i = lo; i < hi; i++)
+                {
+                    var xi = x[i];
+                    int node = rootLocal;
+                    while (feature[node] >= 0)
+                        node = xi[feature[node]] <= threshold[node] ? left[node] : right[node];
+                    f[i] += leafValue[node];
+                }
+            });
+        }
+
+        // Run body over [0, count) in fixed-size row ranges, spread across threads when
+        // parallelOptions is non-null. Only for bodies whose rows are independent of each
+        // other, where the split cannot change any value.
+        private static void ForRanges(ParallelOptions parallelOptions, int count, Action<int, int> body)
+        {
+            if (parallelOptions == null || count < 2 * ROW_RANGE)
+            {
+                body(0, count);
                 return;
             }
 
-            Parallel.For(0, feats.Length, ws.ParallelOptions,
-                fi => AccumulateFeature(ws, start, count, fi, hg, hh));
+            int ranges = (count + ROW_RANGE - 1) / ROW_RANGE;
+            Parallel.For(0, ranges, parallelOptions,
+                k => body(k * ROW_RANGE, Math.Min(count, (k + 1) * ROW_RANGE)));
         }
 
-        private static void AccumulateFeature(TreeWorkspace ws, int start, int count, int fi,
-            double[] hg, double[] hh)
+        // Run body for each index in [0, count), spread across threads when parallelOptions
+        // is non-null. Only for bodies that write disjoint state.
+        private static void ForEach(ParallelOptions parallelOptions, int count, Action<int> body)
         {
-            var rows = ws.Rows;
-            var bin = ws.Bin;
-            var g = ws.G;
-            var h = ws.H;
-            int colStart = ws.Feats[fi] * ws.RowStride;
-            int histStart = fi * ws.MaxBins;
-            for (int r = start; r < start + count; r++)
+            if (parallelOptions == null)
             {
-                int i = rows[r];
-                int b = bin[colStart + i];
-                hg[histStart + b] += g[i];
-                hh[histStart + b] += h[i];
+                for (int k = 0; k < count; k++)
+                    body(k);
+                return;
             }
+
+            Parallel.For(0, count, parallelOptions, body);
         }
 
-        // Stable in-place partition of rows [start, start + count) around the chosen bin.
-        // Rows keep their relative order on both sides, so each child sees exactly the row
-        // sequence the previous list-building implementation produced.
-        private static int Partition(TreeWorkspace ws, int start, int count, int bestFeat, int bestBin)
+        // Run body once per feature, each call with a private n-long scratch column that is
+        // reused across the features the same thread takes.
+        private static void ForEachFeature(ParallelOptions parallelOptions, int nFeat, int n,
+            Action<int, double[]> body)
         {
-            var rows = ws.Rows;
-            var bin = ws.Bin;
-            var right = ws.PartitionBuffer;
-            int colStart = bestFeat * ws.RowStride;
-
-            int leftCount = 0, rightCount = 0;
-            for (int r = start; r < start + count; r++)
+            if (parallelOptions == null)
             {
-                int i = rows[r];
-                if (bin[colStart + i] <= bestBin)
-                    rows[start + leftCount++] = i;
-                else
-                    right[rightCount++] = i;
+                var col = new double[n];
+                for (int j = 0; j < nFeat; j++)
+                    body(j, col);
+                return;
             }
 
-            Array.Copy(right, 0, rows, start + leftCount, rightCount);
-            return leftCount;
+            Parallel.For(0, nFeat, parallelOptions, () => new double[n],
+                (j, state, col) =>
+                {
+                    body(j, col);
+                    return col;
+                },
+                col => { });
+        }
+
+        // Rows drawn per boosting round: all of them at a fraction of (nearly) 1, otherwise
+        // the rounded fraction, at least one.
+        private static int SubsampleCount(int n, double frac)
+        {
+            if (frac >= 0.999)
+                return n;
+            return Math.Max(1, (int)Math.Round(n * Math.Min(Math.Max(frac, 0.01), 1.0)));
         }
 
         // Optimal leaf weight with L1 soft-threshold + L2 shrinkage, times learning rate.
@@ -804,9 +1306,10 @@ namespace pwiz.Osprey.ML
             return lo;
         }
 
+        // Sorts values in place: the caller's scratch column, whose order is not needed again.
         private static double[] QuantileCuts(double[] values, int maxBins)
         {
-            var sorted = (double[])values.Clone();
+            var sorted = values;
             Array.Sort(sorted); // Array.Sort OK: single primitive array read only by quantile INDEX to pick cut points; equal values are interchangeable, so tie order cannot affect the cuts
             int nCut = maxBins - 1;
             var cuts = new List<double>(nCut);
@@ -820,15 +1323,6 @@ namespace pwiz.Osprey.ML
             }
             if (cuts.Count == 0) cuts.Add(sorted[sorted.Length - 1]); // constant feature: one trivial cut
             return cuts.ToArray();
-        }
-
-        private static int[] Subsample(int n, double frac, XorShift64 rng)
-        {
-            if (frac >= 0.999) { var all = new int[n]; for (int i = 0; i < n; i++) all[i] = i; return all; }
-            int m = Math.Max(1, (int)Math.Round(n * Math.Min(Math.Max(frac, 0.01), 1.0)));
-            var idx = new int[n]; for (int i = 0; i < n; i++) idx[i] = i;
-            for (int i = 0; i < m; i++) { int j = i + (int)(rng.Next() % (ulong)(n - i)); int tmp = idx[i]; idx[i] = idx[j]; idx[j] = tmp; }
-            var res = new int[m]; Array.Copy(idx, res, m); return res;
         }
 
         private static int[] SampleColumns(int[] all, int k, XorShift64 rng)

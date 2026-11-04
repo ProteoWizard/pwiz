@@ -141,6 +141,14 @@ namespace pwiz.Osprey.FDR
         public List<int> IterationsPerFold { get; set; }
 
         /// <summary>
+        /// Train-only tree runs with <see cref="PercolatorConfig.ReportTrainEntryFolds"/>
+        /// (OSPREY_GBT_OOF, or round 1 of the two-round training): the fold each input entry was held out of
+        /// (the one model that did not train on it), or -1 for an entry outside the training
+        /// subset. Null otherwise.
+        /// </summary>
+        public int[] TrainEntryFolds { get; set; }
+
+        /// <summary>
         /// Set when <see cref="PercolatorTrainer.RunPercolator"/> wrote a
         /// diagnostic-only (<c>*Only</c>) dump and stopped early instead of
         /// completing FDR. The Tasks-layer caller inspects this and performs the
