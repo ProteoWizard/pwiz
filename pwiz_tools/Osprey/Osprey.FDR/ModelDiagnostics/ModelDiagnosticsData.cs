@@ -575,6 +575,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// i = N quantifies "how anti-conservative is per-run FDR at this run count".
             /// </summary>
             public double[] UnionFdp { get; set; }
+            /// <summary>
+            /// Index k-1 =&gt; DECOY precursors detected in exactly k runs under the SAME gate as
+            /// this view, each decoy counted by its own per-run q (never its paired target's).
+            /// Present on the pass-1 views, null on pass 2, where gap-fill moves targets to higher k
+            /// and not decoys.
+            /// </summary>
+            public int[] DecoyRunCountHistogram { get; set; }
+            /// <summary>
+            /// Decoy-estimated FDP of the precursors detected in exactly k runs (index k-1):
+            /// <see cref="DecoyRunCountHistogram"/> over the target-side count (real targets plus
+            /// entrapment); NaN in a slice with no target. The entrapment-free companion of
+            /// <see cref="EntrapmentFdpByRunCount"/> (#4489) - where both exist they should agree.
+            /// </summary>
+            public double[] DecoyFdpByRunCount { get; set; }
+            /// <summary>
+            /// Decoy-estimated FDP of the precursors detected in AT LEAST k runs (index k-1): the
+            /// FDP of what a run-count floor of k would keep. NaN where no target is that
+            /// reproducible.
+            /// </summary>
+            public double[] DecoyFdpAtLeastRunCount { get; set; }
         }
 
         // A precursor reduced to the fields the diagnostics need.
@@ -839,8 +859,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 progress.Report(++cardIdx);
                 pass2.IdYield = BuildIdYield(precs);
                 progress.Report(++cardIdx);
-                pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
-                    entrapmentRatio, runFdr, fdrLevel);
+                pass2.CrossRun = WithoutDecoyFdp(BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                    entrapmentRatio, runFdr, fdrLevel));
                 progress.Report(++cardIdx);
                 // Reuses the reduction computed for the ID-yield card above rather than
                 // recomputing an identical one from the same inputs.
@@ -1570,6 +1590,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // it adjudicates the real-target set's FDP -- see ComputeCrossRunView.
             var entRunSets = new List<HashSet<string>>(n);
             var entExpSets = new List<HashSet<string>>(n);
+            // The DECOYS' own membership under the SAME two gates (#4489): a decoy is detected in
+            // a run iff its OWN q clears the run gate there - the rule a target's run count uses.
+            // Run q is winner-only per file, so a decoy only has one in a run where it won its
+            // target-decoy competition, exactly as a target only has one where it won; nothing
+            // beyond that competition couples the two. That symmetry is what lets the decoy
+            // run-count histogram stand in for the false targets' and give a per-k FDP on any
+            // dataset - see SetDecoyFdpByRunCount.
+            var decRunSets = new List<HashSet<string>>(n);
+            var decExpSets = new List<HashSet<string>>(n);
             bool anyEntrapment = false;
             for (int i = 0; i < n; i++)
             {
@@ -1579,17 +1608,25 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 var expSet = new HashSet<string>(StringComparer.Ordinal);
                 var entRunSet = new HashSet<string>(StringComparer.Ordinal);
                 var entExpSet = new HashSet<string>(StringComparer.Ordinal);
+                var decRunSet = new HashSet<string>(StringComparer.Ordinal);
+                var decExpSet = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var e in kvp.Value)
                 {
-                    // Decoys (and p_decoys, which carry is_decoy) never enter either tally.
-                    if (e.IsDecoy)
-                        continue;
                     // Gate on the CONFIGURED FDR level (the value the pipeline reports on),
                     // matching the Summary per-file loop -- not a hardcoded peptide q.
                     if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
                     string key = e.ModifiedSequence + @"|" + e.Charge;   // same key as ReduceToPrecs
                     bool expOk = e.EffectiveExperimentQvalue(fdrLevel) <= runFdr; // max(run q, exp q) <= FDR
+                    // Decoys (and p_decoys, which carry is_decoy) never enter the target or
+                    // entrapment tallies; they get their own.
+                    if (e.IsDecoy)
+                    {
+                        decRunSet.Add(key);
+                        if (expOk)
+                            decExpSet.Add(key);
+                        continue;
+                    }
                     // Entrapment (p_target) is a known false set that by design does not
                     // reproduce: route it to its own sets so it can't inflate the real-target
                     // k=1 bump, then reuse it as the FDP reference for the real set.
@@ -1614,6 +1651,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 expSets.Add(expSet);
                 entRunSets.Add(entRunSet);
                 entExpSets.Add(entExpSet);
+                decRunSets.Add(decRunSet);
+                decExpSets.Add(decExpSet);
             }
 
             // Only overlay the entrapment adjudication when the run actually carries
@@ -1623,8 +1662,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return new CrossRunDetection
             {
                 RunNames = runNames,
-                PerRun = ComputeCrossRunView(runSets, anyEntrapment ? entRunSets : null, n, r),
-                Experiment = ComputeCrossRunView(expSets, anyEntrapment ? entExpSets : null, n, r),
+                PerRun = ComputeCrossRunView(runSets, anyEntrapment ? entRunSets : null, decRunSets, n, r),
+                Experiment = ComputeCrossRunView(expSets, anyEntrapment ? entExpSets : null, decExpSets, n, r),
             };
         }
 
@@ -1635,9 +1674,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // per-run mean/std. Shared by the run-scoped and experiment-scoped views.
         // entRunSets (the entrapment membership under the SAME gate, or null on a plain
         // target+decoy run) adds the entrapment run-count overlay and the per-k
-        // entrapment-measured FDP at the library ratio r.
+        // entrapment-measured FDP at the library ratio r. decRunSets (the decoys' membership
+        // under the same gate) adds the decoy run-count histogram and the decoy-estimated per-k FDP.
         private static CrossRunView ComputeCrossRunView(List<HashSet<string>> perRunSets,
-            List<HashSet<string>> entRunSets, int n, double r)
+            List<HashSet<string>> entRunSets, List<HashSet<string>> decRunSets, int n, double r)
         {
             var perRunCount = new int[n];
             var cumUnion = new int[n];
@@ -1671,11 +1711,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
             return AssembleCrossRunView(perRunCount, cumUnion, cumIntersection, hist,
-                entHistOrNull, cumUnionEntOrNull, n, r);
+                entHistOrNull, cumUnionEntOrNull, TallyRunCountHistogram(decRunSets, n), n, r);
         }
 
         /// <summary>
-        /// Streamed counterpart of the set-based <see cref="ComputeCrossRunView(List{HashSet{string}}, List{HashSet{string}}, int, double)"/>:
+        /// Streamed counterpart of the set-based <see cref="ComputeCrossRunView(List{HashSet{string}}, List{HashSet{string}}, List{HashSet{string}}, int, double)"/>:
         /// same view, from state folded one run at a time instead of from N retained per-run sets.
         ///
         /// <para>The two overloads share <see cref="AssembleCrossRunView"/>, which is every line
@@ -1688,12 +1728,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// what they replaced.</para>
         /// </summary>
         private static CrossRunView ComputeCrossRunView(Accumulator.CrossRunStream main,
-            Accumulator.CrossRunStream ent, int n, double r)
+            Accumulator.CrossRunStream ent, Accumulator.CrossRunStream dec, int n, double r)
         {
             return AssembleCrossRunView(main.PerRunCount, main.CumUnion, main.CumIntersection,
                 HistogramFromRunCounts(main.RunCount, n),
                 ent == null ? null : HistogramFromRunCounts(ent.RunCount, n),
-                ent?.CumUnion, n, r);
+                ent?.CumUnion, HistogramFromRunCounts(dec.RunCount, n), n, r);
         }
 
         /// <summary>
@@ -1702,7 +1742,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// in the arithmetic - only in how it arrives at the inputs.
         /// </summary>
         private static CrossRunView AssembleCrossRunView(int[] perRunCount, int[] cumUnion,
-            int[] cumIntersection, int[] hist, int[] entHist, int[] cumUnionEnt, int n, double r)
+            int[] cumIntersection, int[] hist, int[] entHist, int[] cumUnionEnt, int[] decHist, int n, double r)
         {
             int half = (n + 1) / 2;                     // ceil(n/2)
             int atLeastHalf = 0;
@@ -1728,6 +1768,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 MeanPerRun = mean,
                 StdPerRun = std,
             };
+            SetDecoyFdpByRunCount(view, hist, entHist, decHist, n);
 
             // Entrapment adjudication overlay: the known-false set's own run-count
             // histogram, plus the FDRBench combined FDP of each k-slice (real targets
@@ -1766,6 +1807,60 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             }
 
             return view;
+        }
+
+        /// <summary>
+        /// The decoy-based per-k FDP (#4489): the entrapment-free counterpart of
+        /// <see cref="CrossRunView.EntrapmentFdpByRunCount"/>, available on every dataset.
+        ///
+        /// <para>FDP(k) = N_D(k) / N_T(k), where N_D(k) is the decoy precursors detected in
+        /// exactly k runs and N_T(k) every TARGET-side precursor detected in exactly k runs -
+        /// the real targets plus any entrapment, because both are on the target side of the
+        /// competition the decoys are drawn against. Osprey makes one decoy per target-side
+        /// entry, so the target-to-decoy ratio is 1 and carries no factor. False targets do not
+        /// reproduce, so they pile up at low k; decoys are null draws gated by the same per-run
+        /// rule, so their k distribution follows the false targets' and the ratio estimates
+        /// each slice's contamination. The cumulative form FDP(>=k) sums both counts from k up
+        /// to N: the FDP of the set a run-count floor of k would keep. NaN where a slice (or
+        /// tail) holds no target.</para>
+        /// </summary>
+        private static void SetDecoyFdpByRunCount(CrossRunView view, int[] hist, int[] entHist,
+            int[] decHist, int n)
+        {
+            var fdp = new double[n];
+            var fdpAtLeast = new double[n];
+            long tailTargets = 0, tailDecoys = 0;
+            for (int k = n - 1; k >= 0; k--)
+            {
+                int targets = hist[k] + (entHist?[k] ?? 0);
+                fdp[k] = targets > 0 ? (double)decHist[k] / targets : double.NaN;
+                tailTargets += targets;
+                tailDecoys += decHist[k];
+                fdpAtLeast[k] = tailTargets > 0 ? (double)tailDecoys / tailTargets : double.NaN;
+            }
+            view.DecoyRunCountHistogram = decHist;
+            view.DecoyFdpByRunCount = fdp;
+            view.DecoyFdpAtLeastRunCount = fdpAtLeast;
+        }
+
+        /// <summary>
+        /// The pass-2 cross-run views without the decoy-based FDP. In pass 2 the symmetry the
+        /// estimate rests on is broken: Stage 6 gap-fill re-scores TARGETS that passed into the
+        /// runs where they were missing, and a decoy is re-scored there only alongside its
+        /// target, so a passing false target climbs to higher k while a passing decoy stays where
+        /// its own detections put it. The pass-2 decoy curve would read as a calibration finding
+        /// when it is an artifact of gap-fill, so it is left out; the entrapment curve, which
+        /// gap-fill treats like any target, stays.
+        /// </summary>
+        private static CrossRunDetection WithoutDecoyFdp(CrossRunDetection crossRun)
+        {
+            foreach (var view in new[] { crossRun.PerRun, crossRun.Experiment })
+            {
+                view.DecoyRunCountHistogram = null;
+                view.DecoyFdpByRunCount = null;
+                view.DecoyFdpAtLeastRunCount = null;
+            }
+            return crossRun;
         }
 
         // Histogram of how many runs each precursor is detected in (index k-1 => detected

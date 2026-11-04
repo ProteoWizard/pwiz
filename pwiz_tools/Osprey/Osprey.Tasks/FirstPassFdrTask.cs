@@ -187,7 +187,7 @@ namespace pwiz.Osprey.Tasks
         // hands back on the bundle; null where the resume has no retained set to build it
         // from, whose consumers fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
-        // Built once, on first use, when OSPREY_STUB_IDENTITY asks for it. See StubIdentity.
+        // Built once, on first use. See StubIdentity.
         private LibraryIdentity _stubIdentity;
 
         // Phase B resume surface. Reads each file's .scores.parquet,
@@ -474,7 +474,7 @@ namespace pwiz.Osprey.Tasks
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
-                if (string.Equals(output, diagnosticsPath, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(output, diagnosticsPath, PathComparison.Comparison))
                     continue;
                 if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
                     continue;
@@ -535,7 +535,6 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -1407,8 +1406,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Stage 5 -> 6 boundary: drop <c>Fragments</c> from every library entry that nothing
         /// downstream can score or write, keeping the identity fields on all of them. See
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and the
-        /// safety argument.
+        /// <see cref="LibraryFragmentRelease"/> for the rationale and the safety argument.
         ///
         /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
         /// already pair-symmetric so a target's decoy rides along), and nothing else: no
@@ -2460,13 +2458,11 @@ namespace pwiz.Osprey.Tasks
             return result;
         }
 
-        // Experimental (OSPREY_STUB_IDENTITY): the library lookup that lets the first-pass walks
-        // take charge, decoy flag and peptide from entry_id rather than decode them from every
-        // row. Null when the switch is off. Call before starting lanes: it builds on first use.
+        // The library lookup that lets the first-pass walks take charge, decoy flag and peptide
+        // from entry_id rather than decode them from every row (OSPREY_STUB_IDENTITY). Call
+        // before starting lanes: it builds on first use.
         private LibraryIdentity StubIdentity(PipelineContext ctx)
         {
-            if (OspreyEnvironment.StubIdentity == 0)
-                return null;
             return _stubIdentity ?? (_stubIdentity = new LibraryIdentity(ctx.Get<FullLibrary>().Value));
         }
 

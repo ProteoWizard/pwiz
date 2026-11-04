@@ -71,7 +71,7 @@ Skipping these ports because the BCL does the same job better/safer:
 ## Generators
 
 - `Chemistry/generate_elements.py` — rebuilds `ElementData.generated.cs` from `pwiz/utility/chemistry/ChemistryData.cpp`. Re-run after any edit to the upstream C++ file.
-- `build/CvGen` (`dotnet run --project build/CvGen`) rebuilds `pwiz/data/common/CVID.generated.cs` straight from the OBO files; Common.Tests fails when it is stale.
+- `build/CvGen` (`dotnet run --project build/CvGen`) rebuilds `pwiz/data/common/CVID.generated.cs` straight from the OBO files; Common.Tests fails when it is stale. A `unimod.obo` update also regenerates Skyline's `UniModData.cs` with `pwiz_tools/Skyline/Executables/DevTools/UniModCompiler`; Skyline's `TestUniModAgreesWithObo` fails when it is stale.
 
 ## Testing
 
