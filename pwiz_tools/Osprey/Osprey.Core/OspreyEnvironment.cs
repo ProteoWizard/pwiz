@@ -83,18 +83,18 @@ namespace pwiz.Osprey.Core
         public static int FdrFileLanes => ParseIntOrZero(ENV_FDR_FILE_LANES);
 
         private static readonly EnvVar ENV_BLOCK_READ_MB = new EnvVar(@"OSPREY_BLOCK_READ_MB", EnvVarGroup.performance,
-            @"Read score parquets and FDR score files in blocks of this many MB. 0 reads directly, the " +
-            @"parity path. At most 1024.")
-            { ValueExample = @"<MB>", DefaultValue = @"4" };
+            @"Read score parquets and FDR score files in blocks of this many MB, at least 1; larger than " +
+            @"1024 reads 1024. The 0 arm that read directly was retired.")
+            { ValueExample = @"<MB>", DefaultValue = @"4", AcceptsValue = IsPositiveInt };
 
         /// <summary>
         /// OSPREY_BLOCK_READ_MB: score parquets are read in planned spans - the column chunks a
         /// reader touches in each row group, read together - and FDR score sidecars in blocks of
         /// this many MB, serving the reader's smaller reads from memory. Default 4. A cold parquet
         /// walk is otherwise many small column-chunk reads, one seek each on a spinning disk.
-        /// <c>0</c> reads directly, the pre-#4765 path, kept only for parity testing (see the
-        /// parity-path retirement catalogue). Larger values are clamped to
-        /// <see cref="MAX_BLOCK_READ_MB"/>.
+        /// Values are clamped to [1, <see cref="MAX_BLOCK_READ_MB"/>]: the <c>0</c> arm that read
+        /// directly (the pre-#4765 path, kept for parity testing) was retired, along with
+        /// OSPREY_BLOCK_READ_GATE=0, so every read now takes the process-wide disk gate.
         /// </summary>
         public static readonly int BlockReadMb = ClampBlockReadMb(ParseIntOrNull(ENV_BLOCK_READ_MB) ?? 4);
 
@@ -102,41 +102,29 @@ namespace pwiz.Osprey.Core
         public const int MAX_BLOCK_READ_MB = 1024;
 
         /// <summary>
-        /// A <see cref="BlockReadMb"/> setting made safe: 0 (off) for zero or less, otherwise
-        /// at most <see cref="MAX_BLOCK_READ_MB"/>.
+        /// A <see cref="BlockReadMb"/> setting made safe: at least 1, at most
+        /// <see cref="MAX_BLOCK_READ_MB"/>.
         /// </summary>
         public static int ClampBlockReadMb(int blockMb)
         {
-            return blockMb <= 0 ? 0 : Math.Min(blockMb, MAX_BLOCK_READ_MB);
+            return Math.Max(1, Math.Min(blockMb, MAX_BLOCK_READ_MB));
         }
-
-        private static readonly EnvVar ENV_BLOCK_READ_GATE = new EnvVar(@"OSPREY_BLOCK_READ_GATE", EnvVarGroup.performance,
-            @"With block reads, let only one thread in the process read from disk at a time. 0 turns the " +
-            @"gate off.")
-            { DefaultValue = @"1" };
-
-        /// <summary>
-        /// OSPREY_BLOCK_READ_GATE: with <see cref="BlockReadMb"/>, only one thread in the process
-        /// reads from disk at a time, so concurrent file lanes take turns at the disk instead of
-        /// interleaving their reads, and decode concurrently. On by default; <c>0</c> turns it off.
-        /// </summary>
-        public static readonly bool BlockReadGate = IsNotZero(ENV_BLOCK_READ_GATE);
 
         private static readonly EnvVar ENV_STUB_IDENTITY = new EnvVar(@"OSPREY_STUB_IDENTITY", EnvVarGroup.performance,
             @"Where first-pass FDR takes each score row's charge, decoy flag and peptide: 1 from the " +
-            @"library, 0 from the file (the parity path), 2 both, stopping at the first row where they " +
-            @"differ.")
-            { Values = new[] { @"0", @"1", @"2" }, DefaultValue = @"1" };
+            @"library, 2 from both, stopping at the first row where they differ.")
+            { Values = new[] { @"1", @"2" }, DefaultValue = @"1" };
 
         /// <summary>
         /// OSPREY_STUB_IDENTITY: where the first-pass FDR walks take each score row's charge,
-        /// decoy flag and peptide. Default 1: from the library entry the row's entry_id names,
-        /// which skips decoding three columns (two of them strings) from every row; a row group
-        /// with an id the library lacks reads them from the file. <c>0</c> always reads them from
-        /// the file, the pre-#4765 path kept only for parity testing; <c>2</c> reads both and
-        /// stops at the first row where they differ.
+        /// decoy flag and peptide. 1 (the default): from the library entry the row's entry_id
+        /// names, which skips decoding three columns (two of them strings) from every row; a row
+        /// group with an id the library lacks reads them from the file. <c>2</c> reads both and
+        /// stops at the first row where they differ, the proof harness for the flip. The
+        /// <c>0</c> arm that always read the file (the pre-#4765 path, kept for parity testing)
+        /// was retired.
         /// </summary>
-        public static readonly int StubIdentity = ParseIntOrNull(ENV_STUB_IDENTITY) ?? 1;
+        public static readonly int StubIdentity = ParseIntOrNull(ENV_STUB_IDENTITY) == 2 ? 2 : 1;
 
         private static readonly EnvVar ENV_KEEP_FAILED_WRITES = new EnvVar(@"OSPREY_KEEP_FAILED_WRITES", EnvVarGroup.diagnostic,
             @"Keep the temporary file of a write abandoned by an exception, to inspect what it got " +
@@ -167,21 +155,6 @@ namespace pwiz.Osprey.Core
         /// profiling and parity bisection. 0 or unset means "score them all".
         /// </summary>
         public static readonly int MaxScoringWindows = ParseIntOrZero(ENV_MAX_SCORING_WINDOWS);
-
-        private static readonly EnvVar ENV_LOESS_CLASSICAL_ROBUST = new EnvVar(@"OSPREY_LOESS_CLASSICAL_ROBUST", EnvVarGroup.behavior,
-            @"Classical robust LOESS iteration, with residuals recomputed from each pass, as Rust osprey " +
-            @"26.3.1 and later. 0 restores the legacy single-refresh path.")
-            { DefaultValue = @"1" };
-
-        /// <summary>
-        /// OSPREY_LOESS_CLASSICAL_ROBUST: use classical Cleveland (1979) robust
-        /// LOESS iteration (residuals recomputed from the current fit each
-        /// pass) instead of the legacy behavior that caches absolute residuals
-        /// from the initial fit. Default on to match Rust calibration_ml.rs
-        /// v26.3.1 and later; set to "0" to force the legacy single-refresh
-        /// path for comparison.
-        /// </summary>
-        public static readonly bool LoessClassicalRobust = IsNotZero(ENV_LOESS_CLASSICAL_ROBUST);
 
         private static readonly EnvVar ENV_EXIT_AFTER_CALIBRATION = new EnvVar(@"OSPREY_EXIT_AFTER_CALIBRATION", EnvVarGroup.harness,
             @"Exit after calibration, skipping the main search and everything after it.");
@@ -430,53 +403,6 @@ namespace pwiz.Osprey.Core
                 SerialWindowReads ? @"serial" : @"parallel (OSPREY_SERIAL_WINDOW_READS=0)",
                 SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
         }
-
-        private static readonly EnvVar ENV_RELEASE_LIBRARY_FRAGMENTS = new EnvVar(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS", EnvVarGroup.performance,
-            @"Drop the library fragments nothing can still score or write at the start of the second pass. " +
-            @"0 keeps the whole library resident, the byte-identity oracle; it changes the validity key, " +
-            @"so the run recomputes.")
-            { DefaultValue = @"1" };
-
-        /// <summary>
-        /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
-        /// entry that can no longer be scored or written - i.e. everything outside the
-        /// compaction survivors and the gap-fill candidates. The identity fields
-        /// (<c>ModifiedSequence</c> / <c>ProteinIds</c> / m/z / RT) are KEPT on every entry.
-        ///
-        /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
-        /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
-        /// keep the whole library resident as the A/B byte-identity oracle.
-        ///
-        /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
-        /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
-        /// entries. Few files is the MAXIMUM-saving case rather than a scaled-down one - the
-        /// library is fixed while the retained set grows with file count - so expect a smaller
-        /// (still large) saving at 82. Only the FRAGMENTS are freed, never a whole entry, and
-        /// the in-repo figure for the fragment share alone is ~3.2 GB at SEA-AD scale; do not
-        /// read a saving here as recovering the library's total footprint.</para>
-        ///
-        /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
-        /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
-        /// after Stage 5, including entries already judged false. They read only the identity
-        /// fields, never the spectra - so dropping entries would silently move protein FDR,
-        /// while dropping fragments cannot. The blib write is safe for a separate reason:
-        /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
-        /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
-        /// blib-written is a SUBSET of what is retained here.</para>
-        ///
-        /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
-        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> rewrites every
-        /// output. The suffix is still required - the release is a Run-only side
-        /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
-        /// and report a memory profile it never computed - but the escape hatch is not cheap.
-        /// The suffix itself lives with the release
-        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), keyed on whether the release
-        /// actually RAN rather than on this flag alone.</para>
-        ///
-        /// <para>A settable property (not a readonly field) so unit tests can A/B both arms.</para>
-        /// </summary>
-        public static bool ReleaseLibraryFragments { get; set; } =
-            IsNotZero(ENV_RELEASE_LIBRARY_FRAGMENTS);
 
         private static readonly EnvVar ENV_PICK_DUMP_CANDIDATES = new EnvVar(@"OSPREY_PICK_DUMP_CANDIDATES", EnvVarGroup.diagnostic,
             @"Write one row per candidate peak of every precursor scored in the first-pass search to a " +
@@ -1541,6 +1467,12 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrEmpty(v))
                 return null;
             return int.TryParse(v, out int result) ? result : null;
+        }
+
+        // The accepted values of a size with no zero arm (OSPREY_BLOCK_READ_MB).
+        private static bool IsPositiveInt(string value)
+        {
+            return int.TryParse(value, out int result) && result > 0;
         }
 
         /// <summary>Env double override (invariant culture, so "0.5" parses regardless of

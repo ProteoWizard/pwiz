@@ -508,7 +508,9 @@ and *diagnostics* (extra files or log lines). The list cannot drift from the cod
 - A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
   `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
   `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
-  default arm under the name of the one asked for.
+  default arm under the name of the one asked for. A retired arm is refused the same way:
+  `OSPREY_STUB_IDENTITY` lists only `1|2`, and `OSPREY_BLOCK_READ_MB` accepts only a positive
+  size, so the removed `=0` arms stop the run rather than time the default under their name.
 - The log names every set switch and its value on one `Environment switches:` line at startup,
   so a log records which arm it ran. A run that sets none logs nothing new.
 
