@@ -81,22 +81,44 @@ REM Exit 2 is "not the default branch"; any other failure keeps coverage.
 if %ERRORLEVEL% EQU 2 set COVERAGE=
 if "%COVERAGE%"=="" (echo Not the default branch: running tests without coverage.) else (echo Collecting coverage.)
 
-pwsh -NoProfile -File "%SCRIPT_DIR%build.ps1" -TeamCity %COVERAGE% -Configuration Release %VENDOR%
+REM A from-scratch compile, as the Skyline configuration's Clean step gives it: a project that is
+REM already up to date emits no warnings, so an incremental build could not be checked for them.
+call "%SCRIPT_DIR%..\..\clean.bat"
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+
+REM Every compile appends its warnings here, and tcinspect.ps1 judges them at the end. Nothing
+REM promotes a warning to an error: that would stop the build before the tests ran.
+set BUILD_WARNINGS=%TEMP%\osprey-inspectcode\build-warnings.log
+if exist "%BUILD_WARNINGS%" del /q "%BUILD_WARNINGS%"
+
+REM A failed step no longer stops the build: the steps after it still run and report, so the log
+REM carries everything, and the first failure's exit code is the build's. Each step raises its
+REM own buildProblem, so a test failure and a warning failure each still read as themselves.
+set RESULT=0
+
+pwsh -NoProfile -File "%SCRIPT_DIR%build.ps1" -TeamCity %COVERAGE% -Configuration Release %VENDOR% -BuildWarningsPath "%BUILD_WARNINGS%"
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 
 REM CarafeSharp (pwiz_tools/CarafeSharp) trains the spectral libraries Osprey searches and
 REM has no config of its own, so this one builds and tests it too, with its own test results
 REM and coverage snapshot. It needs no test data; the Carafe parity tests are Inconclusive
 REM without it. It reads no instrument files, so it takes no vendor agreement.
-pwsh -NoProfile -File "%SCRIPT_DIR%..\CarafeSharp\build.ps1" -TeamCity %COVERAGE%
-if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+pwsh -NoProfile -File "%SCRIPT_DIR%..\CarafeSharp\build.ps1" -TeamCity %COVERAGE% -BuildWarningsPath "%BUILD_WARNINGS%"
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 
+REM No installers from a build whose compile or tests failed.
+if %RESULT% NEQ 0 (
+    echo Skipping the installers: an earlier step failed.
+    goto inspect
+)
 pwsh -NoProfile -File "%SCRIPT_DIR%package.ps1" -TeamCity -Rid win-x64 -Setup %VENDOR%
-if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 
-REM ReSharper code inspection, last so a finding never keeps the tests or the installers from
-REM running, and failing the build on any warning: without it, warnings the local gate
-REM (Build-Osprey.ps1 -RunInspection) catches reached PRs and master with every check green.
-REM See tcinspect.ps1 for why this fails the build where Skyline's inspection only posts a status.
-pwsh -NoProfile -File "%SCRIPT_DIR%tcinspect.ps1" -TeamCity -Configuration Release %VENDOR%
-exit /b %ERRORLEVEL%
+:inspect
+REM Last, so compiler warnings and ReSharper findings fail the build only after the tests and the
+REM installers have run: without this check, warnings the local gate (Build-Osprey.ps1
+REM -RunInspection) catches reached PRs and master with every check green.
+pwsh -NoProfile -File "%SCRIPT_DIR%tcinspect.ps1" -TeamCity -Configuration Release %VENDOR% -BuildWarningsPath "%BUILD_WARNINGS%"
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
+
+exit /b %RESULT%
