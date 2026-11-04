@@ -48,7 +48,7 @@ namespace pwiz.CarafeSharp.Contracts
         public const string EXT = @".training.parquet";
 
         /// <summary>Written to the footer as <see cref="TrainingExportKeys.FORMAT_VERSION"/>.</summary>
-        public const int FORMAT_VERSION = 2;
+        public const int FORMAT_VERSION = 3;
 
         /// <summary><see cref="FORMAT_VERSION"/> as the footer carries it.</summary>
         public static readonly string FORMAT_VERSION_TEXT = FORMAT_VERSION.ToString(CultureInfo.InvariantCulture);
@@ -56,9 +56,12 @@ namespace pwiz.CarafeSharp.Contracts
         /// <summary>
         /// The formats <see cref="Read"/> accepts. Format 1 also carried each precursor's
         /// experiment q-value and PEP, which Osprey dropped in format 2 because a per-run file
-        /// cannot know them; CarafeSharp never trained on either, so both formats read the same.
+        /// cannot know them; format 2 also carried <c>ddc_neighbor_n</c>, dropped in format 3
+        /// because it was ~0 by construction and nothing read it (issue #4709). CarafeSharp never
+        /// trained on any of these, and a column the schema no longer names is skipped, so all
+        /// three formats read the same.
         /// </summary>
-        private static readonly int[] READABLE_FORMAT_VERSIONS = { 1, FORMAT_VERSION };
+        private static readonly int[] READABLE_FORMAT_VERSIONS = { 1, 2, FORMAT_VERSION };
 
         /// <summary>Rows per parquet row group by default; the per-ion blobs make rows wide.</summary>
         public const int ROWS_PER_GROUP = 20_000;
@@ -281,7 +284,6 @@ namespace pwiz.CarafeSharp.Contracts
                 Scalar(@"boundary_end_ratio_median", r => r.BoundaryEndRatioMedian, (r, v) => r.BoundaryEndRatioMedian = v),
                 Scalar(@"n_coeluting_claimants", r => r.NCoelutingClaimants, (r, v) => r.NCoelutingClaimants = v),
                 Scalar(@"n_same_apex_claimants", r => r.NSameApexClaimants, (r, v) => r.NSameApexClaimants = v),
-                Scalar(@"ddc_neighbor_n", r => r.DdcNeighborCount, (r, v) => r.DdcNeighborCount = v),
                 Blob(@"ion_mz", r => ParquetBlobCodec.EncodeF64Blob(r.IonMz), (r, b) => r.IonMz = ParquetBlobCodec.DecodeF64Blob(b)),
                 Blob(@"ion_flags", r => ParquetBlobCodec.EncodeU8Blob(r.IonFlags), (r, b) => r.IonFlags = ParquetBlobCodec.DecodeU8Blob(b)),
                 F32(@"apex_intensity", r => r.ApexIntensity, (r, v) => r.ApexIntensity = v),

@@ -716,6 +716,7 @@ namespace pwiz.Osprey.Tasks
                         perFileParquetPaths[fileName] = scoresPath;
                         loadProgress.Report(++fileIdx);
                     }
+                    loadProgress.Complete();
                 }
                 // The projection is built from the FOOTER COUNTS collected above, and there is no
                 // scan on any path - deferred or not.
@@ -1380,7 +1381,7 @@ namespace pwiz.Osprey.Tasks
                     perFileIsolationMz, ctx);
                 loadProgress.Report(fileIdx + 1);
             }
-            loadProgress.Dispose();
+            loadProgress.Complete();
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
             return FdrProjectionSet.CountsOnly(joinLeanNames, joinLeanCounts);

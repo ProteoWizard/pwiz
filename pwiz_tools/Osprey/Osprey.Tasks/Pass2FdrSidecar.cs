@@ -1022,6 +1022,7 @@ namespace pwiz.Osprey.Tasks
                     filesPatched++;
                     nPatched += byEntryId.Count;
                 }
+                progress.Complete();
             }
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's
@@ -1591,6 +1592,7 @@ namespace pwiz.Osprey.Tasks
                     DumpRecomputedForDiff(ctx, writer, currentKey, currentEntries);
                     throw;
                 }
+                progress.Complete();
             }
             // Once, after the stream, rather than per file: the counts are run-wide and a
             // missing 1st-pass sidecar is a run-wide conclusion.
@@ -1767,6 +1769,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     floors.ObserveIdentities(kvp.Value);
                 }
+                mergeProgress.Complete();
             }
             return survivorObservations;
         }
@@ -1836,6 +1839,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     nMapped += staged.Count;
                 }
+                patchProgress.Complete();
             }
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));

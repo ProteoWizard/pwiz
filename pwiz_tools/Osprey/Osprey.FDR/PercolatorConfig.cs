@@ -87,6 +87,16 @@ namespace pwiz.Osprey.FDR
         public bool CollectFeatureHistograms { get; set; }
 
         /// <summary>
+        /// If true, <see cref="PercolatorTrainer.RunPercolator"/> measures what each fold did with
+        /// each feature on its training subset (<see cref="TrainingSetAnalysis"/>) before
+        /// returning. Set on every production run, not only under <c>--model-diagnostics</c>: the
+        /// per-fold training sets exist only inside the trainer, so a report written later from
+        /// the persisted model could not otherwise show them (doc 00, P16). Its cost is bounded
+        /// by <see cref="MaxTrainSize"/>, not by the cohort. Never used for scoring.
+        /// </summary>
+        public bool CollectTrainingAnalysis { get; set; }
+
+        /// <summary>
         /// If true, <see cref="PercolatorTrainer.RunPercolator"/> trains the fold
         /// models + standardizer and returns early -- skips CV/averaged
         /// scoring of the input entries, PEP estimation, q-value
@@ -183,6 +193,7 @@ namespace pwiz.Osprey.FDR
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
                 GbtParams = GbtParams,
                 NThreads = NThreads,
+                CollectTrainingAnalysis = CollectTrainingAnalysis,
                 TrainOnly = true,
                 Diagnostics = Diagnostics
             };

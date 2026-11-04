@@ -136,6 +136,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// "Feature Scores" per-feature distribution view.
         /// </summary>
         public double[] FeatureHistEdges { get; set; }
+        /// <summary>
+        /// The first-pass model on its own training subset (#4550, #4467): final-training-set
+        /// population, composite ROC curves, permutation baseline, correlation and groups. Null
+        /// when the model carries no training-set analysis; the per-feature values are on
+        /// <see cref="Model"/>'s rows.
+        /// </summary>
+        public TrainingSetView TrainingSet { get; set; }
         public ScoreHistogram Scores { get; set; }
         /// <summary>
         /// Non-parametric null-alignment ratios (Storey-style) derived from
@@ -192,6 +199,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool Degenerate { get; set; }
             public List<FeatureRow> Features { get; set; }
             public ScoreHistogram Scores { get; set; }
+            /// <summary>This pass's model on its own training subset, or null.</summary>
+            public TrainingSetView TrainingSet { get; set; }
         }
 
         /// <summary>
@@ -286,6 +295,34 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public int[] TargetHist { get; set; }
             public int[] DecoyHist { get; set; }
+
+            // ---- Fold-to-fold weight stability (#4550): the composition's reproducibility.
+            // Coefficient is the fold mean. NaN for a tree ensemble.
+            public double FoldWeightSd { get; set; } = double.NaN;
+            public double FoldWeightMin { get; set; } = double.NaN;
+            public double FoldWeightMax { get; set; } = double.NaN;
+            /// <summary>Every fold's weight has the same sign.</summary>
+            public bool FoldSignConsistent { get; set; }
+
+            // ---- The final training set (#4550, #4467), from TrainingSetAnalysis.FeatureStats.
+            // NaN / null when the model carries no training-set analysis - also the defaults, so a
+            // pass-1 product written before these keys existed reads back as "not available".
+            /// <summary>P(positive &gt; decoy) on the pooled final training set, ties half.</summary>
+            public double Auroc { get; set; } = double.NaN;
+            public double AurocFoldMin { get; set; } = double.NaN;
+            public double AurocFoldMax { get; set; } = double.NaN;
+            public double CohenD { get; set; } = double.NaN;
+            /// <summary>TPR at <see cref="TrainingSetView.ReferenceFpr"/>.</summary>
+            public double TprAtReferenceFpr { get; set; } = double.NaN;
+            /// <summary>TPR at each <see cref="TrainingSetView.RocFpr"/>.</summary>
+            public double[] RocTpr { get; set; }
+            /// <summary>Final-training-set histograms over <see cref="FeatureHistEdges"/>.</summary>
+            public int[] TrainTargetHist { get; set; }
+            public int[] TrainDecoyHist { get; set; }
+            /// <summary>Fractional drop in held-out passing targets with this feature permuted.</summary>
+            public double PermutationDrop { get; set; } = double.NaN;
+            /// <summary>Index into <see cref="TrainingSetView.Groups"/>, or -1 when ungrouped.</summary>
+            public int Group { get; set; } = -1;
         }
 
         /// <summary>
@@ -777,62 +814,63 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // same condition rather than trusting the two to stay in step.
             bool structural = pass2Contributions != null;
             int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
-            // NOT `using`d, matching LibraryDeduplicator: Dispose forces a final 100% from the
-            // finally block, and a report writer catches and logs our exception as one line - so
-            // a card that threw would read "all cards done" immediately followed by "pass-2
-            // enrichment failed". The last Report on the success path prints 100% anyway.
+            // A report writer catches and logs our exception as one line, so a card that throws
+            // must not read "all cards done" before "pass-2 enrichment failed": only the
+            // Complete() at the end of the success path closes this scope with 100%.
             // The heading counts CARDS because that is what the total is; labelling it with the
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;
-            var progress = new ProgressReporter(
+            using (var progress = new ProgressReporter(
                 CountText.Format(cards, OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel,
                     OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels),
-                cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
-
-            // Indented one level: this reporter nests inside the card reporter, and without it
-            // the two percent streams print at the same column - the inner one reaching 100%
-            // immediately before the outer prints its next card.
-            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out _, out _, @"  ");
-            progress.Report(++cardIdx);
-
-            // Q-driven half: available whenever a second pass produced reported
-            // q-values (retrain OR confidence transfer). Entrapment-independent
-            // except FdpViews (which is empty without an entrapment pool).
-            pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
-            progress.Report(++cardIdx);
-            pass2.IdYield = BuildIdYield(precs);
-            progress.Report(++cardIdx);
-            pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
-                entrapmentRatio, runFdr, fdrLevel);
-            progress.Report(++cardIdx);
-            // Reuses the reduction computed for the ID-yield card above rather than
-            // recomputing an identical one from the same inputs.
-            pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio);
-            progress.Report(++cardIdx);
-            // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
-            // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
-            // the uncontaminated scoring picture and the two are meant to be read together.
-            // Takes the pass-2 stratum so each decoy is judged against its own q system's
-            // acceptance boundary (issue #4573); null in every non-stratified mode.
-            pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
-                runFdr, fdrLevel, 2, true, stratumBaseIds);
-            progress.Report(++cardIdx);
-
-            // Structural half: only when contributions were supplied. Production supplies none
-            // (there is no retrained second pass any more, #4484), which leaves Model,
-            // DensityRatio and WinFraction null and shows the report's n/a note. Takes the
-            // reduction computed above; it used to recompute a bit-identical one from the
-            // same inputs.
-            pass2.Model = BuildModelPass2(pass2Contributions, precs);
-            if (pass2.Model != null)
+                cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
+                // Indented one level: this reporter nests inside the card reporter, and without it
+                // the two percent streams print at the same column - the inner one reaching 100%
+                // immediately before the outer prints its next card.
+                var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                    out _, out _, @"  ");
                 progress.Report(++cardIdx);
-                bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
-                pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+
+                // Q-driven half: available whenever a second pass produced reported
+                // q-values (retrain OR confidence transfer). Entrapment-independent
+                // except FdpViews (which is empty without an entrapment pool).
+                pass2.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
                 progress.Report(++cardIdx);
-                pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+                pass2.IdYield = BuildIdYield(precs);
                 progress.Report(++cardIdx);
+                pass2.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                    entrapmentRatio, runFdr, fdrLevel);
+                progress.Report(++cardIdx);
+                // Reuses the reduction computed for the ID-yield card above rather than
+                // recomputing an identical one from the same inputs.
+                pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio);
+                progress.Report(++cardIdx);
+                // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
+                // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
+                // the uncontaminated scoring picture and the two are meant to be read together.
+                // Takes the pass-2 stratum so each decoy is judged against its own q system's
+                // acceptance boundary (issue #4573); null in every non-stratified mode.
+                pass2.CoAssignment = BuildCoAssignment(perFileEntries, classByBaseId, precursorMzByEntryId,
+                    runFdr, fdrLevel, 2, true, stratumBaseIds);
+                progress.Report(++cardIdx);
+
+                // Structural half: only when contributions were supplied. Production supplies none
+                // (there is no retrained second pass any more, #4484), which leaves Model,
+                // DensityRatio and WinFraction null and shows the report's n/a note. Takes the
+                // reduction computed above; it used to recompute a bit-identical one from the
+                // same inputs.
+                pass2.Model = BuildModelPass2(pass2Contributions, precs);
+                if (pass2.Model != null)
+                {
+                    progress.Report(++cardIdx);
+                    bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+                    pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                    progress.Report(++cardIdx);
+                    pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+                    progress.Report(++cardIdx);
+                }
+                progress.Complete();
             }
             return pass2;
         }
@@ -888,6 +926,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var rows = new List<FeatureRow>();
             var targetHist = contributions.TargetHistograms;
             var decoyHist = contributions.DecoyHistograms;
+            var analysis = contributions.TrainingAnalysis;
+            var groupOf = TrainingSetView.GroupIndexByFeature(analysis);
             // A tree ensemble has no percents to rank by, so its rows stay in feature order.
             bool unranked = contributions.IsDegenerate || contributions.IsTreeEnsemble;
             foreach (var f in contributions.Features
@@ -912,9 +952,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // model; null when not collected).
                     TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,
                     DecoyHist = decoyHist != null && f.Index < decoyHist.Count ? decoyHist[f.Index] : null,
+                    FoldWeightSd = f.FoldWeightSd,
+                    FoldWeightMin = f.FoldWeightMin,
+                    FoldWeightMax = f.FoldWeightMax,
+                    FoldSignConsistent = f.IsFoldSignConsistent,
                 });
+                SetTrainingStats(rows[rows.Count - 1], analysis, groupOf);
             }
             return rows;
+        }
+
+        /// <summary>A row's final-training-set values, or the not-available markers.</summary>
+        private static void SetTrainingStats(FeatureRow row, TrainingSetAnalysis analysis, int[] groupOf)
+        {
+            var stats = analysis?.Features != null && row.Index < analysis.Features.Length
+                ? analysis.Features[row.Index]
+                : null;
+            row.Group = groupOf != null && row.Index < groupOf.Length ? groupOf[row.Index] : -1;
+            row.Auroc = stats?.Auroc ?? double.NaN;
+            row.AurocFoldMin = stats?.AurocFoldMin ?? double.NaN;
+            row.AurocFoldMax = stats?.AurocFoldMax ?? double.NaN;
+            row.CohenD = stats?.CohenD ?? double.NaN;
+            row.TprAtReferenceFpr = stats?.TprAtReferenceFpr ?? double.NaN;
+            row.PermutationDrop = stats?.PermutationDrop ?? double.NaN;
+            row.RocTpr = stats?.RocTpr;
+            row.TrainTargetHist = stats?.TrainTargetHist;
+            row.TrainDecoyHist = stats?.TrainDecoyHist;
         }
 
         /// <summary>
@@ -957,6 +1020,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 Degenerate = contributions.IsDegenerate,
                 Features = BuildFeatureRows(contributions),
                 Scores = BuildScoreHistogram(precs),
+                TrainingSet = TrainingSetView.From(contributions),
             };
         }
 
@@ -1113,6 +1177,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         best[key] = cur;
                     }
                 }
+                progress.Complete();
             }
             nWithClass = wc; nWithoutClass = woc;
             return best.Values.ToList();

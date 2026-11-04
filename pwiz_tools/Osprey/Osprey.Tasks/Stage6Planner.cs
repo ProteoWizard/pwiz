@@ -204,8 +204,9 @@ namespace pwiz.Osprey.Tasks
                     cwtInvalid.AddRange(file.Invalid);
                     scanProgress.Report(++done);
                 });
+                CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
+                scanProgress.Complete();
             }
-            CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
 
             _ctx.LogInfo(CountText.Format(fileNames.Count,
                 OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_,

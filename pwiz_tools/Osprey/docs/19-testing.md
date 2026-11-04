@@ -204,7 +204,7 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   worker semantics.
 - **mode 2 — resume vs straight-through self-consistency**
   (`regression.ps1:524-543`). Copies the straight-through blib aside, invalidates
-  the Stage 5 join + blib (`Invoke-ResumeInvalidation`, `regression.ps1:298-304`),
+  the Stage 5 join + blib (`Invoke-ResumeInvalidation` in `Regression/RegressionData.ps1`),
   re-runs the identical command so the rehydrate paths fire, and asserts the
   resume blib equals the cold blib at 1e-9. The build is its own oracle — no
   external baseline. See 14-intermediate-files.md for the cache/sidecar formats

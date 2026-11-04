@@ -208,10 +208,6 @@
     <value>パイプラインの概要、各段階の詳細、および4つの分散HPCタスクの分割と結合については、ワークフロー図{0}を参照してください。以下の引数表はコマンドラインの宣言から生成されるため、常にビルドと一致します。同じ内容をテキストで表示するには、{1}を実行してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
-    <value>Ospreyは、MacCossラボによるペプチド中心型のDIA検索ツールです。DIA mzMLファイルとスペクトルライブラリを読み込み、FDR制御された結果をBiblioSpecLite（{0}）ライブラリとして書き込みます。このライブラリはSkylineに直接インポートできます。WindowsとLinuxでスタンドアロンの実行ファイルとして動作します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
     <value>「{0}」に一致するヘルプセクションが見つかりません。利用可能なセクションを一覧表示するには{1}を使用してください。</value>
     <comment>Needs Review:New resource</comment>

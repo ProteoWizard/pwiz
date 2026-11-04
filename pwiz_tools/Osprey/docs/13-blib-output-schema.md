@@ -222,9 +222,11 @@ typing its search uses, and are compared with Osprey's own typing (`FragmentType
 
 `ParseBlibModifications` reads each bracket of `peptideModSeq` - a mass shift
 (`PEPC[+57.021464]TIDE`), an absolute cysteine mass (`C[160.0]`) or a UniMod id (`[UniMod:4]`,
-or `(UniMod:4)` as DIA-NN writes it) - and identifies it against Osprey's UniMod table
-(`Osprey.Core/UniMod.cs`, masses from Skyline's `UniModData.cs`), as Skyline matches library
-modifications:
+or `(UniMod:4)` as DIA-NN writes it) - and identifies it against UniMod (`Osprey.Core/UniMod.cs`,
+whose ids, titles and masses are `pwiz/data/common/unimod.obo`'s, read by pwiz-sharp's
+`Pwiz.Data.Common`; Osprey keeps no masses of its own), as Skyline matches library
+modifications. A UniMod id may be any in the file; a mass is matched only against the
+modifications and specificities Skyline lists:
 
 - A mass matches a known modification allowed on its residue or terminus when both round to the
   same value at the precision the text prints, at most four decimals, or lie within 1e-4 Da
@@ -232,7 +234,7 @@ modifications:
   `Q[-17.0]` at the N-terminus) gets the exact known mass. When two match, the table's order
   decides: Skyline's common modifications first (Acetyl before Trimethyl for `K[+42.0]`).
 - A mass printed with four or more decimals that matches nothing is used as printed. One printed
-  with fewer cannot be, and a UniMod id Osprey does not know or any other text cannot be
+  with fewer cannot be, and a UniMod id not in UniMod or any other text cannot be
   identified: the library is refused, listing each such modification with the number of spectra
   carrying it and the first of them. Like Skyline, a bracket summing two modifications
   (`M[+58.0]`) is not split.

@@ -34,7 +34,7 @@ namespace pwiz.Common.SystemUtil
     ///
     /// Prints a "&lt;activity&gt;..." heading on construction, then a throttled "&lt;pct&gt;%"
     /// line only when the percent advances AND at least the report interval has elapsed, and
-    /// closes with "100%" on Dispose unless the step finished inside
+    /// closes with "100%" on <see cref="Complete"/> unless the step finished inside
     /// <see cref="MIN_PERCENT_SECONDS"/> without showing a percent. So a fast step shows just
     /// its heading, while a multi-second op shows a handful of intermediate percents. The timer
     /// throttle is the whole point: progress just needs to say "still working" without an
@@ -44,10 +44,14 @@ namespace pwiz.Common.SystemUtil
     ///
     /// Writes to the process-wide <see cref="CommandOutput.Out"/> seam. Thread-safe: callers in
     /// parallel loops may call <see cref="Report"/> concurrently. Use with <c>using</c> so the
-    /// step is closed on scope exit:
+    /// scope is visible, and end the success path with <see cref="Complete"/>: success is
+    /// declared, not inferred, so a step that throws or returns early never logs completion.
     /// <code>
     /// using (var p = new ProgressReporter("Scoring isolation windows", windows.Count))
+    /// {
     ///     Parallel.For(0, windows.Count, i => { /* ... */ p.Report(Interlocked.Increment(ref done)); });
+    ///     p.Complete();
+    /// }
     /// </code>
     /// </summary>
     public sealed class ProgressReporter : IDisposable
@@ -85,7 +89,7 @@ namespace pwiz.Common.SystemUtil
         public const double HEARTBEAT_SECONDS = 15.0;
 
         /// <summary>
-        /// How long a step must run before <see cref="Dispose"/> closes it with 100%. The heading
+        /// How long a step must run before <see cref="Complete"/> closes it with 100%. The heading
         /// always prints - a CLI log is read afterwards, and a step that ran must say so - but a
         /// step that finished before this and showed no percent reads "Reading..." alone rather
         /// than "Reading..." plus a 100% that only says it was fast.
@@ -112,6 +116,7 @@ namespace pwiz.Common.SystemUtil
         private readonly IProgressSink _sink;
         private int _lastPercent = -1;
         private double _lastReportSeconds;
+        private bool _completed;
 
         /// <summary>
         /// Start a reporter for an <paramref name="activity"/> spanning <paramref name="total"/>
@@ -140,7 +145,8 @@ namespace pwiz.Common.SystemUtil
             // Clamped to the report interval, which makes the closing rule hold by construction:
             // the first percent line cannot print before one interval has elapsed
             // (_lastReportSeconds starts at 0), so any step that showed a percent has passed
-            // _minPercentSeconds and Dispose closes it with 100% - a display is never left at 83%.
+            // _minPercentSeconds and Complete closes it with 100% - a successful step's display is
+            // never left at 83%.
             _minPercentSeconds = Math.Min(minPercentSeconds, intervalSeconds);
             _sink = MultiProgressReporter.CurrentSink;
             _stopwatch = Stopwatch.StartNew();
@@ -209,13 +215,18 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Close with 100% unless the step already showed it or finished inside
-        /// <see cref="MIN_PERCENT_SECONDS"/>.
+        /// Declare that the step succeeded, and close it with 100% unless it already showed it
+        /// or finished inside <see cref="MIN_PERCENT_SECONDS"/>. Call it as the last statement
+        /// of the success path; a step that throws or returns early without calling it ends with
+        /// no completion line. Calling it more than once has no further effect.
         /// </summary>
-        public void Dispose()
+        public void Complete()
         {
             lock (_lock)
             {
+                if (_completed)
+                    return;
+                _completed = true;
                 if (_sink != null)
                 {
                     // Bank this segment at 100% so the file percent reaches the
@@ -234,6 +245,15 @@ namespace pwiz.Common.SystemUtil
                     CommandOutput.Out.WriteLine(@"{0}  100%", _indent);
                 }
             }
+        }
+
+        /// <summary>
+        /// Close the scope. Prints nothing: only <see cref="Complete"/> can say the step
+        /// succeeded, because Dispose runs the same way whether the scope finished, threw or
+        /// returned early, and forcing 100% here made a failed step log completion (#4583).
+        /// </summary>
+        public void Dispose()
+        {
         }
 
         /// <summary>

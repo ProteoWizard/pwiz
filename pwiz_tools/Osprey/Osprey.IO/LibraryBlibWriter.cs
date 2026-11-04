@@ -109,6 +109,7 @@ namespace pwiz.Osprey.IO
                         }
                         progress.Report(start + count);
                     }
+                    progress.Complete();
                 }
                 WriteDecoyPairs(writer, entries, refIds);
                 writer.CommitBatch();

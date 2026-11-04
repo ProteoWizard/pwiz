@@ -78,8 +78,11 @@ namespace pwiz.Osprey.FDR
             // Throttled progress over the ~344M-row population competition (the big walk that
             // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
             using (var pepProgress = QProgress(OspreyFDRResources.PercolatorQValues_ComputePepWinnerMap_Population_target_decoy_competition, n, n))
+            {
                 TargetDecoyCompetition.CompeteAll(finalScores, labels, entryIds,
                     out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
+                pepProgress?.Complete();
+            }
 
             int nWinners = winnerIndices.Length;
             var pepOrder = new int[nWinners];
@@ -675,7 +678,7 @@ namespace pwiz.Osprey.FDR
                     qvalues[globalIdx] = q[rank];
                 }
             }
-            progress?.Dispose();
+            progress?.Complete();
 
             return qvalues;
         }
@@ -809,7 +812,7 @@ namespace pwiz.Osprey.FDR
                         qvalues[idx] = qv;
                 }
             }
-            progress?.Dispose();
+            progress?.Complete();
 
             return qvalues;
         }
@@ -852,6 +855,7 @@ namespace pwiz.Osprey.FDR
                 {
                     TargetDecoyCompetition.CompeteAll(scores, labels, entryIds, out wi, out ws, out wd, progress);
                 }
+                progress?.Complete();
             }
 
             var q = new double[wi.Length];
@@ -1004,8 +1008,11 @@ namespace pwiz.Osprey.FDR
             double[] ws;
             bool[] wd;
             using (var progress = QProgress(OspreyFDRResources.PercolatorQValues_ComputeExperimentPeptideQMap_Experiment_peptide_q_values, bestPerPeptide.Length, bestPerPeptide.Length))
+            {
                 TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
                     out wi, out ws, out wd, progress);
+                progress?.Complete();
+            }
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);

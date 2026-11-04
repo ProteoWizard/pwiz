@@ -64,6 +64,7 @@ namespace pwiz.CarafeSharp.Proteome
                     }
                     progress.Report(++digested);
                 }
+                progress.Complete();
             }
             log?.Invoke(string.Format(@"Protein sequences:{0}, total unique peptide sequences:{1}", records, peptides.Count));
             return peptides;

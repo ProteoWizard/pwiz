@@ -121,9 +121,7 @@ namespace pwiz.Osprey.Tasks
                 out double tolerance, out ToleranceUnit toleranceUnit);
             var searchConfig = config.ShallowClone();
             searchConfig.FragmentTolerance = new FragmentToleranceConfig { Tolerance = tolerance, Unit = toleranceUnit };
-            ScoringPipeline.DoubleCountingTolerance(ms2Cal, config, out double ddcTolerance, out ToleranceUnit ddcUnit);
             var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, false, ctx);
-            double rtNeighborhood = ScoringPipeline.DoubleCountingRtNeighborhood(index.AllMs2Rts);
             var evidenceSettings = new TrainingEvidenceSettings
             {
                 SearchConfig = searchConfig,
@@ -156,9 +154,10 @@ namespace pwiz.Osprey.Tasks
                 Parallel.For(0, windows.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, maxThreads) }, w =>
                 {
                     perWindow[w] = ExportWindow(windows[w], provider, targets, maxQ, claimantQ, evidenceSettings,
-                        rtNeighborhood, ddcTolerance, ddcUnit, out observed[w]);
+                        out observed[w]);
                     progress.Report(Interlocked.Increment(ref nDone));
                 });
+                progress.Complete();
             }
 
             var records = perWindow.Where(list => list != null).SelectMany(list => list)
@@ -173,7 +172,7 @@ namespace pwiz.Osprey.Tasks
 
             var source = SpectrumFileReader.TryReadSourceMetadata(input);
             var metadata = ParquetScoreCache.WithStamp(BuildMetadata(config, stem, index, observed, source,
-                runQPass, ms2Cal, tolerance, toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ,
+                runQPass, ms2Cal, tolerance, toleranceUnit, maxQ, claimantQ,
                 nParity, nFittedParity, nFitted, records.Count), stamp);
             TrainingExportParquet.Write(output, records, metadata, settings.WriteXics);
             sw.Stop();
@@ -416,16 +415,17 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The q-value sidecar a run's export selects on, and which pass it is. The second-pass
-        /// sidecar when the per-run second pass in PerFileRescoring wrote it; otherwise the
-        /// first-pass sidecar - a run with no Stage 6 work, or a PerFileRescoring with no
-        /// readable saved first-pass model, whose second pass SecondPassFDR computes after the
-        /// export. Deciding by who wrote the file, which never changes once it is written, makes
-        /// an export written while re-scoring and one written later from disk agree.
+        /// sidecar when the per-run second pass in PerFileRescoring wrote it, which it does for
+        /// every run, the one with no Stage 6 work included (#4665); otherwise the first-pass
+        /// sidecar - a run whose complete answer is not on disk. Deciding by who wrote the file,
+        /// which never changes once it is written, makes an export written while re-scoring and
+        /// one written later from disk agree.
         ///
         /// <para>Who wrote it is the test SecondPassFDR folds by,
-        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar AND the worker's decoys
-        /// file both carry the stamp of the reconciled parquet beside them. A worker sidecar
-        /// without its decoys is not the worker's complete answer.</para>
+        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar, the run's plan and, under
+        /// protein-compact, the worker's decoys file all carry the stamp of the reconciled
+        /// parquet beside them. A sidecar an earlier run left beside a parquet since rewritten
+        /// under another key or build carries a different stamp, so it is not selected.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
@@ -442,8 +442,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static List<TrainingRecord> ExportWindow(IsolationWindow window,
             StreamingWindowSpectraProvider provider, List<Target> targets, double maxQ, double claimantQ,
-            TrainingEvidenceSettings settings, double rtNeighborhood, double ddcTolerance, ToleranceUnit ddcUnit,
-            out double[] observedMzRange)
+            TrainingEvidenceSettings settings, out double[] observedMzRange)
         {
             var result = new List<TrainingRecord>();
             int windowKey = (int)Math.Round(window.Center * 10.0);
@@ -459,8 +458,6 @@ namespace pwiz.Osprey.Tasks
             var claimants = members.Where(t => t.RunQ <= claimantQ)
                 .Select(t => new TrainingClaimant(t.Entry, t.Row, t.RunQ, t.Score, evidenceWindow, tolerance))
                 .ToList();
-            var neighbors = members.OrderBy(t => t.Row.ApexRt).ThenBy(t => t.Row.EntryId)
-                .Select(t => (t.Entry, t.Row.ApexRt)).ToList();
             foreach (var target in members)
             {
                 if (!(target.RunQ <= maxQ))
@@ -468,8 +465,6 @@ namespace pwiz.Osprey.Tasks
                 var record = TrainingEvidence.Compute(target.Entry, target.Row, target.RunQ, target.Score,
                     evidenceWindow, claimants, windowSettings);
                 record.RunPeptideQ = target.RunPeptideQ;
-                record.DdcNeighborCount = TrainingEvidence.CountDoubleCountingNeighbors(target.Entry,
-                    target.Row.ApexRt, neighbors, rtNeighborhood, ddcTolerance, ddcUnit);
                 result.Add(record);
             }
             return result;
@@ -487,8 +482,7 @@ namespace pwiz.Osprey.Tasks
         private static Dictionary<string, string> BuildMetadata(OspreyConfig config, string stem,
             SpectraWindowIndex index, double[][] observedMzRanges, SourceRunMetadata source,
             FdrScoresSidecar.Pass runQPass, MzCalibrationResult ms2Cal, double tolerance,
-            ToleranceUnit toleranceUnit, double ddcTolerance, ToleranceUnit ddcUnit, double rtNeighborhood,
-            double maxQ, double claimantQ, int nParity, int nFittedParity, int nFitted, int nRows)
+            ToleranceUnit toleranceUnit, double maxQ, double claimantQ, int nParity, int nFittedParity, int nFitted, int nRows)
         {
             var ic = CultureInfo.InvariantCulture;
             string R(double v) => v.ToString(@"R", ic);
@@ -522,9 +516,6 @@ namespace pwiz.Osprey.Tasks
                 [TrainingExportKeys.MS2_CALIBRATION_MEAN] = R(ms2Cal.Mean),
                 [TrainingExportKeys.MS2_CALIBRATION_SD] = R(ms2Cal.SD),
                 [TrainingExportKeys.MS2_CALIBRATION_UNIT] = ms2Cal.Unit ?? string.Empty,
-                [TrainingExportKeys.DDC_TOLERANCE] = R(ddcTolerance),
-                [TrainingExportKeys.DDC_TOLERANCE_UNIT] = Unit(ddcUnit),
-                [TrainingExportKeys.DDC_RT_NEIGHBORHOOD] = R(rtNeighborhood),
                 [TrainingExportKeys.INSTRUMENT_VENDOR] = source?.InstrumentVendor ?? string.Empty,
                 [TrainingExportKeys.INSTRUMENT_MODEL] = source?.InstrumentModel ?? string.Empty,
                 [TrainingExportKeys.SOURCE_MS2_SAMPLED] = (source?.NMs2Sampled ?? 0).ToString(ic),

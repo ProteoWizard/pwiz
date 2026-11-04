@@ -32,7 +32,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.Scoring;
 
-// Developer-only dump files (-d / OSPREY_DUMP_*): TSV headers and rows for comparison tools,
+// Developer-only dump files (OSPREY_DIAGNOSTICS / OSPREY_DUMP_*): TSV headers and rows for comparison tools,
 // never user text. The whole file, because nearly every literal is tab-separated file content.
 // ReSharper disable LocalizableElement
 
@@ -65,8 +65,8 @@ namespace pwiz.Osprey
     /// Concrete diagnostics sink: owns the OSPREY_DUMP_* / OSPREY_DIAG_*
     /// env-var gates and the byte-stable cross-impl bisection dumps. A single
     /// instance is created and held by <see cref="OspreyDiagnostics"/> only
-    /// when diagnostics are enabled (a dump env var is set, or <c>-d</c> is
-    /// passed); when no instance exists every facade call is a no-op, so
+    /// when diagnostics are enabled (a dump env var is set, or OSPREY_DIAGNOSTICS is
+    /// set); when no instance exists every facade call is a no-op, so
     /// production carries no diagnostic state. Internal: callers go through the
     /// <see cref="OspreyDiagnostics"/> facade, never this type directly.
     /// </summary>
@@ -323,7 +323,7 @@ namespace pwiz.Osprey
         /// <summary>
         /// True if any dump / diagnostic gate is active. The
         /// <see cref="OspreyDiagnostics"/> facade constructs one instance and
-        /// keeps it as the live sink only when this is true (or when <c>-d</c>
+        /// keeps it as the live sink only when this is true (or when OSPREY_DIAGNOSTICS
         /// forced the dump env vars on first), so an ordinary production run --
         /// where no OSPREY_DUMP_* / OSPREY_DIAG_* var is set -- carries no sink
         /// and every facade call is a no-op.

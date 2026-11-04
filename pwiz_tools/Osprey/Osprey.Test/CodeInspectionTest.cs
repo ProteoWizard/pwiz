@@ -565,7 +565,10 @@ namespace pwiz.Osprey.Test
             ".py", ".jam"
         };
 
-        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs" };
+        // Build output, not source. dist is package.ps1's output, which a TeamCity agent keeps
+        // between builds; a package with the vendor readers stages vendor .config files that carry
+        // a BOM, and this test would fail on them and rewrite them.
+        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs", "dist" };
 
         /// <summary>
         /// Strips a leading UTF-8 BOM from <paramref name="path"/>, preserving its timestamps, and

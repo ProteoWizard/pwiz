@@ -429,5 +429,29 @@ namespace pwiz.Osprey.FDR
             selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
             return selected.ToArray();
         }
+
+        /// <summary>
+        /// Bucket entry indices by source file name, preserving first-seen file
+        /// order. The streaming feature loads (issue #4355 Phase 4) iterate these
+        /// buckets so <c>loadFileFeatures</c> is called exactly once per file and
+        /// only one file's rows are held resident at a time.
+        /// </summary>
+        internal static Dictionary<string, List<int>> GroupIndicesByFileName(
+            IList<PercolatorEntry> entries)
+        {
+            var byFile = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                string file = entries[i].FileName;
+                List<int> list;
+                if (!byFile.TryGetValue(file, out list))
+                {
+                    list = new List<int>();
+                    byFile[file] = list;
+                }
+                list.Add(i);
+            }
+            return byFile;
+        }
     }
 }

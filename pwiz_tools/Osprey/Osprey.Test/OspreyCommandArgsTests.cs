@@ -296,9 +296,8 @@ namespace pwiz.Osprey.Test
                 (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES),
                 (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES));
 
-            // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
-            // but must accept both --task forms without throwing.
-            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
+            // --task is resolved in Main, so ParseArgs alone leaves SelectedTask null but must
+            // accept both --task forms without throwing.
             // The joined --task=Name form too (see OspreyCommandArgsTests.TestNameEqualsValueForm).
             Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
 
@@ -527,9 +526,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(
                 Parse(OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText, @"out.blib").OutputBlib,
                 Parse(OspreyCommandArgs.ARG_OUTPUT + @"out.blib").OutputBlib);
-            Assert.AreEqual(
-                Parse(OspreyCommandArgs.ARG_DIAGNOSTICS.ShortArgumentText).Diagnostics,
-                Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
         }
 
         [TestMethod]
@@ -641,7 +637,7 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
-                @"training-export-xics", @"diagnostics", @"perf-stats",
+                @"training-export-xics", @"perf-stats",
                 // CarafeSharp's, hosted: the training seed
                 CarafeCommandLine.ARG_SEED.Name,
             };

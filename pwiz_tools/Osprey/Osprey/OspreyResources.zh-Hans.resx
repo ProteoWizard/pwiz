@@ -208,10 +208,6 @@
     <value>有关流程概述、各阶段详情以及四个分布式 HPC 任务如何拆分与合并，请参见工作流程图：{0}。下方的参数表由命令行声明生成，因此始终与构建版本一致；运行 {1} 可查看相同内容的文本版本。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
-    <value>Osprey 是 MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具。它读取 DIA mzML 文件和谱图库，并将经过 FDR 控制的结果写入 BiblioSpecLite（{0}）库，该库可直接导入 Skyline。它在 Windows 和 Linux 上作为独立的可执行文件运行。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
     <value>未找到与“{0}”匹配的帮助部分。请使用“{1}”列出可用的部分。</value>
     <comment>Needs Review:New resource</comment>

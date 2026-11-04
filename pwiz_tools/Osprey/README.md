@@ -301,7 +301,7 @@ pwiz_tools/Osprey/
   Osprey.Scoring/          Spectral scoring, CalibrationScorer
   Osprey.FDR/              Percolator SVM, protein FDR
   Osprey.Tasks/            Pipeline driver + the four HPC --task workers
-  Osprey.Diagnostics/      Cross-impl diagnostic dumps (-d / env-var gated)
+  Osprey.Diagnostics/      Cross-impl diagnostic dumps (OSPREY_DIAGNOSTICS / env-var gated)
   Osprey.Test/             Unit + regression tests
   README.md                     (this file)
   Osprey-workflow.html          Visual pipeline diagram (inline SVG)

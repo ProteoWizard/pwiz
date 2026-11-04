@@ -166,8 +166,8 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Skyline's Build Library leg: <c>--precursors</c> predicts exactly a table's precursors as
-        /// the PredictLibrary phase alone, no search, writing the TSV peptdeep wrote beside the
-        /// output; it is never current (the TSV has no stamp slot); and it is refused with what only
+        /// the PredictLibrary phase alone, no search, writing the output .blib itself, every
+        /// precursor with its CCS; it is never current (no stamp); and it is refused with what only
         /// the one command's FASTA gives a meaning to.
         /// </summary>
         [TestMethod, DoNotParallelize]
@@ -193,14 +193,11 @@ namespace pwiz.Osprey.Test
             AssertTasks(log, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME });
             foreach (string task in ALL_TASKS)
                 Assert.IsFalse(HasLine(log, TaskLine(task, @"starting")), task + @" ran" + Environment.NewLine + log);
-            string output = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_TABLE_SUFFIX);
-            Assert.IsTrue(File.Exists(output), output);
-            Assert.IsFalse(File.Exists(outputBlib), @"no search, no output library");
-            StringAssert.Contains(log, output);
-            var lines = File.ReadAllLines(output);
-            Assert.AreEqual(string.Join("\t", PrecursorTablePredictor.OUTPUT_COLUMNS), lines[0]);
-            CollectionAssert.AreEquivalent(new[] { @"_LGGNEQVTR_", @"_AC[UniMod:4]DEFGHIK_" },
-                lines.Skip(1).Select(l => l.Split('\t')[0]).Distinct().ToList());
+            // The library is the output itself: no predicted library beside it, since nothing is searched
+            Assert.IsTrue(File.Exists(outputBlib), outputBlib);
+            Assert.IsFalse(File.Exists(PredictedLibraryPath(workDir)), @"no search, no predicted library");
+            StringAssert.Contains(log, outputBlib);
+            var entries = AssertTableLibrary(outputBlib);
             string again = RunOsprey(args, Verifier(false));
             AssertTasks(again, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME });
 
@@ -213,9 +210,8 @@ namespace pwiz.Osprey.Test
             File.Copy(table, tunedTable);
             var tunedArgs = TunedArgs(WriteSubsetProteinFasta(), tunedDir, Array.Empty<string>(), DataInputs())
                 .Concat(new[] { OspreyCommandArgs.ARG_PRECURSORS.ArgumentText, tunedTable }).ToArray();
-            string stem = Path.GetFileNameWithoutExtension(BLIB_FILE);
-            string tunedOutput = Path.Combine(tunedDir, stem + LibraryBuildWorkflow.PREDICTED_TABLE_SUFFIX);
-            string tunedModel = Path.Combine(tunedDir, stem + CarafeModelFile.EXTENSION);
+            string tunedOutput = Path.Combine(tunedDir, BLIB_FILE);
+            string tunedModel = Path.Combine(tunedDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + CarafeModelFile.EXTENSION);
             using (ShortFineTune())
             {
                 string tuned = RunOsprey(tunedArgs, Verifier(false));
@@ -224,14 +220,11 @@ namespace pwiz.Osprey.Test
                     @"the table was searched" + Environment.NewLine + tuned);
                 Assert.IsTrue(File.Exists(tunedOutput), tunedOutput);
                 Assert.IsTrue(File.Exists(tunedModel), tunedModel);
-                Assert.IsFalse(File.Exists(Path.Combine(tunedDir, BLIB_FILE)), @"no search, no output library");
-                Assert.IsFalse(File.Exists(Path.Combine(tunedDir, stem + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB)), @"no search, no predicted library");
-                var tunedLines = File.ReadAllLines(tunedOutput);
-                Assert.AreEqual(lines[0], tunedLines[0]);
-                CollectionAssert.AreEquivalent(new[] { @"_LGGNEQVTR_", @"_AC[UniMod:4]DEFGHIK_" },
-                    tunedLines.Skip(1).Select(l => l.Split('\t')[0]).Distinct().ToList());
+                Assert.IsFalse(File.Exists(PredictedLibraryPath(tunedDir)), @"no search, no predicted library");
+                var tunedEntries = AssertTableLibrary(tunedOutput);
                 // The tuned models predict minutes on the tuning runs' gradient, the pretrained ones iRT
-                Assert.IsFalse(RtColumn(lines).SequenceEqual(RtColumn(tunedLines)), @"the tuned models predicted the pretrained models' RT" + Environment.NewLine + tuned);
+                Assert.IsFalse(entries.Select(e => e.RetentionTime).SequenceEqual(tunedEntries.Select(e => e.RetentionTime)),
+                    @"the tuned models predicted the pretrained models' RT" + Environment.NewLine + tuned);
 
                 // Warm: the training library, its search and the tuning are current; the table is
                 // predicted again, as it is on its own.
@@ -258,12 +251,23 @@ namespace pwiz.Osprey.Test
                 RunOspreyExpecting(refusedArgs, Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
         }
 
-        /// <summary>The RT column of a predicted table, one value per row, after the header.</summary>
-        private static IEnumerable<string> RtColumn(string[] lines)
+        /// <summary><c>&lt;stem&gt;.predicted.blib</c> in <paramref name="directory"/>: the library a FASTA run predicts and searches.</summary>
+        private static string PredictedLibraryPath(string directory)
         {
-            int rtIndex = Array.IndexOf(lines[0].Split('\t'), @"RT");
-            Assert.IsTrue(rtIndex >= 0, lines[0]);
-            return lines.Skip(1).Select(l => l.Split('\t')[rtIndex]);
+            return Path.Combine(directory, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
+        }
+
+        /// <summary>
+        /// The table's two precursors and nothing else, in the table's order, each with a retention
+        /// time, a CCS and a 1/K0, the modified one with its mass shift in Skyline's notation.
+        /// </summary>
+        private static List<LibraryEntry> AssertTableLibrary(string library)
+        {
+            var entries = new BlibLoader(FragmentToleranceConfig.UnitResolution(0.5)).Load(library);
+            CollectionAssert.AreEqual(new[] { @"LGGNEQVTR/2", @"ACDEFGHIK/3" }, entries.Select(e => e.Sequence + @"/" + e.Charge).ToList());
+            Assert.AreEqual(1, entries[1].Modifications.Count, entries[1].ModifiedSequence);
+            Assert.AreEqual(2, BlibComparer.CountWhere(library, @"RefSpectra", @"retentionTime IS NOT NULL AND collisionalCrossSectionSqA > 0 AND ionMobility > 0"));
+            return entries;
         }
 
         /// <summary>The predicted library: stamped by the prediction task <paramref name="task"/>, with its DecoyPairs, and with Osprey's command line recorded.</summary>

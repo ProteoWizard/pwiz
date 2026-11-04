@@ -35,7 +35,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// precursor with fewer than <c>-lf_min_n_frag</c> is left out), the peptide's proteins
     /// (<c>-</c> when none on the <c>-fast</c> path, an error otherwise), the Decoy flag (always 0 on Carafe's <c>-fast</c> path; otherwise 1
     /// when every protein carries the decoy prefix), and the notations the requested outputs
-    /// need. Stateless apart from its settings, so precursors can be built in parallel.
+    /// need. A precursor given in alphabase's notation alone (a precursor table's) is built the
+    /// same way from alphabase's masses, with no proteins. Stateless apart from its settings, so
+    /// precursors can be built in parallel.
     /// </summary>
     public sealed class LibrarySpectrumBuilder
     {
@@ -58,6 +60,9 @@ namespace pwiz.CarafeSharp.Proteome
         private readonly LibraryOutputs _outputs;
         private readonly IReadOnlyDictionary<string, string> _peptideToProteins;
 
+        /// <param name="settings">The fragment selection, the decoy prefix and <c>-fast</c>.</param>
+        /// <param name="outputs">The outputs whose notations each spectrum needs.</param>
+        /// <param name="peptideToProteins">The proteins of each peptide of a digest, or null when the precursors come with none (a precursor table's).</param>
         public LibrarySpectrumBuilder(LibrarySettings settings, LibraryOutputs outputs, IReadOnlyDictionary<string, string> peptideToProteins)
         {
             _selector = new CarafeFragmentSelector(settings.MinFragmentMz, settings.MaxFragmentMz, settings.TopFragments,
@@ -82,10 +87,10 @@ namespace pwiz.CarafeSharp.Proteome
         public LibrarySpectrum Build(PeptideIsoform isoform, PrecursorForm precursor, float[] intensities, int stride, double retentionTime,
             double? collisionalCrossSection)
         {
-            var fragments = _selector.Select(intensities, stride, AlphabaseFragmentMz.Calculate(precursor));
-            if (fragments.Count < _minFragments)
+            var fragments = SelectFragments(precursor, intensities, stride);
+            if (fragments == null)
                 return null;
-            if (!_peptideToProteins.TryGetValue(isoform.Sequence, out string proteins))
+            if (_peptideToProteins == null || !_peptideToProteins.TryGetValue(isoform.Sequence, out string proteins))
             {
                 // Carafe's -fast path writes '-'; its TSV path stops (DBGear.add_protein_to_psm_table).
                 if (!_fast)
@@ -102,6 +107,40 @@ namespace pwiz.CarafeSharp.Proteome
                 spectrum.SkylineModifications = modifications;
             }
             return spectrum;
+        }
+
+        /// <summary>
+        /// The library spectrum of a precursor given in alphabase's notation alone (a precursor
+        /// table's), or null when too few fragments pass: its m/z from alphabase's masses, no
+        /// proteins, not a decoy, and Skyline's notation from alphabase's modification masses. It
+        /// gets no TSV notation; a precursor table's library is a .blib.
+        /// </summary>
+        /// <param name="precursor">The alphabase form and charge.</param>
+        /// <param name="intensities">Predicted intensities, <paramref name="stride"/> per fragment row, b_z1 b_z2 y_z1 y_z2 first.</param>
+        /// <param name="stride">Values per fragment row of <paramref name="intensities"/>.</param>
+        /// <param name="retentionTime">From <see cref="GetRetentionTime"/>.</param>
+        /// <param name="collisionalCrossSection">The CCS model's prediction, which gives the spectrum its 1/K0, or null.</param>
+        public LibrarySpectrum Build(PrecursorForm precursor, float[] intensities, int stride, double retentionTime,
+            double? collisionalCrossSection)
+        {
+            var fragments = SelectFragments(precursor, intensities, stride);
+            if (fragments == null)
+                return null;
+            var spectrum = new LibrarySpectrum(precursor, AlphabaseFragmentMz.CalculatePrecursorMz(precursor), retentionTime,
+                LibrarySpectrum.NO_PROTEIN, 0, fragments, collisionalCrossSection);
+            if (_outputs.WritesBlib)
+            {
+                spectrum.SkylineModifiedSequence = ModifiedPeptideNotation.FormatSkyline(precursor.Peptide, out var modifications);
+                spectrum.SkylineModifications = modifications;
+            }
+            return spectrum;
+        }
+
+        /// <summary>The selected fragments of a precursor, or null when fewer than <c>-lf_min_n_frag</c> pass.</summary>
+        private List<LibraryFragment> SelectFragments(PrecursorForm precursor, float[] intensities, int stride)
+        {
+            var fragments = _selector.Select(intensities, stride, AlphabaseFragmentMz.Calculate(precursor));
+            return fragments.Count < _minFragments ? null : fragments;
         }
 
         /// <summary>DBGear.add_protein_to_psm_table: a decoy when every protein carries the prefix.</summary>

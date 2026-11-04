@@ -35,6 +35,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
 using Parquet.Schema;
+using Pwiz.Data.Common.Unimod;
+using Pwiz.Data.MsData.Readers;
 using pwiz.BiblioSpec.IO;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
@@ -680,30 +682,61 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(15.994915, mass, 1e-6);
             Assert.IsFalse(BlibPeptideText.TryGetUnimodMass(99999, out mass));
 
-            // The ids Osprey once mapped to another modification's mass, now Skyline's UniModData
-            // masses: every reader and writer shares the one table.
-            var skylineMasses = new Dictionary<int, double>
-            {
-                { 27, -18.010565 },   // Glu->pyro-Glu
-                { 28, -17.026549 },   // Gln->pyro-Glu, once Glu->pyro-Glu
-                { 122, 27.994915 },   // Formyl, once SUMO
-                { 214, 144.102062 },  // iTRAQ4plex, once Nitro
-                { 312, 119.004099 },  // Cysteinyl, once Ammonia-loss
-                { 354, 44.985078 },   // Nitro
-                { 385, -17.026549 },  // Ammonia-loss, once TMT6plex
-                { 737, 229.162932 },  // TMT6plex
-                { 747, 86.000394 },   // Malonyl, once TMTpro
-                { 2016, 304.207146 }, // TMTpro
-                { 259, 8.014199 },    // Label:13C(6)15N(2)
-                { 267, 10.008269 },   // Label:13C(6)15N(4)
-            };
-            foreach (var pair in skylineMasses)
+            // The common ids, and those Osprey's own table once mapped to another modification's
+            // mass, with the delta_mono_mass unimod.obo gives each: the writers and the DIA-NN
+            // reader all read the one copy of UniMod.
+            foreach (var pair in OBO_MASSES)
             {
                 Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(pair.Key, out mass), pair.Key.ToString());
                 Assert.AreEqual(pair.Value, mass, pair.Key.ToString());
-                Assert.AreEqual(pair.Value, DiannTsvLoader.UnimodIdToMass(pair.Key), pair.Key.ToString());
+                Assert.AreEqual(pair.Value, DiannTsvLoader.ParseModMass(@"UniMod:" + pair.Key), pair.Key.ToString());
+            }
+
+            // Any id in unimod.obo, not only those a table listed: UniMod:3 is Biotin.
+            Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(3, out mass));
+            Assert.AreEqual(226.077598, mass);
+            Assert.AreEqual("K[+226.0776]PEPTIDE", BlibPeptideText.ConvertUnimodToMass("K[UniMod:3]PEPTIDE"));
+
+            // The ontology root, UNIMOD:0, is not a modification: a library naming it is refused.
+            Assert.IsNull(UniMod.Find(0));
+            Assert.IsNull(DiannTsvLoader.ParseModMass("UniMod:0"));
+
+            // Every UniMod modification resolves by id and by title to the mass unimod.obo gives it.
+            foreach (var modification in Unimod.Modifications.Where(m => m.Id != 0))
+            {
+                var byId = UniMod.Find(modification.Id);
+                Assert.IsNotNull(byId, modification.Name);
+                Assert.AreEqual(modification.Name, byId.Name);
+                Assert.AreEqual(modification.DeltaMonoisotopicMass, byId.Mass, modification.Name);
+                Assert.AreEqual(modification.DeltaMonoisotopicMass, DiannTsvLoader.ParseModMass(modification.Name) ??
+                                                                    double.NaN, modification.Name);
             }
         }
+
+        /// <summary>
+        /// The delta_mono_mass of each id as written in pwiz/data/common/unimod.obo: the common
+        /// modifications, and the six ids Osprey's hand-typed table once gave another
+        /// modification's mass (28, 122, 214, 312, 385, 747; GitHub issue #4736).
+        /// </summary>
+        private static readonly Dictionary<int, double> OBO_MASSES = new Dictionary<int, double>
+        {
+            { 1, 42.010565 },     // Acetyl
+            { 4, 57.021464 },     // Carbamidomethyl
+            { 21, 79.966331 },    // Phospho
+            { 35, 15.994915 },    // Oxidation
+            { 737, 229.162932 },  // TMT6plex
+            { 27, -18.010565 },   // Glu->pyro-Glu
+            { 28, -17.026549 },   // Gln->pyro-Glu, once Glu->pyro-Glu
+            { 122, 27.994915 },   // Formyl, once SUMO
+            { 214, 144.102063 },  // iTRAQ4plex, once Nitro
+            { 312, 119.004099 },  // Cysteinyl, once Ammonia-loss
+            { 354, 44.985078 },   // Nitro
+            { 385, -17.026549 },  // Ammonia-loss, once TMT6plex
+            { 747, 86.000394 },   // Malonyl, once TMTpro
+            { 2016, 304.207146 }, // TMTpro
+            { 259, 8.014199 },    // Label:13C(6)15N(2)
+            { 267, 10.008269 },   // Label:13C(6)15N(4)
+        };
 
         #endregion
 
@@ -1164,9 +1197,14 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(mass);
             Assert.AreEqual(-17.026, mass.Value, 1e-3);
 
-            mass = DiannTsvLoader.ParseModMass("Oxidation");
-            Assert.IsNotNull(mass);
-            Assert.AreEqual(15.9949, mass.Value, 1e-4);
+            // A UniMod title, in any case, or one of the other names libraries use, takes the
+            // mass unimod.obo gives it.
+            Assert.AreEqual(15.994915, DiannTsvLoader.ParseModMass("Oxidation"));
+            Assert.AreEqual(79.966331, DiannTsvLoader.ParseModMass("PHOSPHO"));
+            Assert.AreEqual(57.021464, DiannTsvLoader.ParseModMass("CAM"));
+            Assert.AreEqual(0.984016, DiannTsvLoader.ParseModMass("Deamidation"));
+            Assert.IsNull(DiannTsvLoader.ParseModMass("NotAModification"));
+            Assert.IsNull(DiannTsvLoader.ParseModMass("UniMod:99999"));
         }
 
         [TestMethod]
@@ -1187,6 +1225,26 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(mods[0].UnimodId);
             Assert.AreEqual(35, mods[0].UnimodId.Value);
             Assert.AreEqual(15.994915, mods[0].MassDelta, 1e-4);
+
+            // A DIA-NN row's ids, among them three Osprey's own table once gave another
+            // modification's mass (28, 214, 385), each take unimod.obo's id, title and mass.
+            mods = DiannTsvLoader.ParseModifications(
+                "(UniMod:1)Q(UniMod:28)PEPK(UniMod:214)C(UniMod:385)S(UniMod:21)C(UniMod:4)M(UniMod:35)K(UniMod:737)");
+            var expectedIds = new[] { 1, 28, 214, 385, 21, 4, 35, 737 };
+            Assert.AreEqual(expectedIds.Length, mods.Count);
+            for (int i = 0; i < expectedIds.Length; i++)
+            {
+                int id = expectedIds[i];
+                Assert.AreEqual(id, mods[i].UnimodId, id.ToString());
+                Assert.AreEqual(OBO_MASSES[id], mods[i].MassDelta, id.ToString());
+                Assert.AreEqual(Unimod.Modifications.First(m => m.Id == id).Name, mods[i].Name, id.ToString());
+            }
+
+            // A modification named by its title takes the id and mass of that UniMod entry.
+            mods = DiannTsvLoader.ParseModifications("PEPTM(Oxidation)IDE");
+            Assert.AreEqual(1, mods.Count);
+            Assert.AreEqual(35, mods[0].UnimodId);
+            Assert.AreEqual(15.994915, mods[0].MassDelta);
         }
 
         [TestMethod]
@@ -1999,13 +2057,16 @@ namespace pwiz.Osprey.Test
             {
                 fromRaw = SpectrumFileReader.LoadAllSpectra(rawPath);
             }
-            catch (NotSupportedException ex)
+            catch (UserMessageException ex) when (ex.InnerException is VendorSupportNotEnabledException)
             {
                 // No vendor SDK in this build. Pin that the message at least NAMES the
                 // file, so a user is not left with a bare format complaint. Asserting on the
-                // file name rather than on wording keeps this translation-proof.
+                // file name rather than on wording keeps this translation-proof. The type
+                // itself is pinned too: it is what makes the top level print this message
+                // alone instead of a stack trace.
                 //
-                // NotSupportedException specifically, NOT Exception: SpectrumFileReader
+                // Only the refusal for missing vendor support, NOT any Exception or any
+                // UserMessageException (the peak-picking refusal is one too): SpectrumFileReader
                 // interpolates the path into its message, so a blanket catch would let an
                 // IOException from a file lock - or a genuine mapping defect that happened to
                 // quote the path - satisfy this assertion and skip every parity check below.

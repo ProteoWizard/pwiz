@@ -138,7 +138,44 @@ namespace pwiz.CarafeSharp.Proteome
                 modifications.Add(new SkylineModification(position,
                     double.Parse(modification.PreferredMassText, NumberStyles.Float, CultureInfo.InvariantCulture)));
             }
-            var builder = new StringBuilder(sequence.Length + 16 * isoform.Modifications.Count);
+            return FormatSkyline(sequence, deltas, modified);
+        }
+
+        /// <summary>
+        /// The BiblioSpec <c>peptideModSeq</c> and <c>Modifications</c> rows of a precursor given in
+        /// alphabase's notation (a precursor table's), with alphabase's modification masses: a
+        /// modification on the N terminus is placed on residue 1 and one on the C terminus on the
+        /// last residue, Skyline's places for them.
+        /// </summary>
+        public static string FormatSkyline(PeptideForm peptide, out List<SkylineModification> modifications)
+        {
+            string sequence = peptide.Sequence;
+            modifications = new List<SkylineModification>(peptide.ModNames.Count);
+            if (peptide.ModNames.Count == 0)
+                return sequence;
+            var deltas = new decimal[sequence.Length];
+            var modified = new bool[sequence.Length];
+            for (int i = 0; i < peptide.ModNames.Count; i++)
+            {
+                double mass = ModificationTable.Get(peptide.ModNames[i]).Mass;
+                int site = peptide.ModSites[i];
+                int position = site == 0 ? 1 : site == -1 ? sequence.Length : site;
+                if (position < 1 || position > sequence.Length)
+                {
+                    throw new NotSupportedException(string.Format(
+                        @"Cannot write {0} at Skyline position {1} of {2}", peptide.ModNames[i], position, sequence));
+                }
+                deltas[position - 1] += new decimal(mass);
+                modified[position - 1] = true;
+                modifications.Add(new SkylineModification(position, mass));
+            }
+            return FormatSkyline(sequence, deltas, modified);
+        }
+
+        /// <summary>The sequence with each modified residue's signed mass shift after it, <c>C[+57.02146372057]</c>.</summary>
+        private static string FormatSkyline(string sequence, decimal[] deltas, bool[] modified)
+        {
+            var builder = new StringBuilder(sequence.Length + 16 * deltas.Length);
             for (int i = 0; i < sequence.Length; i++)
             {
                 builder.Append(sequence[i]);

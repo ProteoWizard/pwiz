@@ -42,6 +42,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public const string ENV_OSPREY_EXE = @"SKYLINE_TEST_OSPREY_EXE";
 
+        /// <summary>TeamCity's name for the commit a build checks out, set in every build's environment.</summary>
+        public const string ENV_TEAMCITY_REVISION = @"BUILD_VCS_NUMBER";
+
         /// <summary>Registers <paramref name="ospreyExe"/> as the Osprey Skyline runs, in place of any earlier registration.</summary>
         public static void RegisterOsprey(string ospreyExe)
         {
@@ -56,8 +59,10 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// The Osprey.exe to test: the one SKYLINE_TEST_OSPREY_EXE names, else a build in the Osprey
-        /// project beside the Skyline source (the developer's loop), else the latest successful build
-        /// on TeamCity (the nightly's loop, as SkylineNightly fetches SkylineTester).
+        /// project beside the Skyline source (the developer's loop), else a build downloaded from
+        /// TeamCity (the nightly's loop, as SkylineNightly fetches SkylineTester): on TeamCity the
+        /// Osprey build of the same commit when it has finished, so a pull request that changes Osprey
+        /// and Skyline together is tested with its own Osprey, else the latest successful master build.
         /// </summary>
         public static string EnsureOsprey(TestContext testContext)
         {
@@ -81,7 +86,10 @@ namespace pwiz.SkylineTestUtil
                 if (Settings.Default.SearchToolList.ContainsKey(SearchToolType.Osprey))
                     Settings.Default.SearchToolList.Remove(Settings.Default.SearchToolList[SearchToolType.Osprey]);
             });
-            var downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
+            string revision = Environment.GetEnvironmentVariable(ENV_TEAMCITY_REVISION);
+            if (string.IsNullOrEmpty(revision) || !OspreyHelpers.TryGetRevisionBuildDownloadInfo(revision, out var downloadInfo))
+                downloadInfo = OspreyHelpers.GetLatestBuildDownloadInfo();
+            Console.WriteLine(@"# Osprey for this test: {0}", downloadInfo.DownloadUrl);
             bool savedUseOriginalUrls = Skyline.Program.UseOriginalURLs;
             try
             {

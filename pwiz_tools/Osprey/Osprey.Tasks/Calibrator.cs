@@ -1637,6 +1637,7 @@ namespace pwiz.Osprey.Tasks
                         return worker;
                     },
                     worker => { });
+                progress.Complete();
             }
             swScoring.Stop();
             _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} scoring: {1:F2}s ({2} matches)",

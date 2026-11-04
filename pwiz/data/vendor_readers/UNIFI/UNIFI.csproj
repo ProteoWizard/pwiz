@@ -21,8 +21,9 @@
     <ProjectReference Include="..\..\..\analysis\Analysis.csproj" />
   </ItemGroup>
 
-  <!-- Match Skyline's protobuf stack 1:1: reference the checked-in Google.Protobuf.dll 3.7.0
-       and use the same protoc.exe 3.8.0 (also checked in under pwiz_tools/Skyline/ProtocolBuffers).
+  <!-- Same Google.Protobuf package version as Skyline: msconvert and bullseye-sharp ship this
+       assembly next to their executables, and their output is deployed into Skyline's bin, so a
+       different version here would overwrite Skyline's copy.
        Generated C# is committed under Protobuf/GeneratedCode/ — same convention Skyline uses
        (Skyline.csproj's PreBuildEvents.bat invokes ProtocolBuffers/generatecode.bat). To
        regenerate, run Protobuf/generatecode.bat after editing the .proto files.
@@ -31,10 +32,7 @@
        (both speak the protobuf spec) but we pick Google.Protobuf to avoid carrying a second
        serializer alongside Skyline. -->
   <ItemGroup>
-    <Reference Include="Google.Protobuf">
-      <HintPath>$(PwizToolsRoot)/Shared/Lib/Google.Protobuf.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
   </ItemGroup>
 
   <ItemGroup>

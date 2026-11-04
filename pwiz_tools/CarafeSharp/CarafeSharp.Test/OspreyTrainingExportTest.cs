@@ -128,12 +128,22 @@ namespace pwiz.CarafeSharp.Test
             }).ToList());
             CollectionAssert.AreEqual(records.Select(x => x.ModifiedSequence).ToArray(),
                 TrainingExport.Read(v1).Records.Select(x => x.ModifiedSequence).ToArray());
+            // Format 2, which also carried ddc_neighbor_n (issue #4709), reads the same: a column
+            // the schema no longer names is skipped.
+            var footerV2 = Footer(@"a");
+            footerV2[FORMAT_VERSION_KEY] = @"2";
+            string v2 = Rewrite(path, @"v2", footerV2, columns => columns.Concat(new[]
+            {
+                Column(@"ddc_neighbor_n", records.Select(x => 0).ToArray()),
+            }).ToList());
+            CollectionAssert.AreEqual(records.Select(x => x.ModifiedSequence).ToArray(),
+                TrainingExport.Read(v2).Records.Select(x => x.ModifiedSequence).ToArray());
 
             // What the reader refuses: another format version or none, a record whose ladder has
             // the wrong number of slots, and a missing column.
-            var footerV3 = Footer(@"a");
-            footerV3[FORMAT_VERSION_KEY] = @"3";
-            AssertInvalid(Rewrite(path, @"v3", footerV3, columns => columns), null);
+            var footerNext = Footer(@"a");
+            footerNext[FORMAT_VERSION_KEY] = (TrainingExportParquet.FORMAT_VERSION + 1).ToString(CultureInfo.InvariantCulture);
+            AssertInvalid(Rewrite(path, @"vnext", footerNext, columns => columns), null);
             var noVersion = Footer(@"a");
             noVersion.Remove(FORMAT_VERSION_KEY);
             AssertInvalid(Rewrite(path, @"v0", noVersion, columns => columns), ContractsResources.TrainingExportParquet_Read_none);

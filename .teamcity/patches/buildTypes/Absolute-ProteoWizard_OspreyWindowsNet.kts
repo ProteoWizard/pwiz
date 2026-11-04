@@ -30,6 +30,7 @@ create(DslContext.projectId, BuildType({
         exec {
             id = "RUNNER_simpleRunner_139"
             path = "pwiz_tools/Osprey/tcbuild.bat"
+            arguments = "--i-agree-to-the-vendor-licenses --require-vendor-support"
         }
         step {
             id = "RUNNER_73"

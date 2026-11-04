@@ -138,7 +138,7 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// First-pass sink of the streaming score pass (<c>PercolatorScorer.RunStreamingFirstPass</c>).
+    /// First-pass sink of the streaming score pass (<c>PercolatorEngine.RunStreamingFirstPass</c>).
     /// Keeps NO per-row state and writes no per-file file: pass 1 writes each file's
     /// <c>.1st-pass.fdr_scores.bin</c> itself as it finishes the file (<c>FileRunScopeSink</c>),
     /// and the resume gate adopts the rest. What this sink produces is:

@@ -385,10 +385,6 @@
     <value>「{0}」を読み取れません：ProteoWizardにはこの形式のベンダーピークピッキングがなく、Ospreyはセントロイド化されたピークをスコアリングします。{1}でファイルをmzMLに変換し、そちらを読み取ってください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_" xml:space="preserve">
-    <value>「{0}」を読み取れません：このOspreyビルドはベンダー装置をサポートしていません。{2}上で{1}を指定して再ビルドするか、「{3}」で再ビルドしてください。または、{4}でファイルをmzMLに変換し、そちらを読み取ってください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
     <value>{0}を読み取り中</value>
     <comment>Needs Review:New resource</comment>

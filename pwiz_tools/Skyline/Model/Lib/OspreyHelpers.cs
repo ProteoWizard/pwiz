@@ -148,12 +148,43 @@ namespace pwiz.Skyline.Model.Lib
             string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},branch:{TEAMCITY_BRANCH},status:SUCCESS,count:1";
             // A locator in the path answers with the one build as the document root
             var build = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/{buildLocator}")).Root;
-            string buildId = build?.Name.LocalName == @"build" ? build.Attribute(@"id")?.Value : null;
-            if (string.IsNullOrEmpty(buildId))
+            if (build?.Name.LocalName != @"build")
             {
                 throw new IOException(string.Format(@"No successful {0} build on branch {1} at {2}",
                     TEAMCITY_BUILD_TYPE, TEAMCITY_BRANCH, TEAMCITY_SERVER));
             }
+            return GetBuildDownloadInfo(client, build);
+        }
+
+        /// <summary>
+        /// The download of the finished, successful Osprey build of one commit, on whatever branch
+        /// (every push of a pull request builds Osprey too), or false when that commit has none. A
+        /// test on TeamCity takes this before the latest master build, so that a change to Osprey and
+        /// Skyline together is tested against its own Osprey rather than master's. The package is
+        /// cached under a name carrying the revision, since every build of a day shares the version
+        /// in the zip's name and a cached master zip would otherwise pass for it.
+        /// </summary>
+        public static bool TryGetRevisionBuildDownloadInfo(string revision, out FileDownloadInfo downloadInfo)
+        {
+            downloadInfo = default;
+            using var client = new HttpClientWithProgress();
+            string buildLocator = $@"buildType:{TEAMCITY_BUILD_TYPE},revision:{revision},branch:default:any,status:SUCCESS,state:finished,count:1";
+            // A locator in the query answers with a list, empty when nothing matches
+            var builds = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds?locator={buildLocator}")).Root;
+            var build = builds?.Elements(@"build").FirstOrDefault();
+            if (build == null)
+                return false;
+            downloadInfo = GetBuildDownloadInfo(client, build);
+            string zipName = downloadInfo.DownloadUrl.Segments.Last();
+            string shortRevision = revision.Length > 8 ? revision.Substring(0, 8) : revision;
+            downloadInfo.MirrorFilename = zipName.Substring(0, zipName.Length - OSPREY_ZIP_SUFFIX.Length) + @"-" + shortRevision + OSPREY_ZIP_SUFFIX;
+            return true;
+        }
+
+        /// <summary>The download of <paramref name="build"/>'s package, named from its artifact list and addressed by build id, so a build finishing meanwhile cannot change what is downloaded.</summary>
+        private static FileDownloadInfo GetBuildDownloadInfo(HttpClientWithProgress client, XElement build)
+        {
+            string buildId = build.Attribute(@"id")?.Value;
             var artifacts = XDocument.Parse(client.DownloadString($@"{TEAMCITY_SERVER}/guestAuth/app/rest/builds/id:{buildId}/artifacts/children/"));
             string zipName = artifacts.Root?.Elements(@"file").Select(f => f.Attribute(@"name")?.Value)
                 .FirstOrDefault(n => n != null && n.StartsWith(@"Osprey-") && n.EndsWith(OSPREY_ZIP_SUFFIX));
@@ -244,9 +275,6 @@ namespace pwiz.Skyline.Model.Lib
         {
             return argumentText.Substring(ARG_PREFIX.Length);
         }
-
-        /// <summary>The suffix, after the output's stem, of the TSV a precursor table's prediction writes.</summary>
-        public const string PREDICTED_TABLE_SUFFIX = @".predicted.speclib.tsv";
 
         // Osprey's --device: gpu and cpu are requirements (a run that cannot predict on the GPU
         // fails); auto takes the GPU when the CUDA runtime is installed, else the CPU.
@@ -577,8 +605,8 @@ namespace pwiz.Skyline.Model.Lib
         /// The command line of the precursor-table prediction Build Library runs: Osprey's
         /// PredictLibrary phase alone over <paramref name="tablePath"/>, with the pretrained models or
         /// the saved <paramref name="modelPath"/>, on the GPU (a requirement, with the CUDA runtime in
-        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the TSV beside
-        /// <paramref name="outputBlib"/>, at <see cref="GetPredictedTablePath"/>, and writes its messages in
+        /// <paramref name="torchRuntimesDirectory"/>) or the CPU. Osprey writes the library to
+        /// <paramref name="outputBlib"/>, every precursor with its CCS, and writes its messages in
         /// <paramref name="cultureName"/>, Skyline's UI language, which a child process would not inherit.
         /// </summary>
         public static string BuildPredictLibraryCommandLine(string tablePath, string outputBlib, string modelPath,
@@ -598,13 +626,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(cultureName))
                 sb.Append(' ').Append(ARG_CULTURE).Append(' ').Append(cultureName);
             return sb.ToString();
-        }
-
-        /// <summary>The TSV a precursor-table prediction with the output <paramref name="outputBlib"/> writes.</summary>
-        public static string GetPredictedTablePath(string outputBlib)
-        {
-            return Path.Combine(Path.GetDirectoryName(outputBlib) ?? string.Empty,
-                Path.GetFileNameWithoutExtension(outputBlib) + PREDICTED_TABLE_SUFFIX);
         }
 
         /// <summary>
