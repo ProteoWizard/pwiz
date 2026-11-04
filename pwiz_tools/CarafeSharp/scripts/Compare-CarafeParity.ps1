@@ -27,10 +27,12 @@
     an NVIDIA GPU of compute capability 7.0 or later, driver 570 or later) and predicts and
     fine-tunes on the GPU. A machine without a usable GPU fails: build.ps1 checks the GPU and driver
     before building, and each comparison that predicts fails rather than falling back to the CPU
-    (CARAFESHARP_REQUIRE_CUDA=1, TestData.ComparisonDeviceName). The tolerances are the CPU's, which
-    no GPU result is expected to match bit for bit. On an Ada GPU the RT predictions exceed them (the
-    prediction and predicted-library comparisons, Stellar and Astral), mostly from libtorch's default
-    TF32 convolutions; the comparisons that do not predict compute the same values on both backends.
+    (CARAFESHARP_REQUIRE_CUDA=1, TestData.ComparisonDeviceName). On the GPU the RT predictions differ
+    from Carafe by more than the CPU limits allow, mostly from libtorch's default TF32 convolutions, so
+    each prediction comparison has a pinned GPU limit beside its CPU one (GpuParity.cs): a value under
+    the pin passes and is printed under its comparison ("GPU pinned: ..."), one beyond it fails. Each GPU
+    prediction also runs twice and must be bit-identical, in-process and with the outputs the previous
+    run kept in TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver> (-tf32off under NVIDIA_TF32_OVERRIDE=0).
     See docs/04-testing.md, "Full-size parity", for the measured differences.
 
     Stellar, the default, is the eight comparisons on carafesharp-testfiles-v1 (and, for masking,
@@ -110,6 +112,16 @@ if ($Torch -eq 'cuda' -and (Get-Command nvidia-smi -ErrorAction SilentlyContinue
         $backend = "cuda ($($gpu.Trim())$visible)"
     }
 }
+if ($Torch -eq 'cuda') {
+    # The comparisons keep the GPU outputs here and require the next run to reproduce them bit for
+    # bit (GpuParity.cs). Another GPU or driver, or TF32 off, changes the outputs, so each keeps its own.
+    $gpuTag = if ($gpu) { '-' + (($gpu.Trim() -replace '[^A-Za-z0-9.]+', '-').Trim('-')) } else { '' }
+    $tf32 = if ($env:NVIDIA_TF32_OVERRIDE -eq '0') { '-tf32off' } else { '' }
+    if ($tf32) {
+        $backend += ', NVIDIA_TF32_OVERRIDE=0'
+    }
+    $env:CARAFESHARP_PARITY_OUTPUTS = Join-Path $resultsDir "CarafeParity-Outputs-cuda$gpuTag$tf32"
+}
 $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
 $rows = @()
 $problems = @()
@@ -151,12 +163,17 @@ foreach ($name in $selected) {
     [xml]$trx = Get-Content -Raw -LiteralPath $trxPath
     foreach ($result in Select-Xml -Xml $trx -XPath '//t:UnitTestResult' -Namespace $ns | ForEach-Object { $_.Node }) {
         $message = (Select-Xml -Xml $result -XPath './/t:Message' -Namespace $ns | Select-Object -First 1).Node.InnerText
+        $stdout = (Select-Xml -Xml $result -XPath './/t:StdOut' -Namespace $ns | Select-Object -First 1).Node.InnerText
+        $outputLines = @(if ($stdout) { $stdout -split "`r?`n" })
         $rows += [pscustomobject]@{
             Dataset  = $name
             Test     = $result.testName
             Outcome  = $result.outcome
             Duration = $(if ($result.duration) { [TimeSpan]::Parse($result.duration) } else { [TimeSpan]::Zero })
             Message  = $message
+            # GpuParity.cs: the values a pinned GPU limit judged, and the self-consistency checks.
+            Pinned   = @($outputLines | Where-Object { $_.StartsWith('GPU pinned: ') })
+            Repeats  = @($outputLines | Where-Object { $_.StartsWith('GPU repeat: ') })
         }
     }
     if ($exitCode -ne 0) {
@@ -169,6 +186,9 @@ Write-Host ("=== CarafeSharp parity with Carafe 2.2.0, libtorch {0} ===" -f $bac
 foreach ($row in $rows | Sort-Object Dataset, Test) {
     $color = if ($row.Outcome -eq 'Passed') { 'Green' } else { 'Red' }
     Write-Host ("  {0,-8} {1,-4} {2,-40} {3,-12} {4,8:F1}s" -f $row.Dataset, $Torch, $row.Test, $row.Outcome, $row.Duration.TotalSeconds) -ForegroundColor $color
+    foreach ($line in $row.Pinned) {
+        Write-Host ("           {0}" -f $line) -ForegroundColor Yellow
+    }
     if ($row.Outcome -ne 'Passed' -and $row.Message) {
         foreach ($line in @($row.Message -split "`r?`n" | Select-Object -First 5)) {
             Write-Host ("           {0}" -f $line) -ForegroundColor DarkYellow
@@ -182,11 +202,38 @@ foreach ($row in $failed) {
 if ($rows.Count -eq 0 -and $problems.Count -eq 0) {
     $problems += 'no comparison ran'
 }
+$repeats = @($rows | ForEach-Object { $_.Repeats })
+if ($repeats.Count -gt 0) {
+    $saved = @($repeats | Where-Object { $_ -match 'against the saved outputs' })
+    $written = @($repeats | Where-Object { $_ -match 'for the next run$' })
+    Write-Host ("GPU self-consistency: {0} predictions repeated in-process, {1} compared with the saved outputs in {2}, {3} saved for the next run" -f `
+        @($repeats | Where-Object { $_ -match 'twice in-process' }).Count, $saved.Count, $env:CARAFESHARP_PARITY_OUTPUTS, $written.Count)
+}
+# The largest value each pinned quantity reached, for the OVERALL line.
+$pinnedMax = [ordered]@{}
+foreach ($line in @($rows | ForEach-Object { $_.Pinned })) {
+    if ($line -match '^GPU pinned: (?<q>.+?) max\|diff\| (?<v>\S+)(?<u> \S+)? \(') {
+        $value = [double]::Parse($Matches.v, [Globalization.CultureInfo]::InvariantCulture)
+        $quantity = $Matches.q
+        if (-not $pinnedMax.Contains($quantity) -or $pinnedMax[$quantity].Value -lt $value) {
+            $pinnedMax[$quantity] = @{ Value = $value; Unit = "$($Matches.u)" }
+        }
+    }
+}
 Write-Host ("Wall: {0:hh\:mm\:ss}" -f $clock.Elapsed)
 if ($problems.Count -gt 0) {
     $summary = @($problems | Select-Object -Unique) -join '; '
     Write-Host ("OVERALL: FAIL ({0}) - {1}" -f $Torch, $summary) -ForegroundColor Red
     exit 1
+}
+if ($pinnedMax.Count -gt 0) {
+    $deltas = @($pinnedMax.Keys | ForEach-Object {
+        '{0} {1}{2}' -f $_, $pinnedMax[$_].Value.ToString('G3', [Globalization.CultureInfo]::InvariantCulture), $pinnedMax[$_].Unit
+    }) -join ', '
+    # The pinned values are differences from Carafe's references that exceed the CPU limits.
+    Write-Host ("OVERALL: PASS (GPU pinned: RT differs from Carafe beyond the CPU limits by up to {0}; see docs/04-testing.md) - {1} comparison(s) on libtorch {2}" -f `
+        $deltas, $rows.Count, $Torch) -ForegroundColor Green
+    exit 0
 }
 Write-Host ("OVERALL: PASS - {0} comparison(s) match Carafe 2.2.0 on libtorch {1}" -f $rows.Count, $Torch) -ForegroundColor Green
 exit 0

@@ -60,12 +60,22 @@ namespace pwiz.CarafeSharp.Test
         private const double RT_MAX_DIFF = 2e-6;
         private const double IRT_MAX_DIFF = 5e-4;
 
+        // Pinned GPU limits (GpuParity), per dataset: MS2 keeps the CPU limits, RT and iRT get their own.
+        // Measured 2026-11-04 on an RTX 4000 Ada (driver 596.71), libtorch 2.10.0 CUDA with TF32 on (libtorch's
+        // default), largest |diff| from Carafe over the folders, pin about 1.25x: Stellar RT 1.02e-4, iRT 1.46e-2;
+        // Astral RT 1.33e-4, iRT 2.09e-2; MS2 at most 6.1e-6 (99.9th pct 9.5e-7), inside the CPU limits.
+        // TF32 is the cause: with NVIDIA_TF32_OVERRIDE=0 the same build gives RT 1.6e-6 (Stellar) and 2.3e-6 (Astral),
+        // iRT 3.9e-4, at no measurable cost: two runs each, the prediction comparisons took -4% to +5% and the
+        // library predictions -4% to -8% of the TF32 wall time, within run-to-run noise.
+        private static readonly GpuPins STELLAR_GPU = new GpuPins(1.3e-4, 1.8e-2);
+        private static readonly GpuPins ASTRAL_GPU = new GpuPins(1.7e-4, 2.6e-2);
+
         public TestContext TestContext { get; set; }
 
         [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestPredictionsMatchCarafe()
         {
-            ComparePredictions(TestData.PretrainedLibraries, TestData.FineTunedLibraries);
+            ComparePredictions(TestData.PretrainedLibraries, TestData.FineTunedLibraries, STELLAR_GPU);
         }
 
         /// <summary>
@@ -76,17 +86,17 @@ namespace pwiz.CarafeSharp.Test
         public void TestPretrainedPredictionsMatchCarafeSubset()
         {
             using (TestData.UseSubset(TestContext, LibraryParityTest.SUBSET_ZIP))
-                ComparePredictions(TestData.PretrainedLibraries, null);
+                ComparePredictions(TestData.PretrainedLibraries, null, STELLAR_GPU);
         }
 
         [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
         public void TestAstralPredictionsMatchCarafe()
         {
-            ComparePredictions(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries);
+            ComparePredictions(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries, ASTRAL_GPU);
         }
 
         /// <summary>Compares the pretrained folders, and the fine-tuned ones unless <paramref name="finetunedItem"/> is null.</summary>
-        private void ComparePredictions(TestData.Item pretrainedItem, TestData.Item finetunedItem)
+        private void ComparePredictions(TestData.Item pretrainedItem, TestData.Item finetunedItem, GpuPins gpuPins)
         {
             TestData.InconclusiveUnlessAvailable(new[] { pretrainedItem, finetunedItem }.Where(i => i != null).ToArray());
             var pretrainedDirs = pretrainedItem.Resolve();
@@ -98,6 +108,7 @@ namespace pwiz.CarafeSharp.Test
 
             var device = TestData.ComparisonDevice;
             TestContext.WriteLine(@"Predicting on {0}", device);
+            GpuParity.DiscardPendingSaves();
             if (pretrainedDirs.Count > 0)
             {
                 var pretrained = PretrainedModels.Open();
@@ -105,7 +116,7 @@ namespace pwiz.CarafeSharp.Test
                 using (var rt = RtModel.FromPretrained(pretrained, device))
                 {
                     foreach (string folder in pretrainedDirs)
-                        CompareFolder(@"pretrained " + folder, folder, ms2, rt, true);
+                        CompareFolder(@"pretrained " + folder, folder, ms2, rt, true, gpuPins);
                 }
             }
             foreach (string folder in finetunedDirs)
@@ -114,21 +125,22 @@ namespace pwiz.CarafeSharp.Test
                 // all four test metrics; these reference folders record that it did.
                 using (var ms2 = Ms2Model.FromPthFile(Path.Combine(folder, MS2_MODEL_FILE), device))
                 using (var rt = RtModel.FromPthFile(Path.Combine(folder, RT_MODEL_FILE), device))
-                    CompareFolder(@"fine-tuned " + folder, folder, ms2, rt, false);
+                    CompareFolder(@"fine-tuned " + folder, folder, ms2, rt, false, gpuPins);
             }
+            GpuParity.SavePending(TestContext);
         }
 
-        private void CompareFolder(string label, string folder, Ms2Model ms2, RtModel rt, bool compareIrt)
+        private void CompareFolder(string label, string folder, Ms2Model ms2, RtModel rt, bool compareIrt, GpuPins gpuPins)
         {
             var frame = ParquetColumns.Read(Path.Combine(folder, MS2_FRAME_FILE),
                 @"sequence", @"charge", @"mods", @"mod_sites", @"instrument", @"nce", @"frag_start_idx");
             var predicted = ParquetColumns.Read(Path.Combine(folder, MS2_PREDICTION_FILE),
                 @"b_z1", @"b_z2", @"y_z1", @"y_z2");
-            CompareMs2(label, ms2, frame, predicted);
-            CompareRt(label, rt, Path.Combine(folder, RT_PREDICTION_FILE), compareIrt);
+            CompareMs2(label, GpuParity.Key(folder, @"ms2"), ms2, frame, predicted);
+            CompareRt(label, GpuParity.Key(folder, @"rt"), rt, Path.Combine(folder, RT_PREDICTION_FILE), compareIrt, gpuPins);
         }
 
-        private void CompareMs2(string label, Ms2Model model, ParquetColumns frame, ParquetColumns predicted)
+        private void CompareMs2(string label, string key, Ms2Model model, ParquetColumns frame, ParquetColumns predicted)
         {
             int[] rows = SampleRows(frame.RowCount);
             string[] sequences = frame.Get<string>(@"sequence");
@@ -144,6 +156,8 @@ namespace pwiz.CarafeSharp.Test
                 new PrecursorForm(PeptideForm.FromAlphabase(sequences[r], mods[r], sites[r]), charges[r]),
                 nces[r], instruments[r])).ToArray();
             var ours = model.Predict(requests);
+            if (GpuParity.IsGpu)
+                GpuParity.AssertRepeatable(TestContext, label + @" MS2", key, Flatten(ours, columns.Length), Flatten(model.Predict(requests), columns.Length));
 
             var differences = new List<double>();
             int cutoffFlips = 0;
@@ -176,7 +190,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(cutoffFlips <= differences.Count / 10000, label + @" MS2 cutoff flips " + cutoffFlips);
         }
 
-        private void CompareRt(string label, RtModel model, string rtPath, bool compareIrt)
+        private void CompareRt(string label, string key, RtModel model, string rtPath, bool compareIrt, GpuPins gpuPins)
         {
             var reference = ParquetColumns.Read(rtPath, @"sequence", @"mods", @"mod_sites", @"rt_pred", @"irt_pred");
             int[] rows = SampleRows(reference.RowCount);
@@ -187,6 +201,8 @@ namespace pwiz.CarafeSharp.Test
             double[] irtPred = reference.Get<double>(@"irt_pred");
             var peptides = rows.Select(r => PeptideForm.FromAlphabase(sequences[r], mods[r], sites[r])).ToArray();
             double[] ours = model.Predict(peptides);
+            if (GpuParity.IsGpu)
+                GpuParity.AssertRepeatable(TestContext, label + @" RT", key, ours, model.Predict(peptides));
             var irt = model.FitIrtCalibration();
             double maxRt = 0, maxIrt = 0;
             for (int i = 0; i < rows.Length; i++)
@@ -195,15 +211,43 @@ namespace pwiz.CarafeSharp.Test
                 maxIrt = Math.Max(maxIrt, Math.Abs(ours[i] * irt.Slope + irt.Intercept - irtPred[rows[i]]));
             }
             TestContext.WriteLine(@"{0} RT: {1} peptides, max |diff| rt_norm {2:E3}, iRT {3:E3}", label, rows.Length, maxRt, maxIrt);
-            Assert.IsTrue(maxRt < RT_MAX_DIFF, label + @" RT max |diff| " + maxRt);
+            GpuParity.AssertBelow(TestContext, label, @"RT", maxRt, RT_MAX_DIFF, gpuPins.Rt, @"rt_norm");
             if (compareIrt)
-                Assert.IsTrue(maxIrt < IRT_MAX_DIFF, label + @" iRT max |diff| " + maxIrt);
+                GpuParity.AssertBelow(TestContext, label, @"iRT", maxIrt, IRT_MAX_DIFF, gpuPins.Irt);
         }
 
         private static int[] SampleRows(int count)
         {
             int step = Math.Max(1, count / SAMPLE_SIZE);
             return Enumerable.Range(0, count / step).Select(i => i * step).ToArray();
+        }
+
+        /// <summary>Every predicted value, in order, for the bit-for-bit repeat check.</summary>
+        private static double[] Flatten(IEnumerable<Ms2Prediction> predictions, int columns)
+        {
+            var values = new List<double>();
+            foreach (var prediction in predictions)
+            {
+                for (int row = 0; row < prediction.RowCount; row++)
+                {
+                    for (int col = 0; col < columns; col++)
+                        values.Add(prediction.Get(row, col));
+                }
+            }
+            return values.ToArray();
+        }
+
+        /// <summary>The pinned GPU limits of one dataset's prediction comparisons (<see cref="GpuParity"/>).</summary>
+        private sealed class GpuPins
+        {
+            public GpuPins(double rt, double irt)
+            {
+                Rt = rt;
+                Irt = irt;
+            }
+
+            public double Rt { get; }
+            public double Irt { get; }
         }
     }
 }

@@ -156,7 +156,7 @@ new version.
 
 | Pass | Command | Tests | Time (i9-14900) |
 |---|---|---|---|
-| CPU | `build.ps1` | 108, with no test data: the subset parity twins and `TestRegressionSubset` run | about 2 min |
+| CPU | `build.ps1` | every test outside the `Cuda`, `Astral`, `Regression` and `FullParity` categories, none skipped or inconclusive, with no test data: the subset parity twins and `TestRegressionSubset` run | about 2 min |
 | Full-size parity | `scripts/Compare-CarafeParity.ps1 [-Dataset Astral\|All]` | the `FullParity` category, 8 on the Stellar packages, or the `Astral` category, 4 on the Astral package (see "Full-size parity") | Stellar about 4 min, Astral about 4 min, after the fetch |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU, and the subset fine-tuned twice on the GPU | about 2 min |
 | Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral about 36 min on the CPU |
@@ -205,27 +205,47 @@ kept as `TestResults/CarafeParity-<Dataset>-<cpu|cuda>.trx`, and every report li
 **`-Torch cuda`** builds the CUDA libtorch (`build.ps1 -Torch cuda`, with its GPU and driver preflight) and
 runs the same comparisons with `CARAFESHARP_REQUIRE_CUDA=1`, under which `TestData.ComparisonDeviceName` puts
 every prediction and fine-tune on the GPU and fails a comparison whose GPU is not usable, rather than letting
-it pass on the CPU. The tolerances are the CPU's. Carafe 2.2.0 wrote the reference values on CUDA (torch
-2.5.1), but neither backend is expected to reproduce them bit for bit: libtorch versions and kernels round
-differently. Measured on an RTX 4000 Ada (driver 596.71) and an i9-14900, 2026-11-03, largest difference
-over the reference folders:
+it pass on the CPU. It is a passing gate that pins today's GPU behavior (`GpuParity.cs`):
 
-| Comparison (limit) | CPU | CUDA | CUDA, `NVIDIA_TF32_OVERRIDE=0` |
+- **Self-consistency, zero tolerance.** Each prediction comparison (predictions and predicted library, Stellar
+  and Astral) predicts twice in-process and requires every RT and fragment value, and the library TSV, to be
+  bit-identical; it also compares with the outputs the previous CUDA run saved in
+  `TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver>` (with `-tf32off` under `NVIDIA_TF32_OVERRIDE=0`), and
+  saves them, once the comparison has passed, when there are none. Any difference fails. Delete the folder to
+  re-baseline after a change meant to move the GPU outputs.
+- **Pinned GPU limits.** A value beyond its CPU limit passes on the GPU while it stays under the GPU pin
+  beside it in the test (measured value, date, GPU and cause in the comment), and fails beyond it, so the pin
+  is a regression check of the GPU path. MS2 keeps the CPU limits.
+- **The delta is reported.** Each value a pin decided prints under its comparison, for example
+  `GPU pinned: RT max|diff| 1.33E-004 rt_norm (CPU limit 2E-06; GPU pin 0.00017, TF32)`, and the summary reads
+  `OVERALL: PASS (GPU pinned: RT differs from Carafe beyond the CPU limits by up to ...; see docs/04-testing.md)`.
+
+**GPU parity.** Carafe 2.2.0 wrote the reference values on CUDA (torch 2.5.1), but neither backend reproduces
+them bit for bit: libtorch versions and kernels round differently. CarafeSharp on the CPU stays within the
+limits below; on the GPU, RT does not. Measured 2026-11-04 on an RTX 4000 Ada (driver 596.71) and an
+i9-14900, libtorch 2.10.0, largest difference from Carafe over the reference folders:
+
+| Comparison (CPU limit) | CPU | CUDA (TF32 on, the default) | CUDA, `NVIDIA_TF32_OVERRIDE=0` |
 |---|---|---|---|
-| Stellar predictions, MS2 (1.5e-5) | 6.3e-6 | 1.9e-6 (first folder) | 6.1e-6 |
-| Stellar predictions, RT in rt_norm (2e-6) | 2.4e-7 | **1.0e-4, fails** | 1.6e-6 |
-| Stellar predicted library, TSV RT (0.011 min) | 0.01 | **0.04, fails** | 0.01 |
-| Stellar predicted library, .blib RT (1e-3) | 3.2e-4 | not reached | **7.4e-3, fails** |
-| Astral predictions, MS2 (1.5e-5) | 2.6e-6 | 1.7e-6 | 1.7e-6 |
-| Astral predictions, RT in rt_norm (2e-6) | 3.3e-7 | **1.3e-4, fails** | **2.3e-6, fails** |
-| Astral library, TSV RT (0.011 min) | 0.01 | **0.10, fails** | 0.01 |
+| Stellar predictions, MS2 (1.5e-5) | 6.3e-6 | 6.1e-6 | 6.1e-6 |
+| Stellar predictions, RT in rt_norm (2e-6) | 2.4e-7 | 1.0e-4 (pin 1.3e-4) | 1.6e-6 |
+| Stellar predictions, iRT (5e-4) | 3.5e-5 | 1.5e-2 (pin 1.8e-2) | 2.2e-4 |
+| Stellar predicted library, TSV RT (0.011 min) | 0.01 | 0.77, `carafe_main_varmod` (pin 0.95); 0.03-0.04 elsewhere | 0.01 |
+| Stellar predicted library, .blib RT (1e-3 min) | 3.2e-4 | 0.76, `carafe_main_varmod` (pin 0.95); 0.03-0.04 elsewhere | 7.4e-3, beyond the CPU limit |
+| Astral predictions, MS2 (1.5e-5) | 2.6e-6 | 2.1e-6 | 2.1e-6 |
+| Astral predictions, RT in rt_norm (2e-6) | 3.3e-7 | 1.3e-4 (pin 1.7e-4) | 2.3e-6, beyond the CPU limit |
+| Astral predictions, iRT (5e-4) | 4.9e-5 | 2.1e-2 (pin 2.6e-2) | 3.7e-4 |
+| Astral library, TSV RT (0.011 min) | 0.01 | 0.10 (pin 0.13) | 0.01 |
 
-The other comparisons (peptidoforms, fragment m/z, assembly, the FASTA builds, masking, and the fine-tune
-checks' pretrained metrics) pass on both backends: 6 of 8 Stellar and 2 of 4 Astral on CUDA. The RT model's
-convolutions and LSTM run in TF32 on Ampere and newer GPUs by libtorch's default, which accounts for most
-of the RT difference; the rest is the GPU's own rounding, which the CPU-derived limits do not allow for.
-So a CUDA run is expected to fail the prediction and predicted-library comparisons until they carry GPU
-limits of their own, and a change is judged on its CPU run.
+All 12 comparisons pass on CUDA under the pins, and every GPU prediction repeated bit for bit, in-process and
+across runs (19 of 19 checks, four runs). TF32, which libtorch enables by default for cuDNN convolutions and
+LSTMs on Ampere and newer GPUs, causes most of the RT delta: turning it off with `NVIDIA_TF32_OVERRIDE=0`
+narrows RT to 2.3e-6 in rt_norm and the library TSV to the CPU's 0.01 min, at no measurable cost on this RTX
+4000 Ada (two runs each, the prediction comparisons took -4% to +5% and the library predictions -4% to -8%
+of the TF32 time, within run-to-run noise). It narrows the gap but does not close it: Astral RT and the
+`carafe_main_varmod` .blib RT stay just beyond the CPU limits. If full GPU/CPU parity becomes a goal, the way to
+close the gap is to disable TF32 in CarafeSharp's inference and then give the GPU only the small allowance
+plain GPU rounding needs.
 
 | Comparison (`FullParity`) | Checks | Subset twin, every commit |
 |---|---|---|
