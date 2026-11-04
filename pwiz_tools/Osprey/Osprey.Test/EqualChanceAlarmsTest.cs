@@ -120,6 +120,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(EqualChanceStatus.cannot_assess, tooFew.Status);
             Assert.AreEqual(EqualChanceGuard.too_few_targets, tooFew.Guard);
 
+            // No decoys is absent input, however many targets there are.
+            var noDecoys = Histogram(Mixture(0.7, -2, 1, 3, 1.5, 500), Normal(-2, 1, 0));
+            Assert.AreEqual(EqualChanceStatus.not_applicable, EqualChanceAlarms.BuildNullAlignment(noDecoys).Status);
+
+            // Every target in one bin: nothing to fit.
+            var oneBin = Histogram(Normal(0.05, 0.001, 5000), Normal(-2, 1, 5000));
+            var degenerate = EqualChanceAlarms.BuildNullAlignment(oneBin);
+            Assert.AreEqual(EqualChanceStatus.cannot_assess, degenerate.Status);
+            Assert.AreEqual(EqualChanceGuard.degenerate, degenerate.Guard);
+
             Assert.AreEqual(EqualChanceStatus.not_applicable, EqualChanceAlarms.BuildNullAlignment(null).Status);
         }
 
@@ -132,7 +142,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(EqualChanceStatus.ok, fair.Status);
             Assert.IsTrue(fair.PooledN >= EqualChanceThresholds.QBAND_MIN_N);
             Assert.IsTrue(Math.Abs(fair.DeltaBalance) <= EqualChanceThresholds.QBAND_DELTA_BALANCE_ALARM);
-            Assert.AreEqual(EqualChanceThresholds.QBAND_BREAKS.Length - 1, fair.BandN.Length);
+            Assert.AreEqual(EqualChanceThresholds.QBAND_BREAKS.Count - 1, fair.BandN.Length);
             // The most confident band is almost all targets.
             Assert.IsTrue(fair.BandDecoyFraction[0] < 0.05);
 
@@ -269,6 +279,8 @@ namespace pwiz.Osprey.Test
         {
             if (z < -10)
                 return 0;
+            if (z > 10)
+                return 1;
             const int steps = 4000;
             double a = -10, h = (z - a) / steps, sum = 0;
             for (int i = 0; i <= steps; i++)

@@ -84,14 +84,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (populated < 2)
                 return null;
 
-            double mean = 0;
-            for (int i = 0; i < counts.Length; i++)
-                mean += centers[i] * counts[i];
-            mean /= n;
-            double var = 0;
-            for (int i = 0; i < counts.Length; i++)
-                var += counts[i] * (centers[i] - mean) * (centers[i] - mean);
-            double sd = Math.Sqrt(var / n);
+            Moments(centers, counts, out _, out double sd);
             double varFloor = binWidth * binWidth / 12;
 
             EqualChanceMixtureFit best = null;
@@ -107,6 +100,23 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 }
             }
             return best;
+        }
+
+        /// <summary>Count-weighted mean and (population) standard deviation of bin centers.</summary>
+        public static void Moments(double[] x, long[] w, out double mean, out double std)
+        {
+            long n = 0;
+            mean = 0;
+            for (int i = 0; i < x.Length; i++)
+            {
+                n += w[i];
+                mean += x[i] * w[i];
+            }
+            mean /= n;
+            double var = 0;
+            for (int i = 0; i < x.Length; i++)
+                var += w[i] * (x[i] - mean) * (x[i] - mean);
+            std = Math.Sqrt(var / n);
         }
 
         /// <summary>

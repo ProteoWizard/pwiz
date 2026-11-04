@@ -2231,7 +2231,7 @@ function renderPerFile(b){
 // not_applicable (input absent for this pass - e.g. pass 2 has no retrained model).
 const EC_LABEL={ok:"ok",alarm:"ALARM",cannot_assess:"cannot assess",not_applicable:"n/a"};
 const EC_CLASS={ok:"good",alarm:"bad",cannot_assess:"warn",not_applicable:""};
-const EC_GUARD={too_few_targets:"too few targets to fit a mixture",not_converged:"the mixture fit did not converge",
+const EC_GUARD={too_few_targets:"too few targets to fit a mixture",degenerate:"the target scores fill fewer than two bins",not_converged:"the mixture fit did not converge",
   component_weight:"one mixture component is negligible",not_separated:"insufficient separation to assess: the two components overlap"};
 function renderEqualChance(b){
   const card=document.getElementById("ecCard");const ec=b.equalChance;
@@ -2241,7 +2241,8 @@ function renderEqualChance(b){
   const sg=v=>(Number(v)>0?"+":"")+fmt(v,2);
   const rows=[
     {name:"Null alignment (decoy vs f_false)",c:na,
-      measured:na.status==="cannot_assess"?(EC_GUARD[na.guard]||"")+
+      measured:na.status==="not_applicable"?"no composite score distribution or no decoys for this pass":
+        na.status==="cannot_assess"?(EC_GUARD[na.guard]||"")+
         (na.fit?" (Ashman D "+fmt(na.fit.separation,2)+")":""):
         "location "+sg(na.locationShift)+"σ, scale ×"+fmt(na.scaleRatio,2)+", J "+fmt(na.symmetricDivergence,3),
       threshold:"|location| > "+fmt(na.locationThreshold,1)+"σ or scale beyond ×"+fmt(na.scaleThreshold,1)},

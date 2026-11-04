@@ -50,7 +50,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public const double SCALE_RATIO_ALARM = 1.5;
 
         /// <summary>diagFDR's q-band edges (<c>dfdr_equal_chance_qbands</c> defaults).</summary>
-        public static readonly double[] QBAND_BREAKS = { 0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 };
+        public static readonly IReadOnlyList<double> QBAND_BREAKS = Array.AsReadOnly(new[] { 0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 });
         /// <summary>The low-confidence region pooled for the balance test (diagFDR <c>low_conf</c>).</summary>
         public const double QBAND_POOLED_LO = 0.2;
         public const double QBAND_POOLED_HI = 0.5;
@@ -92,6 +92,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
     {
         none,
         too_few_targets,
+        /// <summary>Fewer than two populated bins: no mixture can be fitted at all.</summary>
+        degenerate,
         not_converged,
         component_weight,
         not_separated,
@@ -263,6 +265,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             long[] targets = Sum(h.Target, h.PTarget, nb);
             long[] decoys = Sum(h.Decoy, h.PDecoy, nb);
             check.NDecoy = decoys.Sum();
+            if (check.NDecoy == 0)
+                return check;   // no decoys to compare: absent input, whatever the targets
             long nTarget = targets.Sum();
             check.Status = EqualChanceStatus.cannot_assess;
             if (nTarget < EqualChanceThresholds.MIXTURE_MIN_TARGETS)
@@ -273,14 +277,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             var fit = EqualChanceMixtureFit.Fit(centers, targets, edges[1] - edges[0]);
             check.Fit = fit;
             check.Guard = GuardFit(fit);
-            if (check.Guard != EqualChanceGuard.none || check.NDecoy == 0)
-            {
-                if (check.NDecoy == 0)
-                    check.Status = EqualChanceStatus.not_applicable;
+            if (check.Guard != EqualChanceGuard.none)
                 return check;
-            }
 
-            Moments(centers, decoys, out double dMean, out double dStd);
+            // Decoy moments over the same binned, range-clipped histogram the null was fitted
+            // on (not the exact DecoyMean / DecoyStd of the raw scores), so the two sides of the
+            // comparison see the same truncation and quantization.
+            EqualChanceMixtureFit.Moments(centers, decoys, out double dMean, out double dStd);
             check.DecoyMean = dMean;
             check.DecoyStd = dStd;
             check.LocationShift = (dMean - fit.FalseMean) / fit.FalseStd;
@@ -290,7 +293,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             long[] entrapment = Sum(h.PTarget, null, nb);
             if (entrapment.Sum() > 0)
             {
-                Moments(centers, entrapment, out double eMean, out _);
+                EqualChanceMixtureFit.Moments(centers, entrapment, out double eMean, out _);
                 check.EntrapmentLocationShift = (eMean - fit.FalseMean) / fit.FalseStd;
                 check.DecoyVsEntrapmentShift = (dMean - eMean) / fit.FalseStd;
             }
@@ -304,11 +307,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public static EqualChanceView.QBandBalanceCheck BuildQBandBalance(ModelDiagnosticsData.ScoreHistogram h)
         {
             var breaks = EqualChanceThresholds.QBAND_BREAKS;
-            int nBands = breaks.Length - 1;
+            int nBands = breaks.Count - 1;
             var check = new EqualChanceView.QBandBalanceCheck
             {
                 Status = EqualChanceStatus.not_applicable,
-                Breaks = (double[])breaks.Clone(),
+                Breaks = breaks.ToArray(),
                 BandN = new long[nBands],
                 BandDecoys = new long[nBands],
                 BandDecoyFraction = Enumerable.Repeat(double.NaN, nBands).ToArray(),
@@ -428,12 +431,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         private static EqualChanceGuard GuardFit(EqualChanceMixtureFit fit)
         {
-            if (fit == null || !fit.Converged)
-                return EqualChanceGuard.not_converged;
+            if (fit == null)
+                return EqualChanceGuard.degenerate;
+            // Weight and separation first: a slowly converging fit is usually an overlapping one,
+            // and "insufficient separation" is the reason worth reporting.
             if (Math.Min(fit.PiFalse, 1 - fit.PiFalse) < EqualChanceThresholds.MIXTURE_MIN_COMPONENT_WEIGHT)
                 return EqualChanceGuard.component_weight;
             if (!(fit.Separation >= EqualChanceThresholds.MIXTURE_MIN_SEPARATION))
                 return EqualChanceGuard.not_separated;
+            if (!fit.Converged)
+                return EqualChanceGuard.not_converged;
             return EqualChanceGuard.none;
         }
 
@@ -462,19 +469,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     s[i] += b[i];
             }
             return s;
-        }
-
-        private static void Moments(double[] x, long[] w, out double mean, out double std)
-        {
-            long n = w.Sum();
-            mean = 0;
-            for (int i = 0; i < x.Length; i++)
-                mean += x[i] * w[i];
-            mean /= n;
-            double var = 0;
-            for (int i = 0; i < x.Length; i++)
-                var += w[i] * (x[i] - mean) * (x[i] - mean);
-            std = Math.Sqrt(var / n);
         }
 
         // Jeffreys (symmetric KL) divergence sum (p - q) ln(p / q) between the area-normalized
@@ -512,9 +506,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         }
 
         // The band (lo, hi] holding q, the first band closed at 0; -1 past the last break.
-        private static int BandIndex(double[] breaks, double q)
+        private static int BandIndex(IReadOnlyList<double> breaks, double q)
         {
-            for (int b = 0; b < breaks.Length - 1; b++)
+            for (int b = 0; b < breaks.Count - 1; b++)
             {
                 if (q <= breaks[b + 1] && (b == 0 || q > breaks[b]))
                     return b;

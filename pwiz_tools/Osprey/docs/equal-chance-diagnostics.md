@@ -30,14 +30,15 @@ with it is not circular. Four deterministic starts (target quantile pairs 0.25/0
 with the highest log-likelihood wins; variances are floored at the bin-width variance.
 
 **Guard.** The fit is accepted as a null only when all hold, else `cannot_assess` with the
-reason:
+first reason that fails, in this order (a pass with no decoys is `not_applicable` first):
 
 | Guard | Condition | Constant |
 |---|---|---|
 | `too_few_targets` | targets in the histogram >= 1000 | `MIXTURE_MIN_TARGETS` |
-| `not_converged` | EM converged (relative log-likelihood change <= 1e-10) | |
+| `degenerate` | the targets fill at least two bins | |
 | `component_weight` | `min(pi_false, 1 - pi_false) >= 0.02` | `MIXTURE_MIN_COMPONENT_WEIGHT` |
 | `not_separated` | Ashman's `D = sqrt(2) abs(mu_true - mu_false) / sqrt(s_false^2 + s_true^2) >= 2` | `MIXTURE_MIN_SEPARATION` |
+| `not_converged` | EM converged (relative log-likelihood change <= 1e-10 within 1000 iterations) | |
 
 **Metrics.** Decoy moments are taken over the decoy histogram (decoys plus entrapment decoys)
 on the same bins.
