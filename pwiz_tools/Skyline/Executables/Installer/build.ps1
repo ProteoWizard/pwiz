@@ -114,7 +114,7 @@ Write-Host "==> $appName $appVersion ($informationalVersion) from $SkylineBinDir
 # 2. Stage a filtered copy. Everything Skyline builds next to itself ships - vendor
 #    readers, BlibBuild, msconvert, Hardklor, the localized satellites - except:
 #      <name>.xml       NuGet doc-comment file beside a <name>.dll / <name>.exe. Data XML
-#                       with no such sibling (unimod.xml, modifications.xml, which BlibBuild
+#                       with no such sibling (modifications.xml, which BlibBuild
 #                       reads from its own directory) ships.
 #      runtimes\<rid>   native packages' cross-platform copies; x64 Windows keeps win-x64 + win
 #      <rid>\           a self-contained publish folder at the bin root (a stray
@@ -173,7 +173,7 @@ foreach ($ico in @('SkylineDoc.ico', 'SkylineData.ico', 'SkylineDocPointer.ico')
     Copy-Item (Join-Path $skylineDir $ico) $stagingDir
 }
 Write-Host "    $copied files ($([math]::Round($bytesCopied/1MB, 1)) MB), $([math]::Round($bytesSkipped/1MB, 1)) MB skipped"
-foreach ($dataXml in @('unimod.xml', 'modifications.xml')) {
+foreach ($dataXml in @('modifications.xml')) {
     if (-not (Test-Path (Join-Path $stagingDir $dataXml))) { throw "$dataXml did not make it into the stage; BlibBuild needs it." }
 }
 if (Test-Path (Join-Path $stagingDir 'coreclr.dll')) {
