@@ -445,7 +445,11 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       library is present, the amber curve on the <b>right axis</b> is the <b>entrapment-measured FDP of each k-slice</b>
       &mdash; the contamination fraction of the precursors detected in exactly k runs (dashed line = the nominal run FDR).
       It rises at low k and falls toward the reproducible k=N peak, and it is the adjudicator for whether the singletons
-      that survive the experiment-wide gate are real rare biology or over-admitted 1-hit-wonders.</p>
+      that survive the experiment-wide gate are real rare biology or over-admitted 1-hit-wonders. The dashed indigo curve is
+      the same per-slice FDP <b>estimated from the decoys</b>, on every dataset: decoys detected in exactly k runs (each
+      counted by its own per-run detections, by the same rule as the targets) over the targets detected in exactly k runs.
+      Where an entrapment library is present the two curves should roughly agree. Pass&nbsp;1 only: in Pass&nbsp;2, gap-fill
+      moves passing targets to higher k and not decoys.</p>
     <div class="legend" id="runHistLegend"></div>
     <div class="chartbox" id="runHistChart"></div>
     <p class="note" id="runHistNote"></p>
@@ -494,6 +498,22 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="legend" id="unionFdpLegend"></div>
     <div class="chartbox" id="unionFdpChart"></div>
     <p class="note" id="unionFdpNote"></p>
+  </div>
+  <div class="card" id="decoyFloorCard" style="display:none">
+    <h2>Decoy-estimated FDP vs required reproducibility</h2>
+    <p class="desc">The FDP of the precursors you would keep by requiring detection in <b>&ge;&nbsp;k runs</b>, estimated from
+      the <b>decoys</b> &mdash; so it needs no entrapment library. Each decoy is counted by its <b>own</b> per-run detections
+      under the same gate and rule as the targets, so decoys pile up at low k as false targets do;
+      the decoy count over the target count of the retained set estimates its contamination:
+      FDP(&ge;k)&nbsp;=&nbsp;&Sigma;<sub>j&ge;k</sub>N<sub>D</sub>(j)&nbsp;/&nbsp;&Sigma;<sub>j&ge;k</sub>N<sub>T</sub>(j).
+      At k=1 this is the plain decoy/target ratio of everything reported; it falls as the floor rises and false single-run
+      detections drop out. Both q scopes are shown at once (the panel does not follow the toggle). Dashed line = the nominal
+      run FDR. The per-k form is the decoy curve on the histogram above. An estimate to read as a trend, not a q-value, and
+      Pass&nbsp;1 only (Pass&nbsp;2 gap-fill moves targets, not decoys, to higher k).</p>
+    <div class="kpis" id="decoyFloorKpis"></div>
+    <div class="legend" id="decoyFloorLegend"></div>
+    <div class="chartbox" id="decoyFloorChart"></div>
+    <p class="note" id="decoyFloorNote"></p>
   </div>
   <!-- CAL content for the Reproducibility tab: an ALL-FILES overview (not per-file
        selection) to spot an outlier file across 82-500 files. Per-file scalars are
@@ -602,6 +622,18 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="desc">Best-per-precursor <b>population counts</b> &mdash; not q-gated, so these are the same
       regardless of the Pass&nbsp;1&nbsp;/&nbsp;Pass&nbsp;2 switch.</p>
     <div class="kpis" id="sumKpis"></div>
+  </div>
+  <div class="card" id="ecCard">
+    <h2>Equal-chance alarms</h2>
+    <p class="desc">Automated checks of the target-decoy <b>equal-chance</b> assumption (an incorrect match is as
+      likely to land on a decoy as on a false target), which fails silently when it fails. <b>Null alignment</b>
+      compares the decoys with <i>f_false</i>, the lower component of a two-Gaussian fit to the <b>target</b>
+      composite scores alone (so decoy-independent); <b>q-band balance</b> is diagFDR's decoy fraction in the
+      low-confidence q band; the <b>paired coin</b> is the entrapment-pair decoy-win fraction; <b>decoy support</b>
+      is the decoys each run accepts at the run FDR. Diagnostic only &mdash; no FDR result reads these.</p>
+    <div class="kpis" id="ecKpis"></div>
+    <div id="ecTable"></div>
+    <p class="note" id="ecNote"></p>
   </div>
   <div class="card">
     <h2>Per-file passing precursors</h2>
@@ -737,7 +769,7 @@ function passBundle(p){
     features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,trainingSet:D.trainingSet||null,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
     fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
-    coAssignment:D.coAssignment};
+    coAssignment:D.coAssignment,equalChance:D.equalChance?D.equalChance.pass1:null};
   const m=D.pass2.model;   // null under confidence-transfer mode
   return {pass:2,label:"2nd pass",desc:"post-reconciliation reported pool",
     hasStructural:!!m,
@@ -745,7 +777,7 @@ function passBundle(p){
     trainingSet:m?(m.trainingSet||null):null,
     densityRatio:D.pass2.densityRatio,winFraction:D.pass2.winFraction,
     fdpViews:D.pass2.fdpViews,idYield:D.pass2.idYield,crossRun:D.pass2.crossRun,perFile:D.pass2.perFile,
-    coAssignment:D.pass2.coAssignment};
+    coAssignment:D.pass2.coAssignment,equalChance:D.equalChance?D.equalChance.pass2:null};
 }
 const PASSES=[passBundle(1)];
 if(D.pass2)PASSES.push(passBundle(2));
@@ -849,6 +881,7 @@ function renderPass(){
   renderReproTab(b);
   renderCompetitionTab(b);
   renderPerFile(b);
+  renderEqualChance(b);
 }
 
 // Shared feature-contribution table (Feature | Coefficient | Contribution bar).
@@ -1519,7 +1552,7 @@ function renderReproTab(b){
   const sel0=document.getElementById("reproScopeSel");
   if(!hasCross){
     if(sel0)sel0.style.display="none";
-    ["detByRunCard","runHistCard","frontierCard","yieldCutoffCard","unionFdpCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
+    ["detByRunCard","runHistCard","frontierCard","yieldCutoffCard","unionFdpCard","decoyFloorCard"].forEach(id=>{const c=document.getElementById(id);if(c)c.style.display="none";});
     return;
   }
   if(sel0)sel0.style.display="";
@@ -1529,7 +1562,7 @@ function renderReproTab(b){
   const N=cr.perRun.perRunCount.length;
   const view=()=>scope===0?cr.experiment:cr.perRun;                       // CrossRunView for current scope
   const detOff={bars:false,union:false,inter:false,half:false};
-  const histOff={ent:false};   // entrapment overlay on the run-count histogram
+  const histOff={ent:false,dec:false};   // entrapment / decoy FDP overlays on the run-count histogram
 
   function drawDet(){
     if(!hasCross)return;
@@ -1575,10 +1608,15 @@ function renderReproTab(b){
     // manifest is present (both arrays null on a plain target+decoy run).
     const eh=v.entrapmentRunCountHistogram, fdp=v.entrapmentFdpByRunCount, hasEnt=!!(eh&&fdp);
     const showEnt=hasEnt&&!histOff.ent;
+    // Decoy-estimated per-k FDP (#4489): decoys counted by their OWN per-run detections under
+    // the same gate, so it needs no entrapment library. Absent only in a report written before it.
+    const dh=v.decoyRunCountHistogram, dfdp=v.decoyFdpByRunCount, hasDec=!!(dh&&dfdp);
+    const showDec=hasDec&&!histOff.dec;
+    const hasRight=hasEnt||hasDec;
     // Reserve a wider right margin when the FDP axis is present so its tick labels
-    // ("40%") and rotated title clear the SVG edge. Keyed on hasEnt (not showEnt) so
-    // toggling the curve off via the legend doesn't reflow the chart.
-    const W=700,Hh=330,rm=hasEnt?62:20,box={l:64,t:16,w:W-64-rm,h:Hh-64};
+    // ("40%") and rotated title clear the SVG edge. Keyed on hasRight (not showEnt/showDec)
+    // so toggling a curve off via the legend doesn't reflow the chart.
+    const W=700,Hh=330,rm=hasRight?62:20,box={l:64,t:16,w:W-64-rm,h:Hh-64};
     const host=document.getElementById("runHistChart");host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
     // Left axis: real-target counts only (the entrapment counts are far smaller and
     // would be invisible on this scale -- they get their own right axis below, as a rate).
@@ -1597,31 +1635,37 @@ function renderReproTab(b){
     // where the raw entrapment counts (dwarfed by the real bars) could not. High at low k,
     // ~0 at the reproducible k=N peak; a faint dashed line marks the nominal run FDR -- the
     // curve towering over it IS the miscalibration. Empty k-slices (NaN) break the curve.
-    if(showEnt){
-      // Scale the FDP axis to the max across BOTH scopes (not just the current view), so
-      // the axis is stable and flipping the toggle makes the curve visibly rise/fall
+    if(showEnt||showDec){
+      // Scale the FDP axis to the max across BOTH scopes (not just the current view) and both
+      // curves, so the axis is stable and flipping the toggle makes a curve visibly rise/fall
       // rather than both scopes filling the plot identically (a comparison toggle needs a
       // shared axis to read as a change).
       let fmax=D.runFdr*2;
-      [cr.perRun,cr.experiment].forEach(vv=>{const a=vv&&vv.entrapmentFdpByRunCount;if(!a)return;
-        for(let k=0;k<a.length;k++){const f=a[k]==null?NaN:Number(a[k]);if(!isNaN(f))fmax=Math.max(fmax,f);}});
+      [cr.perRun,cr.experiment].forEach(vv=>{if(!vv)return;
+        [vv.entrapmentFdpByRunCount,vv.decoyFdpByRunCount].forEach(a=>{if(!a)return;
+          for(let k=0;k<a.length;k++){const f=a[k]==null?NaN:Number(a[k]);if(!isNaN(f))fmax=Math.max(fmax,f);}});});
       const fdpMax=fmax*1.15;
       const yR=f=>box.t+box.h-(f/fdpMax)*box.h;
+      // The axis takes the entrapment amber when that curve is there, else the decoy curve's color.
+      const axC=hasEnt?COL.warn:COL.accent;
       ticks(0,fdpMax,5).forEach(t=>{if(t<0)return;
-        E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:COL.warn,"font-size":"10"})
+        E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:axC,"font-size":"10"})
           .textContent=pct(t,fdpMax<0.1?1:0);});
-      E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:COL.warn,opacity:.5});
+      E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:axC,opacity:.5});
       const tx=box.l+box.w+40;   // right of the numeric tick labels
-      E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:COL.warn,
-        transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent="entrapment FDP";
+      E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:axC,
+        transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent=hasEnt&&hasDec?"FDP":hasEnt?"entrapment FDP":"decoy FDP";
       if(D.runFdr<=fdpMax)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:yR(D.runFdr),y2:yR(D.runFdr),
-        stroke:COL.warn,"stroke-dasharray":"2 4",opacity:.55});
-      let p="",started=false;
-      for(let k=0;k<N;k++){const f=fdp[k]==null?NaN:Number(fdp[k]);
-        if(isNaN(f)){started=false;continue;}
-        p+=(started?"L":"M")+sc.x(k+1).toFixed(1)+" "+yR(f).toFixed(1)+" ";started=true;
-        if(N<=40)E(s,"circle",{cx:sc.x(k+1),cy:yR(f),r:2.6,fill:COL.warn});}
-      E(s,"path",{d:p,fill:"none",stroke:COL.warn,"stroke-width":2});}
+        stroke:axC,"stroke-dasharray":"2 4",opacity:.55});
+      // One rate curve per k; empty k-slices (NaN) break it.
+      function fdpCurve(arr,color,dash){let p="",started=false;
+        for(let k=0;k<N;k++){const f=arr[k]==null?NaN:Number(arr[k]);
+          if(isNaN(f)){started=false;continue;}
+          p+=(started?"L":"M")+sc.x(k+1).toFixed(1)+" "+yR(f).toFixed(1)+" ";started=true;
+          if(N<=40)E(s,"circle",{cx:sc.x(k+1),cy:yR(f),r:2.6,fill:color});}
+        E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2,"stroke-dasharray":dash||""});}
+      if(showEnt)fdpCurve(fdp,COL.warn);
+      if(showDec)fdpCurve(dfdp,COL.accent,"5 3");}
     const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
     ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
       const px=(ev.clientX-rb.left)/rb.width*W;
@@ -1629,6 +1673,8 @@ function renderReproTab(b){
       let html="<b>"+(k+1)+" of "+N+" run"+(k+1===1?"":"s")+"</b><br>"+fmt(h[k],0)+" precursors";
       if(hasEnt){html+="<br><span style='color:"+COL.warn+"'>■</span> entrapment: "+fmt(eh[k],0);
         if(fdp[k]!=null&&!isNaN(fdp[k]))html+="<br>entrapment FDP: "+pct(fdp[k],1);}
+      if(hasDec){html+="<br><span style='color:"+COL.accent+"'>■</span> decoys: "+fmt(dh[k],0);
+        if(dfdp[k]!=null&&!isNaN(dfdp[k]))html+="<br>decoy FDP: "+pct(dfdp[k],1);}
       showTip(ev,html);});
     ov.addEventListener("mouseleave",hideTip);
     const k1=h[0], kN=h[N-1], tot=h.reduce((a,b)=>a+b,0)||1;
@@ -1645,6 +1691,11 @@ function renderReproTab(b){
             " nominal, so these singletons read as real rare / donor-specific precursors, not FDR escapees."
           : " <b>Entrapment adjudication:</b> the k=1 set measures "+pct(f1,1)+" FDP — well above the "+pct(nom,0)+
             " nominal, so the "+SCOPES[scope].name+" q is admitting excess 1-hit-wonders (a calibration gap one level up); read low-k detections with caution.");}
+    // The same read from the decoys, available on any dataset: FDP at k=1 and at k=N, and their ratio.
+    if(hasDec&&N>=2){const d1=Number(dfdp[0]), dN=Number(dfdp[N-1]);
+      if(!isNaN(d1))
+        note += " <b>Decoy estimate:</b> k=1 FDP "+pct(d1,1)+(isNaN(dN)?"":" vs "+pct(dN,1)+" at k="+N+
+          (dN>0?" ("+fmt(d1/dN,1)+"&times;)":""))+(hasEnt?" &mdash; it should agree with the entrapment curve.":".");}
     document.getElementById("runHistNote").innerHTML=note;
   }
 
@@ -1834,6 +1885,56 @@ function renderReproTab(b){
         : "The two track closely here; the gap is expected to widen at higher run counts.");
   }
 
+  // Decoy-estimated FDP of a run-count floor, FDP(>=k), for BOTH scopes on one axis (#4489).
+  // Scope-independent like the union-FDP panel, so drawn once. Needs no entrapment.
+  function drawDecoyFloor(){
+    const card=document.getElementById("decoyFloorCard");
+    const pr=hasCross&&cr.perRun&&cr.perRun.decoyFdpAtLeastRunCount, ex=hasCross&&cr.experiment&&cr.experiment.decoyFdpAtLeastRunCount;
+    if(!pr||!ex||N<2){if(card)card.style.display="none";return;}
+    card.style.display="";
+    const kp=document.getElementById("decoyFloorKpis");kp.innerHTML="";
+    const at=(a,k)=>{const f=a[k]==null?NaN:Number(a[k]);return isNaN(f)?"n/a":pct(f,1);};
+    const exK=cr.experiment.decoyFdpByRunCount, prK=cr.perRun.decoyFdpByRunCount;
+    kpi(kp,"decoy FDP, k=1 slice (experiment-wide)",at(exK,0));
+    kpi(kp,"decoy FDP, k=1 slice (per-run)",at(prK,0));
+    kpi(kp,"decoy FDP, k="+N+" slice (experiment-wide)",at(exK,N-1));
+    kpi(kp,"decoy FDP, all reported (experiment-wide)",at(ex,0));
+    const host=document.getElementById("decoyFloorChart");host.innerHTML="";
+    const W=700,Hh=320,box={l:56,t:16,w:W-76,h:Hh-64};
+    const s=svg(W,Hh);host.appendChild(s);
+    let ymax=D.runFdr*2;
+    for(let i=0;i<N;i++)[pr[i],ex[i]].forEach(x=>{const f=x==null?NaN:Number(x);if(!isNaN(f))ymax=Math.max(ymax,f);});
+    ymax*=1.15;
+    const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
+    const sc=axes(s,box,[1,N],[0,ymax],{xlab:"minimum runs a precursor must appear in (≥ k)",ylab:"decoy FDP",
+      xticks:xt,xfmt:v=>String(Math.round(v)),yfmt:v=>pct(v,ymax<0.1?1:0)});
+    if(D.runFdr<=ymax)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(D.runFdr),y2:sc.y(D.runFdr),
+      stroke:COL.muted,"stroke-dasharray":"2 4",opacity:.6});
+    function line(arr,color){let p="",started=false;
+      for(let i=0;i<N;i++){const f=arr[i]==null?NaN:Number(arr[i]);if(isNaN(f)){started=false;continue;}
+        p+=(started?"L":"M")+sc.x(i+1).toFixed(1)+" "+sc.y(f).toFixed(1)+" ";started=true;
+        if(N<=40)E(s,"circle",{cx:sc.x(i+1),cy:sc.y(f),r:2.3,fill:color});}
+      E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2});}
+    line(ex,COL.accent);
+    line(pr,COL.decoy);
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;
+      const i=Math.min(N-1,Math.max(0,Math.round((px-box.l)/box.w*(N-1))));
+      showTip(ev,"<b>detected in ≥ "+(i+1)+" run"+(i+1===1?"":"s")+"</b>"+
+        "<br><span style='color:"+COL.accent+"'>■</span> experiment-wide: "+at(ex,i)+
+        "<br><span style='color:"+COL.decoy+"'>■</span> per-run: "+at(pr,i));});
+    ov.addEventListener("mouseleave",hideTip);
+    let cstar=null;for(let c=1;c<=N;c++){const f=ex[c-1]==null?NaN:Number(ex[c-1]);if(!isNaN(f)&&f<=D.runFdr){cstar=c;break;}}
+    document.getElementById("decoyFloorNote").innerHTML=
+      "Experiment-wide, the full reported set reads "+at(ex,0)+" decoy FDP and the k=1 slice alone "+at(exK,0)+". "+
+      (cstar===null
+        ? "No run-count floor brings the experiment-wide set to the "+pct(D.runFdr,0)+" nominal."
+        : cstar===1
+          ? "The whole experiment-wide set is already at or below the "+pct(D.runFdr,0)+" nominal."
+          : "Requiring ≥ "+cstar+" runs brings the experiment-wide set to the "+pct(D.runFdr,0)+" nominal.");
+  }
+
   function renderRepro(){drawDet();drawHist();drawFrontier();}
   legend(document.getElementById("detLegend"),[
     {name:"detected / run",color:COL.target,toggle:o=>{detOff.bars=o;drawDet();}},
@@ -1841,14 +1942,22 @@ function renderReproTab(b){
     {name:"cumulative intersection",color:COL.ink,line:true,toggle:o=>{detOff.inter=o;drawDet();}},
     {name:"detected in ≥ half the runs",color:COL.decoy,line:true,toggle:o=>{detOff.half=o;drawDet();}},
   ]);
-  // Run-count histogram legend, only when the entrapment overlay exists (both scopes
-  // carry the entrapment arrays when a manifest is present).
-  if(cr.experiment && cr.experiment.entrapmentRunCountHistogram)
-    legend(document.getElementById("runHistLegend"),[
-      {name:"real targets",color:COL.target},
-      {name:"entrapment FDP (right axis)",color:COL.warn,line:true,toggle:o=>{histOff.ent=o;drawHist();}},
-    ]);
+  // Run-count histogram legend, when an FDP overlay exists: the decoy curve on every report
+  // that carries it, the entrapment curve when a manifest is present (both scopes carry the
+  // arrays when either does).
+  const histHasEnt=!!(cr.experiment && cr.experiment.entrapmentRunCountHistogram);
+  const histHasDec=!!(cr.experiment && cr.experiment.decoyFdpByRunCount);
+  if(histHasEnt||histHasDec){
+    const items=[{name:"real targets",color:COL.target}];
+    if(histHasEnt)items.push({name:"entrapment FDP (right axis)",color:COL.warn,line:true,toggle:o=>{histOff.ent=o;drawHist();}});
+    if(histHasDec)items.push({name:"decoy FDP (right axis)",color:COL.accent,line:true,toggle:o=>{histOff.dec=o;drawHist();}});
+    legend(document.getElementById("runHistLegend"),items);
+  }
   else legend(document.getElementById("runHistLegend"),[]);
+  legend(document.getElementById("decoyFloorLegend"),[
+    {name:"experiment-wide",color:COL.accent,line:true},
+    {name:"per-run",color:COL.decoy,line:true},
+  ]);
   if(cr.perRun && cr.perRun.unionFdp && N>=2)
     legend(document.getElementById("unionFdpLegend"),[
       {name:"per-run union FDP",color:COL.decoy,line:true},
@@ -1860,6 +1969,7 @@ function renderReproTab(b){
   renderRepro();    // drawDet + drawHist + drawFrontier (all follow the per-run/experiment-wide selector)
   drawYieldCutoff();// scope-independent (both gates on one count axis); drawn once
   drawUnionFdp();   // scope-independent (shows both curves); drawn once
+  drawDecoyFloor(); // scope-independent (shows both curves); drawn once
 }
 
 // ========== Competition tab: paired decoy-win fraction ==========
@@ -2210,6 +2320,65 @@ function renderPerFile(b){
   const fd=document.getElementById("fileDesc");
   if(fd)fd.innerHTML="Precursors passing the run-level FDR, per input file"+
     (PASSES.length>1?" &mdash; <b>"+b.label+"</b> ("+(b.pass===2?"final reported pool":"pre-compaction first-pass pool")+").":".");
+}
+
+// ---------- summary: equal-chance alarms (issue #4464) for the active pass ----------
+// The verdicts are computed in C# (EqualChanceAlarms) and carried in D.equalChance; this only
+// shows them. Each check is ok / alarm / cannot_assess (input present, too weak to judge) /
+// not_applicable (input absent for this pass - e.g. pass 2 has no retrained model).
+const EC_LABEL={ok:"ok",alarm:"ALARM",cannot_assess:"cannot assess",not_applicable:"n/a"};
+const EC_CLASS={ok:"good",alarm:"bad",cannot_assess:"warn",not_applicable:""};
+const EC_GUARD={too_few_targets:"too few targets to fit a mixture",degenerate:"the target scores fill fewer than two bins",not_converged:"the mixture fit did not converge",
+  component_weight:"one mixture component is negligible",not_separated:"insufficient separation to assess: the two components overlap"};
+function renderEqualChance(b){
+  const card=document.getElementById("ecCard");const ec=b.equalChance;
+  if(!ec){if(card)card.style.display="none";return;}
+  if(card)card.style.display="";
+  const na=ec.nullAlignment,qb=ec.qBandBalance,pc=ec.pairedCoin,ds=ec.decoySupport;
+  const sg=v=>(Number(v)>0?"+":"")+fmt(v,2);
+  const rows=[
+    {name:"Null alignment (decoy vs f_false)",c:na,
+      measured:na.status==="not_applicable"?"no composite score distribution or no decoys for this pass":
+        na.status==="cannot_assess"?(EC_GUARD[na.guard]||"")+
+        (na.fit?" (Ashman D "+fmt(na.fit.separation,2)+")":""):
+        "location "+sg(na.locationShift)+"σ, scale ×"+fmt(na.scaleRatio,2)+", J "+fmt(na.symmetricDivergence,3),
+      threshold:"|location| > "+fmt(na.locationThreshold,1)+"σ or scale beyond ×"+fmt(na.scaleThreshold,1)},
+    {name:"q-band balance (diagFDR)",c:qb,
+      measured:"decoy fraction "+pct(qb.pooledDecoyFraction,1)+" in q "+fmt(qb.pooledLo,1)+" to "+fmt(qb.pooledHi,1)+
+        " (n "+fmt(qb.pooledN,0)+"), Δ "+sg(qb.deltaBalance),
+      threshold:"|Δ| > "+fmt(qb.threshold,2)},
+    {name:"Paired coin (entrapment pairs)",c:pc,
+      measured:pc.status==="not_applicable"?"no entrapment pairs (real-pair coin "+pct(pc.realCoin,1)+", confounded by true hits)":
+        "decoy wins "+pct(pc.entrapmentCoin,1)+" of "+fmt(pc.entrapmentPairs,0)+" null-band pairs",
+      threshold:"|coin - 50%| > "+pct(pc.threshold,0)},
+    {name:"Decoy support at the cutoff",c:ds,
+      measured:ds.status==="not_applicable"?"":
+        "fewest decoys accepted per run "+fmt(ds.minRunDecoys,0)+" ("+ds.minRunFile+"), FDP CV ≈ "+pct(ds.fdpCvBenchmark,0),
+      threshold:"granular below "+fmt(ds.threshold,0)+" decoys at "+pct(ds.alpha,0)+" run FDR"}];
+  const kp=document.getElementById("ecKpis");kp.innerHTML="";
+  kpi(kp,"equal-chance alarms",fmt(ec.alarmCount,0),ec.alarmCount>0?"bad":"good");
+  rows.forEach(r=>kpi(kp,r.name,EC_LABEL[r.c.status]||r.c.status,EC_CLASS[r.c.status]||""));
+  const host=document.getElementById("ecTable");host.innerHTML="";
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  [["Check","l"],["Verdict","l"],["Measured","l"],["Alarm when","l"]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  rows.forEach(r=>{const tr=H(tb,"tr",{});H(tr,"td",{class:"l"},r.name);
+    H(tr,"td",{class:"l"},EC_LABEL[r.c.status]||r.c.status);
+    H(tr,"td",{class:"l"},r.measured);H(tr,"td",{class:"l"},r.threshold);});
+  let note="";
+  if(na.status==="ok"||na.status==="alarm"){
+    note+="f_false = N("+fmt(na.fit.falseMean,2)+", "+fmt(na.fit.falseStd,2)+"), weight "+pct(na.fit.piFalse,1)+
+      "; decoys N("+fmt(na.decoyMean,2)+", "+fmt(na.decoyStd,2)+").";
+    if(isFinite(Number(na.entrapmentLocationShift)))
+      note+=" Entrapment (a pure null) sits at "+sg(na.entrapmentLocationShift)+"σ from f_false, the decoys at "+
+        sg(na.decoyVsEntrapmentShift)+"σ from the entrapment.";
+    note+=" A negative location means decoys score below the false targets: the decoy count undercounts them and q is "+
+      "anti-conservative. ";
+  }
+  if(b.pass===2&&na.status==="not_applicable")
+    note+="The null-alignment and q-band checks read the composite score distribution, which only a retrained pass "+
+      "has; switch to <b>Pass 1</b> for them. ";
+  document.getElementById("ecNote").innerHTML=note;
 }
 
 function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}
