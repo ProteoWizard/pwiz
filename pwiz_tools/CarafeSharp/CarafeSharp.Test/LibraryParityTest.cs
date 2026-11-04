@@ -311,6 +311,7 @@ namespace pwiz.CarafeSharp.Test
             string fasta = subset && !TestData.IsSubset ? WriteSubsetFasta(run.FastaPath, Path.Combine(output, @"subset.fasta")) : run.FastaPath;
             var settings = run.CreateSettings(fasta, output);
             settings.LibraryFormat = @"Skyline,DIA-NN";
+            settings.Device = TestData.ComparisonDeviceName;
             var clock = Stopwatch.StartNew();
             var generator = new LibraryGenerator(settings, new TestContextWriter(TestContext));
             generator.Run();

@@ -105,7 +105,9 @@ $backend = $Torch
 if ($Torch -eq 'cuda' -and (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) {
     $gpu = @(& nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>$null) | Select-Object -First 1
     if ($gpu) {
-        $backend = "cuda ($($gpu.Trim()))"
+        # nvidia-smi lists every GPU; libtorch uses the first one CUDA_VISIBLE_DEVICES leaves it.
+        $visible = if ($env:CUDA_VISIBLE_DEVICES) { ", CUDA_VISIBLE_DEVICES=$env:CUDA_VISIBLE_DEVICES" } else { '' }
+        $backend = "cuda ($($gpu.Trim())$visible)"
     }
 }
 $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
@@ -130,8 +132,13 @@ foreach ($name in $selected) {
     if ($TestName) {
         $buildArgs += @('-TestName', $TestName)
     }
-    if (Test-Path -LiteralPath $trxPath) {
-        Remove-Item -LiteralPath $trxPath
+    # build.ps1 writes one trx per configuration and backend; each dataset's is kept under a name of its
+    # own, removed first so a run that writes none leaves no earlier results under that name.
+    $keptTrx = Join-Path $resultsDir "CarafeParity-$name-$Torch.trx"
+    foreach ($path in @($trxPath, $keptTrx)) {
+        if (Test-Path -LiteralPath $path) {
+            Remove-Item -LiteralPath $path
+        }
     }
     & pwsh @buildArgs
     $exitCode = $LASTEXITCODE
@@ -139,8 +146,6 @@ foreach ($name in $selected) {
         $problems += "${name}: build.ps1 exited $exitCode with no test results (see its output above)"
         continue
     }
-    # build.ps1 writes one trx per configuration and backend; keep each dataset's under a name of its own.
-    $keptTrx = Join-Path $resultsDir "CarafeParity-$name-$Torch.trx"
     Copy-Item -LiteralPath $trxPath -Destination $keptTrx -Force
     Write-Host "Results: $keptTrx"
     [xml]$trx = Get-Content -Raw -LiteralPath $trxPath
