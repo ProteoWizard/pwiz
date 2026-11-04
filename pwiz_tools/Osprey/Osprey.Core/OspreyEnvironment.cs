@@ -825,6 +825,41 @@ namespace pwiz.Osprey.Core
         public static readonly double SvmCSelectionTolerance =
             ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
 
+        private static readonly EnvVar ENV_GBT_OOF = new EnvVar(@"OSPREY_GBT_OOF", EnvVarGroup.behavior,
+            @"Experiment, gbdt first pass only: 1 scores each training row with only the fold model that held " +
+            @"it out, instead of the mean of every fold model, two of which trained on it. Not in the validity " +
+            @"key: run it into its own output directory. A resumed first pass retrains rather than adopt the saved model. " +
+            @"Second-pass rescoring still scores training rows with the fold mean.");
+
+        /// <summary>
+        /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
+        /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
+        /// of every fold model (two of which trained on it). Not keyed: run it into its own output directory.
+        /// The held-out folds are not persisted with the first-pass model, so a resumed first pass retrains
+        /// rather than adopt the saved model. Known limitation: the second-pass rescoring and transfer
+        /// (FrozenModelScorer, PerFileRescoreTask) still score training rows with the fold mean.
+        /// </summary>
+        public static readonly bool GbtOutOfFold = ParseIntOrNull(ENV_GBT_OOF) == 1;
+
+        private static readonly EnvVar ENV_GBT_PREFILTER_SIZE = new EnvVar(@"OSPREY_GBT_PREFILTER_SIZE", EnvVarGroup.behavior,
+            @"Experiment, gbdt first pass only: two-round training. Round 1 trains on the usual random " +
+            @"subsample; its fold models score every best-per-precursor candidate, and round 2 retrains on " +
+            @"the N rows of the best-scoring peptide groups. Changes the validity key. Loads the features of every candidate " +
+            @"during training (about double the resident features). Ignored, with a warning, by the " +
+            @"projection path. 0 or unset is off.")
+            { ValueExample = @"<N>" };
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass tree training. Round 1 trains as usual
+        /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
+        /// round 2 retrains on the N rows of the peptide groups that score best. Tree model only; 0 when unset.
+        /// Keyed through the gbdt validity-key term, so a run with it never adopts outputs trained without it.
+        /// Memory: the first pass then loads the features of every best-per-precursor candidate, not only the
+        /// MaxTrainSize subsample - about candidates x features doubles resident during training. Read only
+        /// by the streamed first pass; the projection path ignores it and logs a warning.
+        /// </summary>
+        public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(ENV_GBT_PREFILTER_SIZE));
+
         private static readonly EnvVar ENV_DETERMINISTIC_MATH = new EnvVar(@"OSPREY_DETERMINISTIC_MATH", EnvVarGroup.behavior,
             @"Exp and Log in gradient-boosted tree training: 1 the managed fdlibm port, bit-identical on " +
             @"every OS; 0 System.Math, which can differ in the last bit between operating systems.")

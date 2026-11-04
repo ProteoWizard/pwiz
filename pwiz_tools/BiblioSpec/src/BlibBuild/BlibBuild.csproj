@@ -31,15 +31,6 @@
           Condition="Exists('$(PwizToolsRoot)\BiblioSpec\src\modifications.xml')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <!-- cpp parity: mzTabReader.cpp:66 — MzTabReader loads Unimod records from <exeDir>/unimod.xml
-         at parse time. cpp's BlibBuild ships this file from pwiz/data/common/unimod.xml next to
-         BlibBuild.exe; mirror the same for the C# port so .mzTab / mztab.txt inputs work without
-         throwing FileNotFoundException inside MzTabReader.LoadUnimod. -->
-    <None Include="$(PwizRoot)\data\common\unimod.xml"
-          Link="unimod.xml"
-          Condition="Exists('$(PwizRoot)\data\common\unimod.xml')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
