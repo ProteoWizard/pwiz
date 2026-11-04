@@ -190,7 +190,8 @@ namespace pwiz.Osprey
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
             {
                 DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText, LibrarySource.EXT_BLIB,
-                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV }
+                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV,
+                    LibrarySource.EXT_PARQUET }
             };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
@@ -467,7 +468,8 @@ namespace pwiz.Osprey
             { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
-            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
+            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB,
+                LibrarySource.EXT_PARQUET } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,

@@ -407,20 +407,6 @@ namespace pwiz.Osprey.IO
         {
             string modifiedSequence = StripFlankingChars(modifiedPeptide);
 
-            // Stripped sequence
-            string strippedSequence = strippedPeptide;
-            if (string.IsNullOrEmpty(strippedSequence))
-                strippedSequence = StripModifications(modifiedSequence);
-
-            // Protein and gene info
-            List<string> proteinIds = new List<string>();
-            if (!string.IsNullOrEmpty(proteinStr))
-                proteinIds = SplitList(proteinStr);
-
-            List<string> geneNames = new List<string>();
-            if (!string.IsNullOrEmpty(geneStr))
-                geneNames = SplitList(geneStr);
-
             // Group by precursor key
             string key = modifiedSequence + @"_" + charge;
 
@@ -428,6 +414,20 @@ namespace pwiz.Osprey.IO
             PrecursorData precursor;
             if (!precursorMap.TryGetValue(key, out precursor))
             {
+                // The precursor's own values come from its first row, so they are read only there.
+                string strippedSequence = strippedPeptide;
+                if (string.IsNullOrEmpty(strippedSequence))
+                    strippedSequence = StripModifications(modifiedSequence);
+
+                // Protein and gene info
+                List<string> proteinIds = new List<string>();
+                if (!string.IsNullOrEmpty(proteinStr))
+                    proteinIds = SplitList(proteinStr);
+
+                List<string> geneNames = new List<string>();
+                if (!string.IsNullOrEmpty(geneStr))
+                    geneNames = SplitList(geneStr);
+
                 // Modifications are read once per precursor, on its first line, so a modification
                 // whose mass cannot be known is reported once rather than on every fragment line.
                 var unrecognized = new List<string>();
@@ -915,9 +915,16 @@ namespace pwiz.Osprey.IO
 
             public InvalidDataException ToException()
             {
-                var sb = new StringBuilder(string.Format(
-                    OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_,
-                    _lineCount));
+                return ToException(OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_);
+            }
+
+            /// <summary>
+            /// As <see cref="ToException()"/>, headed by <paramref name="headerFormat"/> with the
+            /// count of lines (or a .parquet's rows) in error.
+            /// </summary>
+            public InvalidDataException ToException(string headerFormat)
+            {
+                var sb = new StringBuilder(string.Format(headerFormat, _lineCount));
                 foreach (string message in _listed)
                     sb.AppendLine().Append(@"  ").Append(message);
                 if (_errorCount > _listed.Count)

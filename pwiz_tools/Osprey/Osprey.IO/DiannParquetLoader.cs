@@ -145,7 +145,7 @@ namespace pwiz.Osprey.IO
 
                 // A library with any invalid row is refused whole, as a .tsv with an invalid line is.
                 if (errors.Any)
-                    throw errors.ToException();
+                    throw errors.ToException(OspreyIOResources.DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_);
 
                 return _assembly.BuildEntries(precursorMap, logInfo);
             }
@@ -162,12 +162,11 @@ namespace pwiz.Osprey.IO
         private static void AddRow(DiannLibraryRowGroup group, int i, long rowNum,
             Dictionary<string, DiannTsvLoader.PrecursorData> precursorMap, DiannTsvLoader.LibraryLineErrors errors)
         {
-            int errorLine = (int)Math.Min(rowNum, int.MaxValue);
             bool valid = true;
             string modifiedPeptide = group.ModifiedSequence[i];
             if (string.IsNullOrEmpty(modifiedPeptide))
             {
-                errors.Add(errorLine, string.Format(OspreyIOResources.DiannParquetLoader_AddRow___row__0___Missing__1_,
+                AddError(rowNum, errors, string.Format(OspreyIOResources.DiannParquetLoader_AddRow___row__0___Missing__1_,
                     rowNum, DiannLibraryParquetReader.ColumnName(DiannLibraryColumns.modified_sequence)));
                 valid = false;
             }
@@ -227,10 +226,7 @@ namespace pwiz.Osprey.IO
             if (unrecognized != null)
             {
                 foreach (string modStr in unrecognized)
-                {
-                    bool unused = true;
-                    AddInvalid(DiannLibraryColumns.modified_sequence, modStr, rowNum, errors, ref unused);
-                }
+                    AddError(rowNum, errors, InvalidValueMessage(DiannLibraryColumns.modified_sequence, modStr, rowNum));
             }
         }
 
@@ -248,9 +244,22 @@ namespace pwiz.Osprey.IO
             DiannTsvLoader.LibraryLineErrors errors, ref bool valid)
         {
             valid = false;
-            errors.Add((int)Math.Min(rowNum, int.MaxValue), string.Format(
-                OspreyIOResources.DiannParquetLoader_AddRow___row__0___Invalid__1____2__,
-                rowNum, DiannLibraryParquetReader.ColumnName(column), value));
+            AddError(rowNum, errors, InvalidValueMessage(column, value, rowNum));
+        }
+
+        private static string InvalidValueMessage(DiannLibraryColumns column, string value, long rowNum)
+        {
+            return string.Format(OspreyIOResources.DiannParquetLoader_AddRow___row__0___Invalid__1____2__,
+                rowNum, DiannLibraryParquetReader.ColumnName(column), value);
+        }
+
+        /// <summary>
+        /// Adds <paramref name="message"/> for row <paramref name="rowNum"/>; the error list counts
+        /// rows by an int, which a library's row count stays far below.
+        /// </summary>
+        private static void AddError(long rowNum, DiannTsvLoader.LibraryLineErrors errors, string message)
+        {
+            errors.Add((int)Math.Min(rowNum, int.MaxValue), message);
         }
     }
 }

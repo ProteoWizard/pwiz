@@ -127,6 +127,9 @@
   <data name="DiannParquetLoader_AddRow___row__0___Missing__1_" xml:space="preserve">
     <value>(row {0}) Missing {1}</value>
   </data>
+  <data name="DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_" xml:space="preserve">
+    <value>{0:N0} library rows have errors. Fix the library and load it again:</value>
+  </data>
   <data name="DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_" xml:space="preserve">
     <value>The DIA-NN library {0} has no rows: DIA-NN writes an empty library when its search identifies nothing.</value>
   </data>

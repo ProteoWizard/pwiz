@@ -701,6 +701,14 @@ public sealed class DiaNNSpecLibReader : BuildParser
         try
         {
             reader = DiannLibraryParquetReader.Open(filepath, columns, DiannLibraryColumns.flags);
+        }
+        catch (DiannLibraryMissingColumnException ex)
+        {
+            throw MissingColumnException(filepath, ex);
+        }
+        using var libraryReader = reader;
+        try
+        {
             // Fragment.{Type,Charge,Series.Number,Loss.Type} are read by cpp but discarded
             // by the C# Product class - we only retain (mz, intensity) per fragment. Requiring
             // them unread keeps the schema check honest (the columns must be present).
@@ -709,17 +717,24 @@ public sealed class DiaNNSpecLibReader : BuildParser
         }
         catch (DiannLibraryMissingColumnException ex)
         {
-            throw new BlibException(false,
-                $"DIA-NN report '{filepath}' is missing required column '{ex.ColumnName}'.");
+            throw MissingColumnException(filepath, ex);
         }
-        using var libraryReader = reader;
 
         string lastPrecursorId = string.Empty;
         Entry? currentEntry = null;
 
         for (int rg = 0; rg < reader.RowGroupCount; rg++)
         {
-            var group = reader.ReadRowGroup(rg);
+            DiannLibraryRowGroup group;
+            try
+            {
+                group = reader.ReadRowGroup(rg);
+            }
+            catch (InvalidDataException ex)
+            {
+                // A column of a type the reader cannot convert, reported as BiblioSpec reports it.
+                throw new BlibException(false, ex.Message);
+            }
 
             string[] precursorId = group.PrecursorId;
             string[] modSeq      = group.ModifiedSequence;
@@ -797,6 +812,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
             _specLib.IRtMin = 0.0;
             _specLib.IRtMax = 0.0;
         }
+    }
+
+    private static BlibException MissingColumnException(string filepath, DiannLibraryMissingColumnException ex)
+    {
+        return new BlibException(false, $"DIA-NN report '{filepath}' is missing required column '{ex.ColumnName}'.");
     }
 
     private string FindDiannReport(out string statsFilepath)

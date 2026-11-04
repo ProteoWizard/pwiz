@@ -25,6 +25,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Parquet;
+using Parquet.Schema;
 using pwiz.BiblioSpec.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -73,6 +75,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, report.Count, string.Join(Environment.NewLine, report));
 
             AssertEmptyParquetLibrary(Path.Combine(dir, @"report-lib-empty.parquet"), tolerance);
+            AssertInvalidParquetLibraries(dir, tolerance);
 
             // A .speclib is DIA-NN's undocumented binary: refused, with the command that converts it.
             string speclib = Path.Combine(dir, @"lib.predicted.speclib");
@@ -157,6 +160,79 @@ namespace pwiz.Osprey.Test
             var entries = LoadParquetLibrary(empty, tolerance, log);
             Assert.AreEqual(0, entries.Count);
             StringAssert.Contains(log.ToString(), noRows);
+        }
+
+        /// <summary>
+        /// Libraries the loader refuses, written here: one whose rows hold a precursor charge of
+        /// 0 and an ion type that is no ion, refused whole with each row named, as a .tsv with
+        /// such lines is (its RT written as double, a width the reader converts); and one
+        /// without a required column.
+        /// </summary>
+        private static void AssertInvalidParquetLibraries(string dir, FragmentToleranceConfig tolerance)
+        {
+            string invalid = Path.Combine(dir, @"invalid-rows.parquet");
+            WriteSmallLibrary(invalid, true);
+            var refusal = Assert.ThrowsException<InvalidDataException>(() => new DiannParquetLoader(tolerance).Load(invalid));
+            StringAssert.StartsWith(refusal.Message, string.Format(
+                OspreyIOResources.DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_, 2));
+            StringAssert.Contains(refusal.Message, string.Format(OspreyIOResources.DiannParquetLoader_AddRow___row__0___Invalid__1____2__,
+                2, @"Precursor.Charge", 0));
+            StringAssert.Contains(refusal.Message, string.Format(OspreyIOResources.DiannParquetLoader_AddRow___row__0___Invalid__1____2__,
+                3, @"Fragment.Type", @"q"));
+
+            string missing = Path.Combine(dir, @"missing-column.parquet");
+            WriteSmallLibrary(missing, false);
+            refusal = Assert.ThrowsException<InvalidDataException>(() => new DiannParquetLoader(tolerance).Load(missing));
+            Assert.AreEqual(string.Format(OspreyIOResources.ColumnIndices_RequireColumn_Missing_required_column___0_,
+                @"Relative.Intensity"), refusal.Message);
+        }
+
+        /// <summary>
+        /// A four-row library of one precursor at <paramref name="path"/>, its second row with
+        /// charge 0 and its third with ion type "q"; without Relative.Intensity unless
+        /// <paramref name="withIntensity"/>.
+        /// </summary>
+        private static void WriteSmallLibrary(string path, bool withIntensity)
+        {
+            var modSeq = new DataField<string>(@"Modified.Sequence", false);
+            var charge = new DataField<long>(@"Precursor.Charge");
+            var precursorMz = new DataField<float>(@"Precursor.Mz");
+            var rt = new DataField<double>(@"RT");
+            var productMz = new DataField<float>(@"Product.Mz");
+            var intensity = new DataField<float>(@"Relative.Intensity");
+            var fragmentType = new DataField<string>(@"Fragment.Type", false);
+            var fields = new List<Field> { modSeq, charge, precursorMz, rt, productMz, fragmentType };
+            if (withIntensity)
+                fields.Add(intensity);
+            using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+            {
+                var writer = ParquetWriter.CreateAsync(new ParquetSchema(fields), stream).GetAwaiter().GetResult();
+                using (var group = writer.CreateRowGroup())
+                {
+                    group.WriteAsync(modSeq, Chars(@"PEPTIDEK", @"PEPTIDEK", @"PEPTIDEK", @"PEPTIDEK"))
+                        .GetAwaiter().GetResult();
+                    group.WriteAsync(charge, new ReadOnlyMemory<long>(new[] { 2L, 0L, 2L, 2L })).GetAwaiter().GetResult();
+                    group.WriteAsync(precursorMz, new ReadOnlyMemory<float>(new[] { 465.7f, 465.7f, 465.7f, 465.7f }))
+                        .GetAwaiter().GetResult();
+                    group.WriteAsync(rt, new ReadOnlyMemory<double>(new[] { 10.0, 10.0, 10.0, 10.0 })).GetAwaiter().GetResult();
+                    group.WriteAsync(productMz, new ReadOnlyMemory<float>(new[] { 147.1f, 263.1f, 376.2f, 477.3f }))
+                        .GetAwaiter().GetResult();
+                    group.WriteAsync(fragmentType, Chars(@"y", @"y", @"q", @"y"))
+                        .GetAwaiter().GetResult();
+                    if (withIntensity)
+                    {
+                        group.WriteAsync(intensity, new ReadOnlyMemory<float>(new[] { 1f, 0.5f, 0.4f, 0.3f }))
+                            .GetAwaiter().GetResult();
+                    }
+                }
+                writer.DisposeAsync().GetAwaiter().GetResult();
+            }
+        }
+
+        /// <summary>Strings as Parquet.Net writes a non-nullable string column.</summary>
+        private static ReadOnlyMemory<ReadOnlyMemory<char>> Chars(params string[] values)
+        {
+            return values.Select(v => v.AsMemory()).ToArray();
         }
 
         private static List<LibraryEntry> LoadParquetLibrary(string parquet, FragmentToleranceConfig tolerance, StringBuilder log)

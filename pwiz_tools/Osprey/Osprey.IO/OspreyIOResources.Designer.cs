@@ -163,6 +163,15 @@ namespace pwiz.Osprey.IO {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library rows have errors. Fix the library and load it again:.
+        /// </summary>
+        public static string DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The DIA-NN library {0} has no rows: DIA-NN writes an empty library when its search identifies nothing..
         /// </summary>
         public static string DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_ {
