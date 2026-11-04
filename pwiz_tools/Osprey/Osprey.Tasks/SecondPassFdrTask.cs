@@ -311,8 +311,8 @@ namespace pwiz.Osprey.Tasks
                 // The fold-versus-resident term is GONE with OSPREY_STAGE7_STREAM (2026-09-10):
                 // it distinguished two arms an operator could pick between, and only one arm
                 // remains. It was empty on the streamed default, so no existing output directory
-                // is invalidated by its removal.
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
+                // is invalidated by its removal. So is the library-fragment release term, for the
+                // same reason, with OSPREY_RELEASE_LIBRARY_FRAGMENTS (2026-11).
                 // The frozen first-pass model scores the second pass, so the classifier that
                 // trained it keys the .blib and 2nd-pass sidecars too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -950,8 +950,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Drop <c>Fragments</c> from every library entry outside the analysis-wide retained
         /// set FirstPassFDR left on disk, keeping the identity fields on all of them. See
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and
-        /// <see cref="LibraryFragmentRelease"/> for the set arithmetic.
+        /// <see cref="LibraryFragmentRelease"/> for the rationale and the set arithmetic.
         ///
         /// <para>This is SecondPassFDR's own release, and on the HPC chain it is the ONLY one.
         /// <c>FirstPassFdrTask</c> - where the Stage 5 -&gt; 6 release lives - is excluded from a
@@ -1315,6 +1314,7 @@ namespace pwiz.Osprey.Tasks
                             passingPeptides.Add(e.ModifiedSequence);
                     }
                 }
+                progress.Complete();
             }
             return passingPeptides;
         }
@@ -1356,6 +1356,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
+                progress.Complete();
             }
             // Fallback: peptides with no precursor-passing charge state keep their best.
             nFallback = 0;
@@ -1437,6 +1438,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
+                progress.Complete();
             }
             return passingEntries;
         }
@@ -1469,6 +1471,7 @@ namespace pwiz.Osprey.Tasks
                         bestExpPrecursorQ[keyExp] = obs.ExperimentPrecursorQvalue;
                     }
                 }
+                progress.Complete();
             }
             return bestExpPrecursorQ;
         }
@@ -1516,6 +1519,7 @@ namespace pwiz.Osprey.Tasks
                         sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
                     }
                 }
+                progress.Complete();
             }
             return sharedBounds;
         }
