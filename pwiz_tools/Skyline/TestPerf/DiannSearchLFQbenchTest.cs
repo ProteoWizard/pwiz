@@ -19,18 +19,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -62,6 +68,7 @@ namespace TestPerf
             { @"ECOLI",  2.0 },
         };
         private const double LOG2FC_TOLERANCE = 0.30;
+        private const string OXIDATION_M = @"Oxidation (M)";
         private const int MIN_QUANTIFIED_PEPTIDES_PER_SPECIES = 50;
 
         // HYE124_TTOF6600_64var — the Navarro paper's headline configuration (TripleTOF
@@ -117,131 +124,121 @@ namespace TestPerf
             AssertEx.IsTrue(File.Exists(realDiannPath),
                 $@"DIA-NN binary not available at {realDiannPath}");
 
-            DiannSearchDlg searchDlg;
+            ConfigureAndRunSearch(realDiannPath);
+            // Volcano + box plot reuse the same per-peptide log2FC computation; the
+            // ClassifySpecies suffix match (_HUMAN, _YEAST, _ECOLI) works for both
+            // FASTAs since both use UniProt SwissProt suffix conventions.
+        }
+
+        /// <summary>
+        /// Walks Run Peptide Search, which the DIA-NN Search menu item opens set up for DIA-NN, through
+        /// every input page and runs the search, the library build, the proteins and the import.
+        /// </summary>
+        private void ConfigureAndRunSearch(string realDiannPath)
+        {
+            string fasta = Path.Combine(CacheDir, FASTA_FILENAME);
+
+            var dlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowDiannSearchDlg);
+            RunUI(() =>
+            {
+                dlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
+                dlg.BuildPepSearchLibControl.DdaSearchDataSources = WiffPaths
+                    .Select(p => (MsDataFileUri) new MsDataFilePath(p)).ToArray();
+            });
+            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => dlg.ClickNextButton());
+            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
+
+            // Modifications: DIA-NN's usual Carbamidomethyl (C) fixed and Oxidation (M) variable
+            WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
+            if (!GetUIValue(() => dlg.MatchModificationsControl.MatchedModifications.Contains(OXIDATION_M)))
+            {
+                var editStructModListUI =
+                    ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(dlg.MatchModificationsControl.ClickAddStructuralModification);
+                RunDlg<EditStaticModDlg>(editStructModListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.SetModification(OXIDATION_M); // Not L10N
+                    editModDlg.OkDialog();
+                });
+                OkDialog(editStructModListUI, editStructModListUI.OkDialog);
+            }
+            RunUI(() =>
+            {
+                dlg.MatchModificationsControl.ChangeAll(true);
+                AssertEx.IsTrue(dlg.ClickNextButton());
+            });
+
+            // FASTA: Navarro paper recipe, Trypsin/P with 1 missed cleavage. The FASTA has decoys
+            // already, so let DIA-NN's predictor + library use them.
+            WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
+            RunUI(() =>
+            {
+                dlg.ImportFastaControl.SetFastaContent(fasta);
+                dlg.ImportFastaControl.Enzyme =
+                    Settings.Default.EnzymeList.FirstOrDefault(e => e.Name == @"Trypsin/P")
+                    ?? Settings.Default.EnzymeList.First();
+                dlg.ImportFastaControl.MaxMissedCleavages = 1;
+                AssertEx.IsTrue(dlg.ClickNextButton());
+                AssertEx.AreEqual(SearchEngine.DIANN, dlg.ConverterSettingsControl.DirectDiaSearchEngine);
+                AssertEx.IsTrue(dlg.ClickNextButton());
+            });
+
+            WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
+            RunUI(() =>
+            {
+                // Navarro paper recipe: FDR 0.01, charges 1-4
+                var settings = dlg.SearchSettingsControl;
+                settings.PrecursorTolerance = new MzTolerance(0, MzTolerance.Units.ppm);
+                settings.FragmentTolerance = new MzTolerance(0, MzTolerance.Units.ppm);
+                settings.MaxVariableMods = 2;
+                settings.CutoffScore = 0.01;
+                settings.SetAdditionalSetting(@"MinPepLen", @"6");
+                settings.SetAdditionalSetting(@"MinPrecursorCharge", @"1");
+                settings.SetAdditionalSetting(@"MaxPrecursorCharge", @"4");
+                settings.SetAdditionalSetting(DiannSearchEngine.THREADS, Environment.ProcessorCount.ToString(CultureInfo.InvariantCulture));
+                // Re-runs leverage the persisted .quant cache via --use-quant.
+                var diann = (DiannSearchEngine) dlg.BuildPepSearchLibControl.ImportPeptideSearch.SearchEngine;
+                diann.ReuseCachedLibrary = true;
+                diann.ReuseQuantFiles = true;
+            });
+
+            // Leaving the search settings page makes sure DIA-NN is installed
             try
             {
                 DiannHelpers.RegisteredDiannPathOverride = () => realDiannPath;
-                SkylineWindow.BeginInvoke(SkylineWindow.ShowDiannSearchDlg);
+                SkylineWindow.BeginInvoke(() => dlg.ClickNextButton());
                 var useExisting = TryWaitForOpenForm<MultiButtonMsgDlg>(5000);
                 if (useExisting != null)
                     OkDialog(useExisting, () => useExisting.DialogResult = DialogResult.Yes);
-                searchDlg = WaitForOpenForm<DiannSearchDlg>();
+                WaitForConditionUI(() => dlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
             }
             finally
             {
                 DiannHelpers.RegisteredDiannPathOverride = null;
             }
 
-            ConfigureAndRunSearch(searchDlg);
-            ImportToSkylineDocument(searchDlg);
-            // Volcano + box plot reuse the same per-peptide log2FC computation; the
-            // ClassifySpecies suffix match (_HUMAN, _YEAST, _ECOLI) works for both
-            // FASTAs since both use UniProt SwissProt suffix conventions.
-        }
-
-        private void ConfigureAndRunSearch(DiannSearchDlg searchDlg)
-        {
-            string fasta = Path.Combine(CacheDir, FASTA_FILENAME);
-
-            WaitForConditionUI(() => searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page);
-            RunUI(() => searchDlg.DataFileResults.FoundResultsFiles = WiffPaths
-                .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileName(p), p)).ToArray());
-            RunUI(searchDlg.NextPage);
-
-            WaitForConditionUI(() => searchDlg.CurrentPage == DiannSearchDlg.Pages.fasta_page);
-            RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fasta));
-            RunUI(searchDlg.NextPage); // → modifications
-
-            WaitForConditionUI(() => searchDlg.CurrentPage == DiannSearchDlg.Pages.modifications_page);
-            RunUI(searchDlg.NextPage); // → search settings
-
-            WaitForConditionUI(() => searchDlg.CurrentPage == DiannSearchDlg.Pages.search_settings_page);
             RunUI(() =>
             {
-                // Navarro paper recipe: Trypsin/P, 1 missed cleavage, FDR 0.01, charges 1-4.
-                // The fasta has decoys already, so let DIA-NN's predictor + library use them.
-                searchDlg.Ms1Tolerance = 0;
-                searchDlg.Ms2Tolerance = 0;
-                searchDlg.QValueThreshold = 0.01;
-                searchDlg.Threads = Environment.ProcessorCount;
-                var addl = searchDlg.DiannSearchConfig.AdditionalSettings;
-                addl[@"MinPepLen"].Value = 6;
-                addl[@"MinPrecursorCharge"].Value = 1;
-                addl[@"MaxPrecursorCharge"].Value = 4;
-                // Re-runs leverage the persisted .quant cache via --use-quant.
-                searchDlg.DiannSearchConfig.ReuseCachedLibrary = true;
-                searchDlg.DiannSearchConfig.ReuseQuantFiles = true;
+                AssertEx.IsTrue(dlg.ClickNextButton());
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.full_scan_settings_page, dlg.CurrentPage);
+                dlg.FullScanSettingsControl.IsolationSchemeName = PropertiesResources.IsolationSchemeList_GetDefaults_Results_only;
             });
-            RunUI(() =>
-            {
-                searchDlg.ImportFastaControl.Enzyme =
-                    Settings.Default.EnzymeList.FirstOrDefault(e => e.Name == @"Trypsin/P")
-                    ?? Settings.Default.EnzymeList.First();
-                searchDlg.ImportFastaControl.MaxMissedCleavages = 1;
-            });
-            RunUI(searchDlg.NextPage); // → run
 
-            WaitForConditionUI(() => searchDlg.CurrentPage == DiannSearchDlg.Pages.run_page);
+            SkylineWindow.BeginInvoke(() => dlg.ClickNextButton()); // Run
             try
             {
-                bool? searchSucceeded = null;
-                searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
                 // 2-hour ceiling — TripleTOF 6600 SWATH on 6 files runs ~30 min on 24 cores
                 // after first-pass cache warm-up, longer on a fresh machine.
-                WaitForConditionUI(2 * 60 * 60 * 1000, () => searchSucceeded.HasValue);
-                RunUI(() => AssertEx.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
+                WaitForConditionUI(2 * 60 * 60 * 1000, () => dlg.RunSucceeded.HasValue);
+                RunUI(() => AssertEx.IsTrue(dlg.RunSucceeded.Value, dlg.SearchControl.LogText));
             }
             finally
             {
-                File.WriteAllText(@"DiannSearchLFQbench_DiannLog.txt", searchDlg.SearchControl.LogText);
+                File.WriteAllText(@"DiannSearchLFQbench_DiannLog.txt", dlg.SearchControl.LogText);
             }
-            AssertEx.IsTrue(File.Exists(searchDlg.SearchControl.OutputSpecLibPath));
-        }
+            AssertEx.IsTrue(File.Exists(Path.Combine(DocDir, DiannHelpers.OUTPUT_LIB_NAME)));
 
-        private void ImportToSkylineDocument(DiannSearchDlg searchDlg)
-        {
-            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
-            if (File.Exists(docBlibPath))
-                File.Delete(docBlibPath);
-
-            var importDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
-            WaitForDocumentLoaded();
-            WaitForConditionUI(() => importDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
-
-            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
-            RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
-
-            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importDlg.ClickNextButton());
-            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
-            WaitForDocumentLoaded();
-
-            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
-            RunUI(() => importDlg.MatchModificationsControl.ChangeAll(true));
-            RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
-
-            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
-            RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
-
-            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
-            RunUI(() => importDlg.FullScanSettingsControl.IsolationSchemeName =
-                PropertiesResources.IsolationSchemeList_GetDefaults_Results_only);
-            RunUI(() => AssertEx.IsTrue(importDlg.ClickNextButton()));
-
-            WaitForConditionUI(() => importDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-            RunUI(() =>
-            {
-                importDlg.ImportFastaControl.DecoyGenerationEnabled = false;
-                importDlg.ImportFastaControl.AutoTrain = false;
-            });
-
-            var associate = ShowDialog<AssociateProteinsDlg>(importDlg.ClickNextButtonNoCheck);
-            WaitForConditionUI(() => associate.DocumentFinalCalculated);
             const int chromExtractionTimeoutMs = 60 * 60 * 1000;
-            using (new WaitDocumentChange(null, true, chromExtractionTimeoutMs))
-            {
-                OkDialog(associate, associate.OkDialog);
-            }
+            OkDialog(dlg, () => dlg.ClickNextButton()); // Finish
             WaitForDocumentLoaded(chromExtractionTimeoutMs);
             RunUI(() => SkylineWindow.SaveDocument());
         }
@@ -268,7 +265,7 @@ namespace TestPerf
                 if (File.Exists(candidate.Path)) return candidate.Path;
             }
             var progress = new SilentProgressMonitor();
-            AssertEx.IsTrue(pwiz.Skyline.Util.SimpleFileDownloader.DownloadRequiredFiles(
+            AssertEx.IsTrue(SimpleFileDownloader.DownloadRequiredFiles(
                 DiannHelpers.FilesToDownload, progress));
             return DiannHelpers.DiannBinary;
         }

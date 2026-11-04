@@ -205,6 +205,9 @@
   <data name="ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation" xml:space="preserve">
     <value>&amp;Gas phase fractionation</value>
   </data>
+  <data name="ConverterSettingsControl_ConverterSettingsControl_Search_engine_for_the_DIA_spectra_" xml:space="preserve">
+    <value>Search engine for the DIA spectra:</value>
+  </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>Fragment ions must be selected</value>
   </data>
@@ -388,6 +391,13 @@
   <data name="RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_" xml:space="preserve">
     <value>The document has {0} proteins, {1} peptides, {2} precursors and {3} transitions.</value>
   </data>
+  <data name="RunPeptideSearchDlg_PrepareRun_A_spectral_library_already_exists_at___0___Overwrite_it__or_append_the_new_results_to_it_" xml:space="preserve">
+    <value>A spectral library already exists at:
+
+{0}
+
+Overwrite it, or append the new search results to it?</value>
+  </data>
   <data name="RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_" xml:space="preserve">
     <value>The search settings and files have not changed since the last search; using its results.</value>
   </data>
@@ -396,6 +406,9 @@
   </data>
   <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
     <value>Additional Settings</value>
+  </data>
+  <data name="SearchSettingsControl_ApplySearchSettingsPreset_DiaNN_requires_ppm_tolerances_" xml:space="preserve">
+    <value>Preset "{0}" specifies non-ppm mass tolerances. DIA-NN only accepts ppm tolerances; the preset was not applied.</value>
   </data>
   <data name="SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_" xml:space="preserve">
     <value>Download {0}</value>
@@ -438,49 +451,14 @@ Click 'Retry' to try building again after placing the original spectrum files in
       <value>No features were detected.
 Check your settings and try again.</value>
   </data>
-  <data name="DiannSearchDlg_NextPage_A_FASTA_file_is_required_for_a_DIA_NN_search_" xml:space="preserve">
-    <value>A FASTA file is required for a DIA-NN search.</value>
-  </data>
-  <data name="DiannSearchDlg_ApplyPreset_DiaNN_requires_ppm_tolerances_" xml:space="preserve">
-    <value>Preset "{0}" specifies non-ppm mass tolerances. DIA-NN only accepts ppm tolerances; the preset was not applied.</value>
-  </data>
   <data name="DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_" xml:space="preserve">
     <value>Please add at least one DIA data file.</value>
-  </data>
-  <data name="DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_" xml:space="preserve">
-    <value>DIA-NN output spectral library not found.</value>
-  </data>
-  <data name="DiannSearchDlg_ImportDiannLibrary_DiaNN_zero_precursors_" xml:space="preserve">
-    <value>DIA-NN found no precursors at q-value {0}. Go back to the search settings page to widen the q-value threshold, change peptide-length or charge-range filters, or verify that the FASTA and DIA data files are matched correctly.</value>
-  </data>
-  <data name="DiannSearchDlg_ImportDiannLibrary_DiaNN_lib_unreadable_" xml:space="preserve">
-    <value>The DIA-NN spectral library file could not be read:
-
-{0}
-
-The file may be truncated or corrupted from an interrupted search. Try running the search again.</value>
-  </data>
-  <data name="DiannSearchDlg_ImportDiannLibrary_Existing_blib_prompt__0_" xml:space="preserve">
-    <value>A spectral library already exists at:
-
-{0}
-
-Overwrite it, or append the new DIA-NN results to it?</value>
   </data>
   <data name="DiannSearchDlg_ImportDiannLibrary_Overwrite" xml:space="preserve">
     <value>&amp;Overwrite</value>
   </data>
   <data name="DiannSearchDlg_ImportDiannLibrary_Append" xml:space="preserve">
     <value>&amp;Append</value>
-  </data>
-  <data name="DiannSearchDlg_SettingsPreset_Label" xml:space="preserve">
-    <value>Settings preset:</value>
-  </data>
-  <data name="DiannSearchDlg_SettingsPreset_Save" xml:space="preserve">
-    <value>Save...</value>
-  </data>
-  <data name="DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_" xml:space="preserve">
-    <value>DIA-NN search did not produce a spectral library output.</value>
   </data>
   <data name="OspreySearchControl_Search_Osprey_did_not_produce_a_spectral_library_" xml:space="preserve">
     <value>Osprey did not produce a spectral library.</value>

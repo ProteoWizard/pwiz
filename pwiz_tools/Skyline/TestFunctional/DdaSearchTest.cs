@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -104,6 +105,11 @@ namespace pwiz.SkylineTestFunctional
             public Action ExpectedErrorAction { get; set; }
             public bool HasMissingDependencies { get; private set; }
             public bool TestDependencyErrors { get; set; }
+            /// <summary>
+            /// After the run, run again into the document, which then has its library, to test the
+            /// question of whether to replace that library or add to it.
+            /// </summary>
+            public bool TestDocumentLibraryPrompt { get; set; }
         }
 
         private const int MAX_SEARCH_ATTEMPTS = 3;
@@ -137,7 +143,8 @@ namespace pwiz.SkylineTestFunctional
                 // startup can silently lose candidates: on a 32-thread machine about 1 in 6 searches came up
                 // short, which shows in the hits MS Amanda reports scoring ("Scored 158 peptide hits and 46
                 // decoy peptide hits" for the first file), so a short search is repeated.
-                ExpectedScoredHits = new[] { 158 + 46, 121 + 34 }
+                ExpectedScoredHits = new[] { 158 + 46, 121 + 34 },
+                TestDocumentLibraryPrompt = true
             };
 
             RunFunctionalTest();
@@ -873,6 +880,43 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
             });
 
+            // In a DIA workflow, a preset chosen on the search settings page also chooses how its engine
+            // searches the DIA spectra, and the page offers that engine
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // DIA search method
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.converter_settings_page, importPeptideSearchDlg.CurrentPage);
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.dda_search_settings_page, importPeptideSearchDlg.CurrentPage);
+                Assert.AreNotEqual(SearchEngine.DIANN, searchSettingsControl.SelectedSearchEngine);
+
+                importPeptideSearchDlg.SelectedPresetName = DiannHelpers.PRESET_ORBITRAP;
+                Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
+                AssertEx.AreEqualDeep(new[] { SearchEngine.DIANN }, searchSettingsControl.SearchEngineChoices.ToArray());
+                Assert.AreEqual(SearchEngine.DIANN, searchSettingsControl.SelectedSearchEngine);
+
+                // An engine chosen over the preset's stays chosen when the page offers the engines again
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // DIA search method
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
+                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
+                Assert.AreEqual(SearchEngine.MSFragger, searchSettingsControl.SelectedSearchEngine);
+                searchSettingsControl.SelectedSearchEngine = SearchEngine.Comet;
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // DIA search method
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings
+                Assert.AreEqual(SearchEngine.Comet, searchSettingsControl.SelectedSearchEngine);
+
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // DIA search method
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
+                importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
+            });
+
             // Test importing presets from .params files
             TestImportParamsFilePresets(importPeptideSearchDlg);
 
@@ -1457,6 +1501,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
 
+            if (TestSettings.TestDocumentLibraryPrompt)
+                TestDocumentLibraryPrompt(SEARCH_PRESET_NAME);
+
             // Verify the preset can be loaded in a new wizard with all settings restored
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME);
         }
@@ -1563,6 +1610,68 @@ namespace pwiz.SkylineTestFunctional
                 Console.WriteLine($@"Search scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", expectedScoredHits)} - repeating search");
                 return false;
             };
+        }
+
+        /// <summary>
+        /// Runs again into the document, which now has its library: clicking Run asks whether to replace
+        /// that library or add the new results to it, before anything runs, and Cancel leaves the user on
+        /// the last page. Searching one of the two files again shows which happened: adding keeps the
+        /// other file's results, replacing does not.
+        /// </summary>
+        private void TestDocumentLibraryPrompt(string presetName)
+        {
+            AssertEx.AreEqual(2, GetDocumentLibraryFileCount());
+
+            RunAgainOnOneFile(presetName, false);
+            AssertEx.AreEqual(2, GetDocumentLibraryFileCount());
+
+            RunAgainOnOneFile(presetName, true);
+            AssertEx.AreEqual(1, GetDocumentLibraryFileCount());
+        }
+
+        private int GetDocumentLibraryFileCount()
+        {
+            WaitForDocumentLoaded();
+            return GetUIValue(() =>
+            {
+                var libraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+                AssertEx.IsTrue(libraries.TryGetDocumentLibrary(out var documentLibrary));
+                return documentLibrary.LibraryFiles.Count;
+            });
+        }
+
+        private void RunAgainOnOneFile(string presetName, bool overwrite)
+        {
+            var dlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            RunUI(() =>
+            {
+                dlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
+                dlg.SelectedPresetName = presetName; // The search's settings, including its FASTA
+                AssertEx.IsTrue(dlg.ClickNextButton()); // Modifications
+                AssertEx.IsTrue(dlg.ClickNextButton()); // FASTA
+                AssertEx.IsTrue(dlg.ClickNextButton()); // Search settings
+                AssertEx.IsTrue(dlg.ClickNextButton()); // Full scan settings, the last page before the run
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.full_scan_settings_page, dlg.CurrentPage);
+                dlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
+            });
+
+            var docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
+            var expectedQuestion = string.Format(PeptideSearchResources.RunPeptideSearchDlg_PrepareRun_A_spectral_library_already_exists_at___0___Overwrite_it__or_append_the_new_results_to_it_,
+                docBlibPath);
+            var question = ShowDialog<MultiButtonMsgDlg>(() => dlg.ClickNextButton()); // Run
+            RunUI(() => AssertEx.AreEqual(expectedQuestion, question.Message));
+            OkDialog(question, question.BtnCancelClick);
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(PeptideSearchWizardDlg.Pages.full_scan_settings_page, dlg.CurrentPage);
+                AssertEx.IsFalse(dlg.RunSucceeded.HasValue);
+            });
+
+            question = ShowDialog<MultiButtonMsgDlg>(() => dlg.ClickNextButton()); // Run
+            OkDialog(question, overwrite ? (Action) question.BtnYesClick : question.Btn1Click);
+            WaitForConditionUI(120000, () => dlg.RunSucceeded.HasValue, () => dlg.SearchControl.LogText);
+            RunUI(() => AssertEx.IsTrue(dlg.RunSucceeded.Value, dlg.SearchControl.LogText));
+            OkDialog(dlg, () => dlg.ClickNextButton()); // Finish
         }
 
         private static List<int> GetScoredHits(string searchLog)

@@ -51,6 +51,11 @@ namespace pwiz.Skyline.Model
             public bool IncludeAmbiguousMatches { get; set; }
 
             /// <summary>
+            /// Replace the document library rather than add the new results to it, when the document has one.
+            /// </summary>
+            public bool OverwriteDocumentLibrary { get; set; }
+
+            /// <summary>
             /// The iRT standard to calibrate the library to; null or empty for none.
             /// </summary>
             public IrtStandard IrtStandard { get; set; }
@@ -192,6 +197,26 @@ namespace pwiz.Skyline.Model
 
         private LibrarySpec BuildLibrary(SrmDocument document, string documentPath, IProgressMonitor monitor, Result result)
         {
+            // Otherwise the builder adds the new results to the document's library. The library set aside
+            // goes back when the build fails, so the document never refers to a library that is gone.
+            var setAside = _options.OverwriteDocumentLibrary
+                ? new SetAsideLibrary(document, _libraryManager, BiblioSpecLiteSpec.GetLibraryFileName(documentPath))
+                : null;
+            try
+            {
+                var docLibSpec = BuildLibraryFiles(document, documentPath, monitor, result);
+                setAside?.Discard();
+                return docLibSpec;
+            }
+            catch
+            {
+                setAside?.Restore();
+                throw;
+            }
+        }
+
+        private LibrarySpec BuildLibraryFiles(SrmDocument document, string documentPath, IProgressMonitor monitor, Result result)
+        {
             var thresholdsByFile = _importPeptideSearch.SearchFilenames.ToDictionary(f => f, f => _options.CutoffScore);
             var builder = _importPeptideSearch.GetLibBuilder(document, documentPath, _options.IncludeAmbiguousMatches,
                 _options.IsFeatureDetection);
@@ -210,6 +235,52 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(string.Format(ModelResources.ImportPeptideSearch_Failed_to_build_the_library__0__, docLibSpec.Name));
             _docLibSpec = docLibSpec;
             return docLibSpec;
+        }
+
+        /// <summary>
+        /// The files of the document's library, moved aside while a new library is built in their place.
+        /// </summary>
+        private sealed class SetAsideLibrary
+        {
+            private const string SET_ASIDE_EXT = @".overwritten";
+
+            private readonly List<string> _paths = new List<string>();
+
+            public SetAsideLibrary(SrmDocument document, LibraryManager libraryManager, string docBlibPath)
+            {
+                ImportPeptideSearch.ReleaseDocumentLibrary(document, libraryManager);
+                foreach (var path in new[] { docBlibPath, BiblioSpecLiteSpec.GetRedundantName(docBlibPath) })
+                {
+                    if (!File.Exists(path))
+                        continue;
+                    FileEx.SafeDelete(path + SET_ASIDE_EXT, true);
+                    File.Move(path, path + SET_ASIDE_EXT);
+                    _paths.Add(path);
+                }
+            }
+
+            public void Discard()
+            {
+                foreach (var path in _paths)
+                    FileEx.SafeDelete(path + SET_ASIDE_EXT, true);
+            }
+
+            public void Restore()
+            {
+                try
+                {
+                    foreach (var path in _paths)
+                    {
+                        FileEx.SafeDelete(path);
+                        File.Move(path + SET_ASIDE_EXT, path);
+                    }
+                }
+                catch (Exception x)
+                {
+                    // The failure of the build is the error to report
+                    Messages.WriteAsyncDebugMessage(@"Failed to restore the document library: {0}", x.Message);
+                }
+            }
         }
 
         private void CalibrateIrts(LibrarySpec docLibSpec, IProgressMonitor monitor, Result result)

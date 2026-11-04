@@ -220,7 +220,4 @@
   <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
     <value>正在等待下一个文件</value>
   </data>
-  <data name="SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported" xml:space="preserve">
-    <value>目前仅 MSFragger 支持原始 DIA 搜索。启用 DIA-Umpire，使用其他搜索引擎。</value>
-  </data>
 </root>

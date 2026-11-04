@@ -647,17 +647,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
 
-                // MSFragger should be selected by default
+                // The DIA search method page chose MSFragger, the default engine for searching DIA spectra directly,
+                // so it is the only engine offered
                 Assert.AreEqual(SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
+                AssertEx.AreEqualDeep(new[] { SearchEngine.MSFragger }, importPeptideSearchDlg.SearchSettingsControl.SearchEngineChoices.ToArray());
             });
-
-            // selecting something other than MSFragger should show an error
-            RunDlg<MessageDlg>(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.MSAmanda,
-                messageDlg =>
-                {
-                    Assert.AreEqual(DdaSearchResources.SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported, messageDlg.Message);
-                    messageDlg.ClickOk();
-                });
 
             RunUI(() =>
             {

@@ -220,7 +220,4 @@
   <data name="HardklorSearchEngine_PerformAllAlignments_Waiting_for_next_file" xml:space="preserve">
     <value>次のファイルを待機中</value>
   </data>
-  <data name="SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported" xml:space="preserve">
-    <value>生データのDIA検索で現在サポートされているのは、MSFraggerだけです。他の検索エンジンを使用するには、DIA-Umpireを有効にしてください。</value>
-  </data>
 </root>

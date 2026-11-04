@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -85,25 +84,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             NextPage(); // skip use existing library page
 
             ImportResultsControl.FoundResultsFiles = resultFiles;
-        }
-
-        /// <summary>
-        /// Seed the chromatograms page's spectrum-source map with files we already know
-        /// the paths of (e.g. DiannSearchDlg passes the same DIA files that were just
-        /// searched). The key and display Name both use the filename without extension,
-        /// matching the BlibBuild library's stored fileName so the doc-library scan in
-        /// <see cref="ImportPeptideSearch.InitializeSpectrumSourceFiles"/> finds these
-        /// entries (via ContainsKey) and leaves them in place rather than emitting a
-        /// second, unpopulated entry that would trigger a rename / prefix-suffix dialog.
-        /// </summary>
-        public void PrefillFoundResultsFiles(IEnumerable<ImportPeptideSearch.FoundResultsFile> files)
-        {
-            foreach (var f in files)
-            {
-                string name = Path.GetFileNameWithoutExtension(f.Path);
-                ImportPeptideSearch.SpectrumSourceFiles[name] =
-                    new ImportPeptideSearch.FoundResultsFilePossibilities(name, f.Path);
-            }
         }
 
         private bool LeaveSpectraPage()

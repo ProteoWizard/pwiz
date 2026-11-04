@@ -55,6 +55,16 @@ namespace pwiz.Skyline.Model
         public abstract double DefaultCutoffScore { get; }
         public abstract Bitmap SearchEngineLogo { get; }
         public abstract string SearchEngineBlurb { get; } // Text shown below the search engine logo
+
+        /// <summary>
+        /// The file the engine writes its console output to as it runs; null when it keeps none.
+        /// </summary>
+        public virtual string LogFilePath => null;
+
+        /// <summary>
+        /// Whether the document's isotope label modifications are searched along with its structural ones.
+        /// </summary>
+        public virtual bool SearchesIsotopeLabels => true;
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
 

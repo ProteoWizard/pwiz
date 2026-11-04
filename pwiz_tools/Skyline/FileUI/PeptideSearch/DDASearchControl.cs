@@ -36,6 +36,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public override void RunSearch()
         {
             ImportPeptideSearch.SearchEngine.SearchProgressChanged += SearchEngine_MessageNotificationEvent;
+            SetLogFilePath(ImportPeptideSearch.SearchEngine.LogFilePath);
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = progressBar.Visible = true;
