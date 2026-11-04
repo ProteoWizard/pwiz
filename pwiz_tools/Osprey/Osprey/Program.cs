@@ -695,8 +695,8 @@ namespace pwiz.Osprey
                 if (unknownMaskedFeature != null)
                 {
                     LogError(string.Format(
-                        @"OSPREY_FEATURE_MASK names an unknown feature: '{0}'. Use PIN feature names separated by " +
-                        @"commas, or 'none' to mask nothing.", unknownMaskedFeature));
+                        OspreyResources.Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_,
+                        @"OSPREY_FEATURE_MASK", unknownMaskedFeature, OspreyEnvironment.FEATURE_MASK_NONE));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // A masked feature is absent from the classifier's vectors, so a mask with nothing
@@ -705,6 +705,22 @@ namespace pwiz.Osprey
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
                     return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Abort for the same reason: a mistyped value would train with the default arm
+                // and key its directories as the default, so a System.Math timing or parity arm
+                // would report the deterministic arm's numbers under its own name.
+                if (OspreyEnvironment.DeterministicMathUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_DETERMINISTIC_MATH must be '0' (System.Math Exp/Log) or '1' (the default, " +
+                        @"platform-independent fdlibm Exp/Log), not '{0}'. Unset it for the default.",
+                        OspreyEnvironment.DeterministicMathSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                if (!OspreyEnvironment.UseDeterministicMath)
+                {
+                    LogInfo(@"Exp/Log: System.Math (OSPREY_DETERMINISTIC_MATH=0) - gbdt training is not " +
+                            @"bit-identical across operating systems");
                 }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {

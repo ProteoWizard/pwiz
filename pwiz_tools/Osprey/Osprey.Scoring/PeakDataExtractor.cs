@@ -625,7 +625,7 @@ namespace pwiz.Osprey.Scoring
         /// stronger candidate shows a negative margin. Only the runner-up features read this;
         /// the Stage 6 candidate list stays empty on this path.
         /// </summary>
-        private static List<(XICPeakBounds peak, double coelutionScore, double rankScore)> OverrideRunnerUpCandidates(
+        internal static List<(XICPeakBounds peak, double coelutionScore, double rankScore)> OverrideRunnerUpCandidates(
             LibraryEntry candidate, List<Spectrum> windowSpectra, double[] windowRts, double expectedRt,
             double rtTolerance, double twoSigmaSq, PickLdaModel pickModel, OspreyConfig config,
             (double Apex, double Start, double End) bounds, XICPeakBounds chosen, double chosenCoelution,
@@ -649,6 +649,14 @@ namespace pwiz.Osprey.Scoring
                 out int startScan, out int endScan);
             if (startScan < 0 || endScan - startScan + 1 < 5)
                 return result;
+            // The first pass's signal prefilter (TryExtract) gates detection on the top-6 fragments
+            // however many XICs are extracted. A window it would reject gave the first pass no
+            // candidates to choose among, so the imposed peak stands alone.
+            if (config.PrefilterEnabled &&
+                !HasPrefilterSignal(candidate, windowSpectra, startScan, endScan, config.FragmentTolerance))
+            {
+                return result;
+            }
             var xics = TopFragmentExtractor.ExtractFragmentXics(candidate, windowSpectra, windowRts,
                 startScan, endScan, config);
             if (xics.Count < 2)

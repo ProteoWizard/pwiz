@@ -325,5 +325,34 @@ namespace pwiz.Osprey.Test
                 Directory.Delete(dir, true);
             }
         }
+
+        /// <summary>
+        /// The OSPREY_DUMP_RUN_PEP fit must compete each target with its paired decoy as the
+        /// first pass does (TargetDecoyCompetition.CompeteFromDicts): higher score wins, the DECOY
+        /// on a tie. Giving ties to the target fit the run PEP to a different winner population
+        /// and undercounted decoys wherever scores tie, as tree models make common. Also pins
+        /// best-of-several per side, unpaired targets and decoys, and base-id order.
+        /// </summary>
+        [TestMethod]
+        public void TestRunPepCompetitionGivesTiesToDecoy()
+        {
+            uint decoy = LibraryEntry.DECOY_ID_BIT;
+            var records = new List<FdrScoreRecord>
+            {
+                Record(3, 2.0), Record(3 | decoy, 2.0),            // tie -> decoy
+                Record(1, 1.0), Record(1, 3.0), Record(1 | decoy, 2.5), // best target 3.0 beats 2.5
+                Record(2 | decoy, 4.0), Record(2, 1.5),            // decoy wins outright
+                Record(5, 0.5),                                    // unpaired target
+                Record(4 | decoy, 0.7),                            // unpaired decoy
+            };
+            var winners = Pass2FdrSidecar.CompeteRunPepWinners(records);
+            CollectionAssert.AreEqual(new[] { 3.0, 4.0, 2.0, 0.7, 0.5 }, winners.Scores);
+            CollectionAssert.AreEqual(new[] { false, true, true, true, false }, winners.IsDecoyWinner);
+        }
+
+        private static FdrScoreRecord Record(uint entryId, double score)
+        {
+            return new FdrScoreRecord(entryId, score, 1.0, 1.0, 0.0);
+        }
     }
 }

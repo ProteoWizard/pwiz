@@ -219,6 +219,7 @@ namespace pwiz.Osprey.Tasks
                 // reader treats a MISSING value as "1": back then the file was only written
                 // when there was work, so its existence meant the same thing.
                 { META_RESCORED, rescored ? @"1" : @"0" },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(OspreyEnvironment.SearchXicFragments) },
             };
         }
     }

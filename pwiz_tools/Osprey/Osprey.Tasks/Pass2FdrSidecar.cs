@@ -2339,11 +2339,21 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The run's posterior error probability as a function of score: <see cref="PepEstimator"/>
-        /// fitted on the run's first-pass target-decoy competition, one winner per base id (the higher
-        /// of the target and its paired decoy, the target on a tie), fed in base-id order because the
-        /// KDE sum is order-sensitive.
+        /// fitted on the run's first-pass target-decoy competition (<see cref="CompeteRunPepWinners"/>).
         /// </summary>
         private static PepEstimator FitRunPep(IEnumerable<FdrScoreRecord> records)
+        {
+            var winners = CompeteRunPepWinners(records);
+            return PepEstimator.FitDefault(winners.Scores, winners.IsDecoyWinner);
+        }
+
+        /// <summary>
+        /// The run's target-decoy competition: one winner per base id, the higher-scoring of the
+        /// target and its paired decoy, the decoy on a tie as in first-pass competition
+        /// (<c>TargetDecoyCompetition.CompeteFromDicts</c>). In base-id order, because the KDE
+        /// sum the PEP fit runs is order-sensitive.
+        /// </summary>
+        internal static (double[] Scores, bool[] IsDecoyWinner) CompeteRunPepWinners(IEnumerable<FdrScoreRecord> records)
         {
             var best = new SortedDictionary<uint, (double Target, double Decoy)>();
             foreach (var rec in records)
@@ -2361,11 +2371,11 @@ namespace pwiz.Osprey.Tasks
             var isDecoyWinner = new List<bool>(best.Count);
             foreach (var pair in best.Values)
             {
-                bool decoyWins = double.IsNaN(pair.Target) || (!double.IsNaN(pair.Decoy) && pair.Decoy > pair.Target);
+                bool decoyWins = double.IsNaN(pair.Target) || (!double.IsNaN(pair.Decoy) && pair.Decoy >= pair.Target);
                 scores.Add(decoyWins ? pair.Decoy : pair.Target);
                 isDecoyWinner.Add(decoyWins);
             }
-            return PepEstimator.FitDefault(scores.ToArray(), isDecoyWinner.ToArray());
+            return (scores.ToArray(), isDecoyWinner.ToArray());
         }
 
         private static string RunPepRow(FdrEntry entry, PerRunClass perRunClass, PepEstimator runPep)

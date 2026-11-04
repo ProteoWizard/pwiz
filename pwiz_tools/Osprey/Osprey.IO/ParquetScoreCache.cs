@@ -372,6 +372,50 @@ namespace pwiz.Osprey.IO
         /// <summary>The footer metadata key holding the search settings hash the scores were written under.</summary>
         public const string META_SEARCH_HASH = @"osprey.search_hash";
 
+        /// <summary>
+        /// The footer metadata key holding the XIC count (OSPREY_XIC_FRAGMENTS) the scores were
+        /// computed with. The search hash leaves the count out, so without this a FDR task pointed
+        /// at existing scores could adopt scores from another count and label its output with its own.
+        /// </summary>
+        public const string META_XIC_FRAGMENTS = @"osprey.xic_fragments";
+
+        private const string XIC_KEY_TERM = @";xic=";
+
+        /// <summary>The <see cref="META_XIC_FRAGMENTS"/> value for <paramref name="count"/>.</summary>
+        public static string XicFragmentsText(int count)
+        {
+            return count.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// The XIC count a scores file records: its <see cref="META_XIC_FRAGMENTS"/> footer entry,
+        /// else the <c>;xic=</c> term of its validity stamp (scores written before the entry), else
+        /// <see cref="OspreyEnvironment.DEFAULT_XIC_FRAGMENTS"/> (scores written before the count
+        /// could change). Null when a record is present but does not parse.
+        /// </summary>
+        public static int? RecordedXicFragments(IReadOnlyDictionary<string, string> footer)
+        {
+            if (footer.TryGetValue(META_XIC_FRAGMENTS, out string text))
+                return ParseXicCount(text);
+            if (footer.TryGetValue(ArtifactStamp.PARQUET_KEY, out string stampText))
+            {
+                string key = ArtifactStamp.Parse(stampText)?.Key;
+                int termStart = key?.IndexOf(XIC_KEY_TERM, StringComparison.Ordinal) ?? -1;
+                if (termStart >= 0)
+                {
+                    int valueStart = termStart + XIC_KEY_TERM.Length;
+                    int valueEnd = key.IndexOf(';', valueStart);
+                    return ParseXicCount(valueEnd < 0 ? key.Substring(valueStart) : key.Substring(valueStart, valueEnd - valueStart));
+                }
+            }
+            return OspreyEnvironment.DEFAULT_XIC_FRAGMENTS;
+        }
+
+        private static int? ParseXicCount(string text)
+        {
+            return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int count) ? count : (int?)null;
+        }
+
         // Score parquets whose charge column a library-identity walk has already checked
         // (RequireFileCharges) in this process. The check costs a seek per row group on a
         // spinning disk, and first-pass FDR walks each file six or more times, so each file is
@@ -2695,6 +2739,15 @@ namespace pwiz.Osprey.IO
                     expectedSearch, expectedLibrary, currentVersion);
                 if (err != null)
                     return err;
+
+                int? recordedXic = RecordedXicFragments(kv);
+                if (recordedXic != OspreyEnvironment.SearchXicFragments)
+                {
+                    return string.Format(
+                        OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__,
+                        path, recordedXic?.ToString(CultureInfo.InvariantCulture) ?? @"?",
+                        OspreyEnvironment.SearchXicFragments.ToString(CultureInfo.InvariantCulture), @"OSPREY_XIC_FRAGMENTS");
+                }
 
                 // --task SecondPassFDR strict reconciled-input gate. Mirrors
                 // Rust pipeline.rs:3313-3344: every input parquet must

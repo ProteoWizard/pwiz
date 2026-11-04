@@ -299,6 +299,7 @@ namespace pwiz.Osprey.Tasks
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { ParquetScoreCache.META_RECONCILED, @"false" },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(OspreyEnvironment.SearchXicFragments) },
             }, _outputStamp);
 
             // Resolve how many input files score concurrently for this invocation
