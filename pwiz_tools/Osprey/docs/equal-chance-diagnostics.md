@@ -99,15 +99,20 @@ carry, so it is not computed.
 
 ## Calibration on the regression datasets
 
-Read on the regression legs that carry `--model-diagnostics` (pass 1):
+Read on the regression datasets (pass 1; Stellar's leg does not carry `--model-diagnostics`, so
+its report was rendered afterwards with `--task ModelDiagnostics`):
 
 | Dataset | Null alignment | q-band | Paired coin | Decoy support |
 |---|---|---|---|---|
+| Stellar | ok: location -0.30, scale 0.93, D 3.00 | ok: 46.3% | n/a (no entrapment) | ok: 261 |
 | StellarLibDecoy | ok: location -0.10, scale 0.95, D 3.24 | ok: 46.2% | ok: 50.1% | ok: 230 |
 | StellarGenDecoyEntrap | ok: location -0.18, scale 0.98, D 2.13 | ok: 43.9% | ok: 46.7% | ok: 239 |
-| Astral | cannot assess: not separated, D 0.32 | ok: 43.5% | n/a | ok: 994 |
+| Astral (from that run's retained diagnostics sidecars) | cannot assess: not separated, D 0.32 | ok: 43.5% | n/a | ok: 994 |
 
 The generated decoys now track the null closely (entrapment FDP about 1.2% at 1% q in pass 1),
 so nothing fires on StellarGenDecoyEntrap; it does read further from the null than the library
-decoys on every check (-0.11 sigma below its own entrapment, against -0.01 for libdecoy). The
+decoys on every check (-0.11 sigma below its own entrapment, against -0.01 for libdecoy).
+Stellar, generated decoys against the plain library, reads furthest from its null (-0.30
+sigma) and has no entrapment to confirm it; it is the dataset to watch if a decoy change moves
+this metric. The
 numbers the issue quotes (22% coin, ~10x miscalibration) predate the decoy-generator fixes.
