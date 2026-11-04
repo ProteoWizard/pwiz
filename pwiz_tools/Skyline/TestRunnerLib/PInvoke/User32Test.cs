@@ -29,6 +29,10 @@ namespace TestRunnerLib.PInvoke
         public const ulong WS_BORDER = 0x00800000L;
         public const ulong WS_VISIBLE = 0x10000000L;
 
+        public const uint SPI_GETCLIENTAREAANIMATION = 0x1042;
+        public const uint SPI_SETCLIENTAREAANIMATION = 0x1043;
+        public const uint SPIF_SENDCHANGE = 0x02;
+
         public enum HandleType
         {
             total = -1,
@@ -58,6 +62,14 @@ namespace TestRunnerLib.PInvoke
 
         [DllImport("user32.dll")]
         public static extern bool SetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref bool pvParam, uint fWinIni);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, uint fWinIni);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);

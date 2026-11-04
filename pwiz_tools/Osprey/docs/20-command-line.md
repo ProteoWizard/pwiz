@@ -11,21 +11,37 @@ Osprey reads DIA mzML files plus a spectral library and writes a BiblioSpecLite
 runs as a standalone .NET 8 executable on Windows and Linux.
 
 ```
-Osprey -i path/to/file ... -l path/to/file.blib|.tsv -o path/to/file.blib [options]
+Osprey -i path/to/file ... -l path/to/file.blib|.tsv|.parquet -o path/to/file.blib [options]
 Osprey -i path/to/file ... --fasta path/to/file.fasta -o path/to/file.blib [options]
 ```
 
 The three required inputs are `-i`/`--input` (one or more mzML), a library - `-l`/`--library`
-(a DIA-NN TSV or `.blib`) or `--fasta` (a protein FASTA the library is predicted from, see
+(a `.blib`, a DIA-NN TSV, or a DIA-NN 2.x library `.parquet`) or `--fasta` (a protein FASTA the library is predicted from, see
 [Library build](#library-build)) - and `-o`/`--output` (the result `.blib`). Everything else
-has a sensible default; `--resolution unit` is the one a search of unit-resolution data (an ion
-trap such as Stellar) must give, since the default is `hram` and nothing detects it from the data.
+has a sensible default, including the resolution: `--resolution auto`, the default, measures
+whether the data is unit resolution (an ion trap such as Stellar) or high resolution (Orbitrap,
+Astral, TOF) and logs the measurement - see [Resolution detection](#resolution-detection).
 
 A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
 column the library has (a fragment charge of `1.0` or `0`, an ion type other than
 a/b/c/x/y/z, an unknown loss or decoy flag, an empty cell) or a modification with no known
 mass refuses the library, listing each line and column to fix, as Skyline's transition
 list import does. Nothing is guessed for a bad value.
+
+A DIA-NN 2.x library `.parquet` is searched directly, with no conversion: a search's
+`report-lib.parquet` (written with `--gen-spec-lib --out-lib report-lib.parquet`), or a
+predicted library, which DIA-NN 2.7 writes as a binary `.speclib` and converts with
+`diann --lib x.speclib --gen-spec-lib --out-lib x.parquet`. Osprey refuses a `.speclib` with
+that command; its format is undocumented. The `.parquet` is read row by row into the same
+library entries as a DIA-NN TSV of the same library (one row per fragment; `RT` is the
+retention time a TSV's `NormalizedRetentionTime` gives, DIA-NN's library scale in a predicted
+and an empirical library alike; `Modified.Sequence` carries UniMod ids such as `C(UniMod:4)`
+and a leading `(UniMod:1)`), each value checked as a TSV's is, and it is kept as a derived
+`.blib` the same way (`report-lib.parquet.blib`). `--decoys-in-library` takes the decoys its
+`Decoy` column marks, as for a TSV. An empty library - DIA-NN writes one, with no rows, when
+its search identifies nothing - loads as no entries and the search stops with the library
+reported empty. The column reading is shared with BiblioSpec's DIA-NN import
+(`BiblioSpec.IO`'s `DiannLibraryParquetReader`).
 
 ---
 
@@ -67,8 +83,38 @@ Osprey -i sample.mzML -l predicted.tsv -o results.blib \
 ```
 
 HRAM turns on the MS1 precursor-coelution and isotope-cosine features and selects the
-Astral-trained defaults for the learned pick. `hram` is the default; the resolution is not
-inferred from the data, so a unit-resolution search must pass `--resolution unit`.
+Astral-trained defaults for the learned pick. The examples above give `--resolution` to show the
+mode; without it the same data measures as the same mode (next section).
+
+### Resolution detection
+
+`--resolution auto` (the default) decides between `unit` and `hram` from the first input's MS2
+spectra, read from its `.spectra.bin` when one exists, else from the data file:
+
+- **Statistic**: the gaps in m/z between adjacent centroids, pooled over the first MS2 spectra in
+  acquisition order until 10,000 gaps (or 1,000 spectra) are collected; the decision reads the
+  **1st percentile** of those gaps.
+- **Threshold**: below **0.2 m/z** is `hram`, else `unit`. A unit-resolution analyzer does not
+  separate peaks that close; a high-resolution one shows some in every DIA spectrum. On the
+  regression data Stellar measures 0.44-0.45 m/z and Astral 0.03 m/z.
+- **Cost**: about 50-130 spectra; tens of milliseconds from a cache, a fraction of a second from
+  an mzML.
+- **Log**: the `Resolution:` settings line is followed by the measurement, the threshold and the
+  file it came from. The other inputs are measured too, and any that measures as the other mode
+  is named in a warning; every input of one search is scored at the first input's mode, so
+  search runs of different resolution separately (or give `--resolution`).
+- **HPC**: nodes with spectra (PerFileScoring, PerFileRescoring) measure their own inputs; FDR
+  nodes handed only scores files read the mode whose search settings match the hash stamped in
+  the first scores file. Runs of one instrument therefore resolve the same mode on every node. A
+  per-file node sees only its own run, so a cohort mixing resolutions scores each run at its own
+  mode, and the FDR join refuses the scores files whose search settings differ: give
+  `--resolution` to every node of such a chain. A detected and an explicit mode give the same
+  search settings hash, so their artifacts are interchangeable.
+- **Too few peaks** to decide (fewer than 100 gaps): the next input that decides is used; when
+  none does, the search runs as `hram`, with a warning.
+
+`--resolution hram` or `--resolution unit` skips the measurement. `--export-library` reads no
+inputs, so it measures nothing and types fragments at `hram` unless `--resolution` is given.
 
 ### Useful extras
 
@@ -97,8 +143,8 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads (vendor files where the vendor readers are installed). Variadic; also accepts positional paths. |
-| `-l`, `--library` | `path/to/file.blib\|.tsv` | Spectral library — DIA-NN TSV or BiblioSpec `.blib` (see [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
+| `-i`, `--input` | `path/to/file ...` | Mass spectrometry data files: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read. Variadic; also accepts positional paths. |
+| `-l`, `--library` | `path/to/file.blib\|.tsv\|.parquet` | Spectral library — BiblioSpec `.blib`, DIA-NN TSV, or DIA-NN 2.x library `.parquet` (see the library inputs at the top of this page, [01-decoy-generation.md](01-decoy-generation.md), [14-intermediate-files.md](14-intermediate-files.md)). |
 | `-o`, `--output` | `path/to/file.blib` | The search result, for Skyline (see [13-blib-output-schema.md](13-blib-output-schema.md)): an entry per precursor that passes FDR with the library spectrum it was searched with (the predicted one with `--fasta`), its best run's retention time and boundaries, its experiment-wide precursor q-value and PEP and peptide q-value, and a row per run it was detected in with that run's retention time, boundaries and q-value; its protein groups with their q-values. (`OSPREY_DIANN_REPORTS=1` also writes `<output>.protein_groups.tsv` and `<output>.stats.tsv`, the same results in the shape of DIA-NN's reports, for comparing the two tools.) |
 | `--work-dir` | `path/to/folder` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `path/to/folder` | Directory for derived artifacts (overrides `--work-dir`). |
@@ -126,14 +172,14 @@ the library. A tuning run may be one of the `-i` runs (the lab's "search the mid
 with `--training-input` tunes the saved model further.
 
 A fourth entry point predicts and does not search: `--precursors` with `--task PredictLibrary`
-predicts a library for exactly the precursors of a table, with no digest, and writes the TSV
-peptdeep writes. Skyline's Build Library runs it (its AlphaPeptDeep source) with the document's
+predicts a library for exactly the precursors of a table, with no digest, and writes it as the
+output `.blib` itself. Skyline's Build Library runs it (its Carafe source) with the document's
 precursors, so the one download of Osprey serves both the wizard and the dialog.
 
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--fasta` | `path/to/file.fasta` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library` and `--decoy-pairing-manifest`. On a cluster each phase is a `--task` of its own (see "The library build on a cluster" below). |
-| `--precursors` | `path/to/file.tsv` | With `--task PredictLibrary` and `-o`: predict a library for exactly the precursors of this tab-separated table (columns `sequence`, `mods`, `mod_sites`, `charge`, in alphabase's notation, as Skyline writes it) and write it beside the output as `<out>.predicted.speclib.tsv`, the TSV peptdeep writes, with its fragment rules (b and y of charge 1 and 2, m/z 200-2000, the 12 most intense). No digest and no search: the pretrained models or `--model` predict, the **Library Prediction** options apply, and `--fasta`, the tuning and the entrapment options are refused. Never current: every run predicts. |
+| `--precursors` | `path/to/file.tsv` | With `--task PredictLibrary` and `-o`: predict a library for exactly the precursors of this tab-separated table (columns `sequence`, `mods`, `mod_sites`, `charge`, in alphabase's notation, as Skyline writes it) and write it as the output `.blib` itself, with Carafe's fragment rules and every precursor's CCS beside its 1/K0 (Skyline converts the CCS with each data file's calibration). No digest and no search: the pretrained models or `--model` predict, the **Library Prediction** options apply, and `--fasta`, the tuning and the entrapment options are refused. Never current: every run predicts. |
 | `--training-input` | `path/to/file ...` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.model.zip`. The options of the **Library Tuning** section apply. |
 | `--training-input-list` | `path/to/file.txt` | A file of `--training-input` runs, one path per line (`#` comments ignored), as `--input-list` is for `-i`: a long run list can pass the Windows command-line limit and hides the other arguments. |
 | `--model` | `path/to/file.model.zip` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
@@ -209,7 +255,7 @@ Each is also a `--task` of its own on a cluster (see "The library build on a clu
 
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
-| `--resolution` | `hram \| unit` | `hram` | How spectra are scored. `hram` (Orbitrap, Astral, TOF): fine bins, the MS1 precursor features, 10 ppm fragment and precursor tolerance. `unit` (ion traps such as Stellar): coarse bins, no MS1 features, 0.5 m/z fragment and 1.0 m/z precursor tolerance. Also selects the default pick model. Not detected from the data. See [03-spectral-scoring.md](03-spectral-scoring.md), [06-peak-detection.md](06-peak-detection.md). |
+| `--resolution` | `auto \| hram \| unit` | `auto` | How spectra are scored. `hram` (Orbitrap, Astral, TOF): fine bins, the MS1 precursor features, 10 ppm fragment and precursor tolerance. `unit` (ion traps such as Stellar): coarse bins, no MS1 features, 0.5 m/z fragment and 1.0 m/z precursor tolerance. Also selects the default pick model. `auto` measures which from the first input's MS2 peak spacing ([Resolution detection](#resolution-detection)). See [03-spectral-scoring.md](03-spectral-scoring.md), [06-peak-detection.md](06-peak-detection.md). |
 | `--fragment-tolerance` | `<number>` | `10` ppm; `0.5` m/z at `unit` | Fragment m/z tolerance, in the `--fragment-unit` unit. |
 | `--fragment-unit` | `ppm \| mz` | `ppm`; `mz` at `unit` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
@@ -273,7 +319,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 | Option | Effect |
 |--------|--------|
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
-| `--memstamp` | Prefix each line with managed + private memory in MB (pair with `--timestamp` for perf visualization). |
+| `--memstamp` | Prefix each line with managed and process private bytes in MB, for monitoring memory use during long runs. |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
 | `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
@@ -282,9 +328,9 @@ None of these counts enters a validity key or changes an output byte; one lane i
 
 | Option | Effect |
 |--------|--------|
-| `-d`, `--diagnostics` | Write the cross-impl bisection dump bundle (`OSPREY_DUMP_*`). See [18-peptide-trace.md](18-peptide-trace.md). |
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
+| `--help-env` | Show the `OSPREY_*` environment variables (developer switches), grouped by what they change. Accepts `ascii` or `unicode`. See [Environment variables](#environment-variables). |
 | `-v`, `--version` | Show version. |
 
 ### Log format
@@ -307,7 +353,7 @@ translated, and it is the only part of the log a script or test may read.
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
 Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,
-`-d`, an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
+an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
 `[TRAIN-EXPORT]`, `[BISECT]`, ...). The tag labels the line and stays ASCII; the text after
 it is prose. In a plain default run `[TASK]` is the only tag.
 
@@ -362,7 +408,7 @@ the user's culture, as Skyline's does:
   A run under any culture writes byte-identical files.
 - `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
   argument and environment variable names, internal-invariant exceptions, and diagnostics reached
-  only through `-d` or an `OSPREY_*` setting.
+  only through an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
   choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
@@ -447,7 +493,28 @@ Full detail: [15-hpc-scoring-split.md](15-hpc-scoring-split.md).
 ## Environment variables
 
 Env vars are the escape hatch for experimental / diagnostic behavior that is not on the
-CLI; they are read once at process start. The ones most likely to matter:
+CLI. **`Osprey --help-env` prints the full catalog**, generated from the declarations, in five
+groups: *behavior* (changes the reported results), *allowances* (relax a check that would stop
+the run), *performance* (how, not what), *harness* (early exits and limits; incomplete output)
+and *diagnostics* (extra files or log lines). The list cannot drift from the code:
+
+- Every variable is an `EnvVar` declared beside the code that reads it, and its constructor
+  requires the group and a description. The only read of the environment is `EnvVar.Value`
+  (`Osprey.Core/EnvVar.cs`); `CodeInspectionTest.TestEnvironmentReadThroughEnvVar` fails on
+  `Environment.GetEnvironmentVariable` anywhere else.
+- Any other set `OSPREY_*` name is a startup ERROR, as an unknown argument is, and the message
+  names the closest catalogued name (`OSPREY_PASS2_QVALUES` ... did you mean
+  `OSPREY_PASS2_QVALUE`?). Osprey claims the `OSPREY_` prefix.
+- A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
+  `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
+  `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
+  default arm under the name of the one asked for. A retired arm is refused the same way:
+  `OSPREY_STUB_IDENTITY` lists only `1|2`, and `OSPREY_BLOCK_READ_MB` accepts only a positive
+  size, so the removed `=0` arms stop the run rather than time the default under their name.
+- The log names every set switch and its value on one `Environment switches:` line at startup,
+  so a log records which arm it ran. A run that sets none logs nothing new.
+
+The catalog text is developer text and is not translated. The ones most likely to matter:
 
 | Variable | What it does | Doc |
 |----------|--------------|-----|
@@ -459,12 +526,15 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
+| `OSPREY_DETERMINISTIC_MATH` | Exp/Log in GBDT training: unset / `1` = managed fdlibm port, bit-identical on Windows and Linux (**default**); `0` = `System.Math`, which calls the OS C library and can differ in the last bit between OSes (an A/B arm for timing and for reproducing pre-switch models; keys the gbdt tasks). Anything else is a startup ERROR | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
-| `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps (also via `-d`) | [18](18-peptide-trace.md) |
+| `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
+| `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 
-The full set is enumerated in the relevant algorithm docs; there is no single flat
-listing on the CLI by design (these are not user-facing knobs).
+`--help-env` is the full set; the algorithm docs describe each in context. None of them is
+promoted to an argument by being listed: the two levels stay distinct, and these are not
+user-facing knobs.
 
 ---
 

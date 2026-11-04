@@ -125,9 +125,6 @@
     <EmbeddedResource Include="MSstats\RatPlasmaQuantileNormalizedProcessedData.csv" />
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithInteraction.csv" />
     <EmbeddedResource Include="MSstats\RatPlasmaResultsWithoutInteraction.csv" />
-    <EmbeddedResource Include="predict.speclib.tsv" />
-    <EmbeddedResource Include="predict_transformed.speclib.tsv" />
-    <EmbeddedResource Include="predict_transformed.speclib.blib" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
     <EmbeddedResource Include="Reporting\ResultSummaryPivot.skyr" />

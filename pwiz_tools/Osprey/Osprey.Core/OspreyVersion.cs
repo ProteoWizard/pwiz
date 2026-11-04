@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -58,12 +57,18 @@ namespace pwiz.Osprey.Core
         /// <summary>The environment variable that pins <see cref="Current"/>.</summary>
         public const string ENV_OVERRIDE = @"OSPREY_VERSION_OVERRIDE";
 
+        // What the build stamped into the assembly, read once.
+        private static readonly string ASSEMBLY_VERSION = ResolveAssemblyVersion();
+        private static readonly string ASSEMBLY_INFORMATIONAL_VERSION = ResolveAssemblyInformationalVersion();
+
         /// <summary>
-        /// OSPREY_VERSION_OVERRIDE: pins the logical version to a fixed string,
-        /// regardless of the assembly version. Set only by the bit-parity
-        /// regression harness; never in production. Read once at process start.
+        /// The build's logical version, or the OSPREY_VERSION_OVERRIDE pin when it is set:
+        /// the regression harness pins it for a deterministic golden, and a developer pins it
+        /// to reuse artifacts another day's build wrote (every artifact's stamp must match it).
+        /// The pin is read through <see cref="OspreyEnvironment"/>'s variable seam on each
+        /// access, so a test can run one in-process command as another build.
         /// </summary>
-        public static readonly string Current = ResolveVersion();
+        public static string Current => VersionOverride ?? ASSEMBLY_VERSION;
 
         /// <summary>
         /// The full informational version stamped by the build:
@@ -76,7 +81,7 @@ namespace pwiz.Osprey.Core
         /// falls back to the bare numeric <see cref="Current"/> for a non-git build
         /// or under the bit-parity <c>OSPREY_VERSION_OVERRIDE</c>.
         /// </summary>
-        public static readonly string InformationalVersion = ResolveInformationalVersion();
+        public static string InformationalVersion => VersionOverride ?? ASSEMBLY_INFORMATIONAL_VERSION;
 
         /// <summary>
         /// Git short hash parsed from <see cref="InformationalVersion"/> (empty for
@@ -111,31 +116,36 @@ namespace pwiz.Osprey.Core
             return stamp.IsCurrent(task, Current, key);
         }
 
-        private static string ResolveVersion()
+        /// <summary>
+        /// The OSPREY_VERSION_OVERRIDE pin, or null when it is unset or empty. It replaces the
+        /// informational version too, so --version and provenance stay deterministic under the
+        /// regression harness (the pin carries no hash; DisplayVersion then renders it as-is).
+        /// </summary>
+        private static string VersionOverride
         {
-            string overrideValue = Environment.GetEnvironmentVariable(ENV_OVERRIDE);
-            if (!string.IsNullOrEmpty(overrideValue))
-                return overrideValue;
+            get
+            {
+                string overrideValue = OspreyEnvironment.VersionOverride;
+                return string.IsNullOrEmpty(overrideValue) ? null : overrideValue;
+            }
+        }
+
+        private static string ResolveAssemblyVersion()
+        {
             // The assembly version carries the Skyline-scheme YEAR.ORDINAL.BRANCH.DOY
             // stamped by the build; Version.ToString() renders all four components.
             var version = typeof(OspreyVersion).Assembly.GetName().Version;
             return version != null ? version.ToString() : @"0.0.0.0";
         }
 
-        private static string ResolveInformationalVersion()
+        private static string ResolveAssemblyInformationalVersion()
         {
-            // Honor the bit-parity pin so --version and provenance stay
-            // deterministic under the regression harness (the override string
-            // carries no hash; DisplayVersion then renders it as-is).
-            string overrideValue = Environment.GetEnvironmentVariable(ENV_OVERRIDE);
-            if (!string.IsNullOrEmpty(overrideValue))
-                return overrideValue;
             var attr = typeof(OspreyVersion).Assembly
                 .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
                 .OfType<AssemblyInformationalVersionAttribute>().FirstOrDefault();
             string info = attr?.InformationalVersion;
             if (string.IsNullOrEmpty(info))
-                return Current;
+                return ASSEMBLY_VERSION;
             // Defensive: strip any SDK-appended source-revision metadata ("+<sha>").
             // We stamp the hash ourselves as a "-<hash>" suffix and disable the SDK
             // append (IncludeSourceRevisionInInformationalVersion=false).

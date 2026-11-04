@@ -20,21 +20,25 @@
 using System;
 using System.Collections;
 using pwiz.CommonMsData;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
     public sealed class SpectrumDisplayInfo : IComparable<SpectrumDisplayInfo>
     {
-        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, double? retentionTime = null)
+        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, double? retentionTime = null,
+            Adduct adduct = null)
         {
             SpectrumInfo = spectrumInfo;
             Precursor = precursor;
             IsBest = true;
             RetentionTime = retentionTime;
+            Adduct = adduct ?? precursor?.PrecursorAdduct;
         }
 
         public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, string replicateName,
-            MsDataFileUri filePath, int fileOrder, double? retentionTime, bool isBest)
+            MsDataFileUri filePath, int fileOrder, double? retentionTime, bool isBest, Adduct adduct = null)
         {
             SpectrumInfo = spectrumInfo;
             Precursor = precursor;
@@ -43,10 +47,26 @@ namespace pwiz.Skyline.Model.Lib
             FileOrder = fileOrder;
             RetentionTime = retentionTime;
             IsBest = isBest;
+            Adduct = adduct ?? precursor?.PrecursorAdduct;
         }
 
         public SpectrumInfo SpectrumInfo { get; }
         public TransitionGroupDocNode Precursor { get; private set; }
+        /// <summary>
+        /// The adduct of the library precursor the spectrum identified, which may differ from that of
+        /// <see cref="Precursor"/>, since all charges of a peptide are evidence for each of its precursors.
+        /// </summary>
+        public Adduct Adduct { get; private set; }
+
+        public bool IsOtherCharge
+        {
+            get { return Precursor != null && Adduct != null && Adduct.AdductCharge != Precursor.PrecursorCharge; }
+        }
+
+        public bool IsOtherLabelType
+        {
+            get { return Precursor != null && !Equals(LabelType, Precursor.LabelType); }
+        }
         public string Name { get { return SpectrumInfo.Name; } }
         public IsotopeLabelType LabelType { get { return SpectrumInfo.LabelType; } }
         public string ReplicateName { get; private set; }
@@ -83,11 +103,20 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
+            string text;
             if (IsBest)
-                return ReferenceEquals(LabelType, IsotopeLabelType.light) ? Name : String.Format(@"{0} ({1})", Name, LabelType);
-            if (IsReplicateUnique)
-                return string.Format(@"{0} ({1:F02} min)", ReplicateName, RetentionTime);
-            return string.Format(@"{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);
+                text = Name;
+            else if (IsReplicateUnique)
+                text = string.Format(@"{0} ({1:F02} min)", ReplicateName, RetentionTime);
+            else
+                text = string.Format(@"{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);
+
+            // Name the charge and label type of a spectrum from another form of the precursor
+            if (IsOtherCharge)
+                text = TextUtil.SpaceSeparate(text, Transition.GetChargeIndicator(Adduct));
+            if (IsOtherLabelType || (IsBest && !LabelType.IsLight))
+                text = TextUtil.SpaceSeparate(text, String.Format(@"({0})", LabelType));
+            return text;
         }
     }
 }

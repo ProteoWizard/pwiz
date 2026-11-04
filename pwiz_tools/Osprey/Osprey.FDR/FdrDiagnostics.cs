@@ -44,10 +44,14 @@ namespace pwiz.Osprey.FDR
 {
     public static class FdrDiagnostics
     {
-        private static bool IsOne(string name)
+        private static bool IsOne(EnvVar envVar)
         {
-            return Environment.GetEnvironmentVariable(name) == @"1";
+            return envVar.Value == @"1";
         }
+
+        private static readonly EnvVar ENV_DUMP_STAGE7_WINNERS = new EnvVar(@"OSPREY_DUMP_STAGE7_WINNERS", EnvVarGroup.diagnostic,
+            @"Dump the whole cumulative protein FDR winners list, targets and decoys, to " +
+            @"cs_stage7_winners.tsv.");
 
         /// <summary>
         /// OSPREY_DUMP_STAGE7_WINNERS: dump the full cumulative-FDR winners
@@ -59,7 +63,10 @@ namespace pwiz.Osprey.FDR
         /// hiding cross-impl divergences driven by decoy-winner scores or
         /// sort-position interleaving in the cumulative sweep.
         /// </summary>
-        public static readonly bool DumpStage7Winners = IsOne(@"OSPREY_DUMP_STAGE7_WINNERS");
+        public static readonly bool DumpStage7Winners = IsOne(ENV_DUMP_STAGE7_WINNERS);
+
+        private static readonly EnvVar ENV_DUMP_BEST_PEPTIDE_SCORES = new EnvVar(@"OSPREY_DUMP_BEST_PEPTIDE_SCORES", EnvVarGroup.diagnostic,
+            @"Dump the per-peptide best scores that protein FDR ranks by to cs_best_peptide_scores.tsv.");
 
         /// <summary>
         /// OSPREY_DUMP_BEST_PEPTIDE_SCORES: dump the per-modseq aggregated
@@ -68,7 +75,11 @@ namespace pwiz.Osprey.FDR
         /// upstream aggregation divergences (e.g. different per-peptide max
         /// scores from compaction asymmetry) can be diffed directly.
         /// </summary>
-        public static readonly bool DumpBestPeptideScores = IsOne(@"OSPREY_DUMP_BEST_PEPTIDE_SCORES");
+        public static readonly bool DumpBestPeptideScores = IsOne(ENV_DUMP_BEST_PEPTIDE_SCORES);
+
+        private static readonly EnvVar ENV_DUMP_COASSIGN_ROWS = new EnvVar(@"OSPREY_DUMP_COASSIGN_ROWS", EnvVarGroup.diagnostic,
+            @"Write the peak co-assignment panel's input rows and acceptance boundaries to this directory.")
+            { ValueExample = @"<dir>" };
 
         /// <summary>
         /// OSPREY_DUMP_COASSIGN_ROWS: directory to write the peak co-assignment
@@ -91,7 +102,7 @@ namespace pwiz.Osprey.FDR
         /// BOUNDARY.</para>
         /// </summary>
         public static readonly string DumpCoAssignRowsDir =
-            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_COASSIGN_ROWS");
+            ENV_DUMP_COASSIGN_ROWS.Value;
 
         /// <summary>
         /// Streaming sink for <see cref="DumpCoAssignRowsDir"/>: writes

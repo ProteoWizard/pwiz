@@ -283,15 +283,6 @@ namespace pwiz.Skyline.Model {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Predicted the library in {0} minutes {1} seconds..
-        /// </summary>
-        public static string CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_ {
-            get {
-                return ResourceManager.GetString("CarafeLibraryBuilder_ExecuteOsprey_Predicted_the_library_in__0__minutes__1__seconds_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Predicting the library with the {0} model.
         /// </summary>
         public static string CarafeLibraryBuilder_ExecuteOsprey_Predicting_the_library_with_the__0__model {
@@ -316,25 +307,6 @@ namespace pwiz.Skyline.Model {
         public static string CarafeLibraryBuilder_Importing_spectral_library {
             get {
                 return ResourceManager.GetString("CarafeLibraryBuilder_Importing_spectral_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to BlibBuild completed successfully..
-        /// </summary>
-        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
-            get {
-                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
-                        "y_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to BlibBuild failed to complete..
-        /// </summary>
-        public static string CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
-            get {
-                return ResourceManager.GetString("CarafeLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
             }
         }
         

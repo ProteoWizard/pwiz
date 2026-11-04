@@ -1337,7 +1337,6 @@ namespace pwiz.Osprey.Tasks
                     MinPoints = minLoessPoints,
                     RobustnessIterations = 2,
                     OutlierRetention = 1.0, // LDA + S/N already filtered
-                    ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust,
                     LinearFit = plan.LinearFit
                 };
 
@@ -1637,6 +1636,7 @@ namespace pwiz.Osprey.Tasks
                         return worker;
                     },
                     worker => { });
+                progress.Complete();
             }
             swScoring.Stop();
             _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} scoring: {1:F2}s ({2} matches)",

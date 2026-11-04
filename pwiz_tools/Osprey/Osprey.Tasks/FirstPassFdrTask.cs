@@ -187,7 +187,7 @@ namespace pwiz.Osprey.Tasks
         // hands back on the bundle; null where the resume has no retained set to build it
         // from, whose consumers fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
-        // Built once, on first use, when OSPREY_STUB_IDENTITY asks for it. See StubIdentity.
+        // Built once, on first use. See StubIdentity.
         private LibraryIdentity _stubIdentity;
 
         // Phase B resume surface. Reads each file's .scores.parquet,
@@ -535,7 +535,6 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -1086,6 +1085,8 @@ namespace pwiz.Osprey.Tasks
                             sink.Add(runName, row);
                         return true;
                     });
+                    if (error == null)
+                        progress.Complete();
                 }
                 if (error != null)
                 {
@@ -1406,8 +1407,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Stage 5 -> 6 boundary: drop <c>Fragments</c> from every library entry that nothing
         /// downstream can score or write, keeping the identity fields on all of them. See
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and the
-        /// safety argument.
+        /// <see cref="LibraryFragmentRelease"/> for the rationale and the safety argument.
         ///
         /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
         /// already pair-symmetric so a target's decoy rides along), and nothing else: no
@@ -1983,7 +1983,7 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"first-pass-fdr-live",
                 string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
 
-            LogFirstPassResultsProjection(projections, sink, config, ctx);
+            LogFirstPassResultsProjection(projections, sink, experiment, config, ctx);
 
             // --model-diagnostics: emit the pass-1 HTML report from the streamed accumulator.
             // Placed here, after first-pass Percolator and BEFORE first-pass protein FDR, so
@@ -2338,12 +2338,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Log per-file and total first-pass passing-target counts from the projection
-        /// rows.
+        /// Log the per-file first-pass passing-target counts from the projection rows, then the
+        /// experiment-level count of distinct precursors.
         /// </summary>
         private void LogFirstPassResultsProjection(
             FdrProjectionSet projections, FdrFirstPassSink sink,
-            OspreyConfig config, PipelineContext ctx)
+            FdrExperimentAccumulator experiment, OspreyConfig config, PipelineContext ctx)
         {
             // Read the per-file passing-target counts the sink accumulated during the
             // score pass (!IsDecoy && EffectiveRunQvalue <= RunFdr) rather than
@@ -2352,28 +2352,36 @@ namespace pwiz.Osprey.Tasks
             // FdrLevel.Precursor. The tally is the identical predicate the tail [COUNT]
             // block uses, so the logged counts are unchanged.
             var filePassingTargets = sink.FilePassingTargets;
-            int passingTargets = 0;
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
-                int fileTargets = filePassingTargets[f];
                 ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR,
-                    projections.PerFile[f].Key, fileTargets, config.RunFdr));
-                passingTargets += fileTargets;
+                    projections.PerFile[f].Key, filePassingTargets[f], config.RunFdr));
             }
-            LogRunLevelTotal(ctx, passingTargets, projections.PerFile.Count);
+            LogExperimentLevelTotal(ctx, experiment, config, projections.PerFile.Count);
         }
 
         /// <summary>
-        /// The total under the per-file run-level lines. Left out for one file, whose own line
-        /// above already states the same number.
+        /// The total under the per-file run-level lines: distinct target precursors passing
+        /// experiment-level FDR, out of all scored, counted once however many files detect them.
+        /// A sum of the per-file counts would count a precursor once per file it passes in.
+        /// Left out for one file, whose experiment q-values are its run q-values.
         /// </summary>
-        private static void LogRunLevelTotal(PipelineContext ctx, int passingTargets, int nFiles)
+        private static void LogExperimentLevelTotal(PipelineContext ctx, FdrExperimentAccumulator experiment,
+            OspreyConfig config, int nFiles)
         {
-            if (nFiles > 1)
+            if (nFiles <= 1)
+                return;
+            int targets = 0, passingTargets = 0;
+            foreach (var record in experiment.Records.Values)
             {
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files,
-                    passingTargets, nFiles));
+                if (record.IsDecoy)
+                    continue;
+                targets++;
+                if (record.EffectiveExperimentQvalue(config.FdrLevel) <= config.ExperimentFdr)
+                    passingTargets++;
             }
+            ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_precursors_at__3__experiment_level__4__FDR,
+                nFiles, passingTargets, targets, config.ExperimentFdr, config.FdrLevel.GetLocalizedString()));
         }
 
         /// <summary>
@@ -2429,6 +2437,8 @@ namespace pwiz.Osprey.Tasks
                     accumulator.Merge(file.Accumulator);
                     return true;
                 });
+                if (reduceError == null)
+                    reduceProgress.Complete();
             }
             if (reduceError != null)
             {
@@ -2450,13 +2460,11 @@ namespace pwiz.Osprey.Tasks
             return result;
         }
 
-        // Experimental (OSPREY_STUB_IDENTITY): the library lookup that lets the first-pass walks
-        // take charge, decoy flag and peptide from entry_id rather than decode them from every
-        // row. Null when the switch is off. Call before starting lanes: it builds on first use.
+        // The library lookup that lets the first-pass walks take charge, decoy flag and peptide
+        // from entry_id rather than decode them from every row (OSPREY_STUB_IDENTITY). Call
+        // before starting lanes: it builds on first use.
         private LibraryIdentity StubIdentity(PipelineContext ctx)
         {
-            if (OspreyEnvironment.StubIdentity == 0)
-                return null;
             return _stubIdentity ?? (_stubIdentity = new LibraryIdentity(ctx.Get<FullLibrary>().Value));
         }
 
@@ -2701,6 +2709,8 @@ namespace pwiz.Osprey.Tasks
                     firstPassBaseIds.UnionWith(file.Passing);
                     return true;
                 });
+                if (compactError == null)
+                    compactProgress.Complete();
             }
             if (compactError != null)
             {
