@@ -680,6 +680,22 @@ namespace pwiz.Osprey
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
                 }
+                // Abort for the same reason: a mistyped value would train with the default arm
+                // and key its directories as the default, so a System.Math timing or parity arm
+                // would report the deterministic arm's numbers under its own name.
+                if (OspreyEnvironment.DeterministicMathUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_DETERMINISTIC_MATH must be '0' (System.Math Exp/Log) or '1' (the default, " +
+                        @"platform-independent fdlibm Exp/Log), not '{0}'. Unset it for the default.",
+                        OspreyEnvironment.DeterministicMathSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                if (!OspreyEnvironment.UseDeterministicMath)
+                {
+                    LogInfo(@"Exp/Log: System.Math (OSPREY_DETERMINISTIC_MATH=0) - gbdt training is not " +
+                            @"bit-identical across operating systems");
+                }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
                     LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
