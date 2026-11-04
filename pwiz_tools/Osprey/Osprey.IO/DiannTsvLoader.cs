@@ -140,7 +140,7 @@ namespace pwiz.Osprey.IO
                     }
                 }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             }
-            return BuildEntries(precursorMap, errors, logInfo);
+            return ValidateAndBuildEntries(precursorMap, errors, logInfo);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace pwiz.Osprey.IO
             var precursorMap = new Dictionary<string, PrecursorData>();
             var errors = new LibraryLineErrors();
             ReadRows(reader, precursorMap, errors);
-            return BuildEntries(precursorMap, errors, logInfo);
+            return ValidateAndBuildEntries(precursorMap, errors, logInfo);
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace pwiz.Osprey.IO
         /// Phase 2 of a parse: refuse a library with any invalid line, then materialize the
         /// precursors read by <see cref="ReadRows"/> as library entries.
         /// </summary>
-        private List<LibraryEntry> BuildEntries(Dictionary<string, PrecursorData> precursorMap,
+        private List<LibraryEntry> ValidateAndBuildEntries(Dictionary<string, PrecursorData> precursorMap,
             LibraryLineErrors errors, Action<string> logInfo)
         {
             // A library with any invalid line is refused whole, after every line has been read, so
