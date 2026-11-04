@@ -373,6 +373,9 @@
   <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
     <value>{0} must contain a comma separated list of adducts or integers describing charge states with absolute values from {1} to {2}.</value>
   </data>
+  <data name="OspreySearchSettingsControl_ShowSavePresetDlg_A_preset_named__0__is_for_another_search_engine__Choose_another_name_" xml:space="preserve">
+    <value>A preset named {0} is for another search engine. Choose another name.</value>
+  </data>
   <data name="RunPeptideSearchDlg_AddSummary_After_dropping_proteins_in_the_iRT_standard__the_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_" xml:space="preserve">
     <value>After dropping proteins in the iRT standard, the document has {0} proteins, {1} peptides, {2} precursors and {3} transitions.</value>
   </data>
@@ -399,6 +402,9 @@
   </data>
   <data name="RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_" xml:space="preserve">
     <value>The document has {0} proteins, {1} peptides, {2} precursors and {3} transitions.</value>
+  </data>
+  <data name="RunPeptideSearchDlg_ApplyPresetOfWorkflow_The_preset__0__is_for_another_workflow__It_is_listed_when_that_workflow_is_chosen_on_the_first_page_" xml:space="preserve">
+    <value>The preset {0} is for another workflow. It is listed when that workflow is chosen on the first page.</value>
   </data>
   <data name="RunPeptideSearchDlg_PrepareRun_A_spectral_library_already_exists_at___0___Overwrite_it__or_append_the_new_results_to_it_" xml:space="preserve">
     <value>A spectral library already exists at:

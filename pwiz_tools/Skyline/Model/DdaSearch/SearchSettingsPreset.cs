@@ -53,10 +53,17 @@ namespace pwiz.Skyline.Model.DdaSearch
     }
 
 
+    /// <summary>
+    /// A named set of the settings of a peptide search: the parts every search shares (the workflow, the
+    /// FASTA, enzyme and missed cleavages, the modifications, the iRT standard) and the settings of its
+    /// engine's own pages. For every engine but Osprey those are the generic search settings page's
+    /// (tolerances, fragment ions, MS2 analyzer, cutoff and additional settings); for Osprey, its own
+    /// settings page's (<see cref="OspreySettings"/>), and the generic ones are not kept.
+    /// </summary>
     [XmlRoot("search_workflow")]
     public sealed class SearchSettingsPreset : XmlNamedElement
     {
-        // Search engine settings
+        // Search engine settings, for every engine but Osprey
         public SearchEngine SearchEngine { get; private set; }
         public double PrecursorToleranceValue { get; private set; }
         public MzTolerance.Units PrecursorToleranceUnit { get; private set; }
@@ -165,7 +172,57 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public SearchSettingsPreset ChangeOspreySettings(OspreySettingsPreset ospreySettings)
         {
-            return ChangeProp(ImClone(this), im => im.OspreySettings = ospreySettings);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.OspreySettings = ospreySettings;
+                im.ClearGenericSettingsForOsprey();
+            });
+        }
+
+        public SearchSettingsPreset ChangeWorkflow(SearchWorkflowType? workflow)
+        {
+            return ChangeProp(ImClone(this), im => im.Workflow = workflow);
+        }
+
+        /// <summary>
+        /// True for a preset of its engine's settings alone, with no FASTA, digestion, modifications or iRT
+        /// standard (an Osprey preset saved from its settings page), which leaves those as they are.
+        /// </summary>
+        public bool HasEngineSettingsOnly => FastaFilePath == null && string.IsNullOrEmpty(EnzymeName) &&
+                                            !HasExplicitModifications && string.IsNullOrEmpty(IrtStandardName);
+
+        /// <summary>
+        /// An Osprey preset keeps no generic engine settings, so they hold the same values however it was
+        /// made, and a preset equals itself read back.
+        /// </summary>
+        private void ClearGenericSettingsForOsprey()
+        {
+            if (SearchEngine != SearchEngine.Osprey)
+                return;
+            PrecursorToleranceValue = FragmentToleranceValue = 0;
+            PrecursorToleranceUnit = FragmentToleranceUnit = MzTolerance.Units.ppm;
+            MaxVariableMods = 0;
+            FragmentIons = Ms2Analyzer = AdditionalSettingsXml = null;
+            CutoffScore = 0;
+        }
+
+        /// <summary>
+        /// An Osprey preset of the DIA workflow. A null <paramref name="fastaFilePath"/> or
+        /// <paramref name="enzymeName"/> leaves the wizard's FASTA or digestion as they are, and modifications
+        /// that are not explicit leave the document's.
+        /// </summary>
+        public static SearchSettingsPreset CreateOsprey(string name, OspreySettingsPreset ospreySettings,
+            string fastaFilePath = null, string enzymeName = null, int maxMissedCleavages = 0,
+            IEnumerable<StaticMod> structuralModifications = null, IEnumerable<StaticMod> heavyModifications = null,
+            string irtStandardName = null, bool hasExplicitModifications = false)
+        {
+            var zeroTolerance = new MzTolerance(0, MzTolerance.Units.ppm);
+            return new SearchSettingsPreset(name, SearchEngine.Osprey, zeroTolerance, zeroTolerance, 0, null, null,
+                    ospreySettings.RunFdr, (string) null, fastaFilePath, enzymeName, maxMissedCleavages,
+                    structuralModifications: structuralModifications, heavyModifications: heavyModifications,
+                    workflowType: SearchWorkflowType.dia, irtStandardName: irtStandardName,
+                    hasExplicitModifications: hasExplicitModifications)
+                .ChangeOspreySettings(ospreySettings);
         }
 
         public MzTolerance PrecursorTolerance => new MzTolerance(PrecursorToleranceValue, PrecursorToleranceUnit);
@@ -377,24 +434,31 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             StructuralModifications = ImmutableList.ValueOfOrEmpty(structuralMods);
             HeavyModifications = ImmutableList.ValueOfOrEmpty(heavyMods);
+            ClearGenericSettingsForOsprey();
         }
 
         public override void WriteXml(XmlWriter writer)
         {
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.search_engine, SearchEngine);
-            writer.WriteAttribute(ATTR.precursor_tolerance_value, PrecursorToleranceValue);
-            writer.WriteAttribute(ATTR.precursor_tolerance_unit, PrecursorToleranceUnit);
-            writer.WriteAttribute(ATTR.fragment_tolerance_value, FragmentToleranceValue);
-            writer.WriteAttribute(ATTR.fragment_tolerance_unit, FragmentToleranceUnit);
-            writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods);
-            writer.WriteAttributeIfString(ATTR.fragment_ions, FragmentIons);
-            writer.WriteAttributeIfString(ATTR.ms2_analyzer, Ms2Analyzer);
-            writer.WriteAttribute(ATTR.cutoff_score, CutoffScore);
-            // Always write the FASTA attribute so applying the preset can distinguish
-            // "user explicitly cleared FASTA" (empty string) from "preset doesn't touch
-            // FASTA" (attribute absent — legacy presets only).
-            writer.WriteAttributeString(ATTR.fasta_file_path, FastaFilePath ?? string.Empty);
+            // Osprey's settings are its own element; the generic ones are every other engine's
+            bool isOsprey = SearchEngine == SearchEngine.Osprey;
+            if (!isOsprey)
+            {
+                writer.WriteAttribute(ATTR.precursor_tolerance_value, PrecursorToleranceValue);
+                writer.WriteAttribute(ATTR.precursor_tolerance_unit, PrecursorToleranceUnit);
+                writer.WriteAttribute(ATTR.fragment_tolerance_value, FragmentToleranceValue);
+                writer.WriteAttribute(ATTR.fragment_tolerance_unit, FragmentToleranceUnit);
+                writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods);
+                writer.WriteAttributeIfString(ATTR.fragment_ions, FragmentIons);
+                writer.WriteAttributeIfString(ATTR.ms2_analyzer, Ms2Analyzer);
+                writer.WriteAttribute(ATTR.cutoff_score, CutoffScore);
+            }
+            // An empty FASTA attribute is "the user cleared the FASTA"; no attribute is "the preset doesn't
+            // touch the FASTA" (presets saved without one: older presets, and Osprey presets saved from its
+            // settings page alone)
+            if (FastaFilePath != null)
+                writer.WriteAttributeString(ATTR.fasta_file_path, FastaFilePath);
             writer.WriteAttributeIfString(ATTR.enzyme_name, EnzymeName);
             writer.WriteAttribute(ATTR.max_missed_cleavages, MaxMissedCleavages);
             writer.WriteAttributeIfString(ATTR.decoy_generation_method, DecoyGenerationMethod);
@@ -405,7 +469,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             writer.WriteAttributeIfString(ATTR.irt_standard_name, IrtStandardName);
             writer.WriteAttribute(ATTR.has_explicit_modifications, HasExplicitModifications);
 
-            if (!string.IsNullOrEmpty(AdditionalSettingsXml))
+            if (!isOsprey && !string.IsNullOrEmpty(AdditionalSettingsXml))
             {
                 writer.WriteStartElement(EL.additional_settings);
                 writer.WriteRaw(AdditionalSettingsXml);
@@ -428,7 +492,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 writer.WriteEndElement();
             }
 
-            if (OspreySettings != null)
+            if (isOsprey && OspreySettings != null)
                 writer.WriteElement(OspreySettings);
         }
 

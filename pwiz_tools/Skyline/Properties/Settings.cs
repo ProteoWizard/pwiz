@@ -2008,6 +2008,53 @@ namespace pwiz.Skyline.Properties
         public override Type SerialType => typeof(SearchSettingsPresetList);
         public override ICollection<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
         public override string FileExtension => @".skysp";
+
+        /// <summary>
+        /// Brings the user's presets up to date before a list of them is shown: the built-in presets this
+        /// version has (first, where the list editor expects them), and the presets the DIA-NN Search wizard
+        /// and Osprey's settings page saved in lists of their own, moved in.
+        /// </summary>
+        public static void EnsureDefaults()
+        {
+            var presets = Settings.Default.SearchSettingsPresets;
+            foreach (var defaultPreset in presets.GetDefaults())
+            {
+                if (!presets.Any(p => p.Name == defaultPreset.Name))
+                    presets.Insert(0, defaultPreset);
+            }
+
+            var diannPresets = Settings.Default.DiannSearchSettingsPresets;
+            var diannDefaultNames = diannPresets.GetDefaults().Select(p => p.Name).ToHashSet();
+            foreach (var preset in diannPresets.Where(p => !diannDefaultNames.Contains(p.Name)).ToList())
+            {
+                presets.Add(WithUniqueName(presets, preset));
+                diannPresets.Remove(preset);
+            }
+
+            MoveInOspreyPresets();
+        }
+
+        /// <summary>
+        /// Moves the presets of Osprey's own settings page (<see cref="Settings.OspreySettingsPresets"/>),
+        /// which Osprey presets in this list replace, into this list as Osprey presets of the DIA workflow.
+        /// </summary>
+        public static void MoveInOspreyPresets()
+        {
+            var presets = Settings.Default.SearchSettingsPresets;
+            var ospreyPresets = Settings.Default.OspreySettingsPresets;
+            foreach (var ospreyPreset in ospreyPresets.ToArray())
+            {
+                presets.Add(WithUniqueName(presets, SearchSettingsPreset.CreateOsprey(ospreyPreset.Name, ospreyPreset)));
+                ospreyPresets.Remove(ospreyPreset);
+            }
+        }
+
+        // A preset of another engine may have the name of one moved in, which then gets a name of its own
+        private static SearchSettingsPreset WithUniqueName(SearchSettingsPresetList presets, SearchSettingsPreset preset)
+        {
+            var name = Helpers.GetUniqueName(preset.Name, n => !presets.Any(p => p.Name == n));
+            return name == preset.Name ? preset : (SearchSettingsPreset) preset.ChangeName(name);
+        }
     }
 
 

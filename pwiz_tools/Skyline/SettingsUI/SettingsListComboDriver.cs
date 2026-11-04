@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -36,6 +37,7 @@ namespace pwiz.Skyline.SettingsUI
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
         private int _selectedIndexLast;
+        private IList<TItem> _shownItems; // The items the combo lists, in its order
 
         public SettingsListComboDriver(ComboBox combo, SettingsListBase<TItem> list)
             : this(combo, list, true)
@@ -55,6 +57,20 @@ namespace pwiz.Skyline.SettingsUI
         public SettingsListBase<TItem> List { get; private set; }
         public int SelectedIndexLast { get { return _selectedIndexLast; } }
 
+        /// <summary>
+        /// When set, the combo lists only the items of the list it accepts; editing still works on the
+        /// whole list. Takes effect at the next <see cref="LoadList"/>.
+        /// </summary>
+        public Func<TItem, bool> Filter { get; set; }
+
+        /// <summary>
+        /// False leaves the combo with nothing selected when <see cref="LoadList"/> is not given an item it
+        /// lists, rather than choosing the first item.
+        /// </summary>
+        public bool SelectFirstItem { get; set; } = true;
+
+        private IList<TItem> ShownItems => _shownItems ?? List;
+
         public event EventHandler<EditItemEventArgs> EditItemEvent;
 
         public void LoadList(string selectedItemLast)
@@ -63,7 +79,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Combo.BeginUpdate();
                 Combo.Items.Clear();
-                foreach (TItem item in List.ToArrayStd())
+                _shownItems = List.ToArrayStd().Where(item => Filter == null || Filter(item)).ToList();
+                foreach (TItem item in _shownItems)
                 {
                     string name = List.GetDisplayName(item);
                     int i = Combo.Items.Add(name);
@@ -81,8 +98,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     Combo.Items.Add(Resources.SettingsListComboDriver_Edit_list);
                 }
-                if (Combo.SelectedIndex < 0)
+                if (Combo.SelectedIndex < 0 && SelectFirstItem)
                     Combo.SelectedIndex = 0;
+                // Clearing the items raised no event, so a list left with nothing selected says so here
+                _selectedIndexLast = Combo.SelectedIndex;
 
                 ComboHelper.AutoSizeDropDown(Combo);
             }
@@ -97,9 +116,10 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 int selectedIndex = Combo.SelectedIndex;
-                if (0 > selectedIndex || selectedIndex >= List.Count)
+                var items = ShownItems;
+                if (0 > selectedIndex || selectedIndex >= items.Count)
                     return default(TItem);
-                return List[selectedIndex];
+                return items[selectedIndex];
             }
         }
 
@@ -191,7 +211,9 @@ namespace pwiz.Skyline.SettingsUI
             if (itemEditor == null)
                 return;
 
-            int i = _selectedIndexLast;
+            // The list index of the item the combo shows at the last selection
+            var items = ShownItems;
+            int i = _selectedIndexLast >= 0 && _selectedIndexLast < items.Count ? List.IndexOf(items[_selectedIndexLast]) : -1;
             TItem itemNew = default(TItem);
             if ((i >= List.ExcludeDefaults) && (i < List.Count))
             {

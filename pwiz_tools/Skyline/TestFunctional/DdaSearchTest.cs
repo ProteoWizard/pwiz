@@ -823,60 +823,47 @@ namespace pwiz.SkylineTestFunctional
                     "Default preset should restore document mods including Carbamidomethyl");
             });
 
-            // Test switching presets on spectra page changes workflow and IRT
+            // The preset list shows the presets of the workflow chosen on the first page only, and choosing
+            // one leaves the workflow as it is
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
-
-                // Both presets are DDA; manually change to PRM and save a temporary preset
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.prm;
-                importPeptideSearchDlg.SaveSettingsPreset("PRM Preset");
-
-                // Switch to preset 1 - should restore DDA workflow
+                Assert.AreEqual(PRESET_1_WORKFLOW, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
+                var ddaPresets = importPeptideSearchDlg.ShownPresetNames.ToArray();
+                AssertEx.IsTrue(ddaPresets.Contains(DEFAULT_PRESET_NAME) && ddaPresets.Contains(PRESET_1_NAME));
+                AssertEx.IsFalse(ddaPresets.Contains(MSFRAGGER_DIA_PRESET) || ddaPresets.Contains(DiannHelpers.PRESET_ORBITRAP),
+                    "DIA presets should not be listed in the DDA workflow");
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
-                Assert.AreEqual(PRESET_1_WORKFLOW, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
-                    "Preset 1 should set DDA workflow on spectra page");
+                AssertEx.AreEqual(PRESET_1_NAME, importPeptideSearchDlg.SelectedPresetName);
+
+                // PRM: the DDA preset is no longer chosen, and a preset saved now is listed for PRM only
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.prm;
+                Assert.IsNull(importPeptideSearchDlg.SelectedPresetName);
+                AssertEx.IsFalse(importPeptideSearchDlg.ShownPresetNames.Contains(PRESET_1_NAME));
+                importPeptideSearchDlg.SaveSettingsPreset("PRM Preset");
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.prm, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
+                AssertEx.AreEqualDeep(new[] { "PRM Preset" }, importPeptideSearchDlg.ShownPresetNames.ToArray());
+
+                // DIA: the DIA presets, and a preset of another workflow cannot be chosen
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
+                var diaPresets = importPeptideSearchDlg.ShownPresetNames.ToArray();
+                AssertEx.IsTrue(diaPresets.Contains(MSFRAGGER_DIA_PRESET) && diaPresets.Contains(DiannHelpers.PRESET_ORBITRAP));
+                AssertEx.IsFalse(diaPresets.Contains(PRESET_1_NAME) || diaPresets.Contains("PRM Preset"));
+                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dia, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
+                importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
+                AssertEx.AreEqual(MSFRAGGER_DIA_PRESET, importPeptideSearchDlg.SelectedPresetName);
+
+                // DDA again: a preset still sets its IRT standard
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
+                Assert.IsNull(importPeptideSearchDlg.SelectedPresetName);
+                importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards.IsAuto,
                     "Preset 1 should have Auto IRT standard");
-
-                // Switch to PRM preset - should change to PRM
-                importPeptideSearchDlg.SelectedPresetName = "PRM Preset";
-                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.prm, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
-                    "PRM preset should set PRM workflow on spectra page");
-
-                // Switch to Default from PRM - should reset workflow to DDA and IRT to None
                 importPeptideSearchDlg.SelectedPresetName = DEFAULT_PRESET_NAME;
-                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
-                    "Default preset should reset workflow to DDA from PRM on spectra page");
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards.IsEmpty,
                     "Default preset should reset IRT standard to None on spectra page");
-
-                // Switch to MSFragger DIA preset - should set DIA workflow
-                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
-                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dia, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
-                    "MSFragger DIA preset should set DIA workflow");
-
-                // Switch to preset 1 - should restore DDA and Auto IRT
-                importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
-                Assert.AreEqual(PRESET_1_WORKFLOW, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType,
-                    "Preset 1 should restore DDA workflow on spectra page");
-                Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards.IsAuto,
-                    "Preset 1 should restore Auto IRT standard on spectra page");
-            });
-
-            // A preset chosen on a later page cannot change which pages the workflow chosen on the first page shows
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Mods
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // FASTA
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
-                importPeptideSearchDlg.SelectedPresetName = MSFRAGGER_DIA_PRESET;
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // Search settings, not the DIA conversion page
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
             });
 
@@ -914,6 +901,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // FASTA
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Mods
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // Spectra
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
                 importPeptideSearchDlg.SelectedPresetName = PRESET_1_NAME;
             });
 
@@ -931,6 +919,8 @@ namespace pwiz.SkylineTestFunctional
         {
             const string COMET_PRESET_NAME = "Imported Comet";
             const string MSFRAGGER_PRESET_NAME = "Imported MSFragger";
+            const string COMET_DIA_PRESET_NAME = "Imported Comet for DIA";
+            const string DIANN_PRESET_NAME = "Imported DIA-NN";
 
             // Create a temp Comet .params file
             var cometParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_comet.params");
@@ -1030,7 +1020,36 @@ namespace pwiz.SkylineTestFunctional
                 // Verify preset was applied
                 AssertEx.AreEqual(MSFRAGGER_PRESET_NAME, importPeptideSearchDlg.SelectedPresetName);
                 Assert.IsTrue(importPeptideSearchDlg.PresetNames.Contains(MSFRAGGER_PRESET_NAME));
+
+                // A .params file names no workflow, so its preset is for the workflow it is imported into
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
+                importPeptideSearchDlg.ImportSettingsPreset(cometParamsPath, COMET_DIA_PRESET_NAME);
+                AssertEx.AreEqual(COMET_DIA_PRESET_NAME, importPeptideSearchDlg.SelectedPresetName);
+                Assert.IsTrue(importPeptideSearchDlg.ShownPresetNames.Contains(COMET_DIA_PRESET_NAME));
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dda;
+                Assert.IsFalse(importPeptideSearchDlg.ShownPresetNames.Contains(COMET_DIA_PRESET_NAME));
             });
+
+            // A DIA-NN .cfg is for DIA: imported in DDA, it is kept for DIA and not applied
+            var diannCfgPath = Path.Combine(TestContext.TestRunDirectory, "test_diann.cfg");
+            File.WriteAllText(diannCfgPath, string.Join("\r\n",
+                @"--fasta ""C:\db\uniprot_human.fasta""",
+                @"--qvalue 0.01",
+                @"--cut K*,R*,!*P",
+                @"--missed-cleavages 1",
+                @"--fixed-mod UniMod:4,57.021464,C"));
+            var otherWorkflow = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ImportSettingsPreset(diannCfgPath, DIANN_PRESET_NAME));
+            AssertEx.AreEqual(string.Format(
+                PeptideSearchResources.RunPeptideSearchDlg_ApplyPresetOfWorkflow_The_preset__0__is_for_another_workflow__It_is_listed_when_that_workflow_is_chosen_on_the_first_page_,
+                DIANN_PRESET_NAME), otherWorkflow.Message);
+            OkDialog(otherWorkflow, otherWorkflow.OkDialog);
+            RunUI(() =>
+            {
+                Assert.AreEqual(PeptideSearchWizardDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
+                Assert.IsFalse(importPeptideSearchDlg.ShownPresetNames.Contains(DIANN_PRESET_NAME));
+                Assert.IsTrue(importPeptideSearchDlg.PresetNames.Contains(DIANN_PRESET_NAME));
+            });
+            File.Delete(diannCfgPath);
 
             // Clean up temp files
             File.Delete(cometParamsPath);

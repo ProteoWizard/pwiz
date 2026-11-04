@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
@@ -221,6 +222,24 @@ namespace pwiz.SkylineTestFunctional
                 grid.SetValue(settings.Properties.Find(@"verbose").Label, true.ToString());
             });
             OkDialog(grid, grid.OkDialog);
+
+            // A preset saved on the page is an Osprey preset of the DIA workflow among the search settings
+            // presets, which Run Peptide Search lists too; choosing it again brings its values back
+            const string buildPresetName = @"Build Library preset";
+            RunUI(() =>
+            {
+                var control = buildLibraryDlg.SearchSettingsControl;
+                control.SaveSettingsPreset(buildPresetName);
+                var preset = Settings.Default.SearchSettingsPresets.First(p => p.Name == buildPresetName);
+                AssertEx.AreEqual(SearchEngine.Osprey, preset.SearchEngine);
+                AssertEx.AreEqual(SearchWorkflowType.dia, preset.Workflow);
+                AssertEx.IsFalse(preset.OspreySettings.IsHighResolution);
+                AssertEx.Contains(preset.OspreySettings.AdditionalSettingsXml, @"verbose");
+                control.IsHighResolution = true;
+                control.SettingsPresetName = buildPresetName;
+                AssertEx.IsFalse(control.IsHighResolution);
+                Settings.Default.SearchSettingsPresets.Remove(preset);
+            });
 
             // Previous back to the model, Next forward again: every choice is kept
             RunUI(() =>

@@ -1054,6 +1054,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
                 return ResourceManager.GetString("OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A preset named {0} is for another search engine. Choose another name..
+        /// </summary>
+        public static string OspreySearchSettingsControl_ShowSavePresetDlg_A_preset_named__0__is_for_another_search_engine__Choose_another_name_ {
+            get {
+                return ResourceManager.GetString("OspreySearchSettingsControl_ShowSavePresetDlg_A_preset_named__0__is_for_another_search_engine__Choose_another_name_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The preset {0} is for another workflow. It is listed when that workflow is chosen on the first page..
+        /// </summary>
+        public static string RunPeptideSearchDlg_ApplyPresetOfWorkflow_The_preset__0__is_for_another_workflow__It_is_listed_when_that_workflow_is_chosen_on_the_first_page_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_ApplyPresetOfWorkflow_The_preset__0__is_for_another_workflow__It_is_listed_when_that_workflow_is_chosen_on_the_first_page_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
         /// </summary>

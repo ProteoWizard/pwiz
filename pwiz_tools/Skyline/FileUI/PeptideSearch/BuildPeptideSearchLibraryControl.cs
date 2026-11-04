@@ -232,6 +232,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public event EventHandler InputFilesChanged;
 
+        /// <summary>The workflow (DDA, PRM or DIA) the user chose changed.</summary>
+        public event EventHandler WorkflowChanged;
+
         private void FireInputFilesChanged()
         {
             InputFilesChanged?.Invoke(this, EventArgs.Empty);
@@ -806,6 +809,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 InputFileType = PeptideSearchWizardDlg.InputFile.dda_raw;
             }
+            if (radioDDA.Checked)
+                WorkflowChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void radioDIA_CheckedChanged(object sender, EventArgs e)
@@ -814,6 +819,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
             }
+            if (radioDIA.Checked)
+                WorkflowChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void radioPRM_CheckedChanged(object sender, EventArgs e)
@@ -822,6 +829,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 InputFileType = PeptideSearchWizardDlg.InputFile.dda_raw;
             }
+            if (radioPRM.Checked)
+                WorkflowChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

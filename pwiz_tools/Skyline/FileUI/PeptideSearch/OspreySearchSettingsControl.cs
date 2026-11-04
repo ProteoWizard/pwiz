@@ -21,10 +21,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -38,15 +40,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     /// the MS/MS resolution and fragment tolerance Osprey scores with, the FDR thresholds and the
     /// thread count, and behind Additional Settings... every other setting the installed Osprey
     /// declares (<see cref="OspreyAdditionalSettings"/>), in a grid, for the scopes of the run the
-    /// host is configuring (<see cref="GetScopes"/>). The page's values save as a named preset
-    /// (<see cref="OspreySettingsPreset"/>) and a preset chosen from the combo sets them again.
+    /// host is configuring (<see cref="GetScopes"/>). The page's values save as an Osprey preset of the
+    /// search settings presets (<see cref="SearchSettingsPreset.OspreySettings"/>), and an Osprey preset
+    /// chosen from the combo sets them again.
     /// </summary>
     public partial class OspreySearchSettingsControl : UserControl
     {
         private OspreyAdditionalSettings _additionalSettings;
         private IList<string> _refusedLastUsed;
         private string _additionalSettingsError;
-        private readonly SettingsListComboDriver<OspreySettingsPreset> _settingsPresetDriver;
+        private readonly SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
         private bool _suppressPresetApply;
         private bool _presetsHidden;
 
@@ -77,8 +80,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Set from a number, not resx text, so the decimal separator is the current culture's
             RunFdr = ExperimentFdr = ProteinFdr = DEFAULT_FDR;
 
-            // The presets are listed with none chosen: the page starts at its defaults, not at a preset
-            _settingsPresetDriver = new SettingsListComboDriver<OspreySettingsPreset>(comboSettingsPreset, Settings.Default.OspreySettingsPresets);
+            // The Osprey presets are listed with none chosen: the page starts at its defaults, not at a preset
+            SearchSettingsPresetList.EnsureDefaults();
+            _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(comboSettingsPreset, Settings.Default.SearchSettingsPresets)
+            {
+                Filter = IsOspreyPreset,
+                SelectFirstItem = false
+            };
             _suppressPresetApply = true;
             try
             {
@@ -194,8 +202,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ShowAdditionalSettings();
         }
 
-        /// <summary>The user's presets of this page (<see cref="Settings.OspreySettingsPresets"/>), the ones the combo lists.</summary>
-        public OspreySettingsPresetList SettingsPresets => Settings.Default.OspreySettingsPresets;
+        private static bool IsOspreyPreset(SearchSettingsPreset preset)
+        {
+            return preset.SearchEngine == SearchEngine.Osprey && preset.OspreySettings != null;
+        }
+
+        /// <summary>The Osprey presets of the search settings presets, the ones the combo lists.</summary>
+        public IEnumerable<SearchSettingsPreset> SettingsPresets => Settings.Default.SearchSettingsPresets.Where(IsOspreyPreset);
 
         /// <summary>
         /// The name of the preset chosen in the combo, or null when none is. Setting it chooses that
@@ -211,7 +224,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (index < 0)
                     throw new ArgumentOutOfRangeException(nameof(value), $@"No Osprey settings preset is named {value}");
                 if (index == comboSettingsPreset.SelectedIndex)
-                    ApplyPreset(SettingsPresets[index]);
+                    ApplyPreset(SettingsPresets.ElementAt(index).OspreySettings);
                 else
                     comboSettingsPreset.SelectedIndex = index;
             }
@@ -232,7 +245,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             if (string.IsNullOrWhiteSpace(name))
                 return;
-            if (SettingsPresets.ContainsKey(name) && MessageDlg.Show(WizardForm,
+            // The combo lists Osprey presets only: a preset of another engine of the name is not this page's to replace
+            if (Settings.Default.SearchSettingsPresets.TryGetValue(name, out var existing) && !IsOspreyPreset(existing))
+            {
+                MessageDlg.Show(WizardForm, string.Format(
+                    PeptideSearchResources.OspreySearchSettingsControl_ShowSavePresetDlg_A_preset_named__0__is_for_another_search_engine__Choose_another_name_,
+                    name));
+                return;
+            }
+            if (existing != null && MessageDlg.Show(WizardForm,
                     string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
                     false, MessageBoxButtons.YesNo) != DialogResult.Yes)
             {
@@ -242,15 +263,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         /// <summary>
-        /// Keeps the page's values as the preset <paramref name="name"/>, in place of one of that
-        /// name, chooses it, and writes the user's settings, so the preset survives however the
-        /// session ends.
+        /// Keeps the page's values as the Osprey preset <paramref name="name"/>, chooses it, and writes the
+        /// user's settings, so the preset survives however the session ends. An Osprey preset of that name
+        /// keeps its other settings (the FASTA, the modifications) and takes these; a preset of another
+        /// engine is replaced.
         /// </summary>
         public void SaveSettingsPreset(string name)
         {
-            var presets = SettingsPresets;
-            presets.RemoveKey(name);
-            presets.Add(BuildPreset(name));
+            var presets = Settings.Default.SearchSettingsPresets;
+            var ospreySettings = BuildPreset(name);
+            var existing = presets.FirstOrDefault(p => p.Name == name);
+            Assume.IsTrue(existing == null || IsOspreyPreset(existing), @"only an Osprey preset is replaced from Osprey's page");
+            var preset = existing != null && IsOspreyPreset(existing)
+                ? existing.ChangeOspreySettings(ospreySettings)
+                : SearchSettingsPreset.CreateOsprey(name, ospreySettings);
+            int index = existing != null ? presets.IndexOf(existing) : -1;
+            if (index >= 0)
+                presets[index] = preset;
+            else
+                presets.Add(preset);
             if (!Program.NoSaveSettings)
                 Settings.Default.SaveWithoutExceptions();
             // The preset just saved is the page's values, so choosing it changes nothing
@@ -311,12 +342,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (indexBefore < 0)
                     comboSettingsPreset.SelectedIndex = -1;
                 else if (_settingsPresetDriver.SelectedItem != null)
-                    ApplyPreset(_settingsPresetDriver.SelectedItem);
+                    ApplyPreset(_settingsPresetDriver.SelectedItem.OspreySettings);
                 return;
             }
             var preset = _settingsPresetDriver.SelectedItem;
             if (preset != null && !_suppressPresetApply)
-                ApplyPreset(preset);
+                ApplyPreset(preset.OspreySettings);
         }
 
         private void btnSavePreset_Click(object sender, EventArgs e)
@@ -326,11 +357,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private int IndexOfPreset(string name)
         {
-            var presets = SettingsPresets;
-            for (int i = 0; i < presets.Count; i++)
+            int i = 0;
+            foreach (var preset in SettingsPresets)
             {
-                if (presets[i].Name == name)
+                if (preset.Name == name)
                     return i;
+                i++;
             }
             return -1;
         }

@@ -184,9 +184,9 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     /// <summary>
-    /// The user's Osprey settings presets (<see cref="Settings.OspreySettingsPresets"/>): none by
-    /// default, each saved from the Search Settings page, edited, imported and exported through
-    /// the list editor as the DDA and DIA-NN search presets are.
+    /// The presets Osprey's settings page saved before Osprey presets joined the search settings
+    /// presets (<see cref="SearchSettingsPresetList.MoveInOspreyPresets"/>), which moves them there.
+    /// Kept so the settings that hold them still load.
     /// </summary>
     public sealed class OspreySettingsPresetList : SerializableSettingsList<OspreySettingsPreset>
     {

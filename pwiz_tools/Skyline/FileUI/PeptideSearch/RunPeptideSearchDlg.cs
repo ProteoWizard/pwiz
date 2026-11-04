@@ -960,42 +960,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void InitSettingsPresetControls()
         {
+            // Only the presets of the workflow chosen on the first page, and none chosen to start with
             _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
                 cbSettingsPreset,
                 Settings.Default.SearchSettingsPresets,
-                true);
+                true)
+            {
+                Filter = IsPresetOfWorkflow,
+                SelectFirstItem = false
+            };
             LoadPresetList(null);
 
             cbSettingsPreset.SelectedIndexChanged += cbSettingsPreset_SelectedIndexChanged;
+            // A preset of the workflow left behind is no longer chosen
+            BuildPepSearchLibControl.WorkflowChanged += (sender, args) => LoadPresetList(SelectedPresetName);
             btnSavePreset.Click += btnSavePreset_Click;
             btnSavePreset.Enabled = false; // Enable once search settings page is reached
         }
 
-        private static void EnsureDefaultPresets()
+        /// <summary>
+        /// True for a preset of the workflow chosen on the first page; one with no workflow (the built-in
+        /// Default, and presets saved before presets had workflows) is a DDA preset.
+        /// </summary>
+        private bool IsPresetOfWorkflow(SearchSettingsPreset preset)
         {
-            var presets = Settings.Default.SearchSettingsPresets;
-            foreach (var defaultPreset in presets.GetDefaults())
-            {
-                if (!presets.Any(p => p.Name == defaultPreset.Name))
-                    presets.Insert(0, defaultPreset);
-            }
-
-            // Move in the presets the DIA-NN Search wizard saved, now that DIA-NN searches run here
-            var diannPresets = Settings.Default.DiannSearchSettingsPresets;
-            var diannDefaultNames = diannPresets.GetDefaults().Select(p => p.Name).ToHashSet();
-            var savedDiannPresets = diannPresets.Where(p => !diannDefaultNames.Contains(p.Name)).ToList();
-            foreach (var preset in savedDiannPresets)
-            {
-                // A preset of another engine may have the same name
-                var name = Helpers.GetUniqueName(preset.Name, n => !presets.Any(p => p.Name == n));
-                presets.Add(name == preset.Name ? preset : (SearchSettingsPreset) preset.ChangeName(name));
-                diannPresets.Remove(preset);
-            }
+            return (preset.Workflow ?? SearchWorkflowType.dda) == (SearchWorkflowType) WorkflowType;
         }
 
         private void LoadPresetList(string selectedName)
         {
-            EnsureDefaultPresets();
+            SearchSettingsPresetList.EnsureDefaults();
             _suppressPresetWarning = true;
             try
             {
@@ -1051,9 +1045,35 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         public void AddImportedPreset(SearchSettingsPreset preset)
         {
+            preset = OfWorkflowIfNone(preset);
             Settings.Default.SearchSettingsPresets.Add(preset);
             LoadPresetList(preset.Name);
-            ApplyPreset(preset);
+            ApplyPresetOfWorkflow(preset);
+        }
+
+        /// <summary>
+        /// A preset imported from a file that names no workflow (a Comet or MSFragger .params file) is for
+        /// the workflow it is imported into.
+        /// </summary>
+        private SearchSettingsPreset OfWorkflowIfNone(SearchSettingsPreset preset)
+        {
+            return preset.Workflow.HasValue ? preset : preset.ChangeWorkflow((SearchWorkflowType) WorkflowType);
+        }
+
+        /// <summary>
+        /// Applies an imported preset when it is of the chosen workflow; otherwise it is kept for that
+        /// workflow, and the user is told where to find it.
+        /// </summary>
+        private void ApplyPresetOfWorkflow(SearchSettingsPreset preset)
+        {
+            if (IsPresetOfWorkflow(preset))
+            {
+                ApplyPreset(preset);
+                return;
+            }
+            MessageDlg.Show(this, string.Format(
+                PeptideSearchResources.RunPeptideSearchDlg_ApplyPresetOfWorkflow_The_preset__0__is_for_another_workflow__It_is_listed_when_that_workflow_is_chosen_on_the_first_page_,
+                preset.Name));
         }
 
         private void ApplyPreset(SearchSettingsPreset preset)
@@ -1114,18 +1134,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportFastaControl.Enzyme = defaultEnzyme;
                     }
                 }
+                // The missed cleavages go with the enzyme: a preset without one leaves the digestion
+                ImportFastaControl.MaxMissedCleavages = preset.MaxMissedCleavages;
             }
-            ImportFastaControl.MaxMissedCleavages = preset.MaxMissedCleavages;
 
             // Apply modification settings immediately if we're on the mods page, otherwise the next time it is set up
             _modificationsPagePreset = null;
             if (CurrentPage == Pages.match_modifications_page)
                 MatchModificationsControl.Initialize(Document, TakePresetForModificationsPage());
 
-            // Apply workflow and IRT settings (null means reset to defaults)
-            BuildPepSearchLibControl.WorkflowType = preset.Workflow.HasValue
-                ? (Workflow)preset.Workflow.Value
-                : Workflow.dda;
+            // The preset is of the chosen workflow, which it leaves. Apply IRT settings (null means none,
+            // except for a preset of engine settings alone, which leaves them)
+            if (preset.HasEngineSettingsOnly)
+                return;
             if (!string.IsNullOrEmpty(preset.IrtStandardName))
             {
                 var irtStandard = IrtStandard.ALL.FirstOrDefault(s => s.Name == preset.IrtStandardName);
@@ -1225,7 +1246,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SearchSettingsControl?.Ms2Analyzer,
                 SearchSettingsControl?.CutoffScore ?? 0.01,
                 SearchSettingsPreset.SerializeAdditionalSettings(ImportPeptideSearch.SearchEngine?.AdditionalSettings),
-                ImportFastaControl?.FastaFile,
+                ImportFastaControl?.FastaFile ?? string.Empty, // No FASTA clears the FASTA when applied
                 ImportFastaControl?.Enzyme?.Name,
                 ImportFastaControl?.MaxMissedCleavages ?? 0,
                 structuralModifications: structuralMods,
@@ -1276,6 +1297,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public IEnumerable<string> PresetNames => Settings.Default.SearchSettingsPresets.Select(w => w.Name);
 
+        /// <summary>The presets the preset combo lists (those of the chosen workflow), read from the combo.</summary>
+        public IEnumerable<string> ShownPresetNames => cbSettingsPreset.Items.Cast<object>().Select(item => item.ToString())
+            .Where(name => Settings.Default.SearchSettingsPresets.ContainsKey(name));
+
         public void SaveSettingsPreset(string name)
         {
             var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
@@ -1293,10 +1318,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (existingPreset != null)
                 Settings.Default.SearchSettingsPresets.Remove(existingPreset);
 
-            var preset = SearchSettingsParamsFileParser.ImportFromFile(filePath, presetName);
+            var preset = OfWorkflowIfNone(SearchSettingsParamsFileParser.ImportFromFile(filePath, presetName));
             Settings.Default.SearchSettingsPresets.Add(preset);
             LoadPresetList(presetName);
-            ApplyPreset(preset);
+            ApplyPresetOfWorkflow(preset);
         }
 
         public SearchSettingsPreset LastAppliedPreset => _lastAppliedPreset;
