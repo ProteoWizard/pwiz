@@ -25,8 +25,8 @@ REM Pre-requisites on the build agent:
 REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallback)
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
 REM   * .NET 10 SDK
-REM   (dotCover is restored from .config\dotnet-tools.json by the build, so it
-REM   needs no agent provisioning.)
+REM   (dotCover and the ReSharper command line tools are restored from
+REM   .config\dotnet-tools.json, so they need no agent provisioning.)
 REM   Inno Setup 6 (for the Setup.exe) is self-provisioned by package.ps1 through
 REM   scripts/installer/Ensure-InnoSetup.ps1 if absent, so no manual agent step
 REM   is needed.
@@ -36,6 +36,7 @@ REM   * pwiz_tools/Osprey/TestResults/*.trx                  (vstest importData)
 REM   * pwiz_tools/Osprey/TestResults/*.dcvr                 (dotCover importData, master only)
 REM   * pwiz_tools/Osprey/dist/Osprey-<ver>-win-x64.zip      (publishArtifacts)
 REM   * pwiz_tools/Osprey/dist/Osprey-Setup-<ver>.exe         (publishArtifacts)
+REM   * ReSharper inspectcode report                         (importData, Inspections tab)
 REM   The installers are unsigned here; signing is a later CI step. The
 REM   publishArtifacts service messages are emitted by package.ps1 -TeamCity, so
 REM   no server-side artifact-path configuration is required.
@@ -80,15 +81,44 @@ REM Exit 2 is "not the default branch"; any other failure keeps coverage.
 if %ERRORLEVEL% EQU 2 set COVERAGE=
 if "%COVERAGE%"=="" (echo Not the default branch: running tests without coverage.) else (echo Collecting coverage.)
 
-pwsh -NoProfile -File "%SCRIPT_DIR%build.ps1" -TeamCity %COVERAGE% -Configuration Release %VENDOR%
+REM A from-scratch compile, as the Skyline configuration's Clean step gives it: a project that is
+REM already up to date emits no warnings, so an incremental build could not be checked for them.
+call "%SCRIPT_DIR%..\..\clean.bat"
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+
+REM Every compile appends its warnings here, and tcinspect.ps1 judges them at the end. Nothing
+REM promotes a warning to an error: that would stop the build before the tests ran.
+set BUILD_WARNINGS=%TEMP%\osprey-inspectcode\build-warnings.log
+if exist "%BUILD_WARNINGS%" del /q "%BUILD_WARNINGS%"
+
+REM A failed step no longer stops the build: the steps after it still run and report, so the log
+REM carries everything, and the first failure's exit code is the build's. Each step raises its
+REM own buildProblem, so a test failure and a warning failure each still read as themselves.
+set RESULT=0
+
+pwsh -NoProfile -File "%SCRIPT_DIR%build.ps1" -TeamCity %COVERAGE% -Configuration Release %VENDOR% -BuildWarningsPath "%BUILD_WARNINGS%"
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 
 REM CarafeSharp (pwiz_tools/CarafeSharp) trains the spectral libraries Osprey searches and
 REM has no config of its own, so this one builds and tests it too, with its own test results
 REM and coverage snapshot. It needs no test data; the Carafe parity tests are Inconclusive
 REM without it. It reads no instrument files, so it takes no vendor agreement.
-pwsh -NoProfile -File "%SCRIPT_DIR%..\CarafeSharp\build.ps1" -TeamCity %COVERAGE%
-if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+pwsh -NoProfile -File "%SCRIPT_DIR%..\CarafeSharp\build.ps1" -TeamCity %COVERAGE% -BuildWarningsPath "%BUILD_WARNINGS%"
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 
+REM No installers from a build whose compile or tests failed.
+if %RESULT% NEQ 0 (
+    echo Skipping the installers: an earlier step failed.
+    goto inspect
+)
 pwsh -NoProfile -File "%SCRIPT_DIR%package.ps1" -TeamCity -Rid win-x64 -Setup %VENDOR%
-exit /b %ERRORLEVEL%
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
+
+:inspect
+REM Last, so compiler warnings and ReSharper findings fail the build only after the tests and the
+REM installers have run: without this check, warnings the local gate (Build-Osprey.ps1
+REM -RunInspection) catches reached PRs and master with every check green.
+pwsh -NoProfile -File "%SCRIPT_DIR%tcinspect.ps1" -TeamCity -Configuration Release %VENDOR% -BuildWarningsPath "%BUILD_WARNINGS%"
+if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
+
+exit /b %RESULT%

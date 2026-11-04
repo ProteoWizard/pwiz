@@ -628,14 +628,18 @@ namespace pwiz.Osprey
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
                 // whose q-values an operator is most likely to attribute to the wrong arm.
                 LogInfo(OspreyEnvironment.DescribeExperimentAgg());
+                // Abort, do not fall back: the default arm's q-values filed under the name of the
+                // arm the caller asked for, as for OSPREY_PASS2_QVALUE below. It used to warn and run
+                // max, which a mistyped sweep cell could not be told apart from.
                 if (OspreyEnvironment.ExperimentAggUnrecognized)
                 {
-                    LogWarning(string.Format(
-                        @"OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
-                        @"'{0}'. Recognized values: '{0}', or '{1}<N>' with N in [2, {2}] (e.g. '{1}2').",
+                    LogError(string.Format(
+                        @"OSPREY_EXPERIMENT_AGG is set to an unrecognized value. Use '{0}', or '{1}<N>' " +
+                        @"with N in [2, {2}] (e.g. '{1}2'), or unset it for the default ('{0}').",
                         OspreyEnvironment.EXPERIMENT_AGG_MAX,
                         OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
                         OspreyEnvironment.MEAN_BEST_N_MAX));
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
                 // asked for trees and trained the linear SVM is the #4491 defect, and its output
@@ -728,23 +732,33 @@ namespace pwiz.Osprey
                         OspreyEnvironment.SvmCSelectionTolerance.ToString(CultureInfo.InvariantCulture)));
                 }
                 // An OSPREY_* variable this build does not read is refused, as an unrecognized
-                // argument is (OspreyEnvironment.KnownVariables). Silence was the bad outcome
-                // for every kind of name this catches: a retired switch (OSPREY_STAGE7_STREAM,
-                // OSPREY_FDR_PROJECTION and the rest) would have the default arm's numbers filed
-                // under the arm it used to select; a Rust-only dump left in a bisection shell
-                // would produce a run with no dump; and a misspelling would change nothing while
-                // its caller believed it had. Checked at startup, so it costs seconds rather
-                // than Stages 1-5.
-                var unrecognizedVariables = OspreyEnvironment.UnrecognizedVariables();
-                if (unrecognizedVariables.Count > 0)
+                // argument is (EnvVarUsage.Catalog). Silence was the bad outcome for every kind of
+                // name this catches: a retired switch (OSPREY_STAGE7_STREAM, OSPREY_FDR_PROJECTION and
+                // the rest) would have the default arm's numbers filed under the arm it used to
+                // select; a Rust-only dump left in a bisection shell would produce a run with no dump;
+                // and a misspelling would change nothing while its caller believed it had. Checked at
+                // startup, so it costs seconds rather than Stages 1-5. An error, not a warning, since
+                // #4825; the message names the closest catalogued name.
+                string unrecognizedVariables = EnvVarUsage.DescribeUnrecognizedVariables(OspreyCommandArgs.ARG_HELP_ENV.ArgumentText);
+                if (unrecognizedVariables != null)
                 {
-                    LogError(string.Format(
-                        @"Osprey does not recognize the environment variable(s) {0}. Unset them. A variable that " +
-                        @"was removed no longer has any effect, and one that only Rust osprey reads is never " +
-                        @"honored here.",
-                        string.Join(@", ", unrecognizedVariables)));
+                    LogError(unrecognizedVariables);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // Every other switch with listed values: a value it does not list would run the
+                // default arm under the name of the one asked for. The switches above give their own
+                // fuller message first.
+                var valueErrors = EnvVarCatalog.ValueErrors(EnvVarUsage.Catalog);
+                if (valueErrors.Count > 0)
+                {
+                    foreach (string valueError in valueErrors)
+                        LogError(valueError);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Provenance: every switch that is set, so a log names its arm without inference.
+                string setVariables = EnvVarUsage.DescribeSetVariables();
+                if (setVariables != null)
+                    LogInfo(setVariables);
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
                 // Machine twins of the banner: the liveness anchor a route assertion needs
@@ -1069,7 +1083,7 @@ namespace pwiz.Osprey
                 }
                 // The loader has closed the library by the time the export replaces its output,
                 // so the same path would silently overwrite the library with the export.
-                if (IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
+                if (PathComparison.IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
                 {
                     return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
                         OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, config.LibrarySource.Path);
@@ -1080,7 +1094,7 @@ namespace pwiz.Osprey
             // The search replaces its output blib at the end, after the library was read, so the
             // library's own path would silently replace the library with this run's results.
             if (config.LibrarySource != null && !string.IsNullOrWhiteSpace(config.OutputBlib) &&
-                IsSamePath(config.OutputBlib, config.LibrarySource.Path))
+                PathComparison.IsSamePath(config.OutputBlib, config.LibrarySource.Path))
             {
                 return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, config.LibrarySource.Path);
@@ -1285,7 +1299,7 @@ namespace pwiz.Osprey
             // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
             // and a re-run would tune again from the last result instead of finding it current.
             if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
-                IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
+                PathComparison.IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__,
                     OspreyCommandArgs.ARG_MODEL.ArgumentText, build.ModelPath, OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText);
@@ -1301,7 +1315,7 @@ namespace pwiz.Osprey
                 // cache may stand in for it; one searched for the tuning only is read here (a file,
                 // or a folder-format run such as a Bruker .d). A task of the one command reads them
                 // as its analysis reads its inputs, if at all: a node is given only what its task reads.
-                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => IsSamePath(input, run))).ToList();
+                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => PathComparison.IsSamePath(input, run))).ToList();
                 bool runsWhole = config.SelectedTask == null && build.Phase == null;
                 foreach (string run in runsWhole ? heldOut : new List<string>())
                 {
@@ -1317,16 +1331,6 @@ namespace pwiz.Osprey
                     return dupErr;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Whether two paths name the same file once made absolute: ignoring case except on
-        /// Linux, whose file systems are case-sensitive.
-        /// </summary>
-        private static bool IsSamePath(string path1, string path2)
-        {
-            return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2),
-                OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
