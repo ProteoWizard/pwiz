@@ -27,6 +27,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
+using pwiz.CarafeSharp.Models;
 
 namespace pwiz.CarafeSharp.Test
 {
@@ -106,7 +107,10 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>The category of the GPU tests, which the CPU pass leaves out.</summary>
         public const string CUDA_CATEGORY = @"Cuda";
 
-        /// <summary>Set to 1 by <c>build.ps1 -Torch cuda</c>: a GPU test without a usable GPU fails instead of being inconclusive.</summary>
+        /// <summary>
+        /// Set to 1 by <c>build.ps1 -Torch cuda</c>: a GPU test without a usable GPU fails instead of being
+        /// inconclusive, and the comparisons with Carafe run on the GPU (<see cref="ComparisonDeviceName"/>).
+        /// </summary>
         public const string REQUIRE_CUDA_VARIABLE = @"CARAFESHARP_REQUIRE_CUDA";
 
         // The known-folder registry value of the Downloads folder, which RegressionData.ps1 reads too.
@@ -259,6 +263,30 @@ namespace pwiz.CarafeSharp.Test
             Assert.Inconclusive(@"No test data: extract {0} into {1}{2}.",
                 string.Join(@" and ", packages.Select(p => p.Zip)), Root,
                 variables.Length > 0 ? @", or set " + string.Join(@" or ", variables) : string.Empty);
+        }
+
+        /// <summary>
+        /// The device the comparisons with Carafe predict and train on (<see cref="TorchDevice.CPU"/> or
+        /// <see cref="TorchDevice.GPU"/>): the GPU in a CUDA build's test run (<see cref="REQUIRE_CUDA_VARIABLE"/>),
+        /// where a GPU that is not usable fails the test rather than letting it pass on the CPU, else the CPU.
+        /// </summary>
+        public static string ComparisonDeviceName
+        {
+            get
+            {
+                if (Environment.GetEnvironmentVariable(REQUIRE_CUDA_VARIABLE) != @"1")
+                    return TorchDevice.CPU;
+                TorchDevice.Resolve(TorchDevice.GPU, out string fallback);
+                if (fallback != null)
+                    Assert.Fail(@"{0} ({1}=1: the comparison must run on the GPU)", fallback, REQUIRE_CUDA_VARIABLE);
+                return TorchDevice.GPU;
+            }
+        }
+
+        /// <summary>The libtorch device of <see cref="ComparisonDeviceName"/>.</summary>
+        public static TorchSharp.torch.Device ComparisonDevice
+        {
+            get { return TorchDevice.Resolve(ComparisonDeviceName, out _); }
         }
 
         /// <summary>True while a committed subset is the root (<see cref="UseSubset"/>).</summary>

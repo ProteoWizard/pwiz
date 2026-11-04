@@ -12,13 +12,26 @@
     configuration runs them.
 
     The script:
-      1. Builds CarafeSharp (Release, CPU) unless -NoBuild, and stops if the build fails.
+      1. Builds CarafeSharp (Release, on the -Torch backend) unless -NoBuild, and stops if the
+         build fails.
       2. Fetches the reference packages the comparisons read that are not there yet
          (build.ps1 -TestData Fetch: testdata.json's URL, size and SHA-256, then each package's
          MANIFEST.sha256), into <Downloads>/Perftests or CARAFESHARP_TESTDATA.
       3. Runs the comparisons, which are CarafeSharp.Test methods in a test category of their own
          (FullParity for Stellar, Astral for Astral), with every one required to run to a result.
-      4. Reports each comparison: what it checks, its outcome and time, and the failure message.
+      4. Reports each comparison: what it checks, its outcome and time, and the failure message,
+         with the backend it ran on, and keeps each dataset's results as
+         TestResults/CarafeParity-<Dataset>-<cpu|cuda>.trx.
+
+    -Torch cuda builds the CUDA libtorch (build.ps1 -Torch cuda: a 4 GB NuGet runtime on first use,
+    an NVIDIA GPU of compute capability 7.0 or later, driver 570 or later) and predicts and
+    fine-tunes on the GPU. A machine without a usable GPU fails: build.ps1 checks the GPU and driver
+    before building, and each comparison that predicts fails rather than falling back to the CPU
+    (CARAFESHARP_REQUIRE_CUDA=1, TestData.ComparisonDeviceName). The tolerances are the CPU's, which
+    no GPU result is expected to match bit for bit. On an Ada GPU the RT predictions exceed them (the
+    prediction and predicted-library comparisons, Stellar and Astral), mostly from libtorch's default
+    TF32 convolutions; the comparisons that do not predict compute the same values on both backends.
+    See docs/04-testing.md, "Full-size parity", for the measured differences.
 
     Stellar, the default, is the eight comparisons on carafesharp-testfiles-v1 (and, for masking,
     carafesharp-export-v1), about 4 minutes after the fetch on an i9-14900 (5.5 minutes with a
@@ -34,7 +47,7 @@
       TestMaskingAgreesWithCarafe        Osprey export masking against Carafe's training
 
     Astral is the same comparisons on the Astral run (4 tests, 4.8 GB download, 22 GB extracted,
-    about 12 minutes).
+    about 4 minutes on the CPU after the fetch, measured 2026-11-03).
 
     The exit code is 0 only when every comparison ran and passed.
 
@@ -44,19 +57,25 @@
 .PARAMETER TestName
     Run only the comparisons whose name contains this text. Needs -Dataset Stellar or Astral.
 
+.PARAMETER Torch
+    libtorch backend, as build.ps1's -Torch: cpu (default) or cuda.
+
 .PARAMETER NoBuild
-    Use the existing Release CPU build.
+    Use the existing Release build of the -Torch backend.
 
 .EXAMPLE
     pwsh -File pwiz_tools/CarafeSharp/scripts/Compare-CarafeParity.ps1
 .EXAMPLE
     pwsh -File pwiz_tools/CarafeSharp/scripts/Compare-CarafeParity.ps1 -Dataset All
 .EXAMPLE
+    pwsh -File pwiz_tools/CarafeSharp/scripts/Compare-CarafeParity.ps1 -Torch cuda
+.EXAMPLE
     pwsh -File pwiz_tools/CarafeSharp/scripts/Compare-CarafeParity.ps1 -NoBuild -TestName FineTune
 #>
 param(
     [ValidateSet('Stellar', 'Astral', 'All')] [string]$Dataset = 'Stellar',
     [string]$TestName,
+    [ValidateSet('cpu', 'cuda')] [string]$Torch = 'cpu',
     [switch]$NoBuild
 )
 
@@ -77,7 +96,18 @@ if ($TestName -and $selected.Count -gt 1) {
     exit 1
 }
 
-$trxPath = Join-Path (Join-Path $carafeRoot 'TestResults') 'CarafeSharp.Test-Release-cpu.trx'
+# ValidateSet ignores case, but the value names build.ps1's output folders and the trx.
+$Torch = $Torch.ToLowerInvariant()
+$resultsDir = Join-Path $carafeRoot 'TestResults'
+$trxPath = Join-Path $resultsDir "CarafeSharp.Test-Release-$Torch.trx"
+$backend = $Torch
+# build.ps1 checks the GPU and driver itself and stops with the reason when one does not qualify.
+if ($Torch -eq 'cuda' -and (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) {
+    $gpu = @(& nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>$null) | Select-Object -First 1
+    if ($gpu) {
+        $backend = "cuda ($($gpu.Trim()))"
+    }
+}
 $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
 $rows = @()
 $problems = @()
@@ -85,7 +115,7 @@ $clock = [Diagnostics.Stopwatch]::StartNew()
 # Build once, up front, and stop if it fails: a dataset run after a failed build would compare
 # the binaries already on disk.
 if (-not $NoBuild) {
-    & pwsh -NoProfile -File $buildScript -NoTests
+    & pwsh -NoProfile -File $buildScript -NoTests -Torch $Torch
     if ($LASTEXITCODE -ne 0) {
         Write-Host ("OVERALL: FAIL - the build failed (build.ps1 exit {0})" -f $LASTEXITCODE) -ForegroundColor Red
         exit 1
@@ -94,8 +124,8 @@ if (-not $NoBuild) {
 foreach ($name in $selected) {
     $spec = $datasets[$name]
     Write-Host ''
-    Write-Host ("=== {0}: TestCategory={1}, packages {2} ===" -f $name, $spec.Category, $spec.Packages) -ForegroundColor Cyan
-    $buildArgs = @('-NoProfile', '-File', $buildScript, '-NoBuild', '-TestCategory', $spec.Category, '-RequireData',
+    Write-Host ("=== {0}: TestCategory={1}, packages {2}, libtorch {3} ===" -f $name, $spec.Category, $spec.Packages, $backend) -ForegroundColor Cyan
+    $buildArgs = @('-NoProfile', '-File', $buildScript, '-NoBuild', '-Torch', $Torch, '-TestCategory', $spec.Category, '-RequireData',
         '-TestData', 'Fetch', '-TestDataPackage', $spec.Packages)
     if ($TestName) {
         $buildArgs += @('-TestName', $TestName)
@@ -109,6 +139,10 @@ foreach ($name in $selected) {
         $problems += "${name}: build.ps1 exited $exitCode with no test results (see its output above)"
         continue
     }
+    # build.ps1 writes one trx per configuration and backend; keep each dataset's under a name of its own.
+    $keptTrx = Join-Path $resultsDir "CarafeParity-$name-$Torch.trx"
+    Copy-Item -LiteralPath $trxPath -Destination $keptTrx -Force
+    Write-Host "Results: $keptTrx"
     [xml]$trx = Get-Content -Raw -LiteralPath $trxPath
     foreach ($result in Select-Xml -Xml $trx -XPath '//t:UnitTestResult' -Namespace $ns | ForEach-Object { $_.Node }) {
         $message = (Select-Xml -Xml $result -XPath './/t:Message' -Namespace $ns | Select-Object -First 1).Node.InnerText
@@ -126,10 +160,10 @@ foreach ($name in $selected) {
 }
 
 Write-Host ''
-Write-Host '=== CarafeSharp parity with Carafe 2.2.0 ===' -ForegroundColor Cyan
+Write-Host ("=== CarafeSharp parity with Carafe 2.2.0, libtorch {0} ===" -f $backend) -ForegroundColor Cyan
 foreach ($row in $rows | Sort-Object Dataset, Test) {
     $color = if ($row.Outcome -eq 'Passed') { 'Green' } else { 'Red' }
-    Write-Host ("  {0,-8} {1,-40} {2,-12} {3,8:F1}s" -f $row.Dataset, $row.Test, $row.Outcome, $row.Duration.TotalSeconds) -ForegroundColor $color
+    Write-Host ("  {0,-8} {1,-4} {2,-40} {3,-12} {4,8:F1}s" -f $row.Dataset, $Torch, $row.Test, $row.Outcome, $row.Duration.TotalSeconds) -ForegroundColor $color
     if ($row.Outcome -ne 'Passed' -and $row.Message) {
         foreach ($line in @($row.Message -split "`r?`n" | Select-Object -First 5)) {
             Write-Host ("           {0}" -f $line) -ForegroundColor DarkYellow
@@ -146,8 +180,8 @@ if ($rows.Count -eq 0 -and $problems.Count -eq 0) {
 Write-Host ("Wall: {0:hh\:mm\:ss}" -f $clock.Elapsed)
 if ($problems.Count -gt 0) {
     $summary = @($problems | Select-Object -Unique) -join '; '
-    Write-Host ("OVERALL: FAIL - {0}" -f $summary) -ForegroundColor Red
+    Write-Host ("OVERALL: FAIL ({0}) - {1}" -f $Torch, $summary) -ForegroundColor Red
     exit 1
 }
-Write-Host ("OVERALL: PASS - {0} comparison(s) match Carafe 2.2.0" -f $rows.Count) -ForegroundColor Green
+Write-Host ("OVERALL: PASS - {0} comparison(s) match Carafe 2.2.0 on libtorch {1}" -f $rows.Count, $Torch) -ForegroundColor Green
 exit 0

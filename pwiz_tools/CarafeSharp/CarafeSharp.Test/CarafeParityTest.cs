@@ -26,7 +26,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
-using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
 {
@@ -97,11 +96,13 @@ namespace pwiz.CarafeSharp.Test
             foreach (string folder in finetunedDirs)
                 TestData.RequireFiles(folder, MS2_FRAME_FILE, MS2_PREDICTION_FILE, RT_PREDICTION_FILE, MS2_MODEL_FILE, RT_MODEL_FILE);
 
+            var device = TestData.ComparisonDevice;
+            TestContext.WriteLine(@"Predicting on {0}", device);
             if (pretrainedDirs.Count > 0)
             {
                 var pretrained = PretrainedModels.Open();
-                using (var ms2 = Ms2Model.FromPretrained(pretrained, CPU))
-                using (var rt = RtModel.FromPretrained(pretrained, CPU))
+                using (var ms2 = Ms2Model.FromPretrained(pretrained, device))
+                using (var rt = RtModel.FromPretrained(pretrained, device))
                 {
                     foreach (string folder in pretrainedDirs)
                         CompareFolder(@"pretrained " + folder, folder, ms2, rt, true);
@@ -111,8 +112,8 @@ namespace pwiz.CarafeSharp.Test
             {
                 // Carafe uses its fine-tuned MS2 model only when it beats the pretrained one on
                 // all four test metrics; these reference folders record that it did.
-                using (var ms2 = Ms2Model.FromPthFile(Path.Combine(folder, MS2_MODEL_FILE), CPU))
-                using (var rt = RtModel.FromPthFile(Path.Combine(folder, RT_MODEL_FILE), CPU))
+                using (var ms2 = Ms2Model.FromPthFile(Path.Combine(folder, MS2_MODEL_FILE), device))
+                using (var rt = RtModel.FromPthFile(Path.Combine(folder, RT_MODEL_FILE), device))
                     CompareFolder(@"fine-tuned " + folder, folder, ms2, rt, false);
             }
         }

@@ -94,7 +94,7 @@ namespace pwiz.CarafeSharp.Test
                 Settings.ModelDirectory = folder;
                 CarafeModelDirectory.Open(folder).ApplyTrainingRunOverrides(Settings);
             }
-            Settings.Device = @"cpu";
+            Settings.Device = TestData.ComparisonDeviceName;
         }
 
         public string Folder { get; }

@@ -48,7 +48,7 @@ kernels for compute capabilities 7.0, 7.5, 8.0, 8.6, 9.0, 10.0 and 12.0, and no 
   first GPU (the one libtorch uses; `CUDA_VISIBLE_DEVICES` picks another) is older than compute 7.0 or the
   driver is older than 570, and says which.
 - **Fallback:** at run time `--device gpu` falls back to the CPU, as Carafe does, and logs why.
-- **Tested hardware:** a GeForce GTX 1650 (Turing, 7.5, 4 GB) under Windows. `build.sh` and the test passes
+- **Tested hardware:** a GeForce GTX 1650 (Turing, 7.5, 4 GB) and an RTX 4000 Ada (8.9, 20 GB) under Windows. `build.sh` and the test passes
   have not yet been verified on Linux or WSL2.
 
 ## Test data
@@ -157,7 +157,7 @@ new version.
 | Pass | Command | Tests | Time (i9-14900) |
 |---|---|---|---|
 | CPU | `build.ps1` | 108, with no test data: the subset parity twins and `TestRegressionSubset` run | about 2 min |
-| Full-size parity | `scripts/Compare-CarafeParity.ps1 [-Dataset Astral\|All]` | the `FullParity` category, 8 on the Stellar packages, or the `Astral` category, 4 on the Astral package (see "Full-size parity") | Stellar about 4 min, Astral about 12 min, after the fetch |
+| Full-size parity | `scripts/Compare-CarafeParity.ps1 [-Dataset Astral\|All]` | the `FullParity` category, 8 on the Stellar packages, or the `Astral` category, 4 on the Astral package (see "Full-size parity") | Stellar about 4 min, Astral about 4 min, after the fetch |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU, and the subset fine-tuned twice on the GPU | about 2 min |
 | Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral about 36 min on the CPU |
 
@@ -193,12 +193,39 @@ every precursor of the reference runs.
 pwsh -File scripts/Compare-CarafeParity.ps1                    # the 8 Stellar comparisons
 pwsh -File scripts/Compare-CarafeParity.ps1 -Dataset All       # and the 4 Astral ones
 pwsh -File scripts/Compare-CarafeParity.ps1 -NoBuild -TestName FineTune
+pwsh -File scripts/Compare-CarafeParity.ps1 -Torch cuda        # the same on the GPU
 ```
 
 The script fetches the packages the comparisons read (`build.ps1 -TestData Fetch`, so the zips are checked
 against `testdata.json` and the files against each `MANIFEST.sha256`), builds, runs the `FullParity` category
 (or `Astral`) with `-RequireData`, so a comparison that did not run fails, and prints each comparison's outcome,
-time and failure message, then `OVERALL: PASS` or `FAIL` with exit code 0 or 1.
+time and failure message, then `OVERALL: PASS` or `FAIL` with exit code 0 or 1. Each dataset's results are
+kept as `TestResults/CarafeParity-<Dataset>-<cpu|cuda>.trx`, and every report line names the backend.
+
+**`-Torch cuda`** builds the CUDA libtorch (`build.ps1 -Torch cuda`, with its GPU and driver preflight) and
+runs the same comparisons with `CARAFESHARP_REQUIRE_CUDA=1`, under which `TestData.ComparisonDeviceName` puts
+every prediction and fine-tune on the GPU and fails a comparison whose GPU is not usable, rather than letting
+it pass on the CPU. The tolerances are the CPU's. Carafe 2.2.0 wrote the reference values on CUDA (torch
+2.5.1), but neither backend is expected to reproduce them bit for bit: libtorch versions and kernels round
+differently. Measured on an RTX 4000 Ada (driver 596.71) and an i9-14900, 2026-11-03, largest difference
+over the reference folders:
+
+| Comparison (limit) | CPU | CUDA | CUDA, `NVIDIA_TF32_OVERRIDE=0` |
+|---|---|---|---|
+| Stellar predictions, MS2 (1.5e-5) | 6.3e-6 | 1.9e-6 (first folder) | 6.1e-6 |
+| Stellar predictions, RT in rt_norm (2e-6) | 2.4e-7 | **1.0e-4, fails** | 1.6e-6 |
+| Stellar predicted library, TSV RT (0.011 min) | 0.01 | **0.04, fails** | 0.01 |
+| Stellar predicted library, .blib RT (1e-3) | 3.2e-4 | not reached | **7.4e-3, fails** |
+| Astral predictions, MS2 (1.5e-5) | 2.6e-6 | 1.7e-6 | 1.7e-6 |
+| Astral predictions, RT in rt_norm (2e-6) | 3.3e-7 | **1.3e-4, fails** | **2.3e-6, fails** |
+| Astral library, TSV RT (0.011 min) | 0.01 | **0.10, fails** | 0.01 |
+
+The other comparisons (peptidoforms, fragment m/z, assembly, the FASTA builds, masking, and the fine-tune
+checks' pretrained metrics) pass on both backends: 6 of 8 Stellar and 2 of 4 Astral on CUDA. The RT model's
+convolutions and LSTM run in TF32 on Ampere and newer GPUs by libtorch's default, which accounts for most
+of the RT difference; the rest is the GPU's own rounding, which the CPU-derived limits do not allow for.
+So a CUDA run is expected to fail the prediction and predicted-library comparisons until they carry GPU
+limits of their own, and a change is judged on its CPU run.
 
 | Comparison (`FullParity`) | Checks | Subset twin, every commit |
 |---|---|---|
