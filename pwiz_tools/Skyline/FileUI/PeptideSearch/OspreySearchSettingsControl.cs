@@ -48,6 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private string _additionalSettingsError;
         private readonly SettingsListComboDriver<OspreySettingsPreset> _settingsPresetDriver;
         private bool _suppressPresetApply;
+        private bool _presetsHidden;
 
         // Osprey's own defaults for each resolution: 10 ppm for high-resolution MS/MS, 0.5 m/z for
         // unit resolution.
@@ -91,6 +92,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private Form WizardForm => FormEx.GetParentForm(this);
+
+        /// <summary>
+        /// Hides the preset row, for a host with presets of its own (Run Peptide Search, whose presets
+        /// carry these settings), and moves the settings up in its place.
+        /// </summary>
+        public void HidePresets()
+        {
+            if (_presetsHidden)
+                return;
+            _presetsHidden = true;
+            int rowHeight = lblResolution.Top - lblSettingsPreset.Top;
+            var presetControls = new Control[] { lblSettingsPreset, comboSettingsPreset, btnSavePreset };
+            foreach (var control in presetControls)
+                control.Visible = false;
+            // Visible is false for every child of a control not yet shown, so the preset row is named
+            foreach (Control control in Controls)
+            {
+                if (!presetControls.Contains(control))
+                    control.Top -= rowHeight;
+            }
+            Height -= rowHeight;
+        }
 
         /// <summary>
         /// The scopes of the run the host is configuring (<see cref="OspreyAdditionalSettings.ScopesFor"/>),

@@ -695,6 +695,9 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class OspreyConfig
     {
+        /// <summary>Osprey's default threshold for each of its FDRs.</summary>
+        public const double DEFAULT_FDR = 0.01;
+
         public IList<string> DataFiles { get; set; } = new List<string>();
 
         /// <summary>
@@ -754,9 +757,9 @@ namespace pwiz.Skyline.Model.Lib
         public string Resolution { get; set; } = OspreyHelpers.RESOLUTION_HRAM;
         public double FragmentTolerance { get; set; } = 10;
         public string FragmentUnit { get; set; } = OspreyHelpers.FRAGMENT_UNIT_PPM;
-        public double RunFdr { get; set; } = 0.01;
-        public double ExperimentFdr { get; set; } = 0.01;
-        public double ProteinFdr { get; set; } = 0.01;
+        public double RunFdr { get; set; } = DEFAULT_FDR;
+        public double ExperimentFdr { get; set; } = DEFAULT_FDR;
+        public double ProteinFdr { get; set; } = DEFAULT_FDR;
         public int Threads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>The index into CarafeSharp's enzyme table; null leaves Carafe's default (trypsin).</summary>

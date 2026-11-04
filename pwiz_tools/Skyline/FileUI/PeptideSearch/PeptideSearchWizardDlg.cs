@@ -67,7 +67,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             import_fasta_page,
             converter_settings_page,
             dda_search_settings_page,
-            dda_search_page
+            dda_search_page,
+            library_model_page // Added in code by the wizards that have it
         }
 
         public enum InputFile
@@ -98,6 +99,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class ConverterSettingsPage : IFormView { }
         public class DDASearchSettingsPage : IFormView { }
         public class DDASearchPage : IFormView { }
+        public class LibraryModelPage : IFormView { }
 
         private static readonly IDictionary<Pages, Func<IFormView>> PAGE_VIEWS = new Dictionary<Pages, Func<IFormView>>
         {
@@ -110,6 +112,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             { Pages.converter_settings_page, () => new ConverterSettingsPage() },
             { Pages.dda_search_settings_page, () => new DDASearchSettingsPage() },
             { Pages.dda_search_page, () => new DDASearchPage() },
+            { Pages.library_model_page, () => new LibraryModelPage() },
         };
 
         private readonly Stack<SrmDocument> _documents;
@@ -220,6 +223,48 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             /// Runs when the user arrives at the page with Next.
             /// </summary>
             public Action Enter { get; }
+
+            /// <summary>
+            /// False passes over a page the workflow has, when a choice made on a page before it
+            /// leaves it nothing to ask (e.g. a library model when no library is predicted).
+            /// </summary>
+            public Func<bool> IsShown { get; set; } = () => true;
+        }
+
+        /// <summary>
+        /// Adds a page the designer does not have, titled like the other pages, after
+        /// <paramref name="afterPage"/>, for a wizard to host its control on.
+        /// </summary>
+        protected TabPage AddWizardTabPage(Pages page, string name, string title, Pages afterPage)
+        {
+            var titlePanel = new Panel
+            {
+                BackColor = converterSettingsTitlePanel.BackColor,
+                BorderStyle = converterSettingsTitlePanel.BorderStyle,
+                Dock = DockStyle.Top,
+                Height = converterSettingsTitlePanel.Height
+            };
+            titlePanel.Controls.Add(new Label
+            {
+                AutoSize = true,
+                Font = label2.Font,
+                ForeColor = label2.ForeColor,
+                Location = label2.Location,
+                Text = title
+            });
+            var tabPage = new TabPage
+            {
+                Name = name,
+                Padding = converterSettingsPage.Padding,
+                Size = converterSettingsPage.Size,
+                Text = title,
+                UseVisualStyleBackColor = true
+            };
+            tabPage.Controls.Add(titlePanel);
+            int index = wizardPagesImportPeptideSearch.TabPages.IndexOfKey(_tabPageNames[afterPage]) + 1;
+            wizardPagesImportPeptideSearch.TabPages.Insert(index, tabPage);
+            _tabPageNames[page] = name;
+            return tabPage;
         }
 
         /// <summary>
@@ -621,7 +666,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IEnumerable<WizardPage> GetApplicablePages()
         {
-            return _wizardPages.Where(Applies);
+            // The page showing stays in the order even when a choice on it passes over it, so Next and
+            // Back still move from it
+            var currentPage = CurrentPage;
+            return _wizardPages.Where(page => Applies(page) && (page.Page == currentPage || page.IsShown()));
         }
 
         private bool Applies(WizardPage page)

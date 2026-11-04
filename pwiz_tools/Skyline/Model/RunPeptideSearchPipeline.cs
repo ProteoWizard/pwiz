@@ -56,6 +56,12 @@ namespace pwiz.Skyline.Model
             public bool OverwriteDocumentLibrary { get; set; }
 
             /// <summary>
+            /// The search wrote a finished library (one file for all the runs), which becomes the document
+            /// library as it is, in place of a library BiblioSpec builds from the results.
+            /// </summary>
+            public bool SearchResultIsLibrary { get; set; }
+
+            /// <summary>
             /// The iRT standard to calibrate the library to; null or empty for none.
             /// </summary>
             public IrtStandard IrtStandard { get; set; }
@@ -204,7 +210,9 @@ namespace pwiz.Skyline.Model
                 : null;
             try
             {
-                var docLibSpec = BuildLibraryFiles(document, documentPath, monitor, result);
+                var docLibSpec = _options.SearchResultIsLibrary && !_options.IsFeatureDetection
+                    ? InstallSearchLibrary(document, documentPath, monitor)
+                    : BuildLibraryFiles(document, documentPath, monitor, result);
                 setAside?.Discard();
                 return docLibSpec;
             }
@@ -213,6 +221,26 @@ namespace pwiz.Skyline.Model
                 setAside?.Restore();
                 throw;
             }
+        }
+
+        /// <summary>
+        /// A library the search wrote is copied into place as the document library, leaving the search's
+        /// own file for a run with the same inputs to install again without searching again, and loaded.
+        /// </summary>
+        private LibrarySpec InstallSearchLibrary(SrmDocument document, string documentPath, IProgressMonitor monitor)
+        {
+            string docBlibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
+            ImportPeptideSearch.ReleaseDocumentLibrary(document, _libraryManager);
+            File.Copy(_importPeptideSearch.SearchFilenames.Single(), docBlibPath, true);
+            // A redundant library left by an earlier BiblioSpec build is not this library's
+            FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
+
+            var docLibSpec = new BiblioSpecLiteSpec(Path.GetFileNameWithoutExtension(documentPath), docBlibPath)
+                .ChangeDocumentLibrary(true);
+            if (!_importPeptideSearch.LoadPeptideSearchLibrary(_libraryManager, docLibSpec, monitor))
+                throw new InvalidDataException(string.Format(ModelResources.ImportPeptideSearch_Failed_to_build_the_library__0__, docLibSpec.Name));
+            _docLibSpec = docLibSpec;
+            return docLibSpec;
         }
 
         private LibrarySpec BuildLibraryFiles(SrmDocument document, string documentPath, IProgressMonitor monitor, Result result)

@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
@@ -122,56 +121,33 @@ namespace TestPerf
         }
 
         /// <summary>
-        /// Page by page, pausing on each on-screen: the three runs on the data files page, the FASTA,
-        /// and on the Library Model page "Choose from the searched files" listing the runs unchecked,
-        /// then the middle run checked as the one tuning run; the search saves the fine-tuned model.
+        /// Page by page: the three runs, the FASTA, Osprey predicting the library on the DIA search
+        /// method page, and on the Library Model page "Choose from the searched files" listing the runs
+        /// unchecked, then the middle run checked as the one tuning run; the search saves the
+        /// fine-tuned model.
         /// </summary>
         private void TuneOnSearchedRun(string[] diaFilePaths, string tuningRun, string fastaFilepath)
         {
             string docPath = SkylineWindow.DocumentFilePath;
-            var searchDlg = ShowDialog<OspreySearchDlg>(SkylineWindow.ShowOspreySearchDlg);
+            var searchDlg = OspreySearchTuningTest.OpenWizardOnLibraryModelPage(diaFilePaths, fastaFilepath);
             RunUI(() =>
             {
-                AssertEx.AreEqual(OspreySearchDlg.Pages.data_files_page, searchDlg.CurrentPage);
-                searchDlg.DataFileResults.FoundResultsFiles = diaFilePaths
-                    .Select(p => new ImportPeptideSearch.FoundResultsFile(Path.GetFileNameWithoutExtension(p), p)).ToArray();
-            });
-            RunUI(() =>
-            {
-                searchDlg.NextPage();
-                AssertEx.AreEqual(OspreySearchDlg.Pages.fasta_page, searchDlg.CurrentPage);
-                searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath);
-            });
-            RunUI(() =>
-            {
-                searchDlg.NextPage();
-                AssertEx.AreEqual(OspreySearchDlg.Pages.library_model_page, searchDlg.CurrentPage);
-                AssertEx.IsTrue(searchDlg.UseExistingModel);
-                AssertEx.IsTrue(searchDlg.Model.IsDefault);
-            });
-            RunUI(() =>
-            {
-                searchDlg.UseExistingModel = false;
-                searchDlg.ChooseFromSearchedFiles = true;
-                AssertEx.AreEqualDeep(diaFilePaths, searchDlg.TuningFileItems);
-                AssertEx.AreEqual(0, searchDlg.TuningFiles.Count);
-            });
-            RunUI(() =>
-            {
-                searchDlg.SetTuningFileChecked(tuningRun, true);
-                AssertEx.AreEqualDeep(new[] { tuningRun }, searchDlg.TuningFiles);
+                var libraryModel = searchDlg.LibraryModelControl;
+                AssertEx.IsTrue(libraryModel.UseExistingModel);
+                AssertEx.IsTrue(libraryModel.Model.IsDefault);
+                libraryModel.UseExistingModel = false;
+                libraryModel.ChooseFromSearchedFiles = true;
+                AssertEx.AreEqualDeep(diaFilePaths, libraryModel.TuningFileItems);
+                AssertEx.AreEqual(0, libraryModel.TuningFiles.Count);
+                libraryModel.SetTuningFileChecked(tuningRun, true);
+                AssertEx.AreEqualDeep(new[] { tuningRun }, libraryModel.TuningFiles);
             });
             ChooseDevice(searchDlg);
-            RunUI(() =>
-            {
-                searchDlg.NextPage();
-                AssertEx.AreEqual(OspreySearchDlg.Pages.modifications_page, searchDlg.CurrentPage);
-            });
             OspreySearchTest.AdvanceToSearchSettings(searchDlg);
-            OspreySearchTuningTest.VerifyCommandLine(searchDlg, diaFilePaths, new[] { tuningRun }, null);
-            VerifyDevice(searchDlg);
             string modelPath = OspreySearchTuningTest.RunTuningSearch(searchDlg,
-                TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), SEARCH_TIMEOUT_MILLIS);
+                TestFilesDir.GetTestPath("OspreySearchControlLog-searched.txt"), out var engine, SEARCH_TIMEOUT_MILLIS);
+            OspreySearchTuningTest.VerifyCommandLine(engine.RunConfig, diaFilePaths, new[] { tuningRun }, null);
+            VerifyDevice(engine.RunConfig);
             AssertEx.FileExists(modelPath);
             FinishImport(searchDlg, diaFilePaths, docPath, MIN_SPECTRA_THREE_RUNS);
         }
@@ -191,7 +167,7 @@ namespace TestPerf
         /// that runtimes folder and checks Use GPU, which must then stay checked (the folder holds the
         /// runtime and this computer's GPU can use it); otherwise leaves the CPU default alone.
         /// </summary>
-        private static void ChooseDevice(OspreySearchDlg searchDlg)
+        private static void ChooseDevice(RunPeptideSearchDlg searchDlg)
         {
             string directory = TorchRuntimesDirectory;
             if (directory == null)
@@ -201,17 +177,15 @@ namespace TestPerf
                 var runtimes = new TorchRuntimes { RuntimesDirectory = directory };
                 AssertEx.IsTrue(runtimes.CanUseCuda, ENV_TORCH_RUNTIMES + @" is set but this computer's GPU cannot predict: " + runtimes.GetCudaUnavailableReason());
                 AssertEx.IsTrue(runtimes.IsCudaInstalled, ENV_TORCH_RUNTIMES + @" names a folder without the CUDA runtime: " + directory);
-                searchDlg.TorchRuntimes = runtimes;
-                searchDlg.UseGpu = true;
-                AssertEx.IsTrue(searchDlg.UseGpu);
+                searchDlg.LibraryModelControl.TorchRuntimes = runtimes;
+                searchDlg.LibraryModelControl.UseGpu = true;
+                AssertEx.IsTrue(searchDlg.LibraryModelControl.UseGpu);
             });
         }
 
         /// <summary>The command names the device chosen and, on the GPU, the runtimes folder the variable named.</summary>
-        private static void VerifyDevice(OspreySearchDlg searchDlg)
+        private static void VerifyDevice(OspreyConfig config)
         {
-            OspreyConfig config = null;
-            RunUI(() => config = searchDlg.GetSearchConfig());
             string commandLine = OspreyHelpers.BuildCommandLine(config);
             string directory = TorchRuntimesDirectory;
             AssertEx.Contains(commandLine, OspreyHelpers.ARG_DEVICE + @" " + (directory != null ? OspreyHelpers.DEVICE_GPU : OspreyHelpers.DEVICE_CPU) + @" ");
@@ -224,7 +198,7 @@ namespace TestPerf
         /// at least <paramref name="minSpectra"/> spectra. The count is written to the test output
         /// for the record.
         /// </summary>
-        private static void FinishImport(OspreySearchDlg searchDlg, string[] searchedRuns, string docPath, int minSpectra)
+        private static void FinishImport(RunPeptideSearchDlg searchDlg, string[] searchedRuns, string docPath, int minSpectra)
         {
             OspreySearchTest.FinishImport(searchDlg, searchedRuns, BiblioSpecLiteSpec.GetLibraryFileName(docPath), IMPORT_TIMEOUT_MILLIS);
             var docLib = OspreySearchTest.GetDocumentLibrary();
