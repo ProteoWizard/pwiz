@@ -682,7 +682,8 @@ namespace pwiz.Osprey.Test
 
             // A wide RT penalty (2 sigma^2 = 50 min^2), so the pick score follows the intensity.
             var result = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, spectra, rts, 3.0, 1.5,
-                50.0, null, config, imposed, chosen, 0.9, 1.0);
+                50.0, null, config, imposed, chosen, 0.9, 1.0, null, null, out var corrResult);
+            Assert.IsNull(corrResult, "no correlation XICs without OSPREY_CORR_FRAGMENT_TOLERANCE");
             Assert.AreSame(chosen, result[0].peak, "the imposed peak comes first");
             Assert.AreEqual(0.9, result[0].coelutionScore, 0.0);
             Assert.AreEqual(1.0, result[0].rankScore, 0.0);
@@ -696,11 +697,11 @@ namespace pwiz.Osprey.Test
             // peak detection alone would find the elution at 4.0 min.
             var oneFragment = rts.Select(rt => ElutionSpectrum(candidate, rt, 300.0, (4.0, 1000.0))).ToList();
             result = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, oneFragment, rts, 3.0, 1.5,
-                50.0, null, config, imposed, chosen, 0.9, 1.0);
+                50.0, null, config, imposed, chosen, 0.9, 1.0, null, null, out _);
             Assert.AreEqual(1, result.Count, "a window the prefilter rejects has no runner-up candidates");
             var noPrefilter = new OspreyConfig { FragmentTolerance = config.FragmentTolerance, PrefilterEnabled = false };
             result = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, oneFragment, rts, 3.0, 1.5,
-                50.0, null, noPrefilter, imposed, chosen, 0.9, 1.0);
+                50.0, null, noPrefilter, imposed, chosen, 0.9, 1.0, null, null, out _);
             Assert.IsTrue(result.Count > 1, "without the prefilter, detection finds the one-fragment elution");
         }
 
