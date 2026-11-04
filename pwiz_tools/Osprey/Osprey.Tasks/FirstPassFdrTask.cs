@@ -474,7 +474,7 @@ namespace pwiz.Osprey.Tasks
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
-                if (string.Equals(output, diagnosticsPath, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(output, diagnosticsPath, PathComparison.Comparison))
                     continue;
                 if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
                     continue;
