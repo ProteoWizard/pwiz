@@ -3,8 +3,7 @@
 Build the Skyline / Skyline-daily installer (Inno Setup) from a .NET build of Skyline.
 
 .DESCRIPTION
-Packaging pipeline on top of the Skyline build (build.bat, for the native Hardklor.exe
-and the referenced projects):
+Packaging pipeline on top of the Skyline build (build.bat):
   1. Build Skyline.csproj x64 into an emptied bin\installer-build\<Config>, a folder
      Skyline is never run from, and read the channel (Skyline.exe or Skyline-daily.exe)
      and version off the exe.
@@ -79,17 +78,13 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet build of Skyline.csproj failed." }
 # The channel is whichever exe the build produced (MSBuildAssemblyName picks it).
 $channelExe = @('Skyline-daily.exe', 'Skyline.exe') | Where-Object { Test-Path (Join-Path $SkylineBinDir $_) } | Select-Object -First 1
 if (-not $channelExe) {
-    throw "Neither Skyline-daily.exe nor Skyline.exe is in $SkylineBinDir; is this a Skyline build output directory?"
+    throw "The build put neither Skyline-daily.exe nor Skyline.exe in $SkylineBinDir."
 }
 $appName = [System.IO.Path]::GetFileNameWithoutExtension($channelExe)
 foreach ($required in @('SkylineCmd.exe', 'msconvert.exe', 'BlibBuild.exe')) {
     if (-not (Test-Path (Join-Path $SkylineBinDir $required))) {
         throw "$required is missing from $SkylineBinDir - the Skyline build is incomplete."
     }
-}
-# Hardklor.exe is native C++, which only build.bat builds (with Visual Studio's MSBuild).
-if (-not (Test-Path (Join-Path $SkylineBinDir 'Hardklor.exe'))) {
-    throw "Hardklor.exe is missing from $SkylineBinDir. Run build.bat $Configuration --build-only --i-agree-to-the-vendor-licenses first; it builds the native Hardklor.exe that Skyline.csproj deploys."
 }
 
 # Version off the exe: FileVersion is the numeric YY.N.B.DDD that SkylineVersion.targets
@@ -127,7 +122,7 @@ $binFiles = Get-ChildItem $SkylineBinDir -Recurse -File
 # Tests and test harnesses never ship. Test projects build into their own output, and
 # Stage-Tests.ps1 merges them with Skyline under bin\staging, so finding one here means
 # a test project wrote into Skyline's output.
-# Checked before copying, so a wrong directory fails before a multi-GB copy. The names
+# Checked before copying, so such a build fails before a multi-GB copy. The names
 # cover the harnesses and the test projects; the MSTest / test platform assemblies every
 # test project brings along also catch a test project that is not in the list.
 $testAssemblies = @('AutoQCTest', 'CommonTest', 'ExampleArgCollector', 'SharedBatchTest',
@@ -168,7 +163,7 @@ foreach ($dataXml in @('unimod.xml', 'modifications.xml')) {
     if (-not (Test-Path (Join-Path $stagingDir $dataXml))) { throw "$dataXml did not make it into the stage; BlibBuild needs it." }
 }
 if (Test-Path (Join-Path $stagingDir 'coreclr.dll')) {
-    throw "The stage contains coreclr.dll: $SkylineBinDir looks like a self-contained publish, not the framework-dependent build the installer expects."
+    throw "The stage contains coreclr.dll: the build of Skyline was self-contained, not the framework-dependent build the installer expects."
 }
 
 # 3. Product name, install URL and update manifest. Skyline's app.config is where a

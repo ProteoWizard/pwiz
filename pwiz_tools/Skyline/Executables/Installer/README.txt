@@ -32,9 +32,9 @@ WiX admin .msi (per-machine) of the .NET Framework build:
 
 Build:
   1. Build Skyline Release x64 once (pwiz_tools\Skyline\build.bat --build-only
-     --i-agree-to-the-vendor-licenses), which builds the native Hardklor.exe that
-     build.ps1 cannot. build.ps1 always builds with the vendor readers, so the same
-     flag here keeps it from recompiling everything that depends on them.
+     --i-agree-to-the-vendor-licenses). build.ps1 always builds with the vendor
+     readers, so the same flag here keeps it from recompiling everything that
+     depends on them.
   2. pwsh -File pwiz_tools\Skyline\Executables\Installer\build.ps1
      It builds Skyline.csproj again into an emptied bin\installer-build\Release,
      which Skyline is never run from, and packages that. The channel comes from
