@@ -400,8 +400,8 @@ namespace pwiz.Osprey.IO
             if (footer.TryGetValue(ArtifactStamp.PARQUET_KEY, out string stampText))
             {
                 string key = ArtifactStamp.Parse(stampText)?.Key;
-                int termStart = key?.IndexOf(XIC_KEY_TERM, StringComparison.Ordinal) ?? -1;
-                if (termStart >= 0)
+                int termStart = key != null ? key.IndexOf(XIC_KEY_TERM, StringComparison.Ordinal) : -1;
+                if (key != null && termStart >= 0)
                 {
                     int valueStart = termStart + XIC_KEY_TERM.Length;
                     int valueEnd = key.IndexOf(';', valueStart);
@@ -413,7 +413,7 @@ namespace pwiz.Osprey.IO
 
         private static int? ParseXicCount(string text)
         {
-            return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int count) ? count : (int?)null;
+            return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int count) ? count : null;
         }
 
         // Score parquets whose charge column a library-identity walk has already checked
