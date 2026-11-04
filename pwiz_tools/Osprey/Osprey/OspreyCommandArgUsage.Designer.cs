@@ -355,7 +355,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_help", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show the developer switches Osprey reads from environment variables, grouped by what they change.
+        /// </summary>
+        public static string _help_env {
+            get {
+                return ResourceManager.GetString("_help_env", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Input mzML files.
         /// </summary>

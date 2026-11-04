@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE"
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_EXPERIMENT_AGG", @"OSPREY_SERIAL_READ_SCOPE"
         };
 
         // OSPREY_* names this build does not read: switches retired by name, a Rust-only dump and
@@ -153,9 +153,22 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(output, @"bogus");
             foreach (string name in UNRECOGNIZED_VARIABLES)
             {
-                Assert.IsFalse(OspreyEnvironment.KnownVariables.Contains(name), name);
+                Assert.IsFalse(EnvVarUsage.Catalog.Any(e => e.Name == name), name);
                 output = RunCommandAndValidateError(Variable(name, @"1"), InputLibraryOutput(input, library));
                 StringAssert.Contains(output, name);
+                StringAssert.Contains(output, OspreyCommandArgs.ARG_HELP_ENV.ArgumentText);
+            }
+            // A misspelling is answered with the name it is closest to.
+            output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUES", @"transfer"),
+                InputLibraryOutput(input, library));
+            StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE?");
+            // A switch with listed values refuses any other value, whether or not it has a
+            // message of its own: the default arm would run under the name of the one asked for.
+            foreach (string name in new[] { @"OSPREY_EXPERIMENT_AGG", @"OSPREY_SERIAL_READ_SCOPE" })
+            {
+                output = RunCommandAndValidateError(Variable(name, @"bogus"), InputLibraryOutput(input, library));
+                StringAssert.Contains(output, name);
+                StringAssert.Contains(output, @"bogus");
             }
             // Empty is unset, for an unknown name as for a known one: the run goes on, here to the
             // ModelDiagnostics error above, which stays the only error line.

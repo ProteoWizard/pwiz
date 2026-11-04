@@ -148,6 +148,9 @@
   <data name="_help" xml:space="preserve">
     <value>Show this help message ({0})</value>
   </data>
+  <data name="_help_env" xml:space="preserve">
+    <value>Show the developer switches Osprey reads from environment variables, grouped by what they change</value>
+  </data>
   <data name="_input" xml:space="preserve">
     <value>Mass spectrometry data files to search: mzML, or any format ProteoWizard reads, including instrument vendor files (.raw, .d, .wiff, .lcd). On Linux some vendor formats cannot be read; convert those to mzML first.</value>
   </data>

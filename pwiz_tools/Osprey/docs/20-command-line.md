@@ -319,6 +319,7 @@ None of these counts enters a validity key or changes an output byte; one lane i
 |--------|--------|
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
+| `--help-env` | Show the `OSPREY_*` environment variables (developer switches), grouped by what they change. Accepts `ascii` or `unicode`. See [Environment variables](#environment-variables). |
 | `-v`, `--version` | Show version. |
 
 ### Log format
@@ -481,7 +482,26 @@ Full detail: [15-hpc-scoring-split.md](15-hpc-scoring-split.md).
 ## Environment variables
 
 Env vars are the escape hatch for experimental / diagnostic behavior that is not on the
-CLI; they are read once at process start. The ones most likely to matter:
+CLI. **`Osprey --help-env` prints the full catalog**, generated from the declarations, in five
+groups: *behavior* (changes the reported results), *allowances* (relax a check that would stop
+the run), *performance* (how, not what), *harness* (early exits and limits; incomplete output)
+and *diagnostics* (extra files or log lines). The list cannot drift from the code:
+
+- Every variable is an `EnvVar` declared beside the code that reads it, and its constructor
+  requires the group and a description. The only read of the environment is `EnvVar.Value`
+  (`Osprey.Core/EnvVar.cs`); `CodeInspectionTest.TestEnvironmentReadThroughEnvVar` fails on
+  `Environment.GetEnvironmentVariable` anywhere else.
+- Any other set `OSPREY_*` name is a startup ERROR, as an unknown argument is, and the message
+  names the closest catalogued name (`OSPREY_PASS2_QVALUES` ... did you mean
+  `OSPREY_PASS2_QVALUE`?). Osprey claims the `OSPREY_` prefix.
+- A switch that lists its values refuses any other value at startup (`OSPREY_PASS2_QVALUE`,
+  `OSPREY_FDR_MODEL`, `OSPREY_EXPERIMENT_AGG`, `OSPREY_DETERMINISTIC_MATH`,
+  `OSPREY_SERIAL_READ_SCOPE`, `OSPREY_STUB_IDENTITY`): a value typo would otherwise run the
+  default arm under the name of the one asked for.
+- The log names every set switch and its value on one `Environment switches:` line at startup,
+  so a log records which arm it ran. A run that sets none logs nothing new.
+
+The catalog text is developer text and is not translated. The ones most likely to matter:
 
 | Variable | What it does | Doc |
 |----------|--------------|-----|
@@ -499,8 +519,9 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_DIAGNOSTICS` | Turns on the bundle of cross-impl bisection dumps (was the `-d` / `--diagnostics` argument) | [18](18-peptide-trace.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps, one at a time | [18](18-peptide-trace.md) |
 
-The full set is enumerated in the relevant algorithm docs; there is no single flat
-listing on the CLI by design (these are not user-facing knobs).
+`--help-env` is the full set; the algorithm docs describe each in context. None of them is
+promoted to an argument by being listed: the two levels stay distinct, and these are not
+user-facing knobs.
 
 ---
 

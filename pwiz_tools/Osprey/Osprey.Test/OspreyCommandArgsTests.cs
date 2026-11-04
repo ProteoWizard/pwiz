@@ -634,7 +634,7 @@ namespace pwiz.Osprey.Test
                 OspreyArgNames.TRAINING_INPUT, OspreyArgNames.TRAINING_INPUT_LIST, OspreyArgNames.MODEL,
                 OspreyArgNames.TORCH_RUNTIMES, OspreyArgNames.INSTALL_CUDA_RUNTIME, OspreyArgNames.ENTRAPMENT,
                 OspreyArgNames.ENTRAPMENT_FASTA, OspreyArgNames.TASK, OspreyArgNames.TRAINING_SEARCH,
-                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"version", @"culture",
+                OspreyArgNames.TASK_FILES, @"timestamp", @"memstamp", @"log-file", @"help", @"help-env", @"version", @"culture",
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
                 @"training-export-xics", @"perf-stats",

@@ -637,6 +637,14 @@ namespace pwiz.Osprey
                 PrintUsage(p.Value);
                 Environment.Exit(0);
             }) { ShortName = @"h", OptionalValue = true, DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|properties|<Section>]" } };
+        // The catalog of the second, developer-only level of controls (EnvVarUsage). Listing them
+        // is cataloging only: none of them becomes an argument, and the two levels stay distinct.
+        public static readonly OspreyArgument ARG_HELP_ENV = new OspreyArgument(@"help-env",
+            () => ArgumentBase.ValuesToExample(ArgUsage.FORMAT_ASCII, @"unicode"), (c, p) =>
+            {
+                Console.Out.Write(EnvVarUsage.BuildUsage(p.Value, USAGE_WIDTH));
+                Environment.Exit(0);
+            }) { OptionalValue = true };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
             (c, p) =>
             {
@@ -654,7 +662,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
-                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
+                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_HELP_ENV, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {

@@ -94,7 +94,10 @@ param(
     [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
-    [string]$Verbosity = 'minimal'
+    [string]$Verbosity = 'minimal',
+    # Also log every restore and build warning to this file (appended), for Osprey's
+    # tcinspect.ps1 to judge. Osprey's tcbuild.bat passes it.
+    [string]$BuildWarningsPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -224,7 +227,12 @@ if ($TestData) {
 if (-not $NoBuild) {
     Write-Step "Building CarafeSharp.sln ($Configuration|$platform, libtorch $Torch)"
     $buildStart = Get-Date
-    & dotnet build $sln -c $Configuration "-p:Platform=$platform" "-p:CarafeSharpTorch=$Torch" "-v:$Verbosity" -nologo
+    $warningsLogger = @()
+    if ($BuildWarningsPath) {
+        Import-Module (Join-Path $scriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
+        $warningsLogger = Get-BuildWarningsLoggerArgs $BuildWarningsPath
+    }
+    & dotnet build $sln -c $Configuration "-p:Platform=$platform" "-p:CarafeSharpTorch=$Torch" "-v:$Verbosity" -nologo @warningsLogger
     if ($LASTEXITCODE -ne 0) {
         Stop-WithProblem "Build failed (exit $LASTEXITCODE)" $LASTEXITCODE
     }
