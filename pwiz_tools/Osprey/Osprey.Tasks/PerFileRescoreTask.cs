@@ -151,6 +151,13 @@ namespace pwiz.Osprey.Tasks
         private readonly ConcurrentDictionary<string, string> _trainingExportErrors =
             new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
 
+        // Fragment mass-error summaries that failed this run, by input: one that failed while
+        // its run re-scored was already reported, and WriteFragmentMassErrors does not measure it
+        // again - that reloads the library and the run's spectra to log the same warning twice.
+        // The next run of the command retries it.
+        private readonly ConcurrentDictionary<string, string> _fragmentMassErrorErrors =
+            new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+
         // The first pass's retained base_ids, read once for every run's fragment mass-error
         // summary rather than once per run; null inside when the summary is unreadable.
         private readonly object _retainedBaseIdsLock = new object();
@@ -550,7 +557,14 @@ namespace pwiz.Osprey.Tasks
         /// artifacts - every run the rescore did not write one for while its spectra were in
         /// hand: resumed, with no re-scoring work, or the diagnostics-only arm. A failure is
         /// reported and never fails the task: a diagnostics product does not stop an analysis,
-        /// and the next run of the command retries it.
+        /// and the next run of the command retries it - not this one, which already reported it.
+        ///
+        /// <para>A run whose calibration or spectra cache is not on this node is not measured:
+        /// a node shipped only the summaries, to render the report (doc 00), keeps the ones it
+        /// was given, which the report shows when they belong to this analysis
+        /// (<see cref="FragmentMassErrorWriter.IsForAnalysis"/>). Their key holds those inputs'
+        /// identities, so on such a node they never read as current, and measuring would only
+        /// fail, once per run.</para>
         /// </summary>
         private void WriteFragmentMassErrors(PipelineContext ctx, bool demandPipelineLibrary)
         {
@@ -559,16 +573,28 @@ namespace pwiz.Osprey.Tasks
                 return;
             string key = ValidityKey(ctx);
             IReadOnlyDictionary<uint, LibraryEntry> library = null;
+            var notMeasurable = new List<string>();
             foreach (string input in config.InputFiles)
             {
                 string output = FragmentMassErrorWriter.PathFor(input);
                 string runKey = OutputValidityKey(ctx, key, output);
-                if (PerFileResumeDriver.IsCurrent(output, Name, runKey))
+                if (_fragmentMassErrorErrors.ContainsKey(input) || PerFileResumeDriver.IsCurrent(output, Name, runKey))
                     continue;
+                if (!FragmentMassErrorWriter.CanMeasure(input))
+                {
+                    notMeasurable.Add(Path.GetFileNameWithoutExtension(input));
+                    continue;
+                }
                 library = library ?? TrainingExportWriter.ResolveTargets(ctx, demandPipelineLibrary);
                 if (library == null)
                     return;
                 WriteFragmentMassError(input, output, runKey, library, ctx, config.NThreads, null, null);
+            }
+            if (notMeasurable.Count > 0)
+            {
+                ctx.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_Not_measured__0_N0__runs_without_spectra,
+                    notMeasurable.Count, string.Join(@", ", notMeasurable)));
             }
         }
 
@@ -590,11 +616,13 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex) when (!IsOutOfMemory(ex))
             {
                 var reported = CommonExceptionUtil.UnwrapUserException(ex);
+                string reason = !CommonExceptionUtil.IsProgrammingDefect(reported) && !string.IsNullOrEmpty(reported.Message)
+                    ? reported.Message
+                    : ex.ToString();
+                _fragmentMassErrorErrors[input] = reason;
                 ctx.LogWarning(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_,
-                    input, !CommonExceptionUtil.IsProgrammingDefect(reported) && !string.IsNullOrEmpty(reported.Message)
-                        ? reported.Message
-                        : ex.ToString()));
+                    input, reason));
             }
         }
 

@@ -242,7 +242,10 @@ namespace pwiz.Osprey.Scoring
             for (int i = 0; i < FeatureCount; i++)
                 mask[i] = names.Remove(_calculators[i].Name);
             if (names.Count > 0)
+            {
+                // Exception text for internal diagnostics, not displayed to user
                 throw new InvalidOperationException(string.Format(@"Unknown correlation feature names: {0}", string.Join(@", ", names)));
+            }
             return mask;
         }
 

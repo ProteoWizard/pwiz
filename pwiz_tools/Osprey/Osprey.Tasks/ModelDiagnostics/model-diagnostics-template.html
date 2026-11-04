@@ -2559,12 +2559,15 @@ function calMassErrorOf(i){
 }
 function renderCalMassError(){
   const card=document.getElementById("calMassErrCard");if(!card)return;
+  card.style.display=CAL.files.length?"":"none";
+  if(!CAL.files.length)return;
+  // No summary at all: say so in the card rather than hide it, so a page rendered where the
+  // per-run summaries were not shipped does not read as one that never had the view.
   const any=!!(D.fragmentMassErrors&&D.fragmentMassErrors.files&&D.fragmentMassErrors.files.length);
-  card.style.display=any?"":"none";
-  if(!any)return;
   const r=calMassErrorOf(CAL.sel);
   document.getElementById("calMassErrHdr").textContent="MS2 fragment mass error \u2014 "+calFileName(CAL.sel);
-  if(!r)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary for this file.");
+  if(!any)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary was on disk for any file when this report was rendered.");
+  else if(!r)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary for this file.");
   else drawCalMassError(document.getElementById("calMassErrChart"),document.getElementById("calMassErrLegend"),r,CAL.files[CAL.sel]);
   // Print-only: every file's histogram (the dropdown shows one on screen).
   const pall=document.getElementById("calMassErrPrintAll");if(pall){pall.innerHTML="";

@@ -147,7 +147,7 @@ namespace pwiz.Osprey.Tasks
             var header = new ModelDiagnosticsData.FragmentMassErrorRun
             {
                 File = stem,
-                Unit = configured.Unit == ToleranceUnit.Ppm ? MzCalibration.UNIT_PPM : MzCalibration.UNIT_TH,
+                Unit = UnitText(configured.Unit),
                 HalfWidth = measure.Tolerance,
                 BinCount = BIN_COUNT,
                 ConfiguredTolerance = configured.Tolerance,
@@ -163,11 +163,7 @@ namespace pwiz.Osprey.Tasks
                 perWindow.SelectMany(p => p.Errors).ToList(), perWindow.SelectMany(p => p.Intensities).ToList());
             ModelDiagnosticsReport.WriteJson(output, summary, stamp);
 
-            var all = summary.Classes[summary.Classes.Count - 1];
-            ctx.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                OspreyTasksResources.FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precursors,
-                stem, summary.Precursors, all.Total, all.Mean, all.Sd, all.RobustSd, Math.Abs(all.Mean) + 3 * all.Sd, header.Unit,
-                header.SearchTolerance));
+            ctx.LogInfo(LogTag.MODEL_DIAGNOSTICS, DescribeRun(summary, search));
             return summary;
         }
 
@@ -187,18 +183,63 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The report's fragment mass-error view: every input's summary that is on disk, in input
-        /// order. Null when none is. Each summary is a few kilobytes, so the view is
-        /// O(runs x bins) however large the runs.
+        /// The report's fragment mass-error view: every input's summary that is on disk and was
+        /// measured for this analysis (<see cref="IsForAnalysis"/>), in input order. Null when
+        /// none is. Each summary is a few kilobytes, so the view is O(runs x bins) however large
+        /// the runs.
         /// </summary>
         public static ModelDiagnosticsData.FragmentMassErrorData ReadAll(OspreyConfig config)
         {
             if (config.InputFiles == null)
                 return null;
-            var runs = config.InputFiles.Select(input => ReadRun(PathFor(input))).Where(r => r != null).ToList();
+            var runs = new List<ModelDiagnosticsData.FragmentMassErrorRun>();
+            foreach (string input in config.InputFiles)
+            {
+                string path = PathFor(input);
+                var run = ReadRun(path);
+                if (run != null && IsForAnalysis(ArtifactValidity.ReadStamp(path), run, config))
+                    runs.Add(run);
+            }
             if (runs.Count == 0)
                 return null;
             return new ModelDiagnosticsData.FragmentMassErrorData { Files = runs };
+        }
+
+        /// <summary>
+        /// Whether a summary on disk was measured for the analysis <paramref name="config"/>
+        /// describes, asked of what the configuration alone decides, so the report can ask it
+        /// wherever it is rendered: written by PerFileRescoring, in this summary format, for this
+        /// search and library, at this run FDR. A summary left from another analysis - an earlier
+        /// --run-fdr whose rewrite failed - is not shown.
+        ///
+        /// <para>Not the whole key PerFileRescoring stamps: that also holds the identities of the
+        /// run's calibration and spectra cache (<see cref="RunInputIdentities"/>), which a node
+        /// rendering the report need not have, and leg-dependent terms. Those keep the WRITER
+        /// from treating a summary as current after its run's inputs were rewritten; the reader
+        /// does not re-check them, and does not check the build that wrote the summary.</para>
+        /// </summary>
+        public static bool IsForAnalysis(ArtifactStamp stamp, ModelDiagnosticsData.FragmentMassErrorRun run, OspreyConfig config)
+        {
+            if (stamp?.Key == null || run == null ||
+                !string.Equals(stamp.Task, OspreyTaskNames.PER_FILE_RESCORING, StringComparison.Ordinal))
+            {
+                return false;
+            }
+            return stamp.Key.Contains(FormatTerm()) &&
+                   stamp.Key.Contains(@"search=" + config.Identity.SearchParameterHash() + @";") &&
+                   stamp.Key.Contains(@";library=" + config.Identity.LibraryIdentityHash()) &&
+                   run.MaxQ.Equals(config.RunFdr);
+        }
+
+        /// <summary>
+        /// Whether this node holds what measuring <paramref name="input"/>'s summary reads besides
+        /// the first-pass artifacts: its calibration and a spectra cache. A node shipped only the
+        /// summaries (one rendering the report) has neither, and keeps the summary it was given.
+        /// </summary>
+        public static bool CanMeasure(string input)
+        {
+            return File.Exists(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input))) &&
+                   (File.Exists(SpectraCache.GetCachePath(input)) || File.Exists(SpectraCache.GetDemuxCachePath(input)));
         }
 
         /// <summary>
@@ -212,8 +253,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public static string RunInputIdentities(string input)
         {
-            return @";fragmasserr=" + FORMAT_VERSION.ToString(CultureInfo.InvariantCulture)
-                + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
+            return FormatTerm()
+                + @"calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
                 + (File.Exists(SpectraCache.GetDemuxCachePath(input))
                     ? @";demuxspectra=" + IdentityOrAbsent(SpectraCache.GetDemuxCachePath(input))
@@ -320,6 +361,40 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return (errors, intensities, precursors);
+        }
+
+        /// <summary>
+        /// The run's log line. The search tolerance is given in its own unit, which is not the
+        /// summary's when the calibration reported in the other one (the summary then records
+        /// NaN for it); a run in which no peak was found says so rather than printing NaN
+        /// statistics.
+        /// </summary>
+        private static string DescribeRun(ModelDiagnosticsData.FragmentMassErrorRun summary, FragmentToleranceConfig search)
+        {
+            var all = summary.Classes[summary.Classes.Count - 1];
+            string searchUnit = UnitText(search.Unit);
+            if (all.Total == 0)
+            {
+                return string.Format(
+                    OspreyTasksResources.FragmentMassErrorWriter_WriteRun__0___no_fragment_peak_was_found_for__1_N0__target_precursors,
+                    summary.File, summary.Precursors, summary.HalfWidth, summary.Unit, search.Tolerance, searchUnit);
+            }
+            return string.Format(
+                OspreyTasksResources.FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precursors,
+                summary.File, summary.Precursors, all.Total, all.Mean, all.Sd, all.RobustSd, Math.Abs(all.Mean) + 3 * all.Sd,
+                summary.Unit, search.Tolerance, searchUnit);
+        }
+
+        /// <summary>The unit token the summary and the calibration file write for <paramref name="unit"/>.</summary>
+        private static string UnitText(ToleranceUnit unit)
+        {
+            return unit == ToleranceUnit.Ppm ? MzCalibration.UNIT_PPM : MzCalibration.UNIT_TH;
+        }
+
+        /// <summary>The summary-format term of the key, which the reader also checks.</summary>
+        private static string FormatTerm()
+        {
+            return @";fragmasserr=" + FORMAT_VERSION.ToString(CultureInfo.InvariantCulture) + @";";
         }
 
         /// <summary>The index of the value in sorted <paramref name="rts"/> nearest <paramref name="rt"/>.</summary>

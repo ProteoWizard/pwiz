@@ -692,6 +692,24 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(4.0, rts[others[0].peak.ApexIndex], 0.15);
             Assert.IsTrue(others[0].rankScore > 1.0, "the stronger elution outranks the imposed peak");
 
+            // With correlation XICs (OSPREY_CORR_FRAGMENT_TOLERANCE), the same candidates again,
+            // index for index, each coelution re-scored over those XICs. At the search tolerance
+            // they are the search's XICs, so every runner-up scores as it did above.
+            var chosenCorrXics = TopFragmentExtractor.ExtractFragmentXics(candidate, spectra, rts, 0, rts.Length - 1, config);
+            var withCorr = PeakDataExtractor.OverrideRunnerUpCandidates(candidate, spectra, rts, 3.0, 1.5,
+                50.0, null, config, imposed, chosen, 0.9, 1.0, config, chosenCorrXics, out corrResult);
+            Assert.IsNotNull(corrResult, "no correlation candidates with a correlation tolerance");
+            Assert.AreEqual(result.Count, withCorr.Count);
+            Assert.AreEqual(withCorr.Count, corrResult.Count, "the correlation candidates are not index-aligned");
+            for (int i = 0; i < withCorr.Count; i++)
+            {
+                Assert.AreSame(withCorr[i].peak, corrResult[i].peak, "candidate " + i);
+                Assert.AreEqual(withCorr[i].rankScore, corrResult[i].rankScore, 0.0, "candidate " + i);
+                if (i > 0)
+                    Assert.AreEqual(withCorr[i].coelutionScore, corrResult[i].coelutionScore, 1e-12, "candidate " + i);
+            }
+            Assert.IsTrue(corrResult[0].coelutionScore > 0.5, "the imposed peak's correlation is over its own bounds");
+
             // Only one top-6 fragment elutes: the first pass's prefilter (2 of the top 6 in 3 of 4
             // consecutive scans) rejects the window, so the imposed peak stands alone - although
             // peak detection alone would find the elution at 4.0 min.

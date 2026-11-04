@@ -873,7 +873,7 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
-| `<stem>.fragment-mass-errors.json` | per-run product (`--model-diagnostics`) | `PerFileRescoring` (Stage 6), in flight or on its optional-products arm | the report render (`SecondPassFDR`, `--task ModelDiagnostics`), behind `File.Exists` | **every node** rendering the report |
+| `<stem>.fragment-mass-errors.json` | per-run product (`--model-diagnostics`) | `PerFileRescoring` (Stage 6), in flight or on its optional-products arm | the report render (`SecondPassFDR`, `--task ModelDiagnostics`), when present and stamped for this analysis | **every node** rendering the report - the JSON alone |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
 | `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
@@ -1314,8 +1314,15 @@ Experiment-wide:
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
   pass-1 half of the report exists nowhere else by this point
 - `<stem>.fragment-mass-errors.json` for every run, when `--model-diagnostics` is on - the
-  report's fragment mass-error view, a few kilobytes per run. Read behind a `File.Exists`, so a
-  node not shipped them renders the page without that view and says so in the view itself
+  report's fragment mass-error view, a few kilobytes per run. The JSON is all a rendering node
+  needs: the render only reads the summaries, and shows one whose stamp says PerFileRescoring
+  wrote it in this summary format for this search, library and run FDR - the terms the
+  configuration alone decides. The rest of its key, the identities of the run's
+  `.calibration.json` and `.spectra.bin`, is checked only where the summary would be measured: a
+  node without those two files (a `--task ModelDiagnostics` node shipped the summaries) never
+  measures and keeps what it was given, and a node with them re-measures a summary whose inputs
+  were rewritten. A node not shipped the summaries renders the page without the view and says so
+  in the view itself
 
 A `SecondPassFDR` node rebuilds each run from these artifacts one at a time and drops it, so
 it needs every run's files present but never holds more than one run's rows. The relay list

@@ -412,6 +412,24 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // A fragment mass-error summary that fails while its run re-scores - a directory holds
+            // its path, so it cannot be written - is reported once, not measured again from disk by
+            // the same run, and does not fail the analysis.
+            CutRescore(workDir, cutRun, true);
+            DeleteSecondPassOutputs(blib);
+            string summaryPath = Path.Combine(workDir, cutRun + FragmentMassErrorWriter.EXT);
+            File.Delete(summaryPath);
+            Directory.CreateDirectory(summaryPath);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
+            AssertRescoredOnly(log, 1);
+            string failure = string.Format(
+                OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_,
+                Path.Combine(workDir, cutRun + MZML_EXTENSION), string.Empty);
+            Assert.AreEqual(1, SplitLines(log).Count(line => line.Contains(failure)),
+                @"the failed fragment mass-error summary was not reported exactly once" + Environment.NewLine + log);
+            AssertBlibsEqual(uninterruptedBlib, blib);
+            Directory.Delete(summaryPath);
         }
 
         /// <summary>
