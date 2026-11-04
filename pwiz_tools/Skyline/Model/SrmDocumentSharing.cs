@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Model
     {
         public const string EXT = ".zip";
         public const string EXT_SKY_ZIP = ".sky.zip";
+        private static readonly byte[] ZIP_SIGNATURE = { 0x50, 0x4B, 0x03, 0x04 }; // Zip local file header "PK\3\4"
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
@@ -158,12 +159,37 @@ namespace pwiz.Skyline.Model
 
         public static string ExtractDir(string sharedPath)
         {
-            string extractDir = Path.GetFileName(sharedPath) ?? string.Empty;
+            string fileName = Path.GetFileName(sharedPath) ?? string.Empty;
+            string extractDir = fileName;
             if (PathEx.HasExtension(extractDir, EXT_SKY_ZIP))
                 extractDir = extractDir.Substring(0, extractDir.Length - EXT_SKY_ZIP.Length);
             else if (PathEx.HasExtension(extractDir, EXT))
                 extractDir = extractDir.Substring(0, extractDir.Length - EXT.Length);
-            return extractDir;
+            else if (PathEx.HasExtension(extractDir, SrmDocument.EXT))
+                extractDir = extractDir.Substring(0, extractDir.Length - SrmDocument.EXT.Length);
+            // Windows drops trailing spaces and periods from folder names (e.g. "c18 .sky" -> "c18 ").
+            // Nothing left (e.g. a file named just ".sky") falls back to the whole file name.
+            var trimmedDir = extractDir.TrimEnd(' ', '.');
+            return trimmedDir.Length > 0 ? trimmedDir : fileName;
+        }
+
+        /// <summary>
+        /// Returns true if the file starts with a zip file header, whatever its extension. A shared
+        /// .sky.zip can lose its .zip extension on the way to a user (e.g. downloaded as "name.sky").
+        /// </summary>
+        public static bool IsZipFile(string path)
+        {
+            try
+            {
+                using var stream = File.OpenRead(path);
+                var header = new byte[ZIP_SIGNATURE.Length];
+                return stream.Read(header, 0, header.Length) == header.Length && header.SequenceEqual(ZIP_SIGNATURE);
+            }
+            catch (Exception)
+            {
+                // Missing, unreadable or malformed path - leave it to the normal open path to report
+                return false;
+            }
         }
 
         private static string GetNonExistentDir(string dirPath)
@@ -171,7 +197,8 @@ namespace pwiz.Skyline.Model
             int count = 1;
             string dirResult = dirPath;
 
-            while (Directory.Exists(dirResult))
+            // A file can also be in the way, e.g. the zip itself when it has no extension
+            while (Directory.Exists(dirResult) || File.Exists(dirResult))
             {
                 // If a directory with the given name already exists, add
                 // a suffix to create a unique folder name.

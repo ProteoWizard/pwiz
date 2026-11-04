@@ -305,6 +305,11 @@ namespace pwiz.Skyline
 
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
+            // A shared .sky.zip that lost its .zip extension (e.g. downloaded as "name.sky")
+            // would otherwise fail in the XML parser.
+            if (SrmDocumentSharing.IsZipFile(path))
+                return OpenSharedFile(path, parentWindow);
+
             // Remove any extraneous temporary chromatogram spill files.
             // ReSharper disable LocalizableElement
             var spillDirectory = Path.Combine(Path.GetDirectoryName(path) ?? "", "xic");
