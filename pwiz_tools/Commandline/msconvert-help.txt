@@ -37,8 +37,8 @@ Options:
   --intenLinear                      : apply linear prediction to intensity values (mzMLb output only)
   --noindex                          : do not write index
   -i [ --contactInfo ] arg           : filename for contact info
-  -z [ --zlib ]                      : use zlib compression for binary data
-  --zstd                             : use Zstandard compression for binary data. This applies to all data arrays, instead of zlib
+  -z [ --zlib ] [=arg(=1)]           : use zlib compression for binary data [default] (add =off to disable compression)
+  --zstd                             : use Zstandard compression for binary data. This applies to all data arrays, instead of zlib, even if zlib=off is specified
   --mzShuffleZstd                    : use byte-shuffling Zstandard compression for m/z and time values
   --dictZstd                         : use dictionary encoding followed by Zstandard compression for m/z and ion mobility values. This overrides --mzShuffleZstd
   --numpressLinear [arg(=2.0e-09)]   : use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)

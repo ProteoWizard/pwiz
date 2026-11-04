@@ -181,6 +181,7 @@ namespace pwiz.Osprey.Tasks
                         string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
                             i + 1, parquetPaths.Count));
                 }
+                progress.Complete();
             }
         }
 

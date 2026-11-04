@@ -357,24 +357,41 @@ namespace pwiz.Skyline.Controls.Graphs
             return title;
         }
 
+        /// <summary>
+        /// Returns a title naming the label type and charge of the library spectrum shown, and saying which
+        /// precursor it is shown for when that differs, since a precursor may use the spectrum of another form.
+        /// </summary>
+        public static string GetTitle(string libraryName, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode,
+            IsotopeLabelType labelType, Adduct spectrumAdduct)
+        {
+            var transitionGroup = transitionGroupDocNode.TransitionGroup;
+            bool isOtherLabelType = !Equals(labelType, transitionGroup.LabelType);
+            bool isOtherCharge = spectrumAdduct != null && spectrumAdduct.AdductCharge != transitionGroup.PrecursorCharge;
+            if (transitionGroup.Peptide.IsCustomMolecule || (!isOtherLabelType && !isOtherCharge))
+                return GetTitle(libraryName, peptideDocNode, transitionGroupDocNode, labelType);
+
+            string forText;
+            if (!isOtherCharge)
+                forText = string.Format(GraphsResources.SpectrumGraphItem_GetTitle__0__spectrum_for__1_, labelType, transitionGroup.LabelType);
+            else if (isOtherLabelType)
+            {
+                forText = string.Format(GraphsResources.SpectrumGraphItem_GetTitle__0__spectrum_for__1___charge__2_,
+                    labelType, transitionGroup.LabelType, transitionGroup.PrecursorCharge);
+            }
+            else if (labelType.IsLight)
+                forText = string.Format(GraphsResources.SpectrumGraphItem_GetTitle_spectrum_for_charge__0_, transitionGroup.PrecursorCharge);
+            else
+                forText = string.Format(GraphsResources.SpectrumGraphItem_GetTitle__0__spectrum_for_charge__1_, labelType, transitionGroup.PrecursorCharge);
+            return string.Format(GraphsResources.SpectrumGraphItem_Title__0__1__Charge__2__3__, GetLibraryPrefix(libraryName),
+                GetSequence(peptideDocNode, transitionGroupDocNode), spectrumAdduct?.AdductCharge ?? transitionGroup.PrecursorCharge, forText);
+        }
+
         public static string GetTitle(string libraryName, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
         {
             string libraryNamePrefix = GetLibraryPrefix(libraryName);
 
             TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
-            string sequence;
-            if (transitionGroup.Peptide.IsCustomMolecule)
-            {
-                sequence = transitionGroupDocNode.CustomMolecule.DisplayName;
-            }
-            else if (peptideDocNode.CrosslinkStructure.HasCrosslinks)
-            {
-                sequence = peptideDocNode.GetCrosslinkedSequence();
-            }
-            else
-            {
-                sequence = transitionGroup.Peptide.Target.Sequence;
-            }
+            string sequence = GetSequence(peptideDocNode, transitionGroupDocNode);
 
             var charge = transitionGroup.PrecursorAdduct.ToString(); // Something like "2" or "-3" for protonation, or "[M+Na]" for small molecules
             if (transitionGroup.Peptide.IsCustomMolecule)
@@ -388,17 +405,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 : string.Format(GraphsResources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
         }
 
+        /// <summary>
+        /// The label type of the library spectrum shown, which may differ from that of
+        /// <see cref="LibraryRankedSpectrumInfo.LabelType"/>, the label type of the predicted ions.
+        /// </summary>
+        public IsotopeLabelType SpectrumLabelType { get; set; }
+
+        /// <summary>
+        /// The adduct of the library precursor the spectrum identified.
+        /// </summary>
+        public Adduct SpectrumAdduct { get; set; }
+
         public override string Title
         {
             get
             {
-                var title = GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType);
+                var title = GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode,
+                    SpectrumLabelType ?? SpectrumInfo.LabelType, SpectrumAdduct);
                 if (PeaksCount == 0)
                 {
                     title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
                 }
                 return title;
             }
+        }
+
+        private static string GetSequence(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode)
+        {
+            var transitionGroup = transitionGroupDocNode.TransitionGroup;
+            if (transitionGroup.Peptide.IsCustomMolecule)
+                return transitionGroupDocNode.CustomMolecule.DisplayName;
+            if (peptideDocNode.CrosslinkStructure.HasCrosslinks)
+                return peptideDocNode.GetCrosslinkedSequence();
+            return transitionGroup.Peptide.Target.Sequence;
         }
 
         private const float RULER_SLOT_HEIGHT = 0.07f;
@@ -943,8 +982,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static void CustomizeAxis(Axis axis, string title)
         {
+            // No size here: GraphSpectrum sizes the titles from SpectrumFontSize, and this runs only
+            // when the pane's first spectrum is added, so a size here won until the next redraw.
             axis.Title.FontSpec.Family = @"Arial";
-            axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;
             SetAxisText(axis, title);

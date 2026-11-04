@@ -61,6 +61,11 @@ namespace pwiz.Osprey
     {
         private const int USAGE_WIDTH = 78;
 
+        // The --resolution values. auto, the default, measures the resolution from the data.
+        public const string RESOLUTION_AUTO = @"auto";
+        public const string RESOLUTION_HRAM = @"hram";
+        public const string RESOLUTION_UNIT = @"unit";
+
         /// <summary>
         /// Osprey's grammar: the standard <c>--name</c> with <c>-x</c> short aliases, a value
         /// as the next token, any dash-prefixed token ending a value (<c>-o -l x</c> fails
@@ -110,7 +115,7 @@ namespace pwiz.Osprey
         private string _workDir;
         private string _outputDir;
         private string _cacheDir;
-        private string _resolution = @"hram";
+        private string _resolution = RESOLUTION_AUTO;
         private double? _fragmentTolerance;
         private string _fragmentUnit;
         private readonly OspreyConfig _config = new OspreyConfig();
@@ -154,11 +159,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
             () => GetPathToFile(EXT_TXT), (c, p) => c._inputListPaths.Add(p.Value)) { DescriptionArgs = () => new object[] { ARG_INPUT.ShortArgumentText } };
         public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(OspreyArgNames.LIBRARY,
-            () => GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV, (c, p) => c._libraryPath = p.Value)
+            () => LibraryPathValue, (c, p) => c._libraryPath = p.Value)
             {
                 ShortName = @"l",
                 DescriptionArgs = () => new object[] { LibrarySource.EXT_BLIB, TextUtil.EXT_TSV, ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_FASTA.ArgumentText }
+                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_FASTA.ArgumentText, LibrarySource.EXT_PARQUET,
+                    LibrarySource.EXT_SPECLIB }
             };
         public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(OspreyArgNames.OUTPUT,
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._outputPath = p.Value)
@@ -184,7 +190,8 @@ namespace pwiz.Osprey
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
             {
                 DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText, LibrarySource.EXT_BLIB,
-                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV }
+                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV,
+                    LibrarySource.EXT_PARQUET }
             };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
@@ -204,12 +211,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => GetPathToFile(EXT_FASTA), (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
             { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
-        // Skyline's Build Library: the document's precursors as they are, no digest, the TSV
-        // peptdeep wrote. A phase of its own and nothing else, so the search options never apply.
+        // Skyline's Build Library: the document's precursors as they are, no digest, the output
+        // .blib itself. A phase of its own and nothing else, so the search options never apply.
         public static readonly OspreyArgument ARG_PRECURSORS = new OspreyArgument(OspreyArgNames.PRECURSORS,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.LibraryBuild.PrecursorTablePath = p.Value)
             { DescriptionArgs = () => new object[] { OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY), ARG_OUTPUT.ShortArgumentText,
-                string.Join(@", ", PrecursorTable.COLUMNS), LibraryBuildWorkflow.PREDICTED_TABLE_EXAMPLE, ARG_MODEL.ArgumentText,
+                string.Join(@", ", PrecursorTable.COLUMNS), LibrarySource.EXT_BLIB, ARG_MODEL.ArgumentText,
                 ARG_TRAINING_INPUT.ArgumentText, ARG_FASTA.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => GetPathToFile(string.Empty) + @" ...", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
@@ -282,7 +289,13 @@ namespace pwiz.Osprey
         /// <summary>The library argument as the usage lines and the missing-argument errors show it.</summary>
         internal static string UsageLibrary
         {
-            get { return ARG_LIBRARY.ShortArgumentText + @" " + GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV; }
+            get { return ARG_LIBRARY.ShortArgumentText + @" " + LibraryPathValue; }
+        }
+
+        /// <summary>The value the library argument takes, as its help and the usage lines show it.</summary>
+        private static string LibraryPathValue
+        {
+            get { return GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV + @"|" + LibrarySource.EXT_PARQUET; }
         }
 
         /// <summary>The output argument as the usage lines and the missing-argument errors show it.</summary>
@@ -345,8 +358,8 @@ namespace pwiz.Osprey
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(OspreyArgNames.RESOLUTION,
-            new[] { @"hram", @"unit" }, (c, p) => c._resolution = p.Value.ToLowerInvariant())
-            { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => @"hram"), DescriptionArgs = () => new object[] { @"hram", @"unit" } };
+            new[] { RESOLUTION_AUTO, RESOLUTION_HRAM, RESOLUTION_UNIT }, (c, p) => c._resolution = p.Value.ToLowerInvariant())
+            { Scope = OspreyPropertyScope.search, DefaultValue = Default(() => RESOLUTION_AUTO), DescriptionArgs = () => new object[] { RESOLUTION_HRAM, RESOLUTION_UNIT, RESOLUTION_AUTO } };
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(OspreyArgNames.FRAGMENT_TOLERANCE,
             NUM_VALUE, (c, p) => c._fragmentTolerance = ParseDouble(p))
             { Scope = OspreyPropertyScope.search, PropertyType = ArgumentPropertyType.number, MinValue = 0, DescriptionArgs = () => new object[] { ARG_FRAGMENT_UNIT.ArgumentText, ARG_RESOLUTION.ArgumentText, @"unit" } };
@@ -455,7 +468,8 @@ namespace pwiz.Osprey
             { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
-            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
+            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB,
+                LibrarySource.EXT_PARQUET } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
@@ -588,7 +602,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_TIMESTAMP = new OspreyArgument(@"timestamp",
             (c, p) => c._config.IsTimeStamped = true) { DescriptionArgs = () => new object[] { @"[yyyy/MM/dd HH:mm:ss]" } };
         public static readonly OspreyArgument ARG_MEMSTAMP = new OspreyArgument(@"memstamp",
-            (c, p) => c._config.IsMemStamped = true) { DescriptionArgs = () => new object[] { ARG_TIMESTAMP.ArgumentText } };
+            (c, p) => c._config.IsMemStamped = true);
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => GetPathToFile(string.Empty), (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
@@ -604,8 +618,8 @@ namespace pwiz.Osprey
         // -h/--help and -v/--version are terminal: their handlers render help / print the
         // version and exit 0. --help accepts an optional format/section value
         // (ascii | unicode | sections | html | <Section>); the description names the values.
-        public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
-            (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        // The developer dump bundle that -d / --diagnostics used to turn on is the
+        // OSPREY_DIAGNOSTICS variable (OspreyEnvironment.Diagnostics): the help is for users.
         // One flag, everything we know how to show. An opt-in token per expensive panel was built
         // and removed (#4522): the peak co-assignment panel measured 7.3M rows/s, i.e. ~46s on an
         // 82-file Astral run against a 10-hour search, so the cost never justified making anyone
@@ -621,6 +635,14 @@ namespace pwiz.Osprey
                 PrintUsage(p.Value);
                 Environment.Exit(0);
             }) { ShortName = @"h", OptionalValue = true, DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|properties|<Section>]" } };
+        // The catalog of the second, developer-only level of controls (EnvVarUsage). Listing them
+        // is cataloging only: none of them becomes an argument, and the two levels stay distinct.
+        public static readonly OspreyArgument ARG_HELP_ENV = new OspreyArgument(@"help-env",
+            () => ArgumentBase.ValuesToExample(ArgUsage.FORMAT_ASCII, @"unicode"), (c, p) =>
+            {
+                Console.Out.Write(EnvVarUsage.BuildUsage(p.Value, USAGE_WIDTH));
+                Environment.Exit(0);
+            }) { OptionalValue = true };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
             (c, p) =>
             {
@@ -638,7 +660,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info, true,
-                ARG_DIAGNOSTICS, ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
+                ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_HELP_ENV, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {
@@ -857,28 +879,12 @@ namespace pwiz.Osprey
             // before the pipeline runs.
             _config.FdrClassifier = fdrModel;
 
-            switch (_resolution)
-            {
-                case @"unit":
-                    _config.ResolutionMode = ResolutionMode.UnitResolution;
-                    break;
-                default:
-                    _config.ResolutionMode = ResolutionMode.HRAM;
-                    break;
-            }
-
-            if (_config.ResolutionMode == ResolutionMode.UnitResolution)
-            {
-                if (_fragmentUnit == null)
-                {
-                    _config.FragmentTolerance.Unit = ToleranceUnit.Mz;
-                    if (!_fragmentTolerance.HasValue)
-                        _config.FragmentTolerance.Tolerance = 0.5;
-                }
-                _config.PrecursorTolerance.Unit = ToleranceUnit.Mz;
-                _config.PrecursorTolerance.Tolerance = 1.0;
-            }
-
+            // The explicit fragment tolerance and unit first, then the resolution, whose defaults
+            // fill in only what the command line left out. A detected resolution reaches the same
+            // ApplyResolutionMode later, once the host has measured the data, so the two routes
+            // cannot differ in what they configure.
+            _config.FragmentToleranceGiven = _fragmentTolerance.HasValue;
+            _config.FragmentUnitGiven = _fragmentUnit != null;
             if (_fragmentTolerance.HasValue)
                 _config.FragmentTolerance.Tolerance = _fragmentTolerance.Value;
 
@@ -899,6 +905,19 @@ namespace pwiz.Osprey
                             OspreyResources.OspreyCommandArgs_Unknown_fragment_unit___0____defaulting_to__1_, _fragmentUnit, @"ppm"));
                         break;
                 }
+            }
+
+            switch (_resolution)
+            {
+                case RESOLUTION_UNIT:
+                    _config.ApplyResolutionMode(ResolutionMode.UnitResolution);
+                    break;
+                case RESOLUTION_HRAM:
+                    _config.ApplyResolutionMode(ResolutionMode.HRAM);
+                    break;
+                default:
+                    _config.DetectResolution = true;
+                    break;
             }
 
             if (!_config.LibrarySuppliesDecoys &&

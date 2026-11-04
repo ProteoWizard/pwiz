@@ -468,9 +468,8 @@ namespace pwiz.Osprey.Tasks
         /// PerFileRescoring run whose key changed, so an answer left by an earlier run under
         /// another key no longer matches it. Comparing the stamps to each other, rather than to
         /// PerFileRescoring's key recomputed in this process, is what keeps the test valid on a
-        /// separate HPC leg - that key folds in a per-leg flag
-        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), so a SecondPassFDR process cannot
-        /// reconstruct it.</para>
+        /// separate HPC leg - a key may fold in a per-leg term, which a SecondPassFDR process
+        /// cannot reconstruct.</para>
         ///
         /// <para>The decoys exist only where a competition produced them. The transfer competes
         /// nothing and writes none, so requiring them there would leave every transfer run
@@ -1022,6 +1021,7 @@ namespace pwiz.Osprey.Tasks
                     filesPatched++;
                     nPatched += byEntryId.Count;
                 }
+                progress.Complete();
             }
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's
@@ -1591,6 +1591,7 @@ namespace pwiz.Osprey.Tasks
                     DumpRecomputedForDiff(ctx, writer, currentKey, currentEntries);
                     throw;
                 }
+                progress.Complete();
             }
             // Once, after the stream, rather than per file: the counts are run-wide and a
             // missing 1st-pass sidecar is a run-wide conclusion.
@@ -1767,6 +1768,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     floors.ObserveIdentities(kvp.Value);
                 }
+                mergeProgress.Complete();
             }
             return survivorObservations;
         }
@@ -1836,6 +1838,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     nMapped += staged.Count;
                 }
+                patchProgress.Complete();
             }
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));

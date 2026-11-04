@@ -90,6 +90,9 @@ public sealed class UnimodModification
     /// <summary>The CV id for this modification.</summary>
     public CVID Cvid { get; set; } = CVID.CVID_Unknown;
 
+    /// <summary>The UniMod accession number (21 for Phospho, from UNIMOD:21).</summary>
+    public int Id => (int)Cvid - CvLookup.OffsetUnimod;
+
     /// <summary>Display name (e.g. "Phospho").</summary>
     public string Name { get; set; } = string.Empty;
 

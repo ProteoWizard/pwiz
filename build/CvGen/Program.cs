@@ -13,6 +13,9 @@ using Pwiz.Data.Common.Obo;
 // and the output defaults to <repo>/pwiz/data/common/CVID.generated.cs, where
 // <repo> is found by walking up from this executable. Common.Tests fails when that file is
 // stale, so an OBO update is: replace the .obo, run this, commit both.
+// A unimod.obo update also regenerates Skyline's UniModData.cs with
+// pwiz_tools/Skyline/Executables/DevTools/UniModCompiler (see its README.md) in the same commit;
+// Skyline's TestUniModAgreesWithObo fails until it is.
 //
 // New OBO files come from the URIs the mzML cvList cites (CvLookup.GetCv):
 //   psi-ms.obo  http://purl.obolibrary.org/obo/ms/psi-ms.obo

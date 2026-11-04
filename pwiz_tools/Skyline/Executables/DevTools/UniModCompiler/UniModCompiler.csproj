@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- UniModCompiler - dev tool that generates UniModData.cs from unimod.xml. Multi-target
+  <!-- UniModCompiler - dev tool that generates UniModData.cs from pwiz/data/common/unimod.obo. Multi-target
        net472;net10.0-windows (the net8 target tracks its CommonUtil project reference, which is
        net10.0-windows). UniModTemplate.cs is a code-gen TEMPLATE embedded as a resource, not a
        compiled source file; the InputFiles data are carried as Content. -->
@@ -33,7 +33,6 @@
     <Content Include="InputFiles\ProteinPilot.DataDictionary.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="InputFiles\unimod.xml" />
   </ItemGroup>
 
 </Project>

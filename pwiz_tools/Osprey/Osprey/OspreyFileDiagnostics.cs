@@ -32,7 +32,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.Scoring;
 
-// Developer-only dump files (-d / OSPREY_DUMP_*): TSV headers and rows for comparison tools,
+// Developer-only dump files (OSPREY_DIAGNOSTICS / OSPREY_DUMP_*): TSV headers and rows for comparison tools,
 // never user text. The whole file, because nearly every literal is tab-separated file content.
 // ReSharper disable LocalizableElement
 
@@ -65,8 +65,8 @@ namespace pwiz.Osprey
     /// Concrete diagnostics sink: owns the OSPREY_DUMP_* / OSPREY_DIAG_*
     /// env-var gates and the byte-stable cross-impl bisection dumps. A single
     /// instance is created and held by <see cref="OspreyDiagnostics"/> only
-    /// when diagnostics are enabled (a dump env var is set, or <c>-d</c> is
-    /// passed); when no instance exists every facade call is a no-op, so
+    /// when diagnostics are enabled (a dump env var is set, or OSPREY_DIAGNOSTICS is
+    /// set); when no instance exists every facade call is a no-op, so
     /// production carries no diagnostic state. Internal: callers go through the
     /// <see cref="OspreyDiagnostics"/> facade, never this type directly.
     /// </summary>
@@ -74,33 +74,54 @@ namespace pwiz.Osprey
     {
         // ----- Env-var gate flags (read once at process start) -----
 
+        private static readonly EnvVar ENV_DUMP_CAL_SAMPLE = new EnvVar(@"OSPREY_DUMP_CAL_SAMPLE", EnvVarGroup.diagnostic,
+            @"Dump the calibration sample, scalars and grid (cs_cal_sample.txt and siblings).");
+
         /// <summary>
         /// OSPREY_DUMP_CAL_SAMPLE: dump the calibration sample list
         /// (cs_cal_sample.txt) AND the calibration scalars+grid
         /// (cs_cal_scalars.txt / cs_cal_grid.txt).
         /// </summary>
-        public bool DumpCalSample { get; } = IsOne(@"OSPREY_DUMP_CAL_SAMPLE");
+        public bool DumpCalSample { get; } = IsOne(ENV_DUMP_CAL_SAMPLE);
+
+        private static readonly EnvVar ENV_CAL_SAMPLE_ONLY = new EnvVar(@"OSPREY_CAL_SAMPLE_ONLY", EnvVarGroup.harness,
+            @"Exit after the calibration sample dump.");
 
         /// <summary>OSPREY_CAL_SAMPLE_ONLY: exit after cs_cal_sample.txt dump.</summary>
-        public bool CalSampleOnly { get; } = IsOne(@"OSPREY_CAL_SAMPLE_ONLY");
+        public bool CalSampleOnly { get; } = IsOne(ENV_CAL_SAMPLE_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_CAL_WINDOWS = new EnvVar(@"OSPREY_DUMP_CAL_WINDOWS", EnvVarGroup.diagnostic,
+            @"Dump the calibration windows (cs_cal_windows.txt).");
 
         /// <summary>
         /// OSPREY_DUMP_CAL_WINDOWS: dump per-entry calibration window
         /// selection (cs_cal_windows.txt).
         /// </summary>
-        public bool DumpCalWindows { get; } = IsOne(@"OSPREY_DUMP_CAL_WINDOWS");
+        public bool DumpCalWindows { get; } = IsOne(ENV_DUMP_CAL_WINDOWS);
+
+        private static readonly EnvVar ENV_CAL_WINDOWS_ONLY = new EnvVar(@"OSPREY_CAL_WINDOWS_ONLY", EnvVarGroup.harness,
+            @"Exit after the calibration windows dump.");
 
         /// <summary>OSPREY_CAL_WINDOWS_ONLY: exit after cs_cal_windows.txt dump.</summary>
-        public bool CalWindowsOnly { get; } = IsOne(@"OSPREY_CAL_WINDOWS_ONLY");
+        public bool CalWindowsOnly { get; } = IsOne(ENV_CAL_WINDOWS_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_CAL_MATCH = new EnvVar(@"OSPREY_DUMP_CAL_MATCH", EnvVarGroup.diagnostic,
+            @"Dump the calibration matches (cs_cal_match.txt).");
 
         /// <summary>
         /// OSPREY_DUMP_CAL_MATCH: dump per-entry calibration match info
         /// (cs_cal_match.txt).
         /// </summary>
-        public bool DumpCalMatch { get; } = IsOne(@"OSPREY_DUMP_CAL_MATCH");
+        public bool DumpCalMatch { get; } = IsOne(ENV_DUMP_CAL_MATCH);
+
+        private static readonly EnvVar ENV_CAL_MATCH_ONLY = new EnvVar(@"OSPREY_CAL_MATCH_ONLY", EnvVarGroup.harness,
+            @"Exit after the calibration match dump.");
 
         /// <summary>OSPREY_CAL_MATCH_ONLY: exit after cs_cal_match.txt dump.</summary>
-        public bool CalMatchOnly { get; } = IsOne(@"OSPREY_CAL_MATCH_ONLY");
+        public bool CalMatchOnly { get; } = IsOne(ENV_CAL_MATCH_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_MS2_CAL_ERRORS = new EnvVar(@"OSPREY_DUMP_MS2_CAL_ERRORS", EnvVarGroup.diagnostic,
+            @"Dump the MS2 calibration mass errors.");
 
         /// <summary>
         /// OSPREY_DUMP_MS2_CAL_ERRORS: dump the per-fragment MS2 mass errors
@@ -109,64 +130,106 @@ namespace pwiz.Osprey
         /// mean divergence cross-impl by checking whether the input
         /// fragment errors are identical in value AND order across impls.
         /// </summary>
-        public bool DumpMs2CalErrors { get; } = IsOne(@"OSPREY_DUMP_MS2_CAL_ERRORS");
+        public bool DumpMs2CalErrors { get; } = IsOne(ENV_DUMP_MS2_CAL_ERRORS);
+
+        private static readonly EnvVar ENV_MS2_CAL_ERRORS_ONLY = new EnvVar(@"OSPREY_MS2_CAL_ERRORS_ONLY", EnvVarGroup.harness,
+            @"Exit after the MS2 calibration error dump.");
 
         /// <summary>OSPREY_MS2_CAL_ERRORS_ONLY: exit after cs_ms2_cal_errors.txt dump.</summary>
-        public bool Ms2CalErrorsOnly { get; } = IsOne(@"OSPREY_MS2_CAL_ERRORS_ONLY");
+        public bool Ms2CalErrorsOnly { get; } = IsOne(ENV_MS2_CAL_ERRORS_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_LDA_SCORES = new EnvVar(@"OSPREY_DUMP_LDA_SCORES", EnvVarGroup.diagnostic,
+            @"Dump the calibration LDA scores.");
 
         /// <summary>
         /// OSPREY_DUMP_LDA_SCORES: dump per-entry LDA discriminant + q-value
         /// after LDA scoring (cs_lda_scores.txt).
         /// </summary>
-        public bool DumpLdaScores { get; } = IsOne(@"OSPREY_DUMP_LDA_SCORES");
+        public bool DumpLdaScores { get; } = IsOne(ENV_DUMP_LDA_SCORES);
+
+        private static readonly EnvVar ENV_LDA_SCORES_ONLY = new EnvVar(@"OSPREY_LDA_SCORES_ONLY", EnvVarGroup.harness,
+            @"Exit after the calibration LDA score dump.");
 
         /// <summary>OSPREY_LDA_SCORES_ONLY: exit after cs_lda_scores.txt dump.</summary>
-        public bool LdaScoresOnly { get; } = IsOne(@"OSPREY_LDA_SCORES_ONLY");
+        public bool LdaScoresOnly { get; } = IsOne(ENV_LDA_SCORES_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_LOESS_INPUT = new EnvVar(@"OSPREY_DUMP_LOESS_INPUT", EnvVarGroup.diagnostic,
+            @"Dump the RT calibration LOESS input.");
 
         /// <summary>
         /// OSPREY_DUMP_LOESS_INPUT: dump the (lib_rt, measured_rt) pairs
         /// fed to LOESS (cs_loess_input.txt).
         /// </summary>
-        public bool DumpLoessInput { get; } = IsOne(@"OSPREY_DUMP_LOESS_INPUT");
+        public bool DumpLoessInput { get; } = IsOne(ENV_DUMP_LOESS_INPUT);
+
+        private static readonly EnvVar ENV_LOESS_INPUT_ONLY = new EnvVar(@"OSPREY_LOESS_INPUT_ONLY", EnvVarGroup.harness,
+            @"Exit after the LOESS input dump.");
 
         /// <summary>OSPREY_LOESS_INPUT_ONLY: exit after cs_loess_input.txt dump.</summary>
-        public bool LoessInputOnly { get; } = IsOne(@"OSPREY_LOESS_INPUT_ONLY");
+        public bool LoessInputOnly { get; } = IsOne(ENV_LOESS_INPUT_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_STANDARDIZER = new EnvVar(@"OSPREY_DUMP_STANDARDIZER", EnvVarGroup.diagnostic,
+            @"Dump the first-pass feature standardizer.");
 
         /// <summary>
         /// OSPREY_DUMP_STANDARDIZER: dump the fitted Stage 5 feature standardizer
         /// (mean/scale per feature) right after FeatureStandardizer.FitTransform.
         /// </summary>
-        public bool DumpStandardizer { get; } = IsOne(@"OSPREY_DUMP_STANDARDIZER");
+        public bool DumpStandardizer { get; } = IsOne(ENV_DUMP_STANDARDIZER);
+
+        private static readonly EnvVar ENV_STANDARDIZER_ONLY = new EnvVar(@"OSPREY_STANDARDIZER_ONLY", EnvVarGroup.harness,
+            @"Exit after the standardizer dump.");
 
         /// <summary>OSPREY_STANDARDIZER_ONLY: exit after the standardizer dump.</summary>
-        public bool StandardizerOnly { get; } = IsOne(@"OSPREY_STANDARDIZER_ONLY");
+        public bool StandardizerOnly { get; } = IsOne(ENV_STANDARDIZER_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_PERC_INPUT = new EnvVar(@"OSPREY_DUMP_PERC_INPUT", EnvVarGroup.diagnostic,
+            @"Dump the first-pass Percolator input.");
 
         /// <summary>
         /// OSPREY_DUMP_PERC_INPUT: dump the raw per-entry feature vectors fed into
         /// the standardizer, for 2nd-pass divergence localization.
         /// </summary>
-        public bool DumpPercInput { get; } = IsOne(@"OSPREY_DUMP_PERC_INPUT");
+        public bool DumpPercInput { get; } = IsOne(ENV_DUMP_PERC_INPUT);
+
+        private static readonly EnvVar ENV_PERC_INPUT_ONLY = new EnvVar(@"OSPREY_PERC_INPUT_ONLY", EnvVarGroup.harness,
+            @"Exit after the Percolator input dump.");
 
         /// <summary>OSPREY_PERC_INPUT_ONLY: exit after the Percolator-input dump.</summary>
-        public bool PercInputOnly { get; } = IsOne(@"OSPREY_PERC_INPUT_ONLY");
+        public bool PercInputOnly { get; } = IsOne(ENV_PERC_INPUT_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_SUBSAMPLE = new EnvVar(@"OSPREY_DUMP_SUBSAMPLE", EnvVarGroup.diagnostic,
+            @"Dump the first-pass training subsample.");
 
         /// <summary>
         /// OSPREY_DUMP_SUBSAMPLE: dump subsample membership + fold assignment per
         /// entry after best-per-precursor dedup and peptide-grouped subsampling.
         /// </summary>
-        public bool DumpSubsample { get; } = IsOne(@"OSPREY_DUMP_SUBSAMPLE");
+        public bool DumpSubsample { get; } = IsOne(ENV_DUMP_SUBSAMPLE);
+
+        private static readonly EnvVar ENV_SUBSAMPLE_ONLY = new EnvVar(@"OSPREY_SUBSAMPLE_ONLY", EnvVarGroup.harness,
+            @"Exit after the training subsample dump.");
 
         /// <summary>OSPREY_SUBSAMPLE_ONLY: exit after the subsample dump.</summary>
-        public bool SubsampleOnly { get; } = IsOne(@"OSPREY_SUBSAMPLE_ONLY");
+        public bool SubsampleOnly { get; } = IsOne(ENV_SUBSAMPLE_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_SVM_WEIGHTS = new EnvVar(@"OSPREY_DUMP_SVM_WEIGHTS", EnvVarGroup.diagnostic,
+            @"Dump the first-pass SVM weights.");
 
         /// <summary>
         /// OSPREY_DUMP_SVM_WEIGHTS: dump per-fold SVM weights, bias, and iteration
         /// count right after training converges and before Granholm calibration.
         /// </summary>
-        public bool DumpSvmWeights { get; } = IsOne(@"OSPREY_DUMP_SVM_WEIGHTS");
+        public bool DumpSvmWeights { get; } = IsOne(ENV_DUMP_SVM_WEIGHTS);
+
+        private static readonly EnvVar ENV_SVM_WEIGHTS_ONLY = new EnvVar(@"OSPREY_SVM_WEIGHTS_ONLY", EnvVarGroup.harness,
+            @"Exit after the SVM weights dump.");
 
         /// <summary>OSPREY_SVM_WEIGHTS_ONLY: exit after the SVM-weights dump.</summary>
-        public bool SvmWeightsOnly { get; } = IsOne(@"OSPREY_SVM_WEIGHTS_ONLY");
+        public bool SvmWeightsOnly { get; } = IsOne(ENV_SVM_WEIGHTS_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_MP_INPUTS = new EnvVar(@"OSPREY_DUMP_MP_INPUTS", EnvVarGroup.diagnostic,
+            @"Dump the inputs of every second-pass median polish call (cs_stage6_mp_inputs.tsv). Large.");
 
         /// <summary>
         /// OSPREY_DUMP_MP_INPUTS: bisection-grade diagnostic that dumps
@@ -182,7 +245,11 @@ namespace pwiz.Osprey
         /// upstream (XIC extraction / peak picking) or downstream
         /// (median polish / peak shape feature compute).
         /// </summary>
-        public bool DumpMpInputs { get; } = IsOne(@"OSPREY_DUMP_MP_INPUTS");
+        public bool DumpMpInputs { get; } = IsOne(ENV_DUMP_MP_INPUTS);
+
+        private static readonly EnvVar ENV_DUMP_PREDICT_RT = new EnvVar(@"OSPREY_DUMP_PREDICT_RT", EnvVarGroup.diagnostic,
+            @"Dump the RT calibration arrays and every second-pass prediction call " +
+            @"(cs_stage6_predict_rt.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_PREDICT_RT: bisection-grade diagnostic that
@@ -199,7 +266,10 @@ namespace pwiz.Osprey
         /// hidden RTCalibration state is leaking; if both match, the
         /// divergence is downstream of RT calibration.
         /// </summary>
-        public bool DumpPredictRt { get; } = IsOne(@"OSPREY_DUMP_PREDICT_RT");
+        public bool DumpPredictRt { get; } = IsOne(ENV_DUMP_PREDICT_RT);
+
+        private static readonly EnvVar ENV_DUMP_CWT_PATH = new EnvVar(@"OSPREY_DUMP_CWT_PATH", EnvVarGroup.diagnostic,
+            @"Dump per-entry CWT peak path counts from the second-pass re-score (cs_stage6_cwt_path.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_CWT_PATH: per-(file, entry) dump of CWT path
@@ -211,17 +281,26 @@ namespace pwiz.Osprey
         /// and at which seam: CWT detection, fallback path, or
         /// apex-acceptance filter. Output: cs_stage6_cwt_path.tsv.
         /// </summary>
-        public bool DumpCwtPath { get; } = IsOne(@"OSPREY_DUMP_CWT_PATH");
+        public bool DumpCwtPath { get; } = IsOne(ENV_DUMP_CWT_PATH);
+
+        private static readonly EnvVar ENV_DUMP_CONSENSUS = new EnvVar(@"OSPREY_DUMP_CONSENSUS", EnvVarGroup.diagnostic,
+            @"Dump the per-peptide consensus RT planning state (cs_stage6_consensus.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_CONSENSUS: dump the per-peptide consensus RT planning
         /// state at the start of Stage 6 (cs_stage6_consensus.tsv) for
         /// cross-impl parity at the planning checkpoint.
         /// </summary>
-        public bool DumpConsensus { get; } = IsOne(@"OSPREY_DUMP_CONSENSUS");
+        public bool DumpConsensus { get; } = IsOne(ENV_DUMP_CONSENSUS);
+
+        private static readonly EnvVar ENV_CONSENSUS_ONLY = new EnvVar(@"OSPREY_CONSENSUS_ONLY", EnvVarGroup.harness,
+            @"Exit after the consensus dump.");
 
         /// <summary>OSPREY_CONSENSUS_ONLY: exit after cs_stage6_consensus.tsv dump.</summary>
-        public bool ConsensusOnly { get; } = IsOne(@"OSPREY_CONSENSUS_ONLY");
+        public bool ConsensusOnly { get; } = IsOne(ENV_CONSENSUS_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_CALIBRATION = new EnvVar(@"OSPREY_DUMP_CALIBRATION", EnvVarGroup.diagnostic,
+            @"Dump each file's loaded RT calibration arrays (cs_stage6_calibration.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_CALIBRATION: dump the loaded calibration JSON
@@ -234,10 +313,16 @@ namespace pwiz.Osprey
         /// later dump's _ONLY (e.g. OSPREY_INV_PREDICT_ONLY) to
         /// short-circuit after all files have written their rows.
         /// </summary>
-        public bool DumpCalibration { get; } = IsOne(@"OSPREY_DUMP_CALIBRATION");
+        public bool DumpCalibration { get; } = IsOne(ENV_DUMP_CALIBRATION);
+
+        private static readonly EnvVar ENV_CALIBRATION_ONLY = new EnvVar(@"OSPREY_CALIBRATION_ONLY", EnvVarGroup.harness,
+            @"Exit after the loaded calibration dump.");
 
         /// <summary>OSPREY_CALIBRATION_ONLY: exit after cs_stage6_calibration.tsv dump.</summary>
-        public bool CalibrationOnly { get; } = IsOne(@"OSPREY_CALIBRATION_ONLY");
+        public bool CalibrationOnly { get; } = IsOne(ENV_CALIBRATION_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_INV_PREDICT = new EnvVar(@"OSPREY_DUMP_INV_PREDICT", EnvVarGroup.diagnostic,
+            @"Dump the inputs of the consensus RT inverse prediction (cs_stage6_inv_predict.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_INV_PREDICT: capture per-detection
@@ -249,10 +334,16 @@ namespace pwiz.Osprey
         /// (apex_rt diverges) or inside LOESS InversePredict (only
         /// library_rt diverges).
         /// </summary>
-        public bool DumpInvPredict { get; } = IsOne(@"OSPREY_DUMP_INV_PREDICT");
+        public bool DumpInvPredict { get; } = IsOne(ENV_DUMP_INV_PREDICT);
+
+        private static readonly EnvVar ENV_INV_PREDICT_ONLY = new EnvVar(@"OSPREY_INV_PREDICT_ONLY", EnvVarGroup.harness,
+            @"Exit after the inverse prediction dump.");
 
         /// <summary>OSPREY_INV_PREDICT_ONLY: exit after cs_stage6_inv_predict.tsv dump.</summary>
-        public bool InvPredictOnly { get; } = IsOne(@"OSPREY_INV_PREDICT_ONLY");
+        public bool InvPredictOnly { get; } = IsOne(ENV_INV_PREDICT_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_PROTEIN_FDR = new EnvVar(@"OSPREY_DUMP_PROTEIN_FDR", EnvVarGroup.diagnostic,
+            @"Dump the per-peptide first-pass protein FDR state (cs_stage6_protein_fdr.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_PROTEIN_FDR: dump the per-peptide first-pass protein
@@ -264,10 +355,16 @@ namespace pwiz.Osprey
         /// (best_qvalue), the ranking input (score), or the algorithm output
         /// (protein_qvalue) is responsible.
         /// </summary>
-        public bool DumpProteinFdr { get; } = IsOne(@"OSPREY_DUMP_PROTEIN_FDR");
+        public bool DumpProteinFdr { get; } = IsOne(ENV_DUMP_PROTEIN_FDR);
+
+        private static readonly EnvVar ENV_PROTEIN_FDR_ONLY = new EnvVar(@"OSPREY_PROTEIN_FDR_ONLY", EnvVarGroup.harness,
+            @"Exit after the first-pass protein FDR dump.");
 
         /// <summary>OSPREY_PROTEIN_FDR_ONLY: exit after cs_stage6_protein_fdr.tsv dump.</summary>
-        public bool ProteinFdrOnly { get; } = IsOne(@"OSPREY_PROTEIN_FDR_ONLY");
+        public bool ProteinFdrOnly { get; } = IsOne(ENV_PROTEIN_FDR_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_STAGE7_PROTEIN_FDR = new EnvVar(@"OSPREY_DUMP_STAGE7_PROTEIN_FDR", EnvVarGroup.diagnostic,
+            @"Dump the per-protein-group state of second-pass protein FDR (cs_stage7_protein_fdr.tsv).");
 
         /// <summary>
         /// OSPREY_DUMP_STAGE7_PROTEIN_FDR: dump per-protein-group state at the
@@ -279,10 +376,17 @@ namespace pwiz.Osprey
         /// (is_target_winner DESC, group_qvalue ASC, accessions ASC) keeps the
         /// target-winner rows that drive FDR calibration at the top.
         /// </summary>
-        public bool DumpStage7ProteinFdr { get; } = IsOne(@"OSPREY_DUMP_STAGE7_PROTEIN_FDR");
+        public bool DumpStage7ProteinFdr { get; } = IsOne(ENV_DUMP_STAGE7_PROTEIN_FDR);
+
+        private static readonly EnvVar ENV_STAGE7_PROTEIN_FDR_ONLY = new EnvVar(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY", EnvVarGroup.harness,
+            @"Exit after the second-pass protein FDR dump.");
 
         /// <summary>OSPREY_STAGE7_PROTEIN_FDR_ONLY: exit after cs_stage7_protein_fdr.tsv dump.</summary>
-        public bool Stage7ProteinFdrOnly { get; } = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
+        public bool Stage7ProteinFdrOnly { get; } = IsOne(ENV_STAGE7_PROTEIN_FDR_ONLY);
+
+        private static readonly EnvVar ENV_DUMP_DETECTED_PEPTIDES = new EnvVar(@"OSPREY_DUMP_DETECTED_PEPTIDES", EnvVarGroup.diagnostic,
+            @"Dump the detected target peptides handed to protein parsimony " +
+            @"(cs_stage7_detected_peptides.txt).");
 
         /// <summary>
         /// OSPREY_DUMP_DETECTED_PEPTIDES: dump the sorted set of detected
@@ -291,39 +395,80 @@ namespace pwiz.Osprey
         /// dump_stage7_detected_peptides; lets the protein-FDR input set
         /// be diffed cross-impl before debugging downstream divergence.
         /// </summary>
-        public bool DumpDetectedPeptides { get; } = IsOne(@"OSPREY_DUMP_DETECTED_PEPTIDES");
+        public bool DumpDetectedPeptides { get; } = IsOne(ENV_DUMP_DETECTED_PEPTIDES);
+
+        private static readonly EnvVar ENV_DIAG_XIC_ENTRY_ID = new EnvVar(@"OSPREY_DIAG_XIC_ENTRY_ID", EnvVarGroup.diagnostic,
+            @"Dump the calibration chromatogram of this entry id.")
+            { ValueExample = @"<id>" };
 
         /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
         /// during calibration scoring. null = no dump.
         /// </summary>
-        public uint? DiagXicEntryId { get; } = ParseNullableUint(@"OSPREY_DIAG_XIC_ENTRY_ID");
+        public uint? DiagXicEntryId { get; } = ParseNullableUint(ENV_DIAG_XIC_ENTRY_ID);
+
+        private static readonly EnvVar ENV_DIAG_XIC_PASS = new EnvVar(@"OSPREY_DIAG_XIC_PASS", EnvVarGroup.diagnostic,
+            @"The calibration pass (1 or 2) at which the chromatogram dump is written.")
+            { ValueExample = @"<pass>", DefaultValue = @"1" };
 
         /// <summary>
         /// OSPREY_DIAG_XIC_PASS: the calibration pass (1 or 2) at which to
         /// dump the XIC. Defaults to 1 because bisection walks downstream:
         /// until pass 1 chromatograms match, comparing pass 2 is premature.
         /// </summary>
-        public int DiagXicPass { get; } = ParseIntOrDefault(@"OSPREY_DIAG_XIC_PASS", 1);
+        public int DiagXicPass { get; } = ParseIntOrDefault(ENV_DIAG_XIC_PASS, 1);
+
+        private static readonly EnvVar ENV_DIAG_SEARCH_ENTRY_IDS = new EnvVar(@"OSPREY_DIAG_SEARCH_ENTRY_IDS", EnvVarGroup.diagnostic,
+            @"Dump the main-search XIC extraction of these comma-separated entry ids.")
+            { ValueExample = @"<id,id...>" };
 
         /// <summary>
         /// OSPREY_DIAG_SEARCH_ENTRY_IDS: comma-separated entry IDs whose
         /// main-search XIC extraction should dump a
         /// cs_search_xic_entry_&lt;ID&gt;.txt. Does NOT exit.
         /// </summary>
-        public HashSet<uint> DiagSearchEntryIds { get; } = ParseIdSet(@"OSPREY_DIAG_SEARCH_ENTRY_IDS");
+        public HashSet<uint> DiagSearchEntryIds { get; } = ParseIdSet(ENV_DIAG_SEARCH_ENTRY_IDS);
+
+        private static readonly EnvVar ENV_DIAG_MP_SCAN = new EnvVar(@"OSPREY_DIAG_MP_SCAN", EnvVarGroup.diagnostic,
+            @"Dump the median polish of this MS2 scan (cs_mp_diag.txt).")
+            { ValueExample = @"<scan>" };
 
         /// <summary>
         /// OSPREY_DIAG_MP_SCAN: the MS2 scan number whose median polish
         /// should dump cs_mp_diag.txt (filtered additionally to a specific
         /// DECOY_ALQFAQWWK target by historical convention). null = no dump.
         /// </summary>
-        public int? DiagMpScan { get; } = ParseNullableInt(@"OSPREY_DIAG_MP_SCAN");
+        public int? DiagMpScan { get; } = ParseNullableInt(ENV_DIAG_MP_SCAN);
+
+        /// <summary>
+        /// The OSPREY_DUMP_* switches the OSPREY_DIAGNOSTICS master switch turns on
+        /// (<see cref="OspreyDiagnostics.Initialize"/>). Excludes the per-call firehose
+        /// (OSPREY_DUMP_MP_INPUTS), the disabled predict-rt dump, the *_ONLY early-exit gates, and
+        /// the OSPREY_DIAG_* per-entry selectors (which need specific IDs). Fine-grained control
+        /// is still available by setting individual variables. After the declarations it names,
+        /// which static initialization reaches first.
+        /// </summary>
+        internal static readonly EnvVar[] FORCED_DUMP_BUNDLE =
+        {
+            ENV_DUMP_CAL_SAMPLE,
+            ENV_DUMP_CAL_WINDOWS,
+            ENV_DUMP_CAL_MATCH,
+            ENV_DUMP_MS2_CAL_ERRORS,
+            ENV_DUMP_LDA_SCORES,
+            ENV_DUMP_LOESS_INPUT,
+            ENV_DUMP_CWT_PATH,
+            ENV_DUMP_CONSENSUS,
+            ENV_DUMP_CALIBRATION,
+            ENV_DUMP_INV_PREDICT,
+            ENV_DUMP_PROTEIN_FDR,
+            ENV_DUMP_STAGE7_PROTEIN_FDR,
+            ENV_DUMP_DETECTED_PEPTIDES,
+        };
 
         /// <summary>
         /// True if any dump / diagnostic gate is active. The
         /// <see cref="OspreyDiagnostics"/> facade constructs one instance and
-        /// keeps it as the live sink only when this is true (or when <c>-d</c>
+        /// keeps it as the live sink only when this is true (or when OSPREY_DIAGNOSTICS
         /// forced the dump env vars on first), so an ordinary production run --
         /// where no OSPREY_DUMP_* / OSPREY_DIAG_* var is set -- carries no sink
         /// and every facade call is a no-op.
@@ -1470,14 +1615,14 @@ namespace pwiz.Osprey
 
         // ----- Env var parsing helpers -----
 
-        private static bool IsOne(string name)
+        private static bool IsOne(EnvVar envVar)
         {
-            return Environment.GetEnvironmentVariable(name) == @"1";
+            return envVar.Value == @"1";
         }
 
-        private static uint? ParseNullableUint(string name)
+        private static uint? ParseNullableUint(EnvVar envVar)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = envVar.Value;
             if (string.IsNullOrEmpty(v))
                 return null;
             uint result;
@@ -1486,9 +1631,9 @@ namespace pwiz.Osprey
             return null;
         }
 
-        private static int? ParseNullableInt(string name)
+        private static int? ParseNullableInt(EnvVar envVar)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = envVar.Value;
             if (string.IsNullOrEmpty(v))
                 return null;
             int result;
@@ -1497,9 +1642,9 @@ namespace pwiz.Osprey
             return null;
         }
 
-        private static int ParseIntOrDefault(string name, int fallback)
+        private static int ParseIntOrDefault(EnvVar envVar, int fallback)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = envVar.Value;
             if (string.IsNullOrEmpty(v))
                 return fallback;
             int result;
@@ -1508,9 +1653,9 @@ namespace pwiz.Osprey
             return fallback;
         }
 
-        private static HashSet<uint> ParseIdSet(string name)
+        private static HashSet<uint> ParseIdSet(EnvVar envVar)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = envVar.Value;
             if (string.IsNullOrEmpty(v))
                 return null;
             var set = new HashSet<uint>();
