@@ -66,8 +66,9 @@ $stagingDir = Join-Path $OutputDir 'stage'
 $cacheDir   = Join-Path $pwizSharpInstaller 'cache'
 
 # 1. Build Skyline into an emptied folder of its own, which Skyline is never run from, so
-#    that nothing a run writes beside the exe (its user.config, for one) can reach the
-#    installer. The referenced projects build into their usual outputs, incrementally.
+#    that nothing a run writes beside the exe can reach the installer: its user.config,
+#    its logs, or the Tools folder of installed external tools and downloaded search
+#    engines, some of which may not be redistributed. The referenced projects build into their usual outputs, incrementally.
 $SkylineBinDir = Join-Path $skylineDir "bin\installer-build\$Configuration"
 if (Test-Path $SkylineBinDir) { Remove-Item $SkylineBinDir -Recurse -Force }
 Write-Host "==> dotnet build Skyline.csproj ($Configuration) into $SkylineBinDir" -ForegroundColor Cyan
