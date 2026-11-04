@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
@@ -97,7 +99,7 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials && IsPass0;
-        private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine.MSFragger);
+        private static bool HasMissingDependencies(SearchEngine searchEngine) => !SearchSettingsControl.HasRequiredFilesDownloaded(searchEngine);
 
         private Image _searchLogImage;
 
@@ -267,13 +269,13 @@ namespace TestPerf
             else if (IsPauseForScreenShots)
             {
                 // Stop progress at a specific line number
-                RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FixedLineCountLock(31));
+                RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new SearchProgressScreenshotLock("Searching spectra 80001 - 90000", 20));
             }
 
             SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // Handle download dialogs if necessary
-            if (RedownloadTools || HasMissingDependencies)
+            if (RedownloadTools || HasMissingDependencies(searchEngine))
             {
                 if (searchEngine == SearchEngine.MSFragger)
                 {
@@ -286,16 +288,16 @@ namespace TestPerf
                     }
                 }
 
-                if (searchEngine != SearchEngine.MSAmanda)
+                // MSAmanda is downloaded on demand too, so its download dialog must be answered as well.
+                // It is not a tutorial screenshot, and pausing for it would renumber the ones after it.
+                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                if (downloaderDlg != null)
                 {
-                    var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-                    if (downloaderDlg != null)
-                    {
+                    if (searchEngine != SearchEngine.MSAmanda)
                         PauseForScreenShot<MultiButtonMsgDlg>("Import Peptide Search - Download Java and Crux"); // Maybe someday
-                        OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                        var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                        WaitForClosedForm(waitDlg);
-                    }
+                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                    WaitForClosedForm(waitDlg);
                 }
             }
 
@@ -401,6 +403,9 @@ namespace TestPerf
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             }
 
+            if (!isNotAmanda && IsFullData)
+                VerifyOutlierIdIgnored();
+
             FindNode(string.Format("{0:F04}++", IsFullData ? 835.914 : 699.3566));
             RunUI(() =>
             {
@@ -450,6 +455,35 @@ namespace TestPerf
 
             // Verify the preset can be loaded in a new wizard with all settings restored
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME, searchEngine);
+        }
+
+        /// <summary>
+        /// MS Amanda 3.0 reports a false charge 3 ID of TGEGFLCVFAINNTK at 20.79 min in 2_UPS1_300fmol,
+        /// far from its other IDs near 138 min. That ID must neither extend chromatogram extraction for
+        /// the charge 2 precursor nor, once aligned into 1_UPS1_100fmol, choose its peak.
+        /// </summary>
+        private void VerifyOutlierIdIgnored()
+        {
+            const double outlierIdTime = 20.79;
+            var doc = SkylineWindow.Document;
+            var nodePep = doc.Peptides.First(p => p.Peptide.Sequence == "TGEGFLCVFAINNTK");
+            var nodeGroup = nodePep.TransitionGroups.First(g => g.IsLight && g.PrecursorCharge == 2);
+            var results = doc.Settings.MeasuredResults;
+            float tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            double minTime = outlierIdTime + doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterLength;
+            for (int i = 0; i < results.Chromatograms.Count; i++)
+            {
+                string replicateName = results.Chromatograms[i].Name;
+                AssertEx.IsTrue(results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, out var chromGroupInfos));
+                foreach (var chromGroupInfo in chromGroupInfos)
+                {
+                    float startTime = chromGroupInfo.TimeIntensitiesGroup.MinTime;
+                    AssertEx.IsTrue(startTime > minTime,
+                        string.Format(@"{0} extraction starts at {1:F02}", replicateName, startTime));
+                }
+                var peakTime = nodeGroup.Results[i].First().RetentionTime;
+                AssertEx.IsTrue(peakTime > minTime, string.Format(@"{0} peak at {1:F02}", replicateName, peakTime));
+            }
         }
 
         private void VerifyPresetInNewWizard(string presetName, SearchEngine expectedEngine)
@@ -567,22 +601,42 @@ namespace TestPerf
         internal class FilterTimeMessageLock : SearchControl.IProgressLock
         {
             public int? LockLineCount => null;
+            public int? MaxPercentComplete => null;
             public string FilterMessage(string message)
             {
                 return !message.Contains("time") ? message : null;
             }
         }
 
-        internal class FixedLineCountLock : SearchControl.IProgressLock
+        /// <summary>
+        /// Holds the progress bar at a fixed percent and locks the search output at the first line containing
+        /// the given text. Output accumulates as usual, except that search timings, which vary between runs,
+        /// are removed.
+        /// </summary>
+        internal class SearchProgressScreenshotLock : SearchControl.IProgressLock
         {
-            public FixedLineCountLock(int lockLineCount)
+            private readonly string _lastLineText;
+            private int _lineCount;
+
+            public SearchProgressScreenshotLock(string lastLineText, int maxPercentComplete)
             {
-                LockLineCount = lockLineCount;
+                _lastLineText = lastLineText;
+                MaxPercentComplete = maxPercentComplete;
             }
 
-            public int? LockLineCount { get; }
+            public int? LockLineCount { get; private set; }
+            public int? MaxPercentComplete { get; }
+
             public string FilterMessage(string message)
             {
+                message = Regex.Replace(message, @" in \d+(\.\d+)? sec", string.Empty);
+                if (!string.IsNullOrEmpty(message))
+                {
+                    _lineCount++;
+                    // SearchControl does not display the line that reaches the lock count, so lock on the next one.
+                    if (!LockLineCount.HasValue && message.Contains(_lastLineText))
+                        LockLineCount = _lineCount + 1;
+                }
                 return message;
             }
         }

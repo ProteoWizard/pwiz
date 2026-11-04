@@ -22,12 +22,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -97,10 +95,6 @@ namespace pwiz.SkylineTest
             TestValidateModifications_Supported();
             TestValidateModifications_Unsupported();
             TestValidateModifications_Limited_Support();
-
-
-            TestTransformPeptDeepOutput();
-            TestImportSpectralLibrary();
         }
 
         /// <summary>
@@ -507,101 +501,6 @@ namespace pwiz.SkylineTest
         private bool IsSupported(PredictionSupport ps, PredictionSupport psCheck)
         {
             return (ps & psCheck) == psCheck;
-        }
-
-        /// <summary>
-        /// Test of <see cref="CarafeLibraryBuilder.TransformPeptdeepOutput"/> the function that
-        /// transforms between native AlphaPeptDeep output and BlibBuild input formats.
-        /// </summary>
-        public void TestTransformPeptDeepOutput()
-        {
-            var document = CreateTestEmptyDocument();
-            const string blibName = "predict.speclib.blib";
-            var blibPath = TestContext.GetTestResultsPath(blibName);
-            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, blibPath, document, IrtStandard.BIOGNOSYS_11);
-
-            // Mimic AlphaPeptDeep succeeding and writing a .speclib.tsv
-            ResourceToTestFile("predict.speclib.tsv", builder.OutputSpectraLibFilepath);
-            const string tsvTransformedName = "predict_transformed.speclib.tsv";
-
-            IProgressStatus status = new ProgressStatus();
-            builder.TransformPeptdeepOutput(new SilentProgressMonitor(), ref status);
-
-            string output = builder.TransformedOutputSpectraLibFilepath;
-            var answer = ResourceToTestFile(tsvTransformedName, output + ".answer");
-
-            using (var answerReader = new StreamReader(answer))
-            using (var productReader = new StreamReader(output))
-            {
-                // tolerance absorbs .NET Core's round-half-to-even last-digit formatting
-                // difference vs the net472-generated reference (values are identical to ~1e-12).
-                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true, tolerance: 1e-8);
-            }
-            CheckBuilderFiles(builder, false);
-        }
-
-        /// <summary>
-        /// Test of <see cref="CarafeLibraryBuilder.ImportSpectralLibrary"/> to see if it generates
-        /// a .blib file with the expected number of spectrum entries.
-        /// </summary>
-        public void TestImportSpectralLibrary()
-        {
-            var document = CreateTestEmptyDocument();
-            const string blibName = "predict.speclib.blib";
-            // Test that a programming error that went unnoticed now throws an argument exception
-            AssertEx.ThrowsException<ArgumentException>(() => new CarafeLibraryBuilder(TEST_LIB_NAME, blibName, document, null));
-
-            var output = TestContext.GetTestResultsPath(blibName);
-            var builder = new CarafeLibraryBuilder(TEST_LIB_NAME, output, document, null);
-
-            // Mimic Transformation succeeding prior to running the library build
-            ResourceToTestFile("predict_transformed.speclib.tsv", builder.TransformedOutputSpectraLibFilepath);
-
-            IProgressStatus status = new ProgressStatus();
-            builder.ImportSpectralLibrary(new SilentProgressMonitor(), ref status);
-
-            var answer = ResourceToTestFile("predict_transformed.speclib.blib", output + ".answer");
-            var ansLibrary = LoadLibrary(answer);
-            var outLibrary = LoadLibrary(output);
-            Assert.AreEqual(ansLibrary.SpectrumCount, outLibrary.SpectrumCount);
-            CheckBuilderFiles(builder, true);
-        }
-
-        /// <summary>
-        /// Returns a loaded <see cref="BiblioSpecLiteLibrary"/> but with a closed stream.
-        /// </summary>
-        private static Library LoadLibrary(string path)
-        {
-            var loader = new LibraryLoadTest.TestLibraryLoader { StreamManager = FileStreamManager.Default };
-            var librarySpec = new BiblioSpecLiteSpec("Library", path);
-            var library = librarySpec.LoadLibrary(loader);
-            Assert.IsTrue(library.IsLoaded);
-            library.ReadStream.CloseStream();   // Release the library stream
-            return library;
-        }
-
-        /// <summary>
-        /// Copies an Assembly resource to the TestResultsPath folder for use in file operations.
-        /// </summary>
-        /// <param name="resourceName">The name of the resource to read the file from</param>
-        /// <param name="testFile">The path to copy the file to</param>
-        /// <returns>The full path to the output file</returns>
-        private string ResourceToTestFile(string resourceName, string testFile)
-        {
-            // First make sure the target folder exists
-            string parentDir = Path.GetDirectoryName(testFile);
-            if (parentDir != null)
-                Directory.CreateDirectory(parentDir);
-
-            using (var stream = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + "." + resourceName))
-            using (var fileStream = new FileStream(testFile, FileMode.Create, FileAccess.Write))
-            {
-                // Copy the resource stream to the file
-                Assert.IsNotNull(stream, $@"Resource '{resourceName}' not found.");
-                stream.CopyTo(fileStream);
-            }
-
-            return testFile;
         }
 
         /// <summary>

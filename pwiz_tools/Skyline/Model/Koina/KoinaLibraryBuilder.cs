@@ -1,6 +1,7 @@
 /*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2019 University of Washington - Seattle, WA
  * 
@@ -182,6 +183,9 @@ namespace pwiz.Skyline.Model.Koina
         /// unless there are <see cref="EntrapmentTargets"/>.
         /// </summary>
         public string DecoyMethod { get; set; }
+
+        /// <summary>The document predicted for: the open document, or the Predict For page's FASTA digest with its decoys and entrapment peptides.</summary>
+        public SrmDocument Document => _document;
 
         /// <summary>The entrapment peptides among the document's, flagged as such in the DecoyPairs table; null for none.</summary>
         public ICollection<Target> EntrapmentTargets { get; set; }

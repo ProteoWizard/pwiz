@@ -410,7 +410,8 @@ namespace pwiz.CarafeSharp.Test
                 foreach (var row in mobilities)
                 {
                     Assert.AreEqual(BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0, row.Type, row.Label);
-                    Assert.IsTrue(double.IsNaN(row.Ccs), row.Label);
+                    // The CCS beside the 1/K0 converted from it, for Skyline's own conversion
+                    Assert.IsTrue(row.Ccs > 200 && row.Ccs < 1000, row.Label);
                     Assert.IsTrue(row.InverseK0 > 0.4 && row.InverseK0 < 2.0, row.Label);
                 }
                 // The unmodified precursors' 1/K0 is the pretrained model's CCS, converted.

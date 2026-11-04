@@ -190,9 +190,12 @@ namespace pwiz.SkylineTestTutorial
 
             if (IsPauseForScreenShots)
             {
-                RunUI(() => editIrtCalc1.CalcPath = irtCalcPathScreenShot);
-                PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form");   // Edit iRT Calculator form
-                RunUI(() => editIrtCalc1.CalcPath = irtCalcPath);
+                using (new ScopedAction(
+                           () => RunUI(() => editIrtCalc1.CalcPath = irtCalcPathScreenShot),
+                           () => RunUI(() => editIrtCalc1.CalcPath = irtCalcPath)))
+                {
+                    PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form");   // Edit iRT Calculator form
+                }
             }
 
             // Check iRT values and update to defined values p. 7-8

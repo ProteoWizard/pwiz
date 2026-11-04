@@ -42,9 +42,10 @@ namespace pwiz.CarafeSharp.IO
     /// DecoyPairs table (Carafe's) pairs them with their targets.
     /// <para>
     /// The values a prediction has nothing for are as Carafe writes them: one copy, no score
-    /// (<see cref="BlibWriter.SCORE_TYPE_UNKNOWN"/>), no peak bounds, no total ion current, and
-    /// the 1/K0 without its CCS when <c>-ccs</c> predicts one (given a CCS, Skyline would convert
-    /// it with the data file's own calibration instead of using this value).
+    /// (<see cref="BlibWriter.SCORE_TYPE_UNKNOWN"/>), no peak bounds, no total ion current. A
+    /// predicted CCS (<c>-ccs</c>) is written with the 1/K0 converted from it: Osprey reads the
+    /// 1/K0, and Skyline the CCS, which it converts with each data file's own calibration, to a
+    /// drift time or a traveling-wave mobility as well as a 1/K0.
     /// </para>
     /// </summary>
     public sealed class BlibLibraryWriter : IDisposable
@@ -207,6 +208,7 @@ namespace pwiz.CarafeSharp.IO
                 PrecursorCharge = spectrum.Charge,
                 NumPeaks = spectrum.Fragments.Count,
                 IonMobility = spectrum.IonMobility,
+                CollisionalCrossSectionSqA = spectrum.CollisionalCrossSection,
                 IonMobilityType = ionMobilityType,
                 RetentionTime = spectrum.RetentionTime,
                 FileId = _sourceFileId,
@@ -219,7 +221,7 @@ namespace pwiz.CarafeSharp.IO
             long refId = _writer.AddSpectrum(record);
             // No start or end time: Skyline would read them as explicit peak boundaries.
             _writer.AddRetentionTime(refId, _sourceFileId, spectrum.RetentionTime, null, null, 0.0, true,
-                spectrum.IonMobility, null, null, ionMobilityType);
+                spectrum.IonMobility, spectrum.CollisionalCrossSection, null, ionMobilityType);
         }
 
         /// <summary>One annotation per peak, in peak order, its mzObserved exactly the stored peak m/z.</summary>
