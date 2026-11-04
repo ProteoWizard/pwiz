@@ -379,6 +379,18 @@
   <data name="ImportFastaControl_ImportFasta_iRT_standards" xml:space="preserve">
     <value>iRT 标准</value>
   </data>
+  <data name="ImportPeptideSearch_Adding_detected_features_to_document" xml:space="preserve">
+    <value>正在向文档中添加检测到的特征</value>
+  </data>
+  <data name="ImportPeptideSearch_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>不能在没有诱饵的情况下自动训练 mProphet 模型，但诱饵选项导致没有生成诱饵。请增加每个目标的诱饵数量，或禁用 mProphet 模型的自动训练。</value>
+  </data>
+  <data name="ImportPeptideSearch_Failed_to_build_the_library__0__" xml:space="preserve">
+    <value>构建库{0}失败。</value>
+  </data>
+  <data name="ImportPeptideSearch_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
+    <value>文档必须至少包含一个母离子离子对才能继续。</value>
+  </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
     <value>去簇电压</value>
   </data>

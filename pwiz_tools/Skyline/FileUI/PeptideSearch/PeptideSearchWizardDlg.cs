@@ -132,6 +132,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         protected PeptideSearchWizardDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType)
         {
             SkylineWindow = skylineWindow;
+            LibraryManager = libraryManager;
             _documents = new Stack<SrmDocument>();
             IsAutomatedTest = false;
             SetDocument(skylineWindow.Document, null);
@@ -188,12 +189,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         protected class WizardPage
         {
-            public WizardPage(Pages page, Func<bool> isApplicable, Func<bool> leave, Action returnTo = null)
+            public WizardPage(Pages page, Func<bool> isApplicable, Func<bool> leave, Action returnTo = null, Action enter = null)
             {
                 Page = page;
                 IsApplicable = isApplicable;
                 Leave = leave;
                 ReturnTo = returnTo ?? (() => { });
+                Enter = enter ?? (() => { });
             }
 
             public Pages Page { get; }
@@ -213,6 +215,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             /// page made when it was left have been undone.
             /// </summary>
             public Action ReturnTo { get; }
+
+            /// <summary>
+            /// Runs when the user arrives at the page with Next.
+            /// </summary>
+            public Action Enter { get; }
         }
 
         /// <summary>
@@ -225,6 +232,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         protected SkylineWindow SkylineWindow { get; }
+        protected LibraryManager LibraryManager { get; }
         protected ImportPeptideSearch ImportPeptideSearch { get; }
 
         public SrmDocument Document
@@ -296,6 +304,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var skippedTransitionPage = !IsPageApplicable(Pages.transition_settings_page);
                 return new ImportPeptideSearchSettings(
+                    BuildLibrarySettings,
                     ImportResultsControl.ImportSettings,
                     MatchModificationsControl.ModificationSettings,
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings,
@@ -309,6 +318,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ModeUI);
             }
         }
+
+        /// <summary>
+        /// The library build recorded in the audit log, when it is part of the wizard's one document change.
+        /// </summary>
+        protected virtual BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings BuildLibrarySettings => null;
 
         /// <summary>
         /// The search settings recorded in the audit log, when the wizard ran a search.
@@ -329,6 +343,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             public ImportPeptideSearchSettings(
+                BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings buildLibrarySettings,
                 ImportResultsSettings importResultsSettings,
                 MatchModificationsControl.MatchModificationsSettings modificationsSettings,
                 TransitionSettingsControl.TransitionFilterAndLibrariesSettings filterAndLibSettings,
@@ -341,6 +356,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportPeptideSearch.HardklorSettings hardklorSearchSettings,
                 SrmDocument.DOCUMENT_TYPE docType)
             {
+                BuildPeptideSearchLibrarySettings = buildLibrarySettings;
                 ImportResultsSettings = importResultsSettings;
                 ModificationsSettings = modificationsSettings;
                 FilterAndLibrariesSettings = filterAndLibSettings;
@@ -353,6 +369,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 HardklorSearchSettings = hardklorSearchSettings;
                 _docType = docType;
             }
+
+            // Build Spectral Library
+            [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
+            public BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings BuildPeptideSearchLibrarySettings { get; private set; }
 
             // Extract Chromatograms
             [TrackChildren]
@@ -401,6 +421,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return null;
 
                 return new ImportPeptideSearchSettings(
+                    null,
                     ImportResultsSettings.DEFAULT,
                     MatchModificationsControl.MatchModificationsSettings.DEFAULT,
                     TransitionSettingsControl.TransitionFilterAndLibrariesSettings.GetDefault(doc.Settings.TransitionSettings),
@@ -534,6 +555,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             CurrentPage = nextPage.Page;
             UpdateButtons();
             UpdateMinimumSize();
+            nextPage.Enter();
+        }
+
+        /// <summary>
+        /// The page that follows the current one in the workflow, or null on the last page.
+        /// </summary>
+        protected Pages? NextPageInWorkflow
+        {
+            get
+            {
+                var currentPage = CurrentPage;
+                return GetApplicablePages().SkipWhile(p => p.Page != currentPage).Skip(1).FirstOrDefault()?.Page;
+            }
+        }
+
+        /// <summary>
+        /// True when the current page is <paramref name="page"/> or comes after it.
+        /// </summary>
+        protected bool IsAtOrAfterPage(Pages page)
+        {
+            var pages = _wizardPages.Select(p => p.Page).ToList();
+            return pages.IndexOf(CurrentPage) >= pages.IndexOf(page);
         }
 
         /// <summary>
@@ -1032,28 +1075,45 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void WizardFinish()
         {
-            Settings.Default.ImportResultsSimultaneousFiles = ImportResultsControl.SimultaneousFiles;
-            Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
-
             // Import results only on "finish"
-            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
-                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
-                .ToList();
-
-            // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
-            if (!ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults))
+            var namedResults = GetNamedResultsWithLockMass();
+            if (namedResults == null)
             {
                 CloseWizard(DialogResult.Cancel);  // User cancelled, no change
             }
             else
             {
-                BeforeImportResults(); // Tweak settings for the workflow if needed
-                SkylineWindow.ModifyDocument(
-                    PeptideSearchResources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), FormSettings.EntryCreator.Create);
-
+                ImportResults(PeptideSearchResources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results, namedResults);
                 CloseWizard(DialogResult.OK);
             }
+        }
+
+        /// <summary>
+        /// The results files to import, named for the document, with any lockmass correction the
+        /// user chose. Null when the user cancels.
+        /// </summary>
+        protected List<KeyValuePair<string, MsDataFileUri[]>> GetNamedResultsWithLockMass()
+        {
+            Settings.Default.ImportResultsSimultaneousFiles = ImportResultsControl.SimultaneousFiles;
+            Settings.Default.ImportResultsDoAutoRetry = ImportResultsControl.DoAutoRetry;
+
+            var namedResults = ImportPeptideSearch.EnsureUniqueNames(ImportResultsControl.FoundResultsFiles)
+                .Select(kvp => new KeyValuePair<string, MsDataFileUri[]>(kvp.Name, new[] { new MsDataFilePath(kvp.Path) }))
+                .ToList();
+
+            // Ask about lockmass correction, if needed - lockmass settings in namedResults will be updated by this call as needed
+            return ImportResultsLockMassDlg.UpdateNamedResultsParameters(this, Document, ref namedResults) ? namedResults : null;
+        }
+
+        /// <summary>
+        /// Commits the wizard's document to Skyline and starts importing <paramref name="namedResults"/>
+        /// into it, as one change to undo and one audit log entry.
+        /// </summary>
+        protected void ImportResults(string description, List<KeyValuePair<string, MsDataFileUri[]>> namedResults)
+        {
+            BeforeImportResults(); // Tweak settings for the workflow if needed
+            SkylineWindow.ModifyDocument(description,
+                doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), FormSettings.EntryCreator.Create);
         }
 
         /// <summary>
@@ -1118,7 +1178,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             catch (Exception x)
             {
                 ExceptionUtil.DisplayOrReportException(this, x,
-                    string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                    string.Format(ModelResources.ImportPeptideSearch_Failed_to_build_the_library__0__,
                         Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath))));
                 e.Cancel = true;
                 return false;
@@ -1350,6 +1410,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool IsBackButtonVisible
         {
             get { return btnBack.Visible; }
+        }
+
+        public bool IsBackButtonEnabled
+        {
+            get { return btnBack.Enabled; }
         }
 
         public bool ClickBackButton()

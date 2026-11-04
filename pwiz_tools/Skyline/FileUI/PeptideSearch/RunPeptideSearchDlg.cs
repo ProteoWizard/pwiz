@@ -19,22 +19,22 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
-using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -51,14 +51,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private SearchSettingsPreset _lastAppliedPreset;
         private SearchSettingsPreset _modificationsPagePreset; // The preset whose modifications the modifications page has checked
         private bool _suppressPresetWarning;
-        private MsDataFileUri[] _originalDdaSearchDataSources;
-        private bool _expandedDdaSearchLog;
-        private PeptideLibraries _existingLibraries;
 
-        // True while a DDA/DIA/feature-detection search is running on its background thread and streaming
+        private List<KeyValuePair<string, MsDataFileUri[]>> _namedResults; // The results to import, decided before the run
+        private string _runSearchFingerprint; // The search inputs of the run in progress
+        private string _searchFingerprint; // The search inputs of the last search that succeeded
+        private string[] _searchResultFilenames; // The result files of that search
+        private bool _runCompleted;
+
+        // True from the start of the run until it finishes or fails: the search and the steps after it stream
         // progress into the SearchControl's log text box (which has its own Cancel button, not a LongWaitDlg).
-        // Set when the search is launched (InitiateSearch) and cleared when it finishes (SearchControlSearchFinished).
-        private bool _searchRunning;
+        private bool _runRunning;
 
         public RunPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow? workflowType)
             : base(skylineWindow, libraryManager, true, workflowType)
@@ -120,37 +122,84 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             label14.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
             label19.Text = PeptideSearchResources.ImportPeptideSearchDlg_ConfigureFullScanChromatogramExtraction;
 
-            SetWizardPages(new[]
+            var spectraPage = new WizardPage(Pages.spectra_page, () => true, LeaveSpectraPage,
+                () => MakeFullScanSettingsControl(WorkflowType)); // reset UI to default
+            var fullScanPage = new WizardPage(Pages.full_scan_settings_page, () => true, LeaveFullScanSettingsPage,
+                ReturnToFullScanSettingsPage);
+            var searchSettingsPage = new WizardPage(Pages.dda_search_settings_page, () => true, LeaveSearchSettingsPage,
+                () => btnNext.Enabled = true);
+            var runPage = new WizardPage(Pages.dda_search_page, () => true, () => _runCompleted, null, StartRun);
+            if (isFeatureDetection)
             {
-                new WizardPage(Pages.spectra_page, () => true, LeaveSpectraPage,
-                    () => MakeFullScanSettingsControl(WorkflowType)), // reset UI to default
-                new WizardPage(Pages.chromatograms_page, () => WorkflowType == Workflow.dia, LeaveChromatogramsPage),
-                new WizardPage(Pages.match_modifications_page, () => !IsFeatureDetectionWorkflow, LeaveModificationsPage,
-                    ReturnToModificationsPage),
-                new WizardPage(Pages.transition_settings_page, () => !IsDdaWorkflow, LeaveTransitionSettingsPage,
-                    () => RestoreDocumentBeforePage(Pages.transition_settings_page)),
-                new WizardPage(Pages.full_scan_settings_page, () => true, LeaveFullScanSettingsPage,
-                    ReturnToFullScanSettingsPage),
-                new WizardPage(Pages.import_fasta_page, () => !IsFeatureDetectionWorkflow, LeaveFastaPage),
-                new WizardPage(Pages.converter_settings_page, () => WorkflowType == Workflow.dia, LeaveConverterSettingsPage),
-                new WizardPage(Pages.dda_search_settings_page, () => true, LeaveSearchSettingsPage,
-                    ReturnToSearchSettingsPage),
-                new WizardPage(Pages.dda_search_page, () => true, LeaveSearchPage)
-            });
+                // Hardklor's settings come from the full-scan settings, so they come first
+                SetWizardPages(new[] { spectraPage, fullScanPage, searchSettingsPage, runPage });
+            }
+            else
+            {
+                // Everything the search needs comes before the chromatogram extraction settings
+                SetWizardPages(new[]
+                {
+                    spectraPage,
+                    new WizardPage(Pages.match_modifications_page, () => true, LeaveModificationsPage,
+                        ReturnToModificationsPage),
+                    new WizardPage(Pages.import_fasta_page, () => true, LeaveFastaPage),
+                    new WizardPage(Pages.converter_settings_page, () => WorkflowType == Workflow.dia, LeaveConverterSettingsPage),
+                    searchSettingsPage,
+                    new WizardPage(Pages.transition_settings_page, () => !IsDdaWorkflow, LeaveTransitionSettingsPage,
+                        () => RestoreDocumentBeforePage(Pages.transition_settings_page)),
+                    fullScanPage,
+                    runPage
+                });
+            }
         }
 
         public ConverterSettingsControl ConverterSettingsControl { get; }
         public SearchSettingsControl SearchSettingsControl { get; }
         public SearchControl SearchControl { get; }
 
+        /// <summary>
+        /// True once the run has finished and its document has been applied to Skyline.
+        /// </summary>
+        public bool IsRunCompleted => _runCompleted;
+
+        /// <summary>
+        /// Null while a run is in progress or none has started; otherwise whether the last run succeeded.
+        /// </summary>
+        public bool? RunSucceeded { get; private set; }
+
+        /// <summary>
+        /// What the steps after the search did, once a run has succeeded.
+        /// </summary>
+        public RunPeptideSearchPipeline.Result LastRunResult { get; private set; }
+
+        /// <summary>
+        /// Testing support: called when a search succeeds. Returning false stops the run as if the
+        /// search had failed, so a test can go back and repeat a search that came up short.
+        /// </summary>
+        public Func<bool> AcceptSearchResults { get; set; }
+
         protected override SearchSettingsControl.DdaSearchSettings DdaSearchSettings =>
             ImportPeptideSearch.IsDDASearch && !IsFeatureDetectionWorkflow ? SearchSettingsControl.SearchSettings : null;
 
         protected override ConverterSettingsControl.DdaConverterSettings DdaConverterSettings => ConverterSettingsControl.ConverterSettings;
 
+        protected override BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings BuildLibrarySettings
+        {
+            get
+            {
+                var scoreType = IsFeatureDetectionWorkflow ? ScoreType.HardklorIdotp : ScoreType.GenericQValue;
+                var files = ImportPeptideSearch.SearchFilenames?.Select(f =>
+                    new BuildLibraryGridView.File(f, scoreType, SearchSettingsControl.CutoffScore));
+                var control = BuildPepSearchLibControl;
+                return new BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings(files, control.IrtStandards,
+                    control.IncludeAmbiguousMatches, control.FilterForDocumentPeptides, control.WorkflowType,
+                    control.InputFileType, ModeUI);
+            }
+        }
+
         // ILongWaitForm: the one long operation the wizard drives in its own progress display, rather than in a
-        // LongWaitDlg the connector's watchdog already rides through, is the search on the DDA search page.
-        public override bool IsBusy => _searchRunning;
+        // LongWaitDlg the connector's watchdog already rides through, is the run on the last page.
+        public override bool IsBusy => _runRunning;
 
         #region Pages
 
@@ -159,6 +208,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch.IsDDASearch = !IsFeatureDetectionWorkflow;
             ImportPeptideSearch.IsDIASearch = WorkflowType == Workflow.dia;
             ImportFastaControl.IsDDASearch = !IsFeatureDetectionWorkflow;
+            ImportFastaControl.IsImportingResults = true;
+            if (!IsFeatureDetectionWorkflow)
+                ImportFastaControl.ShowProteinAssociationOptions();
 
             PrepareFollowingPages(TakePresetForModificationsPage());
 
@@ -173,8 +225,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         new ImportPeptideSearch.FoundResultsFilePossibilities(uniqueNames[i]) {ExactMatch = source.ToString()});
             }
 
-            if (IsDdaWorkflow)
-                ShowRemovePrefixDialog();
+            ShowRemovePrefixDialog();
             return true;
         }
 
@@ -199,23 +250,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return _lastAppliedPreset;
         }
 
-        protected override bool LeaveFullScanSettingsPage()
-        {
-            if (!base.LeaveFullScanSettingsPage())
-                return false;
-            SearchSettingsControl.UpdateControls(); // Feature Finding controls depend on FullScan settings
-            return true;
-        }
-
         private bool LeaveFastaPage()
         {
-            ImportPeptideSearch.CutoffScore = SearchSettingsControl.CutoffScore;
-
             if (!File.Exists(ImportFastaControl.FastaFile))
             {
                 MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
                 return false;
             }
+            if (!ImportFastaControl.ValidateDecoySettings())
+                return false;
+            if (!ImportFastaControl.QValueFilterControls.TryGetFilter(this, out _))
+                return false;
 
             if (ImportPeptideSearch.IsDIASearch)
                 ConverterSettingsControl.InitializeProtocol(ConverterSettingsControl.Protocol.dia_umpire);
@@ -224,16 +269,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool LeaveConverterSettingsPage()
         {
-            if (ConverterSettingsControl.UseDiaUmpire)
-            {
-                if (FullScanSettingsControl.IsolationScheme.PrespecifiedIsolationWindows.Count == 0)
-                {
-                    MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__);
-                    return false;
-                }
-                ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetDiaUmpireConverter();
-            }
-
+            ImportPeptideSearch.IsGpfData = ConverterSettingsControl.IsGpf;
             ImportPeptideSearch.IsDIASearch = !ConverterSettingsControl.UseDiaUmpire;
             SearchSettingsControl.InitializeControls();
             return true;
@@ -243,121 +279,83 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (!SearchSettingsControl.SaveAllSettings(!IsAutomatedTest))
                 return false;
-            InitiateSearch();
-            return true;
+            // Feature detection's last page before the run
+            return !IsFeatureDetectionWorkflow || PrepareRun();
         }
 
-        private void ReturnToSearchSettingsPage()
+        protected override bool LeaveFullScanSettingsPage()
         {
-            btnNext.Enabled = true;
-            // Restore original data sources if they were replaced by search result filenames
-            if (_originalDdaSearchDataSources != null)
-            {
-                BuildPepSearchLibControl.DdaSearchDataSources = _originalDdaSearchDataSources;
-                _originalDdaSearchDataSources = null;
-            }
-        }
-
-        /// <summary>
-        /// After the search: builds the library from the search results, then imports the FASTA or
-        /// adds the detected features to the document. Leaving this page finishes the wizard.
-        /// </summary>
-        private bool LeaveSearchPage()
-        {
-            var eCancel = new CancelEventArgs();
-            // Save original data sources before replacing with search result files
-            _originalDdaSearchDataSources = BuildPepSearchLibControl.DdaSearchDataSources;
-            //change search files to result files
-            BuildPepSearchLibControl.Grid.IsFileOnly = false;
-            var scoreThreshold = SearchSettingsControl.CutoffScore;
-            var scoreType = IsFeatureDetectionWorkflow
-                ? ScoreType.HardklorIdotp
-                : ScoreType.GenericQValue;
-
-            BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
-                new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));
-            BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
-            _existingLibraries = Document.Settings.PeptideSettings.Libraries;
+            if (!base.LeaveFullScanSettingsPage())
+                return false;
             if (IsFeatureDetectionWorkflow)
             {
-                // Disable navigation while the library build is happening
-                btnBack.Enabled = false;
-                btnNext.Enabled = false;
+                SearchSettingsControl.UpdateControls(); // Feature Finding controls depend on FullScan settings
+                return true;
             }
-
-            if (!BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
-                return false;
-
-            if (IsFeatureDetectionWorkflow)
-            {
-                // Load detected features after search
-                AddDetectedFeaturesToDocument();
-            }
-            //load proteins after search
-            else if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
-                return false;
-
-            ImportPeptideSearch.SearchEngine.Dispose();
-            return true;
+            // The last page before the run
+            return PrepareRun();
         }
 
         #endregion
 
-        protected override void UpdateButtons()
-        {
-            base.UpdateButtons();
+        #region Run
 
-            // Enable save button only once search settings have been configured
-            if (btnSavePreset.Visible)
-                btnSavePreset.Enabled = CurrentPage >= Pages.dda_search_settings_page;
-        }
-
-        protected override void BeforeImportResults()
+        /// <summary>
+        /// Asks everything the run still needs to know before it starts, so that nothing stops it
+        /// once it is running. False keeps the user on the page.
+        /// </summary>
+        private bool PrepareRun()
         {
-            UpdateFullScanSettingsForFeatureDetection(); // Tweak full scan filter values if needed
-        }
-
-        protected override void OnWizardClosing()
-        {
-            // Cancel and dispose DDA SearchEngine
-            SearchControl?.Cancel();
-            ImportPeptideSearch.SearchEngine?.Dispose();
-        }
-
-        private void AddDetectedFeaturesToDocument()
-        {
-            SrmDocument docNew = null;
-            bool noFeatures = false;
-            using (var longWaitDlg = new LongWaitDlg())
+            // DIA-Umpire splits the spectra by the isolation windows of the full-scan settings
+            if (WorkflowType == Workflow.dia && ConverterSettingsControl.UseDiaUmpire &&
+                (FullScanSettingsControl.IsolationScheme?.PrespecifiedIsolationWindows.Count ?? 0) == 0)
             {
-                longWaitDlg.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
-                longWaitDlg.Message = PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document;
-                var document = Document;
-                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
-                {
-                    docNew = ImportPeptideSearch.AddDetectedFeatures(document, _existingLibraries, progressMonitor,
-                        new ProgressStatus(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document));
-                    noFeatures = docNew == null;
-                });
+                MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__);
+                return false;
             }
 
-            if (noFeatures)
-                MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_No_features_detected);
-            if (docNew == null)
-                return;
-
-            SetDocument(docNew, Document);
-
-            // Update UI for new content type
-            GetModeUIHelper().ModeUI = Document.HasPeptides
-                ? SrmDocument.DOCUMENT_TYPE.mixed
-                : SrmDocument.DOCUMENT_TYPE.small_molecules;
+            _namedResults = GetNamedResultsWithLockMass();
+            return _namedResults != null;
         }
-        private void InitiateSearch()
+
+        /// <summary>
+        /// Runs the search, then the steps after it, then applies the result to the document, all
+        /// without asking the user anything. A search whose inputs have not changed since it last
+        /// succeeded is not run again.
+        /// </summary>
+        private void StartRun()
         {
-            ImportFastaControl.UpdateDigestSettings();
-            ImportPeptideSearch.PrepareSearch(Document, BuildPepSearchLibControl.DdaSearchDataSources, ImportFastaControl.FastaFile,
-                CreateConverter);
+            _runRunning = true;
+            RunSucceeded = null;
+            btnNext.Enabled = false;
+            btnCancel.Enabled = false;
+            btnBack.Enabled = false;
+
+            try
+            {
+                ImportFastaControl.UpdateDigestSettings();
+                ImportPeptideSearch.DdaConverter = WorkflowType == Workflow.dia && ConverterSettingsControl.UseDiaUmpire
+                    ? ConverterSettingsControl.GetDiaUmpireConverter()
+                    : null;
+                ImportPeptideSearch.PrepareSearch(Document, BuildPepSearchLibControl.DdaSearchDataSources, ImportFastaControl.FastaFile,
+                    CreateConverter);
+                _runSearchFingerprint = GetSearchFingerprint();
+            }
+            catch (Exception x)
+            {
+                RunFailed(x);
+                return;
+            }
+
+            if (_runSearchFingerprint == _searchFingerprint && _searchResultFilenames != null && _searchResultFilenames.All(File.Exists))
+            {
+                SearchControl.AddLogLine(PeptideSearchResources.RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_);
+                RunAfterSearch();
+                return;
+            }
+
+            _searchFingerprint = null;
+            _searchResultFilenames = null;
             SearchControl.SearchFinished -= SearchControlSearchFinished;
             SearchControl.SearchFinished -= SearchControlSearchStepFinished;
             if (ImportPeptideSearch.RemainingStepsInSearch > 1)
@@ -368,18 +366,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 SearchControl.SearchFinished += SearchControlSearchFinished;
             }
-            btnNext.Enabled = false;
-            btnCancel.Enabled = false;
-            btnBack.Enabled = false;
-
-            if (!_expandedDdaSearchLog)
-            {
-                // No longer necessary after widening the form for new library build grid
-                // Width = Math.Min(Screen.FromControl(this).WorkingArea.Width, (int) (Width * 1.0)); // give more space for search log
-                _expandedDdaSearchLog = true;
-            }
-
-            _searchRunning = true;
             SearchControl.RunSearch();
         }
 
@@ -412,10 +398,264 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void SearchControlSearchFinished(bool success)
         {
-            _searchRunning = false;
-            btnCancel.Enabled = true;
-            btnBack.Enabled = true;
+            SearchControl.SearchFinished -= SearchControlSearchFinished;
+            if (!success || AcceptSearchResults?.Invoke() == false)
+            {
+                RunFinished(false);
+                return;
+            }
+
+            _searchFingerprint = _runSearchFingerprint;
+            // Distinct, since some engines write one result file for all the spectrum files. Kept for a
+            // rerun that skips the search: the next PrepareSearch resets the engine to the unconverted files.
+            var searchEngine = ImportPeptideSearch.SearchEngine;
+            _searchResultFilenames = searchEngine.SpectrumFileNames
+                .Select(f => searchEngine.GetSearchResultFilepath(f)).Distinct().ToArray();
+            RunAfterSearch();
+        }
+
+        /// <summary>
+        /// Builds the library from the search results, then adds the proteins (or the detected
+        /// features), on a background thread that reports into the run page.
+        /// </summary>
+        private void RunAfterSearch()
+        {
+            ImportPeptideSearch.SearchFilenames = _searchResultFilenames;
+            ImportPeptideSearch.CutoffScore = SearchSettingsControl.CutoffScore;
+
+            var pipeline = new RunPeptideSearchPipeline(ImportPeptideSearch, LibraryManager, new RunPeptideSearchPipeline.Options
+            {
+                IsFeatureDetection = IsFeatureDetectionWorkflow,
+                CutoffScore = SearchSettingsControl.CutoffScore,
+                IncludeAmbiguousMatches = BuildPepSearchLibControl.IncludeAmbiguousMatches,
+                IrtStandard = BuildPepSearchLibControl.IrtStandards,
+                CirtPeptideCount = BuildPepSearchLibControl.CirtPeptideCount,
+                RecalibrateIrtStandard = BuildPepSearchLibControl.RecalibrateIrtStandard,
+                FastaPath = ImportFastaControl.FastaFile,
+                FastaTargetsPath = ImportFastaControl.FastaImportTargetsFile,
+                InsertPath = ImportFastaControl.InsertPath,
+                QValueFilter = ImportFastaControl.QValueFilterControls.Filter,
+                ParsimonySettings = ImportFastaControl.ParsimonySettings,
+                DecoyGenerationMethod = ImportFastaControl.DecoyGenerationMethod,
+                DecoysPerTarget = ImportFastaControl.NumDecoys ?? 0,
+                AutoTrain = ImportFastaControl.AutoTrain,
+                RequirePrecursorTransition = ImportFastaControl.RequirePrecursorTransition
+            });
+            var document = Document;
+            var documentPath = DocumentFilePath;
+            // Protein association regroups every document peptide
+            if (!IsFeatureDetectionWorkflow && document.PeptideGroups.Any(nodeGroup => nodeGroup.IsProtein))
+                SearchControl.AddLogLine(EditUIResources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_);
+            RunPeptideSearchPipeline.Result result = null;
+            SearchControl.RunAfterSearch((monitor, cancellationToken) => result = pipeline.Run(document, documentPath, monitor, cancellationToken),
+                success =>
+                {
+                    if (!success)
+                    {
+                        pipeline.ReleaseLibrary();
+                        RunFinished(false);
+                        return;
+                    }
+                    try
+                    {
+                        ApplyResult(result);
+                    }
+                    catch (Exception x)
+                    {
+                        RunFailed(x);
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Commits the run's document to Skyline as one change and starts importing the results,
+        /// then writes a summary of what was done into the run page's log.
+        /// </summary>
+        private void ApplyResult(RunPeptideSearchPipeline.Result result)
+        {
+            LastRunResult = result;
+            if (IsFeatureDetectionWorkflow)
+                Settings.Default.SpectralLibraryList.Add(result.LibrarySpec); // Won't displace the current document library
+            else
+                Settings.Default.SpectralLibraryList.Insert(0, result.LibrarySpec);
+
+            var docNew = result.Document;
+            if (result.RetentionTimePredictor != null)
+                ImportPeptideSearch.SaveRetentionTimePredictor(result.RetentionTimePredictor);
+
+            var proteinAssociation = result.ProteinAssociation?.ProteinAssociation;
+            if (proteinAssociation != null)
+            {
+                ImportFastaControl.AssociateProteinsSettings = new AssociateProteinsSettings(proteinAssociation, null, null);
+                if (ImportFastaControl.ParsimonySettings.GeneLevelParsimony)
+                    Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
+            }
+
+            SetDocument(docNew, Document);
+            if (IsFeatureDetectionWorkflow && !result.NoFeaturesDetected)
+            {
+                // Update UI for new content type
+                GetModeUIHelper().ModeUI = Document.HasPeptides
+                    ? SrmDocument.DOCUMENT_TYPE.mixed
+                    : SrmDocument.DOCUMENT_TYPE.small_molecules;
+            }
+
+            ImportResults(SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search, _namedResults);
+            ImportPeptideSearch.SearchEngine.Dispose();
+
+            AddSummary(result);
+            RunFinished(true);
+        }
+
+        private void AddSummary(RunPeptideSearchPipeline.Result result)
+        {
+            if (!string.IsNullOrEmpty(result.AmbiguousMatchesMessage))
+                SearchControl.AddLogLine(result.AmbiguousMatchesMessage);
+            SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Built_the_spectral_library__0__,
+                result.LibrarySpec.Name));
+            if (result.IrtStandardChosen)
+            {
+                SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Several_known_iRT_standards_matched_the_library__used__0___which_has_the_most_peptides_,
+                    result.IrtStandard.Name));
+            }
+            if (result.IrtPeptideCount > 0)
+            {
+                // A standard made from library peptides (CiRT, or Auto with no known standard) has no name to show
+                if (Equals(result.IrtStandard.Name, XmlNamedElement.NAME_INTERNAL))
+                {
+                    SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to__1__standard_peptides_chosen_from_the_library_,
+                        result.IrtPeptideCount, result.IrtStandard.Peptides.Count));
+                }
+                else
+                {
+                    SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to_the_iRT_standard__1__,
+                        result.IrtPeptideCount, result.IrtStandard.Name));
+                }
+            }
+            if (result.NoFeaturesDetected)
+                SearchControl.AddLogLine(PeptideSearchResources.ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_No_features_detected);
+
+            var mappingResults = result.ProteinAssociation?.ProteinAssociation?.FinalResults;
+            if (mappingResults != null)
+            {
+                SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Proteins___0__mapped___1__unmapped___2__in_the_document_,
+                    mappingResults.ProteinsMapped, mappingResults.ProteinsUnmapped, mappingResults.FinalProteinCount));
+                SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Peptides___0__mapped___1__unmapped___2__in_the_document_,
+                    mappingResults.PeptidesMapped, mappingResults.PeptidesUnmapped, mappingResults.FinalPeptideCount));
+            }
+
+            var document = Document;
+            // Explains a protein count below the one mapped above
+            var documentCountsFormat = result.ProteinAssociation?.IrtStandardProteinsRemoved > 0
+                ? PeptideSearchResources.RunPeptideSearchDlg_AddSummary_After_dropping_proteins_in_the_iRT_standard__the_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_
+                : PeptideSearchResources.RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_;
+            SearchControl.AddLogLine(string.Format(documentCountsFormat,
+                document.MoleculeGroupCount, document.MoleculeCount, document.MoleculeTransitionGroupCount, document.MoleculeTransitionCount));
+            SearchControl.AddLogLine(string.Format(PeptideSearchResources.RunPeptideSearchDlg_AddSummary_Extracting_chromatograms_from__0__files__Click_Finish_to_close_this_wizard_,
+                _namedResults.Count));
+        }
+
+        private void RunFailed(Exception x)
+        {
+            SearchControl.AddLogLine(x.Message);
+            ExceptionUtil.DisplayOrReportException(this, x);
+            RunFinished(false);
+        }
+
+        private void RunFinished(bool success)
+        {
+            _runRunning = false;
+            _runCompleted = success;
+            RunSucceeded = success;
             btnNext.Enabled = success;
+            // Once the document is applied there is nothing to go back to
+            btnBack.Enabled = !success;
+            btnCancel.Enabled = !success;
+            UpdateButtons();
+        }
+
+        protected override void Finish()
+        {
+            // The run has already applied its document to Skyline
+            CloseWizard(DialogResult.OK);
+        }
+
+        /// <summary>
+        /// Everything the search reads, so a search can be skipped when the user runs again with the
+        /// same inputs (e.g. after going back to change the chromatogram extraction settings).
+        /// </summary>
+        private string GetSearchFingerprint()
+        {
+            var settings = Document.Settings.PeptideSettings;
+            var fastaFile = ImportFastaControl.FastaFile;
+            var parts = new List<object>
+            {
+                WorkflowType,
+                string.Join(@",", BuildPepSearchLibControl.DdaSearchDataSources.Select(f => f.ToString())),
+                fastaFile,
+                File.Exists(fastaFile) ? File.GetLastWriteTimeUtc(fastaFile).Ticks : 0,
+                settings.Enzyme.Name,
+                settings.DigestSettings.MaxMissedCleavages,
+                string.Join(@",", settings.Modifications.StaticModifications.Concat(settings.Modifications.AllHeavyModifications)
+                    .Select(mod => mod.Name)),
+                ConverterSettingsControl.UseDiaUmpire,
+                ConverterSettingsControl.IsGpf,
+            };
+            if (ConverterSettingsControl.UseDiaUmpire)
+            {
+                parts.AddRange(new object[]
+                {
+                    ConverterSettingsControl.InstrumentPreset, ConverterSettingsControl.EstimateBackground,
+                    SearchSettingsPreset.SerializeAdditionalSettings(ConverterSettingsControl.AdditionalSettings)
+                });
+            }
+            if (IsFeatureDetectionWorkflow)
+            {
+                var hardklor = ImportPeptideSearch.SettingsHardklor;
+                parts.AddRange(new object[]
+                {
+                    hardklor.Instrument, hardklor.Resolution, hardklor.MinIdotP, hardklor.SignalToNoise,
+                    string.Join(@",", hardklor.Charges), hardklor.MinIntensityPPM, hardklor.RetentionTimeTolerance
+                });
+            }
+            else
+            {
+                parts.AddRange(new object[]
+                {
+                    SearchSettingsControl.SelectedSearchEngine,
+                    SearchSettingsControl.PrecursorTolerance, SearchSettingsControl.FragmentTolerance,
+                    SearchSettingsControl.FragmentIons, SearchSettingsControl.Ms2Analyzer,
+                    SearchSettingsControl.MaxVariableMods, SearchSettingsControl.CutoffScore,
+                    SearchSettingsPreset.SerializeAdditionalSettings(ImportPeptideSearch.SearchEngine?.AdditionalSettings)
+                });
+            }
+            return string.Join(@"|", parts.Select(p => Convert.ToString(p, CultureInfo.InvariantCulture)));
+        }
+
+        #endregion
+
+        protected override void UpdateButtons()
+        {
+            base.UpdateButtons();
+
+            if (NextPageInWorkflow == Pages.dda_search_page)
+                btnNext.Text = PeptideSearchResources.RunPeptideSearchDlg_UpdateButtons_Run;
+
+            // Enable save button only once search settings have been configured
+            if (btnSavePreset.Visible)
+                btnSavePreset.Enabled = IsAtOrAfterPage(Pages.dda_search_settings_page);
+        }
+
+        protected override void BeforeImportResults()
+        {
+            UpdateFullScanSettingsForFeatureDetection(); // Tweak full scan filter values if needed
+        }
+
+        protected override void OnWizardClosing()
+        {
+            // Cancel and dispose DDA SearchEngine
+            SearchControl?.Cancel();
+            ImportPeptideSearch.SearchEngine?.Dispose();
         }
 
         // In feature detection, the MS1 resolution values we solicit from the user are for Hardklor's peak finding

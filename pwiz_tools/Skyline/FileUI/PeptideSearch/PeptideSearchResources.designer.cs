@@ -220,6 +220,42 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When the library contains enough CiRT peptides, this many of them become the iRT standard..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_peptides_tooltip {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_peptides_tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CiRT standard peptides:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_standard_peptides_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_standard_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalibrate iRT standard values.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_iRT_standard_values {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_iRT_standard_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recalibrate the iRT standard values relative to the library peptides, when the library has enough of them. This can improve retention time alignment under stable chromatographic conditions..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_tooltip {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select Files to Search.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search {
@@ -278,16 +314,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to build the library {0}..
-        /// </summary>
-        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__ {
-            get {
-                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_li" +
-                        "brary__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &amp;Files to search:.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
@@ -321,6 +347,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string BuildPeptideSearchLibraryControl_Result_files_ {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Result_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Gas phase fractionation.
+        /// </summary>
+        public static string ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation {
+            get {
+                return ResourceManager.GetString("ConverterSettingsControl_ConverterSettingsControl_Gas_phase_fractionation", resourceCulture);
             }
         }
         
@@ -575,17 +610,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model..
-        /// </summary>
-        public static string ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_ {
-            get {
-                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_" +
-                        "decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase" +
-                        "_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Insert FASTA.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Insert_FASTA {
@@ -631,16 +655,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__ {
             get {
                 return ResourceManager.GetString("ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The document must contain at least one precursor transition in order to proceed..
-        /// </summary>
-        public static string ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_ {
-            get {
-                return ResourceManager.GetString("ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_" +
-                        "at_least_one_precursor_transition_in_order_to_proceed_", resourceCulture);
             }
         }
         
@@ -705,15 +719,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Adding detected features to document.
-        /// </summary>
-        public static string ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document {
-            get {
-                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document", resourceCulture);
             }
         }
         
@@ -1174,6 +1179,105 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string SearchSettingsControl_Additional_Settings {
             get {
                 return ResourceManager.GetString("SearchSettingsControl_Additional_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to After dropping proteins in the iRT standard, the document has {0} proteins, {1} peptides, {2} precursors and {3} transitions..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_After_dropping_proteins_in_the_iRT_standard__the_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_After_dropping_proteins_in_the_iRT_standard__the_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Built the spectral library {0}..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Built_the_spectral_library__0__ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Built_the_spectral_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibrated {0} library peptides to {1} standard peptides chosen from the library..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to__1__standard_peptides_chosen_from_the_library_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to__1__standard_peptides_chosen_from_the_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibrated {0} library peptides to the iRT standard {1}..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to_the_iRT_standard__1__ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Calibrated__0__library_peptides_to_the_iRT_standard__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extracting chromatograms from {0} files. Click Finish to close this wizard..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Extracting_chromatograms_from__0__files__Click_Finish_to_close_this_wizard_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Extracting_chromatograms_from__0__files__Click_Finish_to_close_this_wizard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides: {0} mapped, {1} unmapped, {2} in the document..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Peptides___0__mapped___1__unmapped___2__in_the_document_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Peptides___0__mapped___1__unmapped___2__in_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins: {0} mapped, {1} unmapped, {2} in the document..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Proteins___0__mapped___1__unmapped___2__in_the_document_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Proteins___0__mapped___1__unmapped___2__in_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Several known iRT standards matched the library; used {0}, which has the most peptides..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_Several_known_iRT_standards_matched_the_library__used__0___which_has_the_most_peptides_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_Several_known_iRT_standards_matched_the_library__used__0___which_has_the_most_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document has {0} proteins, {1} peptides, {2} precursors and {3} transitions..
+        /// </summary>
+        public static string RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_AddSummary_The_document_has__0__proteins___1__peptides___2__precursors_and__3__transitions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search settings and files have not changed since the last search; using its results..
+        /// </summary>
+        public static string RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_ {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_StartRun_The_search_settings_and_files_have_not_changed_since_the_last_search__using_its_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Run.
+        /// </summary>
+        public static string RunPeptideSearchDlg_UpdateButtons_Run {
+            get {
+                return ResourceManager.GetString("RunPeptideSearchDlg_UpdateButtons_Run", resourceCulture);
             }
         }
         

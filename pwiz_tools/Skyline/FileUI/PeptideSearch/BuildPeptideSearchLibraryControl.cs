@@ -26,12 +26,14 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SQLite;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -49,6 +51,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool _isFeatureDetectionWorkflow;
         private bool _isRunPeptideSearch;
         private PeptideSearchWizardDlg.InputFile _inputFileType;
+        private Label _lblCirtPeptides;
+        private NumericUpDown _numCirtPeptides;
+        private CheckBox _cbRecalibrateIrt;
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager, bool isRunPeptideSearch)
         {
@@ -76,12 +81,88 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
                 else
                     InputFileType = PeptideSearchWizardDlg.InputFile.dda_raw;
+                AddIrtRunOptions();
             }
             else
             {
                 InputFileType = PeptideSearchWizardDlg.InputFile.search_result;
             }
         }
+
+        /// <summary>
+        /// Run Peptide Search calibrates the library it builds without asking, so the choices the
+        /// import wizard asks for after building the library are made here, beside the standard.
+        /// </summary>
+        private void AddIrtRunOptions()
+        {
+            const int spacing = 14;
+            _lblCirtPeptides = new Label
+            {
+                AutoSize = true,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                Location = new Point(comboStandards.Right + spacing, lblStandardPeptides.Top),
+                Name = @"lblCirtPeptides",
+                Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_standard_peptides_
+            };
+            _numCirtPeptides = new NumericUpDown
+            {
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                Location = new Point(_lblCirtPeptides.Left, comboStandards.Top),
+                Width = 60,
+                Minimum = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES,
+                Maximum = IrtStandard.CIRT.Peptides.Count,
+                Value = RunPeptideSearchPipeline.DEFAULT_CIRT_PEPTIDES,
+                Name = @"numCirtPeptides"
+            };
+            _cbRecalibrateIrt = new CheckBox
+            {
+                AutoSize = true,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                Location = new Point(_lblCirtPeptides.Left, cbIncludeAmbiguousMatches.Top),
+                Name = @"cbRecalibrateIrt",
+                Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_iRT_standard_values,
+                UseVisualStyleBackColor = true
+            };
+            helpTip.SetToolTip(_numCirtPeptides, PeptideSearchResources.BuildPeptideSearchLibraryControl_AddIrtRunOptions_CiRT_peptides_tooltip);
+            helpTip.SetToolTip(_cbRecalibrateIrt, PeptideSearchResources.BuildPeptideSearchLibraryControl_AddIrtRunOptions_Recalibrate_tooltip);
+            panelPeptideSearch.Controls.AddRange(new Control[] { _lblCirtPeptides, _numCirtPeptides, _cbRecalibrateIrt });
+            UpdateIrtRunOptions();
+        }
+
+        private bool _standardsHidden;
+
+        private void UpdateIrtRunOptions()
+        {
+            if (_cbRecalibrateIrt == null)
+                return;
+            var standard = IrtStandards;
+            bool hasStandard = standard != null && !standard.IsEmpty;
+            // CiRT peptides become the standard for CiRT, and for Auto when no known standard matches
+            bool mayUseCirt = hasStandard && (standard.IsAuto || ReferenceEquals(standard, IrtStandard.CIRT_SHORT));
+            // Not comboStandards.Visible, which is also false while this page is not on screen
+            _lblCirtPeptides.Visible = _numCirtPeptides.Visible = mayUseCirt && !_standardsHidden;
+            _cbRecalibrateIrt.Visible = hasStandard && !_standardsHidden;
+        }
+
+        /// <summary>
+        /// How many CiRT peptides become the iRT standard when the library holds enough of them (Run Peptide Search).
+        /// </summary>
+        public int CirtPeptideCount
+        {
+            get => _numCirtPeptides != null ? (int) _numCirtPeptides.Value : RunPeptideSearchPipeline.DEFAULT_CIRT_PEPTIDES;
+            set => _numCirtPeptides.Value = Math.Max(_numCirtPeptides.Minimum, Math.Min(_numCirtPeptides.Maximum, value));
+        }
+
+        /// <summary>
+        /// Whether to recalibrate the iRT standard values to the library peptides, when that is possible (Run Peptide Search).
+        /// </summary>
+        public bool RecalibrateIrtStandard
+        {
+            get => _cbRecalibrateIrt?.Checked ?? false;
+            set => _cbRecalibrateIrt.Checked = value;
+        }
+
+        public bool IrtRunOptionsVisible => _cbRecalibrateIrt?.Visible ?? false;
 
         private BuildPeptideSearchLibrarySettings _buildPeptideSearchLibrarySettings;
         public BuildPeptideSearchLibrarySettings BuildLibrarySettings
@@ -394,7 +475,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(ModelResources.ImportPeptideSearch_Failed_to_build_the_library__0__,
                             Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
                         return false;
                     }
@@ -610,6 +691,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 InputFileType = PeptideSearchWizardDlg.InputFile.dda_raw;
                 lblStandardPeptides.Hide();
                 comboStandards.Hide();
+                _standardsHidden = true;
+                UpdateIrtRunOptions();
                 cbIncludeAmbiguousMatches.Hide();
                 cbFilterForDocumentPeptides.Hide();
 
@@ -714,6 +797,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverStandards.SelectedIndexChangedEvent(sender, e);
+            UpdateIrtRunOptions();
         }
 
         private void radioDDA_CheckedChanged(object sender, EventArgs e)
