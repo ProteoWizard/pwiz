@@ -104,7 +104,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
             @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_OOF", @"OSPREY_GBT_PREFILTER_SIZE", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
             @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
-            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_BANDWIDTH", @"OSPREY_LOESS_CLASSICAL_ROBUST",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOCAL_RT_TOLERANCE", @"OSPREY_LOESS_BANDWIDTH", @"OSPREY_LOESS_CLASSICAL_ROBUST",
             @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
             @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
             @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
@@ -829,6 +829,17 @@ namespace pwiz.Osprey.Core
             NumberStyles.Float, CultureInfo.InvariantCulture, out double minRtTolerance) ? minRtTolerance : null;
 
         /// <summary>
+        /// OSPREY_LOCAL_RT_TOLERANCE (experiment): widen the RT search window where the calibration fits
+        /// the run worst, from the robust spread of the residuals of this many calibration points nearest
+        /// in library RT (3 * 1.4826 * median |residual|, clamped between the global half-width and the
+        /// maximum RT tolerance). Aimed at a library whose predicted RTs saturate at the gradient end,
+        /// where many precursors share a library RT but elute minutes apart. Keyed into every task through
+        /// <see cref="PickValidityKeySuffix()"/>. Null when unset or not a positive integer.
+        /// </summary>
+        public static readonly int? LocalRtToleranceNeighbors = int.TryParse(Environment.GetEnvironmentVariable(@"OSPREY_LOCAL_RT_TOLERANCE"),
+            NumberStyles.None, CultureInfo.InvariantCulture, out int localRtNeighbors) && localRtNeighbors > 0 ? localRtNeighbors : null;
+
+        /// <summary>
         /// OSPREY_MIN_FRAGMENT_TOLERANCE (experiment): a floor in ppm on the calibrated fragment tolerance
         /// the main search extracts XICs with (|mean| + 3 SD of confident matches, which is too tight for
         /// weak fragment ions). Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
@@ -1389,7 +1400,8 @@ namespace pwiz.Osprey.Core
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
                    + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
-                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
+                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (LocalRtToleranceNeighbors.HasValue ? @";rtlocal=" + LocalRtToleranceNeighbors.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
