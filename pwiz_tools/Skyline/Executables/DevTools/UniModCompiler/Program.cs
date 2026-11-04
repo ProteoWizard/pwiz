@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 
 namespace UniModCompiler
@@ -45,6 +46,9 @@ namespace UniModCompiler
         private static List<string> _impossibleMods;
         private static readonly HashSet<long> _writtenIds = new HashSet<long>();
         private static readonly HashSet<string> _writtenNames = new HashSet<string>();
+        // Names the template writes itself (its DEFAULT repeats a listed Mascot entry on purpose)
+        private static readonly HashSet<string> _templateNames = new HashSet<string>();
+        private static readonly Regex TEMPLATE_NAME = new Regex(@"Name = ""(.*)""");
         private static Dictionary<string, ThreeLetterCodeUsed> _dictModNameToThreeLetterCode;
 
         private class ThreeLetterCodeUsed
@@ -132,7 +136,8 @@ namespace UniModCompiler
                 _impossibleMods = new List<string>();
 
                 // Writing the output file.
-                var writer = new StreamWriter(OUTPUT_PATH);
+                string tempPath = OUTPUT_PATH + ".tmp";
+                var writer = new StreamWriter(tempPath);
                 var templateStream =
                     typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
                 if (templateStream == null)
@@ -142,7 +147,12 @@ namespace UniModCompiler
                 while ((templateLine = templateReader.ReadLine()) != null)
                 {
                     if (!templateLine.Contains(@"// ADD MODS"))
+                    {
                         writer.WriteLine(templateLine);
+                        var templateName = TEMPLATE_NAME.Match(templateLine);
+                        if (templateName.Success)
+                            _templateNames.Add(templateName.Groups[1].Value);
+                    }
                     else
                     {
                         WriteMods(writer, false, false);
@@ -177,6 +187,8 @@ namespace UniModCompiler
                 }
 
                 writer.Close();
+                File.Copy(tempPath, OUTPUT_PATH, true);
+                File.Delete(tempPath);
             }
             catch(Exception x)
             {
@@ -423,13 +435,13 @@ namespace UniModCompiler
             var dict = isotopic ? _dictIsotopeMods : _dictStructuralMods;
             var unlisted = modifications.Where(m => !_writtenIds.Contains(m.record_id) &&
                                                     dict.TryGetValue(m.title, out var dictMod) && ReferenceEquals(dictMod, m)).ToArray();
-            var candidates = unlisted.SelectMany(GetUnlistedCandidates).ToList();
-            WriteMods(writer, candidates, true, isotopic);
-            var singles = candidates.Where(c => c.AAs.Length > 1)
+            var candidates = unlisted.SelectMany(GetUnlistedCandidates).Where(c => !_templateNames.Contains(c.Name)).ToList();
+            WriteMods(writer, new List<Mod>(candidates), true, isotopic);
+            var singles = candidates.Where(c => c.AAs.Length > 1 && !_writtenNames.Contains(c.Name))
                 .SelectMany(c => c.AAs.Select(aa => new Mod
                 {
                     Name = string.Format("{0} ({1})", c.Title, aa), Title = c.Title, AAs = new[] { aa }
-                })).ToList();
+                })).Where(c => !_templateNames.Contains(c.Name)).ToList();
             WriteMods(writer, singles, true, isotopic);
         }
 
@@ -573,7 +585,7 @@ namespace UniModCompiler
 
         private static bool ListEquals(List<string> list1, List<string> list2)
         {
-            if (list2.Count < list1.Count)
+            if (list2.Count != list1.Count)
                 return false;
             for (int i = 0; i < list1.Count; i++)
             {
