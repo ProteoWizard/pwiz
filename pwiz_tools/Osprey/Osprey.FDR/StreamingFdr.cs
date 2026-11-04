@@ -910,9 +910,9 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// The experiment aggregate score this competition ranked <paramref name="entryId"/>
             /// on (sidecar v4, issue #4522), or <c>null</c> when the entry took no part in the
-            /// experiment fold - which under protein-compact means an OFF-STRATUM entry, whose
-            /// pass-1 aggregate the caller carries through untouched beside the pass-1
-            /// experiment q it also carries.
+            /// experiment fold - which under protein-compact means an OFF-STRATUM entry. Its
+            /// experiment q comes from the complement's own competition, which ranked it on its
+            /// pass-1 aggregate, so the caller carries that aggregate instead.
             ///
             /// <para><b>Nullable, not an in-band sentinel.</b> The score is a signed
             /// discriminant, so 0.0 is an ordinary mid-distribution value: returning it for "not

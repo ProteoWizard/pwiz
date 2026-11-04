@@ -848,6 +848,9 @@ namespace pwiz.Osprey.Core
         /// retrain's over-separation.</summary>
         public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
 
+        /// <summary>The <see cref="Pass2StrataValidityKeySuffix"/> term under protein-compact.</summary>
+        public const string PASS2_STRATA_TERM = @";pass2strata=2";
+
         /// <summary>The <see cref="ExperimentAgg"/> default: each precursor/peptide keeps its
         /// single BEST (max) observation across runs before the experiment-wide target/decoy
         /// competition. The shipped behavior; the committed golden is byte-identical here.</summary>
@@ -1226,6 +1229,22 @@ namespace pwiz.Osprey.Core
         {
             return @";pass2=" + normalizedPass2QValue;
         }
+
+        /// <summary>
+        /// Validity-key term for the MEANING of protein-compact's 2nd-pass q (issue #4581): the
+        /// stratum's complement now competes against its own decoys instead of keeping its
+        /// 1st-pass q (an unchanged off-stratum survivor used to take run q 1.0). No byte layout
+        /// and no mode string changed, so without this term a resume or <c>-LinkFrom</c> into an
+        /// output directory written before the change finds the per-run 2nd-pass sidecars and
+        /// the .blib valid and adopts the old answers. Carried by the two tasks that write them,
+        /// PerFileRescoring and SecondPassFDR - not FirstPassFDR, whose outputs did not change.
+        /// Empty under <see cref="PASS2_QVALUE_TRANSFER"/>, which the change does not reach.
+        /// </summary>
+        public static string Pass2StrataValidityKeySuffix()
+        {
+            return Pass2ProteinCompact ? PASS2_STRATA_TERM : string.Empty;
+        }
+
 
         /// <summary>
         /// Validity-key suffix for the first-pass TRAINING levers

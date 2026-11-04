@@ -4821,6 +4821,72 @@ namespace pwiz.Osprey.Test
                 @"stratum members must not be competed with the complement");
             Assert.IsTrue(complementQ.ContainsKey(DecoyOf(111u)) && !complementQ.ContainsKey(111u),
                 @"a decoy-won complement pair is keyed by the winning decoy");
+
+            AssertComplementExperimentQAcrossFiles(entryIds, scores.ToArray(), survivors, stratum);
+        }
+
+        /// <summary>
+        /// The complement's experiment q across MORE THAN ONE file, through the streamed fold:
+        /// <see cref="StreamingFdr.ComputeComplementExperimentQ"/>'s map is merged into the
+        /// competition state, and <see cref="StreamingFdr.StreamedCompetitionState.ExperimentQ"/>
+        /// floors it by the best run q the complement's own per-file competitions awarded. Fails
+        /// if the merge is dropped (a complement winner would read experiment q 1.0) or the floor
+        /// is taken from anything but the run q map.
+        /// </summary>
+        private static void AssertComplementExperimentQAcrossFiles(
+            uint[] entryIds, double[] scores, HashSet<uint> survivors, HashSet<uint> stratum)
+        {
+            // Two files of the same precursors. Complement targets 101-105 are strong (above every
+            // complement decoy) in the first file only and 106-110 in the second only, so each
+            // file's complement competition sees 5 targets above its decoys - run q (0 + 1) / 5 -
+            // while the experiment competition, on the cross-file maximum, sees all 10 - q
+            // (0 + 1) / 10. The floor must raise the experiment q to the run q.
+            var files = new[] { @"a", @"b" };
+            var fileScores = new Dictionary<string, double[]>
+            {
+                { files[0], (double[])scores.Clone() },
+                { files[1], (double[])scores.Clone() }
+            };
+            for (int i = 0; i < entryIds.Length; i++)
+            {
+                uint id = entryIds[i];
+                if (id < 101u || id > 110u)
+                    continue;
+                bool firstHalf = id <= 105u;
+                fileScores[files[0]][i] += firstHalf ? 0.3 : -0.3;
+                fileScores[files[1]][i] += firstHalf ? -0.3 : 0.3;
+            }
+            (uint[] eids, double[] scs, IReadOnlyDictionary<uint, double> ov, HashSet<uint> own) Read(string file)
+                => ((uint[])entryIds.Clone(), (double[])fileScores[file].Clone(), new Dictionary<uint, double>(), survivors);
+            var minRunQ = new Dictionary<uint, double>();
+            void OnFileRunQ(string _, StreamingFdr.FileCompetition contribution)
+            {
+                foreach (var kv in contribution.RunQ)
+                    minRunQ[kv.Key] = minRunQ.TryGetValue(kv.Key, out double cur) ? Math.Min(cur, kv.Value) : kv.Value;
+            }
+            var aggregates = new Dictionary<uint, double>();
+            foreach (string file in files)
+            {
+                for (int i = 0; i < entryIds.Length; i++)
+                {
+                    double v = fileScores[file][i];
+                    aggregates[entryIds[i]] = aggregates.TryGetValue(entryIds[i], out double cur) ? Math.Max(cur, v) : v;
+                }
+            }
+            var complementQ = StreamingFdr.ComputeComplementExperimentQ(aggregates, stratum);
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                files, Read, survivors, OnFileRunQ, stratum, complementExperimentQ: complementQ);
+
+            foreach (uint target in new[] { 101u, 105u, 106u, 110u })
+            {
+                Assert.AreEqual(1.0 / 10, complementQ[target], 1e-12,
+                    @"the complement's experiment competition ranks on the cross-file maximum");
+                Assert.AreEqual(1.0 / 5, minRunQ[target], 1e-12,
+                    @"each file's complement competition sees only its own 5 strong targets");
+                // 1.0 here means the merge was dropped; 0.1 means the floor was.
+                Assert.AreEqual(1.0 / 5, competition.ExperimentQ(target, minRunQ[target]), 1e-12,
+                    @"a complement winner takes its experiment q floored by its best run q");
+            }
         }
 
         /// <summary>

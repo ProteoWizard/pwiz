@@ -1245,13 +1245,10 @@ namespace pwiz.Osprey.Tasks
             // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
             //    (and fall back to the retrain) before streaming any file.
             var fileKeys = new List<string>(fileNames.Count);
-            // The analysis-wide pass-1 EXPERIMENT-scope records (format v5, issue #4486). This
-            // replaces a per-(file, entry_id) stash of the off-stratum peaks Stage 6 changed:
-            // that stash existed because the post-rescore overlay zeroes an in-memory experiment
-            // q, so the pass-1 value had to be recovered from somewhere, and the only place it
-            // lived was the file's own record. An off-stratum peak keeps its pass-1 experiment q
-            // whether Stage 6 changed it or not, so with one analysis-wide record per entry_id
-            // there is nothing left to stash or to condition on.
+            // The analysis-wide pass-1 EXPERIMENT-scope records (format v5, issue #4486): every
+            // entry's pass-1 aggregate score, which the complement's experiment competition below
+            // ranks on, and the pass-1 PEP its records carry. One record per entry_id, so nothing
+            // is stashed per (file, entry_id) for the off-stratum peaks Stage 6 changed.
             var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
             // The stratum's complement competes against its OWN decoys at experiment scope too
             // (issue #4581), on the aggregate scores the 1st pass ranked every entry on. Built
@@ -1345,10 +1342,10 @@ namespace pwiz.Osprey.Tasks
             // overwrite the reported experiment q from that reduction. Neither is compatible with
             // a mean(best-N) 1st pass, in two different ways:
             //
-            //   protein-compact assembles the reported column from TWO sources - on-stratum
-            //   survivors get the max-aggregated value computed here, off-stratum survivors keep
-            //   their 1st-pass mean(best-N) q (the `continue` in the map-back below). One column,
-            //   two aggregations, and no way for a consumer to tell which row used which.
+            //   protein-compact assembles the reported column from TWO competitions - the
+            //   stratum's, max-aggregated here, and the complement's, on the 1st-pass aggregate
+            //   (mean(best-N) under that arm). One column, two aggregations, and no way for a
+            //   consumer to tell which row used which.
             //
             //   transfer-compete rewrites EVERY survivor, so its column is at least internally
             //   consistent - but it is consistently MAX, silently discarding the mean(best-N)
@@ -1387,8 +1384,8 @@ namespace pwiz.Osprey.Tasks
                         ? @" (recorded in the 1st-pass model sidecar)"
                         : @" (INFERRED from this process's environment - the 1st-pass model sidecar " +
                           @"predates arm recording and does not say which arm trained it)",
-                    @"would leave on-stratum precursors max-aggregated and off-stratum " +
-                    @"precursors on their 1st-pass mean(best-N) q - one column, two statistics",
+                    @"would rank on-stratum precursors on a max aggregate and off-stratum " +
+                    @"precursors on their 1st-pass mean(best-N) aggregate - one column, two statistics",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
 
@@ -1803,11 +1800,10 @@ namespace pwiz.Osprey.Tasks
         /// <para>The peptide floors are derived from the entry floors just folded - no per-run
         /// data and no second pass over anything - and both halves are stamped onto the records
         /// before anyone sees them, which is what makes this file's q-values FINAL rather than a
-        /// value the pipeline overrides afterwards (issue #4522). It is also the point the two
-        /// strata of the competition stop differing: an on-stratum entry takes a fresh
-        /// competition q that was never clamped, and an off-stratum entry carries its pass-1 q -
-        /// which WAS clamped, against pass-1 run q, while pass 2 refreshed run q underneath it.
-        /// One rule closes both.</para>
+        /// value the pipeline overrides afterwards (issue #4522). Both strata of the competition
+        /// take a fresh pass-2 experiment q - the stratum's from its own fold, the complement's
+        /// from ComputeComplementExperimentQ (issue #4581) - and neither was clamped, so one rule
+        /// floors both against the pass-2 run q.</para>
         /// </summary>
         private static int FoldAndPublishExperimentScope(
             PipelineContext ctx, Pass2SidecarWriter writer, IReadOnlyList<string> fileKeys,
@@ -1923,7 +1919,7 @@ namespace pwiz.Osprey.Tasks
         /// parquet when no reconciled sibling exists. <c>survivors</c> is seeded and scored IN
         /// PLACE. <c>survivorIds</c> and <c>pass1Records</c> are caller-owned scratch, cleared and
         /// refilled here so a per-file loop does not reallocate them; the caller reads
-        /// <c>pass1Records</c> again for the off-stratum experiment-q carry-forward.</para>
+        /// <c>pass1Records</c> again.</para>
         /// </summary>
         /// <summary>
         /// Assert that a per-run 2nd-pass sidecar about to be written describes the POOL its
