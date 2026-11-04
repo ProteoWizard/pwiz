@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE"
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_STUB_IDENTITY", @"OSPREY_BLOCK_READ_MB"
         };
 
         // OSPREY_* names this build does not read: switches retired by name, a Rust-only dump and
@@ -151,6 +151,12 @@ namespace pwiz.Osprey.Test
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE");
             StringAssert.Contains(output, @"bogus");
+            // A retired 0 arm is refused, not run as the default under its name.
+            foreach (string name in new[] { @"OSPREY_STUB_IDENTITY", @"OSPREY_BLOCK_READ_MB" })
+            {
+                output = RunCommandAndValidateError(Variable(name, @"0"), InputLibraryOutput(input, library));
+                StringAssert.Contains(output, name);
+            }
             foreach (string name in UNRECOGNIZED_VARIABLES)
             {
                 Assert.IsFalse(OspreyEnvironment.KnownVariables.Contains(name), name);

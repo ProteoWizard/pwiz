@@ -683,6 +683,13 @@ namespace pwiz.Osprey
                 // Abort for the same reason: a mistyped value would train with the default arm
                 // and key its directories as the default, so a System.Math timing or parity arm
                 // would report the deterministic arm's numbers under its own name.
+                // Abort for the same reason: a retired read arm would time the default under its name.
+                string retiredReadArm = OspreyEnvironment.RetiredReadArmError;
+                if (retiredReadArm != null)
+                {
+                    LogError(retiredReadArm);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 if (OspreyEnvironment.DeterministicMathUnrecognized)
                 {
                     LogError(string.Format(

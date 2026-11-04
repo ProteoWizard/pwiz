@@ -187,7 +187,7 @@ namespace pwiz.Osprey.Tasks
         // hands back on the bundle; null where the resume has no retained set to build it
         // from, whose consumers fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
-        // Built once, on first use, when OSPREY_STUB_IDENTITY asks for it. See StubIdentity.
+        // Built once, on first use. See StubIdentity.
         private LibraryIdentity _stubIdentity;
 
         // Phase B resume surface. Reads each file's .scores.parquet,

@@ -204,6 +204,32 @@ namespace pwiz.Osprey.Core
         public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") == 2 ? 2 : 1;
 
         /// <summary>
+        /// The startup refusal for a retired or unrecognized arm of OSPREY_STUB_IDENTITY or
+        /// OSPREY_BLOCK_READ_MB, or null. Both retired a <c>0</c> arm; running the default under
+        /// it would file the default's timings under the arm the caller asked for, which is the
+        /// silence the unknown-variable check exists to prevent.
+        /// </summary>
+        public static string RetiredReadArmError
+        {
+            get
+            {
+                string stub = GetVariable(@"OSPREY_STUB_IDENTITY");
+                if (!string.IsNullOrEmpty(stub) && stub.Trim() != @"1" && stub.Trim() != @"2")
+                {
+                    return string.Format(@"OSPREY_STUB_IDENTITY must be '1' (the default) or '2' (verify against " +
+                        @"the file), not '{0}'. The '0' arm, which always read the file, was removed.", stub);
+                }
+                string blockMb = GetVariable(@"OSPREY_BLOCK_READ_MB");
+                if (!string.IsNullOrEmpty(blockMb) && (!int.TryParse(blockMb, out int mb) || mb <= 0))
+                {
+                    return string.Format(@"OSPREY_BLOCK_READ_MB must be a block size in MB from 1 to {0}, not '{1}'. " +
+                        @"The '0' arm, which read directly, was removed.", MAX_BLOCK_READ_MB, blockMb);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
         /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="SimpleFileSaver"/>. Every
         /// durable write, diagnostic dumps included, goes through <c>SimpleFileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before

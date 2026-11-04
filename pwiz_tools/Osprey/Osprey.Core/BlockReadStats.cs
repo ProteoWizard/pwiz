@@ -57,8 +57,8 @@ namespace pwiz.Osprey.Core
         public static string Text()
         {
             return string.Format(CultureInfo.InvariantCulture,
-                @"block reads (block {0} MB, gate {1}) so far: {2:N0} reads, {3:F1} GB ({6:F1} GB parquet), read {4:F1}s, gate wait {5:F1}s",
-                OspreyEnvironment.BlockReadMb, @"on",
+                @"block reads (block {0} MB, gate on) so far: {1:N0} reads, {2:F1} GB ({5:F1} GB parquet), read {3:F1}s, gate wait {4:F1}s",
+                OspreyEnvironment.BlockReadMb,
                 Interlocked.Read(ref _reads), Interlocked.Read(ref _bytes) / 1e9,
                 Interlocked.Read(ref _readTicks) / (double)Stopwatch.Frequency,
                 Interlocked.Read(ref _gateWaitTicks) / (double)Stopwatch.Frequency,
