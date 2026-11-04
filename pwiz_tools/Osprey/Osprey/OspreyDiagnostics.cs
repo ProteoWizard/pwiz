@@ -42,30 +42,6 @@ namespace pwiz.Osprey
         private static OspreyFileDiagnostics s_sink;
 
         /// <summary>
-        /// OSPREY_DUMP_* env vars turned on by the OSPREY_DIAGNOSTICS master switch.
-        /// Excludes the per-call firehose (OSPREY_DUMP_MP_INPUTS), the disabled
-        /// predict-rt dump, the *_ONLY early-exit gates, and the OSPREY_DIAG_*
-        /// per-entry selectors (which need specific IDs). Fine-grained control
-        /// is still available by setting individual env vars.
-        /// </summary>
-        private static readonly string[] s_forcedDumpBundle =
-        {
-            @"OSPREY_DUMP_CAL_SAMPLE",
-            @"OSPREY_DUMP_CAL_WINDOWS",
-            @"OSPREY_DUMP_CAL_MATCH",
-            @"OSPREY_DUMP_MS2_CAL_ERRORS",
-            @"OSPREY_DUMP_LDA_SCORES",
-            @"OSPREY_DUMP_LOESS_INPUT",
-            @"OSPREY_DUMP_CWT_PATH",
-            @"OSPREY_DUMP_CONSENSUS",
-            @"OSPREY_DUMP_CALIBRATION",
-            @"OSPREY_DUMP_INV_PREDICT",
-            @"OSPREY_DUMP_PROTEIN_FDR",
-            @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
-            @"OSPREY_DUMP_DETECTED_PEPTIDES",
-        };
-
-        /// <summary>
         /// Select the live diagnostics sink. Call once at pipeline entry, before
         /// constructing the <c>PipelineContext</c> that <see cref="Active"/> is
         /// injected into. When <paramref name="forceDumps"/> is <c>true</c> (the
@@ -79,11 +55,11 @@ namespace pwiz.Osprey
         {
             if (forceDumps)
             {
-                foreach (string envVar in s_forcedDumpBundle)
+                foreach (var envVar in OspreyFileDiagnostics.FORCED_DUMP_BUNDLE)
                 {
                     // Force-on: override "0" / unset / anything except already-"1".
-                    if (Environment.GetEnvironmentVariable(envVar) != @"1")
-                        Environment.SetEnvironmentVariable(envVar, @"1");
+                    if (envVar.Value != @"1")
+                        envVar.SetInProcess(@"1");
                 }
             }
             var sink = new OspreyFileDiagnostics();

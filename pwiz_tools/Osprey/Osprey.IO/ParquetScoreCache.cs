@@ -418,6 +418,10 @@ namespace pwiz.Osprey.IO
         // only the append is ordered - so this is purely a speed/memory trade. Defaults to the
         // core count; 1 prepares the columns one at a time through the same code, which is how
         // an A/B against the golden is taken.
+        private static readonly EnvVar ENV_PARQUET_WRITE_THREADS = new EnvVar(@"OSPREY_PARQUET_WRITE_THREADS", EnvVarGroup.performance,
+            @"Columns of a score parquet row group to compress at once. Output is identical at any value; " +
+            @"1 is the serial A/B arm.")
+            { ValueExample = @"<N>", DefaultValue = @"processors" };
         private static readonly int ParquetWriteThreads = ResolveParquetWriteThreads();
 
         /// <summary>
@@ -938,7 +942,7 @@ namespace pwiz.Osprey.IO
 
         private static int ResolveParquetWriteThreads()
         {
-            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_WRITE_THREADS");
+            string raw = ENV_PARQUET_WRITE_THREADS.Value;
             if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
                 return n;
             return Environment.ProcessorCount;
