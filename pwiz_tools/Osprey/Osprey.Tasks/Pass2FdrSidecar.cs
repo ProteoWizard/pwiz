@@ -1179,10 +1179,11 @@ namespace pwiz.Osprey.Tasks
             Pass2SidecarWriter writer,
             HashSet<uint> stratumBaseIds)
         {
-            // The competition is CONSTRAINED to the stratum (peptides of >=2-peptide 1st-pass
-            // proteins), and the map-back below leaves OFF-stratum survivors on their 1st-pass q
-            // (report = pass1 U stratum passers, so re-scoping only adds, never drops an
-            // already-passing peptide). The full-population form this method also served was
+            // The competition is STRATIFIED: the stratum (peptides of >=2-peptide 1st-pass
+            // proteins) and its complement each compete against their own paired decoys, at run
+            // and at experiment scope, and the map-back below reports both. The complement used
+            // to keep its 1st-pass q, which left the decoys the stratum excluded counting against
+            // no one (issue #4581). The full-population form this method also served was
             // transfer-compete, removed because its competition ran over a target-conditioned
             // subset - see the OspreyEnvironment.Pass2QValue remarks and issue #4581.
             if (stratumBaseIds == null)
@@ -1252,6 +1253,12 @@ namespace pwiz.Osprey.Tasks
             // whether Stage 6 changed it or not, so with one analysis-wide record per entry_id
             // there is nothing left to stash or to condition on.
             var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
+            // The stratum's complement competes against its OWN decoys at experiment scope too
+            // (issue #4581), on the aggregate scores the 1st pass ranked every entry on. Built
+            // from the analysis-wide records because they hold every complement base_id,
+            // non-survivors included; O(distinct entry_ids), like the records themselves.
+            var complementExperimentQ = StreamingFdr.ComputeComplementExperimentQ(
+                AggregateScores(pass1Experiment), stratumBaseIds);
 
             // The per-file 1st-pass sidecars are located and header-checked HERE, before any
             // survivor is mutated, because ReadScalars throws on a bad file and doing that inside
@@ -1580,7 +1587,8 @@ namespace pwiz.Osprey.Tasks
                         // Off by default: the recompute is a TEST INSTRUMENT and costs exactly
                         // the re-reads this phase exists to remove. regression.ps1 turns it on.
                         OspreyEnvironment.Pass2VerifyWorker,
-                        BeginFile);
+                        BeginFile,
+                        complementExperimentQ);
                 }
                 catch (InvalidOperationException)
                 {
@@ -1611,31 +1619,25 @@ namespace pwiz.Osprey.Tasks
 
             // The experiment-scope record for one observation plus its PEP, from the bounded
             // competition state. Split out of the loop above only so the two dispositions -
-            // on-stratum recompute and off-stratum carry-through - read side by side.
+            // the stratum and its complement - read side by side.
             FdrExperimentRecord FinishRecord(FdrScoreRecord rec)
             {
+                double eq = competition.ExperimentQ(rec.EntryId, rec.RunPrecursorQvalue);
                 if (!stratumBaseIds.Contains(rec.EntryId & 0x7FFFFFFFu))
                 {
-                    // Off-stratum survivors keep their 1st-pass EXPERIMENT q (report = pass1 U
-                    // stratum passers). That q is a pass-1 property anchored on the
-                    // best-scoring peak, and reconciliation corrects peaks TOWARD that anchor
-                    // rather than moving it, so a changed peak was not the one that set the
-                    // maximum and cannot become it. Carrying the pass-1 value is therefore
-                    // exact, and it is what keeps the re-scoping additive.
+                    // Off-stratum survivors take the q of the stratum's COMPLEMENT, competed
+                    // against its own decoys at run and experiment scope (issue #4581). They
+                    // used to keep their 1st-pass experiment q, which was earned against a
+                    // null diluted by the stratum's true targets while the decoys the stratum
+                    // left behind counted against no one.
                     //
-                    // Their RUN q was refreshed with everyone else's: a peak Stage 6 changed
-                    // competed above on its recalculated score, and one that did not compete
-                    // takes the 1.0 that says so, rather than a stale q describing a peak that
-                    // no longer exists (the post-rescore overlay zeroes it for that reason).
+                    // The aggregate and PEP stay the pass-1 values: the complement competed on
+                    // that aggregate, and its PEP is the pass-1 winner fact for the same
+                    // ranking. The protein q goes in at 1.0, as below.
                     pass1Experiment.TryGetValue(rec.EntryId, out var q1);
-                    // PEP carried with the rest of the pass-1 experiment scope: an off-stratum
-                    // entry did not enter this pass's competition, so it has no 2nd-pass winner
-                    // and its pass-1 winner fact is the one that still describes it.
-                    return new FdrExperimentRecord(rec.EntryId,
-                        q1.ExperimentPrecursorQvalue, q1.ExperimentPeptideQvalue,
+                    return new FdrExperimentRecord(rec.EntryId, eq, eq,
                         1.0, q1.ExperimentAggregateScore, q1.Pep);
                 }
-                double eq = competition.ExperimentQ(rec.EntryId, rec.RunPrecursorQvalue);
                 // The aggregate MUST move with the q. This mode recomputes experiment q from a
                 // fresh full-population competition, so the pass-1 aggregate the seed carried is
                 // no longer the score that q was ranked on - and this is the DEFAULT mode, so
@@ -1645,9 +1647,9 @@ namespace pwiz.Osprey.Tasks
                 // dragged it to 0.0 and admitted the entire decoy pool - 542,368 decoys against
                 // 117,783 targets on astral, 183x the pass-1 count, from a rule meant to admit
                 // about 1%.
-                // null means the entry never entered the experiment fold (off-stratum under
-                // protein-compact); those keep the pass-1 value, which is correct because they
-                // keep the pass-1 experiment q too - the branch above.
+                // null means the entry never entered the stratum's experiment fold; the
+                // complement's entries took the pass-1 value in the branch above, which is the
+                // aggregate their own competition ranked on.
                 double? agg = competition.ExperimentAggregateScore(rec.EntryId);
                 // The protein q goes in at 1.0: the second-pass protein FDR has not run yet, and
                 // it is the one column of this record that the step after it owns.
@@ -1661,6 +1663,17 @@ namespace pwiz.Osprey.Tasks
                 return new FdrExperimentRecord(rec.EntryId, eq, eq, 1.0,
                     agg ?? prior.ExperimentAggregateScore, competition.PepWinner(rec.EntryId));
             }
+        }
+
+        /// <summary>
+        /// Each 1st-pass experiment record as (entry_id, experiment aggregate score), the input
+        /// <see cref="StreamingFdr.ComputeComplementExperimentQ"/> competes on.
+        /// </summary>
+        private static IEnumerable<KeyValuePair<uint, double>> AggregateScores(
+            IReadOnlyDictionary<uint, FdrExperimentRecord> records)
+        {
+            foreach (var kv in records)
+                yield return new KeyValuePair<uint, double>(kv.Key, kv.Value.ExperimentAggregateScore);
         }
 
         /// <summary>
