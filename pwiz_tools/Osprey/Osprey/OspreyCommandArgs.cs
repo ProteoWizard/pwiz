@@ -159,11 +159,12 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
             () => GetPathToFile(EXT_TXT), (c, p) => c._inputListPaths.Add(p.Value)) { DescriptionArgs = () => new object[] { ARG_INPUT.ShortArgumentText } };
         public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(OspreyArgNames.LIBRARY,
-            () => GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV, (c, p) => c._libraryPath = p.Value)
+            () => LibraryPathValue, (c, p) => c._libraryPath = p.Value)
             {
                 ShortName = @"l",
                 DescriptionArgs = () => new object[] { LibrarySource.EXT_BLIB, TextUtil.EXT_TSV, ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_FASTA.ArgumentText }
+                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_FASTA.ArgumentText, LibrarySource.EXT_PARQUET,
+                    LibrarySource.EXT_SPECLIB }
             };
         public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(OspreyArgNames.OUTPUT,
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._outputPath = p.Value)
@@ -189,7 +190,8 @@ namespace pwiz.Osprey
             () => GetPathToFile(LibrarySource.EXT_BLIB), (c, p) => c._config.ExportLibraryBlib = p.Value)
             {
                 DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText, LibrarySource.EXT_BLIB,
-                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV }
+                    ARG_DECOYS_IN_LIBRARY.ArgumentText, ARG_DECOY_PAIRING_MANIFEST.ArgumentText, TextUtil.EXT_TSV,
+                    LibrarySource.EXT_PARQUET }
             };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
@@ -287,7 +289,13 @@ namespace pwiz.Osprey
         /// <summary>The library argument as the usage lines and the missing-argument errors show it.</summary>
         internal static string UsageLibrary
         {
-            get { return ARG_LIBRARY.ShortArgumentText + @" " + GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV; }
+            get { return ARG_LIBRARY.ShortArgumentText + @" " + LibraryPathValue; }
+        }
+
+        /// <summary>The value the library argument takes, as its help and the usage lines show it.</summary>
+        private static string LibraryPathValue
+        {
+            get { return GetPathToFile(LibrarySource.EXT_BLIB) + @"|" + TextUtil.EXT_TSV + @"|" + LibrarySource.EXT_PARQUET; }
         }
 
         /// <summary>The output argument as the usage lines and the missing-argument errors show it.</summary>
@@ -460,7 +468,8 @@ namespace pwiz.Osprey
             { Scope = OspreyPropertyScope.search, DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, string.Join(@", ", new OspreyConfig().DecoyPrefixes), LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => GetPathToFile(TextUtil.EXT_TSV), (c, p) => c._config.DecoyPairingManifestPath = p.Value)
-            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
+            { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText, TextUtil.EXT_TSV, LibrarySource.EXT_BLIB,
+                LibrarySource.EXT_PARQUET } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
