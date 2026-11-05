@@ -693,6 +693,22 @@ namespace pwiz.Osprey
                         @"Unset it for the default (the run FDR).", OspreyEnvironment.FdrTrainFdrSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // Abort for the same reason: an unparseable round-2 q cut would train on the fixed
+                // row count and key its directories as such.
+                if (OspreyEnvironment.GbtPrefilterQUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_GBT_PREFILTER_Q must be a number in (0, 1] such as '0.1', not '{0}'. " +
+                        @"Unset it for the fixed OSPREY_GBT_PREFILTER_SIZE row count.", OspreyEnvironment.GbtPrefilterQSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                if (OspreyEnvironment.GbtPrefilterLocalFdrUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_GBT_PREFILTER_LFDR must be a number in (0, 1] such as '0.9', not '{0}', " +
+                        @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // Abort for the same reason: the mask is resolved when the FDR stage first loads
                 // features, so a mistyped name would otherwise surface only after Stages 1-4.
                 string unknownMaskedFeature = PinFeatureMask.UnknownFeatureName();

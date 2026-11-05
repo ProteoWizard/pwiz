@@ -1033,6 +1033,68 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(ENV_GBT_PREFILTER_SIZE));
 
+        private static readonly EnvVar ENV_GBT_PREFILTER_Q = new EnvVar(@"OSPREY_GBT_PREFILTER_Q", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_GBT_PREFILTER_SIZE as a row cap: round 2 keeps every peptide group whose " +
+            @"best round-1 score reaches the score where target-decoy competition on the round-1 scores reaches " +
+            @"this q, instead of a fixed row count. A number in (0, 1]; anything else stops the run. Changes the validity key.")
+            { ValueExample = @"<q>" };
+
+        /// <summary>OSPREY_GBT_PREFILTER_Q exactly as set, or null when unset.</summary>
+        public static readonly string GbtPrefilterQSetting = ENV_GBT_PREFILTER_Q.Value;
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_Q=q (experiment): round 2 of the two-round training
+        /// (<see cref="GbtPrefilterSize"/>, which must also be set and becomes a row cap) keeps every peptide
+        /// group whose best round-1 score reaches the score at which paired target-decoy competition on the
+        /// round-1 scores reaches q, instead of a fixed row count - a cut that scales with the data. The
+        /// selection only chooses training rows: every candidate is still scored and competed afterwards.
+        /// Keyed through the gbdt validity-key term. Null when unset or not a number in (0, 1].
+        /// </summary>
+        public static readonly double? GbtPrefilterQ = ParseFdrTrainFdr(GbtPrefilterQSetting);
+
+        /// <summary>True when OSPREY_GBT_PREFILTER_Q is set to anything but a number in (0, 1]; startup aborts.</summary>
+        public static readonly bool GbtPrefilterQUnrecognized =
+            !string.IsNullOrEmpty(GbtPrefilterQSetting) && !GbtPrefilterQ.HasValue;
+
+        private static readonly EnvVar ENV_GBT_PREFILTER_LFDR = new EnvVar(@"OSPREY_GBT_PREFILTER_LFDR", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_GBT_PREFILTER_SIZE as a row cap: round 2 keeps every peptide group down to " +
+            @"the round-1 score where the local FDR (the windowed ratio of decoy to target competition winners) " +
+            @"first exceeds this value. A number in (0, 1], not together with OSPREY_GBT_PREFILTER_Q; anything " +
+            @"else stops the run. Changes the validity key.")
+            { ValueExample = @"<f>" };
+
+        /// <summary>OSPREY_GBT_PREFILTER_LFDR exactly as set, or null when unset.</summary>
+        public static readonly string GbtPrefilterLocalFdrSetting = ENV_GBT_PREFILTER_LFDR.Value;
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_LFDR=f (experiment): like <see cref="GbtPrefilterQ"/>, but round 2 keeps every
+        /// peptide group down to the round-1 score where the local FDR - the windowed ratio of decoy to target
+        /// competition winners - first exceeds f, so the cut lands wherever targets and decoys stop separating.
+        /// Keyed through the gbdt validity-key term. Null when unset or not a number in (0, 1].
+        /// </summary>
+        public static readonly double? GbtPrefilterLocalFdr = ParseFdrTrainFdr(GbtPrefilterLocalFdrSetting);
+
+        /// <summary>True when OSPREY_GBT_PREFILTER_LFDR is set to anything but a number in (0, 1], or is set
+        /// together with OSPREY_GBT_PREFILTER_Q; startup aborts.</summary>
+        public static readonly bool GbtPrefilterLocalFdrUnrecognized =
+            !string.IsNullOrEmpty(GbtPrefilterLocalFdrSetting) && (!GbtPrefilterLocalFdr.HasValue || GbtPrefilterQ.HasValue);
+
+        private static readonly EnvVar ENV_GBT_PREFILTER_SAMPLE = new EnvVar(@"OSPREY_GBT_PREFILTER_SAMPLE", EnvVarGroup.behavior,
+            @"Experiment: 1 makes round 2 take a seeded random sample of the eligible peptide groups (those at " +
+            @"or above the OSPREY_GBT_PREFILTER_Q or _LFDR cut, or all of them) up to OSPREY_GBT_PREFILTER_SIZE " +
+            @"rows, instead of the best-scoring ones. Changes the validity key.")
+            { Values = new[] { @"0", @"1" }, DefaultValue = @"0" };
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_SAMPLE=1 (experiment): when the peptide groups eligible for round 2 of the
+        /// two-round training (everything at or above the OSPREY_GBT_PREFILTER_Q / _LFDR cut, or every group
+        /// without one) hold more rows than <see cref="GbtPrefilterSize"/>, round 2 takes a seeded random
+        /// sample of those groups up to that cap instead of the best-scoring ones, so the cap bounds the
+        /// training cost without dropping the low-confidence end of the eligible set. Keyed through the gbdt
+        /// validity-key term.
+        /// </summary>
+        public static readonly bool GbtPrefilterSample = ParseIntOrNull(ENV_GBT_PREFILTER_SAMPLE) == 1;
+
         private static readonly EnvVar ENV_DETERMINISTIC_MATH = new EnvVar(@"OSPREY_DETERMINISTIC_MATH", EnvVarGroup.behavior,
             @"Exp and Log in gradient-boosted tree training: 1 the managed fdlibm port, bit-identical on " +
             @"every OS; 0 System.Math, which can differ in the last bit between operating systems.")

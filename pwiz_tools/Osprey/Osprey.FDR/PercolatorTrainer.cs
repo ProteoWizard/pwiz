@@ -575,8 +575,24 @@ namespace pwiz.Osprey.FDR
                 entryIds[k] = candidates[k].EntryId;
                 peptides[k] = candidates[k].Peptide;
             }
+            double minBestScore = double.NegativeInfinity;
+            if (trainConfig.PrefilterTrainQ > 0)
+            {
+                minBestScore = PrefilterScoreAtQ(round1Scores, labels, entryIds, trainConfig.PrefilterTrainQ,
+                    out int passingTargets);
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter q cut: round-1 q <= {1} reached by {2} targets, at score >= {3:R}",
+                    passLabel, trainConfig.PrefilterTrainQ, passingTargets, minBestScore);
+            }
+            else if (trainConfig.PrefilterTrainLocalFdr > 0)
+            {
+                minBestScore = PrefilterScoreAtLocalFdr(round1Scores, labels, entryIds,
+                    trainConfig.PrefilterTrainLocalFdr, out int passingTargets, out double qAtCut);
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter local-FDR cut: windowed decoys/targets <= {1} held for {2} targets (round-1 q {3:F4} there), at score >= {4:R}",
+                    passLabel, trainConfig.PrefilterTrainLocalFdr, passingTargets, qAtCut, minBestScore);
+            }
             int[] selected = PercolatorSampling.SelectTopScoringGroups(
-                labels, entryIds, peptides, round1Scores, prefilterSize);
+                labels, entryIds, peptides, round1Scores, prefilterSize, minBestScore,
+                trainConfig.PrefilterTrainSample ? trainConfig.Seed : null);
             round2Entries = new List<PercolatorEntry>(selected.Length);
             var round2InitialScores = new double[selected.Length];
             int round2Targets = 0;
@@ -587,8 +603,9 @@ namespace pwiz.Osprey.FDR
                 if (!labels[k])
                     round2Targets++;
             }
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter subsample (round 2): {1} precursors ({2} targets, {3} decoys) from {4} candidates by round-1 score",
-                passLabel, round2Entries.Count, round2Targets, round2Entries.Count - round2Targets, m);
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter subsample (round 2): {1} precursors ({2} targets, {3} decoys) from {4} candidates by round-1 score{5}",
+                passLabel, round2Entries.Count, round2Targets, round2Entries.Count - round2Targets, m,
+                trainConfig.PrefilterTrainSample ? @", sampled from the eligible groups" : string.Empty);
 
             // Round 2: the same training on that subset, its first positive set chosen by the
             // round-1 scores the subset was selected by. MaxTrainSize 0 turns the subsample off:
@@ -598,6 +615,85 @@ namespace pwiz.Osprey.FDR
             var round2Config = trainConfig.CloneForTrainOnly();
             round2Config.MaxTrainSize = 0;
             return RunPercolator(round2Entries, round2Config, round2InitialScores);
+        }
+
+        /// <summary>
+        /// The round-1 score at which paired target-decoy competition over every candidate reaches
+        /// <paramref name="q"/>: the lowest-scoring winning target with q at or below it (the q-values
+        /// are monotone, so every winner above it passes too). Negative infinity, which turns the cut
+        /// off, when no target passes. Used by the two-round training's OSPREY_GBT_PREFILTER_Q.
+        /// </summary>
+        internal static double PrefilterScoreAtQ(double[] scores, bool[] isDecoy, uint[] entryIds, double q,
+            out int passingTargets)
+        {
+            var all = new int[scores.Length];
+            for (int i = 0; i < all.Length; i++)
+                all[i] = i;
+            TargetDecoyCompetition.CompeteFromIndices(scores, isDecoy, entryIds, all,
+                out int[] _, out double[] winnerScores, out bool[] winnerIsDecoy);
+            var qValues = new double[winnerScores.Length];
+            PercolatorQValues.ComputeQvalues(winnerScores, winnerIsDecoy, qValues);
+
+            double threshold = double.NegativeInfinity;
+            passingTargets = 0;
+            for (int rank = 0; rank < winnerScores.Length; rank++)
+            {
+                if (qValues[rank] > q)
+                    break;
+                if (!winnerIsDecoy[rank])
+                {
+                    threshold = winnerScores[rank];
+                    passingTargets++;
+                }
+            }
+            return threshold;
+        }
+
+        /// <summary>
+        /// The round-1 score down to which the local FDR stays at or below <paramref name="localFdr"/>:
+        /// walking the paired-competition winners from the top, the score of the last winning target
+        /// before the windowed ratio of decoy winners to target winners first exceeds it. Under paired
+        /// competition the false targets at a score are expected to equal the decoy winners there, so
+        /// that ratio estimates the local FDR (the PEP of a target at that score), and it approaches 1
+        /// where targets and decoys no longer separate - wherever that falls in q. The window is
+        /// max(1,000, 0.1% of the winners) centred on each rank. Negative infinity, which turns the cut
+        /// off, when no target passes. Used by the two-round training's OSPREY_GBT_PREFILTER_LFDR.
+        /// </summary>
+        internal static double PrefilterScoreAtLocalFdr(double[] scores, bool[] isDecoy, uint[] entryIds,
+            double localFdr, out int passingTargets, out double qAtCut)
+        {
+            var all = new int[scores.Length];
+            for (int i = 0; i < all.Length; i++)
+                all[i] = i;
+            TargetDecoyCompetition.CompeteFromIndices(scores, isDecoy, entryIds, all,
+                out int[] _, out double[] winnerScores, out bool[] winnerIsDecoy);
+            int n = winnerScores.Length;
+            var qValues = new double[n];
+            PercolatorQValues.ComputeQvalues(winnerScores, winnerIsDecoy, qValues);
+            var decoysBefore = new int[n + 1];
+            for (int r = 0; r < n; r++)
+                decoysBefore[r + 1] = decoysBefore[r] + (winnerIsDecoy[r] ? 1 : 0);
+            int half = Math.Max(1000, n / 1000) / 2;
+
+            double threshold = double.NegativeInfinity;
+            passingTargets = 0;
+            qAtCut = 0;
+            for (int rank = 0; rank < n; rank++)
+            {
+                int lo = Math.Max(0, rank - half);
+                int hi = Math.Min(n, rank + half + 1);
+                int decoys = decoysBefore[hi] - decoysBefore[lo];
+                int targets = hi - lo - decoys;
+                if (targets == 0 || (double)decoys / targets > localFdr)
+                    break;
+                if (!winnerIsDecoy[rank])
+                {
+                    threshold = winnerScores[rank];
+                    passingTargets++;
+                    qAtCut = qValues[rank];
+                }
+            }
+            return threshold;
         }
 
         /// <summary>

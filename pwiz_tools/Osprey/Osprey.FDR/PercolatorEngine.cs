@@ -282,6 +282,18 @@ namespace pwiz.Osprey.FDR
             {
                 suffix += string.Format(CultureInfo.InvariantCulture, @";gbtprefilter={0}",
                     OspreyEnvironment.GbtPrefilterSize);
+                if (OspreyEnvironment.GbtPrefilterQ.HasValue)
+                {
+                    suffix += string.Format(CultureInfo.InvariantCulture, @";gbtprefilterq={0:R}",
+                        OspreyEnvironment.GbtPrefilterQ.Value);
+                }
+                if (OspreyEnvironment.GbtPrefilterLocalFdr.HasValue)
+                {
+                    suffix += string.Format(CultureInfo.InvariantCulture, @";gbtprefilterlfdr={0:R}",
+                        OspreyEnvironment.GbtPrefilterLocalFdr.Value);
+                }
+                if (OspreyEnvironment.GbtPrefilterSample)
+                    suffix += @";gbtprefiltersample=1";
             }
             return suffix;
         }
@@ -358,6 +370,17 @@ namespace pwiz.Osprey.FDR
                 PrefilterTrainSize = config.FdrClassifier == FdrClassifier.Gbdt
                     ? OspreyEnvironment.GbtPrefilterSize
                     : 0,
+                // OSPREY_GBT_PREFILTER_Q: round 2 by a round-1 q cut, the size above as its cap.
+                PrefilterTrainQ = config.FdrClassifier == FdrClassifier.Gbdt
+                    ? OspreyEnvironment.GbtPrefilterQ ?? 0
+                    : 0,
+                // OSPREY_GBT_PREFILTER_LFDR: round 2 by a round-1 local-FDR cut instead.
+                PrefilterTrainLocalFdr = config.FdrClassifier == FdrClassifier.Gbdt
+                    ? OspreyEnvironment.GbtPrefilterLocalFdr ?? 0
+                    : 0,
+                // OSPREY_GBT_PREFILTER_SAMPLE: round 2 samples the eligible groups up to the cap.
+                PrefilterTrainSample = config.FdrClassifier == FdrClassifier.Gbdt &&
+                                       OspreyEnvironment.GbtPrefilterSample,
                 // OSPREY_GBT_OOF: the trainer reports each training row's held-out fold, so the
                 // score pass scores that row out of fold. The tree model only.
                 ReportTrainEntryFolds = config.FdrClassifier == FdrClassifier.Gbdt &&
