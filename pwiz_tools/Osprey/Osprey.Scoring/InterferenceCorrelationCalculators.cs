@@ -76,7 +76,13 @@ namespace pwiz.Osprey.Scoring
                 var fragment = fragments[ranked[r]];
                 int charge = Math.Max(1, (int) fragment.Annotation.Charge);
                 double shadowMz = fragment.Mz - ReextractedCorrelations.C13_DELTA / charge;
-                ReextractedCorrelations.FillTrace(spectra, shadowMz, tolerance.ToleranceDa(shadowMz), shadowTrace);
+                double shadowTolDa = tolerance.ToleranceDa(shadowMz);
+                // At unit resolution the shadow window of a multiply charged fragment can reach the
+                // fragment's own peak, which would read as its own interference: such a fragment has no
+                // measurable shadow and is left out.
+                if (shadowMz + shadowTolDa >= fragment.Mz - tolerance.ToleranceDa(fragment.Mz))
+                    continue;
+                ReextractedCorrelations.FillTrace(spectra, shadowMz, shadowTolDa, shadowTrace);
                 Array.Copy(xics[xicIndices[r]].Intensities, timeCorr.WindowStart, fragmentTrace, 0, n);
                 double corr = ScoringMath.PearsonCorrelationInRange(shadowTrace, fragmentTrace, 0, n - 1);
                 if (!double.IsNaN(corr))

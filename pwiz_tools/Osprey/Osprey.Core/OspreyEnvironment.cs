@@ -951,8 +951,9 @@ namespace pwiz.Osprey.Core
         /// OSPREY_REF_XIC (experiment): <c>corr</c> re-chooses the reference fragment XIC inside the chosen
         /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
         /// of the fragment with the largest total intensity over the whole extraction window. The reference
-        /// sets the apex scan (and so every apex-spectrum feature), the area, SNR and sharpness, and the MS1
-        /// correlation reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// sets the apex scan (and so every apex-spectrum feature), the recomputed bounds area and SNR, the
+        /// MS1 correlation reference, and the apex/area of the stored CWT candidates; the peak_apex,
+        /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// False when unset.
         /// </summary>
         public static readonly bool RefXicByCorrelation = string.Equals(

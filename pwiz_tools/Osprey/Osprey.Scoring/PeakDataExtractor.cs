@@ -443,7 +443,7 @@ namespace pwiz.Osprey.Scoring
             {
                 // OSPREY_REF_XIC=corr: the reference is the fragment that agrees best with the others
                 // inside the chosen peak, so an intense interfered fragment does not set the apex.
-                refXicIdx = ReferenceCorrelations.ChooseReference(xics, si, ei);
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, si, ei, refXicIdx);
                 refXicIntensities = xics[refXicIdx].Intensities;
             }
             int newApexIdx = si;
@@ -1340,7 +1340,7 @@ namespace pwiz.Osprey.Scoring
                 if (total >= bestTotal) { bestTotal = total; refXicIdx = f; }
             }
             if (OspreyEnvironment.RefXicByCorrelation)
-                refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end);
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end, refXicIdx);
 
             // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
             // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
