@@ -63,8 +63,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => documentGrid.IsComplete);
 
             // The Pivot Editor's available-columns list is a ListView (ColumnListView).
-            var pivotEditor = ShowDialog<PivotEditor>(() => documentGrid.NavBar.ShowPivotDialog(true));
-            string pivotId = GetOpenFormId<PivotEditor>();
+            var pivotEditor = ShowMcpConnectorForm<PivotEditor>(() => documentGrid.NavBar.ShowPivotDialog(true), out var pivotId);
 
             string columnText = null;
             RunUI(() => columnText = pivotEditor.AvailableColumnList.Items[0].Text);

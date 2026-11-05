@@ -83,9 +83,32 @@ namespace pwiz.SkylineTestUtil
         protected string WaitForMcpConnectorForm(string typeName)
         {
             string id = null;
-            WaitForCondition(() => null != (id = McpConnector.GetOpenForms()
-                .FirstOrDefault(form => form.Type == typeName)?.Id));
+            if (!TryWaitForCondition(() => null != (id = McpConnector.GetOpenForms()
+                    .FirstOrDefault(form => form.Type == typeName)?.Id)))
+            {
+                // Fails naming the forms the connector does list, which a generic timeout would not.
+                return GetOpenFormId(typeName);
+            }
             return id;
+        }
+
+        /// <summary>
+        /// Shows a form with an in-process action, as <see cref="AbstractFunctionalTest.ShowDialog{TDlg}"/> does, and
+        /// waits until the connector can see it too. Returns the form, to inspect or close in-process, and its
+        /// connector form id in <paramref name="formId"/>, to drive it the way an MCP client does.
+        ///
+        /// <para>Use this, not ShowDialog followed by <see cref="GetOpenFormId{TForm}"/>, for a top-level dialog.
+        /// ShowDialog can return while the dialog is still in OnLoad, before Windows shows it, and the connector
+        /// lists top-level windows only once they are visible. A lookup right after ShowDialog therefore failed now
+        /// and then in nightly tests with "Expected a form of type ... to be open, but it was not"
+        /// (TestMcpConnectorShowForm reproduces it). Docked forms are listed whether visible or not.</para>
+        /// </summary>
+        protected TForm ShowMcpConnectorForm<TForm>(Action act, out string formId) where TForm : Form
+        {
+            var form = ShowDialog<TForm>(act);
+            // The form's own type, which the connector reports, not TForm: ShowDialog<AlertDlg> can return a MessageDlg.
+            formId = WaitForMcpConnectorForm(form.GetType().Name);
+            return form;
         }
 
         /// <summary>Asserts that a connector action reported it completed by the time the verb returned (see
@@ -122,7 +145,8 @@ namespace pwiz.SkylineTestUtil
         /// <summary>Resolves a form of the given WinForms type from the connector's open forms RIGHT NOW, without
         /// waiting -- the counterpart to <see cref="WaitForMcpConnectorForm{TForm}"/> for when a preceding action was
         /// expected to have already opened it. Fails if it is not open yet, revealing an action that did not open
-        /// its dialog synchronously.</summary>
+        /// its dialog synchronously. Not for a top-level dialog the test has just shown in-process: that may not be
+        /// visible to the connector yet, so show it with <see cref="ShowMcpConnectorForm{TForm}"/> instead.</summary>
         protected string GetOpenFormId<TForm>() where TForm : Form =>
             GetOpenFormId(typeof(TForm).Name);
 
