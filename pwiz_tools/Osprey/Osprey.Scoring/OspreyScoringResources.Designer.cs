@@ -643,7 +643,16 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Local RT tolerance ({0} nearest calibration points): up to {1:F2} min, wider than global at {2:P1} of points.
+        /// </summary>
+        public static string ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance {
+            get {
+                return ResourceManager.GetString("ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Scoring isolation windows.
         /// </summary>

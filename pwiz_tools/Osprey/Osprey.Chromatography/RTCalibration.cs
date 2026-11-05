@@ -641,6 +641,106 @@ namespace pwiz.Osprey.Chromatography
     }
 
     /// <summary>
+    /// An RT search-window half-width that varies with library RT: never narrower than the global
+    /// half-width, and wider where the calibration points near that library RT scatter more than the
+    /// run as a whole (the OSPREY_LOCAL_RT_TOLERANCE experiment).
+    ///
+    /// <para>The case it is built for is a library whose RT predictor saturates at the gradient end:
+    /// many precursors pile up at nearly the same library RT but elute over minutes, so one global
+    /// half-width, sized by the run-wide MAD, cuts off a large share of them. At each calibration
+    /// point the half-width is <c>3 * 1.4826 * median |residual|</c> over the <c>neighbors</c>
+    /// points nearest in library RT - the global window's definition applied locally - clamped to
+    /// <c>[globalHalfWidth, maxHalfWidth]</c>, and interpolated linearly between points.</para>
+    /// </summary>
+    public class LocalRtTolerance
+    {
+        /// <summary>
+        /// The local half-widths at the points of <paramref name="calibration"/>, from the residuals
+        /// of the <paramref name="neighbors"/> points nearest each in library RT. Null when the
+        /// calibration has no points.
+        /// </summary>
+        public static LocalRtTolerance Create(RTCalibration calibration, int neighbors,
+            double globalHalfWidth, double maxHalfWidth)
+        {
+            var libraryRts = calibration.LibraryRts;
+            var absResiduals = calibration.AbsResiduals;
+            int n = libraryRts.Length;
+            if (n == 0 || absResiduals.Length != n || neighbors < 1)
+                return null;
+
+            int k = Math.Min(neighbors, n);
+            var halfWidths = new double[n];
+            var window = new double[k];
+            for (int i = 0; i < n; i++)
+            {
+                // The k points centred on i, shifted inward at either end of the library RT range.
+                int start = Math.Max(0, Math.Min(i - k / 2, n - k));
+                Array.Copy(absResiduals, start, window, 0, k);
+                double local = RTCalibration.SearchWindowRaw(LoessRegression.PercentileValue(window, 0.5));
+                halfWidths[i] = Math.Max(globalHalfWidth, Math.Min(maxHalfWidth, local));
+            }
+            return new LocalRtTolerance(libraryRts, halfWidths, globalHalfWidth);
+        }
+
+        private readonly double[] _libraryRts;
+        private readonly double[] _halfWidths;
+
+        private LocalRtTolerance(double[] libraryRts, double[] halfWidths, double globalHalfWidth)
+        {
+            _libraryRts = libraryRts;
+            _halfWidths = halfWidths;
+            GlobalHalfWidth = globalHalfWidth;
+            foreach (double w in halfWidths)
+                MaxHalfWidth = Math.Max(MaxHalfWidth, w);
+        }
+
+        /// <summary>The run-wide half-width, the floor of every local one.</summary>
+        public double GlobalHalfWidth { get; }
+
+        /// <summary>The widest local half-width at any calibration point.</summary>
+        public double MaxHalfWidth { get; }
+
+        /// <summary>The fraction of calibration points whose half-width is wider than the global one.</summary>
+        public double FractionWidened
+        {
+            get
+            {
+                int widened = 0;
+                foreach (double w in _halfWidths)
+                {
+                    if (w > GlobalHalfWidth)
+                        widened++;
+                }
+                return (double)widened / _halfWidths.Length;
+            }
+        }
+
+        /// <summary>
+        /// The half-width (minutes) to search a precursor of library RT <paramref name="libraryRt"/>
+        /// with: interpolated between the two nearest calibration points, and the end point's value
+        /// beyond either end.
+        /// </summary>
+        public double HalfWidth(double libraryRt)
+        {
+            int n = _libraryRts.Length;
+            int idx = Array.BinarySearch(_libraryRts, libraryRt);
+            if (idx < 0)
+                idx = ~idx;
+            if (idx == 0)
+                return _halfWidths[0];
+            if (idx >= n)
+                return _halfWidths[n - 1];
+
+            double x0 = _libraryRts[idx - 1];
+            double x1 = _libraryRts[idx];
+            if (x1 - x0 < 1e-12)
+                return Math.Max(_halfWidths[idx - 1], _halfWidths[idx]);
+            double t = (libraryRt - x0) / (x1 - x0);
+            return _halfWidths[idx - 1] + t * (_halfWidths[idx] - _halfWidths[idx - 1]);
+        }
+    }
+
+    /// <summary>
     /// Stratified sampler for RT calibration discovery.
     /// Distributes samples evenly across RT bins for representative calibration.
     /// Maps to RTStratifiedSampler in osprey-chromatography/src/calibration/rt.rs.

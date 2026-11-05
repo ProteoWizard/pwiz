@@ -280,6 +280,9 @@
   <data name="ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_" xml:space="preserve">
     <value>Coelution search using calibrated fragment tolerance: {0:F4} {1}</value>
   </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance" xml:space="preserve">
+    <value>Local RT tolerance ({0} nearest calibration points): up to {1:F2} min, wider than global at {2:P1} of points</value>
+  </data>
   <data name="ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows" xml:space="preserve">
     <value>Scoring isolation windows</value>
   </data>

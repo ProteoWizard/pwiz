@@ -113,6 +113,14 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public OspreyConfig CorrelationConfig { get; set; }
 
+        /// <summary>
+        /// The library-RT-dependent search half-width when OSPREY_LOCAL_RT_TOLERANCE is set and the
+        /// run is calibrated: never narrower than the global half-width, wider where the calibration
+        /// scatters more locally. Set by <c>ScoringPipeline.RunCoelutionScoring</c>; null otherwise,
+        /// so every precursor is searched with the one global half-width.
+        /// </summary>
+        public LocalRtTolerance LocalRtTolerance { get; set; }
+
         public ScoringContext(OspreyConfig config, string fileName)
         {
             Config = config;
