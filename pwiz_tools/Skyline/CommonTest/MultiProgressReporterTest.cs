@@ -75,11 +75,11 @@ namespace CommonTest
             {
                 // Segment 1/4 (read): a reporter inside the scope feeds the slice.
                 file.BeginSegment();
-                using (var reader = new ProgressReporter("Reading fileA", 100))
+                ProgressReporter.Run("Reading fileA", 100, reader =>
                 {
                     reader.Report(50);                 // (0*100 + 50) / 4 = 12
                     percents.Add(file.Slot.Percent);
-                }                                       // Dispose banks segment at 100 -> 25
+                });                                    // Completing banks the segment at 100 -> 25
                 percents.Add(file.Slot.Percent);
                 // Segment 2/4 (calibrate): no reporter - BeginSegment alone carries
                 // the file to the slice boundary (50%) when segment 3 opens.
@@ -94,7 +94,7 @@ namespace CommonTest
                 fileBlock = file.BufferContents;
             }
             AssertEx.AreEqual(12, percents[0], "segment 1 at 50% should compose to 12%");
-            AssertEx.AreEqual(25, percents[1], "segment 1 disposed should bank the slice at 25%");
+            AssertEx.AreEqual(25, percents[1], "segment 1 completed should bank the slice at 25%");
             AssertEx.AreEqual(50, percents[2], "two segments behind should floor the file at 50%");
             AssertEx.AreEqual(75, percents[3], "segment 3 at 100% should compose to 75%");
             AssertEx.Contains(fileBlock, Heading("Reading fileA"));

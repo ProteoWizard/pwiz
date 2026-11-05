@@ -37,7 +37,8 @@ namespace pwiz.Osprey.Test
         /// A library is the same object in memory whichever file it came from: the subset .tsv
         /// loaded directly, and loaded back from its .blib export, are compared entry by entry
         /// and field by field - identity, modifications, every fragment's m/z, intensity and
-        /// annotation, proteins - and every difference is listed. The library-decoy subset goes
+        /// annotation, proteins - and every difference is listed. So are the .tsv read with LF
+        /// line endings, as DIA-NN writes it on Linux, and with CRLF. The library-decoy subset goes
         /// through <see cref="LibraryLoader"/> as well: the .tsv with its pairing manifest,
         /// and its export loaded with no manifest at all, must agree on every entry's pairing id
         /// and on the entrapment pairing built from them. The regression's
@@ -53,6 +54,7 @@ namespace pwiz.Osprey.Test
             var report = new List<string>();
             report.AddRange(RoundTripDifferences(_dataDir, LIBRARY_FILE, FragmentToleranceConfig.UnitResolution(0.5)));
             report.AddRange(RoundTripDifferences(ExtractAstral(), ASTRAL_LIBRARY_FILE, FragmentToleranceConfig.Hram(10)));
+            report.AddRange(LineEndingDifferences());
             report.AddRange(LoaderRoundTripDifferences());
             report.AddRange(DerivedLibraryDifferences());
             // The same library with its modifications printed as masses, as DIA-NN prints them:
@@ -94,6 +96,33 @@ namespace pwiz.Osprey.Test
             LibraryBlibWriter.Write(blib, fromTsv, Path.GetFileName(tsv));
             var fromBlib = new BlibLoader(tolerance).Load(blib);
             return DescribeDifferences(libraryFile, LibraryDifferences(fromTsv, fromBlib), fromTsv.Count);
+        }
+
+        /// <summary>
+        /// The differences between the subset library read from LF-only bytes, as DIA-NN writes
+        /// it on Linux, and read from the same bytes with CRLF endings. The two files differ in
+        /// nothing but the CR before each LF; the loader must read them to the same entries.
+        /// </summary>
+        private List<string> LineEndingDifferences()
+        {
+            var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
+            string text = File.ReadAllText(Path.Combine(_dataDir, LIBRARY_FILE)).Replace(TextUtil.CRLF, TextUtil.LF);
+            string lfPath = Path.Combine(_testDir, @"lf-" + LIBRARY_FILE);
+            string crlfPath = Path.Combine(_testDir, @"crlf-" + LIBRARY_FILE);
+            File.WriteAllText(lfPath, text);
+            File.WriteAllText(crlfPath, text.Replace(TextUtil.LF, TextUtil.CRLF));
+            byte[] lfBytes = File.ReadAllBytes(lfPath);
+            byte[] crlfBytes = File.ReadAllBytes(crlfPath);
+            Assert.AreEqual(-1, Array.IndexOf(lfBytes, (byte) '\r'), lfPath);
+            int lineCount = lfBytes.Count(b => b == '\n');
+            Assert.IsTrue(lineCount > 1, lfPath);
+            CollectionAssert.AreEqual(lfBytes, crlfBytes.Where(b => b != '\r').ToArray(), @"the two files differ in more than line endings");
+            Assert.AreEqual(lfBytes.Length + lineCount, crlfBytes.Length);
+
+            var fromLf = new DiannTsvLoader(tolerance).Load(lfPath);
+            var fromCrlf = new DiannTsvLoader(tolerance).Load(crlfPath);
+            Assert.IsTrue(fromLf.Count > 0, lfPath);
+            return DescribeDifferences(@"LF vs CRLF " + LIBRARY_FILE, LibraryDifferences(fromCrlf, fromLf), fromCrlf.Count);
         }
 
         /// <summary>

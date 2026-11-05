@@ -274,12 +274,17 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const string META_RECONCILED = @"osprey.reconciled";
 
+        /// <summary>The footer metadata key holding the search settings hash the scores were written under.</summary>
+        public const string META_SEARCH_HASH = @"osprey.search_hash";
+
         // Score parquets whose charge column a library-identity walk has already checked
         // (RequireFileCharges) in this process. The check costs a seek per row group on a
         // spinning disk, and first-pass FDR walks each file six or more times, so each file is
-        // checked on its first walk only. A file never changes under a running task.
+        // checked on its first walk only. A file never changes under a running task. Keys are
+        // the paths as given, compared as the file system compares names, so two Linux files
+        // differing only in case are each checked.
         private static readonly ConcurrentDictionary<string, bool> _chargesChecked =
-            new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            new ConcurrentDictionary<string, bool>(PathComparison.Comparer);
 
         /// <summary>
         /// True when <paramref name="path"/> is a reconciled parquet holding the survivor
@@ -415,6 +420,10 @@ namespace pwiz.Osprey.IO
         // only the append is ordered - so this is purely a speed/memory trade. Defaults to the
         // core count; 1 prepares the columns one at a time through the same code, which is how
         // an A/B against the golden is taken.
+        private static readonly EnvVar ENV_PARQUET_WRITE_THREADS = new EnvVar(@"OSPREY_PARQUET_WRITE_THREADS", EnvVarGroup.performance,
+            @"Columns of a score parquet row group to compress at once. Output is identical at any value; " +
+            @"1 is the serial A/B arm.")
+            { ValueExample = @"<N>", DefaultValue = @"processors" };
         private static readonly int ParquetWriteThreads = ResolveParquetWriteThreads();
 
         /// <summary>
@@ -851,11 +860,10 @@ namespace pwiz.Osprey.IO
         {
             using (var saver = new SimpleFileSaver(path))
             {
-                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
-                using (var progress = new ProgressReporter(
-                    string.Format(OspreyIOResources.ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks, totalRows), totalRows, string.Empty,
-                    ProgressReporter.IO_INTERVAL_SECONDS))
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks, totalRows), totalRows, progress =>
                 {
+                    using var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write);
                     var writer = RunSync(ParquetWriter.CreateAsync(schema, stream, WriteOptions(schema)));
 
                     // Set custom metadata if provided
@@ -878,7 +886,7 @@ namespace pwiz.Osprey.IO
                     }
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
-                }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 saver.Commit();
             }
         }
@@ -934,7 +942,7 @@ namespace pwiz.Osprey.IO
 
         private static int ResolveParquetWriteThreads()
         {
-            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_WRITE_THREADS");
+            string raw = ENV_PARQUET_WRITE_THREADS.Value;
             if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
                 return n;
             return Environment.ProcessorCount;
@@ -1879,14 +1887,24 @@ namespace pwiz.Osprey.IO
                         sourceRowCount.ToString(CultureInfo.InvariantCulture);
                 }
 
-                using (var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 // No count in the heading: totalRows is every source row plus the added missing
                 // peaks, and keepIdentities drops most of them, so a count here reads as the
                 // number written and contradicts the "Wrote N" line that follows.
-                using (var progress = progressIndent == null ? null : new ProgressReporter(
-                    OspreyIOResources.ParquetScoreCache_static_Writing_precursor_candidate_peaks, totalRows, progressIndent,
-                    ProgressReporter.IO_INTERVAL_SECONDS))
+                if (progressIndent == null)
                 {
+                    WriteRows(null);
+                }
+                else
+                {
+                    ProgressReporter.Run(OspreyIOResources.ParquetScoreCache_static_Writing_precursor_candidate_peaks, totalRows,
+                        WriteRows, progressIndent, ProgressReporter.IO_INTERVAL_SECONDS);
+                }
+                saver.Commit();
+
+                // The write itself, reporting through progress, or silent when it is null.
+                void WriteRows(ProgressReporter progress)
+                {
+                    using var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write);
                     var writer = RunSync(ParquetWriter.CreateAsync(fields.Schema, writeStream, WriteOptions(fields.Schema)));
                     if (metadata != null && metadata.Count > 0)
                         writer.CustomMetadata = metadata;
@@ -2001,7 +2019,6 @@ namespace pwiz.Osprey.IO
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
                 }
-                saver.Commit();
             }
 
             // Overlay indices that never matched a streamed row lie past the original's

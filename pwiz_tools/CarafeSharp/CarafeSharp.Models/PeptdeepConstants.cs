@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Models
