@@ -215,14 +215,18 @@ namespace pwiz.Osprey.Tasks
         /// The demultiplexing settings are here for the same reason: they
         /// decide the spectra every task's output is computed from. See
         /// <see cref="DemuxCache.ValidityKeySuffix(OspreyConfig)"/>.
+        ///
+        /// The MS2 m/z calibration method is here for the same reason: it moves every MS2 m/z the
+        /// search scores (<see cref="OspreyEnvironment.Ms2CalValidityKeySuffix"/>).
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}{3}{4}",
+            @"search={0};library={1}{2}{3}{4}{5}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
             ReaderTerm(ctx.Config.LibrarySource?.Format),
-            DemuxCache.ValidityKeySuffix(ctx.Config));
+            DemuxCache.ValidityKeySuffix(ctx.Config),
+            OspreyEnvironment.Ms2CalValidityKeySuffix(ctx.Config.FragmentTolerance.Unit));
 
         /// <summary>The reader-version term of the validity key for a library of <paramref name="format"/>.</summary>
         private static string ReaderTerm(LibraryFormat? format)

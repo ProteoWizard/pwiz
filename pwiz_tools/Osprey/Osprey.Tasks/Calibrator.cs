@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Common.SystemUtil;
@@ -1789,6 +1790,32 @@ namespace pwiz.Osprey.Tasks
             _ctx.LogVerbose(string.Format(
                 OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__fragment_,
                 passNumber, ms2Calibration.Mean, unitText, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
+            if (UsesMs2OffsetCurve(config))
+            {
+                // Unit-resolution MS2: an offset beyond half the fragment tolerance, which the mean
+                // cannot see, is calibrated by the m/z-dependent curve instead. An offset within it,
+                // or too few fragments to fit one: the mean stays.
+                var peaks = new List<Ms2FragmentPeaks>();
+                foreach (var m in contributingMatches)
+                {
+                    if (m.Ms2FragmentPeaks != null)
+                        peaks.AddRange(m.Ms2FragmentPeaks);
+                }
+                var curve = Ms2OffsetCurve.Calculate(peaks, config.FragmentTolerance.Tolerance, out double shift);
+                if (curve != null)
+                {
+                    ms2Calibration = curve;
+                    _ctx.LogVerbose(string.Format(
+                        OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____offset__1__to__2___3___SD__4___3___3_SD__5___3___n__6__fragments_,
+                        passNumber, curve.OffsetCurve.Min(), curve.OffsetCurve.Max(), unitText, curve.SD, 3.0 * curve.SD, curve.Count));
+                }
+                else if (!double.IsNaN(shift))
+                {
+                    _ctx.LogVerbose(string.Format(
+                        OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__within_half_the__3___2__tolerance__the_mean_is_kept,
+                        passNumber, shift, unitText, config.FragmentTolerance.Tolerance));
+                }
+            }
         }
 
         /// <summary>
@@ -2170,8 +2197,10 @@ namespace pwiz.Osprey.Tasks
                 : s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
             byte top6Matched = TopFragmentExtractor.CountTop6Matches(entry, apexSpectrum, config);
 
-            // Collect MS2 fragment mass errors at apex for m/z calibration.
+            // Collect MS2 fragment mass errors at apex for m/z calibration, and for unit-resolution
+            // data the peaks around each fragment, which its m/z-dependent calibration is found from.
             var ms2Errors = CollectMs2FragmentErrors(entry, apexSpectrum, config);
+            var ms2Peaks = UsesMs2OffsetCurve(config) ? CollectMs2FragmentPeaks(entry, apexSpectrum) : null;
 
             // MS1 precursor mass error at apex for MS1 mass calibration.
             double? ms1Error = ComputeMs1MassError(entry, ms1Spectra, apexRt, config);
@@ -2204,6 +2233,7 @@ namespace pwiz.Osprey.Tasks
                 DiscriminantScore = bestCorrSum,
                 QValue = 1.0,
                 Ms2MassErrors = ms2Errors.ToArray(),
+                Ms2FragmentPeaks = ms2Peaks,
                 Ms1Error = ms1Error
             };
         }
@@ -2477,6 +2507,48 @@ namespace pwiz.Osprey.Tasks
                     ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, apexSpectrum.Mzs[best]));
             }
             return ms2Errors;
+        }
+
+        /// <summary>
+        /// Whether the MS2 m/z calibration is the m/z-dependent curve of <see cref="Ms2OffsetCurve"/>:
+        /// for unit-resolution (Th) tolerances, unless OSPREY_MS2_CAL_MEAN asks for Rust's mean.
+        /// </summary>
+        private static bool UsesMs2OffsetCurve(OspreyConfig config)
+        {
+            return config.FragmentTolerance.Unit == ToleranceUnit.Mz && !OspreyEnvironment.Ms2CalMean;
+        }
+
+        /// <summary>
+        /// The same top fragments as <see cref="CollectMs2FragmentErrors"/>, each with every peak of
+        /// the apex spectrum within <see cref="Ms2OffsetCurve.SCAN_HALF_WIDTH_TH"/> of it, for the
+        /// unit-resolution MS2 m/z calibration.
+        /// </summary>
+        private static Ms2FragmentPeaks[] CollectMs2FragmentPeaks(LibraryEntry entry, Spectrum apexSpectrum)
+        {
+            int[] topIndices = TopFragmentExtractor.SelectTopFragmentIndices(
+                entry.Fragments, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS);
+            var mzs = apexSpectrum.Mzs;
+            var intensities = apexSpectrum.Intensities;
+            var peaks = new Ms2FragmentPeaks[topIndices.Length];
+            for (int k = 0; k < topIndices.Length; k++)
+            {
+                var fragment = entry.Fragments[topIndices[k]];
+                double fragMz = fragment.Mz;
+                var offsets = new List<double>();
+                var heights = new List<double>();
+                if (mzs != null && mzs.Length > 0)
+                {
+                    double upper = fragMz + Ms2OffsetCurve.SCAN_HALF_WIDTH_TH;
+                    for (int i = apexSpectrum.MzLowerBound(fragMz - Ms2OffsetCurve.SCAN_HALF_WIDTH_TH);
+                         i < mzs.Length && mzs[i] <= upper; i++)
+                    {
+                        offsets.Add(mzs[i] - fragMz);
+                        heights.Add(intensities[i]);
+                    }
+                }
+                peaks[k] = new Ms2FragmentPeaks(fragMz, fragment.Annotation.Charge, offsets.ToArray(), heights.ToArray());
+            }
+            return peaks;
         }
 
         /// <summary>

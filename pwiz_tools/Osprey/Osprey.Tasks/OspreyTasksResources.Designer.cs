@@ -117,7 +117,27 @@ namespace pwiz.Osprey.Tasks {
                         "__3___2___3_SD__4___2___n__5__fragment_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 m/z offset (pass {0}): shift {1:F3} {2}, within half the {3:F2} {2} tolerance: the mean is kept.
+        /// </summary>
+        public static string Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__within_half_the__3___2__tolerance__the_mean_is_kept {
+            get {
+                return ResourceManager.GetString("Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__wit" +
+                        "hin_half_the__3___2__tolerance__the_mean_is_kept", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 m/z offset curve (pass {0}): offset {1:F3} to {2:F3} {3}, SD={4:F4} {3}, 3*SD={5:F4} {3} (n={6:N0} fragments).
+        /// </summary>
+        public static string Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____offset__1__to__2___3___SD__4___3___3_SD__5___3___n__6__fragments_ {
+            get {
+                return ResourceManager.GetString("Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____offset__1__" +
+                        "to__2___3___SD__4___3___3_SD__5___3___n__6__fragments_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}.
         /// </summary>

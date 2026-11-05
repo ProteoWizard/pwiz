@@ -277,6 +277,34 @@ namespace pwiz.Osprey.Core
             @"the configured size.")
             { ValueExample = @"<N>" };
 
+        private static readonly EnvVar ENV_MS2_CAL_MEAN = new EnvVar(@"OSPREY_MS2_CAL_MEAN", EnvVarGroup.behavior,
+            @"Calibrate unit-resolution MS2 m/z by one mean offset, as Rust osprey does, even where the " +
+            @"offset is beyond half the fragment tolerance. For cross-implementation parity runs.");
+
+        /// <summary>
+        /// OSPREY_MS2_CAL_MEAN: calibrate unit-resolution (Th) MS2 m/z as Rust osprey does - the mean
+        /// of each top fragment's closest peak within the fragment tolerance, one offset for every
+        /// m/z - even where the offset lies beyond half the fragment tolerance, which by default is
+        /// calibrated by the m/z-dependent curve of the shift that matches the most fragments
+        /// (<c>Ms2OffsetCurve</c>). For cross-implementation parity runs: the mean cannot see an
+        /// offset as wide as the tolerance, which some Stellar runs' MS2 have. An offset within half
+        /// the tolerance keeps the mean either way, as does ppm calibration. Part of the validity key
+        /// (<see cref="Ms2CalValidityKeySuffix"/>).
+        /// </summary>
+        public static readonly bool Ms2CalMean = IsSetAndNotZero(ENV_MS2_CAL_MEAN);
+
+        /// <summary>
+        /// The validity-key term for the MS2 m/z calibration: empty for ppm, whose calibration did not
+        /// change, and the method for Th, whose default moved from the mean to the curve where the
+        /// offset is large, so a run never adopts outputs scored under the other (<see cref="Ms2CalMean"/>).
+        /// </summary>
+        public static string Ms2CalValidityKeySuffix(ToleranceUnit fragmentUnit)
+        {
+            if (fragmentUnit != ToleranceUnit.Mz)
+                return string.Empty;
+            return Ms2CalMean ? @";ms2cal=mean" : @";ms2cal=curve";
+        }
+
         /// <summary>
         /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
         /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize

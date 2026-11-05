@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -388,6 +389,154 @@ namespace pwiz.Osprey.Test
             double observedOutside = theoretical * (1.0 + 5.0 / 1e6);
             Assert.IsFalse(MzCalibration.IsWithinCalibratedTolerance(
                 observedOutside, theoretical, calibration, 10.0));
+        }
+
+        /// <summary>
+        /// The unit-resolution MS2 m/z calibration (<see cref="Ms2OffsetCurve"/>) recovers an offset
+        /// that runs from -0.40 Th at m/z 200 to -0.55 Th above 600, as large as the 0.5 Th fragment
+        /// tolerance, from fragments whose spectra also carry their M+1 isotope and noise peaks; the
+        /// mean of each fragment's closest peak within the tolerance, the ppm calibration, does not.
+        /// A shift that lands on the M+1 is stepped back to the monoisotopic peak. An offset within half
+        /// the tolerance, which the mean sees, is left to the mean. The curve is subtracted at each
+        /// m/z, kept through the calibration file, and a file without one keeps its mean.
+        /// </summary>
+        [TestMethod]
+        public void TestMs2OffsetCurve()
+        {
+            const double fragmentTolerance = 0.5;
+            var fragments = SyntheticIonTrapFragments(3000, new Random(17), TrueIonTrapOffset);
+
+            var curve = Ms2OffsetCurve.Calculate(fragments, fragmentTolerance, out double shift);
+            Assert.IsNotNull(curve);
+            Assert.AreEqual(TrueIonTrapOffset(700), shift, 0.1);
+            Assert.IsTrue(curve.Calibrated);
+            Assert.IsTrue(curve.HasOffsetCurve);
+            Assert.AreEqual(MzCalibration.UNIT_TH, curve.Unit);
+            foreach (double mz in new[] { 250.0, 400.0, 600.0, 800.0, 1100.0 })
+            {
+                Assert.AreEqual(TrueIonTrapOffset(mz), curve.OffsetAt(mz), 0.03,
+                    string.Format("offset at m/z {0}", mz));
+            }
+            // The real peaks scatter by 0.08 Th; the M+1 isotopes are not taken for them, and only the
+            // noise peaks of fragments without one, within the association window, widen the SD.
+            Assert.IsTrue(curve.SD > 0.05 && curve.SD < 0.16, string.Format("SD {0}", curve.SD));
+            Assert.AreEqual(3.0 * curve.SD, curve.AdjustedTolerance.Value, TOLERANCE);
+            Assert.IsTrue(curve.Count > 0.8 * fragments.Count, string.Format("{0} associated", curve.Count));
+            Assert.AreEqual(Ms2OffsetCurve.KNOT_COUNT, curve.OffsetCurveMz.Length);
+
+            // The closest peak within the 0.5 Th tolerance, averaged: the window cuts the real peaks
+            // in half and takes the neighbour above as often, so the mean lands far from the offset.
+            var closest = new List<double>();
+            foreach (var fragment in fragments)
+            {
+                double best = double.MaxValue;
+                foreach (double o in fragment.Offsets)
+                {
+                    if (Math.Abs(o) <= 0.5 && Math.Abs(o) < Math.Abs(best))
+                        best = o;
+                }
+                if (best != double.MaxValue)
+                    closest.Add(best);
+            }
+            var mean = MzCalibration.CalculateSingleLevel(closest.ToArray(), MzCalibration.UNIT_TH);
+            Assert.IsTrue(mean.Mean - TrueIonTrapOffset(700) > 0.25, string.Format("closest-peak mean {0}", mean.Mean));
+
+            // Applied: each observed m/z less the curve's offset there.
+            double observed = 800.0 + TrueIonTrapOffset(800.0);
+            Assert.AreEqual(observed - curve.OffsetAt(observed), MzCalibration.ApplyCalibration(observed, curve), TOLERANCE);
+            Assert.AreEqual(800.0, MzCalibration.ApplyCalibration(observed, curve), 0.03);
+
+            // Through the calibration file and back; a file written before the curve keeps its mean.
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(MzCalibrationJson.FromResult(curve));
+            Assert.IsTrue(json.Contains("\"offset_curve\""));
+            var loaded = Newtonsoft.Json.JsonConvert.DeserializeObject<MzCalibrationJson>(json).ToResult();
+            Assert.IsTrue(loaded.HasOffsetCurve);
+            foreach (double mz in new[] { 150.0, 333.3, 777.7, 1300.0 })
+                Assert.AreEqual(curve.OffsetAt(mz), loaded.OffsetAt(mz), TOLERANCE);
+            var meanOnly = MzCalibrationJson.FromResult(mean);
+            Assert.IsFalse(Newtonsoft.Json.JsonConvert.SerializeObject(meanOnly).Contains("\"offset_curve\""));
+            var meanLoaded = meanOnly.ToResult();
+            Assert.IsFalse(meanLoaded.HasOffsetCurve);
+            Assert.AreEqual(observed - mean.Mean, MzCalibration.ApplyCalibration(observed, meanLoaded), TOLERANCE);
+            Assert.IsNull(MzCalibrationJson.Uncalibrated().ToResult());
+
+            // Too few fragments to fit: no curve, and the caller keeps the mean.
+            Assert.IsNull(Ms2OffsetCurve.Calculate(SyntheticIonTrapFragments(Ms2OffsetCurve.MIN_FRAGMENTS / 2, new Random(3), TrueIonTrapOffset),
+                fragmentTolerance, out shift));
+            Assert.IsTrue(double.IsNaN(shift));
+
+            // An offset well inside the tolerance, as most runs have: the mean sees it, and is kept. The
+            // same fragments searched with a tolerance no wider than twice the offset get the curve.
+            var small = SyntheticIonTrapFragments(3000, new Random(5), mz => -0.06 - 0.0001 * (mz - 200.0));
+            Assert.IsNull(Ms2OffsetCurve.Calculate(small, fragmentTolerance, out shift));
+            Assert.AreEqual(-0.11, shift, 0.06);
+            Assert.IsNotNull(Ms2OffsetCurve.Calculate(small, 0.1, out shift));
+
+            // A run of tied shifts gives its middle: every fragment's one peak at exactly -0.6 Th ties the
+            // shifts from -0.8 to -0.4.
+            var tight = new List<Ms2FragmentPeaks>();
+            for (int i = 0; i < 200; i++)
+                tight.Add(new Ms2FragmentPeaks(300 + i, 1, new[] { -0.6 }, new[] { 1.0 }));
+            Assert.AreEqual(-0.6, Ms2OffsetCurve.BestShift(tight), 1e-9);
+
+            // Half a Th off is between a fragment's isotopes: a shift on the M+1 has the larger
+            // monoisotopic peak one spacing below it in most fragments, and steps back to it; at the
+            // monoisotopic peak nothing larger lies below, and the shift stays.
+            double mono = TrueIonTrapOffset(800);
+            var isotopes = new List<Ms2FragmentPeaks>();
+            for (int i = 0; i < 300; i++)
+            {
+                isotopes.Add(new Ms2FragmentPeaks(700 + i / 3.0, 1,
+                    new[] { mono, mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH }, new[] { 1.0, 0.45 }));
+            }
+            Assert.AreEqual(mono, Ms2OffsetCurve.MonoisotopicShift(isotopes, mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH), 1e-9);
+            Assert.AreEqual(mono, Ms2OffsetCurve.MonoisotopicShift(isotopes, mono), 1e-9);
+        }
+
+        /// <summary>The offset the synthetic ion trap fragments are drawn about: -0.40 Th at m/z 200 to -0.55 Th above 600.</summary>
+        private static double TrueIonTrapOffset(double mz)
+        {
+            return -0.40 - 0.15 * Math.Min(1.0, Math.Max(0.0, (mz - 200.0) / 400.0));
+        }
+
+        /// <summary>
+        /// Singly charged fragments from 200 to 1200 m/z as a unit-resolution ion trap's centroids show
+        /// them: in 85% the monoisotopic peak at <paramref name="trueOffset"/> with 0.08 Th scatter, in
+        /// 70% of those its M+1 one isotope spacing above at 45% of its height, and two weaker noise
+        /// peaks anywhere in the collection window.
+        /// </summary>
+        private static List<Ms2FragmentPeaks> SyntheticIonTrapFragments(int count, Random random, Func<double, double> trueOffset)
+        {
+            var fragments = new List<Ms2FragmentPeaks>(count);
+            for (int i = 0; i < count; i++)
+            {
+                double mz = 200.0 + 1000.0 * random.NextDouble();
+                var peaks = new List<KeyValuePair<double, double>>();
+                if (random.NextDouble() < 0.85)
+                {
+                    double peak = trueOffset(mz) + 0.08 * Gaussian(random);
+                    peaks.Add(new KeyValuePair<double, double>(peak, 1.0));
+                    if (random.NextDouble() < 0.7)
+                        peaks.Add(new KeyValuePair<double, double>(peak + Ms2OffsetCurve.ISOTOPE_SPACING_TH, 0.45));
+                }
+                for (int n = 0; n < 2; n++)
+                {
+                    peaks.Add(new KeyValuePair<double, double>(
+                        (2 * random.NextDouble() - 1) * Ms2OffsetCurve.SCAN_HALF_WIDTH_TH, 0.2 * random.NextDouble()));
+                }
+                peaks.RemoveAll(p => Math.Abs(p.Key) > Ms2OffsetCurve.SCAN_HALF_WIDTH_TH);
+                peaks.Sort((a, b) => a.Key.CompareTo(b.Key));
+                fragments.Add(new Ms2FragmentPeaks(mz, 1, peaks.Select(p => p.Key).ToArray(), peaks.Select(p => p.Value).ToArray()));
+            }
+            return fragments;
+        }
+
+        private static double Gaussian(Random random)
+        {
+            // Box-Muller.
+            double u1 = 1.0 - random.NextDouble();
+            double u2 = random.NextDouble();
+            return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
         }
 
         #endregion
