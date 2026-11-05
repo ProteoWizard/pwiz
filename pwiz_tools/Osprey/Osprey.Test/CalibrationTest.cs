@@ -638,6 +638,10 @@ namespace pwiz.Osprey.Test
                 calibration.Ms1Calibration.Calibrated = true;
 
                 CalibrationIO.SaveCalibration(calibration, tempPath, TestStamps.Any);
+                // LF on every platform, so a Windows and a Linux run write the same bytes.
+                string written = File.ReadAllText(tempPath);
+                Assert.AreEqual(-1, written.IndexOf('\r'), @"the calibration file has a CR");
+                Assert.IsTrue(written.IndexOf('\n') > 0, @"the calibration file is not indented");
                 var loaded = CalibrationIO.LoadCalibration(tempPath);
 
                 Assert.IsTrue(loaded.IsCalibrated);

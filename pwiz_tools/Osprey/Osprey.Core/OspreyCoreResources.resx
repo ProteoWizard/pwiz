@@ -145,11 +145,17 @@
   <data name="LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec" xml:space="preserve">
     <value>BiblioSpec</value>
   </data>
+  <data name="LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet" xml:space="preserve">
+    <value>DIA-NN Parquet</value>
+  </data>
   <data name="LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_TSV" xml:space="preserve">
     <value>DIA-NN TSV</value>
   </data>
   <data name="LibraryFormatExtension_LOCALIZED_VALUES_Skyline_document" xml:space="preserve">
     <value>Skyline document</value>
+  </data>
+  <data name="LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_" xml:space="preserve">
+    <value>A DIA-NN {0} library cannot be read; convert it to the DIA-NN {1} library format with: {2}</value>
   </data>
   <data name="LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_" xml:space="preserve">
     <value>EncyclopeDIA {0} spectral libraries are no longer supported; convert the library to DIA-NN TSV ({1}) or BiblioSpec ({2}).</value>
