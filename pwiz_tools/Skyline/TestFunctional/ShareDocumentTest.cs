@@ -329,7 +329,35 @@ namespace pwiz.SkylineTestFunctional
             string zipOnlyIgnoreFolder = Path.ChangeExtension(zipOnlyFailPath, SrmDocumentSharing.EXT_SKY_ZIP);
             File.Move(zipOnlyFailPath, zipOnlyIgnoreFolder);
             RunUI(() => SkylineWindow.LoadFile(zipOnlyIgnoreFolder));
+            var docFromZip = WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.NewDocument());
+
+            // A .sky.zip that lost its .zip extension (as can happen with a browser download)
+            // should still open, as should one with no extension at all
+            // Trailing space dropped from the folder name
+            VerifyOpenRenamedSharedFile(zipOnlyPath, "Renamed Share .sky", "Renamed Share", docFromZip);
+            // The zip itself occupies the folder name
+            VerifyOpenRenamedSharedFile(zipOnlyPath, "Share No Extension", "Share No Extension(1)", docFromZip);
+            // Nothing left after removing the extension
+            VerifyOpenRenamedSharedFile(zipOnlyPath, ".sky", ".sky(1)", docFromZip);
+        }
+
+        private void VerifyOpenRenamedSharedFile(string sharedPath, string renamedFileName, string expectedExtractFolder,
+            SrmDocument docExpected)
+        {
+            string renamedPath = Path.Combine(Path.GetDirectoryName(sharedPath) ?? string.Empty, renamedFileName);
+            File.Copy(sharedPath, renamedPath);
+            RunUI(() => Assert.IsTrue(SkylineWindow.LoadFile(renamedPath)));
+            var doc = WaitForDocumentLoaded();
+            AssertEx.IsDocumentState(doc, null, docExpected.MoleculeGroupCount, docExpected.MoleculeCount,
+                docExpected.MoleculeTransitionGroupCount, docExpected.MoleculeTransitionCount);
+            RunUI(() =>
+            {
+                // The document was extracted to a folder beside the renamed file, not opened in place
+                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(renamedPath) ?? string.Empty, expectedExtractFolder),
+                    Path.GetDirectoryName(SkylineWindow.DocumentFilePath));
+                SkylineWindow.NewDocument();
+            });
         }
 
         private void ShareWithRawFilesTest()

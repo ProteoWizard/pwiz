@@ -378,26 +378,12 @@ namespace pwiz.Skyline
             // ReSharper disable LocalizableElement
             string pathOpen = Uri.UnescapeDataString(uri.AbsolutePath).Replace("/", @"\");
             // ReSharper restore LocalizableElement
-            
-            // If the file chosen was the cache file, open its associated document.)
-            if (Equals(Path.GetExtension(pathOpen), ChromatogramCache.EXT))
-                pathOpen = Path.ChangeExtension(pathOpen, SrmDocument.EXT);
+
             // Handle direct open from UNC path names
             if (!string.IsNullOrEmpty(uri.Host))
                 pathOpen = @"//" + uri.Host + pathOpen;
 
-            if (pathOpen.EndsWith(SrmDocumentSharing.EXT))
-            {
-                return OpenSharedFile(pathOpen, parentWindow);
-            }
-            else if (pathOpen.EndsWith(SkypFile.EXT))
-            {
-                return OpenSkypFile(pathOpen, parentWindow);
-            }
-            else
-            {
-                return OpenFile(pathOpen, parentWindow);
-            }
+            return OpenDocumentFilePath(pathOpen, parentWindow);
         }
 
         protected override void OnHandleCreated(EventArgs e)
