@@ -251,9 +251,9 @@ namespace pwiz.Osprey.Scoring
             // scorer invokes it null-conditionally, so this is a no-op then).
             var coelutionScorer = new CoelutionScorer(_diagnostics, _recordedFeatures);
 
-            using (var progress = new ProgressReporter(
+            ProgressReporter.Run(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
-                windowsToScore.Count, passLabel == null ? string.Empty : @"  ", 2.0))
+                windowsToScore.Count, progress =>
             {
                 Parallel.For(0, windowsToScore.Count, new ParallelOptions
                 {
@@ -296,8 +296,7 @@ namespace pwiz.Osprey.Scoring
                         progress.Report(windowsProcessed);
                     }
                 });
-                progress.Complete();
-            }
+            }, passLabel == null ? string.Empty : @"  ", 2.0);
 
             // Flatten in deterministic window-index order.
             for (int wIdx = 0; wIdx < windowResults.Length; wIdx++)
