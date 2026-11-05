@@ -70,6 +70,8 @@ message SkylineDocumentProto {
 		bool forcedIntegration = 25;
 		PeakShapeValues peakShapeValues = 26;
 		google.protobuf.DoubleValue ionMobilityCollisionCrossSection = 27;
+		google.protobuf.FloatValue observedIonMobility = 28;
+		google.protobuf.FloatValue observedCollisionCrossSection = 29;
 		message PeakShapeValues {
 			float stdDev = 1;
 			float skewness = 2;

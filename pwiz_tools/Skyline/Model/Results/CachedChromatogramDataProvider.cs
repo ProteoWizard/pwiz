@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly bool _sourceHasPositivePolarityData;
         private readonly bool _sourceHasNegativePolarityData;
+        // Captured up front, since the cache builder asks for it after ReleaseMemory() drops the cache
+        private readonly eIonMobilityUnits _ionMobilityUnits;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -66,6 +68,7 @@ namespace pwiz.Skyline.Model.Results
             _cache = cache = cache.ChangeReadStream(loader.StreamManager.CreatePooledStream(cache.CachePath, false));
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
+            _ionMobilityUnits = _fileIndex >= 0 ? cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none;
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
             foreach (var c in _chromKeyIndices.Where(i => i.Key.Precursor != 0))
             {
@@ -92,7 +95,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromKeyIndices.Select((v, i) => new ChromKeyProviderIdPair(v.Key, i)); }
         }
 
-        public override eIonMobilityUnits IonMobilityUnits { get { return _cache != null ? _cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
 
         public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {

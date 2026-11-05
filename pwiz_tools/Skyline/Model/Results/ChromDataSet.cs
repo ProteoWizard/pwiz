@@ -299,7 +299,64 @@ namespace pwiz.Skyline.Model.Results
                     Remove(chromData);
                 }
             }
+            AddObservedCcs(provider.IonMobilityFunctionsProvider);
             return _listChromData.Count > 0;
+        }
+
+        /// <summary>
+        /// Converts each point's observed IM to observed CCS with the data file's vendor IM to CCS
+        /// conversion (a vendor black box), while the file is open. Storing CCS per point lets a
+        /// peak picked again later, by rescoring or manual integration, read its CCS at its apex
+        /// just as it reads its IM, without the data file. Open formats like mzML and mz5 do not
+        /// expose the conversion, and chromatograms read back from the cache already carry their
+        /// CCS. CCS is a property of the precursor ion, so chromatograms extracted from MS2
+        /// spectra (in the high-energy IM frame) get none.
+        /// </summary>
+        private void AddObservedCcs(IIonMobilityFunctionsProvider converter)
+        {
+            if (converter == null || !converter.ProvidesCollisionalCrossSectionConverter)
+                return;
+            int charge = NodeGroup?.PrecursorCharge ?? 0;
+            if (charge == 0)
+                return;
+            double mz = PrecursorMz;
+            foreach (var chromData in _listChromData)
+            {
+                var timeIntensities = chromData.RawTimeIntensities;
+                var observedIonMobilities = timeIntensities?.ObservedIonMobilities;
+                if (observedIonMobilities == null || timeIntensities.ObservedCcs != null || chromData.Key.Source == ChromSource.fragment)
+                    continue;
+                var imFilter = chromData.Key.IonMobilityFilter;
+                if (IonMobilityFilter.IsNullOrEmpty(imFilter) || !imFilter.HasIonMobilityValue)
+                    continue;
+                var imUnits = imFilter.IonMobility.Units;
+                var observedCcs = new float[observedIonMobilities.Count];
+                for (int i = 0; i < observedCcs.Length; i++)
+                {
+                    float observedIonMobility = observedIonMobilities[i];
+                    if (!(observedIonMobility > 0))
+                        continue;
+                    var ionMobility = IonMobilityValue.GetIonMobilityValue(observedIonMobility, imUnits);
+                    var ccs = GetObservedCcs(converter, ionMobility, mz, charge, NodeGroup);
+                    if (ccs.HasValue)
+                        observedCcs[i] = (float) ccs.Value;
+                }
+                if (observedCcs.Any(value => value > 0))
+                    chromData.SetObservedCcs(observedCcs);
+            }
+        }
+
+        /// <summary>
+        /// Observed CCS for an observed IM, from the vendor-supplied conversion, or null when the
+        /// conversion gives no value.
+        /// </summary>
+        internal static double? GetObservedCcs(IIonMobilityFunctionsProvider converter, IonMobilityValue ionMobility,
+            double mz, int charge, object obj)
+        {
+            double ccs = converter.CCSFromIonMobility(ionMobility, mz, charge, obj);
+            if (ccs == 0 || double.IsNaN(ccs))
+                return null;
+            return ccs;
         }
 
         internal float MinRawTime
@@ -1398,12 +1455,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public TimeIntensitiesGroup ToGroupOfTimeIntensities(bool useRawTimes)
+        public TimeIntensitiesGroup ToGroupOfTimeIntensities(bool useRawTimes, int observedIonMobilityScale)
         {
             if (useRawTimes)
             {
                 var rawTimeIntensities = new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
-                    InterpolationParams);
+                    InterpolationParams, observedIonMobilityScale);
                 if (TimeIntervals != null)
                 {
                     rawTimeIntensities = rawTimeIntensities.ChangeTimeIntervals(TimeIntervals);
@@ -1411,7 +1468,7 @@ namespace pwiz.Skyline.Model.Results
 
                 return rawTimeIntensities;
             }
-            return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
+            return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities),
                 _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
         }
 
@@ -1464,7 +1521,8 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNames featureNames, ChromCachedFile chromCachedFile)
         {
-            var timeIntensitiesGroup = ToGroupOfTimeIntensities(true);
+            var timeIntensitiesGroup = ToGroupOfTimeIntensities(true,
+                RawTimeIntensities.GetObservedIonMobilityScaleOrZero(chromCachedFile.IonMobilityUnits));
             var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
             var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();

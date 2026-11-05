@@ -93,6 +93,18 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
+        /// <summary>
+        /// Adds per-point observed CCS to the loaded points, before they are interpolated.
+        /// </summary>
+        public void SetObservedCcs(IEnumerable<float> observedCcs)
+        {
+            if (!ReferenceEquals(TimeIntensities, RawTimeIntensities))
+            {
+                throw new InvalidOperationException(@"Cannot add observed CCS after interpolation");
+            }
+            TimeIntensities = RawTimeIntensities = RawTimeIntensities.ChangeObservedCcs(observedCcs);
+        }
+
         public ChromData Truncate(double minTime, double maxTime)
         {
             if (!ReferenceEquals(Times, RawTimes))
@@ -383,8 +395,9 @@ namespace pwiz.Skyline.Model.Results
 
         public void Interpolate(float[] timesNew, bool inferZeros)
         {
-            var chromatogramTimeIntensities = new TimeIntensities(RawTimes, RawIntensities, RawMassErrors, RawScanIds);
-            TimeIntensities = chromatogramTimeIntensities.Interpolate(timesNew, inferZeros);
+            // Interpolate directly from RawTimeIntensities so per-time-point side data
+            // (mass errors, observed IM, etc.) is preserved through the resampling.
+            TimeIntensities = RawTimeIntensities.Interpolate(timesNew, inferZeros);
         }
 
         public int CompareTo(ChromData other)

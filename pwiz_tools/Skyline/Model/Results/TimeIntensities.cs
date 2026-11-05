@@ -28,28 +28,51 @@ namespace pwiz.Skyline.Model.Results
     public class TimeIntensities : Immutable
     {
         public static readonly TimeIntensities EMPTY = new TimeIntensities(ImmutableList<float>.EMPTY, ImmutableList<float>.EMPTY, null, null);
-        
+
         public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities) : this(times, intensities, null, null)
         {
         }
-        
-        public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities, IEnumerable<float> massErrors, IEnumerable<int> scanIds)
+
+        public TimeIntensities(IEnumerable<float> times, IEnumerable<float> intensities, IEnumerable<float> massErrors, IEnumerable<int> scanIds,
+            IEnumerable<float> observedIonMobilities = null, IEnumerable<float> observedCcs = null)
         {
             Times = ImmutableList<float>.ValueOf(times);
             Intensities = ImmutableList.ValueOf(intensities);
             MassErrors = ImmutableList<float>.ValueOf(massErrors);
             ScanIds = ImmutableList<int>.ValueOf(scanIds);
+            ObservedIonMobilities = ImmutableList<float>.ValueOf(observedIonMobilities);
+            ObservedCcs = ImmutableList<float>.ValueOf(observedCcs);
         }
 
         public ImmutableList<float> Times { get; private set; }
         public ImmutableList<float> Intensities { get; private set; }
         public ImmutableList<float> MassErrors { get; private set; }
+        // Per-time-point intensity-weighted observed IM (raw IM units). Null when no IM
+        // filter window is in use, or the source uses a non-tracked IM unit - FAIMS
+        // (compensation_V), Waters SONAR (waters_sonar), or none/unknown (see
+        // RawTimeIntensities.IsTrackedObservedIonMobilityUnit).
+        public ImmutableList<float> ObservedIonMobilities { get; private set; }
+        // Per-time-point observed CCS (sq Angstroms), converted from ObservedIonMobilities by the
+        // data file's vendor IM to CCS conversion while the file is open at import. Present only
+        // for precursor chromatograms from files that provide that conversion; 0 marks a point
+        // without one.
+        public ImmutableList<float> ObservedCcs { get; private set; }
         public ImmutableList<int> ScanIds { get; private set; }
         public int NumPoints { get { return Times.Count; } }
 
         public TimeIntensities ChangeMassErrors(IEnumerable<float> massErrors)
         {
             return ChangeProp(ImClone(this), im => im.MassErrors = ImmutableList.ValueOf(massErrors));
+        }
+
+        public TimeIntensities ChangeObservedIonMobilities(IEnumerable<float> observedIonMobilities)
+        {
+            return ChangeProp(ImClone(this), im => im.ObservedIonMobilities = ImmutableList.ValueOf(observedIonMobilities));
+        }
+
+        public TimeIntensities ChangeObservedCcs(IEnumerable<float> observedCcs)
+        {
+            return ChangeProp(ImClone(this), im => im.ObservedCcs = ImmutableList.ValueOf(observedCcs));
         }
 
         public TimeIntensities ChangeScanIds(IEnumerable<int> scanIds)
@@ -77,19 +100,29 @@ namespace pwiz.Skyline.Model.Results
             var timesMeasured = Times;
             var intensMeasured = Intensities;
             IList<float> massErrorsMeasured = MassErrors;
+            IList<float> observedIonMobilitiesMeasured = ObservedIonMobilities;
+            IList<float> observedCcsMeasured = ObservedCcs;
 
             var intensNew = new List<float>();
             var massErrorsNew = massErrorsMeasured != null ? new List<float>() : null;
+            var observedIonMobilitiesNew = observedIonMobilitiesMeasured != null ? new List<float>() : null;
+            var observedCcsNew = observedCcsMeasured != null ? new List<float>() : null;
 
             int iTime = 0;
             double timeLast = timesNew[0];
             double intenLast = 0;
             double massErrorLast = 0;
+            double observedIonMobilityLast = 0;
+            double observedCcsLast = 0;
             if (!inferZeros && intensMeasured.Count != 0)
             {
                 intenLast = intensMeasured[0];
                 if (massErrorsMeasured != null)
                     massErrorLast = massErrorsMeasured[0];
+                if (observedIonMobilitiesMeasured != null)
+                    observedIonMobilityLast = observedIonMobilitiesMeasured[0];
+                if (observedCcsMeasured != null)
+                    observedCcsLast = observedCcsMeasured[0];
             }
             for (int i = 0; i < timesMeasured.Count && iTime < timesNew.Count; i++)
             {
@@ -98,8 +131,12 @@ namespace pwiz.Skyline.Model.Results
                 float inten = intensMeasured[i];
                 double totalInten = inten;
                 double massError = 0;
+                var observedIonMobility = new ObservedValueMean();
+                var observedCcs = new ObservedValueMean();
                 if (massErrorsMeasured != null)
                     massError = massErrorsMeasured[i];
+                observedIonMobility.Add(observedIonMobilitiesMeasured, i, inten);
+                observedCcs.Add(observedCcsMeasured, i, inten);
 
                 // Continue enumerating points until one is encountered
                 // that has a greater time value than the point being assigned.
@@ -117,6 +154,8 @@ namespace pwiz.Skyline.Model.Results
                         // TODO: Figure out whether this is an appropriate estimation method
                         massError += (massErrorsMeasured[i] - massError) * inten / totalInten;
                     }
+                    observedIonMobility.Add(observedIonMobilitiesMeasured, i, inten);
+                    observedCcs.Add(observedCcsMeasured, i, inten);
                 }
 
                 if (i >= timesMeasured.Count)
@@ -132,7 +171,9 @@ namespace pwiz.Skyline.Model.Results
                                 (timesNew[iTime] - timeLast) * (0 - intenLast) /
                                 (timesNew[iTime] + intervalDelta - timeLast);
                     intensNew.Add((float)intenNext);
-                    AddMassError(massErrorsNew, massError);
+                    AddError(massErrorsNew, massError);
+                    AddError(observedIonMobilitiesNew, observedIonMobility.Value);
+                    AddError(observedCcsNew, observedCcs.Value);
                     timeLast = timesNew[iTime++];
                     intenLast = 0;
                 }
@@ -145,7 +186,9 @@ namespace pwiz.Skyline.Model.Results
                     while (intenLast == 0 && iTime < timesNew.Count && timesNew[iTime] + intervalDelta < time)
                     {
                         intensNew.Add(0);
-                        AddMassError(massErrorsNew, massError);
+                        AddError(massErrorsNew, massError);
+                        AddError(observedIonMobilitiesNew, observedIonMobility.Value);
+                        AddError(observedCcsNew, observedCcs.Value);
                         timeLast = timesNew[iTime++];
                     }
                 }
@@ -157,7 +200,9 @@ namespace pwiz.Skyline.Model.Results
                     {
                         intenNext = intenLast + (timesNew[iTime] - timeLast) * (inten - intenLast) / (time - timeLast);
                         intensNew.Add((float)intenNext);
-                        AddMassError(massErrorsNew, massError);
+                        AddError(massErrorsNew, massError);
+                        AddError(observedIonMobilitiesNew, observedIonMobility.Value);
+                        AddError(observedCcsNew, observedCcs.Value);
                         iTime++;
                     }
                 }
@@ -172,7 +217,9 @@ namespace pwiz.Skyline.Model.Results
                 else
                     intenNext = intenLast + (timesNew[iTime] - timeLast) * (inten - intenLast) / (time - timeLast);
                 intensNew.Add((float)intenNext);
-                massErrorLast = AddMassError(massErrorsNew, massError);
+                massErrorLast = AddError(massErrorsNew, massError);
+                observedIonMobilityLast = AddError(observedIonMobilitiesNew, observedIonMobility.Value);
+                observedCcsLast = AddError(observedCcsNew, observedCcs.Value);
                 iTime++;
                 intenLast = inten;
                 timeLast = time;
@@ -182,7 +229,9 @@ namespace pwiz.Skyline.Model.Results
             while (intensNew.Count < timesNew.Count)
             {
                 intensNew.Add(0);
-                AddMassError(massErrorsNew, massErrorLast);
+                AddError(massErrorsNew, massErrorLast);
+                AddError(observedIonMobilitiesNew, observedIonMobilityLast);
+                AddError(observedCcsNew, observedCcsLast);
             }
             int[] scanIndexesNew = null;
             // Replicate scan ids to match new times.
@@ -210,14 +259,53 @@ namespace pwiz.Skyline.Model.Results
                 // Round off all the mass errors, since that is what will be persisted in the .skyd file
                 massErrorsNewTruncated = massErrorsNew.Select(error => ChromPeak.To10x(error)/10f);
             }
-            return new TimeIntensities(timesNew, intensNew, massErrorsNewTruncated, scanIndexesNew);
+            return new TimeIntensities(timesNew, intensNew, massErrorsNewTruncated, scanIndexesNew, observedIonMobilitiesNew, observedCcsNew);
         }
-        private static float AddMassError(ICollection<float> massErrors, double massError)
+
+        /// <summary>
+        /// Scans without an observed value store 0 (or NaN) in <see cref="ObservedIonMobilities"/>
+        /// and <see cref="ObservedCcs"/>.
+        /// </summary>
+        private static bool IsObservedValue(float observedValue)
         {
-            if (massErrors != null)
+            return observedValue > 0;
+        }
+
+        /// <summary>
+        /// Intensity-weighted mean of the observed IM or CCS of the scans merged into one
+        /// interpolated point. Scans without an observed value carry no weight, so they cannot
+        /// pull the mean toward 0. The mean stays 0 when no scan has an observed value.
+        /// </summary>
+        private struct ObservedValueMean
+        {
+            private double _totalIntensity;
+
+            public double Value { get; private set; }
+
+            public void Add(IList<float> observedValues, int index, float intensity)
             {
-                massErrors.Add((float) massError);
-                return (float) massError;
+                if (observedValues == null || !IsObservedValue(observedValues[index]))
+                    return;
+                if (Value == 0)
+                {
+                    // First scan with an observed value
+                    Value = observedValues[index];
+                    _totalIntensity = intensity;
+                }
+                else if (intensity > 0)
+                {
+                    _totalIntensity += intensity;
+                    Value += (observedValues[index] - Value) * intensity / _totalIntensity;
+                }
+            }
+        }
+
+        private static float AddError(ICollection<float> errors, double error)
+        {
+            if (errors != null)
+            {
+                errors.Add((float) error);
+                return (float) error;
             }
             return 0;
         }
@@ -283,7 +371,9 @@ namespace pwiz.Skyline.Model.Results
                 SubList(Times, firstIndex, lastIndex),
                 SubList(Intensities, firstIndex, lastIndex),
                 SubList(MassErrors, firstIndex, lastIndex),
-                SubList(ScanIds, firstIndex, lastIndex));
+                SubList(ScanIds, firstIndex, lastIndex),
+                SubList(ObservedIonMobilities, firstIndex, lastIndex),
+                SubList(ObservedCcs, firstIndex, lastIndex));
         }
 
         private static IEnumerable<T> SubList<T>(IList<T> list, int firstIndex, int lastIndex)
@@ -347,17 +437,23 @@ namespace pwiz.Skyline.Model.Results
             index = ~index;
             double newIntensity;
             double newMassError = 0;
+            double newObservedIonMobility = 0;
+            double newObservedCcs = 0;
             int newScanId = 0;
             if (index == 0)
             {
                 newIntensity = Intensities[0];
                 newMassError = MassErrors?[0] ?? 0;
+                newObservedIonMobility = ObservedIonMobilities?[0] ?? 0;
+                newObservedCcs = ObservedCcs?[0] ?? 0;
                 newScanId = ScanIds?[0] ?? 0;
             }
             else if (index >= Times.Count)
             {
                 newIntensity = Intensities[NumPoints - 1];
                 newMassError = MassErrors?[NumPoints - 1] ?? 0;
+                newObservedIonMobility = ObservedIonMobilities?[NumPoints - 1] ?? 0;
+                newObservedCcs = ObservedCcs?[NumPoints - 1] ?? 0;
                 newScanId = ScanIds?[NumPoints - 1] ?? 0;
             }
             else
@@ -368,17 +464,15 @@ namespace pwiz.Skyline.Model.Results
                 double time2 = Times[index];
                 double width = time2 - time1;
                 newIntensity = (intensity2 * (newTime - time1) + intensity1 * (time2 - newTime)) / width;
-                if (MassErrors != null)
+                double weight1 = intensity1 * (time2 - newTime);
+                double weight2 = intensity2 * (newTime - time1);
+                double weightTotal = weight1 + weight2;
+                if (MassErrors != null && weightTotal > 0)
                 {
-                    double massError1 = MassErrors[index - 1];
-                    double massError2 = MassErrors[index];
-                    double weight1 = intensity1 * (time2 - newTime);
-                    double weight2 = intensity2 * (newTime - time1);
-                    if (weight1 + weight2 > 0)
-                    {
-                        newMassError = (weight1 * massError1 + weight2 * massError2) / (weight1 + weight2);
-                    }
+                    newMassError = (weight1 * MassErrors[index - 1] + weight2 * MassErrors[index]) / weightTotal;
                 }
+                newObservedIonMobility = InterpolateObservedValue(ObservedIonMobilities, index, weight1, weight2);
+                newObservedCcs = InterpolateObservedValue(ObservedCcs, index, weight1, weight2);
 
                 if (ScanIds != null)
                 {
@@ -403,7 +497,6 @@ namespace pwiz.Skyline.Model.Results
                 newMassErrors = MassErrors.ToList();
                 newMassErrors.Insert(index, (float) newMassError);
             }
-
             IList<int> newScanIds = null;
             if (ScanIds != null)
             {
@@ -411,7 +504,34 @@ namespace pwiz.Skyline.Model.Results
                 newScanIds.Insert(index, newScanId);
             }
 
-            return new TimeIntensities(newTimes, newIntensities, newMassErrors, newScanIds);
+            return new TimeIntensities(newTimes, newIntensities, newMassErrors, newScanIds,
+                InsertObservedValue(ObservedIonMobilities, index, newObservedIonMobility),
+                InsertObservedValue(ObservedCcs, index, newObservedCcs));
+        }
+
+        /// <summary>
+        /// The observed IM or CCS between the points at index - 1 and index, weighted like the
+        /// mass error. A neighbor without an observed value (0) carries no weight.
+        /// </summary>
+        private static double InterpolateObservedValue(IList<float> observedValues, int index, double weight1, double weight2)
+        {
+            if (observedValues == null)
+                return 0;
+            double valueWeight1 = IsObservedValue(observedValues[index - 1]) ? weight1 : 0;
+            double valueWeight2 = IsObservedValue(observedValues[index]) ? weight2 : 0;
+            if (valueWeight1 + valueWeight2 <= 0)
+                return 0;
+            return (valueWeight1 * observedValues[index - 1] + valueWeight2 * observedValues[index]) /
+                   (valueWeight1 + valueWeight2);
+        }
+
+        private static IList<float> InsertObservedValue(IList<float> observedValues, int index, double newValue)
+        {
+            if (observedValues == null)
+                return null;
+            var newValues = observedValues.ToList();
+            newValues.Insert(index, (float) newValue);
+            return newValues;
         }
 
         public float GetInterpolatedIntensity(float time)

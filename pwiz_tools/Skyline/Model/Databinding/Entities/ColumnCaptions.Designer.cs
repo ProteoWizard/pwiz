@@ -509,7 +509,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("CAS", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to CCS Error Percent.
+        /// </summary>
+        public static string CcsErrorPercent {
+            get {
+                return ResourceManager.GetString("CcsErrorPercent", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Chosen.
         /// </summary>
@@ -1501,6 +1510,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Error Percent.
+        /// </summary>
+        public static string IonMobilityErrorPercent {
+            get {
+                return ResourceManager.GetString("IonMobilityErrorPercent", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Ion Mobility Fragment.
         /// </summary>
         public static string IonMobilityFragment {
@@ -1508,7 +1526,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("IonMobilityFragment", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Ion Mobility High Energy Offset.
         /// </summary>
@@ -2669,7 +2687,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("NumberOfPoints", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed CCS.
+        /// </summary>
+        public static string ObservedCcs {
+            get {
+                return ResourceManager.GetString("ObservedCcs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Observed Ion Mobility.
+        /// </summary>
+        public static string ObservedIonMobility {
+            get {
+                return ResourceManager.GetString("ObservedIonMobility", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Opt Collision Energy.
         /// </summary>

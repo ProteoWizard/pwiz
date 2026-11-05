@@ -553,6 +553,37 @@ Here are the last 3 errors:
   <data name="GraphFullScan_ToolTip_Summed_Intensity" xml:space="preserve">
     <value>Summed Intensity</value>
   </data>
+  <data name="GraphFullScan_ToolTip_IonMobilityFilterHeader" xml:space="preserve">
+    <value>Ion Mobility Filter</value>
+    <comment>Header for the tooltip on the dashed target-IM line; the body rows show the filter's IM, CCS, and isolation window for the current target.</comment>
+  </data>
+  <data name="GraphFullScan_ToolTip_IsolationWindow" xml:space="preserve">
+    <value>Isolation Window</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_MobiloPeakArea" xml:space="preserve">
+    <value>Mobility peak area</value>
+    <comment>Row label in the observed-line tooltip: area under the mobilogram (intensity integrated over ion mobility).</comment>
+  </data>
+  <data name="GraphFullScan_ToolTip_MobiloPeakFwhm" xml:space="preserve">
+    <value>Mobility peak FWHM</value>
+    <comment>Row label in the observed-line tooltip: full width at half maximum of the mobility peak, in ion mobility units.</comment>
+  </data>
+  <data name="GraphFullScan_ToolTip_MobiloPeakHeight" xml:space="preserve">
+    <value>Mobility peak height</value>
+    <comment>Row label in the observed-line tooltip: apex (maximum) intensity of the mobility peak.</comment>
+  </data>
+  <data name="GraphFullScan_ToolTip_ObservedAtPeakHeaderFormat" xml:space="preserve">
+    <value>Observed at Peak (RT={0})</value>
+    <comment>{0} = peak retention time. Header row for the observed-line tooltip; subsequent rows show IM and CCS values.</comment>
+  </data>
+  <data name="GraphFullScan_ToolTip_Ccs" xml:space="preserve">
+    <value>CCS</value>
+    <comment>Compact column name used in the observed-line tooltip under the "Observed at Peak" header.</comment>
+  </data>
+  <data name="GraphFullScan_ToolTip_ObservedValueWithErrorFormat" xml:space="preserve">
+    <value>{0} ({1}% error)</value>
+    <comment>{0} = numeric value, {1} = percent error vs target. Used inline in the observed-line tooltip rows.</comment>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>

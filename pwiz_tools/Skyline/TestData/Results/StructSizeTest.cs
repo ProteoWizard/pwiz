@@ -45,7 +45,12 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(32, Marshal.OffsetOf<ChromPeak>("_pointsAcross"));
             Assert.AreEqual(32, ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));
-            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(36, Marshal.OffsetOf<ChromPeak>("_stdDev"));
+            Assert.AreEqual(48, Marshal.OffsetOf<ChromPeak>("_shapeCorrelation"));
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Sixteen));
+            Assert.AreEqual(52, Marshal.OffsetOf<ChromPeak>("_observedIonMobility"));
+            Assert.AreEqual(56, Marshal.OffsetOf<ChromPeak>("_observedCcs"));
+            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.Twenty));
         }
 
         [TestMethod]
