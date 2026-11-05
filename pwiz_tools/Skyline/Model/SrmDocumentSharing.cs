@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model
             string dirResult = dirPath;
 
             // A file can also be in the way, e.g. the zip itself when it has no extension
-            while (Directory.Exists(dirResult) || File.Exists(dirResult))
+            while (Path.Exists(dirResult))
             {
                 // If a directory with the given name already exists, add
                 // a suffix to create a unique folder name.
