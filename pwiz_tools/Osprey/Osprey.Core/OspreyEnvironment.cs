@@ -288,7 +288,8 @@ namespace pwiz.Osprey.Core
         /// calibrated by the m/z-dependent curve of the shift that matches the most fragments
         /// (<c>Ms2OffsetCurve</c>). For cross-implementation parity runs: the mean cannot see an
         /// offset as wide as the tolerance, which some Stellar runs' MS2 have. An offset within half
-        /// the tolerance keeps the mean either way, as does ppm calibration. Part of the validity key
+        /// the tolerance keeps the mean either way. It also overrides OSPREY_MS2_CAL_CURVE_PPM, so ppm
+        /// calibration is the mean too. Part of the validity key
         /// (<see cref="Ms2CalValidityKeySuffix"/>).
         /// </summary>
         /// <remarks>
@@ -298,8 +299,10 @@ namespace pwiz.Osprey.Core
         public static bool Ms2CalMean => IsSetAndNotZero(ENV_MS2_CAL_MEAN);
 
         private static readonly EnvVar ENV_MS2_CAL_CURVE_PPM = new EnvVar(@"OSPREY_MS2_CAL_CURVE_PPM", EnvVarGroup.behavior,
-            @"Experimental: calibrate ppm MS2 m/z by an m/z-dependent offset curve instead of one mean " +
-            @"offset, to test whether HRAM data (TOF, Orbitrap) gains from it.");
+            @"Experimental, opt-in: calibrate MS2 m/z searched with a ppm fragment tolerance by an m/z-dependent " +
+            @"offset curve, centered on the bulk of the fragment errors, instead of one mean offset. HRAM data " +
+            @"(TOF, Orbitrap) only; OSPREY_MS2_CAL_MEAN overrides it. Gave 5.7% more precursors on one " +
+            @"demultiplexed ZenoTOF 8600 ZT Scan run. See docs/04-calibration.md.");
 
         /// <summary>
         /// OSPREY_MS2_CAL_CURVE_PPM: experimental. Calibrate MS2 m/z searched in ppm by the

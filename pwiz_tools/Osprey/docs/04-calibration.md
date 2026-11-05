@@ -184,7 +184,10 @@ matched fragments; MS1 errors are the single M+0 precursor error per match.
 `MzCalibration.CalculateSingleLevel` (`MzCalibration.cs:233`) computes mean, median,
 sample SD (n-1 denominator, two left-to-right passes), and
 `AdjustedTolerance = |mean| + 3·SD`. The unit ("ppm" vs "Th") is taken from
-`config.FragmentTolerance.Unit` (`Calibrator.cs:737`).
+`config.FragmentTolerance.Unit` (`Calibrator.cs:737`). Where the search calibrates by the MS2
+offset curve (unit resolution with a large offset, or `OSPREY_MS2_CAL_CURVE_PPM=1` for ppm), the
+same matches' collected fragment peaks feed `Ms2OffsetCurve.Calculate`, and its result replaces
+the MS2 mean; see [MS2 m/z offset curve](#ms2-mz-offset-curve-ms2offsetcurvecs).
 
 ### 3f. LOESS fit
 
@@ -293,6 +296,135 @@ summary.
 
 ---
 
+## MS2 m/z offset curve (`Ms2OffsetCurve.cs`)
+
+The mean above (one offset for every m/z) is how Rust osprey calibrates MS2. The C# port
+can instead calibrate MS2 by an offset that depends on m/z, the **offset curve**. It does so
+by default for unit-resolution data with a large offset, and on request
+(`OSPREY_MS2_CAL_CURVE_PPM=1`, experimental) for ppm searches.
+
+### Why: the mean aligned a Stellar run to the M+1
+
+The mean takes each top-6 fragment's closest peak within the fragment tolerance. That is
+unbiased only while the true offset is small against the tolerance. We came across a Stellar
+HeLa 2 Th DIA set (2026) whose MS2 m/z sit 0.5-0.7 Th low while its MS1 is on target. With
+the 0.5 Th unit-resolution tolerance, the monoisotopic (M+0) peak sat at or past the window's
+edge, and the closest peak was as often the M+1 (about 1 Th up, so +0.3 to +0.5 Th from the
+library m/z). The calibration was partly aligning to the M+1 rather than the M+0: the mean came
+out +0.08 Th on Thermo's centroids, where the true offset is -0.64 at m/z 200 to -0.85 at 1200.
+Osprey made up for it only by widening the tolerance to 3 SD (+-0.85 Th).
+
+The curve finds the offset first, as the shift that puts the most fragments on a peak, and
+only then measures each fragment's error around it. Searched with each arm's own predicted
+library at +-0.5 Th, TR01-TR03 went from 17,175 to 39,025 precursors and from 2,077 to 5,122
+protein groups (Thermo centroids), and from 33,601 to 40,299 and 4,503 to 4,931 (Centrix
+centroids), at 1% FDR (target-decoy; entrapment not yet checked).
+
+### When it is used
+
+`OspreyEnvironment.UsesMs2OffsetCurve(resolution, fragmentUnit, ms2CalMean, ms2CalCurvePpm)`
+decides, per search:
+
+| Search | Default | `OSPREY_MS2_CAL_CURVE_PPM=1` | `OSPREY_MS2_CAL_MEAN=1` |
+|---|---|---|---|
+| Unit resolution, Th tolerance | Curve when the shift is beyond half the tolerance; mean otherwise | Same as default | Mean |
+| ppm tolerance (HRAM) | Mean | Curve, at any shift | Mean |
+| HRAM with a Th tolerance | Mean | Mean | Mean |
+
+`OSPREY_MS2_CAL_MEAN` wins over everything: it is the cross-implementation parity switch.
+Data with a small unit-resolution offset (the 2024 Stellar regression and subset runs, about
+-0.06 Th) keeps the mean, so the goldens and Rust parity are unchanged. Without
+`OSPREY_MS2_CAL_CURVE_PPM`, every ppm search (Astral, the ZenoTOF) calibrates exactly as before.
+
+### How it is found
+
+`Ms2OffsetCurve.Calculate(fragments, widths, out shift)`, from the peaks the calibration
+collected around each target match's top-6 fragments (`Ms2FragmentPeaks`; decoys collect none):
+
+1. **Shift scan** (`BestShift`): every trial shift on a grid across the scan range; the one
+   that puts the most fragments within the hit tolerance of a peak wins. Of a run of tied
+   shifts, the middle.
+2. **Monoisotopic check** (`MonoisotopicShift`, unit resolution only): while most singly
+   charged fragments show a larger peak one isotope spacing (1.00335 Th) below the shift, the
+   scan landed on the M+1, so the shift steps down one spacing. Fewer than 100 singly charged
+   fragments, and the shift stays where the scan put it.
+3. **Mean window**: a shift within the mean window (half the tolerance at unit resolution)
+   returns null, and the caller keeps the mean.
+4. **Curve**: each fragment's nearest peak within the association half-width of the shift;
+   a LOESS of offset against m/z (`LoessRegression.Fit`, as the RT calibration fits);
+   each fragment re-associated against the curve and refitted. The SD is the classical SD of
+   the offsets about the curve, and the search matches within 3 SD
+   (`MzCalibration.CalibratedTolerance`, with its 1 ppm / 0.05 Th floors).
+5. **Knots**: the curve is kept as 21 knots evenly spaced in m/z
+   (`MzCalibrationResult.OffsetCurveMz`, `OffsetCurve`); `Mean` is the curve's average and
+   `AdjustedTolerance` 3 SD.
+
+At least 100 fragments must sit near the shift, or `Calculate` returns null and the mean is
+kept. Its widths (`Ms2OffsetCurve.Widths`):
+
+| Width | Unit resolution (`Widths.UnitResolution`) | ppm, tolerance T (`Widths.Ppm`) |
+|---|---|---|
+| Shift scan range | +-1.3 Th | +-2T |
+| Scan step | 0.01 Th | T/100 |
+| Hit tolerance | 0.2 Th | T/4 |
+| M+1 step-down | Yes | No (resolved isotopes lie thousands of ppm apart) |
+| Association half-width | 0.5 Th | T |
+| Peaks collected either side of a fragment | 2.5 Th (1.3 + 1.00335 + 0.2) | 2T + T/4 (22.5 ppm at T = 10) |
+| Mean kept when the shift is within | Half the tolerance | Never (used at any shift) |
+| Offsets | Th | ppm |
+
+The unit-resolution widths are absolute Th, tuned for ion-trap peak widths, so they are not
+used for HRAM data searched in Th.
+
+### How it is applied
+
+`MzCalibration.ApplyCalibration` subtracts `MzCalibrationResult.OffsetAt(mz)` from each MS2
+m/z: linear between the knots, held flat past the ends. In ppm the subtraction is
+`mz * OffsetAt(mz) / 1e6`. A result with no curve gives the mean at every m/z, as before.
+
+### Storage, validity and logs
+
+- **`<stem>.calibration.json`**: an optional `ms2_calibration.offset_curve` with `mz` and
+  `offset` arrays (the knots). `mean`, `sd` and `adjusted_tolerance` are still written. A file
+  without `offset_curve` loads as the mean. Every reader (per-file scoring, rescoring, the HPC
+  `--task` chain) goes through `MzCalibrationJson.ToResult()`. Rust reads only `mean`, `sd` and
+  `adjusted_tolerance`, so a Rust run on a C# file with a curve uses its average and 3 SD.
+- **Validity key** (`OspreyEnvironment.Ms2CalValidityKeySuffix`): unit-resolution Th searches
+  carry `;ms2cal=curve` or `;ms2cal=mean`; ppm searches carry `;ms2cal=curveppm` only under
+  `OSPREY_MS2_CAL_CURVE_PPM` (and not `OSPREY_MS2_CAL_MEAN`), so their default key is unchanged.
+  Switching either variable recalibrates.
+- **Verbose log**, after each pass's mean line:
+  `MS2 m/z offset curve (pass N): offset A to B <unit>, SD=..., 3*SD=... (n=... fragments)`,
+  or that the shift is within half the tolerance and the mean is kept. At unit resolution, a
+  shift beyond half the tolerance with too few fragments near it logs a **warning**: the mean
+  is kept and cannot see an offset that large. For the ppm curve the same case logs a verbose
+  line that the mean is kept.
+- **Cost**: the peaks around each target match's fragments are held until aggregation, about
+  100-150 MB transient per file; each LOESS fit costs about 0.4 s CPU (n=15,572 fragments on a
+  Stellar run), about 1.5 s a file.
+
+### The ppm curve (experimental, `OSPREY_MS2_CAL_CURVE_PPM=1`)
+
+Off by default. On a demultiplexed ZenoTOF 8600 ZT Scan run (250814_ZTScan_100spd_A_1_A1,
+10 ppm), searched twice with the same predicted library, decoys included, and the same spectra
+cache, only this variable differing, at 1% FDR:
+
+| MS2 calibration | Precursors (run) | Protein groups (first pass / final) | Library spectra |
+|---|---|---|---|
+| Mean, 4.28 ppm, 3 SD 11.05 ppm | 23,439 | 3,461 / 2,562 | 27,662 |
+| Curve, 4.39 to 5.91 ppm, 3 SD 10.85 ppm | 24,769 (+5.7%) | 3,698 / 2,696 (+5.2%) | 28,144 (+1.7%) |
+
+25,791 precursors are shared, 1,871 found only with the mean and 2,353 only with the curve.
+The curve varies only 1.5 ppm over the m/z range and the windows are nearly equal, but the
+fragment errors are skewed (median 5.0 ppm, mean 4.28): the curve centers on the bulk of the
+errors, and the gain likely comes as much from that centering as from the m/z dependence.
+
+Before it could become the default for ppm searches it needs: more runs (the ZT Scan D1 and
+G1 replicates; Astral), an entrapment check, and a regenerated Astral golden, since Astral is
+searched in ppm.
+
+---
+
 ## Applying calibration in the main search
 
 Stage 4 consumes the calibration in `Osprey.Scoring/ScoringPipeline.cs`:
@@ -300,7 +432,8 @@ Stage 4 consumes the calibration in `Osprey.Scoring/ScoringPipeline.cs`:
 - **MS2 spectrum correction** (`ScoringPipeline.cs:104-129`): when
   `ms2Calibration.Calibrated`, every spectrum's m/z array is copied and corrected via
   `MzCalibration.ApplyCalibration` (`MzCalibration.cs:147`): PPM
-  `corrected = observed - observed·mean/1e6`; Th `corrected = observed - mean`. The
+  `corrected = observed - observed·offset/1e6`; Th `corrected = observed - offset`, where
+  `offset` is the mean, or the offset curve at that m/z (`OffsetAt`) when there is one. The
   spectra are copied (not mutated in place) so repeated `run_search` calls do not
   apply the offset cumulatively.
 - **Calibrated fragment tolerance** (`ScoringPipeline.cs:193-214`):
@@ -356,6 +489,8 @@ console report the same window number (issue #4364).
 | `--resolution {auto\|hram\|unit}` | `auto`: measured from the data ([20-command-line.md](20-command-line.md#resolution-detection)) | Selects the main-search scorer and the mass-error unit context; the calibration XCorr is always unit-resolution regardless (`Calibrator.cs:72`). |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; forced `mz 0.5` at unit resolution | Base fragment tolerance used before calibration and as the fallback when uncalibrated (`ScoringPipeline.cs:192`). Also sets the mass-error unit ("ppm"/"Th"). |
 | `PrecursorTolerance` (config, ppm) | `10.0` | Window for MS1 M+0 isotope extraction (`Calibrator.cs:1305-1308`). |
+| `OSPREY_MS2_CAL_MEAN=1` (env) | off | Calibrate MS2 by the mean always, as Rust does: no offset curve at unit resolution, and overrides `OSPREY_MS2_CAL_CURVE_PPM`. For cross-implementation parity runs. Validity key `;ms2cal=mean`. See [MS2 m/z offset curve](#ms2-mz-offset-curve-ms2offsetcurvecs). |
+| `OSPREY_MS2_CAL_CURVE_PPM=1` (env) | off | **Experimental, opt-in.** Calibrate MS2 of ppm searches by the offset curve instead of the mean, at any shift. Validity key `;ms2cal=curveppm`. C#-only. |
 | `OSPREY_EXIT_AFTER_CALIBRATION` (env) | off | Exit after Stage 3, skipping the main search (`OspreyEnvironment.cs:79`). |
 | `OSPREY_LOAD_CALIBRATION=<path>` (env) | unset | Load a Rust-produced `.calibration.json` instead of computing; used for cross-impl bisection (`PerFileScoringTask.cs:1623-1667`). |
 
@@ -418,6 +553,15 @@ accepted fit, `Calibrator.cs:274, 343`), `OSPREY_DUMP_MS2_CAL_ERRORS`
   Evidence: `Osprey.Tasks/Calibrator.cs:196-197, 259, 261-267, 479-485`. Severity:
   major. A human should confirm whether the retry/graduated-fit omission is an
   intentional simplification or a genuine port gap for small-library inputs.
+
+- **[INTENTIONAL-CSHARP-DESIGN] MS2 m/z offset curve** - Rust calibrates MS2 by one mean
+  offset. The C# port calibrates unit-resolution (Th) MS2 by an m/z-dependent offset curve
+  when the offset is beyond half the fragment tolerance, and ppm MS2 by it under the
+  experimental `OSPREY_MS2_CAL_CURVE_PPM=1`; both keep the mean otherwise, so small-offset
+  data matches Rust. `OSPREY_MS2_CAL_MEAN=1` restores Rust's behavior everywhere. Rust reads
+  only the mean, SD and tolerance from a C# calibration file with a curve. Evidence:
+  `Osprey.Chromatography/Ms2OffsetCurve.cs`, `OspreyEnvironment.UsesMs2OffsetCurve`.
+  Severity: major for the affected (large-offset) data, none otherwise.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Calibration XCorr is managed unit-bin code, not BLAS
   sdot** - The Rust doc's LDA feature table describes the XCorr feature as "Comet-style

@@ -96,6 +96,12 @@ namespace pwiz.Osprey.Chromatography
     /// monoisotopic peak is the larger): the shift is stepped down while most singly charged
     /// fragments show a larger peak one spacing below (<see cref="MonoisotopicShift"/>).
     /// </para>
+    /// <para>
+    /// Experimental, opt-in (OSPREY_MS2_CAL_CURVE_PPM): the same curve for ppm searches, with
+    /// widths scaled from the ppm tolerance and no M+1 check (<see cref="Widths.Ppm"/>). Centered
+    /// on the bulk of the fragment errors rather than their mean, it gave 5.7% more precursors on
+    /// a demultiplexed ZenoTOF 8600 ZT Scan run whose errors are skewed. See docs/04-calibration.md.
+    /// </para>
     /// </summary>
     public static class Ms2OffsetCurve
     {

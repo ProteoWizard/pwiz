@@ -1823,6 +1823,13 @@ namespace pwiz.Osprey.Tasks
                         OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__within_half_the__3___2__tolerance__the_mean_is_kept,
                         passNumber, shift, unitText, config.FragmentTolerance.Tolerance));
                 }
+                else if (!double.IsNaN(shift) && widths.MeanWindow < 0)
+                {
+                    // The ppm curve, used at any shift: too few fragments near the shift to fit it.
+                    _ctx.LogVerbose(string.Format(
+                        OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_m_z_offset_curve__pass__0____too_few_fragments_near_the__1___2__shift_to_fit_a_curve__the_mean_is_kept,
+                        passNumber, shift, unitText));
+                }
                 else if (!double.IsNaN(shift))
                 {
                     // An offset the mean cannot see, and too few fragments near it to fit the curve.
