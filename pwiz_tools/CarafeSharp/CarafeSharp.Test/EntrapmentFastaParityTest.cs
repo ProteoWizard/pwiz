@@ -57,7 +57,7 @@ namespace pwiz.CarafeSharp.Test
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod]
+        [TestMethod, TestCategory(TestData.FULL_PARITY_CATEGORY)]
         public void TestFullFastaBuildsMatchCarafe()
         {
             CompareBuilds(TestData.Stage1References, TestData.Stage1Builds);
