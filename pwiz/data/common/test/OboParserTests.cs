@@ -38,6 +38,7 @@ public class OboParserTests
         is_a: UO:0000000 ! unit
         is_a: MS:1000441 ! scan attribute
         relationship: has_units xsd:float
+        relationship: has_value_type xsd:float
         relationship: has_order MS:1000042
 
         [Term]
@@ -114,10 +115,11 @@ public class OboParserTests
         // "xsd:float" names a value type, not a term. Letters in an accession are digits to
         // TryParseId (NCIT:C25330), so without an explicit guard psi-ms.obo's 1366
         // has_value_type lines turn into fabricated relations - xsd:float as term 61215120 -
-        // for every spelling that happens to fit in a uint.
+        // for every spelling that happens to fit in a uint. The value type itself is still kept.
         var mz = ObOntology.Parse(new StringReader(SampleObo)).FindTerm("MS", 1000040)!;
         CollectionAssert.AreEqual(new[] { "has_order" }, mz.Relations.Select(r => r.Name).ToArray());
         Assert.AreEqual(1000042u, mz.Relations[0].TargetId);
+        Assert.AreEqual("xsd:float", mz.ValueType);
     }
 
     [TestMethod]

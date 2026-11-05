@@ -66,9 +66,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestBlankOperatorRoundTrip()
         {
-            // The operand-less blank tests have no readable operator symbol, so they serialize against
-            // the empty string ("Column = ''" / "Column <> ''") and must round-trip back to the
-            // blank operators rather than to an equals-empty-string comparison.
+            // The operand-less blank tests have no readable operator symbol, so the syntax gives them one
+            // of their own, spelled as SQL spells it ("Column is null" / "Column is not null"). Having
+            // their own form leaves "= ''" to mean equality with the empty string, so the two are no
+            // longer conflated in either direction.
             var isBlank = new FilterClause(new[]
             {
                 new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription)),
@@ -82,15 +83,26 @@ namespace pwiz.SkylineTest
             VerifyFilterClause(typeof(SpectrumClass), new[] { isBlank });
             VerifyFilterClause(typeof(SpectrumClass), new[] { isNotBlank });
 
-            // The rendered form uses the empty-string notation (column/operator are culture-independent)
+            // The rendered form names the operator (column/operator are culture-independent)
             var serializer = new FilterClauseSerializer(
                 ColumnDescriptor.RootColumn(GetDataSchema(DataSchemaLocalizer.INVARIANT), typeof(SpectrumClass)));
-            Assert.AreEqual("ScanDescription = ''", serializer.ToFilterString(new[] { isBlank }));
-            Assert.AreEqual("ScanDescription <> ''", serializer.ToFilterString(new[] { isNotBlank }));
+            Assert.AreEqual("ScanDescription is null", serializer.ToFilterString(new[] { isBlank }));
+            Assert.AreEqual("ScanDescription is not null", serializer.ToFilterString(new[] { isNotBlank }));
 
-            // Only the *empty* operand means "is blank". A non-empty value that happens to contain
-            // single quotes (e.g. the two-character literal "''") is escaped as six quotes and still
-            // round-trips as an equals comparison -- it must not collapse to is-blank.
+            // Equality with the empty string is a different test from is-blank, and now says so: it
+            // renders as "= ''" and comes back as an equals comparison. While is-blank rendered this way,
+            // the two were indistinguishable coming back, and a filter authored as equals-empty returned
+            // as is-blank -- the opposite test for a CV term, where blank means the term is absent.
+            var equalsEmpty = new FilterClause(new[]
+            {
+                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription)),
+                    FilterOperations.OP_EQUALS, string.Empty)
+            });
+            VerifyFilterClause(typeof(SpectrumClass), new[] { equalsEmpty });
+            Assert.AreEqual("ScanDescription = ''", serializer.ToFilterString(new[] { equalsEmpty }));
+
+            // A non-empty value that happens to contain single quotes (e.g. the two-character literal
+            // "''") is escaped as six quotes and round-trips as an equals comparison.
             var equalsLiteralQuotes = new FilterClause(new[]
             {
                 new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClass.ScanDescription)),

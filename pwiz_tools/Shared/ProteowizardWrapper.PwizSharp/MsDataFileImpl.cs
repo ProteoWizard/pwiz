@@ -934,6 +934,32 @@ namespace pwiz.ProteowizardWrapper
             return GetSpectrumMetadata(spectra.GetSpectrum(spectrumIndex, DetailLevel.FullMetadata));
         }
 
+        /// <summary>
+        /// The distinct uninterpreted CV/user parameters carried by the first <paramref name="maxSpectra"/>
+        /// spectra, one entry per accession (first value seen wins). This reports which terms a file
+        /// carries without importing it, so a caller can tell the user which of the ontology's terms are
+        /// worth filtering on. <see cref="CaptureOtherParams"/> serves the import path instead, where the
+        /// terms are captured onto every spectrum and persisted; here nothing is retained per spectrum.
+        /// </summary>
+        public IList<SpectrumMetadataTerm> GetDistinctOtherParams(int maxSpectra, CancellationToken cancellationToken)
+        {
+            var termsByAccession = new Dictionary<string, SpectrumMetadataTerm>();
+            int spectrumCount = Math.Min(maxSpectra, SpectrumCount);
+            for (int i = 0; i < spectrumCount; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var spectrum = SpectrumList.GetSpectrum(i, DetailLevel.FullMetadata);
+                foreach (var term in GetOtherParams(spectrum))
+                {
+                    if (!termsByAccession.ContainsKey(term.Accession))
+                    {
+                        termsByAccession.Add(term.Accession, term);
+                    }
+                }
+            }
+            return termsByAccession.Values.ToList();
+        }
+
         public double? GetMaxIonMobility()
         {
             return GetMaxIonMobilityInList();
@@ -1681,6 +1707,106 @@ namespace pwiz.ProteowizardWrapper
             @"ion mobility upper limit",
             CENTROIDED_MIN_MAX
         };
+
+        // Roots under which the PSI-MS controlled vocabulary groups the per-spectrum and per-scan
+        // cvParams. A term belongs in the spectrum-filter catalog when it (transitively) is_a one of
+        // these and is a leaf (not itself a parent - see below), is not obsolete, and is not already
+        // interpreted into one of Skyline's typed fields. Every such leaf term is something the filter
+        // can act on (numeric or string terms by value, flag terms by presence), so all are offered;
+        // only the ontology's grouping/category nodes are excluded.
+        private static readonly HashSet<CVID> SPECTRUM_LEVEL_CV_ROOTS = new HashSet<CVID>
+        {
+            CVID.MS_spectrum_property,   // MS:1003058
+            CVID.MS_spectrum_attribute,  // MS:1000499
+            CVID.MS_scan_attribute       // MS:1000503
+        };
+
+        /// <summary>
+        /// The uninterpreted mzML CV terms that can appear on a spectrum or scan, enumerated from the
+        /// controlled vocabulary compiled into ProteoWizard, so the spectrum-filter editor can offer them
+        /// without first reading data. Excludes obsolete terms and the terms Skyline interprets into its
+        /// own typed fields. Vendor userParams are not in the vocabulary and so are not included here
+        /// (they are discovered from imported data instead). Each entry carries the term's accession,
+        /// name, definition, and the type of value the ontology says it takes.
+        /// </summary>
+        public static IList<SpectrumCvTerm> GetSpectrumCvTermCatalog()
+        {
+            return CatalogHolder.Catalog;
+        }
+
+        /// <summary>
+        /// Lazily builds the CV term catalog on first use. Relying on the CLR's thread-safe type
+        /// initialization for a nested type is simpler than an explicit lock; the catalog is a read-only
+        /// view so the shared instance can't be mutated.
+        /// </summary>
+        private static class CatalogHolder
+        {
+            public static readonly IList<SpectrumCvTerm> Catalog = BuildSpectrumCvTermCatalog();
+        }
+
+        private static IList<SpectrumCvTerm> BuildSpectrumCvTermCatalog()
+        {
+            // A term that is a parent of some other term is a grouping/category node in the ontology
+            // ("spectrum property", "scan attribute", "spectrum aggregation type", ...), not a measurable
+            // per-spectrum value, so only leaf terms are offered.
+            // AllCvids comes from Enum.GetValues, which repeats a value once per enum alias
+            // (e.g. MS_enhanced_resolution_scan = MS_zoom_scan), so take each term once.
+            var cvids = CvLookup.AllCvids.Distinct().ToList();
+            var parentTerms = new HashSet<CVID>();
+            foreach (var cvid in cvids)
+            {
+                foreach (CVID parent in CvLookup.CvTermInfo(cvid).ParentsIsA)
+                {
+                    parentTerms.Add(parent);
+                }
+            }
+
+            var isSpectrumLevel = new Dictionary<CVID, bool>();
+            var catalog = new List<SpectrumCvTerm>();
+            foreach (var cvid in cvids)
+            {
+                if (INTERPRETED_CVIDS.Contains(cvid) || parentTerms.Contains(cvid))
+                {
+                    continue;
+                }
+                var info = CvLookup.CvTermInfo(cvid);
+                if (info.IsObsolete)
+                {
+                    continue;
+                }
+                if (IsSpectrumLevelCvTerm(cvid, isSpectrumLevel))
+                {
+                    catalog.Add(new SpectrumCvTerm(info.Id, info.Name, CleanDefinition(info.Def), info.ValueType));
+                }
+            }
+            return catalog.AsReadOnly();
+        }
+
+        private static bool IsSpectrumLevelCvTerm(CVID cvid, Dictionary<CVID, bool> memo)
+        {
+            if (SPECTRUM_LEVEL_CV_ROOTS.Contains(cvid))
+            {
+                return true;
+            }
+            if (memo.TryGetValue(cvid, out var cached))
+            {
+                return cached;
+            }
+
+            // Record false before recursing so a cycle in the is_a graph cannot recurse forever.
+            memo[cvid] = false;
+            bool result = false;
+            foreach (CVID parent in CvLookup.CvTermInfo(cvid).ParentsIsA)
+            {
+                if (IsSpectrumLevelCvTerm(parent, memo))
+                {
+                    result = true;
+                    break;
+                }
+            }
+            memo[cvid] = result;
+            return result;
+        }
 
         /// <summary>
         /// Collects the spectrum's CV and user parameters that Skyline does not otherwise
