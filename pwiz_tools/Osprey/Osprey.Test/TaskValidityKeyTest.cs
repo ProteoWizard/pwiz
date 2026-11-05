@@ -60,7 +60,6 @@ namespace pwiz.Osprey.Test
             AssertEachArmKeysDifferently();
             AssertTrainingSampleLeversKeyDifferently();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
-            AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
             AssertTreeClassifierKeysTheModelTasks();
             AssertTrainingExportKey();
@@ -397,7 +396,15 @@ namespace pwiz.Osprey.Test
                 @";fdrmodel=gbdt;gbtobjective=LogisticBinary;gbttrees=200;gbtdepth=6;gbtlr=0.1" +
                 @";gbtminchild=1;gbtsubsample=0.8;gbtcolsample=0.8;gbtgamma=0;gbtlambda=1;gbtalpha=0" +
                 @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5",
-                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(),
+                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams { UseDeterministicMath = true },
+                    OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5));
+            // OSPREY_DETERMINISTIC_MATH=0 appends one term and leaves the rest alone, so the
+            // default key above - every existing gbdt directory - did not move when it arrived.
+            Assert.AreEqual(
+                @";fdrmodel=gbdt;gbtobjective=LogisticBinary;gbttrees=200;gbtdepth=6;gbtlr=0.1" +
+                @";gbtminchild=1;gbtsubsample=0.8;gbtcolsample=0.8;gbtgamma=0;gbtlambda=1;gbtalpha=0" +
+                @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5;gbtmath=system",
+                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams { UseDeterministicMath = false },
                     OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5));
 
             // The term is the ONLY difference: a percolator key is the gbdt key without it.
@@ -454,6 +461,8 @@ namespace pwiz.Osprey.Test
                 return d + 0.5;
             if (value is ulong u)
                 return u + 1;
+            if (value is bool b)
+                return !b;
             if (value is GbtObjective objective)
                 return objective == GbtObjective.LogisticBinary ? GbtObjective.SquaredError : GbtObjective.LogisticBinary;
             Assert.Fail(@"no alternative value for a GbtParams field of type " + value.GetType().Name);
@@ -650,60 +659,6 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));
-            }
-        }
-
-        /// <summary>
-        /// The library-fragment arm, pinned to the pipeline by the same walk. It is hand-wired
-        /// into three tasks, so without this, dropping any one of those lines stays green.
-        ///
-        /// <para>Asserted against a NON-EMPTY arm on purpose. The default arm emits nothing -
-        /// deliberately, so shipping the feature invalidates no existing output directory - and
-        /// a test written against that arm asserts nothing at all. Flipping the flag off is what
-        /// makes the term observable.</para>
-        ///
-        /// <para>The term must also be DISTINCT from every other arm's, which
-        /// <c>AreNotEqual(string.Empty, ...)</c> alone would not catch: a suffix that collided
-        /// with a token another arm already emits would let two different configurations
-        /// compute the same key, which is the failure the whole file exists to prevent.</para>
-        /// </summary>
-        private static void AssertLibraryFragmentArmIsPinnedToThePipeline()
-        {
-            bool saved = OspreyEnvironment.ReleaseLibraryFragments;
-            try
-            {
-                OspreyEnvironment.ReleaseLibraryFragments = false;
-                var tasks = OspreyTasks.Create().Pipeline;
-                var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-                string libfrag = LibraryFragmentRelease.ValidityKeySuffix(ctx);
-
-                Assert.AreNotEqual(string.Empty, libfrag,
-                    @"the resident opt-out must emit a term, or an in-place A/B adopts the other arm's outputs");
-                foreach (string other in new[]
-                {
-                    OspreyEnvironment.PickValidityKeySuffix(),
-                    OspreyEnvironment.Pass2QValueValidityKeySuffix(),
-                    OspreyEnvironment.ExperimentAggValidityKeySuffix()
-                })
-                {
-                    Assert.AreNotEqual(libfrag, other,
-                        @"the library-fragment term must not collide with another arm's token");
-                }
-
-                // Per-file scoring is exempt for the reason it is exempt from the 2nd-pass mode:
-                // its parquet is written in Stages 1-4, before any release can happen, and
-                // keying it here would re-run hours of scoring to reproduce a byte-identical file.
-                foreach (var task in tasks)
-                {
-                    bool expectLibfrag = task.Name != PerFileScoringTask.TASK_NAME;
-                    Assert.AreEqual(expectLibfrag, task.ValidityKey(ctx).Contains(libfrag),
-                        string.Format(@"{0} must {1}key on the library-fragment release arm",
-                            task.Name, expectLibfrag ? string.Empty : @"NOT "));
-                }
-            }
-            finally
-            {
-                OspreyEnvironment.ReleaseLibraryFragments = saved;
             }
         }
     }

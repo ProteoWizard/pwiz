@@ -148,8 +148,8 @@ namespace pwiz.Osprey.Tasks
             // data, and silence that long reads as a hang. At the I/O cadence rather than the
             // rescore's 2 s: at 2 s this loop printed ~19 percent lines per SEA-AD run.
             int nDone = 0;
-            using (var progress = new ProgressReporter(OspreyTasksResources.TrainingExportWriter_ExportRun_Exporting_isolation_windows,
-                       windows.Count, @"  ", ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(OspreyTasksResources.TrainingExportWriter_ExportRun_Exporting_isolation_windows,
+                windows.Count, progress =>
             {
                 Parallel.For(0, windows.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, maxThreads) }, w =>
                 {
@@ -157,8 +157,7 @@ namespace pwiz.Osprey.Tasks
                         out observed[w]);
                     progress.Report(Interlocked.Increment(ref nDone));
                 });
-                progress.Complete();
-            }
+            }, @"  ", ProgressReporter.IO_INTERVAL_SECONDS);
 
             var records = perWindow.Where(list => list != null).SelectMany(list => list)
                 .OrderBy(r => r.EntryId).ToList();

@@ -1337,7 +1337,6 @@ namespace pwiz.Osprey.Tasks
                     MinPoints = minLoessPoints,
                     RobustnessIterations = 2,
                     OutlierRetention = 1.0, // LDA + S/N already filtered
-                    ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust,
                     LinearFit = plan.LinearFit
                 };
 
@@ -1574,8 +1573,7 @@ namespace pwiz.Osprey.Tasks
             // across an 82-file run.
             int windowsDone = 0;
             bool serialReads = OspreyEnvironment.SerialWindowReads;
-            using (var progress = new ProgressReporter(
-                       OspreyTasksResources.Calibrator_private_Scoring_calibration_windows, entriesByWindow.Count, @"  "))
+            ProgressReporter.Run(OspreyTasksResources.Calibrator_private_Scoring_calibration_windows, entriesByWindow.Count, progress =>
             {
                 Parallel.ForEach(entriesByWindow, new ParallelOptions
                     {
@@ -1637,8 +1635,7 @@ namespace pwiz.Osprey.Tasks
                         return worker;
                     },
                     worker => { });
-                progress.Complete();
-            }
+            }, @"  ");
             swScoring.Stop();
             _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} scoring: {1:F2}s ({2} matches)",
                 passNumber, swScoring.Elapsed.TotalSeconds, matches.Count);

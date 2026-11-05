@@ -75,19 +75,20 @@ namespace pwiz.Osprey.Test
         }
 
         // OSPREY_BLOCK_READ_MB values that overflowed int arithmetic (2048 gave a negative block,
-        // multiples of 4096 a zero one) clamp to the largest block; zero and below are off.
+        // multiples of 4096 a zero one) clamp to the largest block; zero and below to 1 MB, since
+        // the direct-read arm they once selected was retired.
         private static void VerifyBlockBytesClamp()
         {
             const int maxBytes = OspreyEnvironment.MAX_BLOCK_READ_MB << 20;
             Assert.AreEqual(4 << 20, BlockReadStream.BlockBytes(4));
             Assert.AreEqual(1 << 20, BlockReadStream.BlockBytes(1));
-            Assert.AreEqual(0, BlockReadStream.BlockBytes(0));
-            Assert.AreEqual(0, BlockReadStream.BlockBytes(-5));
+            Assert.AreEqual(1 << 20, BlockReadStream.BlockBytes(0));
+            Assert.AreEqual(1 << 20, BlockReadStream.BlockBytes(-5));
             Assert.AreEqual(maxBytes, BlockReadStream.BlockBytes(OspreyEnvironment.MAX_BLOCK_READ_MB));
             Assert.AreEqual(maxBytes, BlockReadStream.BlockBytes(2048));
             Assert.AreEqual(maxBytes, BlockReadStream.BlockBytes(4096));
             Assert.AreEqual(maxBytes, BlockReadStream.BlockBytes(int.MaxValue));
-            Assert.AreEqual(0, OspreyEnvironment.ClampBlockReadMb(int.MinValue));
+            Assert.AreEqual(1, OspreyEnvironment.ClampBlockReadMb(int.MinValue));
         }
 
         // A rejected block size must not leave the file open behind the exception.

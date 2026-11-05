@@ -54,6 +54,7 @@ namespace ImageComparer
             this.toolStripAutoSize = new System.Windows.Forms.ToolStripButton();
             this.toolStripDiffOnly = new System.Windows.Forms.ToolStripButton();
             this.toolStripAmplify = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSameSize = new System.Windows.Forms.ToolStripButton();
             this.contextMenuImageSource = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuItemGit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemWeb = new System.Windows.Forms.ToolStripMenuItem();
@@ -237,6 +238,7 @@ namespace ImageComparer
             this.toolStripPickColorButton,
             this.toolStripDiffOnly,
             this.toolStripAmplify,
+            this.toolStripSameSize,
             this.toolStripSeparator3,
             this.toolStripGotoWeb});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
@@ -343,6 +345,16 @@ namespace ImageComparer
             this.toolStripAmplify.Text = "Amp";
             this.toolStripAmplify.ToolTipText = "Amplify diff pixels to 5x larger squares (A)";
             this.toolStripAmplify.CheckedChanged += new System.EventHandler(this.toolStripAmplify_CheckedChanged);
+            //
+            // toolStripSameSize
+            //
+            this.toolStripSameSize.CheckOnClick = true;
+            this.toolStripSameSize.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripSameSize.Name = "toolStripSameSize";
+            this.toolStripSameSize.Size = new System.Drawing.Size(23, 22);
+            this.toolStripSameSize.Text = "Same";
+            this.toolStripSameSize.ToolTipText = "Compare images of different sizes by scaling the old image to the new size (S)";
+            this.toolStripSameSize.CheckedChanged += new System.EventHandler(this.toolStripSameSize_CheckedChanged);
             //
             // contextMenuImageSource
             //
@@ -452,6 +464,7 @@ namespace ImageComparer
         private AlphaColorPickerButton toolStripPickColorButton;
         private System.Windows.Forms.ToolStripButton toolStripDiffOnly;
         private System.Windows.Forms.ToolStripButton toolStripAmplify;
+        private System.Windows.Forms.ToolStripButton toolStripSameSize;
         private System.Windows.Forms.ContextMenuStrip contextMenuImageSource;
         private System.Windows.Forms.ToolStripMenuItem menuItemGit;
         private System.Windows.Forms.ToolStripMenuItem menuItemWeb;
