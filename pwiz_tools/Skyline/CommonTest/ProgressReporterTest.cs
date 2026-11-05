@@ -171,13 +171,12 @@ namespace CommonTest
             // at the last percent shown.
             var marked = Capture(() =>
             {
-                using (var scope = ProgressReporter.Begin("phase", 100, string.Empty, 60.0, 60.0, 0.0))
-                {
-                    scope.Report(50);
-                    scope.MarkComplete();
-                    // A second Dispose (here and at the end of the using) does not close the step twice.
-                    scope.Dispose();
-                }
+                var scope = ProgressReporter.Begin("phase", 100, string.Empty, 60.0, 60.0, 0.0);
+                scope.Report(50);
+                scope.MarkComplete();
+                scope.Dispose();
+                // A second Dispose does not close the step twice.
+                scope.Dispose();
             });
             AssertEx.Contains(marked[0], Heading("phase"));
             AssertEx.AreEqual(1, marked.Count(line => line.Contains("100%")),
