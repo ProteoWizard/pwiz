@@ -200,14 +200,13 @@ namespace pwiz.Osprey.Core
             // singleton stands in for every released spectrum - deliberately, since a
             // per-entry sentinel would reintroduce the per-entry allocation the release
             // exists to remove. The stack trace names the READER, which is the half that
-            // matters: rerun with OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to get the entry.
+            // matters.
             private static InvalidOperationException Released()
             {
                 return new InvalidOperationException(
                     @"These library fragments were released after Stage 5 because the entry is " +
                     @"neither a compaction survivor nor a gap-fill candidate, so nothing should " +
-                    @"score or write it. Reaching them means the retained set is wrong. Set " +
-                    @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to keep the whole library resident.");
+                    @"score or write it. Reaching them means the retained set is wrong.");
             }
         }
     }

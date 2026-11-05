@@ -1425,7 +1425,9 @@
   <static_modification name="Hex (ST)" aminoacid="S, T" variable="true" formula="H10C6O5" unimod_id="41" short_name="Hex">
     <potential_loss formula="H10C6O5" massdiff_monoisotopic="162.052824" massdiff_average="162.1415" />
   </static_modification>
-  <static_modification name="Hex (W)" aminoacid="W" variable="true" formula="H10C6O5" unimod_id="41" short_name="Hex" />
+  <static_modification name="Hex (W)" aminoacid="W" variable="true" formula="H10C6O5" unimod_id="41" short_name="Hex">
+    <potential_loss formula="H8C4O4" massdiff_monoisotopic="120.042259" massdiff_average="120.10452" />
+  </static_modification>
   <static_modification name="Hex (Y)" aminoacid="Y" variable="true" formula="H10C6O5" unimod_id="41" short_name="Hex" />
   <static_modification name="Hex(1)HexA(1) (ST)" aminoacid="S, T" variable="true" formula="H18C12O11" unimod_id="1427">
     <potential_loss formula="H18C12O11" massdiff_monoisotopic="338.084912" massdiff_average="338.26652" />
@@ -2338,7 +2340,9 @@
   <static_modification name="maleimide5 (C)" aminoacid="C" variable="true" formula="H79C49N7O33" unimod_id="972" />
   <static_modification name="maleimide5 (K)" aminoacid="K" variable="true" formula="H79C49N7O33" unimod_id="972" />
   <static_modification name="Malonyl (C)" aminoacid="C" variable="true" formula="H2C3O3" unimod_id="747" short_name="Mal" />
-  <static_modification name="Malonyl (K)" aminoacid="K" variable="true" formula="H2C3O3" unimod_id="747" short_name="Mal" />
+  <static_modification name="Malonyl (K)" aminoacid="K" variable="true" formula="H2C3O3" unimod_id="747" short_name="Mal">
+    <potential_loss formula="CO2" massdiff_monoisotopic="43.989829" massdiff_average="44.00965" />
+  </static_modification>
   <static_modification name="Malonyl (S)" aminoacid="S" variable="true" formula="H2C3O3" unimod_id="747" short_name="Mal" />
   <static_modification name="MBS+peptide (C)" aminoacid="C" variable="true" formula="H108C81N7O19" unimod_id="2040" />
   <static_modification name="MDCC (C)" aminoacid="C" variable="true" formula="H21C20N3O5" unimod_id="887" />
@@ -2899,4 +2903,430 @@
   <static_modification name="ZQG (K)" aminoacid="K" variable="true" formula="H16C15N2O6" unimod_id="2001">
     <potential_loss formula="H6C8O2" massdiff_monoisotopic="134.036779" massdiff_average="134.13324" />
   </static_modification>
+  <static_modification name="His-&gt;Asn (H)" aminoacid="H" variable="true" formula="O-HC2N" unimod_id="348" />
+  <static_modification name="His-&gt;Asp (H)" aminoacid="H" variable="true" formula="O2-H2C2N2" unimod_id="349" />
+  <static_modification name="Ala-&gt;Ser (A)" aminoacid="A" variable="true" formula="O" unimod_id="540" />
+  <static_modification name="Ala-&gt;Thr (A)" aminoacid="A" variable="true" formula="H2CO" unimod_id="541" />
+  <static_modification name="Ala-&gt;Asp (A)" aminoacid="A" variable="true" formula="CO2" unimod_id="542" />
+  <static_modification name="Ala-&gt;Pro (A)" aminoacid="A" variable="true" formula="H2C2" unimod_id="543" />
+  <static_modification name="Ala-&gt;Gly (A)" aminoacid="A" variable="true" formula="-H2C" unimod_id="544" />
+  <static_modification name="Ala-&gt;Glu (A)" aminoacid="A" variable="true" formula="H2C2O2" unimod_id="545" />
+  <static_modification name="Ala-&gt;Val (A)" aminoacid="A" variable="true" formula="H4C2" unimod_id="546" />
+  <static_modification name="Cys-&gt;Phe (C)" aminoacid="C" variable="true" formula="H4C6-S" unimod_id="547" />
+  <static_modification name="Cys-&gt;Ser (C)" aminoacid="C" variable="true" formula="O-S" unimod_id="548" />
+  <static_modification name="Cys-&gt;Trp (C)" aminoacid="C" variable="true" formula="H5C8N-S" unimod_id="549" />
+  <static_modification name="Cys-&gt;Tyr (C)" aminoacid="C" variable="true" formula="H4C6O-S" unimod_id="550" />
+  <static_modification name="Cys-&gt;Arg (C)" aminoacid="C" variable="true" formula="H7C3N3-S" unimod_id="551" />
+  <static_modification name="Cys-&gt;Gly (C)" aminoacid="C" variable="true" formula="-H2CS" unimod_id="552" />
+  <static_modification name="Asp-&gt;Ala (D)" aminoacid="D" variable="true" formula="-CO2" unimod_id="553" />
+  <static_modification name="Asp-&gt;His (D)" aminoacid="D" variable="true" formula="H2C2N2-O2" unimod_id="554" />
+  <static_modification name="Asp-&gt;Asn (D)" aminoacid="D" variable="true" formula="HN-O" unimod_id="555" />
+  <static_modification name="Asp-&gt;Gly (D)" aminoacid="D" variable="true" formula="-H2C2O2" unimod_id="556" />
+  <static_modification name="Asp-&gt;Tyr (D)" aminoacid="D" variable="true" formula="H4C5-O" unimod_id="557" />
+  <static_modification name="Asp-&gt;Glu (D)" aminoacid="D" variable="true" formula="H2C" unimod_id="558" />
+  <static_modification name="Asp-&gt;Val (D)" aminoacid="D" variable="true" formula="H4C-O2" unimod_id="559" />
+  <static_modification name="Glu-&gt;Ala (E)" aminoacid="E" variable="true" formula="-H2C2O2" unimod_id="560" />
+  <static_modification name="Glu-&gt;Gln (E)" aminoacid="E" variable="true" formula="HN-O" unimod_id="561" />
+  <static_modification name="Glu-&gt;Asp (E)" aminoacid="E" variable="true" formula="-H2C" unimod_id="562" />
+  <static_modification name="Glu-&gt;Lys (E)" aminoacid="E" variable="true" formula="H5CN-O2" unimod_id="563" />
+  <static_modification name="Glu-&gt;Gly (E)" aminoacid="E" variable="true" formula="-H4C3O2" unimod_id="564" />
+  <static_modification name="Glu-&gt;Val (E)" aminoacid="E" variable="true" formula="H2-O2" unimod_id="565" />
+  <static_modification name="Phe-&gt;Ser (F)" aminoacid="F" variable="true" formula="O-H4C6" unimod_id="566" />
+  <static_modification name="Phe-&gt;Cys (F)" aminoacid="F" variable="true" formula="S-H4C6" unimod_id="567" />
+  <static_modification name="Phe-&gt;Xle (F)" aminoacid="F" variable="true" formula="H2-C3" unimod_id="568" />
+  <static_modification name="Phe-&gt;Tyr (F)" aminoacid="F" variable="true" formula="O" unimod_id="569" />
+  <static_modification name="Phe-&gt;Val (F)" aminoacid="F" variable="true" formula="-C4" unimod_id="570" />
+  <static_modification name="Gly-&gt;Ala (G)" aminoacid="G" variable="true" formula="H2C" unimod_id="571" />
+  <static_modification name="Gly-&gt;Ser (G)" aminoacid="G" variable="true" formula="H2CO" unimod_id="572" />
+  <static_modification name="Gly-&gt;Trp (G)" aminoacid="G" variable="true" formula="H7C9N" unimod_id="573" />
+  <static_modification name="Gly-&gt;Glu (G)" aminoacid="G" variable="true" formula="H4C3O2" unimod_id="574" />
+  <static_modification name="Gly-&gt;Val (G)" aminoacid="G" variable="true" formula="H6C3" unimod_id="575" />
+  <static_modification name="Gly-&gt;Asp (G)" aminoacid="G" variable="true" formula="H2C2O2" unimod_id="576" />
+  <static_modification name="Gly-&gt;Cys (G)" aminoacid="G" variable="true" formula="H2CS" unimod_id="577" />
+  <static_modification name="Gly-&gt;Arg (G)" aminoacid="G" variable="true" formula="H9C4N3" unimod_id="578" />
+  <static_modification name="His-&gt;Pro (H)" aminoacid="H" variable="true" formula="-CN2" unimod_id="580" />
+  <static_modification name="His-&gt;Tyr (H)" aminoacid="H" variable="true" formula="H2C3O-N2" unimod_id="581" />
+  <static_modification name="His-&gt;Gln (H)" aminoacid="H" variable="true" formula="HO-CN" unimod_id="582" />
+  <static_modification name="His-&gt;Arg (H)" aminoacid="H" variable="true" formula="H5N" unimod_id="584" />
+  <static_modification name="His-&gt;Xle (H)" aminoacid="H" variable="true" formula="H4-N2" unimod_id="585" />
+  <static_modification name="Xle-&gt;Thr (I)" aminoacid="I" variable="true" formula="O-H4C2" unimod_id="588" />
+  <static_modification name="Xle-&gt;Thr (L)" aminoacid="L" variable="true" formula="O-H4C2" unimod_id="588" />
+  <static_modification name="Xle-&gt;Asn (I)" aminoacid="I" variable="true" formula="NO-H5C2" unimod_id="589" />
+  <static_modification name="Xle-&gt;Asn (L)" aminoacid="L" variable="true" formula="NO-H5C2" unimod_id="589" />
+  <static_modification name="Xle-&gt;Lys (I)" aminoacid="I" variable="true" formula="HN" unimod_id="590" />
+  <static_modification name="Xle-&gt;Lys (L)" aminoacid="L" variable="true" formula="HN" unimod_id="590" />
+  <static_modification name="Lys-&gt;Thr (K)" aminoacid="K" variable="true" formula="O-H5C2N" unimod_id="594" />
+  <static_modification name="Lys-&gt;Asn (K)" aminoacid="K" variable="true" formula="O-H6C2" unimod_id="595" />
+  <static_modification name="Lys-&gt;Glu (K)" aminoacid="K" variable="true" formula="O2-H5CN" unimod_id="596" />
+  <static_modification name="Lys-&gt;Gln (K)" aminoacid="K" variable="true" formula="O-H4C" unimod_id="597" />
+  <static_modification name="Lys-&gt;Met (K)" aminoacid="K" variable="true" formula="S-H3CN" unimod_id="598" />
+  <static_modification name="Lys-&gt;Arg (K)" aminoacid="K" variable="true" formula="N2" unimod_id="599" />
+  <static_modification name="Lys-&gt;Xle (K)" aminoacid="K" variable="true" formula="-HN" unimod_id="600" />
+  <static_modification name="Xle-&gt;Ser (L)" aminoacid="L" variable="true" formula="O-H6C3" unimod_id="601" />
+  <static_modification name="Xle-&gt;Ser (I)" aminoacid="I" variable="true" formula="O-H6C3" unimod_id="601" />
+  <static_modification name="Xle-&gt;Phe (L)" aminoacid="L" variable="true" formula="C3-H2" unimod_id="602" />
+  <static_modification name="Xle-&gt;Phe (I)" aminoacid="I" variable="true" formula="C3-H2" unimod_id="602" />
+  <static_modification name="Xle-&gt;Trp (L)" aminoacid="L" variable="true" formula="C5N-H" unimod_id="603" />
+  <static_modification name="Xle-&gt;Trp (I)" aminoacid="I" variable="true" formula="C5N-H" unimod_id="603" />
+  <static_modification name="Xle-&gt;Pro (L)" aminoacid="L" variable="true" formula="-H4C" unimod_id="604" />
+  <static_modification name="Xle-&gt;Pro (I)" aminoacid="I" variable="true" formula="-H4C" unimod_id="604" />
+  <static_modification name="Xle-&gt;Val (L)" aminoacid="L" variable="true" formula="-H2C" unimod_id="605" />
+  <static_modification name="Xle-&gt;Val (I)" aminoacid="I" variable="true" formula="-H2C" unimod_id="605" />
+  <static_modification name="Xle-&gt;His (L)" aminoacid="L" variable="true" formula="N2-H4" unimod_id="606" />
+  <static_modification name="Xle-&gt;His (I)" aminoacid="I" variable="true" formula="N2-H4" unimod_id="606" />
+  <static_modification name="Xle-&gt;Gln (L)" aminoacid="L" variable="true" formula="NO-H3C" unimod_id="607" />
+  <static_modification name="Xle-&gt;Gln (I)" aminoacid="I" variable="true" formula="NO-H3C" unimod_id="607" />
+  <static_modification name="Xle-&gt;Met (L)" aminoacid="L" variable="true" formula="S-H2C" unimod_id="608" />
+  <static_modification name="Xle-&gt;Met (I)" aminoacid="I" variable="true" formula="S-H2C" unimod_id="608" />
+  <static_modification name="Xle-&gt;Arg (L)" aminoacid="L" variable="true" formula="HN3" unimod_id="609" />
+  <static_modification name="Xle-&gt;Arg (I)" aminoacid="I" variable="true" formula="HN3" unimod_id="609" />
+  <static_modification name="Met-&gt;Thr (M)" aminoacid="M" variable="true" formula="O-H2CS" unimod_id="610" />
+  <static_modification name="Met-&gt;Arg (M)" aminoacid="M" variable="true" formula="H3CN3-S" unimod_id="611" />
+  <static_modification name="Met-&gt;Lys (M)" aminoacid="M" variable="true" formula="H3CN-S" unimod_id="613" />
+  <static_modification name="Met-&gt;Xle (M)" aminoacid="M" variable="true" formula="H2C-S" unimod_id="614" />
+  <static_modification name="Met-&gt;Val (M)" aminoacid="M" variable="true" formula="-S" unimod_id="615" />
+  <static_modification name="Asn-&gt;Ser (N)" aminoacid="N" variable="true" formula="-HCN" unimod_id="616" />
+  <static_modification name="Asn-&gt;Thr (N)" aminoacid="N" variable="true" formula="H-N" unimod_id="617" />
+  <static_modification name="Asn-&gt;Lys (N)" aminoacid="N" variable="true" formula="H6C2-O" unimod_id="618" />
+  <static_modification name="Asn-&gt;Tyr (N)" aminoacid="N" variable="true" formula="H3C5-N" unimod_id="619" />
+  <static_modification name="Asn-&gt;His (N)" aminoacid="N" variable="true" formula="HC2N-O" unimod_id="620" />
+  <static_modification name="Asn-&gt;Asp (N)" aminoacid="N" variable="true" formula="O-HN" unimod_id="621" />
+  <static_modification name="Asn-&gt;Xle (N)" aminoacid="N" variable="true" formula="H5C2-NO" unimod_id="622" />
+  <static_modification name="Pro-&gt;Ser (P)" aminoacid="P" variable="true" formula="O-H2C2" unimod_id="623" />
+  <static_modification name="Pro-&gt;Ala (P)" aminoacid="P" variable="true" formula="-H2C2" unimod_id="624" />
+  <static_modification name="Pro-&gt;His (P)" aminoacid="P" variable="true" formula="CN2" unimod_id="625" />
+  <static_modification name="Pro-&gt;Gln (P)" aminoacid="P" variable="true" formula="HNO" unimod_id="626" />
+  <static_modification name="Pro-&gt;Thr (P)" aminoacid="P" variable="true" formula="O-C" unimod_id="627" />
+  <static_modification name="Pro-&gt;Arg (P)" aminoacid="P" variable="true" formula="H5CN3" unimod_id="628" />
+  <static_modification name="Pro-&gt;Xle (P)" aminoacid="P" variable="true" formula="H4C" unimod_id="629" />
+  <static_modification name="Gln-&gt;Pro (Q)" aminoacid="Q" variable="true" formula="-HNO" unimod_id="630" />
+  <static_modification name="Gln-&gt;Lys (Q)" aminoacid="Q" variable="true" formula="H4C-O" unimod_id="631" />
+  <static_modification name="Gln-&gt;Glu (Q)" aminoacid="Q" variable="true" formula="O-HN" unimod_id="632" />
+  <static_modification name="Gln-&gt;His (Q)" aminoacid="Q" variable="true" formula="CN-HO" unimod_id="633" />
+  <static_modification name="Gln-&gt;Arg (Q)" aminoacid="Q" variable="true" formula="H4CN2-O" unimod_id="634" />
+  <static_modification name="Gln-&gt;Xle (Q)" aminoacid="Q" variable="true" formula="H3C-NO" unimod_id="635" />
+  <static_modification name="Arg-&gt;Ser (R)" aminoacid="R" variable="true" formula="O-H7C3N3" unimod_id="636" />
+  <static_modification name="Arg-&gt;Trp (R)" aminoacid="R" variable="true" formula="C5-H2N2" unimod_id="637" />
+  <static_modification name="Arg-&gt;Thr (R)" aminoacid="R" variable="true" formula="O-H5C2N3" unimod_id="638" />
+  <static_modification name="Arg-&gt;Pro (R)" aminoacid="R" variable="true" formula="-H5CN3" unimod_id="639" />
+  <static_modification name="Arg-&gt;Lys (R)" aminoacid="R" variable="true" formula="-N2" unimod_id="640" />
+  <static_modification name="Arg-&gt;His (R)" aminoacid="R" variable="true" formula="-H5N" unimod_id="641" />
+  <static_modification name="Arg-&gt;Gln (R)" aminoacid="R" variable="true" formula="O-H4CN2" unimod_id="642" />
+  <static_modification name="Arg-&gt;Met (R)" aminoacid="R" variable="true" formula="S-H3CN3" unimod_id="643" />
+  <static_modification name="Arg-&gt;Cys (R)" aminoacid="R" variable="true" formula="S-H7C3N3" unimod_id="644" />
+  <static_modification name="Arg-&gt;Xle (R)" aminoacid="R" variable="true" formula="-HN3" unimod_id="645" />
+  <static_modification name="Arg-&gt;Gly (R)" aminoacid="R" variable="true" formula="-H9C4N3" unimod_id="646" />
+  <static_modification name="Ser-&gt;Phe (S)" aminoacid="S" variable="true" formula="H4C6-O" unimod_id="647" />
+  <static_modification name="Ser-&gt;Ala (S)" aminoacid="S" variable="true" formula="-O" unimod_id="648" />
+  <static_modification name="Ser-&gt;Trp (S)" aminoacid="S" variable="true" formula="H5C8N-O" unimod_id="649" />
+  <static_modification name="Ser-&gt;Thr (S)" aminoacid="S" variable="true" formula="H2C" unimod_id="650" />
+  <static_modification name="Ser-&gt;Asn (S)" aminoacid="S" variable="true" formula="HCN" unimod_id="651" />
+  <static_modification name="Ser-&gt;Pro (S)" aminoacid="S" variable="true" formula="H2C2-O" unimod_id="652" />
+  <static_modification name="Ser-&gt;Tyr (S)" aminoacid="S" variable="true" formula="H4C6" unimod_id="653" />
+  <static_modification name="Ser-&gt;Cys (S)" aminoacid="S" variable="true" formula="S-O" unimod_id="654" />
+  <static_modification name="Ser-&gt;Arg (S)" aminoacid="S" variable="true" formula="H7C3N3-O" unimod_id="655" />
+  <static_modification name="Ser-&gt;Xle (S)" aminoacid="S" variable="true" formula="H6C3-O" unimod_id="656" />
+  <static_modification name="Ser-&gt;Gly (S)" aminoacid="S" variable="true" formula="-H2CO" unimod_id="657" />
+  <static_modification name="Thr-&gt;Ser (T)" aminoacid="T" variable="true" formula="-H2C" unimod_id="658" />
+  <static_modification name="Thr-&gt;Ala (T)" aminoacid="T" variable="true" formula="-H2CO" unimod_id="659" />
+  <static_modification name="Thr-&gt;Asn (T)" aminoacid="T" variable="true" formula="N-H" unimod_id="660" />
+  <static_modification name="Thr-&gt;Lys (T)" aminoacid="T" variable="true" formula="H5C2N-O" unimod_id="661" />
+  <static_modification name="Thr-&gt;Pro (T)" aminoacid="T" variable="true" formula="C-O" unimod_id="662" />
+  <static_modification name="Thr-&gt;Met (T)" aminoacid="T" variable="true" formula="H2CS-O" unimod_id="663" />
+  <static_modification name="Thr-&gt;Xle (T)" aminoacid="T" variable="true" formula="H4C2-O" unimod_id="664" />
+  <static_modification name="Thr-&gt;Arg (T)" aminoacid="T" variable="true" formula="H5C2N3-O" unimod_id="665" />
+  <static_modification name="Val-&gt;Phe (V)" aminoacid="V" variable="true" formula="C4" unimod_id="666" />
+  <static_modification name="Val-&gt;Ala (V)" aminoacid="V" variable="true" formula="-H4C2" unimod_id="667" />
+  <static_modification name="Val-&gt;Glu (V)" aminoacid="V" variable="true" formula="O2-H2" unimod_id="668" />
+  <static_modification name="Val-&gt;Met (V)" aminoacid="V" variable="true" formula="S" unimod_id="669" />
+  <static_modification name="Val-&gt;Asp (V)" aminoacid="V" variable="true" formula="O2-H4C" unimod_id="670" />
+  <static_modification name="Val-&gt;Xle (V)" aminoacid="V" variable="true" formula="H2C" unimod_id="671" />
+  <static_modification name="Val-&gt;Gly (V)" aminoacid="V" variable="true" formula="-H6C3" unimod_id="672" />
+  <static_modification name="Trp-&gt;Ser (W)" aminoacid="W" variable="true" formula="O-H5C8N" unimod_id="673" />
+  <static_modification name="Trp-&gt;Cys (W)" aminoacid="W" variable="true" formula="S-H5C8N" unimod_id="674" />
+  <static_modification name="Trp-&gt;Arg (W)" aminoacid="W" variable="true" formula="H2N2-C5" unimod_id="675" />
+  <static_modification name="Trp-&gt;Gly (W)" aminoacid="W" variable="true" formula="-H7C9N" unimod_id="676" />
+  <static_modification name="Trp-&gt;Xle (W)" aminoacid="W" variable="true" formula="H-C5N" unimod_id="677" />
+  <static_modification name="Tyr-&gt;Phe (Y)" aminoacid="Y" variable="true" formula="-O" unimod_id="678" />
+  <static_modification name="Tyr-&gt;Ser (Y)" aminoacid="Y" variable="true" formula="-H4C6" unimod_id="679" />
+  <static_modification name="Tyr-&gt;Asn (Y)" aminoacid="Y" variable="true" formula="N-H3C5" unimod_id="680" />
+  <static_modification name="Tyr-&gt;His (Y)" aminoacid="Y" variable="true" formula="N2-H2C3O" unimod_id="681" />
+  <static_modification name="Tyr-&gt;Asp (Y)" aminoacid="Y" variable="true" formula="O-H4C5" unimod_id="682" />
+  <static_modification name="Tyr-&gt;Cys (Y)" aminoacid="Y" variable="true" formula="S-H4C6O" unimod_id="683" />
+  <static_modification name="Ala-&gt;Cys (A)" aminoacid="A" variable="true" formula="S" unimod_id="1044" />
+  <static_modification name="Ala-&gt;Phe (A)" aminoacid="A" variable="true" formula="H4C6" unimod_id="1045" />
+  <static_modification name="Ala-&gt;His (A)" aminoacid="A" variable="true" formula="H2C3N2" unimod_id="1046" />
+  <static_modification name="Ala-&gt;Xle (A)" aminoacid="A" variable="true" formula="H6C3" unimod_id="1047" />
+  <static_modification name="Ala-&gt;Lys (A)" aminoacid="A" variable="true" formula="H7C3N" unimod_id="1048" />
+  <static_modification name="Ala-&gt;Met (A)" aminoacid="A" variable="true" formula="H4C2S" unimod_id="1049" />
+  <static_modification name="Ala-&gt;Asn (A)" aminoacid="A" variable="true" formula="HCNO" unimod_id="1050" />
+  <static_modification name="Ala-&gt;Gln (A)" aminoacid="A" variable="true" formula="H3C2NO" unimod_id="1051" />
+  <static_modification name="Ala-&gt;Arg (A)" aminoacid="A" variable="true" formula="H7C3N3" unimod_id="1052" />
+  <static_modification name="Ala-&gt;Trp (A)" aminoacid="A" variable="true" formula="H5C8N" unimod_id="1053" />
+  <static_modification name="Ala-&gt;Tyr (A)" aminoacid="A" variable="true" formula="H4C6O" unimod_id="1054" />
+  <static_modification name="Cys-&gt;Ala (C)" aminoacid="C" variable="true" formula="-S" unimod_id="1055" />
+  <static_modification name="Cys-&gt;Asp (C)" aminoacid="C" variable="true" formula="CO2-S" unimod_id="1056" />
+  <static_modification name="Cys-&gt;Glu (C)" aminoacid="C" variable="true" formula="H2C2O2-S" unimod_id="1057" />
+  <static_modification name="Cys-&gt;His (C)" aminoacid="C" variable="true" formula="H2C3N2-S" unimod_id="1058" />
+  <static_modification name="Cys-&gt;Xle (C)" aminoacid="C" variable="true" formula="H6C3-S" unimod_id="1059" />
+  <static_modification name="Cys-&gt;Lys (C)" aminoacid="C" variable="true" formula="H7C3N-S" unimod_id="1060" />
+  <static_modification name="Cys-&gt;Met (C)" aminoacid="C" variable="true" formula="H4C2" unimod_id="1061" />
+  <static_modification name="Cys-&gt;Asn (C)" aminoacid="C" variable="true" formula="HCNO-S" unimod_id="1062" />
+  <static_modification name="Cys-&gt;Pro (C)" aminoacid="C" variable="true" formula="H2C2-S" unimod_id="1063" />
+  <static_modification name="Cys-&gt;Gln (C)" aminoacid="C" variable="true" formula="H3C2NO-S" unimod_id="1064" />
+  <static_modification name="Cys-&gt;Thr (C)" aminoacid="C" variable="true" formula="H2CO-S" unimod_id="1065" />
+  <static_modification name="Cys-&gt;Val (C)" aminoacid="C" variable="true" formula="H4C2-S" unimod_id="1066" />
+  <static_modification name="Asp-&gt;Cys (D)" aminoacid="D" variable="true" formula="S-CO2" unimod_id="1067" />
+  <static_modification name="Asp-&gt;Phe (D)" aminoacid="D" variable="true" formula="H4C5-O2" unimod_id="1068" />
+  <static_modification name="Asp-&gt;Xle (D)" aminoacid="D" variable="true" formula="H6C2-O2" unimod_id="1069" />
+  <static_modification name="Asp-&gt;Lys (D)" aminoacid="D" variable="true" formula="H7C2N-O2" unimod_id="1070" />
+  <static_modification name="Asp-&gt;Met (D)" aminoacid="D" variable="true" formula="H4CS-O2" unimod_id="1071" />
+  <static_modification name="Asp-&gt;Pro (D)" aminoacid="D" variable="true" formula="H2C-O2" unimod_id="1072" />
+  <static_modification name="Asp-&gt;Gln (D)" aminoacid="D" variable="true" formula="H3CN-O" unimod_id="1073" />
+  <static_modification name="Asp-&gt;Arg (D)" aminoacid="D" variable="true" formula="H7C2N3-O2" unimod_id="1074" />
+  <static_modification name="Asp-&gt;Ser (D)" aminoacid="D" variable="true" formula="-CO" unimod_id="1075" />
+  <static_modification name="Asp-&gt;Thr (D)" aminoacid="D" variable="true" formula="H2-O" unimod_id="1076" />
+  <static_modification name="Asp-&gt;Trp (D)" aminoacid="D" variable="true" formula="H5C7N-O2" unimod_id="1077" />
+  <static_modification name="Glu-&gt;Cys (E)" aminoacid="E" variable="true" formula="S-H2C2O2" unimod_id="1078" />
+  <static_modification name="Glu-&gt;Phe (E)" aminoacid="E" variable="true" formula="H2C4-O2" unimod_id="1079" />
+  <static_modification name="Glu-&gt;His (E)" aminoacid="E" variable="true" formula="CN2-O2" unimod_id="1080" />
+  <static_modification name="Glu-&gt;Xle (E)" aminoacid="E" variable="true" formula="H4C-O2" unimod_id="1081" />
+  <static_modification name="Glu-&gt;Met (E)" aminoacid="E" variable="true" formula="H2S-O2" unimod_id="1082" />
+  <static_modification name="Glu-&gt;Asn (E)" aminoacid="E" variable="true" formula="N-HCO" unimod_id="1083" />
+  <static_modification name="Glu-&gt;Pro (E)" aminoacid="E" variable="true" formula="-O2" unimod_id="1084" />
+  <static_modification name="Glu-&gt;Arg (E)" aminoacid="E" variable="true" formula="H5CN3-O2" unimod_id="1085" />
+  <static_modification name="Glu-&gt;Ser (E)" aminoacid="E" variable="true" formula="-H2C2O" unimod_id="1086" />
+  <static_modification name="Glu-&gt;Thr (E)" aminoacid="E" variable="true" formula="-CO" unimod_id="1087" />
+  <static_modification name="Glu-&gt;Trp (E)" aminoacid="E" variable="true" formula="H3C6N-O2" unimod_id="1088" />
+  <static_modification name="Glu-&gt;Tyr (E)" aminoacid="E" variable="true" formula="H2C4-O" unimod_id="1089" />
+  <static_modification name="Phe-&gt;Ala (F)" aminoacid="F" variable="true" formula="-H4C6" unimod_id="1090" />
+  <static_modification name="Phe-&gt;Asp (F)" aminoacid="F" variable="true" formula="O2-H4C5" unimod_id="1091" />
+  <static_modification name="Phe-&gt;Glu (F)" aminoacid="F" variable="true" formula="O2-H2C4" unimod_id="1092" />
+  <static_modification name="Phe-&gt;Gly (F)" aminoacid="F" variable="true" formula="-H6C7" unimod_id="1093" />
+  <static_modification name="Phe-&gt;His (F)" aminoacid="F" variable="true" formula="N2-H2C3" unimod_id="1094" />
+  <static_modification name="Phe-&gt;Lys (F)" aminoacid="F" variable="true" formula="H3N-C3" unimod_id="1095" />
+  <static_modification name="Phe-&gt;Met (F)" aminoacid="F" variable="true" formula="S-C4" unimod_id="1096" />
+  <static_modification name="Phe-&gt;Asn (F)" aminoacid="F" variable="true" formula="NO-H3C5" unimod_id="1097" />
+  <static_modification name="Phe-&gt;Pro (F)" aminoacid="F" variable="true" formula="-H2C4" unimod_id="1098" />
+  <static_modification name="Phe-&gt;Gln (F)" aminoacid="F" variable="true" formula="NO-HC4" unimod_id="1099" />
+  <static_modification name="Phe-&gt;Arg (F)" aminoacid="F" variable="true" formula="H3N3-C3" unimod_id="1100" />
+  <static_modification name="Phe-&gt;Thr (F)" aminoacid="F" variable="true" formula="O-H2C5" unimod_id="1101" />
+  <static_modification name="Phe-&gt;Trp (F)" aminoacid="F" variable="true" formula="HC2N" unimod_id="1102" />
+  <static_modification name="Gly-&gt;Phe (G)" aminoacid="G" variable="true" formula="H6C7" unimod_id="1103" />
+  <static_modification name="Gly-&gt;His (G)" aminoacid="G" variable="true" formula="H4C4N2" unimod_id="1104" />
+  <static_modification name="Gly-&gt;Xle (G)" aminoacid="G" variable="true" formula="H8C4" unimod_id="1105" />
+  <static_modification name="Gly-&gt;Lys (G)" aminoacid="G" variable="true" formula="H9C4N" unimod_id="1106" />
+  <static_modification name="Gly-&gt;Met (G)" aminoacid="G" variable="true" formula="H6C3S" unimod_id="1107" />
+  <static_modification name="Gly-&gt;Asn (G)" aminoacid="G" variable="true" formula="H3C2NO" unimod_id="1108" />
+  <static_modification name="Gly-&gt;Pro (G)" aminoacid="G" variable="true" formula="H4C3" unimod_id="1109" />
+  <static_modification name="Gly-&gt;Gln (G)" aminoacid="G" variable="true" formula="H5C3NO" unimod_id="1110" />
+  <static_modification name="Gly-&gt;Thr (G)" aminoacid="G" variable="true" formula="H4C2O" unimod_id="1111" />
+  <static_modification name="Gly-&gt;Tyr (G)" aminoacid="G" variable="true" formula="H6C7O" unimod_id="1112" />
+  <static_modification name="His-&gt;Ala (H)" aminoacid="H" variable="true" formula="-H2C3N2" unimod_id="1113" />
+  <static_modification name="His-&gt;Cys (H)" aminoacid="H" variable="true" formula="S-H2C3N2" unimod_id="1114" />
+  <static_modification name="His-&gt;Glu (H)" aminoacid="H" variable="true" formula="O2-CN2" unimod_id="1115" />
+  <static_modification name="His-&gt;Phe (H)" aminoacid="H" variable="true" formula="H2C3-N2" unimod_id="1116" />
+  <static_modification name="His-&gt;Gly (H)" aminoacid="H" variable="true" formula="-H4C4N2" unimod_id="1117" />
+  <static_modification name="His-&gt;Lys (H)" aminoacid="H" variable="true" formula="H5-N" unimod_id="1119" />
+  <static_modification name="His-&gt;Met (H)" aminoacid="H" variable="true" formula="H2S-CN2" unimod_id="1120" />
+  <static_modification name="His-&gt;Ser (H)" aminoacid="H" variable="true" formula="O-H2C3N2" unimod_id="1121" />
+  <static_modification name="His-&gt;Thr (H)" aminoacid="H" variable="true" formula="O-C2N2" unimod_id="1122" />
+  <static_modification name="His-&gt;Val (H)" aminoacid="H" variable="true" formula="H2-CN2" unimod_id="1123" />
+  <static_modification name="His-&gt;Trp (H)" aminoacid="H" variable="true" formula="H3C5-N" unimod_id="1124" />
+  <static_modification name="Xle-&gt;Ala (L)" aminoacid="L" variable="true" formula="-H6C3" unimod_id="1125" />
+  <static_modification name="Xle-&gt;Ala (I)" aminoacid="I" variable="true" formula="-H6C3" unimod_id="1125" />
+  <static_modification name="Xle-&gt;Cys (L)" aminoacid="L" variable="true" formula="S-H6C3" unimod_id="1126" />
+  <static_modification name="Xle-&gt;Cys (I)" aminoacid="I" variable="true" formula="S-H6C3" unimod_id="1126" />
+  <static_modification name="Xle-&gt;Asp (L)" aminoacid="L" variable="true" formula="O2-H6C2" unimod_id="1127" />
+  <static_modification name="Xle-&gt;Asp (I)" aminoacid="I" variable="true" formula="O2-H6C2" unimod_id="1127" />
+  <static_modification name="Xle-&gt;Glu (L)" aminoacid="L" variable="true" formula="O2-H4C" unimod_id="1128" />
+  <static_modification name="Xle-&gt;Glu (I)" aminoacid="I" variable="true" formula="O2-H4C" unimod_id="1128" />
+  <static_modification name="Xle-&gt;Gly (L)" aminoacid="L" variable="true" formula="-H8C4" unimod_id="1129" />
+  <static_modification name="Xle-&gt;Gly (I)" aminoacid="I" variable="true" formula="-H8C4" unimod_id="1129" />
+  <static_modification name="Xle-&gt;Tyr (L)" aminoacid="L" variable="true" formula="C3O-H2" unimod_id="1130" />
+  <static_modification name="Xle-&gt;Tyr (I)" aminoacid="I" variable="true" formula="C3O-H2" unimod_id="1130" />
+  <static_modification name="Lys-&gt;Ala (K)" aminoacid="K" variable="true" formula="-H7C3N" unimod_id="1131" />
+  <static_modification name="Lys-&gt;Cys (K)" aminoacid="K" variable="true" formula="S-H7C3N" unimod_id="1132" />
+  <static_modification name="Lys-&gt;Asp (K)" aminoacid="K" variable="true" formula="O2-H7C2N" unimod_id="1133" />
+  <static_modification name="Lys-&gt;Phe (K)" aminoacid="K" variable="true" formula="C3-H3N" unimod_id="1134" />
+  <static_modification name="Lys-&gt;Gly (K)" aminoacid="K" variable="true" formula="-H9C4N" unimod_id="1135" />
+  <static_modification name="Lys-&gt;His (K)" aminoacid="K" variable="true" formula="N-H5" unimod_id="1136" />
+  <static_modification name="Lys-&gt;Pro (K)" aminoacid="K" variable="true" formula="-H5CN" unimod_id="1137" />
+  <static_modification name="Lys-&gt;Ser (K)" aminoacid="K" variable="true" formula="O-H7C3N" unimod_id="1138" />
+  <static_modification name="Lys-&gt;Val (K)" aminoacid="K" variable="true" formula="-H3CN" unimod_id="1139" />
+  <static_modification name="Lys-&gt;Trp (K)" aminoacid="K" variable="true" formula="C5-H2" unimod_id="1140" />
+  <static_modification name="Lys-&gt;Tyr (K)" aminoacid="K" variable="true" formula="C3O-H3N" unimod_id="1141" />
+  <static_modification name="Met-&gt;Ala (M)" aminoacid="M" variable="true" formula="-H4C2S" unimod_id="1142" />
+  <static_modification name="Met-&gt;Cys (M)" aminoacid="M" variable="true" formula="-H4C2" unimod_id="1143" />
+  <static_modification name="Met-&gt;Asp (M)" aminoacid="M" variable="true" formula="O2-H4CS" unimod_id="1144" />
+  <static_modification name="Met-&gt;Glu (M)" aminoacid="M" variable="true" formula="O2-H2S" unimod_id="1145" />
+  <static_modification name="Met-&gt;Phe (M)" aminoacid="M" variable="true" formula="C4-S" unimod_id="1146" />
+  <static_modification name="Met-&gt;Gly (M)" aminoacid="M" variable="true" formula="-H6C3S" unimod_id="1147" />
+  <static_modification name="Met-&gt;His (M)" aminoacid="M" variable="true" formula="CN2-H2S" unimod_id="1148" />
+  <static_modification name="Met-&gt;Asn (M)" aminoacid="M" variable="true" formula="NO-H3CS" unimod_id="1149" />
+  <static_modification name="Met-&gt;Pro (M)" aminoacid="M" variable="true" formula="-H2S" unimod_id="1150" />
+  <static_modification name="Met-&gt;Gln (M)" aminoacid="M" variable="true" formula="NO-HS" unimod_id="1151" />
+  <static_modification name="Met-&gt;Ser (M)" aminoacid="M" variable="true" formula="O-H4C2S" unimod_id="1152" />
+  <static_modification name="Met-&gt;Trp (M)" aminoacid="M" variable="true" formula="HC6N-S" unimod_id="1153" />
+  <static_modification name="Met-&gt;Tyr (M)" aminoacid="M" variable="true" formula="C4O-S" unimod_id="1154" />
+  <static_modification name="Asn-&gt;Ala (N)" aminoacid="N" variable="true" formula="-HCNO" unimod_id="1155" />
+  <static_modification name="Asn-&gt;Cys (N)" aminoacid="N" variable="true" formula="S-HCNO" unimod_id="1156" />
+  <static_modification name="Asn-&gt;Glu (N)" aminoacid="N" variable="true" formula="HCO-N" unimod_id="1157" />
+  <static_modification name="Asn-&gt;Phe (N)" aminoacid="N" variable="true" formula="H3C5-NO" unimod_id="1158" />
+  <static_modification name="Asn-&gt;Gly (N)" aminoacid="N" variable="true" formula="-H3C2NO" unimod_id="1159" />
+  <static_modification name="Asn-&gt;Met (N)" aminoacid="N" variable="true" formula="H3CS-NO" unimod_id="1160" />
+  <static_modification name="Asn-&gt;Pro (N)" aminoacid="N" variable="true" formula="HC-NO" unimod_id="1161" />
+  <static_modification name="Asn-&gt;Gln (N)" aminoacid="N" variable="true" formula="H2C" unimod_id="1162" />
+  <static_modification name="Asn-&gt;Arg (N)" aminoacid="N" variable="true" formula="H6C2N2-O" unimod_id="1163" />
+  <static_modification name="Asn-&gt;Val (N)" aminoacid="N" variable="true" formula="H3C-NO" unimod_id="1164" />
+  <static_modification name="Asn-&gt;Trp (N)" aminoacid="N" variable="true" formula="H4C7-O" unimod_id="1165" />
+  <static_modification name="Pro-&gt;Cys (P)" aminoacid="P" variable="true" formula="S-H2C2" unimod_id="1166" />
+  <static_modification name="Pro-&gt;Asp (P)" aminoacid="P" variable="true" formula="O2-H2C" unimod_id="1167" />
+  <static_modification name="Pro-&gt;Glu (P)" aminoacid="P" variable="true" formula="O2" unimod_id="1168" />
+  <static_modification name="Pro-&gt;Phe (P)" aminoacid="P" variable="true" formula="H2C4" unimod_id="1169" />
+  <static_modification name="Pro-&gt;Gly (P)" aminoacid="P" variable="true" formula="-H4C3" unimod_id="1170" />
+  <static_modification name="Pro-&gt;Lys (P)" aminoacid="P" variable="true" formula="H5CN" unimod_id="1171" />
+  <static_modification name="Pro-&gt;Met (P)" aminoacid="P" variable="true" formula="H2S" unimod_id="1172" />
+  <static_modification name="Pro-&gt;Asn (P)" aminoacid="P" variable="true" formula="NO-HC" unimod_id="1173" />
+  <static_modification name="Pro-&gt;Val (P)" aminoacid="P" variable="true" formula="H2" unimod_id="1174" />
+  <static_modification name="Pro-&gt;Trp (P)" aminoacid="P" variable="true" formula="H3C6N" unimod_id="1175" />
+  <static_modification name="Pro-&gt;Tyr (P)" aminoacid="P" variable="true" formula="H2C4O" unimod_id="1176" />
+  <static_modification name="Gln-&gt;Ala (Q)" aminoacid="Q" variable="true" formula="-H3C2NO" unimod_id="1177" />
+  <static_modification name="Gln-&gt;Cys (Q)" aminoacid="Q" variable="true" formula="S-H3C2NO" unimod_id="1178" />
+  <static_modification name="Gln-&gt;Asp (Q)" aminoacid="Q" variable="true" formula="O-H3CN" unimod_id="1179" />
+  <static_modification name="Gln-&gt;Phe (Q)" aminoacid="Q" variable="true" formula="HC4-NO" unimod_id="1180" />
+  <static_modification name="Gln-&gt;Gly (Q)" aminoacid="Q" variable="true" formula="-H5C3NO" unimod_id="1181" />
+  <static_modification name="Gln-&gt;Met (Q)" aminoacid="Q" variable="true" formula="HS-NO" unimod_id="1182" />
+  <static_modification name="Gln-&gt;Asn (Q)" aminoacid="Q" variable="true" formula="-H2C" unimod_id="1183" />
+  <static_modification name="Gln-&gt;Ser (Q)" aminoacid="Q" variable="true" formula="-H3C2N" unimod_id="1184" />
+  <static_modification name="Gln-&gt;Thr (Q)" aminoacid="Q" variable="true" formula="-HCN" unimod_id="1185" />
+  <static_modification name="Gln-&gt;Val (Q)" aminoacid="Q" variable="true" formula="H-NO" unimod_id="1186" />
+  <static_modification name="Gln-&gt;Trp (Q)" aminoacid="Q" variable="true" formula="H2C6-O" unimod_id="1187" />
+  <static_modification name="Gln-&gt;Tyr (Q)" aminoacid="Q" variable="true" formula="HC4-N" unimod_id="1188" />
+  <static_modification name="Arg-&gt;Ala (R)" aminoacid="R" variable="true" formula="-H7C3N3" unimod_id="1189" />
+  <static_modification name="Arg-&gt;Asp (R)" aminoacid="R" variable="true" formula="O2-H7C2N3" unimod_id="1190" />
+  <static_modification name="Arg-&gt;Glu (R)" aminoacid="R" variable="true" formula="O2-H5CN3" unimod_id="1191" />
+  <static_modification name="Arg-&gt;Asn (R)" aminoacid="R" variable="true" formula="O-H6C2N2" unimod_id="1192" />
+  <static_modification name="Arg-&gt;Val (R)" aminoacid="R" variable="true" formula="-H3CN3" unimod_id="1193" />
+  <static_modification name="Arg-&gt;Tyr (R)" aminoacid="R" variable="true" formula="C3O-H3N3" unimod_id="1194" />
+  <static_modification name="Arg-&gt;Phe (R)" aminoacid="R" variable="true" formula="C3-H3N3" unimod_id="1195" />
+  <static_modification name="Ser-&gt;Asp (S)" aminoacid="S" variable="true" formula="CO" unimod_id="1196" />
+  <static_modification name="Ser-&gt;Glu (S)" aminoacid="S" variable="true" formula="H2C2O" unimod_id="1197" />
+  <static_modification name="Ser-&gt;His (S)" aminoacid="S" variable="true" formula="H2C3N2-O" unimod_id="1198" />
+  <static_modification name="Ser-&gt;Lys (S)" aminoacid="S" variable="true" formula="H7C3N-O" unimod_id="1199" />
+  <static_modification name="Ser-&gt;Met (S)" aminoacid="S" variable="true" formula="H4C2S-O" unimod_id="1200" />
+  <static_modification name="Ser-&gt;Gln (S)" aminoacid="S" variable="true" formula="H3C2N" unimod_id="1201" />
+  <static_modification name="Ser-&gt;Val (S)" aminoacid="S" variable="true" formula="H4C2-O" unimod_id="1202" />
+  <static_modification name="Thr-&gt;Cys (T)" aminoacid="T" variable="true" formula="S-H2CO" unimod_id="1203" />
+  <static_modification name="Thr-&gt;Asp (T)" aminoacid="T" variable="true" formula="O-H2" unimod_id="1204" />
+  <static_modification name="Thr-&gt;Glu (T)" aminoacid="T" variable="true" formula="CO" unimod_id="1205" />
+  <static_modification name="Thr-&gt;Phe (T)" aminoacid="T" variable="true" formula="H2C5-O" unimod_id="1206" />
+  <static_modification name="Thr-&gt;Gly (T)" aminoacid="T" variable="true" formula="-H4C2O" unimod_id="1207" />
+  <static_modification name="Thr-&gt;His (T)" aminoacid="T" variable="true" formula="C2N2-O" unimod_id="1208" />
+  <static_modification name="Thr-&gt;Gln (T)" aminoacid="T" variable="true" formula="HCN" unimod_id="1209" />
+  <static_modification name="Thr-&gt;Val (T)" aminoacid="T" variable="true" formula="H2C-O" unimod_id="1210" />
+  <static_modification name="Thr-&gt;Trp (T)" aminoacid="T" variable="true" formula="H3C7N-O" unimod_id="1211" />
+  <static_modification name="Thr-&gt;Tyr (T)" aminoacid="T" variable="true" formula="H2C5" unimod_id="1212" />
+  <static_modification name="Val-&gt;Cys (V)" aminoacid="V" variable="true" formula="S-H4C2" unimod_id="1213" />
+  <static_modification name="Val-&gt;His (V)" aminoacid="V" variable="true" formula="CN2-H2" unimod_id="1214" />
+  <static_modification name="Val-&gt;Lys (V)" aminoacid="V" variable="true" formula="H3CN" unimod_id="1215" />
+  <static_modification name="Val-&gt;Asn (V)" aminoacid="V" variable="true" formula="NO-H3C" unimod_id="1216" />
+  <static_modification name="Val-&gt;Pro (V)" aminoacid="V" variable="true" formula="-H2" unimod_id="1217" />
+  <static_modification name="Val-&gt;Gln (V)" aminoacid="V" variable="true" formula="NO-H" unimod_id="1218" />
+  <static_modification name="Val-&gt;Arg (V)" aminoacid="V" variable="true" formula="H3CN3" unimod_id="1219" />
+  <static_modification name="Val-&gt;Ser (V)" aminoacid="V" variable="true" formula="O-H4C2" unimod_id="1220" />
+  <static_modification name="Val-&gt;Thr (V)" aminoacid="V" variable="true" formula="O-H2C" unimod_id="1221" />
+  <static_modification name="Val-&gt;Trp (V)" aminoacid="V" variable="true" formula="HC6N" unimod_id="1222" />
+  <static_modification name="Val-&gt;Tyr (V)" aminoacid="V" variable="true" formula="C4O" unimod_id="1223" />
+  <static_modification name="Trp-&gt;Ala (W)" aminoacid="W" variable="true" formula="-H5C8N" unimod_id="1224" />
+  <static_modification name="Trp-&gt;Asp (W)" aminoacid="W" variable="true" formula="O2-H5C7N" unimod_id="1225" />
+  <static_modification name="Trp-&gt;Glu (W)" aminoacid="W" variable="true" formula="O2-H3C6N" unimod_id="1226" />
+  <static_modification name="Trp-&gt;Phe (W)" aminoacid="W" variable="true" formula="-HC2N" unimod_id="1227" />
+  <static_modification name="Trp-&gt;His (W)" aminoacid="W" variable="true" formula="N-H3C5" unimod_id="1228" />
+  <static_modification name="Trp-&gt;Lys (W)" aminoacid="W" variable="true" formula="H2-C5" unimod_id="1229" />
+  <static_modification name="Trp-&gt;Met (W)" aminoacid="W" variable="true" formula="S-HC6N" unimod_id="1230" />
+  <static_modification name="Trp-&gt;Asn (W)" aminoacid="W" variable="true" formula="O-H4C7" unimod_id="1231" />
+  <static_modification name="Trp-&gt;Pro (W)" aminoacid="W" variable="true" formula="-H3C6N" unimod_id="1232" />
+  <static_modification name="Trp-&gt;Gln (W)" aminoacid="W" variable="true" formula="O-H2C6" unimod_id="1233" />
+  <static_modification name="Trp-&gt;Thr (W)" aminoacid="W" variable="true" formula="O-H3C7N" unimod_id="1234" />
+  <static_modification name="Trp-&gt;Val (W)" aminoacid="W" variable="true" formula="-HC6N" unimod_id="1235" />
+  <static_modification name="Trp-&gt;Tyr (W)" aminoacid="W" variable="true" formula="O-HC2N" unimod_id="1236" />
+  <static_modification name="Tyr-&gt;Ala (Y)" aminoacid="Y" variable="true" formula="-H4C6O" unimod_id="1237" />
+  <static_modification name="Tyr-&gt;Glu (Y)" aminoacid="Y" variable="true" formula="O-H2C4" unimod_id="1238" />
+  <static_modification name="Tyr-&gt;Gly (Y)" aminoacid="Y" variable="true" formula="-H6C7O" unimod_id="1239" />
+  <static_modification name="Tyr-&gt;Lys (Y)" aminoacid="Y" variable="true" formula="H3N-C3O" unimod_id="1240" />
+  <static_modification name="Tyr-&gt;Met (Y)" aminoacid="Y" variable="true" formula="S-C4O" unimod_id="1241" />
+  <static_modification name="Tyr-&gt;Pro (Y)" aminoacid="Y" variable="true" formula="-H2C4O" unimod_id="1242" />
+  <static_modification name="Tyr-&gt;Gln (Y)" aminoacid="Y" variable="true" formula="N-HC4" unimod_id="1243" />
+  <static_modification name="Tyr-&gt;Arg (Y)" aminoacid="Y" variable="true" formula="H3N3-C3O" unimod_id="1244" />
+  <static_modification name="Tyr-&gt;Thr (Y)" aminoacid="Y" variable="true" formula="-H2C5" unimod_id="1245" />
+  <static_modification name="Tyr-&gt;Val (Y)" aminoacid="Y" variable="true" formula="-C4O" unimod_id="1246" />
+  <static_modification name="Tyr-&gt;Trp (Y)" aminoacid="Y" variable="true" formula="HC2N-O" unimod_id="1247" />
+  <static_modification name="Tyr-&gt;Xle (Y)" aminoacid="Y" variable="true" formula="H2-C3O" unimod_id="1248" />
+  <static_modification name="Mono_Ngamma-propargyl-L-Gln_desthiobiotin (C)" aminoacid="C" variable="true" formula="H44C26N8O8" unimod_id="2067" />
+  <static_modification name="Di_L-Glu_Ngamma-propargyl-L-Gln_desthiobiotin (D)" aminoacid="D" variable="true" formula="H51C31N9O10" unimod_id="2068">
+    <potential_loss formula="H16C10N2O2" massdiff_monoisotopic="196.121178" massdiff_average="196.24774" />
+    <potential_loss formula="H39C21N7O5" massdiff_monoisotopic="469.301268" massdiff_average="469.58141" />
+    <potential_loss formula="H53C31N9O11" massdiff_monoisotopic="727.386454" massdiff_average="727.81087" />
+  </static_modification>
+  <static_modification name="Di_L-Glu_Ngamma-propargyl-L-Gln_desthiobiotin (E)" aminoacid="E" variable="true" formula="H51C31N9O10" unimod_id="2068">
+    <potential_loss formula="H16C10N2O2" massdiff_monoisotopic="196.121178" massdiff_average="196.24774" />
+    <potential_loss formula="H39C21N7O5" massdiff_monoisotopic="469.301268" massdiff_average="469.58141" />
+    <potential_loss formula="H53C31N9O11" massdiff_monoisotopic="727.386454" massdiff_average="727.81087" />
+  </static_modification>
+  <static_modification name="Di_L-Gln_Ngamma-propargyl-L-Gln_desthiobiotin (D)" aminoacid="D" variable="true" formula="H52C31N10O9" unimod_id="2069">
+    <potential_loss formula="H16C10N2O2" massdiff_monoisotopic="196.121178" massdiff_average="196.24774" />
+    <potential_loss formula="H39C21N7O5" massdiff_monoisotopic="469.301268" massdiff_average="469.58141" />
+    <potential_loss formula="H54C31N10O10" massdiff_monoisotopic="726.402438" massdiff_average="726.82611" />
+  </static_modification>
+  <static_modification name="Di_L-Gln_Ngamma-propargyl-L-Gln_desthiobiotin (E)" aminoacid="E" variable="true" formula="H52C31N10O9" unimod_id="2069">
+    <potential_loss formula="H16C10N2O2" massdiff_monoisotopic="196.121178" massdiff_average="196.24774" />
+    <potential_loss formula="H39C21N7O5" massdiff_monoisotopic="469.301268" massdiff_average="469.58141" />
+    <potential_loss formula="H54C31N10O10" massdiff_monoisotopic="726.402438" massdiff_average="726.82611" />
+  </static_modification>
+  <static_modification name="iST-NHS specific cysteine modification (C)" aminoacid="C" variable="true" formula="H11C6NO" unimod_id="2086" />
+  <static_modification name="DPIA (C)" aminoacid="C" variable="true" formula="H37C21N5O6" unimod_id="2106" />
+  <static_modification name="Acetoacetyl (K)" aminoacid="K" variable="true" formula="H4C4O2" unimod_id="2107" />
+  <static_modification name="Isovaleryl (K)" aminoacid="K" variable="true" formula="H8C5O" unimod_id="2108" />
+  <static_modification name="2-methylbutyryl (K)" aminoacid="K" variable="true" formula="H8C5O" unimod_id="2109" />
+  <static_modification name="Tiglyl (K)" aminoacid="K" variable="true" formula="H6C5O" unimod_id="2110" />
+  <static_modification name="3-methylglutaryl (K)" aminoacid="K" variable="true" formula="H8C6O3" unimod_id="2111" />
+  <static_modification name="3-methylglutaconyl (K)" aminoacid="K" variable="true" formula="H6C6O3" unimod_id="2112" />
+  <static_modification name="3-hydroxy-3-methylglutaryl (K)" aminoacid="K" variable="true" formula="H8C6O4" unimod_id="2113" />
+  <static_modification name="Lactylation (K)" aminoacid="K" variable="true" formula="H4C3O2" unimod_id="2114" />
+  <static_modification name="Pyruvoyl (K)" aminoacid="K" variable="true" formula="H2C3O2" unimod_id="2115" />
+  <static_modification name="Glyoxylyl (K)" aminoacid="K" variable="true" formula="C2O2" unimod_id="2116" />
+  <static_modification name="Itaconatyl (C)" aminoacid="C" variable="true" formula="H6C5O4" unimod_id="2117" />
+  <static_modification name="Itaconyl (K)" aminoacid="K" variable="true" formula="H4C5O3" unimod_id="2118" />
+  <static_modification name="ValGly (K)" aminoacid="K" variable="true" formula="H12C7N2O2" unimod_id="2119" />
+  <static_modification name="Pentanoyl (K)" aminoacid="K" variable="true" formula="H8C5O" unimod_id="2120" />
+  <static_modification name="Hexanoyl (K)" aminoacid="K" variable="true" formula="H10C6O" unimod_id="2121" />
+  <static_modification name="Label:13C(6)15N(2)+TMT6plex (K)" aminoacid="K" formula="H20C2C'10N'3O2-N" unimod_id="2122" />
+  <static_modification name="Label:13C(6)15N(2)+TMTpro (K)" aminoacid="K" formula="H25C2C'13N'4O3-N" unimod_id="2123" />
+  <static_modification name="2PCA-triazole-ethanethiol (N-term)" terminus="N" variable="true" formula="H8C10N4S" unimod_id="2126" />
+  <static_modification name="Desthiobiotin-Phenol (Y)" aminoacid="Y" variable="true" formula="H25C18N3O3" unimod_id="2127" />
+  <static_modification name="Cys-vinyl sulfone amine probe addition (C)" aminoacid="C" variable="true" formula="H38C20N4O7S" unimod_id="2128" />
+  <static_modification name="Cys-&gt;fGly-diol (C)" aminoacid="C" variable="true" formula="O2-S" unimod_id="2129" />
+  <static_modification name="Cys-&gt;sulfo-fGly-dio (C)" aminoacid="C" variable="true" formula="O5-H" unimod_id="2130" />
+  <static_modification name="Cys-&gt;Ser-O-sulfate (C)" aminoacid="C" variable="true" formula="O4" unimod_id="2131" />
+  <static_modification name="b-type-ion (C-term)" terminus="C" variable="true" formula="-H2O" unimod_id="2132" />
+  <static_modification name="PnTAG (K)" aminoacid="K" variable="true" formula="H11C6O4P" unimod_id="2135" />
+  <static_modification name="PnTAG (N-term)" terminus="N" variable="true" formula="H11C6O4P" unimod_id="2135" />
+  <static_modification name="PnTAG (S)" aminoacid="S" variable="true" formula="H11C6O4P" unimod_id="2135" />
+  <static_modification name="PnTAG (T)" aminoacid="T" variable="true" formula="H11C6O4P" unimod_id="2135" />
+  <static_modification name="PnTAG (Y)" aminoacid="Y" variable="true" formula="H11C6O4P" unimod_id="2135" />
+  <static_modification name="DMA-PEG3 (K)" aminoacid="K" variable="true" formula="H21C11NO4" unimod_id="2136" />
+  <static_modification name="DMA-PEG3 (N-term)" terminus="N" variable="true" formula="H21C11NO4" unimod_id="2136" />
+  <static_modification name="DMA-PEG3 (S)" aminoacid="S" variable="true" formula="H21C11NO4" unimod_id="2136" />
+  <static_modification name="DMA-PEG3 (T)" aminoacid="T" variable="true" formula="H21C11NO4" unimod_id="2136" />
+  <static_modification name="DMA-PEG3 (Y)" aminoacid="Y" variable="true" formula="H21C11NO4" unimod_id="2136" />
+  <static_modification name="HCCA-Lys (K)" aminoacid="K" variable="true" formula="H28C22N4O4" unimod_id="2138" />
+  <static_modification name="Phosphocholine (S)" aminoacid="S" variable="true" formula="H12C5NO3P" unimod_id="2139" />
+  <static_modification name="Phosphocholine (T)" aminoacid="T" variable="true" formula="H12C5NO3P" unimod_id="2139" />
+  <static_modification name="Phosphocholine (Y)" aminoacid="Y" variable="true" formula="H12C5NO3P" unimod_id="2139" />
+  <static_modification name="Methyl:13C(1)2H(2) (K)" aminoacid="K" variable="true" formula="C'H'2" unimod_id="2140" />
+  <static_modification name="c-type-ion (C-term)" terminus="C" variable="true" formula="HN-O" unimod_id="2141" />
+  <static_modification name="x-type-ion (N-term)" terminus="N" variable="true" formula="CO-H2" unimod_id="2142" />
+  <static_modification name="z-type-ion (N-term)" terminus="N" variable="true" formula="-H3N" unimod_id="2143" />
+  <static_modification name="imidazolone (R)" aminoacid="R" variable="true" formula="H8C6O4" unimod_id="2147" />
 </StaticModList>

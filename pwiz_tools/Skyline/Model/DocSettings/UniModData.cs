@@ -5517,7 +5517,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new UniModModificationData
             {
                  Name = "Hex (W)", 
-                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "H10C6O5", ID = 41, 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "H10C6O5", Losses = new [] { new FragmentLoss("H8C4O4"), }, ID = 41, 
                  Structural = true, ShortName = "Hex", Hidden = true, 
             },
             new UniModModificationData
@@ -7947,7 +7947,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new UniModModificationData
             {
                  Name = "Malonyl (K)", 
-                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H2C3O3", ID = 747, 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H2C3O3", Losses = new [] { new FragmentLoss("CO2"), }, ID = 747, 
                  Structural = true, ShortName = "Mal", Hidden = true, 
             },
             new UniModModificationData
@@ -11706,6 +11706,2478 @@ namespace pwiz.Skyline.Model.DocSettings
                  AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "H'9 - H9", ID = 1371, 
                  Structural = false, Hidden = true, 
             },
+            new UniModModificationData
+            {
+                 Name = "His->Asn (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "O - HC2N", ID = 348, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Asp (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "O2 - H2C2N2", ID = 349, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Ser (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "O", ID = 540, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Thr (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H2CO", ID = 541, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Asp (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "CO2", ID = 542, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Pro (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H2C2", ID = 543, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Gly (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "-H2C", ID = 544, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Glu (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H2C2O2", ID = 545, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Val (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H4C2", ID = 546, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Phe (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H4C6 - S", ID = 547, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Ser (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "O - S", ID = 548, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Trp (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H5C8N - S", ID = 549, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Tyr (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H4C6O - S", ID = 550, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Arg (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H7C3N3 - S", ID = 551, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Gly (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "-H2CS", ID = 552, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Ala (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "-CO2", ID = 553, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->His (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H2C2N2 - O2", ID = 554, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Asn (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "HN - O", ID = 555, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Gly (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "-H2C2O2", ID = 556, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Tyr (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H4C5 - O", ID = 557, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Glu (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H2C", ID = 558, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Val (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H4C - O2", ID = 559, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Ala (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "-H2C2O2", ID = 560, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Gln (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "HN - O", ID = 561, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Asp (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "-H2C", ID = 562, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Lys (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H5CN - O2", ID = 563, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Gly (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "-H4C3O2", ID = 564, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Val (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H2 - O2", ID = 565, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Ser (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "O - H4C6", ID = 566, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Cys (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "S - H4C6", ID = 567, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Xle (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "H2 - C3", ID = 568, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Tyr (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "O", ID = 569, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Val (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "-C4", ID = 570, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Ala (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H2C", ID = 571, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Ser (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H2CO", ID = 572, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Trp (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H7C9N", ID = 573, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Glu (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H4C3O2", ID = 574, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Val (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H6C3", ID = 575, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Asp (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H2C2O2", ID = 576, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Cys (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H2CS", ID = 577, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Arg (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H9C4N3", ID = 578, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Pro (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "-CN2", ID = 580, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Tyr (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H2C3O - N2", ID = 581, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Gln (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "HO - CN", ID = 582, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Arg (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H5N", ID = 584, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Xle (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H4 - N2", ID = 585, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Thr (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "O - H4C2", ID = 588, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Thr (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "O - H4C2", ID = 588, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Asn (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "NO - H5C2", ID = 589, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Asn (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "NO - H5C2", ID = 589, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Lys (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "HN", ID = 590, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Lys (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "HN", ID = 590, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Thr (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "O - H5C2N", ID = 594, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Asn (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "O - H6C2", ID = 595, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Glu (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "O2 - H5CN", ID = 596, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Gln (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "O - H4C", ID = 597, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Met (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "S - H3CN", ID = 598, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Arg (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "N2", ID = 599, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Xle (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "-HN", ID = 600, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Ser (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "O - H6C3", ID = 601, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Ser (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "O - H6C3", ID = 601, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Phe (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "C3 - H2", ID = 602, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Phe (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "C3 - H2", ID = 602, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Trp (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "C5N - H", ID = 603, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Trp (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "C5N - H", ID = 603, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Pro (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "-H4C", ID = 604, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Pro (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "-H4C", ID = 604, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Val (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "-H2C", ID = 605, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Val (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "-H2C", ID = 605, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->His (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "N2 - H4", ID = 606, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->His (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "N2 - H4", ID = 606, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Gln (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "NO - H3C", ID = 607, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Gln (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "NO - H3C", ID = 607, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Met (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "S - H2C", ID = 608, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Met (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "S - H2C", ID = 608, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Arg (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "HN3", ID = 609, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Arg (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "HN3", ID = 609, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Thr (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "O - H2CS", ID = 610, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Arg (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "H3CN3 - S", ID = 611, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Lys (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "H3CN - S", ID = 613, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Xle (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "H2C - S", ID = 614, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Val (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "-S", ID = 615, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Ser (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "-HCN", ID = 616, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Thr (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H - N", ID = 617, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Lys (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H6C2 - O", ID = 618, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Tyr (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H3C5 - N", ID = 619, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->His (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "HC2N - O", ID = 620, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Asp (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "O - HN", ID = 621, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Xle (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H5C2 - NO", ID = 622, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Ser (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "O - H2C2", ID = 623, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Ala (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "-H2C2", ID = 624, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->His (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "CN2", ID = 625, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Gln (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "HNO", ID = 626, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Thr (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "O - C", ID = 627, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Arg (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H5CN3", ID = 628, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Xle (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H4C", ID = 629, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Pro (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "-HNO", ID = 630, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Lys (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "H4C - O", ID = 631, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Glu (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "O - HN", ID = 632, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->His (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "CN - HO", ID = 633, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Arg (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "H4CN2 - O", ID = 634, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Xle (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "H3C - NO", ID = 635, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Ser (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "O - H7C3N3", ID = 636, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Trp (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "C5 - H2N2", ID = 637, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Thr (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "O - H5C2N3", ID = 638, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Pro (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-H5CN3", ID = 639, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Lys (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-N2", ID = 640, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->His (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-H5N", ID = 641, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Gln (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "O - H4CN2", ID = 642, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Met (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "S - H3CN3", ID = 643, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Cys (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "S - H7C3N3", ID = 644, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Xle (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-HN3", ID = 645, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Gly (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-H9C4N3", ID = 646, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Phe (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H4C6 - O", ID = 647, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Ala (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "-O", ID = 648, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Trp (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H5C8N - O", ID = 649, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Thr (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H2C", ID = 650, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Asn (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "HCN", ID = 651, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Pro (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H2C2 - O", ID = 652, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Tyr (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H4C6", ID = 653, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Cys (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "S - O", ID = 654, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Arg (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H7C3N3 - O", ID = 655, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Xle (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H6C3 - O", ID = 656, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Gly (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "-H2CO", ID = 657, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Ser (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "-H2C", ID = 658, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Ala (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "-H2CO", ID = 659, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Asn (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "N - H", ID = 660, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Lys (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H5C2N - O", ID = 661, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Pro (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "C - O", ID = 662, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Met (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H2CS - O", ID = 663, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Xle (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H4C2 - O", ID = 664, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Arg (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H5C2N3 - O", ID = 665, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Phe (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "C4", ID = 666, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Ala (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "-H4C2", ID = 667, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Glu (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "O2 - H2", ID = 668, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Met (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "S", ID = 669, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Asp (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "O2 - H4C", ID = 670, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Xle (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "H2C", ID = 671, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Gly (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "-H6C3", ID = 672, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Ser (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O - H5C8N", ID = 673, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Cys (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "S - H5C8N", ID = 674, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Arg (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "H2N2 - C5", ID = 675, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Gly (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "-H7C9N", ID = 676, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Xle (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "H - C5N", ID = 677, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Phe (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-O", ID = 678, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Ser (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-H4C6", ID = 679, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Asn (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "N - H3C5", ID = 680, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->His (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "N2 - H2C3O", ID = 681, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Asp (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "O - H4C5", ID = 682, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Cys (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "S - H4C6O", ID = 683, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Cys (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "S", ID = 1044, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Phe (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H4C6", ID = 1045, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->His (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H2C3N2", ID = 1046, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Xle (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H6C3", ID = 1047, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Lys (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H7C3N", ID = 1048, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Met (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H4C2S", ID = 1049, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Asn (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "HCNO", ID = 1050, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Gln (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H3C2NO", ID = 1051, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Arg (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H7C3N3", ID = 1052, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Trp (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H5C8N", ID = 1053, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ala->Tyr (A)", 
+                 AAs = "A", LabelAtoms = LabelAtoms.None, Formula = "H4C6O", ID = 1054, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Ala (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "-S", ID = 1055, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Asp (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "CO2 - S", ID = 1056, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Glu (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H2C2O2 - S", ID = 1057, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->His (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H2C3N2 - S", ID = 1058, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Xle (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H6C3 - S", ID = 1059, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Lys (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H7C3N - S", ID = 1060, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Met (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H4C2", ID = 1061, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Asn (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "HCNO - S", ID = 1062, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Pro (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H2C2 - S", ID = 1063, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Gln (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H3C2NO - S", ID = 1064, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Thr (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H2CO - S", ID = 1065, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Val (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H4C2 - S", ID = 1066, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Cys (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "S - CO2", ID = 1067, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Phe (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H4C5 - O2", ID = 1068, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Xle (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H6C2 - O2", ID = 1069, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Lys (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H7C2N - O2", ID = 1070, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Met (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H4CS - O2", ID = 1071, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Pro (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H2C - O2", ID = 1072, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Gln (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H3CN - O", ID = 1073, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Arg (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H7C2N3 - O2", ID = 1074, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Ser (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "-CO", ID = 1075, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Thr (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H2 - O", ID = 1076, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asp->Trp (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H5C7N - O2", ID = 1077, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Cys (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "S - H2C2O2", ID = 1078, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Phe (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H2C4 - O2", ID = 1079, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->His (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "CN2 - O2", ID = 1080, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Xle (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H4C - O2", ID = 1081, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Met (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H2S - O2", ID = 1082, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Asn (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "N - HCO", ID = 1083, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Pro (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "-O2", ID = 1084, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Arg (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H5CN3 - O2", ID = 1085, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Ser (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "-H2C2O", ID = 1086, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Thr (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "-CO", ID = 1087, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Trp (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H3C6N - O2", ID = 1088, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glu->Tyr (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H2C4 - O", ID = 1089, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Ala (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "-H4C6", ID = 1090, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Asp (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "O2 - H4C5", ID = 1091, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Glu (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "O2 - H2C4", ID = 1092, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Gly (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "-H6C7", ID = 1093, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->His (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "N2 - H2C3", ID = 1094, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Lys (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "H3N - C3", ID = 1095, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Met (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "S - C4", ID = 1096, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Asn (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "NO - H3C5", ID = 1097, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Pro (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "-H2C4", ID = 1098, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Gln (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "NO - HC4", ID = 1099, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Arg (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "H3N3 - C3", ID = 1100, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Thr (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "O - H2C5", ID = 1101, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phe->Trp (F)", 
+                 AAs = "F", LabelAtoms = LabelAtoms.None, Formula = "HC2N", ID = 1102, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Phe (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H6C7", ID = 1103, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->His (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H4C4N2", ID = 1104, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Xle (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H8C4", ID = 1105, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Lys (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H9C4N", ID = 1106, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Met (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H6C3S", ID = 1107, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Asn (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H3C2NO", ID = 1108, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Pro (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H4C3", ID = 1109, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Gln (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H5C3NO", ID = 1110, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Thr (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H4C2O", ID = 1111, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gly->Tyr (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.None, Formula = "H6C7O", ID = 1112, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Ala (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "-H2C3N2", ID = 1113, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Cys (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "S - H2C3N2", ID = 1114, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Glu (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "O2 - CN2", ID = 1115, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Phe (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H2C3 - N2", ID = 1116, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Gly (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "-H4C4N2", ID = 1117, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Lys (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H5 - N", ID = 1119, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Met (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H2S - CN2", ID = 1120, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Ser (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "O - H2C3N2", ID = 1121, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Thr (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "O - C2N2", ID = 1122, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Val (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H2 - CN2", ID = 1123, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "His->Trp (H)", 
+                 AAs = "H", LabelAtoms = LabelAtoms.None, Formula = "H3C5 - N", ID = 1124, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Ala (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "-H6C3", ID = 1125, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Ala (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "-H6C3", ID = 1125, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Cys (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "S - H6C3", ID = 1126, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Cys (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "S - H6C3", ID = 1126, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Asp (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "O2 - H6C2", ID = 1127, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Asp (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "O2 - H6C2", ID = 1127, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Glu (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "O2 - H4C", ID = 1128, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Glu (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "O2 - H4C", ID = 1128, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Gly (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "-H8C4", ID = 1129, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Gly (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "-H8C4", ID = 1129, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Tyr (L)", 
+                 AAs = "L", LabelAtoms = LabelAtoms.None, Formula = "C3O - H2", ID = 1130, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Xle->Tyr (I)", 
+                 AAs = "I", LabelAtoms = LabelAtoms.None, Formula = "C3O - H2", ID = 1130, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Ala (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "-H7C3N", ID = 1131, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Cys (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "S - H7C3N", ID = 1132, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Asp (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "O2 - H7C2N", ID = 1133, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Phe (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "C3 - H3N", ID = 1134, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Gly (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "-H9C4N", ID = 1135, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->His (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "N - H5", ID = 1136, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Pro (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "-H5CN", ID = 1137, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Ser (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "O - H7C3N", ID = 1138, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Val (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "-H3CN", ID = 1139, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Trp (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "C5 - H2", ID = 1140, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lys->Tyr (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "C3O - H3N", ID = 1141, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Ala (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "-H4C2S", ID = 1142, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Cys (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "-H4C2", ID = 1143, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Asp (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "O2 - H4CS", ID = 1144, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Glu (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "O2 - H2S", ID = 1145, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Phe (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "C4 - S", ID = 1146, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Gly (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "-H6C3S", ID = 1147, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->His (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "CN2 - H2S", ID = 1148, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Asn (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "NO - H3CS", ID = 1149, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Pro (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "-H2S", ID = 1150, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Gln (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "NO - HS", ID = 1151, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Ser (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "O - H4C2S", ID = 1152, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Trp (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "HC6N - S", ID = 1153, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Met->Tyr (M)", 
+                 AAs = "M", LabelAtoms = LabelAtoms.None, Formula = "C4O - S", ID = 1154, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Ala (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "-HCNO", ID = 1155, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Cys (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "S - HCNO", ID = 1156, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Glu (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "HCO - N", ID = 1157, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Phe (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H3C5 - NO", ID = 1158, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Gly (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "-H3C2NO", ID = 1159, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Met (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H3CS - NO", ID = 1160, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Pro (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "HC - NO", ID = 1161, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Gln (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H2C", ID = 1162, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Arg (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H6C2N2 - O", ID = 1163, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Val (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H3C - NO", ID = 1164, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Asn->Trp (N)", 
+                 AAs = "N", LabelAtoms = LabelAtoms.None, Formula = "H4C7 - O", ID = 1165, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Cys (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "S - H2C2", ID = 1166, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Asp (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "O2 - H2C", ID = 1167, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Glu (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "O2", ID = 1168, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Phe (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H2C4", ID = 1169, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Gly (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "-H4C3", ID = 1170, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Lys (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H5CN", ID = 1171, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Met (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H2S", ID = 1172, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Asn (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "NO - HC", ID = 1173, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Val (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H2", ID = 1174, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Trp (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H3C6N", ID = 1175, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pro->Tyr (P)", 
+                 AAs = "P", LabelAtoms = LabelAtoms.None, Formula = "H2C4O", ID = 1176, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Ala (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "-H3C2NO", ID = 1177, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Cys (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "S - H3C2NO", ID = 1178, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Asp (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "O - H3CN", ID = 1179, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Phe (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "HC4 - NO", ID = 1180, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Gly (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "-H5C3NO", ID = 1181, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Met (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "HS - NO", ID = 1182, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Asn (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "-H2C", ID = 1183, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Ser (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "-H3C2N", ID = 1184, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Thr (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "-HCN", ID = 1185, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Val (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "H - NO", ID = 1186, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Trp (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "H2C6 - O", ID = 1187, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Gln->Tyr (Q)", 
+                 AAs = "Q", LabelAtoms = LabelAtoms.None, Formula = "HC4 - N", ID = 1188, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Ala (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-H7C3N3", ID = 1189, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Asp (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "O2 - H7C2N3", ID = 1190, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Glu (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "O2 - H5CN3", ID = 1191, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Asn (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "O - H6C2N2", ID = 1192, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Val (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "-H3CN3", ID = 1193, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Tyr (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "C3O - H3N3", ID = 1194, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Arg->Phe (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "C3 - H3N3", ID = 1195, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Asp (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "CO", ID = 1196, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Glu (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H2C2O", ID = 1197, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->His (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H2C3N2 - O", ID = 1198, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Lys (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H7C3N - O", ID = 1199, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Met (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H4C2S - O", ID = 1200, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Gln (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H3C2N", ID = 1201, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Ser->Val (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H4C2 - O", ID = 1202, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Cys (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "S - H2CO", ID = 1203, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Asp (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "O - H2", ID = 1204, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Glu (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "CO", ID = 1205, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Phe (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H2C5 - O", ID = 1206, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Gly (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "-H4C2O", ID = 1207, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->His (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "C2N2 - O", ID = 1208, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Gln (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "HCN", ID = 1209, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Val (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H2C - O", ID = 1210, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Trp (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H3C7N - O", ID = 1211, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Thr->Tyr (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H2C5", ID = 1212, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Cys (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "S - H4C2", ID = 1213, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->His (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "CN2 - H2", ID = 1214, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Lys (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "H3CN", ID = 1215, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Asn (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "NO - H3C", ID = 1216, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Pro (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "-H2", ID = 1217, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Gln (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "NO - H", ID = 1218, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Arg (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "H3CN3", ID = 1219, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Ser (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "O - H4C2", ID = 1220, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Thr (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "O - H2C", ID = 1221, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Trp (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "HC6N", ID = 1222, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Val->Tyr (V)", 
+                 AAs = "V", LabelAtoms = LabelAtoms.None, Formula = "C4O", ID = 1223, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Ala (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "-H5C8N", ID = 1224, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Asp (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O2 - H5C7N", ID = 1225, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Glu (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O2 - H3C6N", ID = 1226, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Phe (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "-HC2N", ID = 1227, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->His (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "N - H3C5", ID = 1228, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Lys (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "H2 - C5", ID = 1229, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Met (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "S - HC6N", ID = 1230, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Asn (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O - H4C7", ID = 1231, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Pro (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "-H3C6N", ID = 1232, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Gln (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O - H2C6", ID = 1233, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Thr (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O - H3C7N", ID = 1234, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Val (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "-HC6N", ID = 1235, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Trp->Tyr (W)", 
+                 AAs = "W", LabelAtoms = LabelAtoms.None, Formula = "O - HC2N", ID = 1236, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Ala (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-H4C6O", ID = 1237, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Glu (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "O - H2C4", ID = 1238, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Gly (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-H6C7O", ID = 1239, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Lys (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H3N - C3O", ID = 1240, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Met (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "S - C4O", ID = 1241, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Pro (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-H2C4O", ID = 1242, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Gln (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "N - HC4", ID = 1243, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Arg (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H3N3 - C3O", ID = 1244, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Thr (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-H2C5", ID = 1245, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Val (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "-C4O", ID = 1246, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Trp (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "HC2N - O", ID = 1247, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tyr->Xle (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H2 - C3O", ID = 1248, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Mono_Ngamma-propargyl-L-Gln_desthiobiotin (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H44C26N8O8", ID = 2067, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Di_L-Glu_Ngamma-propargyl-L-Gln_desthiobiotin (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H51C31N9O10", Losses = new [] { new FragmentLoss("H16C10N2O2"), new FragmentLoss("H39C21N7O5"), new FragmentLoss("H53C31N9O11"), }, ID = 2068, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Di_L-Glu_Ngamma-propargyl-L-Gln_desthiobiotin (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H51C31N9O10", Losses = new [] { new FragmentLoss("H16C10N2O2"), new FragmentLoss("H39C21N7O5"), new FragmentLoss("H53C31N9O11"), }, ID = 2068, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Di_L-Gln_Ngamma-propargyl-L-Gln_desthiobiotin (D)", 
+                 AAs = "D", LabelAtoms = LabelAtoms.None, Formula = "H52C31N10O9", Losses = new [] { new FragmentLoss("H16C10N2O2"), new FragmentLoss("H39C21N7O5"), new FragmentLoss("H54C31N10O10"), }, ID = 2069, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Di_L-Gln_Ngamma-propargyl-L-Gln_desthiobiotin (E)", 
+                 AAs = "E", LabelAtoms = LabelAtoms.None, Formula = "H52C31N10O9", Losses = new [] { new FragmentLoss("H16C10N2O2"), new FragmentLoss("H39C21N7O5"), new FragmentLoss("H54C31N10O10"), }, ID = 2069, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "iST-NHS specific cysteine modification (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H11C6NO", ID = 2086, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "DPIA (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H37C21N5O6", ID = 2106, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Acetoacetyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H4C4O2", ID = 2107, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Isovaleryl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H8C5O", ID = 2108, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "2-methylbutyryl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H8C5O", ID = 2109, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Tiglyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H6C5O", ID = 2110, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "3-methylglutaryl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H8C6O3", ID = 2111, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "3-methylglutaconyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H6C6O3", ID = 2112, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "3-hydroxy-3-methylglutaryl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H8C6O4", ID = 2113, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Lactylation (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H4C3O2", ID = 2114, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pyruvoyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H2C3O2", ID = 2115, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Glyoxylyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "C2O2", ID = 2116, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Itaconatyl (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H6C5O4", ID = 2117, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Itaconyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H4C5O3", ID = 2118, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "ValGly (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H12C7N2O2", ID = 2119, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Pentanoyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H8C5O", ID = 2120, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Hexanoyl (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H10C6O", ID = 2121, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Label:13C(6)15N(2)+TMT6plex (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H20C2C'10N'3O2 - N", ID = 2122, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Label:13C(6)15N(2)+TMTpro (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H25C2C'13N'4O3 - N", ID = 2123, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "2PCA-triazole-ethanethiol (N-term)", 
+                 Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "H8C10N4S", ID = 2126, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Desthiobiotin-Phenol (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H25C18N3O3", ID = 2127, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys-vinyl sulfone amine probe addition (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "H38C20N4O7S", ID = 2128, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->fGly-diol (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "O2 - S", ID = 2129, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->sulfo-fGly-dio (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "O5 - H", ID = 2130, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Cys->Ser-O-sulfate (C)", 
+                 AAs = "C", LabelAtoms = LabelAtoms.None, Formula = "O4", ID = 2131, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "b-type-ion (C-term)", 
+                 Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.None, Formula = "-H2O", ID = 2132, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "PnTAG (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H11C6O4P", ID = 2135, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "PnTAG (N-term)", 
+                 Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "H11C6O4P", ID = 2135, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "PnTAG (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H11C6O4P", ID = 2135, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "PnTAG (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H11C6O4P", ID = 2135, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "PnTAG (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H11C6O4P", ID = 2135, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "DMA-PEG3 (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H21C11NO4", ID = 2136, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "DMA-PEG3 (N-term)", 
+                 Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "H21C11NO4", ID = 2136, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "DMA-PEG3 (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H21C11NO4", ID = 2136, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "DMA-PEG3 (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H21C11NO4", ID = 2136, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "DMA-PEG3 (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H21C11NO4", ID = 2136, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "HCCA-Lys (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H28C22N4O4", ID = 2138, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phosphocholine (S)", 
+                 AAs = "S", LabelAtoms = LabelAtoms.None, Formula = "H12C5NO3P", ID = 2139, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phosphocholine (T)", 
+                 AAs = "T", LabelAtoms = LabelAtoms.None, Formula = "H12C5NO3P", ID = 2139, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Phosphocholine (Y)", 
+                 AAs = "Y", LabelAtoms = LabelAtoms.None, Formula = "H12C5NO3P", ID = 2139, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Methyl:13C(1)2H(2) (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "C'H'2", ID = 2140, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "c-type-ion (C-term)", 
+                 Terminus = ModTerminus.C, LabelAtoms = LabelAtoms.None, Formula = "HN - O", ID = 2141, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "x-type-ion (N-term)", 
+                 Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "CO - H2", ID = 2142, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "z-type-ion (N-term)", 
+                 Terminus = ModTerminus.N, LabelAtoms = LabelAtoms.None, Formula = "-H3N", ID = 2143, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "imidazolone (R)", 
+                 AAs = "R", LabelAtoms = LabelAtoms.None, Formula = "H8C6O4", ID = 2147, 
+                 Structural = true, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Label:13C(2)15N(1) (G)", 
+                 AAs = "G", LabelAtoms = LabelAtoms.C13|LabelAtoms.N15, ID = 2088, 
+                 Structural = false, Hidden = true, 
+            },
+            new UniModModificationData
+            {
+                 Name = "Label:2H(8) (K)", 
+                 AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H'8 - H8", ID = 2146, 
+                 Structural = false, Hidden = true, 
+            },
             
             // Hardcoded Skyline Mods
             new UniModModificationData
@@ -11871,14 +14343,20 @@ namespace pwiz.Skyline.Model.DocSettings
 //Unable to match: Xlink:EGS[244] (Protein N-term)
 //Unable to match: Xlink:SMCC[219] (Protein N-term)
 //Unable to match: Xlink:SMCC[237] (Protein N-term)
+//Not in table: UNIMOD:107 FormylMet
+//Not in table: UNIMOD:394 GPIanchor
+//Not in table: UNIMOD:432 Cholesterol
+//Not in table: UNIMOD:437 MicrocinC7
+//Not in table: UNIMOD:448 Microcin
+//Not in table: UNIMOD:2144 Dehydromethionine
 //Unused code: arg-add = +1R
 //Unused code: benzyl = Bnz
 //Unused code: benzyloxycarbonyl = CBZ
 //Unused code: boc = Boc
-//Unused code: cholesterol = Chl
 //Unused code: c-terminal ethyl = 1Et
 //Unused code: c-terminal methyl = 1Me
 //Unused code: c-terminal methyl:2h(3) = M+3
+//Unused code: cholesterol = Chl
 //Unused code: cys->hcy = CHC
 //Unused code: cys->pyro-cam = PCa
 //Unused code: cys->pyro-cmc = PCm
@@ -11912,15 +14390,15 @@ namespace pwiz.Skyline.Model.DocSettings
 //Unused code: methyl+propionyl = MeP
 //Unused code: microcin = Mic
 //Unused code: microcinc7 = Mi7
-//Unused code: naphthyl = Npl
-//Unused code: napthylacetyl = NpA
 //Unused code: n-ethylmaleimide = NEM
 //Unused code: n-ethylmaleimide+water = NMH
-//Unused code: nhs-fluorescein  = Flr
 //Unused code: n-methylmaleimide = NMM
 //Unused code: n-methylmaleimide+water = MMH
 //Unused code: n-terminal ethyl = 1Et
 //Unused code: n-terminal methyl = 1Me
+//Unused code: naphthyl = Npl
+//Unused code: napthylacetyl = NpA
+//Unused code: nhs-fluorescein  = Flr
 //Unused code: oxidation+nem  = OxN
 //Unused code: phospho(ser,thr) = Pho
 //Unused code: phosphoglyceryl = Pgl

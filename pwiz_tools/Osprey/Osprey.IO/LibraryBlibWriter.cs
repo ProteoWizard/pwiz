@@ -85,10 +85,10 @@ namespace pwiz.Osprey.IO
                 long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
                 var block = new BlibSpectrum[BLOCK_SIZE];
                 var refIds = new long[entries.Count];
-                using (var progress = new ProgressReporter(
-                           string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
-                               entries.Count, path),
-                           entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
+                        entries.Count, path),
+                    entries.Count, progress =>
                 {
                     for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
                     {
@@ -109,7 +109,7 @@ namespace pwiz.Osprey.IO
                         }
                         progress.Report(start + count);
                     }
-                }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 WriteDecoyPairs(writer, entries, refIds);
                 writer.CommitBatch();
                 writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
