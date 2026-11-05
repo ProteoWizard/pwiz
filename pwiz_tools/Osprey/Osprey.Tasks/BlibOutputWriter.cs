@@ -260,9 +260,9 @@ namespace pwiz.Osprey.Tasks
             // LogTag.COUNT is gated behind --perf-stats, so they appear only
             // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Compressing__0__library_spectra_for_the_blib, blibN),
-                       blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Compressing__0__library_spectra_for_the_blib, blibN),
+                blibN, progress =>
             {
                 Parallel.For(0, blibN,
                     new ParallelOptions { MaxDegreeOfParallelism = nThreads },
@@ -274,7 +274,7 @@ namespace pwiz.Osprey.Tasks
                         if (libraryById.TryGetValue(blibEntries[i].Value.EntryId, out var libEntry))
                             spectra[i] = BlibSpectrum.FromLibraryEntry(libEntry, Array.Empty<string>());
                     });
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return spectra;
         }
 
@@ -294,9 +294,9 @@ namespace pwiz.Osprey.Tasks
             var refIdByPrecursor = new Dictionary<(string, byte), long>(blibEntries.Count);
             // Reported for the same reason as the pre-compress pass above: this emits several
             // row families per spectrum into SQLite and ran silent inside the same 47 s gap.
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
-                       blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
+                blibEntries.Count, progress =>
             {
                 for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
                 {
@@ -354,7 +354,7 @@ namespace pwiz.Osprey.Tasks
 
                     refIdByPrecursor[lookupKey] = refId;
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return refIdByPrecursor;
         }
 
@@ -410,10 +410,10 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, string), double[]> sharedBounds,
             double fdrThreshold)
         {
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.BlibOutputWriter_WriteRetentionTimesFileMajor_Writing__0__peak_retention_times_to_the_blib,
-                                     passingEntries.Count),
-                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.BlibOutputWriter_WriteRetentionTimesFileMajor_Writing__0__peak_retention_times_to_the_blib,
+                              passingEntries.Count),
+                passingEntries.Count, progress =>
             {
                 int done = 0;
                 foreach (var obs in passingEntries)
@@ -463,7 +463,7 @@ namespace pwiz.Osprey.Tasks
                         runQ,
                         isBest);
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
         }
 
         /// <summary>

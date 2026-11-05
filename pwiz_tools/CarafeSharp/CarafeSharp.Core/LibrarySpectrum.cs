@@ -73,9 +73,9 @@ namespace pwiz.CarafeSharp.Core
 
         /// <summary>
         /// The library retention time: minutes (<c>rt_max * rt_pred</c>) when the training
-        /// gradient length is known, else iRT.
+        /// gradient length is known, else iRT; null once <see cref="Withhold"/> took it back.
         /// </summary>
-        public double RetentionTime { get; }
+        public double? RetentionTime { get; private set; }
 
         /// <summary>The <c>;</c>-joined protein accessions, or <see cref="NO_PROTEIN"/>.</summary>
         public string ProteinId { get; }
@@ -88,10 +88,26 @@ namespace pwiz.CarafeSharp.Core
         /// <see cref="CollisionalCrossSection"/> (<see cref="TimsMobility"/>), or null when the
         /// library predicts none (without <c>-ccs</c>).
         /// </summary>
-        public double? IonMobility { get; }
+        public double? IonMobility { get; private set; }
 
         /// <summary>The predicted collisional cross section in square angstroms, or null.</summary>
-        public double? CollisionalCrossSection { get; }
+        public double? CollisionalCrossSection { get; private set; }
+
+        /// <summary>
+        /// Takes back a prediction from a model that was not trained for the peptide's
+        /// modifications: the retention time, or the CCS and the 1/K0 that follows from it, so the
+        /// library carries nothing for them.
+        /// </summary>
+        public void Withhold(bool retentionTime, bool collisionalCrossSection)
+        {
+            if (retentionTime)
+                RetentionTime = null;
+            if (collisionalCrossSection)
+            {
+                CollisionalCrossSection = null;
+                IonMobility = null;
+            }
+        }
 
         /// <summary>The selected fragments, most intense first.</summary>
         public IReadOnlyList<LibraryFragment> Fragments { get; }

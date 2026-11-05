@@ -112,10 +112,24 @@ namespace pwiz.Osprey.Core
         public string CacheDir { get; set; }
 
         /// <summary>
-        /// Resolution mode for binning. HRAM unless the command line says unit: there is no
-        /// detection from the data yet, so the default is the instruments most searches use.
+        /// Resolution mode for binning. Set through <see cref="ApplyResolutionMode"/>, from an
+        /// explicit <c>--resolution</c> or, when <see cref="DetectResolution"/> is set, from the
+        /// data before the analysis starts. HRAM until then.
         /// </summary>
         public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.HRAM;
+
+        /// <summary>
+        /// True when the command line did not choose the resolution (<c>--resolution auto</c>,
+        /// the default): the host measures it from the data and passes the result to
+        /// <see cref="ApplyResolutionMode"/> before anything reads <see cref="ResolutionMode"/>.
+        /// </summary>
+        public bool DetectResolution { get; set; }
+
+        /// <summary>True when the command line gave <c>--fragment-tolerance</c>, which the resolution's default does not replace.</summary>
+        public bool FragmentToleranceGiven { get; set; }
+
+        /// <summary>True when the command line gave <c>--fragment-unit</c>, which the resolution's default does not replace.</summary>
+        public bool FragmentUnitGiven { get; set; }
 
         /// <summary>Fragment tolerance for LibCosine scoring.</summary>
         public FragmentToleranceConfig FragmentTolerance { get; set; } = FragmentToleranceConfig.Default();
@@ -236,18 +250,11 @@ namespace pwiz.Osprey.Core
 
 
         /// <summary>
-        /// -d / --diagnostics: master switch that turns on the cross-impl
-        /// bisection dump bundle (see <c>OspreyDiagnostics.Initialize</c>).
-        /// Runtime toggle only -- intentionally NOT part of any identity hash.
-        /// </summary>
-        public bool Diagnostics { get; set; }
-
-        /// <summary>
         /// --model-diagnostics: emit a single self-contained interactive HTML
         /// report of the trained scoring model + FDR calibration (feature
         /// contributions, target/decoy/entrapment score densities, q-value to
         /// FDP calibration, paired decoy-win fraction) when first-pass FDR
-        /// completes. A user-facing deliverable, distinct from the -d bisection
+        /// completes. A user-facing deliverable, distinct from the OSPREY_DIAGNOSTICS bisection
         /// dumps; opt-in and off the default output path (writes only its own
         /// HTML file), so it does not affect any other output. Runtime toggle
         /// only -- intentionally NOT part of any identity hash.
@@ -286,6 +293,12 @@ namespace pwiz.Osprey.Core
         /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
+
+        /// <summary>
+        /// --task-files: print the files the selected task reads and writes for this command line,
+        /// as the task declares them, and exit without running it. Runtime-only.
+        /// </summary>
+        public bool PrintTaskFiles { get; set; }
 
         /// <summary>
         /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
@@ -530,6 +543,31 @@ namespace pwiz.Osprey.Core
         public OspreyConfig ShallowClone()
         {
             return (OspreyConfig)this.MemberwiseClone();
+        }
+
+        /// <summary>
+        /// Sets the resolution mode and the tolerances it implies. The one route by which both an
+        /// explicit <c>--resolution</c> and a detected one reach the configuration, so the two
+        /// produce the same search settings and the same <see cref="SearchIdentity"/>. Unit
+        /// resolution matches fragments within 0.5 m/z unless <c>--fragment-unit</c> or
+        /// <c>--fragment-tolerance</c> said otherwise, and precursors within 1.0 m/z. The
+        /// tolerances are replaced, never changed in place, because a shallow clone shares them.
+        /// </summary>
+        public void ApplyResolutionMode(ResolutionMode mode)
+        {
+            ResolutionMode = mode;
+            DetectResolution = false;
+            if (mode != ResolutionMode.UnitResolution)
+                return;
+            if (!FragmentUnitGiven)
+            {
+                FragmentTolerance = new FragmentToleranceConfig
+                {
+                    Tolerance = FragmentToleranceGiven ? FragmentTolerance.Tolerance : 0.5,
+                    Unit = ToleranceUnit.Mz
+                };
+            }
+            PrecursorTolerance = FragmentToleranceConfig.UnitResolution(1.0);
         }
 
         /// <summary>

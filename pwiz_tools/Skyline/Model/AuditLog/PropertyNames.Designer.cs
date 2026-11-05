@@ -1958,7 +1958,16 @@ namespace pwiz.Skyline.Model.AuditLog {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_ModificationsSettings", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey search settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_OspreySearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_OspreySearchSettings", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Import results settings.
         /// </summary>
@@ -2849,7 +2858,79 @@ namespace pwiz.Skyline.Model.AuditLog {
                 return ResourceManager.GetString("OptimizationLibrary_DatabasePathAuditLog", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment FDR.
+        /// </summary>
+        public static string OspreySearchSettings_ExperimentFdr {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_ExperimentFdr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance.
+        /// </summary>
+        public static string OspreySearchSettings_FragmentTolerance {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_FragmentTolerance", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment tolerance unit.
+        /// </summary>
+        public static string OspreySearchSettings_FragmentUnit {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_FragmentUnit", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey non-default settings.
+        /// </summary>
+        public static string OspreySearchSettings_NonDefaultAdditionalSettings {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_NonDefaultAdditionalSettings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein FDR.
+        /// </summary>
+        public static string OspreySearchSettings_ProteinFdr {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_ProteinFdr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to MS/MS resolution.
+        /// </summary>
+        public static string OspreySearchSettings_Resolution {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_Resolution", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Run FDR.
+        /// </summary>
+        public static string OspreySearchSettings_RunFdr {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_RunFdr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Threads.
+        /// </summary>
+        public static string OspreySearchSettings_Threads {
+            get {
+                return ResourceManager.GetString("OspreySearchSettings_Threads", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Find minimal protein list.
         /// </summary>

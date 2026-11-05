@@ -18,6 +18,9 @@
  * limitations under the License.
  */
 
+using System;
+using System.IO;
+
 namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
@@ -88,5 +91,11 @@ namespace pwiz.CarafeSharp.Core
         /// (<see cref="RtAlignment"/>), written when the training aligned its runs' retention times (<c>-rt_align kde</c>).
         /// </summary>
         public const string RT_MAPS = @"rt_maps.json";
+
+        /// <summary>Whether a model file is CarafeSharp's safetensors, not a Carafe (PyTorch) checkpoint.</summary>
+        public static bool IsSafetensors(string modelPath)
+        {
+            return string.Equals(Path.GetExtension(modelPath), @".safetensors", StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

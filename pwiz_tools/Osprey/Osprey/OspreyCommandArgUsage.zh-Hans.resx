@@ -97,10 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="_diagnostics" xml:space="preserve">
-    <value>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_fdrbench" xml:space="preserve">
     <value>将与 FDRBench 兼容的输入 TSV 写入此路径。水平取自“{0}”（{2}；{3} 和 {4} 输出母离子水平）。包含每个报告的目标，即实际写入输出的肽段，不论 q 值如何，并将原始 SVM 判别值作为“{1}”，以便 FDRBench 通过诱捕计数计算真实 FDR，而不会在 Osprey 的阈值处截断。</value>
     <comment>Needs Review:New resource</comment>
@@ -121,10 +117,6 @@
     <value>输入路径列表文件，每行一个（忽略 # 注释）。可替代很长的“{0}”列表。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_memstamp" xml:space="preserve">
-    <value>在每行输出前加上以 MB 为单位的托管内存和专用内存（与“{0}”配合使用，供 perfviz 读取）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_model_diagnostics" xml:space="preserve">
     <value>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</value>
     <comment>Needs Review:New resource</comment>
@@ -135,10 +127,6 @@
   </data>
   <data name="_reconciliation_compaction_fdr" xml:space="preserve">
     <value>为跨运行协调和第二轮保留第一轮肽段的肽段 q 值阈值（默认：0.01 =“{0}”；可放宽，例如到 0.05，以扩大协调池）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_task" xml:space="preserve">
-    <value>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。{0} 准备 {1} 缓存；{4} 写入“{5}”parquet 文件（对已完成的运行仅写入缺失的文件）；{2} 仅为已完成的运行重新生成“{3}”报告，不写入其他输出。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_threads" xml:space="preserve">

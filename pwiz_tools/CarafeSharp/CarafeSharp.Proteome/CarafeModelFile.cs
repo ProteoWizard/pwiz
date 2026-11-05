@@ -193,6 +193,20 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public static CarafeModelFile Open(string path)
         {
+            return Read(path, true);
+        }
+
+        /// <summary>
+        /// Reads what a saved model says about itself, its manifest and training runs, without
+        /// checking its models, for a user choosing among model files. Predict only from <see cref="Open"/>.
+        /// </summary>
+        public static CarafeModelFile ReadDescription(string path)
+        {
+            return Read(path, false);
+        }
+
+        private static CarafeModelFile Read(string path, bool verify)
+        {
             if (!File.Exists(path))
                 throw new FileNotFoundException(@"Model file (" + CarafeCommandLine.ARG_MODEL.ArgumentText + @") not found: " + path, path);
             try
@@ -204,17 +218,20 @@ namespace pwiz.CarafeSharp.Proteome
                     CarafeModelFile model;
                     using (var stream = manifestEntry.Open())
                         model = ReadManifest(path, stream);
-                    foreach (var pair in model.Entries)
+                    if (verify)
                     {
-                        // Extract unpacks each entry beside the others: a folder or path in its name would write outside.
-                        if (!IsEntryName(pair.Key))
-                            throw new InvalidDataException(string.Format(@"{0} lists {1}, which is not a file name.", path, pair.Key));
-                        var entry = zip.GetEntry(pair.Key) ??
-                                    throw new InvalidDataException(string.Format(@"{0} lists {1}, which it does not hold.", path, pair.Key));
-                        if (!string.Equals(Sha256(ReadAll(entry)), pair.Value, StringComparison.OrdinalIgnoreCase))
-                            throw new InvalidDataException(string.Format(@"{0} is damaged: {1} does not match its SHA-256.", path, pair.Key));
+                        foreach (var pair in model.Entries)
+                        {
+                            // Extract unpacks each entry beside the others: a folder or path in its name would write outside.
+                            if (!IsEntryName(pair.Key))
+                                throw new InvalidDataException(string.Format(@"{0} lists {1}, which is not a file name.", path, pair.Key));
+                            var entry = zip.GetEntry(pair.Key) ??
+                                        throw new InvalidDataException(string.Format(@"{0} lists {1}, which it does not hold.", path, pair.Key));
+                            if (!string.Equals(Sha256(ReadAll(entry)), pair.Value, StringComparison.OrdinalIgnoreCase))
+                                throw new InvalidDataException(string.Format(@"{0} is damaged: {1} does not match its SHA-256.", path, pair.Key));
+                        }
+                        model.FileSha256 = Sha256(File.ReadAllBytes(path));
                     }
-                    model.FileSha256 = Sha256(File.ReadAllBytes(path));
                     var metaEntry = model.Entries.ContainsKey(ModelFiles.META) ? zip.GetEntry(ModelFiles.META) : null;
                     if (metaEntry != null)
                     {
@@ -657,7 +674,7 @@ namespace pwiz.CarafeSharp.Proteome
 
         private static string SafetensorsOrNull(string modelPath)
         {
-            return modelPath != null && CarafeModelDirectory.IsSafetensors(modelPath) ? modelPath : null;
+            return modelPath != null && ModelFiles.IsSafetensors(modelPath) ? modelPath : null;
         }
 
         /// <summary>model_evaluation_metrics.json's scores, as "ms2.pretrained.cos" and the like.</summary>

@@ -512,6 +512,26 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The inputs every task of a search declares: the library, and the
+        /// <c>--decoy-pairing-manifest</c> when the search names one. Every task loads the library
+        /// - <see cref="PerFileScoringTask"/> to score, every later task through that task's
+        /// rehydrate, which is how a join node gets the entries its sidecars index into - and the
+        /// manifest pairs the library's supplied decoys on that same load. Its identity is also in
+        /// the search hash, so a node without it computes another key for every artifact.
+        ///
+        /// <para>The derived <c>&lt;library-leaf&gt;.blib</c> is NOT declared: it is a cache of the
+        /// library (doc 00, "The sidecar file contract"), so a node without one rebuilds it, and a
+        /// harness may relay it to save that rebuild.</para>
+        /// </summary>
+        internal static IEnumerable<string> LibraryInputs(OspreyConfig config)
+        {
+            if (!string.IsNullOrEmpty(config.LibrarySource?.Path))
+                yield return config.LibrarySource.Path;
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+                yield return config.DecoyPairingManifestPath;
+        }
+
+        /// <summary>
         /// Whether this run's Stage-6 rescore hydrates each run from that run's own artifacts.
         /// TRUE means the <c>--input-scores</c> load must NOT build the all-runs bundle: the
         /// rescore loop hydrates per run, and anything the load pre-built would be discarded and
@@ -1023,9 +1043,9 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>This is a CONSISTENCY check, not the validity check a resume makes. A full
         /// check rebuilds the writer's key and compares, and a reader on another HPC node
-        /// cannot: FirstPassFDR's key includes <c>LibraryFragmentRelease.ValidityKeySuffix</c>,
-        /// which records what the WRITING leg did, so a PerFileRescoring or SecondPassFDR node
-        /// would compute its own leg's term and refuse a valid file. What a reader can check
+        /// cannot rely on it: a key may fold in a per-leg term recording what the WRITING leg
+        /// did, which a PerFileRescoring or SecondPassFDR node would compute for its own leg and
+        /// so refuse a valid file. What a reader can check
         /// is that the file was written by FirstPassFDR of this build - which catches an HPC
         /// node shipped a file from an older Osprey - and that the two products FirstPassFDR
         /// writes back to back under one stamp still carry the same one, which catches one of
@@ -1064,8 +1084,7 @@ namespace pwiz.Osprey.Tasks
             };
             foreach (string other in siblings)
             {
-                if (string.IsNullOrEmpty(other) ||
-                    string.Equals(Path.GetFullPath(other), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(other) || PathComparison.IsSamePath(other, path))
                 {
                     continue;
                 }

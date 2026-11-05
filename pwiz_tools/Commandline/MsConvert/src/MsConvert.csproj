@@ -77,48 +77,6 @@
   </ItemGroup>
 
 
-  <!-- Side-by-side wiff2 dlls. The wiff2 SDK is loaded into a custom AssemblyLoadContext
-       (Wiff2LoadContext) that pulls bundled Clearcore2/OFX/Unity dlls from SCIEX.Apis.Data.v1's
-       SmartAssembly resources, plus a dedicated copy of SQLite 1.0.109 (no SEE license probe)
-       and its matching native interop. The on-disk signed-PKT Clearcore2 dlls remain in the
-       default ALC for the legacy .wiff path (AnalystDataProvider was compiled against those
-       identities). The two ALCs coexist because their resolved assemblies have different
-       PublicKeyTokens, so there's no identity collision. -->
-  <!-- Gated on $(NativeVendorsAvailable), not $(IAgreeToVendorLicenses): the files staged below
-       come from Sciex.csproj's extraction, which only runs on Windows. -->
-  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(NativeVendorsAvailable)' == 'true'">
-    <PropertyGroup>
-      <!-- System.Data.SQLite.dll (1.0.109) and Unity.Abstractions.dll (Cecil-patched) are
-           committed at pwiz-sharp/vendor-archives/Sciex/. Both originate from the SmartAssembly
-           bundle inside SCIEX.Apis.Data.v1.dll; we keep on-disk copies because the wiff2 SDK
-           is hard-bound to those exact assembly identities and a build-time extraction step
-           (with Cecil patching for Unity) is more machinery than this PR warrants. See
-           src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
-      <_SciexWiff2DepsDir>$(PwizVendorArchivesPath)\Sciex</_SciexWiff2DepsDir>
-      <!-- SQLite.Interop.dll: extracted by Sciex.csproj's ExtractSciexAssemblies from
-           vendor_api_ABI.7z's vendor_api\ABI\x64\ subfolder and flattened into
-           vendor-assemblies/Sciex/. -->
-      <_SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</_SciexAssembliesDir>
-      <!-- MSBuild appends the trailing slash to OutputPath inside the project, which cannot
-           touch a GLOBAL property, so `dotnet build -o <dir>` leaves it slash-less and
-           "$(OutputPath)wiff2" resolves to the SIBLING directory "<dir>wiff2". The plugin
-           directory then does not exist beside msconvert.exe, Wiff2LoadContext falls back to
-           the default-ALC SQLite/Unity, and EVERY .wiff2 fails to open. That silently produced
-           4 bogus conversion failures in the C++-vs-C# parity sweep. -->
-      <_Wiff2OutDir>$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))wiff2</_Wiff2OutDir>
-    </PropertyGroup>
-    <MakeDir Directories="$(_Wiff2OutDir)" />
-    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(_Wiff2OutDir)\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(_Wiff2OutDir)\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
-    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(_Wiff2OutDir)\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
-    <!-- The CRT again, beside SQLite.Interop.dll. The copy in the output root does not serve a
-         plugin subfolder: loading a native DLL by full path uses LOAD_WITH_ALTERED_SEARCH_PATH,
-         which searches the DLL's own directory in place of the application directory. See
-         VendorNativeCrt.targets. -->
-    <Copy SourceFiles="@(VendorNativeCrtFile)" DestinationFolder="$(_Wiff2OutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
-  </Target>
-
-
   <!-- The ProteoWizard website shows msconvert's help from the source-controlled
        pwiz_tools/Commandline/msconvert-help.txt, so write msconvert's doc option output there whenever
        msconvert or a library it takes help text from (the filter factories in Pwiz.Analysis)
@@ -130,28 +88,41 @@
        The page is replaced only when its text changes. msconvert writes LF, while a Windows
        checkout holds CRLF, and git status reports an LF copy of a CRLF checkout as modified
        even though git diff shows nothing; overwriting it every time failed the CI check for
-       files a build leaves modified. Incrementality is tracked against the copy in obj, so an
-       unchanged page is never touched. -->
+       files a build leaves modified. The comparison is case-sensitive, so a change only in case
+       still reaches the page. Incrementality is tracked by a stamp touched only after the page
+       is up to date, so a failed run is retried by the next build, and an unchanged page is
+       never touched. -->
   <PropertyGroup>
     <MsConvertHelpFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\msconvert-help.txt'))</MsConvertHelpFile>
   </PropertyGroup>
   <Target Name="WriteMsConvertHelp" AfterTargets="Build"
           Condition="'$(IAgreeToVendorLicenses)' == 'true' AND ('$(RuntimeIdentifier)' == '' OR '$(RuntimeIdentifier)' == '$(NETCoreSdkRuntimeIdentifier)')"
-          Inputs="$(TargetPath);@(ReferenceCopyLocalPaths)" Outputs="$(IntermediateOutputPath)msconvert-help.txt">
+          Inputs="$(TargetPath);@(ReferenceCopyLocalPaths);$(MsConvertHelpFile)" Outputs="$(IntermediateOutputPath)msconvert-help.stamp">
     <PropertyGroup>
       <!-- Written beside the build first, so a failed run cannot leave a truncated page. -->
       <_MsConvertHelpTemp>$(IntermediateOutputPath)msconvert-help.txt</_MsConvertHelpTemp>
+      <_MsConvertHelpStamp>$(IntermediateOutputPath)msconvert-help.stamp</_MsConvertHelpStamp>
     </PropertyGroup>
+    <!-- cmd reports success when it cannot open the redirect's file, so check the file was written. -->
+    <Delete Files="$(_MsConvertHelpTemp)" />
     <Exec Command="&quot;$(TargetDir)$(TargetName)$(_NativeExecutableExtension)&quot; --doc &gt; &quot;$(_MsConvertHelpTemp)&quot;" />
+    <Error Condition="!Exists('$(_MsConvertHelpTemp)')" Text="msconvert --doc did not write $(_MsConvertHelpTemp)." />
     <PropertyGroup>
       <_MsConvertHelpNew>$([System.IO.File]::ReadAllText('$(_MsConvertHelpTemp)').Replace('&#13;', ''))</_MsConvertHelpNew>
       <_MsConvertHelpOld Condition="Exists('$(MsConvertHelpFile)')">$([System.IO.File]::ReadAllText('$(MsConvertHelpFile)').Replace('&#13;', ''))</_MsConvertHelpOld>
     </PropertyGroup>
-    <Copy Condition="'$(_MsConvertHelpNew)' != '$(_MsConvertHelpOld)'"
+    <Copy Condition="!$([System.String]::Equals($(_MsConvertHelpNew), $(_MsConvertHelpOld)))"
           SourceFiles="$(_MsConvertHelpTemp)" DestinationFiles="$(MsConvertHelpFile)" />
+    <Touch Files="$(_MsConvertHelpStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_MsConvertHelpTemp);$(_MsConvertHelpStamp)" />
+    </ItemGroup>
   </Target>
 
   <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
   <Import Project="$(PwizToolsRoot)\Shared\Lib\VendorNativeCrt.targets" />
+
+  <!-- The wiff2\ plugin folder; see the targets file. -->
+  <Import Project="$(PwizToolsRoot)\Shared\Lib\SciexWiff2Staging.targets" />
 
 </Project>

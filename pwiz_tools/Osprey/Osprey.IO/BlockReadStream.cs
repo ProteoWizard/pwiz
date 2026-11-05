@@ -31,7 +31,7 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// A read-only file stream that reads from disk in few, large reads and serves the caller's
-    /// smaller reads from memory, optionally taking a process-wide lock for each disk read.
+    /// smaller reads from memory, taking a process-wide lock for each disk read.
     ///
     /// <para>For readers that walk many files from a cold spinning disk. A parquet walk reads
     /// each needed column chunk separately, and a score file holds dozens of row groups, so one
@@ -47,7 +47,8 @@ namespace pwiz.Osprey.IO
     /// block, and any other read - a format probe such as Parquet.Net's head magic, or a footer
     /// read - reads exactly what it asks.</para>
     ///
-    /// <para>With the gate, concurrent file lanes take turns at the disk - each holding it for
+    /// <para>With the gate (always on in production; a test may open one without it),
+    /// concurrent file lanes take turns at the disk - each holding it for
     /// one read - and decode concurrently, instead of interleaving their reads so the disk seeks
     /// between files.</para>
     ///
@@ -63,21 +64,17 @@ namespace pwiz.Osprey.IO
         private const long MAX_PLANNED_READ_BYTES = 64L << 20;
 
         /// <summary>
-        /// Opens <paramref name="path"/> for reading: a <see cref="BlockReadStream"/> when
-        /// <see cref="OspreyEnvironment.BlockReadMb"/> is set, otherwise a plain
-        /// <see cref="FileStream"/>, exactly as before.
+        /// Opens <paramref name="path"/> for reading in blocks of
+        /// <see cref="OspreyEnvironment.BlockReadMb"/>, through the process-wide disk gate.
         /// </summary>
         public static Stream OpenRead(string path)
         {
-            int blockBytes = BlockBytes(OspreyEnvironment.BlockReadMb);
-            if (blockBytes <= 0)
-                return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return new BlockReadStream(path, blockBytes, OspreyEnvironment.BlockReadGate);
+            return new BlockReadStream(path, BlockBytes(OspreyEnvironment.BlockReadMb), true);
         }
 
         /// <summary>
         /// The block size in bytes for a setting of <paramref name="blockMb"/> MB, clamped by
-        /// <see cref="OspreyEnvironment.ClampBlockReadMb"/>; 0 when block reads are off.
+        /// <see cref="OspreyEnvironment.ClampBlockReadMb"/>.
         /// </summary>
         internal static int BlockBytes(int blockMb)
         {

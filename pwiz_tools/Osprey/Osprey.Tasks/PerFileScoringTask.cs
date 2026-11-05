@@ -197,10 +197,14 @@ namespace pwiz.Osprey.Tasks
         // stage - it chooses which candidate peak each precursor's row
         // describes - so a re-run under a different pick model must not
         // adopt these parquets.
+        //
+        // The data file is declared as the input it is, and a node that holds only its
+        // <stem>.spectra.bin satisfies it: the cache stands in for an absent source (doc 00,
+        // "HPC relay checklist"), so a harness ships the cache in its place.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
-            if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
-                yield return ctx.Config.LibrarySource.Path;
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
             if (ctx.Config.InputFiles != null)
                 foreach (var input in ctx.Config.InputFiles)
                     yield return input;
@@ -629,10 +633,10 @@ namespace pwiz.Osprey.Tasks
                 // stall on a large resume (the phase that looked hung on the 82-file run).
                 ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"lean files={0}",
                     config.InputFiles.Count));
-                using (var loadProgress = new ProgressReporter(
-                           CountText.Format(config.InputFiles.Count, OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for_1_file,
-                               OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for__0__files),
-                           config.InputFiles.Count))
+                bool loaded = ProgressReporter.TryRun(
+                    CountText.Format(config.InputFiles.Count, OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for_1_file,
+                        OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for__0__files),
+                    config.InputFiles.Count, loadProgress =>
                 {
                     int fileIdx = 0;
                     // Sequential in InputFiles order to match Run's "collect in original
@@ -712,7 +716,10 @@ namespace pwiz.Osprey.Tasks
                         perFileParquetPaths[fileName] = scoresPath;
                         loadProgress.Report(++fileIdx);
                     }
-                }
+                    return true;
+                });
+                if (!loaded)
+                    return false;
                 // The projection is built from the FOOTER COUNTS collected above, and there is no
                 // scan on any path - deferred or not.
                 //
@@ -1327,56 +1334,57 @@ namespace pwiz.Osprey.Tasks
 
             // One heading with a percent in place of a line per file: at cohort scale the
             // per-file lines were most of the log. The file names stay behind --verbose.
-            var loadProgress = new ProgressReporter(CountText.Format(scoresPaths.Count,
+            ProgressReporter.Run(CountText.Format(scoresPaths.Count,
                     OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for_1_file,
                     OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for__0__files),
-                scoresPaths.Count, intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
-            for (int fileIdx = 0; fileIdx < scoresPaths.Count; fileIdx++)
+                scoresPaths.Count, loadProgress =>
             {
-                string parquetPath = scoresPaths[fileIdx];
-                // The input's own stem, not one recovered from the parquet name. The
-                // recovery existed because the parquet was all this path was given; it had
-                // to strip ".scores" or ".scores-reconciled" to get back to a key that
-                // matches the rest of the pipeline, and a naive trailing strip left the
-                // bogus key "<stem>.reconciled".
-                string fileName = Path.GetFileNameWithoutExtension(
-                    config.InputFiles[fileIdx]) ?? string.Empty;
-                ctx.LogVerbose(string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_file__0___1____2___from__3__,
-                    fileIdx + 1, scoresPaths.Count, fileName, parquetPath));
-                // Lean: no fat FdrEntry stub or 21-float feature vector is ever allocated,
-                // and no column data is read at all.
-                // Fail-fast corruption guard: this branch never loads features, so check
-                // the feature schema up front via a footer-only probe (no feature memory).
-                // A SecondPassFDR node pointed at a foreign/truncated parquet missing the
-                // feature schema stops here rather than surfacing downstream. The
-                // scores-group hash check above (ValidateScoresParquetGroup) catches a
-                // wrong-library parquet; this catches a same-library corrupt one.
-                // FOOTER COUNT, and nothing else. This branch produced a counts-only
-                // projection, so the scan that used to sit here read every row of the file
-                // to arrive at a number the footer declares - the same 1.34-billion-row
-                // waste the resume path carried, on the node that can least afford it.
-                //
-                // It also read that footer TWICE and used neither count: HasPinFeatureColumns
-                // above opened the file for the schema, ProbeCwtRowMetadata opened it again
-                // for NumRows, and the resulting hint was handed to BeginFile - which
-                // returns before touching capacityHint in counts-only mode, because there is
-                // no row list to pre-size. ProbeResumeSchemaAndRows answers both in one open.
-                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(parquetPath);
-                if (!probe.HasPinFeatures)
+                for (int fileIdx = 0; fileIdx < scoresPaths.Count; fileIdx++)
                 {
-                    throw new InvalidDataException(string.Format(
-                        OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_,
-                        parquetPath));
+                    string parquetPath = scoresPaths[fileIdx];
+                    // The input's own stem, not one recovered from the parquet name. The
+                    // recovery existed because the parquet was all this path was given; it had
+                    // to strip ".scores" or ".scores-reconciled" to get back to a key that
+                    // matches the rest of the pipeline, and a naive trailing strip left the
+                    // bogus key "<stem>.reconciled".
+                    string fileName = Path.GetFileNameWithoutExtension(
+                        config.InputFiles[fileIdx]) ?? string.Empty;
+                    ctx.LogVerbose(string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_file__0___1____2___from__3__,
+                        fileIdx + 1, scoresPaths.Count, fileName, parquetPath));
+                    // Lean: no fat FdrEntry stub or 21-float feature vector is ever allocated,
+                    // and no column data is read at all.
+                    // Fail-fast corruption guard: this branch never loads features, so check
+                    // the feature schema up front via a footer-only probe (no feature memory).
+                    // A SecondPassFDR node pointed at a foreign/truncated parquet missing the
+                    // feature schema stops here rather than surfacing downstream. The
+                    // scores-group hash check above (ValidateScoresParquetGroup) catches a
+                    // wrong-library parquet; this catches a same-library corrupt one.
+                    // FOOTER COUNT, and nothing else. This branch produced a counts-only
+                    // projection, so the scan that used to sit here read every row of the file
+                    // to arrive at a number the footer declares - the same 1.34-billion-row
+                    // waste the resume path carried, on the node that can least afford it.
+                    //
+                    // It also read that footer TWICE and used neither count: HasPinFeatureColumns
+                    // above opened the file for the schema, ProbeCwtRowMetadata opened it again
+                    // for NumRows, and the resulting hint was handed to BeginFile - which
+                    // returns before touching capacityHint in counts-only mode, because there is
+                    // no row list to pre-size. ProbeResumeSchemaAndRows answers both in one open.
+                    var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(parquetPath);
+                    if (!probe.HasPinFeatures)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_,
+                            parquetPath));
+                    }
+                    joinLeanNames.Add(fileName);
+                    joinLeanCounts.Add(RowCountAsInt(probe.RowCount, parquetPath));
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+                    perFileParquetPaths[fileName] = parquetPath;
+                    LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
+                        perFileIsolationMz, ctx);
+                    loadProgress.Report(fileIdx + 1);
                 }
-                joinLeanNames.Add(fileName);
-                joinLeanCounts.Add(RowCountAsInt(probe.RowCount, parquetPath));
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
-                perFileParquetPaths[fileName] = parquetPath;
-                LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
-                    perFileIsolationMz, ctx);
-                loadProgress.Report(fileIdx + 1);
-            }
-            loadProgress.Dispose();
+            }, intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
             return FdrProjectionSet.CountsOnly(joinLeanNames, joinLeanCounts);

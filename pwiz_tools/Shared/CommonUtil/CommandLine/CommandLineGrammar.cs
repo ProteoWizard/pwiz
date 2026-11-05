@@ -40,9 +40,11 @@ namespace pwiz.Common.CommandLine
     /// subclass per tool. <see cref="STRICT"/> is Skyline's <c>--name=value</c>; Osprey adds
     /// values as the next token, short aliases and variadic arguments; CarafeSharp accepts
     /// Carafe's single-dash <c>-name value</c> alongside the standard form. One grammar is in
-    /// force per process, on <see cref="ArgUsage.Grammar"/>, because an argument's text
+    /// force at a time, on <see cref="ArgUsage.Grammar"/>, because an argument's text
     /// (<see cref="ArgumentBase.ArgumentText"/>, the generated help, every error message) is
-    /// spelled with its <see cref="Prefix"/>.
+    /// spelled with its <see cref="Prefix"/>; the program that owns the process installs it
+    /// (<see cref="ArgUsage.Install"/>), and declarations hosted in another program's process
+    /// run under that program's.
     /// <para>Every grammar accepts the inline form <c>--name=value</c>, split at the first
     /// <c>=</c>; the rest is configured here.</para>
     /// </summary>
