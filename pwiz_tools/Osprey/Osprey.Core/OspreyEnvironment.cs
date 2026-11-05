@@ -297,14 +297,32 @@ namespace pwiz.Osprey.Core
         /// </remarks>
         public static bool Ms2CalMean => IsSetAndNotZero(ENV_MS2_CAL_MEAN);
 
+        private static readonly EnvVar ENV_MS2_CAL_CURVE_PPM = new EnvVar(@"OSPREY_MS2_CAL_CURVE_PPM", EnvVarGroup.behavior,
+            @"Experimental: calibrate ppm MS2 m/z by an m/z-dependent offset curve instead of one mean " +
+            @"offset, to test whether HRAM data (TOF, Orbitrap) gains from it.");
+
+        /// <summary>
+        /// OSPREY_MS2_CAL_CURVE_PPM: experimental. Calibrate MS2 m/z searched in ppm by the
+        /// m/z-dependent offset curve (<c>Ms2OffsetCurve</c> with its ppm widths) in place of the
+        /// mean, whatever the offset; off by default, where ppm calibration is the mean as before.
+        /// OSPREY_MS2_CAL_MEAN overrides it. Part of the validity key (<see cref="Ms2CalValidityKeySuffix"/>).
+        /// </summary>
+        public static bool Ms2CalCurvePpm => IsSetAndNotZero(ENV_MS2_CAL_CURVE_PPM);
+
         /// <summary>
         /// Whether a search may calibrate its MS2 m/z by the m/z offset curve (<c>Ms2OffsetCurve</c>):
-        /// unit-resolution data with a Th fragment tolerance, and <paramref name="ms2CalMean"/> not set.
+        /// unit-resolution data with a Th fragment tolerance, or a ppm tolerance with
+        /// <paramref name="ms2CalCurvePpm"/> (experimental), and <paramref name="ms2CalMean"/> not set.
         /// Every other search calibrates by the mean, as before.
         /// </summary>
-        public static bool UsesMs2OffsetCurve(ResolutionMode resolution, ToleranceUnit fragmentUnit, bool ms2CalMean)
+        public static bool UsesMs2OffsetCurve(ResolutionMode resolution, ToleranceUnit fragmentUnit, bool ms2CalMean,
+            bool ms2CalCurvePpm)
         {
-            return resolution == ResolutionMode.UnitResolution && fragmentUnit == ToleranceUnit.Mz && !ms2CalMean;
+            if (ms2CalMean)
+                return false;
+            if (fragmentUnit == ToleranceUnit.Ppm)
+                return ms2CalCurvePpm;
+            return resolution == ResolutionMode.UnitResolution;
         }
 
         /// <summary>
@@ -315,7 +333,10 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string Ms2CalValidityKeySuffix(ResolutionMode resolution, ToleranceUnit fragmentUnit)
         {
-            if (resolution != ResolutionMode.UnitResolution || fragmentUnit != ToleranceUnit.Mz)
+            // Experimental ppm curve: its own term; off, ppm searches key exactly as before.
+            if (fragmentUnit == ToleranceUnit.Ppm)
+                return Ms2CalCurvePpm && !Ms2CalMean ? @";ms2cal=curveppm" : string.Empty;
+            if (resolution != ResolutionMode.UnitResolution)
                 return string.Empty;
             return Ms2CalMean ? @";ms2cal=mean" : @";ms2cal=curve";
         }

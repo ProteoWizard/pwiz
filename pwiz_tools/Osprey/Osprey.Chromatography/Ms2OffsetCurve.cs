@@ -144,6 +144,77 @@ namespace pwiz.Osprey.Chromatography
         public const double MEAN_WINDOW_FRACTION = 0.5;
 
         /// <summary>
+        /// The widths an offset curve is found with, in the unit of its fragments' offsets: the
+        /// shift scan's range, step and hit tolerance, the association half-width, whether the
+        /// shift is checked for the M+1, and the shift within which the mean is kept.
+        /// </summary>
+        public sealed class Widths
+        {
+            private Widths(string unit, double shiftRange, double scanStep, double hitTolerance,
+                double associationHalfWidth, bool stepIsotopes, double meanWindow)
+            {
+                Unit = unit;
+                ShiftRange = shiftRange;
+                ScanStep = scanStep;
+                HitTolerance = hitTolerance;
+                AssociationHalfWidth = associationHalfWidth;
+                StepIsotopes = stepIsotopes;
+                MeanWindow = meanWindow;
+            }
+
+            /// <summary>
+            /// Unit-resolution (Th) data searched with <paramref name="fragmentToleranceTh"/>: the
+            /// constants of <see cref="Ms2OffsetCurve"/>, the M+1 check, and the mean kept within
+            /// <see cref="MEAN_WINDOW_FRACTION"/> of the tolerance.
+            /// </summary>
+            public static Widths UnitResolution(double fragmentToleranceTh)
+            {
+                return new Widths(MzCalibration.UNIT_TH, SHIFT_RANGE_TH, SCAN_STEP_TH, HIT_TOLERANCE_TH,
+                    ASSOCIATION_HALF_WIDTH_TH, true, MEAN_WINDOW_FRACTION * fragmentToleranceTh);
+            }
+
+            /// <summary>
+            /// Experimental (OSPREY_MS2_CAL_CURVE_PPM): HRAM data searched with
+            /// <paramref name="fragmentTolerancePpm"/>, offsets in ppm. The scan covers twice the
+            /// tolerance either way in hundredths of it, a hit is within a quarter of it, a fragment's
+            /// offset is its peak within the tolerance of the curve, there is no M+1 check (resolved
+            /// isotopes lie thousands of ppm apart), and the curve is used whatever the shift.
+            /// </summary>
+            public static Widths Ppm(double fragmentTolerancePpm)
+            {
+                return new Widths(MzCalibration.UNIT_PPM, 2 * fragmentTolerancePpm, fragmentTolerancePpm / 100,
+                    fragmentTolerancePpm / 4, fragmentTolerancePpm, false, -1);
+            }
+
+            /// <summary>The unit of the offsets and of the calibration found.</summary>
+            public string Unit { get; }
+
+            /// <summary>Trial shifts run from minus this to plus this.</summary>
+            public double ShiftRange { get; }
+
+            /// <summary>The shift scan's step.</summary>
+            public double ScanStep { get; }
+
+            /// <summary>A fragment counts as matched at a trial shift when a peak lies this close to it.</summary>
+            public double HitTolerance { get; }
+
+            /// <summary>A fragment's offset is its peak closest to the curve within this.</summary>
+            public double AssociationHalfWidth { get; }
+
+            /// <summary>Whether the shift is stepped down off the M+1 (<see cref="MonoisotopicShift"/>).</summary>
+            public bool StepIsotopes { get; }
+
+            /// <summary>A shift no larger than this leaves the calibration to the mean; negative, never.</summary>
+            public double MeanWindow { get; }
+
+            /// <summary>Peaks within this of a fragment's library m/z are collected for it.</summary>
+            public double CollectionHalfWidth
+            {
+                get { return ShiftRange + (StepIsotopes ? ISOTOPE_SPACING_TH : 0) + HitTolerance; }
+            }
+        }
+
+        /// <summary>
         /// The calibration of <paramref name="fragments"/>: the offset curve
         /// (<see cref="MzCalibrationResult.OffsetCurveMz"/>, <see cref="MzCalibrationResult.OffsetCurve"/>),
         /// its mean over the associated fragments as <see cref="MzCalibrationResult.Mean"/>, the
@@ -158,23 +229,36 @@ namespace pwiz.Osprey.Chromatography
         public static MzCalibrationResult Calculate(IReadOnlyList<Ms2FragmentPeaks> fragments,
             double fragmentToleranceTh, out double shift)
         {
+            return Calculate(fragments, Widths.UnitResolution(fragmentToleranceTh), out shift);
+        }
+
+        /// <summary>
+        /// The calibration of <paramref name="fragments"/>, whose offsets are in the unit of
+        /// <paramref name="widths"/>, found with its widths: as the overload taking a Th tolerance
+        /// for unit-resolution data, and the experimental ppm curve (<see cref="Widths.Ppm"/>).
+        /// </summary>
+        public static MzCalibrationResult Calculate(IReadOnlyList<Ms2FragmentPeaks> fragments,
+            Widths widths, out double shift)
+        {
             shift = double.NaN;
             if (fragments == null || fragments.Count(f => f.Offsets.Length > 0) < MIN_FRAGMENTS)
                 return null;
 
-            shift = MonoisotopicShift(fragments, BestShift(fragments));
-            if (Math.Abs(shift) <= MEAN_WINDOW_FRACTION * fragmentToleranceTh)
+            shift = BestShift(fragments, widths);
+            if (widths.StepIsotopes)
+                shift = MonoisotopicShift(fragments, shift);
+            if (Math.Abs(shift) <= widths.MeanWindow)
                 return null;
             double start = shift;
             double[] mz, offset;
-            Associate(fragments, _ => start, out mz, out offset);
+            Associate(fragments, _ => start, widths.AssociationHalfWidth, out mz, out offset);
             if (mz.Length < MIN_FRAGMENTS)
                 return null;
             // LOESS at its default bandwidth (0.3), as the RT calibration fits.
             var model = LoessRegression.Fit(mz, offset);
             // Once more about the fitted curve: where the offset changes with m/z, the first
             // association, about one shift, reaches the wrong peak at the ends of the range.
-            Associate(fragments, model.Predict, out mz, out offset);
+            Associate(fragments, model.Predict, widths.AssociationHalfWidth, out mz, out offset);
             if (mz.Length < MIN_FRAGMENTS)
                 return null;
             model = LoessRegression.Fit(mz, offset);
@@ -201,7 +285,7 @@ namespace pwiz.Osprey.Chromatography
                 Median = LoessRegression.Median(offset),
                 SD = sd,
                 Count = mz.Length,
-                Unit = MzCalibration.UNIT_TH,
+                Unit = widths.Unit,
                 AdjustedTolerance = 3.0 * sd,
                 Calibrated = true,
                 OffsetCurveMz = knotMz,
@@ -217,8 +301,19 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public static double BestShift(IReadOnlyList<Ms2FragmentPeaks> fragments)
         {
-            double first = -SHIFT_RANGE_TH;
-            int steps = (int)Math.Round(2 * SHIFT_RANGE_TH / SCAN_STEP_TH) + 1;
+            return BestShift(fragments, Widths.UnitResolution(0));
+        }
+
+        /// <summary>
+        /// The shift on the <see cref="Widths.ScanStep"/> grid of <paramref name="widths"/>, within its
+        /// <see cref="Widths.ShiftRange"/>, at which the most fragments have a peak within its
+        /// <see cref="Widths.HitTolerance"/>; among ties, as the unit-resolution overload chooses.
+        /// </summary>
+        public static double BestShift(IReadOnlyList<Ms2FragmentPeaks> fragments, Widths widths)
+        {
+            double step = widths.ScanStep, hit = widths.HitTolerance;
+            double first = -widths.ShiftRange;
+            int steps = (int)Math.Round(2 * widths.ShiftRange / step) + 1;
             var hits = new int[steps];
             var lastFragment = Enumerable.Repeat(-1, steps).ToArray();   // a fragment counts once per shift
             for (int f = 0; f < fragments.Count; f++)
@@ -227,8 +322,8 @@ namespace pwiz.Osprey.Chromatography
                 {
                     // Grid shifts s with |o - s| <= HIT_TOLERANCE_TH; the epsilon keeps a peak exactly
                     // at the tolerance in, whichever way the division rounds.
-                    int from = Math.Max(0, (int)Math.Ceiling((o - HIT_TOLERANCE_TH - first) / SCAN_STEP_TH - 1e-9));
-                    int to = Math.Min(steps - 1, (int)Math.Floor((o + HIT_TOLERANCE_TH - first) / SCAN_STEP_TH + 1e-9));
+                    int from = Math.Max(0, (int)Math.Ceiling((o - hit - first) / step - 1e-9));
+                    int to = Math.Min(steps - 1, (int)Math.Floor((o + hit - first) / step + 1e-9));
                     for (int s = from; s <= to; s++)
                     {
                         if (lastFragment[s] == f)
@@ -247,7 +342,7 @@ namespace pwiz.Osprey.Chromatography
                 int end = s;
                 while (end + 1 < steps && hits[end + 1] == max)
                     end++;
-                double middle = first + (s + end) / 2.0 * SCAN_STEP_TH;
+                double middle = first + (s + end) / 2.0 * step;
                 if (double.IsNaN(best) || Math.Abs(middle) < Math.Abs(best))
                     best = middle;
                 s = end;
@@ -258,15 +353,18 @@ namespace pwiz.Osprey.Chromatography
         /// <summary>
         /// <paramref name="shift"/>, stepped down by the isotope spacing while it sits on the M+1:
         /// while more than <see cref="M_PLUS_1_FRACTION"/> of the singly charged fragments with a peak
-        /// there have a larger peak one spacing below (all fragments, each at its own charge's
-        /// spacing, when too few are singly charged), and the step stays within the scan range.
+        /// there have a larger peak one spacing below, and the step stays within the scan range.
+        /// Left as it is when fewer than <see cref="MIN_FRAGMENTS"/> fragments are singly charged:
+        /// the step is the singly charged spacing, and a shift that landed on the M+1 of mostly 2+
+        /// fragments lies only half of it above their monoisotopic peak.
         /// </summary>
         public static double MonoisotopicShift(IReadOnlyList<Ms2FragmentPeaks> fragments, double shift)
         {
             var singly = fragments.Where(f => f.Charge == 1).ToList();
-            var tested = singly.Count >= MIN_FRAGMENTS ? singly : fragments;
+            if (singly.Count < MIN_FRAGMENTS)
+                return shift;
             while (shift - ISOTOPE_SPACING_TH >= -SHIFT_RANGE_TH - HIT_TOLERANCE_TH &&
-                   LargerPeakBelowFraction(tested, shift) > M_PLUS_1_FRACTION)
+                   LargerPeakBelowFraction(singly, shift) > M_PLUS_1_FRACTION)
             {
                 shift -= ISOTOPE_SPACING_TH;
             }
@@ -275,8 +373,8 @@ namespace pwiz.Osprey.Chromatography
 
         /// <summary>
         /// Of the fragments with a peak within <see cref="HIT_TOLERANCE_TH"/> of <paramref name="shift"/>,
-        /// the share whose most intense peak one isotope spacing (at the fragment's charge) below is
-        /// more intense than the one there; 0 when too few have a peak there to tell.
+        /// the share whose most intense peak one isotope spacing below is more intense than the one
+        /// there; 0 when too few have a peak there to tell. The fragments are singly charged.
         /// </summary>
         private static double LargerPeakBelowFraction(IReadOnlyList<Ms2FragmentPeaks> fragments, double shift)
         {
@@ -287,7 +385,7 @@ namespace pwiz.Osprey.Chromatography
                 if (here <= 0)
                     continue;
                 present++;
-                if (fragment.MaxIntensityNear(shift - ISOTOPE_SPACING_TH / fragment.Charge, HIT_TOLERANCE_TH) > here)
+                if (fragment.MaxIntensityNear(shift - ISOTOPE_SPACING_TH, HIT_TOLERANCE_TH) > here)
                     below++;
             }
             return present < MIN_FRAGMENTS ? 0 : below / (double)present;
@@ -295,11 +393,11 @@ namespace pwiz.Osprey.Chromatography
 
         /// <summary>
         /// Each fragment's peak closest to <paramref name="expected"/>(its m/z), within
-        /// <see cref="ASSOCIATION_HALF_WIDTH_TH"/>, as (fragment m/z, offset) pairs; a fragment with no
+        /// <paramref name="halfWidth"/>, as (fragment m/z, offset) pairs; a fragment with no
         /// peak that close is left out. Of two peaks as close, the lower.
         /// </summary>
         private static void Associate(IReadOnlyList<Ms2FragmentPeaks> fragments, Func<double, double> expected,
-            out double[] mz, out double[] offset)
+            double halfWidth, out double[] mz, out double[] offset)
         {
             var mzList = new List<double>(fragments.Count);
             var offsetList = new List<double>(fragments.Count);
@@ -317,7 +415,7 @@ namespace pwiz.Osprey.Chromatography
                         bestOffset = o;
                     }
                 }
-                if (bestDistance <= ASSOCIATION_HALF_WIDTH_TH)
+                if (bestDistance <= halfWidth)
                 {
                     mzList.Add(fragment.LibraryMz);
                     offsetList.Add(bestOffset);

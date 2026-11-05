@@ -65,7 +65,7 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// The top fragments and every peak around each in the apex spectrum, for the
         /// unit-resolution MS2 m/z calibration (<see cref="Ms2OffsetCurve"/>).
-        /// Null for ppm data and under OSPREY_MS2_CAL_MEAN.
+        /// Null for ppm data (unless OSPREY_MS2_CAL_CURVE_PPM) and under OSPREY_MS2_CAL_MEAN.
         /// </summary>
         public Ms2FragmentPeaks[] Ms2FragmentPeaks { get; set; }
         /// <summary>

@@ -498,6 +498,71 @@ namespace pwiz.Osprey.Test
             var swapped = isotopes.Select(f => new Ms2FragmentPeaks(f.LibraryMz, 1, f.Offsets, new[] { 0.45f, 1.0f })).ToList();
             Assert.AreEqual(mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH,
                 Ms2OffsetCurve.MonoisotopicShift(swapped, mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH), 1e-9);
+            // Doubly charged, a shift on the M+1 lies half a spacing above the monoisotopic peak, and the
+            // singly charged step would carry it half a spacing past: with too few singly charged
+            // fragments to test, the shift stays.
+            double doublyM1 = mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH / 2;
+            var doubly = isotopes.Select(f => new Ms2FragmentPeaks(f.LibraryMz, 2,
+                new[] { (float)mono, (float)doublyM1 }, new[] { 1.0f, 0.45f })).ToList();
+            Assert.AreEqual(doublyM1, Ms2OffsetCurve.MonoisotopicShift(doubly, doublyM1), 1e-9);
+
+            // The whole calculation where the M+1 wins the shift scan: 0.75 Th low, as a Stellar run's
+            // Thermo centroids are, the M+1 lies 0.25 Th above the library m/z, and is in every fragment
+            // while the monoisotopic peak is in 80%. The scan lands on the M+1, the step-down brings the
+            // shift back to the monoisotopic peak, and the curve follows it.
+            const double farOffset = -0.75;
+            var random = new Random(23);
+            var mPlus1 = new List<Ms2FragmentPeaks>();
+            for (int i = 0; i < 3000; i++)
+            {
+                double mz = 200.0 + 1000.0 * random.NextDouble();
+                double peak = farOffset + 0.08 * Gaussian(random);
+                var offsets = new List<float>();
+                var heights = new List<float>();
+                if (random.NextDouble() < 0.8)
+                {
+                    offsets.Add((float)peak);
+                    heights.Add(1.0f);
+                }
+                offsets.Add((float)(peak + Ms2OffsetCurve.ISOTOPE_SPACING_TH));
+                heights.Add(0.6f);
+                mPlus1.Add(new Ms2FragmentPeaks(mz, 1, offsets.ToArray(), heights.ToArray()));
+            }
+            Assert.AreEqual(farOffset + Ms2OffsetCurve.ISOTOPE_SPACING_TH, Ms2OffsetCurve.BestShift(mPlus1), 0.1);
+            curve = Ms2OffsetCurve.Calculate(mPlus1, fragmentTolerance, out shift);
+            Assert.AreEqual(farOffset, shift, 0.1);
+            Assert.IsNotNull(curve);
+            foreach (double mz in new[] { 300.0, 700.0, 1100.0 })
+                Assert.AreEqual(farOffset, curve.OffsetAt(mz), 0.03, string.Format("M+1 case, offset at m/z {0}", mz));
+
+            // The experimental ppm curve (OSPREY_MS2_CAL_CURVE_PPM): offsets in ppm, +4 ppm at m/z 200
+            // falling to -3 ppm at 1200 with 1.5 ppm scatter, searched at 10 ppm. No M+1 check, and the
+            // curve whatever the shift.
+            var ppmRandom = new Random(29);
+            Func<double, double> ppmOffset = mz => 4.0 - 7.0 * (mz - 200.0) / 1000.0;
+            var ppmWidths = Ms2OffsetCurve.Widths.Ppm(10);
+            Assert.AreEqual(22.5, ppmWidths.CollectionHalfWidth, 1e-9);   // twice the tolerance and a hit
+            var ppmFragments = new List<Ms2FragmentPeaks>();
+            for (int i = 0; i < 3000; i++)
+            {
+                double mz = 200.0 + 1000.0 * ppmRandom.NextDouble();
+                var offsets = new List<float>();
+                if (ppmRandom.NextDouble() < 0.9)
+                    offsets.Add((float)(ppmOffset(mz) + 1.5 * Gaussian(ppmRandom)));
+                if (ppmRandom.NextDouble() < 0.3)
+                    offsets.Add((float)((2 * ppmRandom.NextDouble() - 1) * ppmWidths.CollectionHalfWidth));
+                offsets.Sort();
+                ppmFragments.Add(new Ms2FragmentPeaks(mz, 1, offsets.ToArray(), offsets.Select(_ => 1.0f).ToArray()));
+            }
+            curve = Ms2OffsetCurve.Calculate(ppmFragments, ppmWidths, out shift);
+            Assert.IsNotNull(curve);
+            Assert.AreEqual(MzCalibration.UNIT_PPM, curve.Unit);
+            foreach (double mz in new[] { 300.0, 700.0, 1100.0 })
+                Assert.AreEqual(ppmOffset(mz), curve.OffsetAt(mz), 0.5, string.Format("ppm case, offset at m/z {0}", mz));
+            Assert.IsTrue(curve.SD < 2.5, string.Format("ppm SD {0}", curve.SD));
+            // Applied in ppm: the observed m/z less the curve's ppm of it.
+            double observedPpm = 1000.0 * (1 + ppmOffset(1000.0) / 1e6);
+            Assert.AreEqual(1000.0, MzCalibration.ApplyCalibration(observedPpm, curve), 1000.0 * 0.5e-6);
         }
 
         /// <summary>The offset the synthetic ion trap fragments are drawn about: -0.40 Th at m/z 200 to -0.55 Th above 600.</summary>

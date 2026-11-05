@@ -213,9 +213,9 @@ namespace pwiz.Osprey.Chromatography
 
         /// <summary>
         /// Apply m/z calibration to correct an observed m/z value.
-        /// For PPM: corrected = observed - observed * mean / 1e6.
-        /// For absolute m/z: corrected = observed - offset, the curve's offset at the observed m/z
-        /// when there is one (<see cref="MzCalibrationResult.OffsetAt"/>), else the mean.
+        /// For PPM: corrected = observed - observed * offset / 1e6; for absolute m/z: corrected =
+        /// observed - offset. The offset is the curve's at the observed m/z when there is one
+        /// (<see cref="MzCalibrationResult.OffsetAt"/>), else the mean.
         /// </summary>
         public static double ApplyCalibration(double observedMz, MzCalibrationResult calibration)
         {
@@ -226,7 +226,7 @@ namespace pwiz.Osprey.Chromatography
                 return observedMz - calibration.OffsetAt(observedMz);
 
             // PPM correction
-            double correctionDa = observedMz * calibration.Mean / 1e6;
+            double correctionDa = observedMz * calibration.OffsetAt(observedMz) / 1e6;
             return observedMz - correctionDa;
         }
 
