@@ -178,11 +178,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // it is scoped to the per-file pass AFTER this one, so it did not cover the
             // expensive half.
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"scan files={0}", fileNames.Count));
-            using (var scanProgress = new ProgressReporter(
+            bool scanned = ProgressReporter.TryRun(
                 fileNames.Count == 1
                     ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_first_pass_results_for_1_file
                     : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_first_pass_results_for__0__files, fileNames.Count),
-                fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileNames.Count, scanProgress =>
             {
                 for (int f = 0; f < fileNames.Count; f++)
                 {
@@ -223,7 +223,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
                             OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__the_first_pass_results_for__0__could_not_be_read_in_full__so_the_,
                             fileNames[f]));
-                        return null;
+                        return false;
                     }
                     // Reduce this file's per-precursor bests to its run cutoff and the decoys
                     // clearing it, then let them go. Holding every file's bests to the end was
@@ -231,7 +231,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     // library, i.e. ~79 GB at the 500-file target.
                     builder.SealRunCutoff(fileIdx);
                 }
-            }
+                return true;
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            if (!scanned)
+                return null;
             // Also reported: SealCutoffs walks the whole experiment population in score order to
             // find where this pass's own count reaches the target FDR, which is the other half of
             // the silence the 138 s gap covered.
@@ -244,23 +247,21 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // on this panel gated by score rather than by its own q, so it is the only one with no
             // independent check on the page - a boundary that drifts produces a plausible-looking
             // number instead of an obvious failure. Printing the boundary, the accepted count
-            // behind it, and how many precursors clear it makes the panel self-diagnosing.
+            // behind it, and how many precursors clear it makes the panel self-diagnosing. The
+            // per-RUN boundaries are in the report (CoAssignmentData.RunCutoffs), plotted over the
+            // run axis: as one log line per run they were 446 lines on a 446-run cohort, and the
+            // outlier they were meant to expose was unreadable among them (issue #4672).
             builder.CountAboveExperimentCutoff(out int aboveDecoys, out int aboveNonDecoys);
             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_COASSIGN_BOUNDARY,
                 @"pass=1 experiment={0:F4} accepted={1} decoys-above={2} non-decoys-above={3}",
                 builder.ExperimentCutoff, builder.AcceptedForCutoff, aboveDecoys, aboveNonDecoys));
-            for (int f = 0; f < fileNames.Count; f++)
-            {
-                log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_COASSIGN_BOUNDARY,
-                    @"pass=1 run={0} cutoff={1:F4}", fileNames[f], builder.RunCutoff(f)));
-            }
 
             int totalDetected = 0, totalUnresolved = 0;
             // Reported because this loop is the panel's whole cost and it used to run SILENT. On
-            // the 82-file SEA-AD run it went 101 s between the last per-run boundary line and the
-            // completion summary with nothing in between, which reads as a hung run - the same
-            // shape as the unreported spectra-cache write. The per-run boundary lines above are
-            // one-per-file and cheap; this pass is where the time actually goes.
+            // the 82-file SEA-AD run it went 101 s between the boundary lines that used to stand
+            // above and the completion summary with nothing in between, which reads as a hung run -
+            // the same shape as the unreported spectra-cache write. This pass is where the time
+            // actually goes.
             // Attribution for this pass's allocation, off unless asked for. It is what found the
             // parquet column read the v7 sidecar removed - two 58-minute cohort runs looking at
             // memory curves found nothing, and ten seconds of this on three files named the call
@@ -269,11 +270,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             var tally = OspreyEnvironment.LogCoAssignmentAllocation ? new AllocationTally() : null;
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-start");
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"join files={0}", fileNames.Count));
-            using (var progress = new ProgressReporter(
+            bool joined = ProgressReporter.TryRun(
                 fileNames.Count == 1
                     ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_apex_retention_times_for_1_file
                     : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_apex_retention_times_for__0__files, fileNames.Count),
-                fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                fileNames.Count, progress =>
             {
                 for (int f = 0; f < fileNames.Count; f++)
                 {
@@ -288,12 +289,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     {
                         log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
                             OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment_is_unavailable___0____so_the_panel_is_left_out_of_the_report_, reason));
-                        return null;
+                        return false;
                     }
                     totalDetected += detected;
                     builder.FlushFile(f);
                 }
-            }
+                return true;
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
+            if (!joined)
+                return null;
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-end");
             if (tally != null)
             {

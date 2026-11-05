@@ -167,6 +167,7 @@ namespace pwiz.Osprey
                 // wipe the per-file outputs that <see cref="PerFileScoringTask"/>
                 // relies on for its within-task per-file skip.
                 ((PipelineContext)ctx).LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
+                WarnOtherBuildOutputs(task, ctx);
             }
 
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
@@ -174,8 +175,7 @@ namespace pwiz.Osprey
                 var ospreyCtx = (PipelineContext)ctx;
                 ospreyCtx.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)",
                     task.Name, elapsed.TotalSeconds);
-                if (OspreyEnvironment.BlockReadMb > 0)
-                    ospreyCtx.LogInfo(LogTag.PATH, @"{0}: {1}", task.Name, BlockReadStats.Text());
+                ospreyCtx.LogInfo(LogTag.PATH, @"{0}: {1}", task.Name, BlockReadStats.Text());
                 // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
                 // the HPC split - this task drops everything but the library, and the next reloads
                 // what it needs from artifacts. Off by default; the whole experiment reverts
@@ -207,6 +207,47 @@ namespace pwiz.Osprey
                 }
                 // Last: the developer stop ends the run between this task and the next.
                 TaskBudget.TaskDone(task.Name, ctx.ExitCode);
+            }
+
+            /// <summary>
+            /// Say so when this task is about to recompute outputs another build of Osprey wrote.
+            /// A stamp from another build is never current, so a resume the day after a run
+            /// started re-runs every stage, which is hours at cohort scale, and nothing said why.
+            /// An operator who meant to reuse those outputs needs both versions and the variable
+            /// that pins this build to the older one.
+            ///
+            /// <para>Only outputs the pin would make current are counted: this task's stamp with
+            /// this run's key, under another version. An output whose key also differs recomputes
+            /// whatever the version, and advising a pin for it would only stamp the recomputed
+            /// file with a version that did not write it. One line per earlier version, since a
+            /// pin reuses only the outputs of the version it names.</para>
+            /// </summary>
+            private static void WarnOtherBuildOutputs(PipelineTask task, TaskContext ctx)
+            {
+                string key = task.ValidityKey(ctx);
+                int outputCount = 0;
+                var countsByVersion = new Dictionary<string, int>();
+                var versions = new List<string>();
+                foreach (string output in task.Outputs(ctx))
+                {
+                    outputCount++;
+                    var stamp = ctx.ReadStamp(output);
+                    if (stamp == null ||
+                        string.Equals(stamp.Version, ctx.Version, StringComparison.Ordinal) ||
+                        !stamp.IsCurrent(task.Name, stamp.Version, task.OutputValidityKey(ctx, key, output)))
+                    {
+                        continue;
+                    }
+                    if (!countsByVersion.TryGetValue(stamp.Version, out int count))
+                        versions.Add(stamp.Version);
+                    countsByVersion[stamp.Version] = count + 1;
+                }
+                foreach (string version in versions)
+                {
+                    ctx.LogWarning(string.Format(
+                        OspreyResources.AnalysisPipeline_WarnOtherBuildOutputs__0____1__of_its__2__output_files_were_written_by_Osprey__3__,
+                        task.Name, countsByVersion[version], outputCount, version, ctx.Version, OspreyVersion.ENV_OVERRIDE));
+                }
             }
         }
 
