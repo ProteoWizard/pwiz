@@ -112,7 +112,17 @@ namespace pwiz.Common.SystemUtil
         /// <paramref name="body"/> with the reporter, and declare success with
         /// <see cref="Complete"/> when the body returns. There is no <c>catch</c>: an exception
         /// skips <see cref="Complete"/>, so a failed step ends without a completion line, and
-        /// propagates unchanged. Parameters as for the constructor.
+        /// propagates unchanged.
+        /// <para><paramref name="activity"/> is the heading text, printed first (without the
+        /// trailing "..."); <paramref name="total"/> the number of units the body reports against
+        /// (a <see cref="long"/>, so byte and row counts on Astral-class data cannot overflow);
+        /// <paramref name="indent"/> leading whitespace for the heading (null for none), with the
+        /// percent lines one level (2 spaces) deeper; <paramref name="intervalSeconds"/> the minimum
+        /// seconds between percent lines; <paramref name="heartbeatSeconds"/> the idle threshold
+        /// of the frozen-percent heartbeat (<see cref="HEARTBEAT_SECONDS"/>); and
+        /// <paramref name="minPercentSeconds"/> the run time before a step that showed no percent
+        /// also closes with 100% (<see cref="MIN_PERCENT_SECONDS"/>). The wrappers and
+        /// <see cref="Begin"/> take the same parameters.</para>
         /// </summary>
         public static void Run(string activity, long total, Action<ProgressReporter> body, string indent = null,
             double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
@@ -179,7 +189,8 @@ namespace pwiz.Common.SystemUtil
         /// a completion line. Prefer
         /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
         /// wherever the body can be a lambda, since there success cannot be left undeclared.
-        /// Parameters as for Run.
+        /// Parameters as for
+        /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>.
         /// </summary>
         public static Scope Begin(string activity, long total, string indent = null,
             double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
