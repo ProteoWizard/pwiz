@@ -472,25 +472,32 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(-0.11, shift, 0.06);
             Assert.IsNotNull(Ms2OffsetCurve.Calculate(small, 0.1, out shift));
 
-            // A run of tied shifts gives its middle: every fragment's one peak at exactly -0.6 Th ties the
-            // shifts from -0.8 to -0.4.
+            // A run of tied shifts gives its middle: every fragment's one peak at -0.6 Th ties the shifts
+            // from -0.8 to -0.4 (to a grid step: -0.6 is not exact in single precision).
             var tight = new List<Ms2FragmentPeaks>();
             for (int i = 0; i < 200; i++)
-                tight.Add(new Ms2FragmentPeaks(300 + i, 1, new[] { -0.6 }, new[] { 1.0 }));
-            Assert.AreEqual(-0.6, Ms2OffsetCurve.BestShift(tight), 1e-9);
+                tight.Add(new Ms2FragmentPeaks(300 + i, 1, new[] { -0.6f }, new[] { 1.0f }));
+            Assert.AreEqual(-0.6, Ms2OffsetCurve.BestShift(tight), Ms2OffsetCurve.SCAN_STEP_TH);
 
-            // Half a Th off is between a fragment's isotopes: a shift on the M+1 has the larger
-            // monoisotopic peak one spacing below it in most fragments, and steps back to it; at the
-            // monoisotopic peak nothing larger lies below, and the shift stays.
-            double mono = TrueIonTrapOffset(800);
+            // A third of a Th off and the M+1 lies two thirds above: a shift on the M+1 has the larger
+            // monoisotopic peak one spacing below it in every fragment, and steps back to it. At the
+            // monoisotopic peak one spacing below is still inside the scan range, and holds nothing
+            // larger, so the shift stays.
+            const double mono = -0.30;
+            Assert.IsTrue(mono - Ms2OffsetCurve.ISOTOPE_SPACING_TH >= -Ms2OffsetCurve.SHIFT_RANGE_TH - Ms2OffsetCurve.HIT_TOLERANCE_TH);
             var isotopes = new List<Ms2FragmentPeaks>();
             for (int i = 0; i < 300; i++)
             {
                 isotopes.Add(new Ms2FragmentPeaks(700 + i / 3.0, 1,
-                    new[] { mono, mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH }, new[] { 1.0, 0.45 }));
+                    new[] { (float)mono, (float)(mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH) }, new[] { 1.0f, 0.45f }));
             }
             Assert.AreEqual(mono, Ms2OffsetCurve.MonoisotopicShift(isotopes, mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH), 1e-9);
             Assert.AreEqual(mono, Ms2OffsetCurve.MonoisotopicShift(isotopes, mono), 1e-9);
+            // With the heights swapped the upper peak is the larger, and a shift on it stays: the step
+            // reads the intensities one spacing below, not only whether a peak is there.
+            var swapped = isotopes.Select(f => new Ms2FragmentPeaks(f.LibraryMz, 1, f.Offsets, new[] { 0.45f, 1.0f })).ToList();
+            Assert.AreEqual(mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH,
+                Ms2OffsetCurve.MonoisotopicShift(swapped, mono + Ms2OffsetCurve.ISOTOPE_SPACING_TH), 1e-9);
         }
 
         /// <summary>The offset the synthetic ion trap fragments are drawn about: -0.40 Th at m/z 200 to -0.55 Th above 600.</summary>
@@ -526,7 +533,7 @@ namespace pwiz.Osprey.Test
                 }
                 peaks.RemoveAll(p => Math.Abs(p.Key) > Ms2OffsetCurve.SCAN_HALF_WIDTH_TH);
                 peaks.Sort((a, b) => a.Key.CompareTo(b.Key));
-                fragments.Add(new Ms2FragmentPeaks(mz, 1, peaks.Select(p => p.Key).ToArray(), peaks.Select(p => p.Value).ToArray()));
+                fragments.Add(new Ms2FragmentPeaks(mz, 1, peaks.Select(p => (float)p.Key).ToArray(), peaks.Select(p => (float)p.Value).ToArray()));
             }
             return fragments;
         }

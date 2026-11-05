@@ -115,6 +115,9 @@
   <data name="Calibrator_AggregateMassCalibrations_MS2_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__fragment_" xml:space="preserve">
     <value>MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} fragment matches)</value>
   </data>
+  <data name="Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__beyond_half_the__3___2__tolerance__too_few_fragments_to_fit_a_curve" xml:space="preserve">
+    <value>MS2 m/z offset (pass {0}): shift {1:F3} {2}, beyond half the {3:F2} {2} tolerance, but too few fragments lie near it to fit a curve: the mean is kept, and does not see an offset this large</value>
+  </data>
   <data name="Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__within_half_the__3___2__tolerance__the_mean_is_kept" xml:space="preserve">
     <value>MS2 m/z offset (pass {0}): shift {1:F3} {2}, within half the {3:F2} {2} tolerance: the mean is kept</value>
   </data>

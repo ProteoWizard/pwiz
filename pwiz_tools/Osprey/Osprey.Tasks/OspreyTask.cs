@@ -226,7 +226,7 @@ namespace pwiz.Osprey.Tasks
             OspreyEnvironment.PickValidityKeySuffix(),
             ReaderTerm(ctx.Config.LibrarySource?.Format),
             DemuxCache.ValidityKeySuffix(ctx.Config),
-            OspreyEnvironment.Ms2CalValidityKeySuffix(ctx.Config.FragmentTolerance.Unit));
+            OspreyEnvironment.Ms2CalValidityKeySuffix(ctx.Config.ResolutionMode, ctx.Config.FragmentTolerance.Unit));
 
         /// <summary>The reader-version term of the validity key for a library of <paramref name="format"/>.</summary>
         private static string ReaderTerm(LibraryFormat? format)

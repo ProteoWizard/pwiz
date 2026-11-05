@@ -291,16 +291,31 @@ namespace pwiz.Osprey.Core
         /// the tolerance keeps the mean either way, as does ppm calibration. Part of the validity key
         /// (<see cref="Ms2CalValidityKeySuffix"/>).
         /// </summary>
-        public static readonly bool Ms2CalMean = IsSetAndNotZero(ENV_MS2_CAL_MEAN);
+        /// <remarks>
+        /// Read on each access, so an in-process test can set it (<see cref="EnvVar.OverrideVariables"/>);
+        /// the calibrator reads it once per file.
+        /// </remarks>
+        public static bool Ms2CalMean => IsSetAndNotZero(ENV_MS2_CAL_MEAN);
 
         /// <summary>
-        /// The validity-key term for the MS2 m/z calibration: empty for ppm, whose calibration did not
-        /// change, and the method for Th, whose default moved from the mean to the curve where the
-        /// offset is large, so a run never adopts outputs scored under the other (<see cref="Ms2CalMean"/>).
+        /// Whether a search may calibrate its MS2 m/z by the m/z offset curve (<c>Ms2OffsetCurve</c>):
+        /// unit-resolution data with a Th fragment tolerance, and <paramref name="ms2CalMean"/> not set.
+        /// Every other search calibrates by the mean, as before.
         /// </summary>
-        public static string Ms2CalValidityKeySuffix(ToleranceUnit fragmentUnit)
+        public static bool UsesMs2OffsetCurve(ResolutionMode resolution, ToleranceUnit fragmentUnit, bool ms2CalMean)
         {
-            if (fragmentUnit != ToleranceUnit.Mz)
+            return resolution == ResolutionMode.UnitResolution && fragmentUnit == ToleranceUnit.Mz && !ms2CalMean;
+        }
+
+        /// <summary>
+        /// The validity-key term for the MS2 m/z calibration: empty where the calibration did not
+        /// change (ppm, and HRAM data with a Th tolerance), and the method for unit-resolution Th
+        /// searches, whose default moved from the mean to the curve where the offset is large, so a
+        /// run never adopts outputs scored under the other (<see cref="Ms2CalMean"/>).
+        /// </summary>
+        public static string Ms2CalValidityKeySuffix(ResolutionMode resolution, ToleranceUnit fragmentUnit)
+        {
+            if (resolution != ResolutionMode.UnitResolution || fragmentUnit != ToleranceUnit.Mz)
                 return string.Empty;
             return Ms2CalMean ? @";ms2cal=mean" : @";ms2cal=curve";
         }

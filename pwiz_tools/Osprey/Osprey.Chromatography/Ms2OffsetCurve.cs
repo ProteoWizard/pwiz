@@ -37,12 +37,16 @@ namespace pwiz.Osprey.Chromatography
         /// <see cref="Ms2OffsetCurve.SCAN_HALF_WIDTH_TH"/>, in ascending order.
         /// </param>
         /// <param name="intensities">Each peak's intensity, in the order of <paramref name="offsets"/>.</param>
-        public Ms2FragmentPeaks(double libraryMz, int charge, double[] offsets, double[] intensities)
+        /// <remarks>
+        /// Single precision: the calibration holds these for every scored target match, and a float
+        /// is exact to well under a thousandth of a Th over the few Th collected.
+        /// </remarks>
+        public Ms2FragmentPeaks(double libraryMz, int charge, float[] offsets, float[] intensities)
         {
             LibraryMz = libraryMz;
             Charge = Math.Max(1, charge);
-            Offsets = offsets ?? Array.Empty<double>();
-            Intensities = intensities ?? Array.Empty<double>();
+            Offsets = offsets ?? Array.Empty<float>();
+            Intensities = intensities ?? Array.Empty<float>();
             if (Intensities.Length != Offsets.Length)
                 throw new ArgumentException(@"offsets and intensities must have the same length");
         }
@@ -54,10 +58,10 @@ namespace pwiz.Osprey.Chromatography
         public int Charge { get; }
 
         /// <summary>Observed m/z minus <see cref="LibraryMz"/> of the peaks around it, ascending.</summary>
-        public double[] Offsets { get; }
+        public float[] Offsets { get; }
 
         /// <summary>The intensity of each of <see cref="Offsets"/>.</summary>
-        public double[] Intensities { get; }
+        public float[] Intensities { get; }
 
         /// <summary>The most intense peak within <paramref name="tolerance"/> of <paramref name="offset"/>; 0 if none.</summary>
         public double MaxIntensityNear(double offset, double tolerance)

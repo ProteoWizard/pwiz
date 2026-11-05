@@ -119,6 +119,16 @@ namespace pwiz.Osprey.Tasks {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to MS2 m/z offset (pass {0}): shift {1:F3} {2}, beyond half the {3:F2} {2} tolerance, but too few fragments lie near it to fit a curve: the mean is kept, and does not see an offset this large.
+        /// </summary>
+        public static string Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__beyond_half_the__3___2__tolerance__too_few_fragments_to_fit_a_curve {
+            get {
+                return ResourceManager.GetString("Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__bey" +
+                        "ond_half_the__3___2__tolerance__too_few_fragments_to_fit_a_curve", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to MS2 m/z offset (pass {0}): shift {1:F3} {2}, within half the {3:F2} {2} tolerance: the mean is kept.
         /// </summary>
         public static string Calibrator_AggregateMassCalibrations_MS2_m_z_offset__pass__0____shift__1___2__within_half_the__3___2__tolerance__the_mean_is_kept {
