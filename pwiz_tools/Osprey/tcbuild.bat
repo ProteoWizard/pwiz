@@ -101,8 +101,9 @@ if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 
 REM CarafeSharp (pwiz_tools/CarafeSharp) trains the spectral libraries Osprey searches and
 REM has no config of its own, so this one builds and tests it too, with its own test results
-REM and coverage snapshot. It needs no test data; the Carafe parity tests are Inconclusive
-REM without it. It reads no instrument files, so it takes no vendor agreement.
+REM and coverage snapshot. It needs no test data: the Carafe parity tests run on committed
+REM subsets, and the full-size ones are developer-run (scripts/Compare-CarafeParity.ps1). It
+REM reads no instrument files, so it takes no vendor agreement.
 pwsh -NoProfile -File "%SCRIPT_DIR%..\CarafeSharp\build.ps1" -TeamCity %COVERAGE% -BuildWarningsPath "%BUILD_WARNINGS%"
 if %ERRORLEVEL% NEQ 0 if %RESULT%==0 set RESULT=%ERRORLEVEL%
 

@@ -144,10 +144,14 @@ namespace pwiz.CarafeSharp.Training
             var shuffle = new NumpyRandomState(options.Seed);
             var result = new FineTuneResult();
 
-            if (rtRows != null)
-                TrainRt(rtRows, pretrained, options, outputDirectory, shuffle, result, log);
-            if (ms2Rows != null)
-                TrainMs2(ms2Rows, pretrained, options, outputDirectory, shuffle, result, log);
+            // On the GPU, training keeps cuDNN's TF32, which repeats byte for byte where float32 does not.
+            using (TorchDevice.AllowTf32ForTraining(options.Device))
+            {
+                if (rtRows != null)
+                    TrainRt(rtRows, pretrained, options, outputDirectory, shuffle, result, log);
+                if (ms2Rows != null)
+                    TrainMs2(ms2Rows, pretrained, options, outputDirectory, shuffle, result, log);
+            }
 
             WriteMetrics(Path.Combine(outputDirectory, ModelFiles.METRICS), result);
             WriteModelInfo(Path.Combine(outputDirectory, MODEL_INFO_FILE), pretrained, options, result);

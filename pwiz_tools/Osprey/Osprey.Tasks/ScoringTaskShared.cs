@@ -1084,8 +1084,7 @@ namespace pwiz.Osprey.Tasks
             };
             foreach (string other in siblings)
             {
-                if (string.IsNullOrEmpty(other) ||
-                    string.Equals(Path.GetFullPath(other), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(other) || PathComparison.IsSamePath(other, path))
                 {
                     continue;
                 }

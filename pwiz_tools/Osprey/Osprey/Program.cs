@@ -1057,7 +1057,7 @@ namespace pwiz.Osprey
                 }
                 // The loader has closed the library by the time the export replaces its output,
                 // so the same path would silently overwrite the library with the export.
-                if (IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
+                if (PathComparison.IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
                 {
                     return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
                         OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, config.LibrarySource.Path);
@@ -1068,7 +1068,7 @@ namespace pwiz.Osprey
             // The search replaces its output blib at the end, after the library was read, so the
             // library's own path would silently replace the library with this run's results.
             if (config.LibrarySource != null && !string.IsNullOrWhiteSpace(config.OutputBlib) &&
-                IsSamePath(config.OutputBlib, config.LibrarySource.Path))
+                PathComparison.IsSamePath(config.OutputBlib, config.LibrarySource.Path))
             {
                 return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, config.LibrarySource.Path);
@@ -1273,7 +1273,7 @@ namespace pwiz.Osprey
             // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
             // and a re-run would tune again from the last result instead of finding it current.
             if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
-                IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
+                PathComparison.IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__,
                     OspreyCommandArgs.ARG_MODEL.ArgumentText, build.ModelPath, OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText);
@@ -1289,7 +1289,7 @@ namespace pwiz.Osprey
                 // cache may stand in for it; one searched for the tuning only is read here (a file,
                 // or a folder-format run such as a Bruker .d). A task of the one command reads them
                 // as its analysis reads its inputs, if at all: a node is given only what its task reads.
-                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => IsSamePath(input, run))).ToList();
+                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => PathComparison.IsSamePath(input, run))).ToList();
                 bool runsWhole = config.SelectedTask == null && build.Phase == null;
                 foreach (string run in runsWhole ? heldOut : new List<string>())
                 {
@@ -1305,16 +1305,6 @@ namespace pwiz.Osprey
                     return dupErr;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Whether two paths name the same file once made absolute: ignoring case except on
-        /// Linux, whose file systems are case-sensitive.
-        /// </summary>
-        private static bool IsSamePath(string path1, string path2)
-        {
-            return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2),
-                OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
