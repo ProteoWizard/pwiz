@@ -31,7 +31,8 @@ namespace pwiz.Osprey.Core
     {
         DiannTsv,
         Blib,
-        SkylineDocument
+        SkylineDocument,
+        DiannParquet
     }
 
     /// <summary>
@@ -48,7 +49,8 @@ namespace pwiz.Osprey.Core
                 {
                     OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_TSV,
                     OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec,
-                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_Skyline_document
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_Skyline_document,
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_Parquet
                 };
             }
         }
@@ -68,6 +70,8 @@ namespace pwiz.Osprey.Core
         public const string EXT_BLIB = @".blib";
         public const string EXT_ELIB = @".elib";
         public const string EXT_SKY = @".sky";
+        public const string EXT_PARQUET = @".parquet";
+        public const string EXT_SPECLIB = @".speclib";
 
         /// <summary>The detected or specified library format.</summary>
         public LibraryFormat Format { get; }
@@ -83,9 +87,11 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Detect library format from file extension.
-        /// .blib -> Blib, .sky -> SkylineDocument, default -> DiannTsv. An .elib
-        /// path is rejected: EncyclopeDIA reading was removed, and falling through
-        /// to the TSV loader would fail with a confusing parse error instead.
+        /// .blib -> Blib, .parquet -> DiannParquet, .sky -> SkylineDocument, default -> DiannTsv.
+        /// An .elib path is rejected: EncyclopeDIA reading was removed, and falling through
+        /// to the TSV loader would fail with a confusing parse error instead. So is a DIA-NN
+        /// .speclib, whose binary format is undocumented: the message gives the DIA-NN command
+        /// that converts it to the .parquet this reads.
         /// </summary>
         public static LibrarySource FromPath(string path)
         {
@@ -100,9 +106,26 @@ namespace pwiz.Osprey.Core
                         EXT_ELIB, TextUtil.EXT_TSV, EXT_BLIB));
                 case EXT_SKY:
                     return new LibrarySource(LibraryFormat.SkylineDocument, path);
+                case EXT_PARQUET:
+                    return new LibrarySource(LibraryFormat.DiannParquet, path);
+                case EXT_SPECLIB:
+                    throw new System.NotSupportedException(string.Format(
+                        OspreyCoreResources.LibrarySource_FromPath_A_DIA_NN__0__library_cannot_be_read__convert_it_to_the_DIA_NN__1__library_format_with_,
+                        EXT_SPECLIB, EXT_PARQUET, SpeclibConversionCommand(path)));
                 default:
                     return new LibrarySource(LibraryFormat.DiannTsv, path);
             }
+        }
+
+        /// <summary>
+        /// The DIA-NN 2.x command that converts the binary library <paramref name="speclibPath"/>
+        /// to the .parquet beside it, which <see cref="FromPath"/> accepts. DIA-NN's own flags,
+        /// not Osprey's.
+        /// </summary>
+        public static string SpeclibConversionCommand(string speclibPath)
+        {
+            return string.Format(@"diann --lib ""{0}"" --gen-spec-lib --out-lib ""{1}""",
+                speclibPath, System.IO.Path.ChangeExtension(speclibPath, EXT_PARQUET));
         }
     }
 }

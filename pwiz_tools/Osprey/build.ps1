@@ -57,7 +57,10 @@ param(
     [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet','minimal','normal','detailed','diagnostic')]
-    [string]$Verbosity = 'minimal'
+    [string]$Verbosity = 'minimal',
+    # Also log every restore and build warning to this file (appended), for tcinspect.ps1 to
+    # judge. tcbuild.bat passes it; a warning can only be caught on the compile that emits it.
+    [string]$BuildWarningsPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -206,6 +209,10 @@ if ($IAgreeToVendorLicenses) {
 # `dotnet msbuild` only use it when asked. `auto` falls back to the classic logger when
 # output is redirected; TeamCity's log turns it off outright.
 $buildArgs += if ($TeamCity) { '-tl:off' } else { '-tl:auto' }
+if ($BuildWarningsPath) {
+    Import-Module (Join-Path $scriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
+    $buildArgs += Get-BuildWarningsLoggerArgs $BuildWarningsPath
+}
 if ($isWin) { & $msbuild @buildArgs } else { & dotnet msbuild @buildArgs }
 $buildExit = $LASTEXITCODE
 $buildSec = ((Get-Date) - $buildStart).TotalSeconds

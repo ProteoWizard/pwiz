@@ -1698,6 +1698,130 @@ namespace pwiz.Osprey.Test
             // At or above the population: everything, in order.
             CollectionAssert.AreEqual(Enumerable.Range(0, 11).ToArray(),
                 PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 11));
+
+            // A score cut (OSPREY_GBT_PREFILTER_Q) keeps every group at or above it, whatever the cap.
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 0.85));
+            // The cut is inclusive: A and D tie at 0.5 and both are kept, so nothing is left out.
+            CollectionAssert.AreEqual(Enumerable.Range(0, 11).ToArray(),
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 0.5));
+            // The cap still binds under a cut: E fits in 3, B would pass it.
+            CollectionAssert.AreEqual(new[] { 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 3, 0.85));
+            // A cut above every group keeps the best group, so round 2 is never empty.
+            CollectionAssert.AreEqual(new[] { 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 2.0));
+
+            // Sampling (OSPREY_GBT_PREFILTER_SAMPLE) changes nothing while the eligible groups fit the cap.
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 100, 0.85, 42));
+            // Over the cap it draws whole groups from the eligible set only: cut 0.75 makes E, B and C
+            // (7 rows) eligible, cap 4. The best-scoring selection is always E + B; across seeds the
+            // sample must also reach C, and never A or D.
+            var eligibleGroups = new[] { new[] { 2, 3 }, new[] { 4, 5, 6 }, new[] { 9, 10 } };
+            CollectionAssert.AreEqual(new[] { 2, 3, 9, 10 },
+                PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 4, 0.75));
+            bool reachedC = false;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var sampled = PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 4, 0.75, seed);
+                CollectionAssert.AreEqual(sampled,
+                    PercolatorSampling.SelectTopScoringGroups(labels, entryIds, peptides, scores, 4, 0.75, seed));
+                Assert.IsTrue(sampled.Length > 0 && sampled.Length <= 4);
+                foreach (var group in eligibleGroups)
+                {
+                    int inSample = group.Count(sampled.Contains);
+                    Assert.IsTrue(inSample == 0 || inSample == group.Length);
+                }
+                Assert.AreEqual(sampled.Length, eligibleGroups.Sum(g => g.Count(sampled.Contains)));
+                reachedC |= sampled.Contains(4);
+            }
+            Assert.IsTrue(reachedC);
+
+            AssertPrefilterScoreAtQ();
+        }
+
+        /// <summary>
+        /// <see cref="PercolatorTrainer.PrefilterScoreAtQ"/>: the score of the lowest winning target at
+        /// or below q after paired competition. Six pairs; pair 6's decoy (8.5) beats its target (5).
+        /// Winners 10 T, 9 T, 8.5 D, 8 T, 7 T, 6 T give q 0, 0, 0.2, 0.2, 0.2, 0.2 (monotone).
+        /// </summary>
+        private static void AssertPrefilterScoreAtQ()
+        {
+            var scores = new[] { 10.0, 0.0, 9.0, 0.0, 8.0, 0.0, 7.0, 0.0, 6.0, 0.0, 5.0, 8.5 };
+            var isDecoy = new bool[12];
+            var entryIds = new uint[12];
+            for (int p = 0; p < 6; p++)
+            {
+                entryIds[2 * p] = (uint)(p + 1);
+                entryIds[2 * p + 1] = (uint)(p + 1) | 0x80000000;
+                isDecoy[2 * p + 1] = true;
+            }
+
+            Assert.AreEqual(9.0, PercolatorTrainer.PrefilterScoreAtQ(scores, isDecoy, entryIds, 0.1, out int passing), 1e-12);
+            Assert.AreEqual(2, passing);
+            Assert.AreEqual(6.0, PercolatorTrainer.PrefilterScoreAtQ(scores, isDecoy, entryIds, 0.2, out passing), 1e-12);
+            Assert.AreEqual(5, passing);
+            // A decoy at the very top: no target passes, so the cut is off.
+            var decoyTop = (double[])scores.Clone();
+            decoyTop[1] = 20.0;
+            decoyTop[3] = 19.0;
+            Assert.IsTrue(double.IsNegativeInfinity(
+                PercolatorTrainer.PrefilterScoreAtQ(decoyTop, isDecoy, entryIds, 0.1, out passing)));
+            Assert.AreEqual(0, passing);
+
+            AssertPrefilterScoreAtLocalFdr();
+        }
+
+        /// <summary>
+        /// <see cref="PercolatorTrainer.PrefilterScoreAtLocalFdr"/>: 1,000 separated pairs (the target
+        /// wins) above 2,000 null pairs (target and decoy win in turn, local FDR 1). A cut of 0.5 stops
+        /// where the 1,000-winner window first holds a third decoys - past the separated block, well
+        /// before the end; a cut of 1 never trips in a 1:1 null, so every target passes; a decoy on top
+        /// of a decoy-only window turns the cut off.
+        /// </summary>
+        private static void AssertPrefilterScoreAtLocalFdr()
+        {
+            const int separated = 1000, nulls = 2000, pairs = separated + nulls;
+            var scores = new double[2 * pairs];
+            var isDecoy = new bool[2 * pairs];
+            var entryIds = new uint[2 * pairs];
+            for (int p = 0; p < pairs; p++)
+            {
+                int t = 2 * p, d = 2 * p + 1;
+                entryIds[t] = (uint)(p + 1);
+                entryIds[d] = (uint)(p + 1) | 0x80000000;
+                isDecoy[d] = true;
+                if (p < separated)
+                {
+                    scores[t] = 100 - p * 0.01;
+                    scores[d] = -100 - p;
+                }
+                else
+                {
+                    int j = p - separated;
+                    double winner = 10 - j * 0.001, loser = -50 - j;
+                    scores[t] = j % 2 == 0 ? winner : loser;
+                    scores[d] = j % 2 == 0 ? loser : winner;
+                }
+            }
+
+            PercolatorTrainer.PrefilterScoreAtLocalFdr(scores, isDecoy, entryIds, 0.5, out int passing, out double q);
+            Assert.IsTrue(passing > separated && passing < separated + nulls / 4,
+                string.Format("local FDR 0.5 should stop just past the separated block, passed {0}", passing));
+            Assert.IsTrue(q > 0 && q < 0.5, string.Format("q at the cut {0}", q));
+            // A looser cut reaches further into the null: 0.8 trips later than 0.5 (an exact 1:1 null sits
+            // at a ratio of 1, so a cut of 1 would stop wherever the window first tips over it).
+            PercolatorTrainer.PrefilterScoreAtLocalFdr(scores, isDecoy, entryIds, 0.8, out int passingLoose, out q);
+            Assert.IsTrue(passingLoose > passing,
+                string.Format("local FDR 0.8 passed {0}, not more than 0.5's {1}", passingLoose, passing));
+
+            var decoyTop = (double[])scores.Clone();
+            for (int p = 0; p < separated; p++)
+                decoyTop[2 * p + 1] = 200 - p * 0.01;
+            Assert.IsTrue(double.IsNegativeInfinity(
+                PercolatorTrainer.PrefilterScoreAtLocalFdr(decoyTop, isDecoy, entryIds, 0.5, out passing, out q)));
+            Assert.AreEqual(0, passing);
         }
 
         /// <summary>An <see cref="IOspreyLog"/> that keeps every line it is given.</summary>

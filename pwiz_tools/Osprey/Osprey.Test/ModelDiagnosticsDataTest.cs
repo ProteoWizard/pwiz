@@ -1018,6 +1018,10 @@ namespace pwiz.Osprey.Test
             var panel = ModelDiagnosticsData.BuildCoAssignmentDetection(coAssign, runNames,
                 perFileEntries, cls, mzLookup, runFdr, level);
             var streamed = acc.BuildPass2(contrib, panel);
+            // Gap-fill breaks the decoy/target run-count symmetry in pass 2, so neither build
+            // carries the decoy-based per-k FDP there (#4489).
+            Assert.IsNull(batch.CrossRun.PerRun.DecoyFdpByRunCount);
+            Assert.IsNull(streamed.CrossRun.Experiment.DecoyRunCountHistogram);
 
             var settings = new JsonSerializerSettings
             {
@@ -1382,6 +1386,33 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(pr.PerRunCount, cr.Experiment.PerRunCount);
             CollectionAssert.AreEqual(pr.RunCountHistogram, cr.Experiment.RunCountHistogram);
 
+            // Decoy-based per-k FDP (#4489): the decoy kept out of the target counts above gets
+            // its own run-count histogram, here DEC in exactly 1 run. FDP(k) = N_D(k) / N_T(k)
+            // over the target histogram [1, 1, 1]; the at-least form sums both from k up.
+            CollectionAssert.AreEqual(new[] { 1, 0, 0 }, pr.DecoyRunCountHistogram);
+            Assert.AreEqual(1.0, pr.DecoyFdpByRunCount[0], 1e-9);
+            Assert.AreEqual(0.0, pr.DecoyFdpByRunCount[1], 1e-9);
+            Assert.AreEqual(0.0, pr.DecoyFdpByRunCount[2], 1e-9);
+            Assert.AreEqual(1.0 / 3.0, pr.DecoyFdpAtLeastRunCount[0], 1e-9);
+            Assert.AreEqual(0.0, pr.DecoyFdpAtLeastRunCount[1], 1e-9);
+            Assert.AreEqual(0.0, pr.DecoyFdpAtLeastRunCount[2], 1e-9);
+            CollectionAssert.AreEqual(new[] { 1, 0, 0 }, cr.Experiment.DecoyRunCountHistogram);
+
+            // A decoy's run count is its OWN, as winner-only run q makes it: T wins run 1, its
+            // decoy D2 wins runs 2 and 3 (where T's run q is 1.0). So D2 sits at k=2, not at T's
+            // k=1, and the k=2 slice, holding no target, has no FDP (NaN). A slice with targets and
+            // no decoy reads 0, and the at-least tail from k=1 is 1 decoy over 1 target.
+            var d1 = new List<FdrEntry> { Entry(7, false, 5, 0.001, "T", 2), Entry(7 | DECOY_BIT, true, 5, 1.0, "D2", 2) };
+            var d2 = new List<FdrEntry> { Entry(7, false, 5, 1.0, "T", 2), Entry(7 | DECOY_BIT, true, 5, 0.001, "D2", 2) };
+            var d3 = new List<FdrEntry> { Entry(7, false, 5, 1.0, "T", 2), Entry(7 | DECOY_BIT, true, 5, 0.001, "D2", 2) };
+            var dcr = ModelDiagnosticsData.Build(WrapFiles(d1, d2, d3), null, null, null, 1.0, 0.01, FdrLevel.Peptide).CrossRun.PerRun;
+            CollectionAssert.AreEqual(new[] { 1, 0, 0 }, dcr.RunCountHistogram);
+            CollectionAssert.AreEqual(new[] { 0, 1, 0 }, dcr.DecoyRunCountHistogram);
+            Assert.AreEqual(0.0, dcr.DecoyFdpByRunCount[0], 1e-9);
+            Assert.IsTrue(double.IsNaN(dcr.DecoyFdpByRunCount[1]));
+            Assert.AreEqual(1.0, dcr.DecoyFdpAtLeastRunCount[0], 1e-9);
+            Assert.IsTrue(double.IsNaN(dcr.DecoyFdpAtLeastRunCount[1]));
+
             // Experiment-wide gate drops a precursor whose run q passes but experiment q
             // does not: max(run q, exp q) <= FDR. G has run q 0.001 in both runs (would be
             // k=2 under per-run) but experiment q 0.20 -> excluded entirely from the
@@ -1417,6 +1448,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2.0, ecr.EntrapmentFdpByRunCount[0], 1e-9);
             Assert.AreEqual(0.0, ecr.EntrapmentFdpByRunCount[1], 1e-9);
             Assert.IsNotNull(ecrFull.Experiment.EntrapmentRunCountHistogram);
+
+            // With entrapment, the decoy FDP's denominator is the whole TARGET side - real targets
+            // plus entrapment - because the decoys are drawn against both. A decoy in run 1 only:
+            // the k=1 slice holds ENT alone, so FDP(1) = 1 / (0 + 1); both lines are present.
+            var ef1Dec = new List<FdrEntry>(ef1) { Entry(80 | DECOY_BIT, true, 5, 0.001, "DEC", 2) };
+            var edcr = ModelDiagnosticsData.Build(WrapFiles(ef1Dec, ef2), null, ecls, null, 1.0, 0.01, FdrLevel.Peptide)
+                .CrossRun.PerRun;
+            CollectionAssert.AreEqual(new[] { 1, 0 }, edcr.DecoyRunCountHistogram);
+            Assert.AreEqual(1.0, edcr.DecoyFdpByRunCount[0], 1e-9);
+            Assert.AreEqual(0.0, edcr.DecoyFdpByRunCount[1], 1e-9);
+            Assert.IsNotNull(edcr.EntrapmentFdpByRunCount);
 
             // Phase C: union FDP vs number of runs. Real union = {A} at both prefixes;
             // entrapment union = {ENT} from run 1 on. UnionFdp[i] = (1 + 1/r) * npU /

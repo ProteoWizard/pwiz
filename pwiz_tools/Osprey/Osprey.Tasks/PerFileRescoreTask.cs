@@ -360,7 +360,6 @@ namespace pwiz.Osprey.Tasks
                 // writes the rescored rows' features beside them, so it records what scoring did.
                 + PinFeatureMask.RecordedFeaturesValidityKeySuffix()
                 + OspreyEnvironment.FdrExperimentValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
