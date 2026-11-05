@@ -111,7 +111,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_MIN_FRAGMENT_TOLERANCE", @"OSPREY_MIN_RT_TOLERANCE", @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_NO_PREFILTER", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
             @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PEP_FORMULA", @"OSPREY_PERC_INPUT_ONLY",
             @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
-            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RECORD_ALL_FEATURES", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RECONCILIATION", @"OSPREY_RECORD_ALL_FEATURES", @"OSPREY_REF_XIC", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
             @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
@@ -848,6 +848,17 @@ namespace pwiz.Osprey.Core
             NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
 
         /// <summary>
+        /// OSPREY_REF_XIC (experiment): <c>corr</c> re-chooses the reference fragment XIC inside the chosen
+        /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
+        /// of the fragment with the largest total intensity over the whole extraction window. The reference
+        /// sets the apex scan (and so every apex-spectrum feature), the area, SNR and sharpness, and the MS1
+        /// correlation reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// False when unset.
+        /// </summary>
+        public static readonly bool RefXicByCorrelation = string.Equals(
+            Environment.GetEnvironmentVariable(@"OSPREY_REF_XIC"), @"corr", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
         /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
         /// Null when unset.
@@ -1389,7 +1400,8 @@ namespace pwiz.Osprey.Core
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
                    + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
-                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
+                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (RefXicByCorrelation ? @";refxic=corr" : string.Empty);
         }
 
         /// <summary>

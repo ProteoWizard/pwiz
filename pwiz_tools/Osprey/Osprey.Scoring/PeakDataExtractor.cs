@@ -434,6 +434,13 @@ namespace pwiz.Osprey.Scoring
             // on the two-window Stellar subset).
             int si = bestPeak.StartIndex;
             int ei = bestPeak.EndIndex;
+            if (OspreyEnvironment.RefXicByCorrelation)
+            {
+                // OSPREY_REF_XIC=corr: the reference is the fragment that agrees best with the others
+                // inside the chosen peak, so an intense interfered fragment does not set the apex.
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, si, ei);
+                refXicIntensities = xics[refXicIdx].Intensities;
+            }
             int newApexIdx = si;
             double newApexVal = refXicIntensities[si];
             for (int i = si + 1; i <= ei; i++)
@@ -1313,6 +1320,8 @@ namespace pwiz.Osprey.Scoring
                     total += inten[k];
                 if (total >= bestTotal) { bestTotal = total; refXicIdx = f; }
             }
+            if (OspreyEnvironment.RefXicByCorrelation)
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end);
 
             // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
             // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
