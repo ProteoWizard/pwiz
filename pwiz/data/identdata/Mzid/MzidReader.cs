@@ -42,14 +42,18 @@ public sealed class MzidReader
                     target.CreationDate = xr.GetAttribute("creationDate") ?? string.Empty;
                     break;
                 case "cv":
-                    target.Cvs.Add(new CV
+                {
+                    var cv = new CV
                     {
                         Id = xr.GetAttribute("id") ?? string.Empty,
                         FullName = xr.GetAttribute("fullName") ?? string.Empty,
                         Uri = xr.GetAttribute("uri") ?? string.Empty,
                         Version = xr.GetAttribute("version") ?? string.Empty,
-                    });
+                    };
+                    target.Cvs.Add(cv);
+                    CvLookup.RegisterSource(cv);
                     break;
+                }
                 case "AnalysisSoftware":
                     target.AnalysisSoftwareList.Add(ReadAnalysisSoftware(xr));
                     break;

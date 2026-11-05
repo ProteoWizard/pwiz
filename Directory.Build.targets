@@ -46,6 +46,11 @@
          (tcbuild.bat) instead of TC's bundled .NET runner. No-op locally where
          TEAMCITY_VERSION is unset. Equivalent to the C++ build's teamcity-test-decoration. -->
     <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
+
+    <!-- Keeps tests off the network: no CV downloads for terms a fixture uses that the
+         embedded CVs lack. An explicit PWIZ_CV_ONLINE_UPDATE in the environment still wins. -->
+    <Compile Include="$(PwizRepoRoot)build\TestSupport\DisableCvOnlineUpdate.cs" Link="DisableCvOnlineUpdate.cs"
+             Condition="'$(Language)' == 'C#'" />
   </ItemGroup>
 
   <!-- BinaryFormatter opt-in for EXECUTABLES.

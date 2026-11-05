@@ -440,13 +440,15 @@ public static class TraDataIO
         {
             if (r.NodeType == XmlNodeType.EndElement && r.Depth == d) break;
             if (r.NodeType != XmlNodeType.Element || r.LocalName != "cv") continue;
-            cvs.Add(new CV
+            var cv = new CV
             {
                 Id = r.GetAttribute("id") ?? string.Empty,
                 FullName = r.GetAttribute("fullName") ?? string.Empty,
                 Version = r.GetAttribute("version") ?? string.Empty,
                 Uri = r.GetAttribute("URI") ?? string.Empty,
-            });
+            };
+            cvs.Add(cv);
+            CvLookup.RegisterSource(cv);
             if (!r.IsEmptyElement) r.Skip();
         }
     }
