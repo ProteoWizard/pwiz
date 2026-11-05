@@ -1015,13 +1015,6 @@ namespace pwiz.Osprey.FDR
             return ShowQProgress(workSize) ? ProgressReporter.Run(activity, reportTotal, body) : body(null);
         }
 
-        // The reporter itself, or null under the same rule as QRun, for a caller that manages
-        // the scope and calls Complete itself.
-        internal static ProgressReporter QProgress(string activity, long reportTotal, long workSize)
-        {
-            return ShowQProgress(workSize) ? new ProgressReporter(activity, reportTotal) : null;
-        }
-
         private static bool ShowQProgress(long workSize)
         {
             return workSize > 2_000_000;

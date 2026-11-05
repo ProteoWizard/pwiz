@@ -635,30 +635,7 @@ namespace pwiz.Osprey.FDR
             }
 
             var subsetByFile = PercolatorSampling.GroupIndicesByFileName(subsetEntries);
-            // Per-file progress: loading the training-subset feature vectors from every file
-            // ran ~5 min silent before cross-validation. Console-only, never touches the
-            // loaded features, so training is byte-identical.
-            using (var loadProgress = new ProgressReporter(
-                CountText.Format(subsetByFile.Count,
-                    OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file,
-                    OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from__0__files),
-                subsetByFile.Count))
-            {
-                int loadDone = 0;
-                foreach (var kvp in subsetByFile)
-                {
-                    loadProgress.Report(++loadDone);
-                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                    foreach (int k in kvp.Value)
-                    {
-                        var entry = subsetEntries[k];
-                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
-                            rows, entry.ParquetIndex, entry.CoelutionSum,
-                            percConfig.FeatureInfos.Length).Clone();
-                    }
-                }
-                loadProgress.Complete();
-            }
+            LoadTrainingSubsetFeatures(subsetByFile, subsetEntries, loadFileFeatures, percConfig.FeatureInfos.Length);
 
             var trainConfig = percConfig.CloneForTrainOnly();
             PercolatorResults trainResults = PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
@@ -711,6 +688,37 @@ namespace pwiz.Osprey.FDR
                 applyExperimentAgg: passLabel == FIRST_PASS_LABEL,
                 heldOutFoldByRow: heldOutFoldByRow);
             return false;
+        }
+
+        /// <summary>
+        /// Load the training subset's feature vectors one file at a time, under per-file progress:
+        /// this step ran ~5 min silent before cross-validation. Console-only, never touches the
+        /// loaded features, so training is byte-identical. A method of its own so the progress
+        /// body captures these parameters rather than the caller's locals, which the caller
+        /// drops before its score pass to release them.
+        /// </summary>
+        private static void LoadTrainingSubsetFeatures(Dictionary<string, List<int>> subsetByFile,
+            List<PercolatorEntry> subsetEntries, Func<string, IReadOnlyList<double[]>> loadFileFeatures, int nFeatures)
+        {
+            ProgressReporter.Run(
+                CountText.Format(subsetByFile.Count,
+                    OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file,
+                    OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from__0__files),
+                subsetByFile.Count, loadProgress =>
+            {
+                int loadDone = 0;
+                foreach (var kvp in subsetByFile)
+                {
+                    loadProgress.Report(++loadDone);
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int k in kvp.Value)
+                    {
+                        var entry = subsetEntries[k];
+                        entry.Features = (double[])PercolatorScorer.ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -1081,20 +1089,13 @@ namespace pwiz.Osprey.FDR
             }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
-            // This pass streams every file's parquet rows before the [PATH] line below, so it is a
-            // determinate O(files) I/O step (43s at 82 files, minutes at 500). Report per-file
-            // progress through the standard throttled reporter so a large join never goes silent.
-            var ingestProgress = new ProgressReporter(
-                CountText.Format(nFiles, OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from_1_file,
-                    OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from__0__files), nFiles,
-                intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             // The decode is this pass's cost and is file-local, so the lanes read files ahead. The
             // dedup is order-dependent - a tie goes to the first-seen ordinal, and the reservoir
             // draws per run in arrival order - so it stays on this thread, in file order.
             // Each file's row count, recorded here so the later passes can size a file's buffers
             // exactly instead of growing them.
             var rowCounts = new int[nFiles];
-            void DedupFile(int f, RowBuffer buffer)
+            void DedupFile(int f, RowBuffer buffer, ProgressReporter ingestProgress)
             {
                 string file = fileNames[f];
                 int count = buffer.Count;
@@ -1167,12 +1168,18 @@ namespace pwiz.Osprey.FDR
                 }
                 ingestProgress.Report(f + 1);
             }
-            OrderedFileLanes.Run(nFiles, fileLanes,
-                // Core only: this pass reduces to a best-per-precursor training subset and never
-                // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
-                f => ReadFileRows(streamFileRows, fileNames[f], StubColumns.Core),
-                DedupFile);
-            ingestProgress.Complete();
+            // This pass streams every file's parquet rows before the [PATH] line below, so it is a
+            // determinate O(files) I/O step (43s at 82 files, minutes at 500). Report per-file
+            // progress through the standard throttled reporter so a large join never goes silent.
+            ProgressReporter.Run(
+                CountText.Format(nFiles, OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from_1_file,
+                    OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from__0__files), nFiles,
+                ingestProgress => OrderedFileLanes.Run(nFiles, fileLanes,
+                    // Core only: this pass reduces to a best-per-precursor training subset and never
+                    // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
+                    f => ReadFileRows(streamFileRows, fileNames[f], StubColumns.Core),
+                    (f, buffer) => DedupFile(f, buffer, ingestProgress)),
+                intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             int n = g;
             log.LogInfo(LogTag.PATH, @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n);
             LogBlockReads(log, passLabel, @"pass 0");
@@ -1305,9 +1312,9 @@ namespace pwiz.Osprey.FDR
                 var subsetFiles = new List<KeyValuePair<string, List<int>>>(subsetByFile);
                 var laneEntries = loadEntries;
                 int subsetFilesLoaded = 0;
-                using (var loadProgress = new ProgressReporter(CountText.Format(subsetFiles.Count,
+                ProgressReporter.Run(CountText.Format(subsetFiles.Count,
                            OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file,
-                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), subsetFiles.Count))
+                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), subsetFiles.Count, loadProgress =>
                 {
                     OrderedFileLanes.For(subsetFiles.Count, fileLanes, i =>
                     {
@@ -1320,8 +1327,7 @@ namespace pwiz.Osprey.FDR
                         }
                         loadProgress.Report(Interlocked.Increment(ref subsetFilesLoaded));
                     });
-                    loadProgress.Complete();
-                }
+                });
             }
             else
             {
@@ -1465,7 +1471,7 @@ namespace pwiz.Osprey.FDR
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident PercolatorScorer.ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (CommandOutput.Out), so the FDR output stays byte-identical.
-            using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n))
+            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n, scoreProgress =>
             {
                 // On a lane: everything about one file that no other file can see.
                 Pass1File ScoreFile(int f)
@@ -1587,8 +1593,7 @@ namespace pwiz.Osprey.FDR
                 }
 
                 OrderedFileLanes.Run(nFiles, fileLanes, ScoreFile, ApplyScoredFile);
-                scoreProgress.Complete();
-            }
+            });
             wall1.Stop();
             log.LogInfo(LogTag.PATH,
                 @"{0} pass 1 cost over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, feature load {6:F1}s, score {7:F1}s, competition {8:F1}s, run-q sort {9:F1}s, clamp floors + entry facts {10:F1}s, sidecar write {11:F1}s, run-scope tallies {12:F1}s; in order competition merge + contribution sums {13:F1}s",
@@ -1686,7 +1691,7 @@ namespace pwiz.Osprey.FDR
             var order = new LaneCost(FOLD_ORDER_BUCKETS);
             var wall = Stopwatch.StartNew();
             int gFolded = 0;
-            using (var foldProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
+            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n, foldProgress =>
             {
                 // On a lane: the file's rows, its five q-values and the sink's order-free fold.
                 FoldFile PrepareFile(int f)
@@ -1755,8 +1760,7 @@ namespace pwiz.Osprey.FDR
                 }
 
                 OrderedFileLanes.Run(nFiles, fileLanes, PrepareFile, MergeFile);
-                foldProgress.Complete();
-            }
+            });
             wall.Stop();
             log.LogInfo(LogTag.PATH,
                 @"{0} diagnostics row walk over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, rescore + run-q recompute {6:F1}s, q-value lookups {7:F1}s, fold preparation {8:F1}s; in order fold merge {9:F1}s",

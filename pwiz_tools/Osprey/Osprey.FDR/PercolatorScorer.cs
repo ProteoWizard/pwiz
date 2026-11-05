@@ -146,7 +146,7 @@ namespace pwiz.Osprey.FDR
             // covers a slow single file. Console-only -- never touches finalScores /
             // the sink, so byte-identity is unaffected.
             int gi = 0;
-            using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks, n), n))
+            ProgressReporter.Run(string.Format(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks, n), n, scoreProgress =>
             {
                 foreach (var kvp in perFile)
                 {
@@ -198,8 +198,7 @@ namespace pwiz.Osprey.FDR
                         contribAcc.Add(share.ToFeatureSums());
                     scoreProgress.Report(gi);
                 }
-                scoreProgress.Complete();
-            }
+            });
 
             var contributions = reportContributions
                 ? BuildContributions(contribAcc, gbtModels, trainResults, config)
@@ -273,7 +272,7 @@ namespace pwiz.Osprey.FDR
             // to assign. min/max are order-independent -> byte-identical to the flat clamp.
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
-            using (var floorProgress = PercolatorQValues.QProgress(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors, perFile.Count, n))
+            PercolatorQValues.QRun(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors, perFile.Count, n, floorProgress =>
             {
                 int off = 0;
                 int floorFile = 0;
@@ -293,8 +292,7 @@ namespace pwiz.Osprey.FDR
                     off += count;
                     floorProgress?.Report(++floorFile);
                 }
-                floorProgress?.Complete();
-            }
+            });
 
             // Emit pass: recompute each file's per-run q-values, assign every row's five q-values
             // from the bounded lookups, write the Score onto the projection row (FdrProjection is

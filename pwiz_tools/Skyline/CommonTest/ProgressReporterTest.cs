@@ -166,11 +166,30 @@ namespace CommonTest
             AssertEx.ThrowsException<InvalidOperationException>(() =>
                 ProgressReporter.Run("phase", 100, p => true));
 
-            // Complete is idempotent: the wrapper's call after the body's does not print a second 100%.
-            var twice = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
-                act: p => p.Complete(), minPercentSeconds: 0.0);
-            AssertEx.AreEqual(1, twice.Count(line => line.Contains("100%")),
-                "Complete called twice should close the step once");
+            // Begin, for an iterator that yields inside its step: disposing the scope closes the
+            // step only when MarkComplete was called, so an exception or an abandoned walk ends
+            // at the last percent shown.
+            var marked = Capture(() =>
+            {
+                using (var scope = ProgressReporter.Begin("phase", 100, string.Empty, 60.0, 60.0, 0.0))
+                {
+                    scope.Report(50);
+                    scope.MarkComplete();
+                    // A second Dispose (here and at the end of the using) does not close the step twice.
+                    scope.Dispose();
+                }
+            });
+            AssertEx.Contains(marked[0], Heading("phase"));
+            AssertEx.AreEqual(1, marked.Count(line => line.Contains("100%")),
+                "a marked scope should close the step exactly once");
+            var unmarked = Capture(() =>
+            {
+                using (var scope = ProgressReporter.Begin("phase", 100, string.Empty, 0.0, 60.0, 0.0))
+                    scope.Report(50);
+            });
+            AssertEx.Contains(unmarked[unmarked.Count - 1], "50%");
+            AssertEx.IsFalse(unmarked.Any(line => line.Contains("100%")),
+                "a scope disposed without MarkComplete must not log completion");
         }
 
         /// <summary>

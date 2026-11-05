@@ -58,7 +58,7 @@ namespace pwiz.Common.SystemUtil
     /// A lambda cannot <c>yield</c>, and cannot capture an outer <c>ref</c> local, <c>ref</c> or
     /// <c>out</c> parameter or <see cref="Span{T}"/> (it may declare its own); copy such a value to
     /// an ordinary local, return it through <see cref="Run{T}"/>, or move the code into a method
-    /// the body calls.
+    /// the body calls. An iterator that yields inside its step opens it with <see cref="Begin"/>.
     /// </summary>
     public sealed class ProgressReporter : IDisposable
     {
@@ -169,6 +169,25 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
+        /// <summary>
+        /// Open a progress-reported step whose body cannot be a lambda - an iterator that
+        /// <c>yield</c>s inside the step. Prints the "&lt;activity&gt;..." heading now and returns a
+        /// <see cref="Scope"/> for a <c>using</c> block. The body calls
+        /// <see cref="Scope.MarkComplete"/> as the last statement of its success path, and the step
+        /// is declared complete when the scope is disposed, only if that happened: an exception, or
+        /// an iterator its consumer abandoned, disposes the scope unmarked and the step ends without
+        /// a completion line. Prefer
+        /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
+        /// wherever the body can be a lambda, since there success cannot be left undeclared.
+        /// Parameters as for Run.
+        /// </summary>
+        public static Scope Begin(string activity, long total, string indent = null,
+            double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
+            double minPercentSeconds = MIN_PERCENT_SECONDS)
+        {
+            return new Scope(new ProgressReporter(activity, total, indent, intervalSeconds, heartbeatSeconds, minPercentSeconds));
+        }
+
         private readonly long _total;
         private readonly string _indent;
         private readonly double _intervalSeconds;
@@ -190,11 +209,9 @@ namespace pwiz.Common.SystemUtil
         /// Start a reporter for an <paramref name="activity"/> spanning <paramref name="total"/>
         /// units, printing the "&lt;activity&gt;..." heading immediately.
         ///
-        /// <para>Prefer <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>,
-        /// which cannot leave a success undeclared. Constructing a reporter directly is for a
-        /// scope a lambda cannot hold - an iterator that yields inside it - and for the Osprey
-        /// Percolator sites still to be converted. Making this non-public needs both gone: the
-        /// iterator scope (in another assembly) has to find a form of its own first.</para>
+        /// <para>Private: a reporter is created only by the Run wrappers and <see cref="Begin"/>,
+        /// which decide completion from how the step ended, so no caller can construct one and
+        /// forget to declare its success.</para>
         /// </summary>
         /// <param name="activity">Heading text printed on construction (without the trailing "...").</param>
         /// <param name="total">Total number of units; percent is reported as current/total. A
@@ -209,7 +226,7 @@ namespace pwiz.Common.SystemUtil
         /// (see <see cref="HEARTBEAT_SECONDS"/>). Injectable so tests can trip it quickly.</param>
         /// <param name="minPercentSeconds">Minimum run time before the closing 100% is printed
         /// for a step that showed no percent (see <see cref="MIN_PERCENT_SECONDS"/>).</param>
-        public ProgressReporter(string activity, long total, string indent = null, double intervalSeconds = 1.0,
+        private ProgressReporter(string activity, long total, string indent = null, double intervalSeconds = 1.0,
             double heartbeatSeconds = HEARTBEAT_SECONDS, double minPercentSeconds = MIN_PERCENT_SECONDS)
         {
             _total = total;
@@ -289,13 +306,22 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Declare that the step succeeded, and close it with 100% unless it already showed it
-        /// or finished inside <see cref="MIN_PERCENT_SECONDS"/>. The Run wrappers call it when
-        /// their body succeeds; a reporter constructed directly must call it as the last
-        /// statement of each success path, and a step that ends without calling it has no
-        /// completion line. Calling it more than once has no further effect.
+        /// Close the scope. Prints nothing: only <see cref="Complete"/> can say the step
+        /// succeeded, because Dispose runs the same way whether the scope finished, threw or
+        /// returned early, and forcing 100% here made a failed step log completion (#4583).
         /// </summary>
-        public void Complete()
+        public void Dispose()
+        {
+        }
+
+        /// <summary>
+        /// Declare that the step succeeded, and close it with 100% unless it already showed it
+        /// or finished inside <see cref="MIN_PERCENT_SECONDS"/>. Private: the Run wrappers call it
+        /// when their body succeeds, and a <see cref="Scope"/> when it is disposed after
+        /// <see cref="Scope.MarkComplete"/>; a step that ends without it has no completion line.
+        /// Calling it more than once has no further effect.
+        /// </summary>
+        private void Complete()
         {
             lock (_lock)
             {
@@ -323,15 +349,6 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Close the scope. Prints nothing: only <see cref="Complete"/> can say the step
-        /// succeeded, because Dispose runs the same way whether the scope finished, threw or
-        /// returned early, and forcing 100% here made a failed step log completion (#4583).
-        /// </summary>
-        public void Dispose()
-        {
-        }
-
-        /// <summary>
         /// Compact elapsed-time formatting for the heartbeat line: "45s", "2m03s", "1h05m".
         /// </summary>
         private static string FormatElapsed(TimeSpan elapsed)
@@ -341,6 +358,47 @@ namespace pwiz.Common.SystemUtil
             if (elapsed.TotalMinutes >= 1)
                 return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_m_1_00_s, (int)elapsed.TotalMinutes, elapsed.Seconds);
             return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_s, (int)elapsed.TotalSeconds);
+        }
+
+        /// <summary>
+        /// The handle <see cref="Begin"/> returns: the step's reporter, completed on
+        /// <see cref="Dispose"/> only when <see cref="MarkComplete"/> was called first.
+        /// </summary>
+        public sealed class Scope : IDisposable
+        {
+            private readonly ProgressReporter _progress;
+            private bool _succeeded;
+
+            internal Scope(ProgressReporter progress)
+            {
+                _progress = progress;
+            }
+
+            /// <summary>As <see cref="ProgressReporter.Report"/>.</summary>
+            public void Report(long current)
+            {
+                _progress.Report(current);
+            }
+
+            /// <summary>
+            /// Declare that the step succeeded. Prints nothing itself: the completion line is
+            /// written when the scope is disposed, at the same point in the log a Run wrapper
+            /// writes it.
+            /// </summary>
+            public void MarkComplete()
+            {
+                _succeeded = true;
+            }
+
+            /// <summary>
+            /// Close the step, declaring it complete only if <see cref="MarkComplete"/> was called.
+            /// </summary>
+            public void Dispose()
+            {
+                if (_succeeded)
+                    _progress.Complete();
+                _progress.Dispose();
+            }
         }
     }
 }
