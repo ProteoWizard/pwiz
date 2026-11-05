@@ -76,6 +76,7 @@ namespace pwiz.Osprey.IO
             @"dom_best_corr_delta", @"dom_tot_corr_sum", @"dom_apex_count", @"dom_corr_margin",
             @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
             @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
+            @"shadow_corr_sum6", @"shadow_frac6", @"tc_clean_sum6", @"tc_clip_sum6",
         };
 
         /// <summary>
@@ -91,6 +92,7 @@ namespace pwiz.Osprey.IO
             @"peak_coelution_margin", @"context_peptide_length", @"frag_rank1_abs_mass_error",
             @"peak_spectrum_cosine_mean", @"mp_fragment_r2_rank2", @"ref_corr_rank2", @"peak_width",
             @"tc_sum6", @"heavy_sum6", @"dom_best_corr_delta", @"top3_ref_n_corr_good", @"wide_coelution_sum",
+            @"shadow_corr_sum6", @"tc_clean_sum6",
         };
 
         /// <summary>
