@@ -979,6 +979,82 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Interference families over synthetic window spectra: the top fragment has a co-eluting trace one 13C
+        /// spacing below it at half its intensity, the M-1 shadow of an interfering ion, and the others none; rank 5
+        /// also holds a narrower interferer inside the peak, about 3 x its prediction and 0.02 min later, which leaving out or
+        /// capping the scans above twice the prediction recovers most of the correlation for.
+        /// </summary>
+        [TestMethod]
+        public void TestInterferenceCorrelations()
+        {
+            const int n = 61;
+            const int apex = 30;
+            const int interfered = 4;
+            var tolerance = FragmentToleranceConfig.Hram(10.0);
+            var rts = Enumerable.Range(0, n).Select(i => 10.0 + 0.01 * i).ToArray();
+            var profile = rts.Select(rt => 1000.0 * Math.Exp(-Math.Pow((rt - 10.3) / 0.04, 2)) + 5.0).ToArray();
+            var library = new[] { 100f, 90f, 80f, 70f, 60f, 50f };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = library.Select((v, i) => new LibraryFragment
+                {
+                    Mz = 300 + 100 * i,
+                    RelativeIntensity = v,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = (byte) (3 + i), Charge = 1 },
+                }).ToList(),
+            };
+            var spectra = new List<Spectrum>();
+            var xicIntensities = library.Select(_ => new double[n]).ToArray();
+            for (int i = 0; i < n; i++)
+            {
+                var peaks = new List<KeyValuePair<double, double>>();
+                for (int f = 0; f < library.Length; f++)
+                {
+                    double intensity = profile[i] * library[f] / 100.0;
+                    if (f == interfered)
+                        intensity += 1800.0 * Math.Exp(-Math.Pow((rts[i] - 10.32) / 0.015, 2));
+                    xicIntensities[f][i] = intensity;
+                    peaks.Add(new KeyValuePair<double, double>(candidate.Fragments[f].Mz, intensity));
+                }
+                peaks.Add(new KeyValuePair<double, double>(candidate.Fragments[0].Mz - ReextractedCorrelations.C13_DELTA,
+                    0.5 * xicIntensities[0][i]));
+                var sorted = peaks.OrderBy(p => p.Key).ToArray();
+                spectra.Add(new Spectrum
+                {
+                    RetentionTime = rts[i],
+                    Mzs = sorted.Select(p => p.Key).ToArray(),
+                    Intensities = sorted.Select(p => (float) p.Value).ToArray(),
+                });
+            }
+            var xics = xicIntensities.Select((v, f) => new XicData(f, rts, v)).ToList();
+            var bounds = new XICPeakBounds { StartIndex = 25, EndIndex = 35, ApexIndex = apex };
+            var peakData = new FakePeakData(xics, bounds, candidate: candidate, apexSpectrum: spectra[apex],
+                apexGlobalIndex: apex, apexLocalIndex: apex, windowStartIndex: 0, windowLength: n, windowSpectra: spectra);
+            var context = new OspreyScoringContext(new OspreyConfig { FragmentTolerance = tolerance });
+
+            var shadow = ShadowIsotopeCorrelations.GetOrCompute(context, peakData);
+            Assert.IsTrue(shadow.CorrSum > 0.99 && shadow.CorrSum <= 1.0 + TOLERANCE,
+                string.Format("One co-eluting shadow and five absent ones, got {0:F4}", shadow.CorrSum));
+            Assert.AreEqual(0.5 / 6, shadow.Fraction, 1e-4);
+            Assert.AreSame(shadow, ShadowIsotopeCorrelations.GetOrCompute(context, peakData), "Computed once per candidate");
+            Assert.AreEqual(shadow.CorrSum, FeatureByName(@"shadow_corr_sum6").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(shadow.Fraction, FeatureByName(@"shadow_frac6").Calculate(context, peakData), TOLERANCE);
+
+            var timeCorr = TimeCorrelations.GetOrCompute(context, peakData);
+            double interferedCorr = timeCorr.RankCorrelations[interfered];
+            Assert.IsTrue(interferedCorr < 0.8, string.Format("The interferer pulls rank 5 off the reference, got {0:F4}", interferedCorr));
+            var cleaned = CleanedTimeCorrelations.GetOrCompute(context, peakData);
+            double cleanRest = timeCorr.TopSum - interferedCorr;
+            Assert.IsTrue(cleaned.ExcludedSum - cleanRest > interferedCorr + 0.1,
+                string.Format("Leaving out the interfered scans recovers rank 5, got {0:F4} from {1:F4}", cleaned.ExcludedSum - cleanRest, interferedCorr));
+            Assert.IsTrue(cleaned.ClippedSum - cleanRest > interferedCorr + 0.1,
+                string.Format("Capping the interfered scans recovers rank 5, got {0:F4} from {1:F4}", cleaned.ClippedSum - cleanRest, interferedCorr));
+            Assert.IsTrue(cleaned.ExcludedSum <= 6.0 + TOLERANCE && cleaned.ClippedSum <= 6.0 + TOLERANCE);
+            Assert.AreEqual(cleaned.ExcludedSum, FeatureByName(@"tc_clean_sum6").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(cleaned.ClippedSum, FeatureByName(@"tc_clip_sum6").Calculate(context, peakData), TOLERANCE);
+        }
+
+        /// <summary>
         /// Peak-dominance family over two apexes: all six fragments co-elute at scan 30, only the top three
         /// at scan 90, the rest absent there. Each is accepted once, scoring about 5 and 2. Choosing the full
         /// peak gives a positive best-delta and margin; choosing the partial one makes both negative.

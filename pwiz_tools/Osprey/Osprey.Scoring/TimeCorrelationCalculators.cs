@@ -70,6 +70,9 @@ namespace pwiz.Osprey.Scoring
         /// <summary>Library fragment indices of the top ranks (index r - 1 is rank r), null with <see cref="Elution"/>.</summary>
         public int[] RankedFragments { get; private set; }
 
+        /// <summary>Index into the XICs of the reference fragment <see cref="Elution"/> smooths, -1 with no window.</summary>
+        public int ReferenceXicIndex { get; private set; } = -1;
+
         public static TimeCorrelations GetOrCompute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             if (context.TryGetInfo(out TimeCorrelations timeCorr))
@@ -95,12 +98,14 @@ namespace pwiz.Osprey.Scoring
             if (end - start < 2)
                 return result;
 
-            var elution = Smooth(xics[ReferenceCorrelations.ChooseReference(xics, start, end)].Intensities, start, end);
+            int reference = ReferenceCorrelations.ChooseReference(xics, start, end);
+            var elution = Smooth(xics[reference].Intensities, start, end);
             int[] ranked = FragmentMath.TopIndicesByIntensity(fragments, Math.Min(RANK_COUNT, fragments.Count));
             result.WindowStart = start;
             result.HalfScans = halfScans;
             result.Elution = elution;
             result.RankedFragments = ranked;
+            result.ReferenceXicIndex = reference;
             int nResidual = 0;
             foreach (var xic in xics)
             {

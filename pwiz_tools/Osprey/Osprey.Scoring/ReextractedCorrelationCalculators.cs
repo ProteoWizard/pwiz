@@ -92,18 +92,8 @@ namespace pwiz.Osprey.Scoring
             if (elution == null || tolerance == null)
                 return result;
 
-            // The window spectra, one per window scan: XIC index i is apex offset i - ApexIndex. The offset is
-            // taken from the unclamped ApexIndex because TryGetApexOffsetSpectrum counts from that same index;
-            // WindowStart is an absolute XIC index, whichever apex placed it.
             int n = elution.Length;
-            var spectra = new Spectrum[n];
-            int firstOffset = timeCorr.WindowStart - peakData.PeakBounds.ApexIndex;
-            for (int i = 0; i < n; i++)
-            {
-                if (peakData.TryGetApexOffsetSpectrum(firstOffset + i, out var spectrum, out _))
-                    spectra[i] = spectrum;
-            }
-
+            var spectra = WindowSpectra(peakData, timeCorr);
             var fragments = peakData.Candidate.Fragments;
             var ranked = timeCorr.RankedFragments;
             var trace = new double[n];
@@ -127,9 +117,33 @@ namespace pwiz.Osprey.Scoring
             return result;
         }
 
-        // Fill trace with the closest peak to mz within +/- tolDa in each window spectrum (0 where none,
-        // or where the scan is outside the scored range) and correlate it with the elution; 0 when undefined.
-        private static double Correlate(double[] elution, Spectrum[] spectra, double mz, double tolDa, double[] trace)
+        /// <summary>
+        /// The window spectra of <paramref name="timeCorr"/>, one per window scan, null where a scan is
+        /// outside the scored range; null when it has no window.
+        /// </summary>
+        internal static Spectrum[] WindowSpectra(IOspreyApexSpectraPeakData peakData, TimeCorrelations timeCorr)
+        {
+            if (timeCorr.Elution == null)
+                return null;
+            // XIC index i is apex offset i - ApexIndex. The offset is taken from the unclamped ApexIndex because
+            // TryGetApexOffsetSpectrum counts from that same index; WindowStart is an absolute XIC index,
+            // whichever apex placed it.
+            int n = timeCorr.Elution.Length;
+            var spectra = new Spectrum[n];
+            int firstOffset = timeCorr.WindowStart - peakData.PeakBounds.ApexIndex;
+            for (int i = 0; i < n; i++)
+            {
+                if (peakData.TryGetApexOffsetSpectrum(firstOffset + i, out var spectrum, out _))
+                    spectra[i] = spectrum;
+            }
+            return spectra;
+        }
+
+        /// <summary>
+        /// Fills <paramref name="trace"/> with the closest peak to <paramref name="mz"/> within +/- <paramref name="tolDa"/>
+        /// in each window spectrum, 0 where there is none or the scan is outside the scored range.
+        /// </summary>
+        internal static void FillTrace(Spectrum[] spectra, double mz, double tolDa, double[] trace)
         {
             for (int i = 0; i < spectra.Length; i++)
             {
@@ -141,6 +155,12 @@ namespace pwiz.Osprey.Scoring
                 if (best >= 0)
                     trace[i] = spectrum.Intensities[best];
             }
+        }
+
+        // The trace re-extracted at mz within +/- tolDa, correlated with the elution; 0 when undefined.
+        private static double Correlate(double[] elution, Spectrum[] spectra, double mz, double tolDa, double[] trace)
+        {
+            FillTrace(spectra, mz, tolDa, trace);
             double corr = ScoringMath.PearsonCorrelationInRange(elution, trace, 0, trace.Length - 1);
             return double.IsNaN(corr) ? 0.0 : corr;
         }

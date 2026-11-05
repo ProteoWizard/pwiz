@@ -2032,7 +2032,7 @@ namespace pwiz.Osprey.Test
                 if (readsCorr)
                     nCorrelation++;
             }
-            Assert.AreEqual(40, nCorrelation);
+            Assert.AreEqual(44, nCorrelation);
             Assert.IsTrue(corrScored.Features[0] > searched.Features[0] + 1.0,
                 @"the recovered fragment adds its pairs to the coelution sum");
 

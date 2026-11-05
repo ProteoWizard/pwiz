@@ -37,8 +37,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-96 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment and wide-span coelution families,
+    /// never returns null. Slots 21-100 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment, wide-span coelution, shadow-isotope and cleaned time-correlation families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, and computed and written only for a family the mask leaves a feature of,
     /// or under OSPREY_RECORD_ALL_FEATURES=1. (Scores the Rust engine computes but excludes from its PIN features
@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 97;
+        public const int FeatureCount = 101;
 
         /// <summary>
         /// The core features, the first 21: the Rust PIN features, which the scorer always computes.
@@ -190,6 +190,16 @@ namespace pwiz.Osprey.Scoring
             calculators[95] = new WideCoelutionMarginCalc();
             calculators[96] = new WideTop3CoelutionMinCalc();
 
+            // Shadow-isotope family: the trace one 13C spacing below each top-6 fragment, where another ion would
+            // sit whose M+1 isotope interferes with the fragment channel.
+            calculators[97] = new ShadowIsotopeCorrSumCalc();
+            calculators[98] = new ShadowIsotopeFractionCalc();
+
+            // Cleaned time-correlation family: the top-6 time correlation with the scans each fragment exceeds its
+            // library-predicted intensity left out or capped, as interference.
+            calculators[99] = new CleanedTimeCorrelationSumCalc(false);
+            calculators[100] = new CleanedTimeCorrelationSumCalc(true);
+
             return calculators;
         }
 
@@ -237,6 +247,8 @@ namespace pwiz.Osprey.Scoring
                 // The top-3 and wide-span agreement families.
                 @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
                 @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
+                // The interference families, over the time-correlation window.
+                @"shadow_corr_sum6", @"shadow_frac6", @"tc_clean_sum6", @"tc_clip_sum6",
             };
             var mask = new bool[FeatureCount];
             for (int i = 0; i < FeatureCount; i++)
