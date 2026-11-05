@@ -34,10 +34,11 @@ namespace pwiz.CarafeSharp.Test
     /// How the full-size comparisons with Carafe judge a CUDA run (<c>Compare-CarafeParity.ps1 -Torch cuda</c>).
     ///
     /// Limits: Carafe's references were written on CUDA, but CarafeSharp on the CPU is the backend that
-    /// reproduces them within the comparisons' limits. On the GPU, TF32 (libtorch's default for cuDNN
-    /// convolutions and LSTMs on Ampere and later) moves RT further than those limits allow, so each
-    /// comparison has a pinned GPU limit beside its CPU one, measured on one machine. A value beyond the
-    /// CPU limit passes on the GPU while it stays under the pin, and is reported with a
+    /// reproduces them within the comparisons' limits. CarafeSharp turns TF32 off on the GPU
+    /// (<see cref="TorchDevice"/>), which brings it to about those limits; where a measured residual of
+    /// float32 rounding on the GPU remains beyond one, the comparison has a pinned GPU limit beside its CPU
+    /// one, measured on one machine. A value beyond the CPU limit passes on the GPU while it stays under
+    /// the pin, and is reported with a
     /// <see cref="PINNED_PREFIX"/> line the script collects; a value beyond the pin fails, so the pin is
     /// a regression check of the GPU path, not a waiver.
     ///
@@ -76,10 +77,9 @@ namespace pwiz.CarafeSharp.Test
         {
             if (IsGpu && !(measured < cpuLimit))
             {
-                // Invariant, for the script that parses it. The pins were measured with TF32 on.
-                string tf32 = Environment.GetEnvironmentVariable(@"NVIDIA_TF32_OVERRIDE") == @"0" ? @"TF32 off" : @"TF32";
-                context.WriteLine(string.Format(CultureInfo.InvariantCulture, @"{0} {1} max|diff| {2:E2}{3} (CPU limit {4:G2}; GPU pin {5:G2}, {6}) - {7}",
-                    PINNED_PREFIX, quantity, measured, unit != null ? @" " + unit : string.Empty, cpuLimit, gpuPin, tf32, label));
+                // Invariant, for the script that parses it.
+                context.WriteLine(string.Format(CultureInfo.InvariantCulture, @"{0} {1} max|diff| {2:E2}{3} (CPU limit {4:G2}; GPU pin {5:G2}) - {6}",
+                    PINNED_PREFIX, quantity, measured, unit != null ? @" " + unit : string.Empty, cpuLimit, gpuPin, label));
                 Assert.IsTrue(measured < gpuPin,
                     string.Format(@"{0} {1} max |diff| {2} exceeds the pinned GPU limit {3} (CPU limit {4})", label, quantity, measured, gpuPin, cpuLimit));
                 return;

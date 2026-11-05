@@ -210,42 +210,49 @@ it pass on the CPU. It is a passing gate that pins today's GPU behavior (`GpuPar
 - **Self-consistency, zero tolerance.** Each prediction comparison (predictions and predicted library, Stellar
   and Astral) predicts twice in-process and requires every RT and fragment value, and the library TSV, to be
   bit-identical; it also compares with the outputs the previous CUDA run saved in
-  `TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver>` (with `-tf32off` under `NVIDIA_TF32_OVERRIDE=0`), and
-  saves them, once the comparison has passed, when there are none. Any difference fails. Delete the folder to
-  re-baseline after a change meant to move the GPU outputs.
-- **Pinned GPU limits.** A value beyond its CPU limit passes on the GPU while it stays under the GPU pin
-  beside it in the test (measured value, date, GPU and cause in the comment), and fails beyond it, so the pin
-  is a regression check of the GPU path. MS2 keeps the CPU limits.
+  `TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver>`, and saves them, once the comparison has passed, when
+  there are none. Any difference fails. Delete the folder to re-baseline after a change meant to move the GPU
+  outputs (turning TF32 off was one: a folder saved before it holds TF32 outputs).
+- **The CPU limits, pinned only where a GPU residual remains.** Two values are beyond their CPU limits on the
+  GPU (below); each has a GPU pin beside it in the test (measured value, date and GPU in the comment). It
+  passes while it stays under the pin and fails beyond it, so the pin is a regression check of the GPU path.
+  Every other value, MS2 included, is held to the CPU limit on the GPU too.
 - **The delta is reported.** Each value a pin decided prints under its comparison, for example
-  `GPU pinned: RT max|diff| 1.33E-004 rt_norm (CPU limit 2E-06; GPU pin 0.00017, TF32)`, and the summary reads
+  `GPU pinned: RT max|diff| 2.34E-006 rt_norm (CPU limit 2E-06; GPU pin 3E-06)`, and the summary reads
   `OVERALL: PASS (GPU pinned: RT differs from Carafe beyond the CPU limits by up to ...; see docs/04-testing.md)`.
 
 **GPU parity.** Carafe 2.2.0 wrote the reference values on CUDA (torch 2.5.1), but neither backend reproduces
-them bit for bit: libtorch versions and kernels round differently. CarafeSharp on the CPU stays within the
-limits below; on the GPU, RT does not. Measured 2026-11-04 on an RTX 4000 Ada (driver 596.71) and an
-i9-14900, libtorch 2.10.0, largest difference from Carafe over the reference folders:
+them bit for bit: libtorch versions and kernels round differently. CarafeSharp turns TF32 off on CUDA
+(`TorchDevice.DisableTf32`, the equivalent of `torch.backends.cuda.matmul.allow_tf32 = False` and
+`torch.backends.cudnn.allow_tf32 = False`), so the GPU computes in float32 as the CPU does and the two give
+about the same library; `NVIDIA_TF32_OVERRIDE=0` is no longer needed. Fine-tuning on the GPU keeps cuDNN's TF32
+(`TorchDevice.AllowTf32ForTraining`): with it off, two GPU fine-tunes of the same data gave different RT models
+(`TestRegressionSubsetRepeatsOnGpu` failed 4 of 4 times), and TorchSharp 0.106 has no way to ask cuDNN for its
+deterministic algorithms (`torch.backends.cudnn.deterministic`). Measured 2026-11-04 on an RTX 4000 Ada
+(driver 596.71) and an i9-14900, libtorch 2.10.0, largest difference from Carafe over the reference folders:
 
-| Comparison (CPU limit) | CPU | CUDA (TF32 on, the default) | CUDA, `NVIDIA_TF32_OVERRIDE=0` |
+| Comparison (CPU limit) | CPU | CUDA, TF32 off (CarafeSharp) | CUDA, TF32 on (libtorch's default, before) |
 |---|---|---|---|
 | Stellar predictions, MS2 (1.5e-5) | 6.3e-6 | 6.1e-6 | 6.1e-6 |
-| Stellar predictions, RT in rt_norm (2e-6) | 2.4e-7 | 1.0e-4 (pin 1.3e-4) | 1.6e-6 |
-| Stellar predictions, iRT (5e-4) | 3.5e-5 | 1.5e-2 (pin 1.8e-2) | 2.2e-4 |
-| Stellar predicted library, TSV RT (0.011 min) | 0.01 | 0.77, `carafe_main_varmod` (pin 0.95); 0.03-0.04 elsewhere | 0.01 |
-| Stellar predicted library, .blib RT (1e-3 min) | 3.2e-4 | 0.76, `carafe_main_varmod` (pin 0.95); 0.03-0.04 elsewhere | 7.4e-3, beyond the CPU limit |
+| Stellar predictions, RT in rt_norm (2e-6) | 2.4e-7 | 1.6e-6 | 1.0e-4 |
+| Stellar predictions, iRT (5e-4) | 3.5e-5 | 2.7e-4 | 1.5e-2 |
+| Stellar predicted library, TSV RT (0.011 min) | 0.01 | 0.01 | 0.77, `carafe_main_varmod`; 0.03-0.04 elsewhere |
+| Stellar predicted library, .blib RT (1e-3 min) | 3.2e-4 | 7.4e-3, `carafe_main_varmod` (pin 9.3e-3); 9.4e-4 elsewhere | 0.76, `carafe_main_varmod`; 0.03-0.04 elsewhere |
 | Astral predictions, MS2 (1.5e-5) | 2.6e-6 | 2.1e-6 | 2.1e-6 |
-| Astral predictions, RT in rt_norm (2e-6) | 3.3e-7 | 1.3e-4 (pin 1.7e-4) | 2.3e-6, beyond the CPU limit |
-| Astral predictions, iRT (5e-4) | 4.9e-5 | 2.1e-2 (pin 2.6e-2) | 3.7e-4 |
-| Astral library, TSV RT (0.011 min) | 0.01 | 0.10 (pin 0.13) | 0.01 |
+| Astral predictions, RT in rt_norm (2e-6) | 3.3e-7 | 2.3e-6 (pin 3e-6) | 1.3e-4 |
+| Astral predictions, iRT (5e-4) | 4.9e-5 | 3.9e-4 | 2.1e-2 |
+| Astral library, TSV RT (0.011 min) | 0.01 | 0.01 | 0.10 |
 
-All 12 comparisons pass on CUDA under the pins, and every GPU prediction repeated bit for bit, in-process and
-across runs (19 of 19 checks, four runs). TF32, which libtorch enables by default for cuDNN convolutions and
-LSTMs on Ampere and newer GPUs, causes most of the RT delta: turning it off with `NVIDIA_TF32_OVERRIDE=0`
-narrows RT to 2.3e-6 in rt_norm and the library TSV to the CPU's 0.01 min, at no measurable cost on this RTX
-4000 Ada (two runs each, the prediction comparisons took -4% to +5% and the library predictions -4% to -8%
-of the TF32 time, within run-to-run noise). It narrows the gap but does not close it: Astral RT and the
-`carafe_main_varmod` .blib RT stay just beyond the CPU limits. If full GPU/CPU parity becomes a goal, the way to
-close the gap is to disable TF32 in CarafeSharp's inference and then give the GPU only the small allowance
-plain GPU rounding needs.
+All 12 comparisons pass on CUDA, and every GPU prediction repeated bit for bit, in-process and across runs
+(19 of 19 checks in each of six runs, which also matched the outputs of an earlier run under
+`NVIDIA_TF32_OVERRIDE=0`). TF32, which libtorch enables by default for cuDNN convolutions and LSTMs on Ampere
+and newer GPUs, rounds to a 10-bit mantissa and caused nearly all of the GPU's RT delta. Turning it off cost
+nothing measurable on this RTX 4000 Ada: in a same-session A/B of this change against the build before it,
+two runs each, TF32 off took 0.98 to 1.06 times the TF32 time per comparison (1.00 for both predicted
+libraries, 0.99 and 1.00 for their GPU prediction; an earlier A/B with `NVIDIA_TF32_OVERRIDE=0` gave 0.91 to
+1.05). Two residuals remain beyond the CPU limits and are pinned: Astral RT (2.3e-6 against 2e-6) and the `carafe_main_varmod` .blib RT (7.4e-3 min against 1e-3; the CPU's is 3.2e-4).
+Both are float32 rounding, not a TF32 remnant: the GPU's float32 kernels add the same products in another
+order than the CPU's, and the last bits differ. Neither changes a TSV value beyond its 0.01 min precision.
 
 | Comparison (`FullParity`) | Checks | Subset twin, every commit |
 |---|---|---|
@@ -484,7 +491,8 @@ Measured on the subset (2026-10-13; the regression gates it, see "Regression"):
 
 - **Training tables, everywhere.** The run alignment maps each run onto the pretrained Chronologer's
   hydrophobic index. Predicted in float32, that index differed in its last bits between the Windows and Linux
-  libtorch builds, and by up to 5e-3 on a GPU, whose cuDNN convolutions use TF32 by default; enough on the GPU to
+  libtorch builds, and by up to 5e-3 on a GPU whose cuDNN convolutions used TF32 (libtorch's default, which
+  CarafeSharp now turns off; see "GPU parity"); enough on the GPU to
   move the KDE ridge and the RT targets by up to 0.4 s. The alignment's reference therefore predicts on the CPU in
   float64, rounded to float32 (`ChronologerModel.AlignmentReference`), which gives the same values everywhere.
   The tables are written with `\n` line ends on every system. The KDE's .NET `Math.Cos` still differs between
@@ -493,6 +501,7 @@ Measured on the subset (2026-10-13; the regression gates it, see "Regression"):
   sums in another order: the models differ slightly, within the tolerances.
 - **GPU fine-tuning** repeats byte for byte since its dropout is seeded: TorchSharp's `manual_seed` leaves the
   CUDA generator unseeded, so `FineTuneRun` seeds it too (`cuda.manual_seed_all`). Its models differ from the
-  CPU's, as its kernels do. `TestRegressionSubsetRepeatsOnGpu` checks it.
+  CPU's, as its kernels do. It keeps cuDNN's TF32, which prediction turns off, because in float32 it did not
+  repeat (see "GPU parity"). `TestRegressionSubsetRepeatsOnGpu` checks it.
 - **Before the fine-tune:** digests, precursor sets and fragment m/z are identical across CPU and GPU,
   and between Windows and Linux on the CPU. Predicted intensities differ between devices by at most about 1e-5.

@@ -27,12 +27,12 @@
     an NVIDIA GPU of compute capability 7.0 or later, driver 570 or later) and predicts and
     fine-tunes on the GPU. A machine without a usable GPU fails: build.ps1 checks the GPU and driver
     before building, and each comparison that predicts fails rather than falling back to the CPU
-    (CARAFESHARP_REQUIRE_CUDA=1, TestData.ComparisonDeviceName). On the GPU the RT predictions differ
-    from Carafe by more than the CPU limits allow, mostly from libtorch's default TF32 convolutions, so
-    each prediction comparison has a pinned GPU limit beside its CPU one (GpuParity.cs): a value under
-    the pin passes and is printed under its comparison ("GPU pinned: ..."), one beyond it fails. Each GPU
-    prediction also runs twice and must be bit-identical, in-process and with the outputs the previous
-    run kept in TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver> (-tf32off under NVIDIA_TF32_OVERRIDE=0).
+    (CARAFESHARP_REQUIRE_CUDA=1, TestData.ComparisonDeviceName). CarafeSharp turns TF32 off on the
+    GPU, which brings it to about the CPU limits; where a measured GPU residual remains beyond one, the
+    comparison has a pinned GPU limit beside its CPU one (GpuParity.cs): a value under the pin passes
+    and is printed under its comparison ("GPU pinned: ..."), one beyond it fails. Each GPU prediction
+    also runs twice and must be bit-identical, in-process and with the outputs the previous run kept
+    in TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver>.
     See docs/04-testing.md, "Full-size parity", for the measured differences.
 
     Stellar, the default, is the eight comparisons on carafesharp-testfiles-v1 (and, for masking,
@@ -114,13 +114,11 @@ if ($Torch -eq 'cuda' -and (Get-Command nvidia-smi -ErrorAction SilentlyContinue
 }
 if ($Torch -eq 'cuda') {
     # The comparisons keep the GPU outputs here and require the next run to reproduce them bit for
-    # bit (GpuParity.cs). Another GPU or driver, or TF32 off, changes the outputs, so each keeps its own.
+    # bit (GpuParity.cs). Another GPU or driver changes the outputs, so each keeps its own. CarafeSharp turns
+    # TF32 off for prediction itself (TorchDevice.DisableTf32); NVIDIA_TF32_OVERRIDE=0 is not needed, and would
+    # also turn off the TF32 fine-tuning keeps so that it repeats (TorchDevice.AllowTf32ForTraining).
     $gpuTag = if ($gpu) { '-' + (($gpu.Trim() -replace '[^A-Za-z0-9.]+', '-').Trim('-')) } else { '' }
-    $tf32 = if ($env:NVIDIA_TF32_OVERRIDE -eq '0') { '-tf32off' } else { '' }
-    if ($tf32) {
-        $backend += ', NVIDIA_TF32_OVERRIDE=0'
-    }
-    $env:CARAFESHARP_PARITY_OUTPUTS = Join-Path $resultsDir "CarafeParity-Outputs-cuda$gpuTag$tf32"
+    $env:CARAFESHARP_PARITY_OUTPUTS = Join-Path $resultsDir "CarafeParity-Outputs-cuda$gpuTag"
 }
 $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
 $rows = @()

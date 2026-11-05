@@ -90,19 +90,13 @@ namespace pwiz.CarafeSharp.Test
 
         // Pinned GPU limits (GpuParity), by reference folder (GpuParity.FolderKey); a folder not listed keeps
         // the CPU limits on the GPU too. Measured 2026-11-04 on an RTX 4000 Ada (driver 596.71), libtorch 2.10.0
-        // CUDA with TF32 on (libtorch's default), largest |diff| from Carafe, pin about 1.25x, plus the TSV's
-        // 0.01 min rounding:
-        //   stellar initial library TSV 0.04 min; carafe_main_varmod TSV 0.77, .blib 0.764; nocut-every50 TSV 0.04,
-        //   .blib 0.0425; trypsin-proteins TSV 0.03, .blib 0.0292; astral initial library TSV 0.10.
-        // TF32 is the cause: with NVIDIA_TF32_OVERRIDE=0 the same build gives TSV 0.01 everywhere (the CPU's) and .blib
-        // at most 7.4e-3 (carafe_main_varmod; CPU 3.2e-4), at no measurable cost (see CarafeParityTest).
+        // CUDA, TF32 off (TorchDevice), largest |diff| from Carafe: TSV 0.01 min everywhere, as on the CPU; .blib
+        // 9.4e-4 (nocut-every50) and 7.0e-4 (trypsin-proteins), inside the CPU limit, and 7.40e-3 for
+        // carafe_main_varmod (CPU 3.2e-4), the one residual, pinned at about 1.25x: the GPU's float32 kernels
+        // accumulate in another order than the CPU's. With TF32 on, library RT differed by up to 0.77 min.
         private static readonly Dictionary<string, LibraryGpuPins> GPU_PINS = new Dictionary<string, LibraryGpuPins>(StringComparer.Ordinal)
         {
-            { @"stellar/carafe-osprey-entrapment/osprey_initial_library", new LibraryGpuPins(0.06, BLIB_RT_MAX_DIFF) },
-            { @"carafesharp-testfiles-v1/library-references/carafe_main_varmod", new LibraryGpuPins(0.95, 0.95) },
-            { @"m3/ref/nocut-every50", new LibraryGpuPins(0.06, 0.055) },
-            { @"m3/ref/trypsin-proteins", new LibraryGpuPins(0.05, 0.04) },
-            { @"astral/Carafe-Osprey-entrapment/osprey_initial_library", new LibraryGpuPins(0.13, BLIB_RT_MAX_DIFF) },
+            { @"carafesharp-testfiles-v1/library-references/carafe_main_varmod", new LibraryGpuPins(TSV_RT_MAX_DIFF, 9.3e-3) },
         };
 
         public TestContext TestContext { get; set; }

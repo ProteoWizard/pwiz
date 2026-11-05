@@ -60,15 +60,13 @@ namespace pwiz.CarafeSharp.Test
         private const double RT_MAX_DIFF = 2e-6;
         private const double IRT_MAX_DIFF = 5e-4;
 
-        // Pinned GPU limits (GpuParity), per dataset: MS2 keeps the CPU limits, RT and iRT get their own.
-        // Measured 2026-11-04 on an RTX 4000 Ada (driver 596.71), libtorch 2.10.0 CUDA with TF32 on (libtorch's
-        // default), largest |diff| from Carafe over the folders, pin about 1.25x: Stellar RT 1.02e-4, iRT 1.46e-2;
-        // Astral RT 1.33e-4, iRT 2.09e-2; MS2 at most 6.1e-6 (99.9th pct 9.5e-7), inside the CPU limits.
-        // TF32 is the cause: with NVIDIA_TF32_OVERRIDE=0 the same build gives RT 1.6e-6 (Stellar) and 2.3e-6 (Astral),
-        // iRT 3.9e-4, at no measurable cost: two runs each, the prediction comparisons took -4% to +5% and the
-        // library predictions -4% to -8% of the TF32 wall time, within run-to-run noise.
-        private static readonly GpuPins STELLAR_GPU = new GpuPins(1.3e-4, 1.8e-2);
-        private static readonly GpuPins ASTRAL_GPU = new GpuPins(1.7e-4, 2.6e-2);
+        // GPU limits (GpuParity), per dataset: the CPU limits, except where a measured GPU residual remains.
+        // Measured 2026-11-04 on an RTX 4000 Ada (driver 596.71), libtorch 2.10.0 CUDA, TF32 off (TorchDevice),
+        // largest |diff| from Carafe over the folders: Stellar RT 1.55e-6, iRT 2.7e-4; Astral RT 2.34e-6, iRT 3.9e-4;
+        // MS2 at most 6.1e-6 (99.9th pct 9.5e-7). Only Astral RT is beyond its CPU limit, pinned at about 1.25x: the
+        // GPU's float32 kernels accumulate in another order than the CPU's. With TF32 on, RT was 1.0e-4 to 1.3e-4.
+        private static readonly GpuPins STELLAR_GPU = new GpuPins(RT_MAX_DIFF, IRT_MAX_DIFF);
+        private static readonly GpuPins ASTRAL_GPU = new GpuPins(3e-6, IRT_MAX_DIFF);
 
         public TestContext TestContext { get; set; }
 
