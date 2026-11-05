@@ -1095,6 +1095,20 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool GbtPrefilterSample = ParseIntOrNull(ENV_GBT_PREFILTER_SAMPLE) == 1;
 
+        /// <summary>
+        /// True when OSPREY_GBT_PREFILTER_Q, _LFDR or _SAMPLE is set without OSPREY_GBT_PREFILTER_SIZE; startup
+        /// aborts. They only shape round 2 of the two-round training, which runs only with a size, so without
+        /// one the run would be the one-round baseline under the baseline's validity key.
+        /// </summary>
+        public static readonly bool GbtPrefilterSwitchesWithoutSize = PrefilterSwitchesWithoutSize(
+            GbtPrefilterQSetting, GbtPrefilterLocalFdrSetting, GbtPrefilterSample, GbtPrefilterSize);
+
+        /// <summary><see cref="GbtPrefilterSwitchesWithoutSize"/> for explicitly supplied settings.</summary>
+        internal static bool PrefilterSwitchesWithoutSize(string qSetting, string localFdrSetting, bool sample, int size)
+        {
+            return size <= 0 && (!string.IsNullOrEmpty(qSetting) || !string.IsNullOrEmpty(localFdrSetting) || sample);
+        }
+
         private static readonly EnvVar ENV_DETERMINISTIC_MATH = new EnvVar(@"OSPREY_DETERMINISTIC_MATH", EnvVarGroup.behavior,
             @"Exp and Log in gradient-boosted tree training: 1 the managed fdlibm port, bit-identical on " +
             @"every OS; 0 System.Math, which can differ in the last bit between operating systems.")

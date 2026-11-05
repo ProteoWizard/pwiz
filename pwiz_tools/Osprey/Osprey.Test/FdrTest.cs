@@ -1822,6 +1822,56 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(double.IsNegativeInfinity(
                 PercolatorTrainer.PrefilterScoreAtLocalFdr(decoyTop, isDecoy, entryIds, 0.5, out passing, out q)));
             Assert.AreEqual(0, passing);
+
+            AssertLocalFdrWalkCrossesNoisyWindow();
+
+            // An empty cut caps round 2 at the round-1 size, not the (high) cap; otherwise the cap stands.
+            Assert.AreEqual(300000, PercolatorTrainer.Round2RowCap(5000000, 300000, true, double.NegativeInfinity));
+            Assert.AreEqual(200, PercolatorTrainer.Round2RowCap(200, 300000, true, double.NegativeInfinity));
+            Assert.AreEqual(5000000, PercolatorTrainer.Round2RowCap(5000000, 300000, true, 1.5));
+            Assert.AreEqual(5000000, PercolatorTrainer.Round2RowCap(5000000, 300000, false, double.NegativeInfinity));
+
+            // The round-2 switches need a size; with one, or with none set, startup goes ahead.
+            Assert.IsTrue(OspreyEnvironment.PrefilterSwitchesWithoutSize("0.9", null, false, 0));
+            Assert.IsTrue(OspreyEnvironment.PrefilterSwitchesWithoutSize(null, "0.2", false, 0));
+            Assert.IsTrue(OspreyEnvironment.PrefilterSwitchesWithoutSize(null, null, true, 0));
+            Assert.IsFalse(OspreyEnvironment.PrefilterSwitchesWithoutSize("0.9", null, true, 500000));
+            Assert.IsFalse(OspreyEnvironment.PrefilterSwitchesWithoutSize(null, null, false, 0));
+        }
+
+        /// <summary>
+        /// A short run of decoy winners inside a well-separated block lifts the windowed ratio over the
+        /// cut for fewer ranks than a window, so the walk resumes past it and stops only at the null:
+        /// 4,000 separated pairs with 150 decoy winners at ranks 400-549, then 2,000 null pairs. A cut of
+        /// 0.15 trips from the first rank (150 decoys in a 1,001-rank window is 0.18) to about rank 920,
+        /// which ended the walk with no target before; now the passing targets reach toward the 3,850.
+        /// </summary>
+        private static void AssertLocalFdrWalkCrossesNoisyWindow()
+        {
+            const int separated = 4000, nulls = 2000, pairs = separated + nulls;
+            const int pocketStart = 400, pocketEnd = 550;
+            var scores = new double[2 * pairs];
+            var isDecoy = new bool[2 * pairs];
+            var entryIds = new uint[2 * pairs];
+            for (int p = 0; p < pairs; p++)
+            {
+                int t = 2 * p, d = 2 * p + 1;
+                entryIds[t] = (uint)(p + 1);
+                entryIds[d] = (uint)(p + 1) | 0x80000000;
+                isDecoy[d] = true;
+                double winner, loser = -100 - p;
+                if (p < separated)
+                    winner = 100 - p * 0.01;
+                else
+                    winner = 10 - (p - separated) * 0.001;
+                bool decoyWins = p >= separated ? (p - separated) % 2 == 1 : p >= pocketStart && p < pocketEnd;
+                scores[t] = decoyWins ? loser : winner;
+                scores[d] = decoyWins ? winner : loser;
+            }
+
+            PercolatorTrainer.PrefilterScoreAtLocalFdr(scores, isDecoy, entryIds, 0.15, out int passing, out _);
+            Assert.IsTrue(passing > 3000 && passing <= separated - (pocketEnd - pocketStart) + nulls / 4,
+                string.Format("local FDR 0.15 should pass the noisy pocket and stop near the null, passed {0}", passing));
         }
 
         /// <summary>An <see cref="IOspreyLog"/> that keeps every line it is given.</summary>

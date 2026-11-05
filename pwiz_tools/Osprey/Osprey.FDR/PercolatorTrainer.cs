@@ -590,6 +590,15 @@ namespace pwiz.Osprey.FDR
                 log.LogInfo(LogTag.COUNT, @"{0} Percolator prefilter local-FDR cut: windowed decoys/targets <= {1} held for {2} targets (round-1 q {3:F4} there), at score >= {4:R}",
                     passLabel, trainConfig.PrefilterTrainLocalFdr, passingTargets, qAtCut, minBestScore);
             }
+            prefilterSize = Round2RowCap(prefilterSize, round1Subset.Length,
+                trainConfig.PrefilterTrainQ > 0 || trainConfig.PrefilterTrainLocalFdr > 0, minBestScore);
+            if (prefilterSize < trainConfig.PrefilterTrainSize)
+            {
+                log.LogInfo(string.Format(
+                    @"Warning: {0} no round-1 target passes the round-2 {1} cut, so round 2 trains on the best {2} rows (the round-1 size) instead.",
+                    passLabel, trainConfig.PrefilterTrainQ > 0 ? @"OSPREY_GBT_PREFILTER_Q" : @"OSPREY_GBT_PREFILTER_LFDR",
+                    prefilterSize));
+            }
             int[] selected = PercolatorSampling.SelectTopScoringGroups(
                 labels, entryIds, peptides, round1Scores, prefilterSize, minBestScore,
                 trainConfig.PrefilterTrainSample ? trainConfig.Seed : null);
@@ -615,6 +624,19 @@ namespace pwiz.Osprey.FDR
             var round2Config = trainConfig.CloneForTrainOnly();
             round2Config.MaxTrainSize = 0;
             return RunPercolator(round2Entries, round2Config, round2InitialScores);
+        }
+
+        /// <summary>
+        /// Round 2's row cap. A q or local-FDR cut that no round-1 target passes returns negative
+        /// infinity, which turns the cut off; the cap alone would then take every candidate up to
+        /// <paramref name="prefilterSize"/>, which cut runs set high (millions) because the cut is
+        /// meant to bound them. So an empty cut caps round 2 at the round-1 training size instead.
+        /// </summary>
+        internal static int Round2RowCap(int prefilterSize, int round1Size, bool cutRequested, double minBestScore)
+        {
+            if (cutRequested && double.IsNegativeInfinity(minBestScore))
+                return Math.Max(1, Math.Min(prefilterSize, round1Size));
+            return prefilterSize;
         }
 
         /// <summary>
@@ -656,8 +678,11 @@ namespace pwiz.Osprey.FDR
         /// competition the false targets at a score are expected to equal the decoy winners there, so
         /// that ratio estimates the local FDR (the PEP of a target at that score), and it approaches 1
         /// where targets and decoys no longer separate - wherever that falls in q. The window is
-        /// max(1,000, 0.1% of the winners) centred on each rank. Negative infinity, which turns the cut
-        /// off, when no target passes. Used by the two-round training's OSPREY_GBT_PREFILTER_LFDR.
+        /// max(1,000, 0.1% of the winners) centred on each rank. The walk stops only where the ratio stays
+        /// above the cut for a full window of consecutive ranks (or to the end): a shorter excursion is
+        /// one noisy window, not the end of the separation, so the walk resumes past it and counts its
+        /// targets. Negative infinity, which turns the cut off, when no target passes. Used by the
+        /// two-round training's OSPREY_GBT_PREFILTER_LFDR.
         /// </summary>
         internal static double PrefilterScoreAtLocalFdr(double[] scores, bool[] isDecoy, uint[] entryIds,
             double localFdr, out int passingTargets, out double qAtCut)
@@ -675,9 +700,12 @@ namespace pwiz.Osprey.FDR
                 decoysBefore[r + 1] = decoysBefore[r] + (winnerIsDecoy[r] ? 1 : 0);
             int half = Math.Max(1000, n / 1000) / 2;
 
+            int window = 2 * half + 1;
+
             double threshold = double.NegativeInfinity;
             passingTargets = 0;
             qAtCut = 0;
+            int excursionStart = -1;   // first rank of the current run above the cut, or -1
             for (int rank = 0; rank < n; rank++)
             {
                 int lo = Math.Max(0, rank - half);
@@ -685,12 +713,25 @@ namespace pwiz.Osprey.FDR
                 int decoys = decoysBefore[hi] - decoysBefore[lo];
                 int targets = hi - lo - decoys;
                 if (targets == 0 || (double)decoys / targets > localFdr)
-                    break;
-                if (!winnerIsDecoy[rank])
                 {
-                    threshold = winnerScores[rank];
-                    passingTargets++;
-                    qAtCut = qValues[rank];
+                    if (excursionStart < 0)
+                        excursionStart = rank;
+                    if (rank - excursionStart + 1 >= window)
+                        break;
+                    continue;
+                }
+                // The ratio came back under the cut within a window: that run was noise, so its
+                // targets pass with the ranks around it.
+                int first = excursionStart >= 0 ? excursionStart : rank;
+                excursionStart = -1;
+                for (int r = first; r <= rank; r++)
+                {
+                    if (!winnerIsDecoy[r])
+                    {
+                        threshold = winnerScores[r];
+                        passingTargets++;
+                        qAtCut = qValues[r];
+                    }
                 }
             }
             return threshold;

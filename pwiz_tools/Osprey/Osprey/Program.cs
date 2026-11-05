@@ -709,6 +709,14 @@ namespace pwiz.Osprey
                         @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // Abort for the same reason: without a size there is no round 2, so the switches
+                // would do nothing while the run kept the one-round baseline's key.
+                if (OspreyEnvironment.GbtPrefilterSwitchesWithoutSize)
+                {
+                    LogError(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
+                             @"of the two-round training and need OSPREY_GBT_PREFILTER_SIZE (the row cap) set as well.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // Abort for the same reason: the mask is resolved when the FDR stage first loads
                 // features, so a mistyped name would otherwise surface only after Stages 1-4.
                 string unknownMaskedFeature = PinFeatureMask.UnknownFeatureName();
