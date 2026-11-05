@@ -95,7 +95,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateTitle();
 
             DataFileResults = new ImportResultsDIAControl(this);
-            WizardPages.AddPageControl(DataFileResults, dataFilesPage, 2, 60, 0);
+            WizardPages.AddPageControl(DataFileResults, dataFilesPage, 2, 60);
 
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             WizardPages.AddPageControl(SearchSettingsControl, searchSettingsPage, 20, 45, 4);
 
             SearchControl = new OspreySearchControl(this);
-            WizardPages.AddPageControl(SearchControl, runSearchPage, 2, 0, 0);
+            WizardPages.AddPageControl(SearchControl, runSearchPage, 2, 0);
             SearchControl.SearchFinished += SearchControlSearchFinished;
 
             UpdateExistingLibraryControls();
