@@ -20,7 +20,6 @@
 
 using System;
 using System.Windows.Forms;
-using pwiz.CarafeSharp.Models;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -31,27 +30,25 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
-    /// Drives a Use GPU checkbox for a form that predicts spectral libraries with the libtorch
-    /// runtimes: Build Library, which predicts in Skyline's own process, and the Osprey Search
-    /// wizard, which runs Osprey as a child process. Checking the box says why when this computer's
-    /// GPU cannot be used, and otherwise downloads the NVIDIA CUDA runtime first if it is not
-    /// installed; the box starts as the user last left it when the GPU can be used and the runtime
-    /// is installed. In-process prediction loads one runtime per process, so once a runtime is loaded
-    /// the box shows it and cannot change it; a child process chooses afresh every time.
+    /// Drives a Use GPU checkbox for a form that has Osprey predict a spectral library: Build Library
+    /// and the Osprey Search wizard, both of which run Osprey as a child process that chooses its
+    /// libtorch runtime afresh every time. Checking the box says why when this computer's GPU cannot
+    /// be used, and otherwise downloads the NVIDIA CUDA runtime first if it is not installed; the box
+    /// starts as the user last left it when the GPU can be used and the runtime is installed.
     /// </summary>
     public class UseGpuDriver
     {
-        private readonly Form _owner;
+        private readonly Control _owner;
         private readonly CheckBox _checkBox;
-        private readonly bool _inProcess;
         private TorchRuntimes _torchRuntimes;
         private bool _updating;
 
-        public UseGpuDriver(Form owner, CheckBox checkBox, bool inProcess)
+        /// <param name="owner">The form, or a control of it, the driver's questions and waits are shown from.</param>
+        /// <param name="checkBox">The Use GPU box.</param>
+        public UseGpuDriver(Control owner, CheckBox checkBox)
         {
             _owner = owner;
             _checkBox = checkBox;
-            _inProcess = inProcess;
         }
 
         /// <summary>
@@ -75,25 +72,13 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Whether the CPU or the GPU is still open to choose: always for a child process; in this
-        /// process, until a runtime is loaded.
-        /// </summary>
-        public bool CanChooseRuntime => !_inProcess || TorchRuntimes.CanChooseRuntime;
-
-        /// <summary>
-        /// Shows the runtime this process already predicted with, which it cannot change, or else
-        /// checks Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is
+        /// Checks Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is
         /// installed. Finding the GPU loads the NVIDIA driver and initializes CUDA, which can take a
         /// moment, so the first time that runs behind an indeterminate wait, shown if it takes long.
         /// </summary>
         public void Update()
         {
             var runtimes = TorchRuntimes;
-            if (!CanChooseRuntime)
-            {
-                SetUseGpu(LibTorchRuntime.Loaded.IsCuda);
-                return;
-            }
             if (!runtimes.IsCudaDriverFound)
             {
                 using var longWaitDlg = new LongWaitDlg(allowCancel: false);
@@ -115,12 +100,7 @@ namespace pwiz.Skyline.SettingsUI
             if (_updating)
                 return;
 
-            string reason = null;
-            if (!CanChooseRuntime)
-                reason = SettingsUIResources.BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_;
-            else if (_checkBox.Checked)
-                reason = TorchRuntimes.GetCudaUnavailableReason();
-
+            string reason = _checkBox.Checked ? TorchRuntimes.GetCudaUnavailableReason() : null;
             if (reason != null)
             {
                 MessageDlg.Show(_owner, reason);
@@ -132,11 +112,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        /// <summary>Remembers the choice for the next form, when the choice was open.</summary>
+        /// <summary>Remembers the choice for the next form.</summary>
         public void SaveSetting()
         {
-            if (CanChooseRuntime)
-                Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
+            Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
         }
 
         /// <summary>

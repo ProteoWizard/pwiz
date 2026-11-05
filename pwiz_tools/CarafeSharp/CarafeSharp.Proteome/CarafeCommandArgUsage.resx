@@ -188,13 +188,13 @@
     <value>The normalized collision energy the MS2 model predicts at (default 27, or the one the fine-tuned model it predicts with was trained at).</value>
   </data>
   <data name="_ms_instrument" xml:space="preserve">
-    <value>The instrument the MS2 model predicts for, by AlphaPeptDeep's name (default Eclipse, or the one the fine-tuned model it predicts with was trained on).</value>
+    <value>The instrument the fragment intensities are predicted for (default Eclipse, or the one a fine-tuned model was trained on). Each name selects one of the five instrument groups the pretrained model knows: QE (QE, QE+, QEHF, QEHFX, Exploris), Lumos (Lumos, Fusion, Eclipse, Astral, Stellar, Velos, Elite, the Tribrids), timsTOF, SciexTOF and ThermoTOF.</value>
   </data>
   <data name="_activation" xml:space="preserve">
-    <value>The activation predicted for, else a training run's. Not in Java Carafe.</value>
+    <value>The fragmentation the library is predicted for: beam-CID (HCD, and Sciex's and Bruker's CID) or reCID (resonance CID in an ion trap). Not given, the one a fine-tuned model was trained on.</value>
   </data>
   <data name="_analyzer" xml:space="preserve">
-    <value>The MS2 analyzer predicted for, else a training run's. Not in Java Carafe.</value>
+    <value>The MS2 mass analyzer the library is predicted for: Orbitrap, LIT (a linear ion trap, as a Stellar's) or ToF (an Astral's, a timsTOF's, a Sciex TOF's). Not given, the one a fine-tuned model was trained on.</value>
   </data>
   <data name="_rt_max" xml:space="preserve">
     <value>The gradient length the library's retention times are scaled to, in minutes; absent, iRT.</value>
@@ -218,7 +218,7 @@
     <value>A saved model (.model.zip, a ZIP archive), which every training run writes into --o: predict a library with it, or with --i fine-tune it further. Not in Java Carafe.</value>
   </data>
   <data name="_pretrained" xml:space="preserve">
-    <value>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</value>
+    <value>The AlphaPeptDeep pretrained models zip (default: the one beside the executable).</value>
   </data>
   <data name="_tf" xml:space="preserve">
     <value>The models to train: all (default), ms2 or rt.</value>
@@ -266,7 +266,7 @@
     <value>How the training runs' retention times are aligned before the RT model is fine-tuned: kde (default; each run's minutes mapped onto Chronologer's hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe's one rt_max). Not in Java Carafe.</value>
   </data>
   <data name="_rt_select" xml:space="preserve">
-    <value>With aligned runs, the retention time a peptide form trains on: its best run, or the runs' median. Not in Java Carafe.</value>
+    <value>With aligned runs, the retention time a peptide form trains on: its best run, or the runs' median.</value>
   </data>
   <data name="_log_file" xml:space="preserve">
     <value>Write every line of output and error to this file instead of the console. Not in Java Carafe; any mode.</value>
@@ -342,5 +342,116 @@
   </data>
   <data name="_y1" xml:space="preserve">
     <value>Not supported by CarafeSharp training.</value>
+  </data>
+  <data name="_enzyme_property" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="_miss_c_property" xml:space="preserve">
+    <value>Maximum missed cleavages</value>
+  </data>
+  <data name="_min_length_property" xml:space="preserve">
+    <value>Minimum peptide length</value>
+  </data>
+  <data name="_max_length_property" xml:space="preserve">
+    <value>Maximum peptide length</value>
+  </data>
+  <data name="_clip_n_m_property" xml:space="preserve">
+    <value>Clip N-terminal methionine</value>
+  </data>
+  <data name="_fix_mod_property" xml:space="preserve">
+    <value>Fixed modification ids</value>
+  </data>
+  <data name="_var_mod_property" xml:space="preserve">
+    <value>Variable modification ids</value>
+  </data>
+  <data name="_max_var_property" xml:space="preserve">
+    <value>Maximum variable modifications</value>
+  </data>
+  <data name="_min_pep_mz_property" xml:space="preserve">
+    <value>Minimum precursor m/z</value>
+  </data>
+  <data name="_max_pep_mz_property" xml:space="preserve">
+    <value>Maximum precursor m/z</value>
+  </data>
+  <data name="_min_pep_charge_property" xml:space="preserve">
+    <value>Minimum precursor charge</value>
+  </data>
+  <data name="_max_pep_charge_property" xml:space="preserve">
+    <value>Maximum precursor charge</value>
+  </data>
+  <data name="_i2l_property" xml:space="preserve">
+    <value>Isoleucine as leucine</value>
+  </data>
+  <data name="_lf_frag_mz_min_property" xml:space="preserve">
+    <value>Minimum fragment m/z</value>
+  </data>
+  <data name="_lf_frag_mz_max_property" xml:space="preserve">
+    <value>Maximum fragment m/z</value>
+  </data>
+  <data name="_lf_top_n_frag_property" xml:space="preserve">
+    <value>Fragments per precursor</value>
+  </data>
+  <data name="_lf_min_n_frag_property" xml:space="preserve">
+    <value>Minimum fragments per precursor</value>
+  </data>
+  <data name="_lf_frag_n_min_property" xml:space="preserve">
+    <value>Minimum fragment ordinal</value>
+  </data>
+  <data name="_nce_property" xml:space="preserve">
+    <value>Collision energy (NCE)</value>
+  </data>
+  <data name="_ms_instrument_property" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="_activation_property" xml:space="preserve">
+    <value>Activation</value>
+  </data>
+  <data name="_analyzer_property" xml:space="preserve">
+    <value>MS2 analyzer</value>
+  </data>
+  <data name="_rt_max_property" xml:space="preserve">
+    <value>Gradient length (minutes)</value>
+  </data>
+  <data name="_ccs_property" xml:space="preserve">
+    <value>Predict ion mobility</value>
+  </data>
+  <data name="_rt_model_property" xml:space="preserve">
+    <value>Retention time model</value>
+  </data>
+  <data name="_pretrained_property" xml:space="preserve">
+    <value>Pretrained models zip</value>
+  </data>
+  <data name="_tf_property" xml:space="preserve">
+    <value>Models to train</value>
+  </data>
+  <data name="_cor_property" xml:space="preserve">
+    <value>Minimum fragment correlation</value>
+  </data>
+  <data name="_n_ion_min_property" xml:space="preserve">
+    <value>Minimum b-ion ordinal</value>
+  </data>
+  <data name="_c_ion_min_property" xml:space="preserve">
+    <value>Minimum y-ion ordinal</value>
+  </data>
+  <data name="_nf_property" xml:space="preserve">
+    <value>Minimum matched fragments</value>
+  </data>
+  <data name="_min_n_property" xml:space="preserve">
+    <value>Minimum valid fragments</value>
+  </data>
+  <data name="_valid_property" xml:space="preserve">
+    <value>Require a valid top fragment</value>
+  </data>
+  <data name="_no_masking_property" xml:space="preserve">
+    <value>Train without masking</value>
+  </data>
+  <data name="_rt_align_property" xml:space="preserve">
+    <value>Retention time alignment</value>
+  </data>
+  <data name="_rt_select_property" xml:space="preserve">
+    <value>Retention time selection</value>
+  </data>
+  <data name="_rt_reference_property" xml:space="preserve">
+    <value>Retention time reference run</value>
   </data>
 </root>

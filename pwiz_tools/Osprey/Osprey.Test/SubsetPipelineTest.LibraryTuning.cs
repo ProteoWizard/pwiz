@@ -99,7 +99,13 @@ namespace pwiz.Osprey.Test
 
                 // Entrapment is the final library's alone: the training library, the tuning search
                 // and the tuning are current, and the library and the output's search run again.
-                string entrapment = RunOsprey(buildArgs.Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText }).ToArray(), Verifier(false));
+                // What runs is checked, not what passes: with a one-epoch tuning each seven-minute
+                // run sits at the 100-target first-pass floor, so a run can keep nothing at 1%, and
+                // every precursor is reported.
+                string entrapment = RunOsprey(buildArgs.Concat(new[]
+                {
+                    OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1"
+                }).ToArray(), Verifier(false));
                 AssertTunedPhases(entrapment, TUNING_PHASES.Take(2), new[] { PredictLibraryTask.TASK_NAME }, true, true);
                 Assert.IsTrue(File.Exists(Path.Combine(products.WorkDirectory, LibraryBuildWorkflow.PAIRING_FILE_NAME)));
                 Assert.AreEqual(1, Math.Sign(BlibComparer.CountWhere(products.Library, @"DecoyPairs", @"IsEntrapment = 1")));
@@ -194,9 +200,13 @@ namespace pwiz.Osprey.Test
             var inputs = tuningRuns.Take(2).ToArray();
             string workDir = CreateDir(@"library-build-held-out");
             var products = new TunedProducts(workDir);
+            // Which runs reach the output is checked, not what passes: two seven-minute runs searched
+            // with a one-epoch tuning sit at the 100-target first-pass floor, so every precursor is
+            // reported.
+            var reportAll = new[] { OspreyCommandArgs.ARG_EXPERIMENT_FDR.ArgumentText, @"1" };
             using (ShortFineTune())
             {
-                string log = RunOsprey(TunedArgs(fasta, workDir, inputs, tuningRuns).ToArray(), Verifier(false));
+                string log = RunOsprey(TunedArgs(fasta, workDir, inputs, tuningRuns).Concat(reportAll).ToArray(), Verifier(false));
                 AssertTunedPhases(log, Array.Empty<string>(), TUNING_PHASES, false, true);
                 AssertTunedProducts(products, tuningRuns, inputs.Length, MIN_LIBRARY_BUILD_PRECURSORS);
                 // The held-out run is in the tuning search, not the output.
@@ -213,7 +223,7 @@ namespace pwiz.Osprey.Test
             {
                 string furtherDir = CreateDir(@"library-build-further");
                 var further = new TunedProducts(furtherDir);
-                string furtherLog = RunOsprey(TunedArgs(fasta, furtherDir, inputs, tuningRuns)
+                string furtherLog = RunOsprey(TunedArgs(fasta, furtherDir, inputs, tuningRuns).Concat(reportAll)
                     .Concat(new[] { OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model }).ToArray(), Verifier(false));
                 AssertTunedPhases(furtherLog, Array.Empty<string>(), TUNING_PHASES, false, true);
                 AssertTunedProducts(further, tuningRuns, inputs.Length, MIN_LIBRARY_BUILD_PRECURSORS);

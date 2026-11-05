@@ -1373,6 +1373,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public OspreySettingsPresetList OspreySettingsPresets
+        {
+            get
+            {
+                var list = (OspreySettingsPresetList)this[@"OspreySettingsPresets"];
+                if (list == null)
+                {
+                    list = new OspreySettingsPresetList();
+                    list.AddDefaults();
+                    OspreySettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"OspreySettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 
@@ -1457,6 +1477,42 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this[nameof(NormalizeOptionValue)] = value;
+            }
+        }
+
+        /// <summary>
+        /// The last Osprey additional settings that were not Osprey's defaults, as the Additional
+        /// settings grid of the Osprey Search wizard and Build Library left them (the XML the DDA
+        /// search presets keep theirs in); null or empty for none.
+        /// </summary>
+        [UserScopedSetting]
+        public string OspreyAdditionalSettings
+        {
+            get
+            {
+                return (string) this[nameof(OspreyAdditionalSettings)];
+            }
+            set
+            {
+                this[nameof(OspreyAdditionalSettings)] = value;
+            }
+        }
+
+        /// <summary>
+        /// True when the Osprey Additional Settings grid lists its settings by name rather than
+        /// under their help sections, as the user last left its toolbar.
+        /// </summary>
+        [UserScopedSetting]
+        [DefaultSettingValue("False")]
+        public bool OspreyAdditionalSettingsSorted
+        {
+            get
+            {
+                return (bool) this[nameof(OspreyAdditionalSettingsSorted)];
+            }
+            set
+            {
+                this[nameof(OspreyAdditionalSettingsSorted)] = value;
             }
         }
 

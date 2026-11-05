@@ -247,6 +247,51 @@ namespace pwiz.Common.SystemUtil
             return PREFIX_LONG_PATH + path;
         }
 
+        public const string PREFIX_LONG_PATH_UNC = @"\\?\UNC\";
+
+        /// <summary>
+        /// Returns a path as it should be shown to a user: without long-path syntax, and with
+        /// <see cref="DisplayPathRoot"/> shown as <see cref="DisplayPathRootShown"/> when both are set.
+        /// </summary>
+        public static string DisplayPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+
+            if (path.StartsWith(PREFIX_LONG_PATH_UNC, StringComparison.OrdinalIgnoreCase))
+                path = @"\\" + path.Substring(PREFIX_LONG_PATH_UNC.Length);
+            else if (path.StartsWith(PREFIX_LONG_PATH))
+                path = path.Substring(PREFIX_LONG_PATH.Length);
+
+            var root = DisplayPathRoot?.TrimEnd(Path.DirectorySeparatorChar);
+            if (!string.IsNullOrEmpty(root) && DisplayPathRootShown != null &&
+                path.StartsWith(root, StringComparison.OrdinalIgnoreCase) &&
+                (path.Length == root.Length || path[root.Length] == Path.DirectorySeparatorChar))
+            {
+                path = DisplayPathRootShown.TrimEnd(Path.DirectorySeparatorChar) + path.Substring(root.Length);
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Returns text, such as a message, with every path under <see cref="DisplayPathRoot"/>
+        /// shown under <see cref="DisplayPathRootShown"/> when both are set.
+        /// </summary>
+        public static string DisplayPathsInText(string text)
+        {
+            var root = DisplayPathRoot?.TrimEnd(Path.DirectorySeparatorChar);
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(root) || DisplayPathRootShown == null)
+                return text;
+
+            // Only whole folder names, so C:\proj\pwiz-work3 does not match C:\proj\pwiz-work30
+            return Regex.Replace(text, Regex.Escape(root) + @"(?![\w-])",
+                DisplayPathRootShown.TrimEnd(Path.DirectorySeparatorChar).Replace(@"$", @"$$"), RegexOptions.IgnoreCase);
+        }
+
+        // Test framework can set these so tutorial screenshots show the same folder from any checkout
+        public static string DisplayPathRoot { get; set; }
+        public static string DisplayPathRootShown { get; set; }
+
         /// <summary>
         /// Returns true if the path specified is relative to the current drive or working directory.
         /// Returns false if the path is fixed to a specific drive or UNC path.  This method does no

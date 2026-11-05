@@ -596,7 +596,7 @@
     <value>3</value>
   </data>
   <data name="tabAlphaSource.Text" xml:space="preserve">
-    <value>AlphaPeptDeep</value>
+    <value>Carafe</value>
   </data>
   <data name="&gt;&gt;tabAlphaSource.Name" xml:space="preserve">
     <value>tabAlphaSource</value>
@@ -798,7 +798,7 @@
     <value>1</value>
   </data>
   <data name="radioAlphaSource.Text" xml:space="preserve">
-    <value>AlphaPeptDeep(&amp;D)</value>
+    <value>Carafe(&amp;C)</value>
   </data>
   <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
     <value>radioAlphaSource</value>

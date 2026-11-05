@@ -22,6 +22,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using pwiz.Osprey.Core;
 

@@ -530,6 +530,18 @@ namespace pwiz.Osprey
                     return EXIT_CODE_FAILURE_TO_START;
                 }
 
+                // --resolution auto: measured here, before anything reads the resolution (the
+                // settings lines below, the search settings hash, scoring), and applied through the
+                // same ApplyResolutionMode an explicit value takes, so the two configure identical
+                // searches. A library phase reads no input and scores nothing, so measures nothing.
+                bool resolutionDetected = config.DetectResolution && config.LibraryBuild.Phase == null;
+                ResolutionDetection resolutionDetection = null;
+                if (resolutionDetected)
+                {
+                    resolutionDetection = ResolutionDetector.Detect(config);
+                    config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
+                }
+
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
                 LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
@@ -538,12 +550,21 @@ namespace pwiz.Osprey
                 {
                     // The one command: the library is predicted before the search, so the banner
                     // names what it is predicted from and where it will be.
-                    LogInfo(string.Format(OspreyResources.Program_Run_Library__predicted_from__0__with__1_, config.LibraryBuild.FastaPath,
+                    LogInfo(string.Format(OspreyResources.Program_Run_Library__predicted_from__0__with__1_,
+                        config.LibraryBuild.PrecursorTablePath ?? config.LibraryBuild.FastaPath,
                         config.LibraryBuild.ModelPath != null
                             ? string.Format(OspreyResources.Program_Run_the_saved_model__0_, config.LibraryBuild.ModelPath)
                             : OspreyResources.Program_Run_the_pretrained_models));
-                    LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
-                        LibraryBuildWorkflow.LibraryPath(config), LibraryBuildWorkflow.WorkDirectory(config)));
+                    // A precursor table's prediction alone has no working folder: the Output line
+                    // names its library. With the tuning, the folder holds the training library and the model.
+                    if (config.LibraryBuild.PrecursorTablePath == null || config.LibraryBuild.Tuning)
+                    {
+                        LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
+                            config.LibraryBuild.PrecursorTablePath != null
+                                ? LibraryBuildWorkflow.TableLibraryPath(config)
+                                : LibraryBuildWorkflow.LibraryPath(config),
+                            LibraryBuildWorkflow.WorkDirectory(config)));
+                    }
                     if (config.LibraryBuild.Tuning)
                     {
                         LogInfo(string.Format(OspreyResources.Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_,
@@ -583,7 +604,7 @@ namespace pwiz.Osprey
                     config.LibraryBuild.Phase != null
                         ? LibraryBuildWorkflow.PhaseOutput(config)
                         : config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
-                LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
+                LogResolution(config, resolutionDetected, resolutionDetection);
                 LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
                     config.FragmentTolerance.Unit.GetLocalizedString()));
@@ -607,14 +628,18 @@ namespace pwiz.Osprey
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
                 // whose q-values an operator is most likely to attribute to the wrong arm.
                 LogInfo(OspreyEnvironment.DescribeExperimentAgg());
+                // Abort, do not fall back: the default arm's q-values filed under the name of the
+                // arm the caller asked for, as for OSPREY_PASS2_QVALUE below. It used to warn and run
+                // max, which a mistyped sweep cell could not be told apart from.
                 if (OspreyEnvironment.ExperimentAggUnrecognized)
                 {
-                    LogWarning(string.Format(
-                        @"OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
-                        @"'{0}'. Recognized values: '{0}', or '{1}<N>' with N in [2, {2}] (e.g. '{1}2').",
+                    LogError(string.Format(
+                        @"OSPREY_EXPERIMENT_AGG is set to an unrecognized value. Use '{0}', or '{1}<N>' " +
+                        @"with N in [2, {2}] (e.g. '{1}2'), or unset it for the default ('{0}').",
                         OspreyEnvironment.EXPERIMENT_AGG_MAX,
                         OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
                         OspreyEnvironment.MEAN_BEST_N_MAX));
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
                 // asked for trees and trained the linear SVM is the #4491 defect, and its output
@@ -659,29 +684,55 @@ namespace pwiz.Osprey
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
                 }
+                // Abort for the same reason: a mistyped value would train with the default arm
+                // and key its directories as the default, so a System.Math timing or parity arm
+                // would report the deterministic arm's numbers under its own name.
+                if (OspreyEnvironment.DeterministicMathUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_DETERMINISTIC_MATH must be '0' (System.Math Exp/Log) or '1' (the default, " +
+                        @"platform-independent fdlibm Exp/Log), not '{0}'. Unset it for the default.",
+                        OspreyEnvironment.DeterministicMathSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                if (!OspreyEnvironment.UseDeterministicMath)
+                {
+                    LogInfo(@"Exp/Log: System.Math (OSPREY_DETERMINISTIC_MATH=0) - gbdt training is not " +
+                            @"bit-identical across operating systems");
+                }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
                     LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
                         OspreyEnvironment.SvmCSelectionTolerance.ToString(CultureInfo.InvariantCulture)));
                 }
                 // An OSPREY_* variable this build does not read is refused, as an unrecognized
-                // argument is (OspreyEnvironment.KnownVariables). Silence was the bad outcome
-                // for every kind of name this catches: a retired switch (OSPREY_STAGE7_STREAM,
-                // OSPREY_FDR_PROJECTION and the rest) would have the default arm's numbers filed
-                // under the arm it used to select; a Rust-only dump left in a bisection shell
-                // would produce a run with no dump; and a misspelling would change nothing while
-                // its caller believed it had. Checked at startup, so it costs seconds rather
-                // than Stages 1-5.
-                var unrecognizedVariables = OspreyEnvironment.UnrecognizedVariables();
-                if (unrecognizedVariables.Count > 0)
+                // argument is (EnvVarUsage.Catalog). Silence was the bad outcome for every kind of
+                // name this catches: a retired switch (OSPREY_STAGE7_STREAM, OSPREY_FDR_PROJECTION and
+                // the rest) would have the default arm's numbers filed under the arm it used to
+                // select; a Rust-only dump left in a bisection shell would produce a run with no dump;
+                // and a misspelling would change nothing while its caller believed it had. Checked at
+                // startup, so it costs seconds rather than Stages 1-5. An error, not a warning, since
+                // #4825; the message names the closest catalogued name.
+                string unrecognizedVariables = EnvVarUsage.DescribeUnrecognizedVariables(OspreyCommandArgs.ARG_HELP_ENV.ArgumentText);
+                if (unrecognizedVariables != null)
                 {
-                    LogError(string.Format(
-                        @"Osprey does not recognize the environment variable(s) {0}. Unset them. A variable that " +
-                        @"was removed no longer has any effect, and one that only Rust osprey reads is never " +
-                        @"honored here.",
-                        string.Join(@", ", unrecognizedVariables)));
+                    LogError(unrecognizedVariables);
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // Every other switch with listed values: a value it does not list would run the
+                // default arm under the name of the one asked for. The switches above give their own
+                // fuller message first.
+                var valueErrors = EnvVarCatalog.ValueErrors(EnvVarUsage.Catalog);
+                if (valueErrors.Count > 0)
+                {
+                    foreach (string valueError in valueErrors)
+                        LogError(valueError);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Provenance: every switch that is set, so a log names its arm without inference.
+                string setVariables = EnvVarUsage.DescribeSetVariables();
+                if (setVariables != null)
+                    LogInfo(setVariables);
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
                 // Machine twins of the banner: the liveness anchor a route assertion needs
@@ -1006,7 +1057,7 @@ namespace pwiz.Osprey
                 }
                 // The loader has closed the library by the time the export replaces its output,
                 // so the same path would silently overwrite the library with the export.
-                if (IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
+                if (PathComparison.IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
                 {
                     return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
                         OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, config.LibrarySource.Path);
@@ -1017,7 +1068,7 @@ namespace pwiz.Osprey
             // The search replaces its output blib at the end, after the library was read, so the
             // library's own path would silently replace the library with this run's results.
             if (config.LibrarySource != null && !string.IsNullOrWhiteSpace(config.OutputBlib) &&
-                IsSamePath(config.OutputBlib, config.LibrarySource.Path))
+                PathComparison.IsSamePath(config.OutputBlib, config.LibrarySource.Path))
             {
                 return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, config.LibrarySource.Path);
@@ -1066,7 +1117,10 @@ namespace pwiz.Osprey
             // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
             // directory that already holds each run's artifacts skips to whichever stage is
             // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
-            if (!hasInputFiles)
+            // A precursor table tuned on runs searches the tuning runs alone and predicts the table:
+            // it has no output search, so no inputs.
+            bool predictsTable = config.LibraryBuild.PrecursorTablePath != null;
+            if (!hasInputFiles && !predictsTable)
                 return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, OspreyCommandArgs.UsageInput);
             if (config.LibrarySource == null && !config.LibraryBuild.Enabled)
             {
@@ -1110,6 +1164,52 @@ namespace pwiz.Osprey
                 return null;
             }
             string fastaArg = OspreyCommandArgs.ARG_FASTA.ArgumentText;
+            if (build.PrecursorTablePath != null)
+            {
+                // A precursor table is predicted, never searched: on its own it is the PredictLibrary
+                // phase alone, and with the tuning runs a FASTA names the training library they are
+                // searched against, after which the tuned models predict the table. Nothing of the
+                // output library's entrapment applies to it, and without the FASTA nothing digests.
+                string precursorsArg = OspreyCommandArgs.ARG_PRECURSORS.ArgumentText;
+                if (build.FastaPath != null && !build.Tuning)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__and__1__both_name_what_to_predict__give_one_or_the_other_,
+                        fastaArg, precursorsArg);
+                }
+                if (!build.Tuning && build.Phase != LibraryBuildConfig.PREDICT_LIBRARY)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
+                        precursorsArg, OspreyArgNames.TaskText(LibraryBuildConfig.PREDICT_LIBRARY));
+                }
+                // Nothing of the table is searched: not the inputs, not with entrapment, not as a
+                // stage of a search
+                var notWithTable = new List<string>();
+                if (config.InputFiles.Count > 0)
+                    notWithTable.Add(OspreyCommandArgs.ARG_INPUT.ShortArgumentText);
+                if (build.Entrapment)
+                    notWithTable.Add(OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
+                if (build.EntrapmentFastaPath != null)
+                    notWithTable.Add(OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText);
+                if (build.TrainingSearch)
+                    notWithTable.Add(OspreyCommandArgs.ARG_TRAINING_SEARCH.ArgumentText);
+                if (notWithTable.Count > 0)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__predicts_a_library_and_searches_nothing__so__1__cannot_be_given_with_it_,
+                        precursorsArg, string.Join(@", ", notWithTable));
+                }
+                // The tuning runs and the digest options need the FASTA they describe
+                var fastaOnly = new List<string>();
+                if (build.Tuning && build.FastaPath == null)
+                    fastaOnly.Add(OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
+                fastaOnly.AddRange(build.DigestOptionsWithPrecursors);
+                if (fastaOnly.Count > 0)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                        string.Join(@", ", fastaOnly), fastaArg);
+                }
+                if (build.FastaPath == null)
+                    fastaArg = precursorsArg;
+            }
             if (config.LibrarySource != null)
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_,
@@ -1148,8 +1248,10 @@ namespace pwiz.Osprey
                                                        build.Phase == LibraryBuildConfig.PREDICT_LIBRARY);
             bool tunes = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.TRAIN_MODEL);
             bool predictsOutputLibrary = !config.PrintTaskFiles && (whole || build.Phase == LibraryBuildConfig.PREDICT_LIBRARY);
-            if (predicts && !File.Exists(build.FastaPath))
+            if (predicts && build.FastaPath != null && !File.Exists(build.FastaPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.FastaPath);
+            if (predicts && build.PrecursorTablePath != null && !File.Exists(build.PrecursorTablePath))
+                return string.Format(OspreyResources.Program_LibraryBuildError_Precursor_table_not_found___0_, build.PrecursorTablePath);
             if ((predicts || tunes) && build.ModelPath != null && !File.Exists(build.ModelPath))
                 return string.Format(OspreyResources.Program_LibraryBuildError_Model_file_not_found___0_, build.ModelPath);
             if (build.EntrapmentFastaPath != null)
@@ -1171,7 +1273,7 @@ namespace pwiz.Osprey
             // The tuning writes <out>.model.zip, so tuning from it would overwrite its own input,
             // and a re-run would tune again from the last result instead of finding it current.
             if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
-                IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
+                PathComparison.IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__,
                     OspreyCommandArgs.ARG_MODEL.ArgumentText, build.ModelPath, OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText);
@@ -1187,7 +1289,7 @@ namespace pwiz.Osprey
                 // cache may stand in for it; one searched for the tuning only is read here (a file,
                 // or a folder-format run such as a Bruker .d). A task of the one command reads them
                 // as its analysis reads its inputs, if at all: a node is given only what its task reads.
-                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => IsSamePath(input, run))).ToList();
+                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => PathComparison.IsSamePath(input, run))).ToList();
                 bool runsWhole = config.SelectedTask == null && build.Phase == null;
                 foreach (string run in runsWhole ? heldOut : new List<string>())
                 {
@@ -1206,13 +1308,53 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Whether two paths name the same file once made absolute: ignoring case except on
-        /// Linux, whose file systems are case-sensitive.
+        /// The resolution settings line and, when it was detected, the evidence: the measurement
+        /// and the threshold it was compared with, or the scores file it was read from, and every
+        /// input whose own spectra measure as the other resolution.
         /// </summary>
-        private static bool IsSamePath(string path1, string path2)
+        private static void LogResolution(OspreyConfig config, bool detected, ResolutionDetection detection)
         {
-            return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2),
-                OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+            LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
+            if (!detected)
+            {
+                // A library phase scores nothing, so an auto resolution there is never resolved.
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, config.DetectResolution ? @"unused" : @"explicit"));
+                return;
+            }
+            string choose = OspreyCommandArgs.ARG_RESOLUTION.ArgumentText + @" " +
+                            OspreyCommandArgs.RESOLUTION_HRAM + @"|" + OspreyCommandArgs.RESOLUTION_UNIT;
+            string modeText = config.ResolutionMode.GetLocalizedString();
+            if (detection?.Mode == null)
+            {
+                var measurement = detection?.Measurement;
+                LogWarning(measurement == null
+                    ? string.Format(OspreyResources.Program_LogResolution_No_spectra_or_scores_file_of_the_inputs_shows_the_resolution__searching_at__0___Give__1__to_choose_it_yourself_,
+                        modeText, choose)
+                    : string.Format(OspreyResources.Program_LogResolution_The_MS2_spectra_of__0__hold_too_few_peaks_to_measure_the_resolution___1__adjacent_peaks_in__2__spectra___searching_at__3___Give__4__to_choose_it_yourself_,
+                        detection.InputFile, measurement.SpacingCount, measurement.SpectrumCount, modeText, choose));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"undecided"));
+                return;
+            }
+            if (detection.Measurement == null)
+            {
+                LogInfo(string.Format(OspreyResources.Program_LogResolution_Read_from_the_search_settings_recorded_in__0___since_no_spectra_of_the_inputs_are_at_hand_to_measure__Give__1__to_choose_it_yourself_,
+                    detection.ScoresPath, choose));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"scores-file"));
+                return;
+            }
+            var evidence = detection.Measurement;
+            LogInfo(string.Format(config.ResolutionMode == ResolutionMode.HRAM
+                    ? OspreyResources.Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1____2__of_adjacent_peaks_are_within__3__m_z_of_each_other__closer_than_the__4__m_z_a_unit_resolution_analyzer_separates__Give__5__to_choose_it_yourself_
+                    : OspreyResources.Program_LogResolution_Measured_from_the_first__0__MS2_spectra_of__1___the_closest__2__of_adjacent_peaks_are__3__m_z_apart__no_closer_than__4__m_z__as_at_unit_resolution__Give__5__to_choose_it_yourself_,
+                evidence.SpectrumCount, detection.InputFile, ResolutionDetector.SPACING_QUANTILE.ToString(@"0.#%"),
+                evidence.SpacingQuantile, ResolutionDetector.HRAM_MAX_SPACING, choose));
+            LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESOLUTION, @"spectra {0}", config.ResolutionMode));
+            foreach (var disagreement in detection.Disagreements)
+            {
+                LogWarning(string.Format(OspreyResources.Program_LogResolution__0__measures_as__1____2__m_z___unlike__3___it_is_searched_at__4__with_the_other_inputs__Search_runs_of_different_resolution_separately_,
+                    disagreement.Key, disagreement.Value.Mode.GetLocalizedString(), disagreement.Value.SpacingQuantile,
+                    detection.InputFile, modeText));
+            }
         }
 
         /// <summary>

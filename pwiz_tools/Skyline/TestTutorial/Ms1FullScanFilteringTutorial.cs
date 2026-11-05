@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
@@ -452,10 +453,10 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
                     bmp =>
                     {
-                        var rectBorder = ScreenshotProcessingExtensions.GetToolWindowBorderRect(
+                        var rectBorder = ScreenshotBorder.GetToolWindowBorderRect(
                             ScreenshotManager.GetFramedWindowBounds(peakAreas));
                         bmp = bmp.CleanupBorder(rectBorder,
-                            ScreenshotProcessingExtensions.CornerToolWindow, 
+                            ScreenshotBorder.CornerToolWindow, 
                             Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
 
                         return ClipRegionAndEraseBackground(bmp,

@@ -310,14 +310,14 @@
   <data name="FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_" xml:space="preserve">
     <value>Failed to load the scores for {0} from {1}: {2}</value>
   </data>
+  <data name="FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_precursors_at__3__experiment_level__4__FDR" xml:space="preserve">
+    <value>Across {0:N0} files: {1:N0} of {2:N0} target precursors at {3:P1} experiment-level {4} FDR</value>
+  </data>
   <data name="FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
     <value>{0}: {1:N0} precursors at {2:P1} run-level FDR</value>
   </data>
   <data name="FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__first_pass_intermediate_files_could_not_be_written__so_" xml:space="preserve">
     <value>{2}: {0:N0} of {1:N0} first-pass intermediate files could not be written, so the next task cannot run. See the warnings above for each file.</value>
-  </data>
-  <data name="FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files" xml:space="preserve">
-    <value>Total: {0:N0} precursors pass run-level FDR across {1:N0} files</value>
   </data>
   <data name="FirstPassFdrTask_OnlyDiagnosticsProductOutstanding_Model_diagnostics___0__is_missing__so_the_first_pass_is_re_run_to_build_the_report_" xml:space="preserve">
     <value>Model diagnostics: {0} is missing, so the first pass is re-run to build the report.</value>

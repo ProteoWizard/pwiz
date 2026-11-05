@@ -138,6 +138,15 @@ namespace pwiz.Osprey
             return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
         }
 
+        /// <summary>
+        /// The library a precursor table's prediction writes: the <c>-o</c> path itself, which is
+        /// what Skyline's Build Library asked for.
+        /// </summary>
+        public static string TableLibraryPath(OspreyConfig config)
+        {
+            return Path.GetFullPath(config.OutputBlib);
+        }
+
         /// <summary>The model the tuning writes: <c>&lt;out&gt;.model.zip</c>.</summary>
         public static string ModelPath(OspreyConfig config)
         {
@@ -172,7 +181,7 @@ namespace pwiz.Osprey
                 case TRAIN_MODEL_TASK:
                     return ModelPath(config);
                 default:
-                    return LibraryPath(config);
+                    return config.LibraryBuild.PrecursorTablePath != null ? TableLibraryPath(config) : LibraryPath(config);
             }
         }
 
@@ -285,6 +294,10 @@ namespace pwiz.Osprey
                     }
                 }
 
+                // A precursor table's prediction is the whole run: the phase alone, no pairing, no search.
+                if (_config.LibraryBuild.PrecursorTablePath != null)
+                    return RunPhase(PhaseTask(PREDICT_LIBRARY_TASK));
+
                 var predict = (PredictLibraryTask)PhaseTask(PREDICT_LIBRARY_TASK);
                 int predictExit = RunPhase(predict);
                 if (predictExit != 0)
@@ -363,12 +376,19 @@ namespace pwiz.Osprey
                 default:
                 {
                     var library = _outputLibrary;
-                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
                     if (training != null)
                     {
                         library.ModelDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
                         library.PreferSafetensors = true;
                     }
+                    if (_config.LibraryBuild.PrecursorTablePath != null)
+                    {
+                        // Exactly the table's precursors, as the .blib the output names; no working
+                        // folder of its own (a saved model unpacks into a temporary folder, and after
+                        // a tuning the models are read from the tuning's model folder)
+                        return new PredictPrecursorTableTask(library, _config.LibraryBuild.PrecursorTablePath, TableLibraryPath(_config));
+                    }
+                    PrepareLibrary(library, LibraryPath(_config), workDirectory);
                     return new PredictLibraryTask(library, DigestSettings(library, _config.LibraryBuild.Entrapment));
                 }
             }

@@ -37,9 +37,9 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<blib-stem>.1st-pass.consensus.json` | exp | JSON | `Osprey.Tasks/Stage6ConsensusFile.cs` | The cross-run consensus every run's plan reads: consensus RTs and the two passing sets (section 5a) |
 | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v3**, 32-byte header + 44-byte records + validity stamp trailer | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
 | `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v2**, 32-byte header + 4-byte records + validity stamp trailer | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending - the distinct base_ids of every run's first-pass survivors. Written once when the consensus pass ends. (It used to add each planned action target's base_id, which never added one: every action targets a survivor.) Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
-| `<blib-stem>.1st-pass.model.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
+| `<blib-stem>.1st-pass.model.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB), plus `TrainingAnalysis`, the training-set feature analysis the `--model-diagnostics` report reads, because the fold training sets it describes exist nowhere else (07, "Training-set feature analysis"). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
 | `<blib-stem>.1st-pass.stratum.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides, ascending. Absent under every mode but protein-compact. A SECOND file rather than a member of the model file because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadForAnalysis` merges the two on read when their stamps match. Until 2026-10 it was copied beside every run: 82 x 9.6 MB = 790 MB on the SEA-AD cohort |
-| `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
+| `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` or `.parquet` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
 | `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
@@ -91,7 +91,7 @@ There is no separate validity-record writer. Each pipeline product in this table
 validity stamp (section 8) in the same commit as its content, so the stamp is exactly as
 atomic as the file.
 
-Most `-d` diagnostic dumps commit the same way as a durable artifact, though nothing in
+Most `OSPREY_DIAGNOSTICS` dumps commit the same way as a durable artifact, though nothing in
 the pipeline reads any of them back - see P8 in
 [00-pipeline-architecture](00-pipeline-architecture.md) for why that does not exempt them.
 The exceptions are the log-shaped dumps marked below, which write directly to their final
@@ -599,9 +599,10 @@ column values added by `Osprey.IO/OspreyBlibWriter.cs`.
 ## 7. The derived library (`<library-leaf>.blib`)
 
 **C# source**: `Osprey.IO/LibraryLoader.cs` (`Load`), `Osprey.IO/LibraryBlibWriter.cs`,
-`Osprey.IO/BlibLoader.cs`. A `.tsv` library is parsed once; its FINISHED form - normalized,
-deduplicated, decoys marked and paired, every entry's pairing id assigned - is written in the
-cache directory as `<library file name>.blib` (`lib.tsv.blib`), the library's transfer format,
+`Osprey.IO/BlibLoader.cs`. A `.tsv` or DIA-NN `.parquet` library is parsed once; its FINISHED
+form - normalized, deduplicated, decoys marked and paired, every entry's pairing id assigned - is
+written in the cache directory as `<library file name>.blib` (`lib.tsv.blib`,
+`report-lib.parquet.blib`), the library's transfer format,
 through the same writer `--export-library` uses, with a `DecoyPairs` table when the library has
 decoys or entrapment. Every later run loads that file through the blib branch of `Load`
 (`BlibLoader`, the `DecoyPairs` table, the contract check, Normalize and Deduplicate as
@@ -613,7 +614,8 @@ carries them, but no output reads them.
 
 **Validity**: the `LibMetadata` row `osprey.library_hash` (`OspreyBlibWriter.KEY_LIBRARY_HASH`),
 SHA-256 of the library composition - the source's identity (name, size, mtime), the decoy
-configuration, the pairing manifest's identity, the TSV reader's term - plus
+configuration, the pairing manifest's identity, the TSV reader's term (for a `.parquet`,
+`parquet_reader:` with both its own version and the TSV reader's, whose row assembly it shares) - plus
 `BlibLoader.CacheTerm` (the blib reader's version and the fragment tolerance it types within),
 because the file is read by that reader and a change to what it makes of a blib must rebuild
 it. A mismatch logs that the derived library was built from a different version or
@@ -770,7 +772,8 @@ composition term `blib_reader:` does (with the fragment tolerance the typed peak
 within), so one edit moves the key term and the composition term together. The tolerance itself
 needs no key term: it is in the search hash. A DIA-NN TSV search keys as before; its derived
 library's hash carries `tsv_reader:` and, since the derived file is read by the blib reader,
-`blib_reader:` too, so a change to either reader rebuilds it once (section 7).
+`blib_reader:` too, so a change to either reader rebuilds it once (section 7). A DIA-NN
+`.parquet` search keys with `;tsvreader=5;parquetreader=1`, both readers' versions.
 
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than
@@ -816,7 +819,7 @@ parquet's blobs, and the same encoders (`ParquetBlobCodec`, in the same shared a
 slot order and every footer key are [22-training-export](22-training-export.md), which is the
 contract; `TrainingExportParquetTest` fails when the writer emits a column that document does not
 name (it checks names only - not types, and not a documented column the writer lacks). Footer
-`osprey.training_export.format_version` is 2.
+`osprey.training_export.format_version` is 3.
 
 ---
 
@@ -854,7 +857,7 @@ written or reused. Defaults from `Osprey/OspreyCommandArgs.cs` + `Osprey.Core/Os
 | `--output-dir <dir>` | unset | Sets `ArtifactPaths.OutputDir` (scores parquet, calibration JSON, FDR sidecars, reconciliation JSON) |
 | `--cache-dir <dir>` | unset | Sets `ArtifactPaths.CacheDir`, which holds `.spectra.bin` **and** the derived `<library-leaf>.blib` (`LibraryLoader` routes the derived library through it too); a shared cache dir lets analyses reuse one parse |
 | `--task <T>` | unset (in-process) | `FirstPassFDR`/`SecondPassFDR` trigger `ValidateScoresParquetGroup`; `SecondPassFDR` sets `ExpectReconciledInput` (requires `osprey.reconciled = "true"`). See 15-hpc-scoring-split.md |
-| `--resolution {hram\|unit}` | `hram` | Folded into `SearchParameterHash` ⇒ changing it invalidates `.scores.parquet` and (via the task key) recalibration |
+| `--resolution {auto\|hram\|unit}` | `auto`: measured from the data ([20-command-line.md](20-command-line.md#resolution-detection)) | The resolved mode is folded into `SearchParameterHash` ⇒ changing it invalidates `.scores.parquet` and (via the task key) recalibration. A detected mode and the same explicit mode give the same hash; the `.spectra.bin` is not keyed by it |
 | `--fragment-tolerance` / `--fragment-unit` | ppm; unit-res forces mz 0.5 | Folded into `SearchParameterHash` |
 | `--no-prefilter` | prefilter on | Folded into `SearchParameterHash` |
 | decoy flags (`--decoys-in-library`, `--decoy-pairing-manifest`, decoy method/prefixes/pair-min-fraction) | Reverse; DECOY_/rev_/decoy_; 0.80 | All folded into `SearchParameterHash` |

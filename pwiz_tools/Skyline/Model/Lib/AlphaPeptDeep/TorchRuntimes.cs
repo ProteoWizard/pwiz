@@ -19,22 +19,25 @@
  */
 
 using System.IO;
-using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Core;
 using pwiz.Skyline.Model.Tools;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
     /// <summary>
-    /// The libtorch runtimes AlphaPeptDeep prediction runs on: the CPU runtime Skyline ships in
-    /// torch\cpu, and the CUDA runtime it downloads from nuget.org the first time it predicts on a
-    /// computer whose GPU can use it, into the Tools folder, like the search engines Skyline downloads.
-    /// The choosing and the download are <see cref="LibTorchRuntimes"/>, shared with Osprey; this
-    /// supplies Skyline's folders and its words.
+    /// The libtorch runtimes Osprey predicts with for Skyline, in Build Library and the Osprey Search
+    /// wizard: the CPU runtime the Osprey package ships in its torch\cpu, and the CUDA runtime Skyline
+    /// downloads from nuget.org the first time a user asks for the GPU on a computer whose GPU can use
+    /// it, into the Tools folder, like the search engines Skyline downloads, where Osprey is pointed at
+    /// it (--torch-runtimes). The detection and the download are <see cref="LibTorchRuntimes"/>,
+    /// shared with Osprey, which reads the package list from the installed Osprey folder, so the CUDA
+    /// version is the one the Osprey Skyline runs was built with; this supplies Skyline's folders
+    /// and its words. Nothing loads a runtime into Skyline's process.
     /// </summary>
     public class TorchRuntimes : LibTorchRuntimes
     {
         public TorchRuntimes()
-            : base(Path.GetDirectoryName(typeof(TorchRuntimes).Assembly.Location), ToolDescriptionHelpers.GetToolsDirectory())
+            : base(Path.GetDirectoryName(OspreyHelpers.OspreyBinary), ToolDescriptionHelpers.GetToolsDirectory())
         {
         }
 
@@ -55,7 +58,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         CudaDriver.DeviceName ?? ModelResources.TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU,
                         FormatComputeCapability(CudaDriver.ComputeCapability), FormatComputeCapability(CudaDriver.MIN_LIBTORCH_COMPUTE_CAPABILITY));
                 case CudaUnavailability.no_package_list:
-                    return ModelResources.TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NVIDIA_CUDA_runtime_packages_;
+                    return ModelResources.TorchRuntimes_GetCudaUnavailableReason_Osprey__which_predicts_the_library__is_not_installed__so_its_NVIDIA_CUDA_runtime_packages_are_not_known_;
                 default:
                     return null;
             }

@@ -21,7 +21,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Test
 {
@@ -56,7 +56,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.IsFalse(runtimes.CanUseCuda);
                 Assert.IsNull(runtimes.CudaInstaller);
                 Assert.IsFalse(runtimes.IsCudaInstalled);
-                Assert.AreEqual(Path.Combine(torchDirectory, LibTorchRuntimes.CPU_FOLDER), runtimes.CpuRuntime.Directory);
+                Assert.AreEqual(Path.Combine(torchDirectory, LibTorchRuntimes.CPU_FOLDER), runtimes.CpuRuntimeDirectory);
 
                 // The driver too old, then the GPU too old, then no package list in this build
                 runtimes.CudaDriver = new CudaDriver(CudaDriver.MIN_LIBTORCH_DRIVER_VERSION - 10, CudaDriver.MIN_LIBTORCH_COMPUTE_CAPABILITY, @"Test GPU");

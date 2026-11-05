@@ -145,6 +145,42 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (row {0}) Invalid {1} &apos;{2}&apos;.
+        /// </summary>
+        public static string DiannParquetLoader_AddRow___row__0___Invalid__1____2__ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_AddRow___row__0___Invalid__1____2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to (row {0}) Missing {1}.
+        /// </summary>
+        public static string DiannParquetLoader_AddRow___row__0___Missing__1_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_AddRow___row__0___Missing__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library rows have errors. Fix the library and load it again:.
+        /// </summary>
+        public static string DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_Load__0__library_rows_have_errors__Fix_the_library_and_load_it_again_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The DIA-NN library {0} has no rows: DIA-NN writes an empty library when its search identifies nothing..
+        /// </summary>
+        public static string DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_ {
+            get {
+                return ResourceManager.GetString("DiannParquetLoader_Load_The_DIA_NN_library__0__has_no_rows__DIA_NN_writes_an_empty_library_when_its_search_identifies_nothing_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
         public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {
@@ -1102,12 +1138,12 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: this build of Osprey has no vendor instrument support. Rebuild with {1} on {2}, or with &apos;{3}&apos;. Otherwise convert the file to mzML with {4} and read that instead..
+        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: this copy of Osprey has no reader for this instrument vendor format. Convert the file to mzML with {1} and search that instead..
         /// </summary>
-        public static string SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_ {
+        public static string SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_reader_for_this_instrument_vendor_format_ {
             get {
-                return ResourceManager.GetString("SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_" +
-                        "vendor_instrument_support__Rebuild_with__p_", resourceCulture);
+                return ResourceManager.GetString("SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_copy_of_Osprey_has_no_r" +
+                        "eader_for_this_instrument_vendor_format_", resourceCulture);
             }
         }
         

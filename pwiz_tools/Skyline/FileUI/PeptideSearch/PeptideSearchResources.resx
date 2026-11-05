@@ -509,4 +509,10 @@ Overwrite it, or append the new DIA-NN results to it?</value>
   <data name="OspreySearchDlg_ValidateCurrentPage_The_tuning_run__0__does_not_exist_" xml:space="preserve">
     <value>The tuning run {0} does not exist.</value>
   </data>
+  <data name="OspreyFastaControl_BrowseFasta_FASTA_files" xml:space="preserve">
+    <value>FASTA files</value>
+  </data>
+  <data name="OspreySearchSettingsControl_AdditionalSettings_The_additional_settings__0__are_set_on_the_pages_of_the_wizard_and_were_ignored_" xml:space="preserve">
+    <value>The additional settings last used, {0}, are set on the pages of the wizard or are not valid for the installed Osprey, and were ignored.</value>
+  </data>
 </root>

@@ -58,6 +58,19 @@ namespace pwiz.Skyline.Controls
             SelectedIndex = index;
         }
 
+        /// <summary>
+        /// Places a page's control below its header text, filling the page to its borders and
+        /// stretching with it: the way a wizard page hosts the control that is its content.
+        /// </summary>
+        public static void AddPageControl(UserControl pageControl, TabPage tabPage, int border, int header, int footer)
+        {
+            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pageControl.Location = new System.Drawing.Point(border, header);
+            pageControl.Width = tabPage.Width - border * 2;
+            pageControl.Height = tabPage.Height - header - border - footer;
+            tabPage.Controls.Add(pageControl);
+        }
+
         protected override void WndProc(ref Message m)
         {
             // Hide tabs by trapping the TCM_ADJUSTRECT message

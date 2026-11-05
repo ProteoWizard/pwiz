@@ -22,6 +22,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
@@ -98,7 +99,7 @@ namespace pwiz.Osprey
         public string Load(string device)
         {
             bool wantGpu = !string.Equals(device, DEVICE_CPU, StringComparison.OrdinalIgnoreCase);
-            var runtime = _runtimes.Load(wantGpu);
+            var runtime = LibTorchRuntime.Load(_runtimes, wantGpu);
             if (wantGpu && runtime.IsCuda)
             {
                 Program.LogInfo(string.Format(OspreyResources.OspreyTorchRuntimes_Load_Predicting_on_the_GPU___0___with_the_NVIDIA_CUDA_runtime_in__1_,

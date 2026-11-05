@@ -61,8 +61,15 @@ namespace pwiz.Osprey.Core
         /// <summary>The protein FASTA to predict the library from (<c>--fasta</c>), or null for a run that searches a given library.</summary>
         public string FastaPath { get; set; }
 
-        /// <summary>True when the run builds its library.</summary>
-        public bool Enabled => FastaPath != null;
+        /// <summary>
+        /// The precursor table to predict a library for (<c>--precursors</c>): exactly its
+        /// precursors, with no digest, written as the TSV peptdeep wrote, which Skyline's Build
+        /// Library runs as the <see cref="PREDICT_LIBRARY"/> phase alone; or null.
+        /// </summary>
+        public string PrecursorTablePath { get; set; }
+
+        /// <summary>True when the run builds its library, or predicts one for a precursor table.</summary>
+        public bool Enabled => FastaPath != null || PrecursorTablePath != null;
 
         /// <summary>
         /// The runs the models are tuned on before the library is predicted (<c>--training-input</c>);
@@ -123,5 +130,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>The tuning options given without <c>--training-input</c>, as typed: without the runs they would change nothing.</summary>
         public List<string> OptionsWithoutTrainingInput { get; } = new List<string>();
+
+        /// <summary>The Library Digest options given with <c>--precursors</c>, as typed: a table is predicted as it is, not digested.</summary>
+        public List<string> DigestOptionsWithPrecursors { get; } = new List<string>();
     }
 }

@@ -1232,6 +1232,9 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_EnsureOspreyInstalled_Downloading_Osprey" xml:space="preserve">
     <value>Downloading Osprey</value>
   </data>
+  <data name="OspreyInstaller_EnsureInstalled_Looking_for_the_latest_Osprey_build" xml:space="preserve">
+    <value>Looking for the latest Osprey build</value>
+  </data>
   <data name="SkylineWindow_EnsureOspreyInstalled_Failed_to_download_Osprey_" xml:space="preserve">
     <value>Failed to download Osprey.</value>
   </data>

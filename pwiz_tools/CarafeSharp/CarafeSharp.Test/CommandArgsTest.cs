@@ -117,10 +117,35 @@ namespace pwiz.CarafeSharp.Test
                     Assert.IsTrue(compatibility.Contains(arg.Name), string.Format(@"Argument {0} has no usage text {1} in CarafeCommandArgUsage.resx", arg.Name, key));
                 Assert.IsFalse(string.IsNullOrEmpty(ArgUsage.Provider.GetDescription(arg.Name)), string.Format(@"Argument {0} has no description", arg.Name));
             }
+            // A hosted argument that is a property of a host's settings page has its label under
+            // its usage key with the property suffix, and nothing else does.
+            var propertyKeys = new HashSet<string>();
+            var hosted = CarafeCommandLine.HostedDigestArguments.Concat(CarafeCommandLine.HostedPredictionArguments)
+                .Concat(CarafeCommandLine.HostedTrainingArguments).ToList();
+            foreach (var arg in declared)
+            {
+                string key = CarafeCommandLine.UsageKey(arg.Name) + CarafeCommandLine.PROPERTY_SUFFIX;
+                if (arg.PropertyName != null)
+                {
+                    Assert.IsTrue(hosted.Contains(arg), string.Format(@"Property {0} is not a hosted argument", arg.Name));
+                    Assert.AreEqual(CarafeCommandLine.GetPropertyName(arg.Name), arg.PropertyName(), arg.Name);
+                    Assert.IsFalse(string.IsNullOrEmpty(arg.PropertyName()), string.Format(@"Property {0} has no label {1} in CarafeCommandArgUsage.resx", arg.Name, key));
+                    propertyKeys.Add(key);
+                }
+                else
+                {
+                    Assert.IsNull(CarafeCommandArgUsage.ResourceManager.GetString(key), string.Format(@"{0} is labeled as a property but is none", arg.Name));
+                }
+            }
             var resourceSet = CarafeCommandArgUsage.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(resourceSet);
             foreach (DictionaryEntry entry in resourceSet)
-                Assert.IsTrue(usageKeys.Contains((string)entry.Key), string.Format(@"CarafeCommandArgUsage.resx key {0} matches no argument", entry.Key));
+            {
+                string key = (string)entry.Key;
+                bool isLabel = key.EndsWith(CarafeCommandLine.PROPERTY_SUFFIX);
+                Assert.IsTrue(isLabel ? propertyKeys.Contains(key) : usageKeys.Contains(key),
+                    string.Format(@"CarafeCommandArgUsage.resx key {0} matches no argument", key));
+            }
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Test
 {

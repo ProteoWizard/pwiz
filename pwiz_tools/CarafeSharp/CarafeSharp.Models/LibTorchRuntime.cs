@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Models
 {
@@ -44,6 +45,24 @@ namespace pwiz.CarafeSharp.Models
         /// The runtime this process loaded, or null before one is loaded.
         /// </summary>
         public static LibTorchRuntime Loaded { get; private set; }
+
+        /// <summary>
+        /// Loads the CUDA runtime of <paramref name="runtimes"/> when asked to, it is installed and the
+        /// GPU can use it, otherwise the CPU runtime, unless this process already loaded one, and
+        /// returns the runtime loaded.
+        /// </summary>
+        public static LibTorchRuntime Load(LibTorchRuntimes runtimes, bool useCuda)
+        {
+            var runtime = Loaded;
+            if (runtime == null)
+            {
+                runtime = new LibTorchRuntime(useCuda && runtimes.CanUseCuda && runtimes.IsCudaInstalled
+                    ? runtimes.CudaInstaller.RuntimeDirectory
+                    : runtimes.CpuRuntimeDirectory);
+                runtime.Load();
+            }
+            return runtime;
+        }
 
         public LibTorchRuntime(string directory)
         {

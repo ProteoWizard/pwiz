@@ -69,8 +69,8 @@ namespace pwiz.Skyline
         static CommandArgs()
         {
             // Skyline's grammar is the default, strict --name=value. CarafeSharp's declarations,
-            // in this process for AlphaPeptDeep library builds, run under these settings; Carafe's
-            // own grammar is installed only by CarafeSharp.exe.
+            // in this process for the options the Osprey Search wizard hands Osprey, run under these
+            // settings; Carafe's own grammar is installed only by CarafeSharp.exe.
             ArgUsage.Install(new ArgUsageSettings
             {
                 Provider = new SkylineArgUsageProvider(),
