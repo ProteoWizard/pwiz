@@ -758,10 +758,10 @@ namespace pwiz.Osprey.Test
             string oneKey = PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => oneFamily[f]);
             Assert.AreEqual(string.Empty, defaultKey, @"the default must not change existing keys");
             Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix());
-            Assert.AreEqual(@";featrec=all", allKey);
+            Assert.AreEqual(@";featrec=all;featavail=109", allKey);
             Assert.AreEqual(allKey, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => maskNone[f]),
                 @"masking none records what recording all does, so the two share their scores");
-            Assert.AreEqual(@";featrec=tc_sum6", oneKey);
+            Assert.AreEqual(@";featrec=tc_sum6;featavail=109", oneKey);
 
             // Under the default no task carries the term, so no default output directory is invalidated.
             var tasks = OspreyTasks.Create().Pipeline;
@@ -821,14 +821,26 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(PinFeatureMask.RecordedFeatures(byDefault, false, hram),
                 PinFeatureMask.RecordedFeatures(byDefault, false, unit));
 
-            // Recording everything available keys as all at either resolution; one family keys by name.
+            // Recording everything available keys as all at either resolution, and HRAM also counts the
+            // features, so its outputs from before the families are not adopted. Unit keys do not change.
             bool[] unitAll = PinFeatureMask.RecordedFeatures(f => false, true, unit);
             bool[] hramAll = PinFeatureMask.RecordedFeatures(f => false, true, hram);
             Assert.AreEqual(@";featrec=all", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => unitAll[f], unit));
-            Assert.AreEqual(@";featrec=all", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => hramAll[f], hram));
+            Assert.AreEqual(@";featrec=all;featavail=109", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => hramAll[f], hram));
             Assert.AreNotEqual(@";featrec=all", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => unitAll[f], hram),
                 @"at HRAM the unit-resolution columns are not all of them");
             Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => onlySpec[f], unit));
+
+            // The mask term likewise: default keys are the same everywhere, and only an HRAM mask counts.
+            const string defaultMask = @";featmask=default;fdrcols=unmasked";
+            Assert.AreEqual(defaultMask, PinFeatureMask.ValidityKeySuffix(null, hram));
+            Assert.AreEqual(defaultMask, PinFeatureMask.ValidityKeySuffix(null, unit));
+            var none = Array.Empty<string>();
+            Assert.AreEqual(@";featmask=none;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(none, unit));
+            Assert.AreEqual(@";featmask=none;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(none, hram));
+            var listed = new[] { @"tc_sum6", @"peak_width", @"tc_sum6" };
+            Assert.AreEqual(@";featmask=peak_width+tc_sum6;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(listed, unit));
+            Assert.AreEqual(@";featmask=peak_width+tc_sum6;featavail=109;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix(listed, hram));
         }
 
         /// <summary>

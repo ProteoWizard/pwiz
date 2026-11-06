@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Osprey.Core;
 
@@ -310,7 +311,8 @@ namespace pwiz.Osprey.IO
                 .Where(name => isRecorded(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name))).ToArray();
             if (families.Length == 0)
                 return string.Empty;
-            return @";featrec=" + (families.Length == available.Length ? @"all" : string.Join(@"+", families));
+            return @";featrec=" + (families.Length == available.Length ? @"all" : string.Join(@"+", families)) +
+                   AvailableFeaturesTerm(mode);
         }
 
         /// <summary>
@@ -336,14 +338,25 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string ValidityKeySuffix()
         {
-            string mask;
-            if (OspreyEnvironment.FeatureMask == null)
-                mask = @"default";
-            else if (OspreyEnvironment.FeatureMask.Length == 0)
-                mask = @"none";
-            else
-                mask = string.Join(@"+", OspreyEnvironment.FeatureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
-            return @";featmask=" + mask + @";fdrcols=unmasked";
+            return ValidityKeySuffix(OspreyEnvironment.FeatureMask, _resolutionMode);
+        }
+
+        /// <summary>
+        /// <see cref="ValidityKeySuffix()"/> for an explicitly supplied OSPREY_FEATURE_MASK value and
+        /// resolution. A mask names what is hidden, so what it leaves depends on how many features
+        /// exist: an HRAM key with a mask of its own also carries that count (<c>;featavail=</c>), and an
+        /// output from before features were added is not adopted. The default mask leaves the core
+        /// alone however many features exist, and unit resolution has not gained any, so their keys
+        /// do not carry it.
+        /// </summary>
+        public static string ValidityKeySuffix(string[] featureMask, ResolutionMode mode)
+        {
+            if (featureMask == null)
+                return @";featmask=default;fdrcols=unmasked";
+            string mask = featureMask.Length == 0
+                ? @"none"
+                : string.Join(@"+", featureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
+            return @";featmask=" + mask + AvailableFeaturesTerm(mode) + @";fdrcols=unmasked";
         }
 
         /// <summary>
@@ -406,6 +419,15 @@ namespace pwiz.Osprey.IO
                 masked[index] = true;
             }
             return masked;
+        }
+
+        // The count of features an HRAM search can use, for the keys that depend on it; nothing at unit
+        // resolution, where the HRAM-only families are not available and the count has not changed.
+        private static string AvailableFeaturesTerm(ResolutionMode mode)
+        {
+            if (mode != ResolutionMode.HRAM)
+                return string.Empty;
+            return @";featavail=" + ParquetScoreCache.NUM_PIN_FEATURES.ToString(CultureInfo.InvariantCulture);
         }
 
         private static bool[] CreateHramOnlyFlags()

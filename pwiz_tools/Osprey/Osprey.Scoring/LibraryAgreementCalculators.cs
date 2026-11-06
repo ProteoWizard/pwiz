@@ -136,12 +136,12 @@ namespace pwiz.Osprey.Scoring
                 hq += Entropy(b);
                 hm += Entropy(m);
             }
-            return 1.0 - (2 * hm - hp - hq) / Math.Log(4.0);
+            return 1.0 - (2 * hm - hp - hq) / DeterministicMath.Log(4.0);
         }
 
         private static double Entropy(double x)
         {
-            return x > 0 ? -x * Math.Log(x) : 0.0;
+            return x > 0 ? -x * DeterministicMath.Log(x) : 0.0;
         }
     }
 

@@ -474,7 +474,9 @@ unrecorded (`PinFeatureMask.IsAvailable`): `Program` hands the resolved mode to
 `PinFeatureMask.ApplyResolutionMode`, the FDR vectors and the scores parquet then have no column
 for them (see "Absent, not zero" for why that differs from a column of zeros under gbdt), and
 `OSPREY_FEATURE_MASK=none` or `OSPREY_RECORD_ALL_FEATURES=1` give the output they would give if
-the families did not exist; a logged line says so when the mask left one unmasked. The
+the families did not exist; a logged line says so when the mask left one unmasked. An HRAM key
+with a mask of its own, or with recorded families, carries the feature count (`;featavail=109`), so
+outputs from before these families are not adopted; default and unit-resolution keys are unchanged. The
 calculators also score 0 there themselves (`context.Config.ResolutionMode`), for a scorer that
 computes every feature.
 

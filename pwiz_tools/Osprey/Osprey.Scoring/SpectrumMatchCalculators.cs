@@ -51,6 +51,12 @@ namespace pwiz.Osprey.Scoring
         /// <summary>The smallest tail probability scored, so the match probability is at most 300.</summary>
         public const double MIN_TAIL_PROBABILITY = 1e-300;
 
+        // Log and Exp through DeterministicMath, so the scores are bit-identical across operating systems.
+        private static readonly double LN_10 = DeterministicMath.Log(10.0);
+
+        // ln(n!) for the fragment counts a library precursor has; LogFactorial continues past the end.
+        private static readonly double[] LOG_FACTORIALS = CreateLogFactorials(128);
+
         public double ApexMatchProbability { get; private set; }
         public double ApexProjectedCosineScore { get; private set; }
         public double ApexHyperscore { get; private set; }
@@ -100,12 +106,22 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         internal static double PoissonBinomialTail(IList<double> probabilities, int k)
         {
+            return PoissonBinomialTail(probabilities, k, new double[probabilities.Count + 1]);
+        }
+
+        /// <summary>
+        /// <see cref="PoissonBinomialTail(IList{double},int)"/> using <paramref name="scratch"/>, at least one
+        /// longer than <paramref name="probabilities"/>, in place of allocating its distribution.
+        /// </summary>
+        internal static double PoissonBinomialTail(IList<double> probabilities, int k, double[] scratch)
+        {
             if (k <= 0)
                 return 1.0;
             int n = probabilities.Count;
             if (k > n)
                 return 0.0;
-            var distribution = new double[n + 1];
+            var distribution = scratch;
+            Array.Clear(distribution, 0, n + 1);
             distribution[0] = 1.0;
             for (int j = 0; j < n; j++)
             {
@@ -120,13 +136,23 @@ namespace pwiz.Osprey.Scoring
             return tail;
         }
 
-        /// <summary>ln(n!) by summation; n is a fragment count, so small.</summary>
+        /// <summary>ln(n!), from a table for the small n a fragment count is.</summary>
         internal static double LogFactorial(int n)
         {
-            double sum = 0.0;
-            for (int i = 2; i <= n; i++)
-                sum += Math.Log(i);
+            if (n < LOG_FACTORIALS.Length)
+                return LOG_FACTORIALS[n];
+            double sum = LOG_FACTORIALS[LOG_FACTORIALS.Length - 1];
+            for (int i = LOG_FACTORIALS.Length; i <= n; i++)
+                sum += DeterministicMath.Log(i);
             return sum;
+        }
+
+        private static double[] CreateLogFactorials(int length)
+        {
+            var table = new double[length];
+            for (int i = 2; i < length; i++)
+                table[i] = table[i - 1] + DeterministicMath.Log(i);
+            return table;
         }
 
         /// <summary>
@@ -137,6 +163,7 @@ namespace pwiz.Osprey.Scoring
             private readonly IReadOnlyList<LibraryFragment> _fragments;
             private readonly FragmentToleranceConfig _tolerance;
             private readonly double[] _probabilities;
+            private readonly double[] _distribution;
             private readonly double _libraryNorm;
 
             public ScanScorer(IReadOnlyList<LibraryFragment> fragments, FragmentToleranceConfig tolerance)
@@ -144,6 +171,7 @@ namespace pwiz.Osprey.Scoring
                 _fragments = fragments;
                 _tolerance = tolerance;
                 _probabilities = new double[fragments.Count];
+                _distribution = new double[fragments.Count + 1];
                 double sumSq = 0.0;
                 foreach (var fragment in fragments)
                     sumSq += Math.Max(0.0, fragment.RelativeIntensity);
@@ -174,7 +202,7 @@ namespace pwiz.Osprey.Scoring
                     int localCount = spectrum.MzLowerBound(fragment.Mz + DENSITY_HALF_WIDTH) -
                                      spectrum.MzLowerBound(fragment.Mz - DENSITY_HALF_WIDTH);
                     double density = localCount / (2 * DENSITY_HALF_WIDTH);
-                    _probabilities[j] = 1.0 - Math.Exp(-density * 2 * tolDa);
+                    _probabilities[j] = 1.0 - DeterministicMath.Exp(-density * 2 * tolDa);
                     if (observed <= 0)
                         continue;
 
@@ -192,15 +220,18 @@ namespace pwiz.Osprey.Scoring
                 if (matched == 0)
                     return;
 
-                double tail = PoissonBinomialTail(_probabilities, matched);
-                MatchProbability = -Math.Log10(Math.Max(tail, MIN_TAIL_PROBABILITY));
+                double tail = PoissonBinomialTail(_probabilities, matched, _distribution);
+                MatchProbability = -DeterministicMath.Log(Math.Max(tail, MIN_TAIL_PROBABILITY)) / LN_10;
                 if (_libraryNorm > 0 && dot > 0)
                 {
                     double cosine = dot / (Math.Sqrt(observedSumSq) * _libraryNorm);
-                    ProjectedCosineScore = Math.Max(0.0, Math.Log10(cosine) + LogFactorial(matched) / Math.Log(10) + 2.0);
+                    ProjectedCosineScore = Math.Max(0.0, DeterministicMath.Log(cosine) / LN_10 + LogFactorial(matched) / LN_10 + 2.0);
                 }
                 if (typedIntensity > 0)
-                    Hyperscore = LogFactorial(matchedB) + LogFactorial(matchedY) + Math.Log(typedIntensity);
+                {
+                    // At least 0: a summed intensity under 1 must not rank a weak match below no match.
+                    Hyperscore = Math.Max(0.0, LogFactorial(matchedB) + LogFactorial(matchedY) + DeterministicMath.Log(typedIntensity));
+                }
             }
         }
     }

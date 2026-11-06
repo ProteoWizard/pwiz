@@ -723,6 +723,13 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.75, SpectrumMatchScores.PoissonBinomialTail(new[] { 0.5, 0.5 }, 1), TOLERANCE);
             Assert.AreEqual(0.0, SpectrumMatchScores.PoissonBinomialTail(new[] { 0.5, 0.5 }, 3), TOLERANCE);
             Assert.AreEqual(Math.Log(24), SpectrumMatchScores.LogFactorial(4), TOLERANCE);
+            // Past the table, and a reused scratch holding another distribution.
+            Assert.AreEqual(Enumerable.Range(2, 199).Sum(i => Math.Log(i)), SpectrumMatchScores.LogFactorial(200), TOLERANCE);
+            var scratch = new[] { 7.0, 7.0, 7.0, 7.0 };
+            Assert.AreEqual(0.75, SpectrumMatchScores.PoissonBinomialTail(new[] { 0.5, 0.5 }, 1, scratch), TOLERANCE);
+
+            AssertMatchProbabilityFloor();
+            AssertUnannotatedFragmentsAndHyperscoreFloor();
 
             // Nothing matched anywhere: every score 0.
             var missed = new FakePeakData(new List<XicData>(), Bounds(0, 1, 0), candidate: candidate,
@@ -734,6 +741,47 @@ namespace pwiz.Osprey.Test
             {
                 Assert.AreEqual(0.0, Calc(name).Calculate(context, missed), TOLERANCE);
             }
+        }
+
+        // So many exact matches at 1 ppm that the tail underflows: the probability stops at the floor, -log10(1e-300).
+        private static void AssertMatchProbabilityFloor()
+        {
+            var mzs = Enumerable.Range(0, 120).Select(i => 300.0 + i * 5).ToArray();
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = mzs.Select(mz => TypedFrag(mz, 1.0, IonType.Y, 1)).ToList(),
+            };
+            var spectrum = new Spectrum { Mzs = mzs, Intensities = mzs.Select(_ => 10f).ToArray() };
+            var peakData = new FakePeakData(new List<XicData>(), Bounds(0, 0, 0), candidate: candidate,
+                apexSpectrum: spectrum, windowLength: 1, windowSpectra: new List<Spectrum> { spectrum });
+            var scores = SpectrumMatchScores.Compute(peakData, FragmentToleranceConfig.Hram(1.0));
+            Assert.AreEqual(-Math.Log10(SpectrumMatchScores.MIN_TAIL_PROBABILITY), scores.ApexMatchProbability, TOLERANCE);
+        }
+
+        // A fragment of unknown type counts as a match but not toward the hyperscore, which has no b or y to read,
+        // and a matched b/y intensity under 1, whose log is negative, scores as no match rather than below it.
+        private static void AssertUnannotatedFragmentsAndHyperscoreFloor()
+        {
+            var tolerance = FragmentToleranceConfig.Hram(10.0);
+            var spectrum = new Spectrum { Mzs = new[] { 300.0, 400.0 }, Intensities = new[] { 100f, 50f } };
+            var unknown = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment> { TypedFrag(300.0, 1.0, IonType.Unknown, 0), TypedFrag(400.0, 1.0, IonType.Unknown, 0) },
+            };
+            var scores = SpectrumMatchScores.Compute(new FakePeakData(new List<XicData>(), Bounds(0, 0, 0), candidate: unknown,
+                apexSpectrum: spectrum), tolerance);
+            Assert.IsTrue(scores.ApexMatchProbability > 0.0);
+            Assert.IsTrue(scores.ApexProjectedCosineScore > 0.0);
+            Assert.AreEqual(0.0, scores.ApexHyperscore, TOLERANCE);
+
+            var weak = new Spectrum { Mzs = new[] { 300.0 }, Intensities = new[] { 0.1f } };
+            var typed = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment> { TypedFrag(300.0, 1.0, IonType.Y, 1) },
+            };
+            scores = SpectrumMatchScores.Compute(new FakePeakData(new List<XicData>(), Bounds(0, 0, 0), candidate: typed,
+                apexSpectrum: weak), tolerance);
+            Assert.AreEqual(0.0, scores.ApexHyperscore, TOLERANCE);
         }
 
         private static double ChanceMatch(double density, double mz)
