@@ -232,7 +232,16 @@ namespace pwiz.Skyline.ToolsUI
                     if (!string.IsNullOrEmpty(toolDesc.ArgsCollectorDllPath) && !string.IsNullOrEmpty(toolDesc.ArgsCollectorClassName))
                     {
                         if (!toolDesc.CallArgsCollector(parent, args, reportReader, startInfo))
+                        {
+                            // The tool will not run, so nothing will read its input report
+                            if (reportCsvPath != null)
+                            {
+                                reportReader.Dispose();
+                                FileEx.SafeDelete(reportCsvPath, true);
+                                toolDesc.ReportTempPath_toDelete = null;
+                            }
                             return;
+                        }
                     }
 
 

@@ -48,6 +48,10 @@ namespace TestRunnerLib.PInvoke
 
         // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
+        public static extern int DwmFlush();
+
+        // ReSharper disable once StringLiteralTypo
+        [DllImport("dwmapi.dll")]
         public static extern int DwmRegisterThumbnail(IntPtr dest, IntPtr src, out IntPtr thumb);
 
         // ReSharper disable once StringLiteralTypo
