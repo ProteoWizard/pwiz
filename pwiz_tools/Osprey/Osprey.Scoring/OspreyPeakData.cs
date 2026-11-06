@@ -82,6 +82,20 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
+        /// Present <paramref name="source"/>'s candidate with <paramref name="xics"/> in place of its
+        /// XICs: the view the correlation-shape features score when OSPREY_CORR_FRAGMENT_TOLERANCE
+        /// re-extracts the same fragments over the same scans at a wider tolerance. Everything else -
+        /// the peak, the apex, the spectra and the MS1 data - is the source's.
+        /// </summary>
+        public void SetFrom(OspreyPeakData source, IReadOnlyList<XicData> xics)
+        {
+            Set(source._candidate, source._peakBounds, xics, source._apexRetentionTime, source._expectedRt,
+                source._apexSpectrum, source._apexGlobalIndex, source._apexLocalIndex, source._windowStartIndex,
+                source._windowLength, source._windowSpectra);
+            SetMs1(source._ms1PrecursorXic, source._ms1ReferenceXic, source._apexIsotopeEnvelope);
+        }
+
+        /// <summary>
         /// Publish the MS1 data the extractor produced for this candidate (the
         /// precursor chromatogram, its co-sampled reference fragment chromatogram,
         /// and the apex isotope envelope). Called only when the run has MS1 features

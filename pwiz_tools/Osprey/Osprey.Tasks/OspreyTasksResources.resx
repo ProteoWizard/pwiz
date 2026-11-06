@@ -1339,4 +1339,16 @@
   <data name="SecondPassFdrTask_WriteBlibOutput_No_precursor_passed_the_second_pass_against__0___none_has_an_experiment_level_q_value_at_or_below__1_" xml:space="preserve">
     <value>No precursor passed the second pass against {0}: none has an experiment-level q-value at or below {1} ({2}), so no {3} was written. Check that the library suits these runs and that the threshold is intended.</value>
   </data>
+  <data name="FragmentMassErrorWriter_WriteRun__0___fragment_mass_error_of__1_N0__target_precursors" xml:space="preserve">
+    <value>{0}: fragment mass error of {1:N0} target precursors ({2:N0} peaks): mean {3:F2}, SD {4:F2}, robust SD {5:F2}, |mean| + 3 SD {6:F2} {7}; search tolerance {8:F2} {9}</value>
+  </data>
+  <data name="FragmentMassErrorWriter_WriteRun__0___no_fragment_peak_was_found_for__1_N0__target_precursors" xml:space="preserve">
+    <value>{0}: no fragment peak was found within {2:F2} {3} of the library fragments of {1:N0} target precursors, so no fragment mass error was measured; search tolerance {4:F2} {5}</value>
+  </data>
+  <data name="PerFileRescoreTask_WriteFragmentMassErrors_Not_measured__0_N0__runs_without_spectra" xml:space="preserve">
+    <value>{0:N0} fragment mass-error summaries were not measured, because the run's calibration or spectra cache is not in its output folder; any summary already there is kept: {1}</value>
+  </data>
+  <data name="PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_" xml:space="preserve">
+    <value>The fragment mass-error summary for the model diagnostics report failed for {0}: {1}</value>
+  </data>
 </root>

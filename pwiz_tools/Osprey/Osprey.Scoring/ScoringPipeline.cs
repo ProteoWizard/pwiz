@@ -183,12 +183,16 @@ namespace pwiz.Osprey.Scoring
                 MzCalibration.CalibratedTolerance(ms2Calibration,
                     config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
                     out calTol, out calUnit);
+                if (calUnit == ToleranceUnit.Ppm && OspreyEnvironment.MinFragmentTolerancePpm.HasValue)
+                    calTol = Math.Max(calTol, OspreyEnvironment.MinFragmentTolerancePpm.Value);
                 searchFragTol = new FragmentToleranceConfig
                 {
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                if (logSettings)
+                // At default log level: the search tolerance replaces the configured one, so a
+                // log that shows only the configured value misreports what was searched.
+                if (logSearchSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
@@ -207,6 +211,8 @@ namespace pwiz.Osprey.Scoring
                         ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
                 }
             }
+
+            context.CorrelationConfig = CorrelationConfigFor(config, OspreyEnvironment.CorrFragmentTolerancePpm);
 
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
@@ -310,6 +316,31 @@ namespace pwiz.Osprey.Scoring
             LogWindowTimingSummary(windowTimings);
 
             return allEntries;
+        }
+
+        /// <summary>
+        /// The configuration the correlation-shape features score with (see
+        /// <see cref="ScoringContext.CorrelationConfig"/>): a copy of the search
+        /// <paramref name="config"/> at max(search tolerance, <paramref name="corrTolerancePpm"/>) ppm.
+        /// Null when <paramref name="corrTolerancePpm"/> is null, the search tolerance is not in ppm,
+        /// or the setting is no wider than the search tolerance - the wider XICs would then be the
+        /// search XICs, so nothing is re-extracted.
+        /// </summary>
+        public static OspreyConfig CorrelationConfigFor(OspreyConfig config, double? corrTolerancePpm)
+        {
+            var searchTolerance = config.FragmentTolerance;
+            if (!corrTolerancePpm.HasValue || searchTolerance == null ||
+                searchTolerance.Unit != ToleranceUnit.Ppm || corrTolerancePpm.Value <= searchTolerance.Tolerance)
+            {
+                return null;
+            }
+            var corrConfig = config.ShallowClone();
+            corrConfig.FragmentTolerance = new FragmentToleranceConfig
+            {
+                Tolerance = corrTolerancePpm.Value,
+                Unit = ToleranceUnit.Ppm
+            };
+            return corrConfig;
         }
 
 

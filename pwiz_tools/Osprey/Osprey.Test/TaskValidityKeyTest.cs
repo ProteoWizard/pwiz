@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
 using pwiz.Osprey.Scoring;
@@ -66,6 +67,7 @@ namespace pwiz.Osprey.Test
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
             AssertTreeClassifierKeysTheModelTasks();
             AssertTrainingExportKey();
+            AssertFragmentMassErrorReaderKey();
             AssertTrainingExportKeyFollowsEachRunsInputs();
             AssertLibraryTermsKeyOnlyWhatChanged();
         }
@@ -356,6 +358,60 @@ namespace pwiz.Osprey.Test
             taskKey = task.ValidityKey(ctx);
             declared = task.Outputs(ctx).Contains(export);
             return task.OutputValidityKey(ctx, taskKey, export);
+        }
+
+        /// <summary>
+        /// The report renders a fragment mass-error summary by the terms of its key that the
+        /// configuration alone decides, so a node holding no spectra can ask it: it accepts the
+        /// summary PerFileRescoring stamps for this analysis, whether the analysis or
+        /// <c>--task ModelDiagnostics</c> wrote it, and not one left by another run FDR or library,
+        /// or stamped by another task.
+        /// </summary>
+        private static void AssertFragmentMassErrorReaderKey()
+        {
+            var config = MassErrorConfig(TaskConfigs.StraightThrough(), c => { });
+            var run = new ModelDiagnosticsData.FragmentMassErrorRun { MaxQ = config.RunFdr };
+            var stamp = OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, MassErrorKey(config));
+            Assert.IsTrue(FragmentMassErrorWriter.IsForAnalysis(stamp, run, config), @"the analysis's own summary");
+            var selector = MassErrorConfig(TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME), c => { });
+            Assert.IsTrue(FragmentMassErrorWriter.IsForAnalysis(stamp, run, selector),
+                OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME) + @" must render the analysis's summary");
+            Assert.IsTrue(FragmentMassErrorWriter.IsForAnalysis(
+                    OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, MassErrorKey(selector)), run, config),
+                @"the analysis must render the summary " + OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME) + @" wrote");
+            Assert.IsFalse(FragmentMassErrorWriter.IsForAnalysis(
+                OspreyVersion.Stamp(SecondPassFdrTask.TASK_NAME, MassErrorKey(config)), run, config), @"another task's stamp");
+            Assert.IsFalse(FragmentMassErrorWriter.IsForAnalysis(null, run, config), @"no stamp");
+
+            var otherFdr = MassErrorConfig(TaskConfigs.StraightThrough(), c => c.RunFdr = 0.05);
+            Assert.IsFalse(FragmentMassErrorWriter.IsForAnalysis(
+                    OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, MassErrorKey(otherFdr)),
+                    new ModelDiagnosticsData.FragmentMassErrorRun { MaxQ = otherFdr.RunFdr }, config),
+                @"a summary measured at another run FDR");
+            var otherLibrary = MassErrorConfig(TaskConfigs.StraightThrough(), c => c.LibrarySource = LibrarySource.FromPath(@"other.tsv"));
+            Assert.IsFalse(FragmentMassErrorWriter.IsForAnalysis(
+                OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, MassErrorKey(otherLibrary)), run, config),
+                @"a summary measured against another library");
+        }
+
+        private static OspreyConfig MassErrorConfig(OspreyConfig config, Action<OspreyConfig> mutate)
+        {
+            config.InputFiles = new List<string> { @"a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
+            config.OutputBlib = @"out.blib";
+            config.ModelDiagnostics = true;
+            mutate(config);
+            return config;
+        }
+
+        /// <summary>The key PerFileRescoring stamps the one run's fragment mass-error summary with.</summary>
+        private static string MassErrorKey(OspreyConfig config)
+        {
+            var ctx = TaskConfigs.ContextFor(config);
+            var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
+            string summary = FragmentMassErrorWriter.PathFor(@"a.mzML");
+            Assert.IsTrue(task.Outputs(ctx).Contains(summary), @"the summary is a declared output of PerFileRescoring");
+            return task.OutputValidityKey(ctx, task.ValidityKey(ctx), summary);
         }
 
         /// <summary>The XIC fragment-count term every task's key ends with.</summary>

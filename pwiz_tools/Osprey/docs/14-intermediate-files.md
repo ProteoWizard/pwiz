@@ -42,6 +42,7 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` or `.parquet` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
 | `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
+| `<stem>.fragment-mass-errors.json` | run | JSON, stamp as the first property | `Osprey.Tasks/FragmentMassErrorWriter.cs` | `--model-diagnostics` only: `PerFileRescoring`'s fixed-bin histogram of the signed m/z error of the peak nearest each top-6 library fragment of the first pass's q <= run FDR targets (apex scan +/- 1, calibrated spectra, a window of max(25 ppm, 3x the configured tolerance)), per observed-intensity tercile. Keyed on the task key plus the identities of the run's calibration and spectra cache (not its 1st-pass sidecar, which FirstPassFDR rewrites bit-identically on every resume); the report renders a summary whose stamp matches the search, library and run FDR, and plots each run's histogram beside its row of the calibration corrections table (CAL Summary) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
 (`Osprey.IO/ArtifactPaths.cs`), so `--output-dir` / `--cache-dir` / `--work-dir`
@@ -83,6 +84,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `FirstPassModelIO` (2 sites) | `<blib-stem>.1st-pass.model.json`, `<blib-stem>.1st-pass.stratum.json` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `TrainingExportWriter` | `<stem>.training.parquet` |
+| `FragmentMassErrorWriter` (via `ModelDiagnosticsReport.WriteJson`) | `<stem>.fragment-mass-errors.json` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.html` and the diagnostics JSON products |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |

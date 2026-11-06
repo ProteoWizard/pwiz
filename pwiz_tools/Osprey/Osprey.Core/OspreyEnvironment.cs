@@ -897,6 +897,35 @@ namespace pwiz.Osprey.Core
             @"correlate over, in place of 0.15. Keyed into every task.")
             { ValueExample = @"<minutes>", DefaultValue = @"0.15" };
 
+        private static readonly EnvVar ENV_MIN_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_MIN_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: a floor in ppm on the calibrated fragment tolerance the main search extracts " +
+            @"XICs with. Keyed into every task.")
+            { ValueExample = @"<ppm>" };
+
+        /// <summary>
+        /// OSPREY_MIN_FRAGMENT_TOLERANCE (experiment): a floor in ppm on the calibrated fragment tolerance
+        /// the main search extracts XICs with (|mean| + 3 SD of confident matches, which is too tight for
+        /// weak fragment ions). Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? MinFragmentTolerancePpm = double.TryParse(ENV_MIN_FRAGMENT_TOLERANCE.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double minFragTol) ? minFragTol : null;
+
+        private static readonly EnvVar ENV_CORR_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_CORR_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: a tolerance in ppm (at least the calibrated one) the correlation-shape features " +
+            @"re-extract their fragment XICs with. Keyed into every task.")
+            { ValueExample = @"<ppm>" };
+
+        /// <summary>
+        /// OSPREY_CORR_FRAGMENT_TOLERANCE (experiment): a tolerance in ppm the correlation-shape features
+        /// re-extract their fragment XICs with, as max(calibrated, setting), over the same scans. Peak
+        /// detection, the apex, the intensity-pattern and the mass-error features stay on the XICs at the
+        /// calibrated tolerance. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? CorrFragmentTolerancePpm = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
+
         /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
         /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
@@ -1583,7 +1612,9 @@ namespace pwiz.Osprey.Core
         public static string PickValidityKeySuffix()
         {
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
-                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
+                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
