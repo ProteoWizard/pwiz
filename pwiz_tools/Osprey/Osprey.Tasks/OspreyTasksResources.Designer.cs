@@ -1357,6 +1357,17 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:N0} of {1:N0} entrapment peptides sit on a target protein; the model diagnostics report splits the entrapment FDP by protein placement..
+        /// </summary>
+        public static string ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_peptides_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_FDP_by_protein_placement_ {
+            get {
+                return ResourceManager.GetString("ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_pepti" +
+                        "des_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_F" +
+                        "DP_by_protein_placement_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Classifying {0:N0} precursor candidates for first-pass model diagnostics....
         /// </summary>
         public static string ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_first_pass_model_diagnostics___ {
@@ -3600,6 +3611,16 @@ namespace pwiz.Osprey.Tasks {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Left {0:N0} entrapment precursors ({1:N0} observations) out of the result..
+        /// </summary>
+        public static string SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observations__out_of_the_result_ {
+            get {
+                return ResourceManager.GetString("SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observation" +
+                        "s__out_of_the_result_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to No precursor passed the second pass against {0}: none has an experiment-level q-value at or below {1 [rest of string was truncated]";.
         /// </summary>

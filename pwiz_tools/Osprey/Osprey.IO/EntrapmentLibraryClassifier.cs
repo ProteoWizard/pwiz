@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -42,6 +43,12 @@ namespace pwiz.Osprey.IO
     /// from the accession when the manifest's clean proteins are substituted into
     /// the library for protein parsimony, so entrapment-to-target PAIRING is not
     /// recoverable here and still comes from the manifest; the CLASS is.)
+    ///
+    /// The one exception is entrapment placed on a real target protein, an audit of
+    /// protein-aware scoring: such a peptide carries the target protein's clean
+    /// accession, so the pairing (the manifest's <c>peptide_type</c>, the blib's
+    /// <c>DecoyPairs.IsEntrapment</c>) sets <see cref="LibraryEntry.IsEntrapment"/>
+    /// at load and the entry, not its accessions, is what the class is read from.
     /// </summary>
     public static class EntrapmentLibraryClassifier
     {
@@ -50,6 +57,26 @@ namespace pwiz.Osprey.IO
 
         /// <summary>FDRBench default decoy prefix on decoy-side protein accessions.</summary>
         private const string DecoyPrefix = @"decoy_";
+
+        /// <summary>
+        /// True if <paramref name="entry"/> is entrapment (p_target / p_decoy): flagged by its
+        /// pairing, or marked by its accessions. The one test of the entrapment class for every
+        /// consumer, since entrapment on a target protein is flagged but not marked.
+        /// </summary>
+        public static bool IsEntrapment(LibraryEntry entry)
+        {
+            return entry.IsEntrapment || IsEntrapment(entry.ProteinIds);
+        }
+
+        /// <summary>
+        /// True if <paramref name="entry"/> is entrapment that sits on an entrapment protein of its
+        /// own (the <c>_p_target</c> marker), false for a target or for entrapment placed on a real
+        /// target protein. The split the protein-aware audit reads.
+        /// </summary>
+        public static bool IsOnEntrapmentProtein(LibraryEntry entry)
+        {
+            return IsEntrapment(entry.ProteinIds);
+        }
 
         /// <summary>True if any accession marks this as an entrapment (p_target / p_decoy) sequence.</summary>
         public static bool IsEntrapment(IReadOnlyList<string> proteinIds)
@@ -89,11 +116,20 @@ namespace pwiz.Osprey.IO
             return entry.IsDecoy || IsDecoySide(entry.ProteinIds);
         }
 
+        /// <summary>The four-way peptide kind for a library entry, from its flags and its accessions.</summary>
+        public static PeptideKind Classify(LibraryEntry entry)
+        {
+            return Classify(IsDecoySide(entry), IsEntrapment(entry));
+        }
+
         /// <summary>The four-way peptide kind for a library entry, from its accessions.</summary>
         public static PeptideKind Classify(IReadOnlyList<string> proteinIds)
         {
-            bool decoy = IsDecoySide(proteinIds);
-            bool entrap = IsEntrapment(proteinIds);
+            return Classify(IsDecoySide(proteinIds), IsEntrapment(proteinIds));
+        }
+
+        private static PeptideKind Classify(bool decoy, bool entrap)
+        {
             if (decoy)
                 return entrap ? PeptideKind.PDecoy : PeptideKind.Decoy;
             return entrap ? PeptideKind.PTarget : PeptideKind.Target;

@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -273,6 +274,88 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// for the numbers and the direction, which is not the intuitive one).
             /// </summary>
             public CoAssignmentData CoAssignment { get; set; }
+            /// <summary>
+            /// Protein-group FDP from the entrapment proteins: the picked-protein q of the
+            /// reported groups against the groups made only of entrapment proteins. Null when
+            /// the library has no entrapment on proteins of its own.
+            /// </summary>
+            public ProteinEntrapmentView ProteinEntrapment { get; set; }
+        }
+
+        /// <summary>
+        /// The protein-level analogue of <see cref="FdpView"/>: the protein-group q-value axis
+        /// against the combined entrapment estimate, where the entrapment groups are those made
+        /// only of entrapment proteins (the <c>_p_target</c> accessions) and r is the library's
+        /// entrapment-protein to target-protein count ratio. Entrapment placed on target proteins
+        /// is not counted here: it belongs to a target protein's group by design.
+        /// </summary>
+        public sealed class ProteinEntrapmentView
+        {
+            /// <summary>Entrapment proteins over target proteins in the searched library.</summary>
+            public double EntrapmentRatio { get; set; }
+            public int NLibraryTargetProteins { get; set; }
+            public int NLibraryEntrapmentProteins { get; set; }
+            /// <summary>The protein-group q-value axis (experiment-level picked-protein q).</summary>
+            public double[] Q { get; set; }
+            public int[] NTargetGroups { get; set; }
+            public int[] NEntrapmentGroups { get; set; }
+            /// <summary><c>(1 + 1/r) * n_e / (n_t + n_e)</c> at each q.</summary>
+            public double[] Combined { get; set; }
+            /// <summary>Entrapment groups a calibrated q would let through at each threshold.</summary>
+            public double[] ExpectedEntrapment { get; set; }
+        }
+
+        /// <summary>
+        /// Builds <see cref="ProteinEntrapmentView"/> from the reported protein groups: each a
+        /// (made only of entrapment proteins, group q) pair, swept up the target groups' q as
+        /// <see cref="FdpView"/> sweeps precursors. Null when there is no entrapment protein in
+        /// the library or no target group to sweep.
+        /// </summary>
+        public static ProteinEntrapmentView BuildProteinEntrapmentView(
+            IEnumerable<KeyValuePair<bool, double>> groupsEntrapmentAndQ,
+            int nLibraryTargetProteins, int nLibraryEntrapmentProteins)
+        {
+            if (nLibraryTargetProteins <= 0 || nLibraryEntrapmentProteins <= 0)
+                return null;
+            var targetQ = new List<double>();
+            var entrapQ = new List<double>();
+            foreach (var kv in groupsEntrapmentAndQ)
+                (kv.Key ? entrapQ : targetQ).Add(kv.Value);
+            if (targetQ.Count == 0)
+                return null;
+            targetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            entrapQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            double r = (double)nLibraryEntrapmentProteins / nLibraryTargetProteins;
+            var qs = new List<double>();
+            var nt = new List<int>();
+            var ne = new List<int>();
+            var comb = new List<double>();
+            var expected = new List<double>();
+            int ei = 0, nE = 0;
+            for (int i = 0; i < targetQ.Count; i++)
+            {
+                double t = targetQ[i];
+                while (ei < entrapQ.Count && entrapQ[ei] <= t) { nE++; ei++; }
+                int nT = i + 1;
+                double denom = nT + nE;
+                qs.Add(t);
+                nt.Add(nT);
+                ne.Add(nE);
+                comb.Add((1.0 + 1.0 / r) * nE / denom);
+                expected.Add(t * denom * r / (1.0 + r));
+            }
+            var idx = ThinFdpIndices(qs);
+            return new ProteinEntrapmentView
+            {
+                EntrapmentRatio = r,
+                NLibraryTargetProteins = nLibraryTargetProteins,
+                NLibraryEntrapmentProteins = nLibraryEntrapmentProteins,
+                Q = Pick(qs, idx),
+                NTargetGroups = Pick(nt, idx),
+                NEntrapmentGroups = Pick(ne, idx),
+                Combined = Pick(comb, idx),
+                ExpectedEntrapment = Pick(expected, idx),
+            };
         }
 
         /// <summary>One row of the trained-model feature-contribution table.</summary>
@@ -434,6 +517,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// lower-bound remain valid at any ratio.</summary>
             public bool PairedSuppressedPartial { get; set; }
             public int[] NTargetAccepted { get; set; }
+
+            /// <summary>Entrapment accepted at each q (n_p), the count the estimators scale.</summary>
+            public int[] NEntrapmentAccepted { get; set; }
+            /// <summary>
+            /// The entrapment count a calibrated q would produce at each threshold: FDP = q solved
+            /// for n_p under the combined estimator, <c>q * (n_t + n_p) * r / (1 + r)</c>. Read
+            /// <see cref="NEntrapmentAccepted"/> against it with a Poisson interval (about
+            /// 2 * sqrt of the expectation), so a thin entrapment arm's noise is read as noise.
+            /// </summary>
+            public double[] ExpectedEntrapment { get; set; }
+
+            // ----- the protein-placement split (null when the library has no entrapment on target proteins) -----
+            /// <summary>Entrapment on real target proteins over targets, from the library.</summary>
+            public double RatioOnTargetProteins { get; set; }
+            /// <summary>Entrapment on entrapment proteins of its own over targets, from the library.</summary>
+            public double RatioOnEntrapmentProteins { get; set; }
+            /// <summary>Accepted entrapment on real target proteins at each q.</summary>
+            public int[] NEntrapmentOnTargetProteins { get; set; }
+            /// <summary>Accepted entrapment on its own entrapment proteins at each q.</summary>
+            public int[] NEntrapmentOnEntrapmentProteins { get; set; }
+            /// <summary>Combined FDP from the entrapment on target proteins alone, at its own ratio.</summary>
+            public double[] CombinedOnTargetProteins { get; set; }
+            /// <summary>Combined FDP from the entrapment on its own proteins alone, at its own ratio.</summary>
+            public double[] CombinedOnEntrapmentProteins { get; set; }
+            /// <summary>True when the two halves are both present, so their divergence can be read.</summary>
+            public bool HasPlacementSplit { get; set; }
         }
 
         /// <summary>
@@ -608,6 +717,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public uint PairIndex;
             public byte Charge;
             public bool HasPair;
+            /// <summary>Entrapment placed on a real target protein (<see cref="EntrapmentPlacement"/>).</summary>
+            public bool OnTargetProtein;
         }
 
         /// <summary>
@@ -651,6 +762,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Full entry id to library precursor m/z (NaN when unknown), for the co-assignment panel.
         /// Null skips that panel and leaves <see cref="CoAssignment"/> null.
         /// </param>
+        /// <param name="placement">
+        /// Which entrapment sits on a real target protein (the protein-aware audit), with each
+        /// half's own ratio, for the FDP views' placement split. Null for no split.
+        /// </param>
         internal static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
@@ -659,7 +774,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double entrapmentRatio,
             double runFdr,
             FdrLevel fdrLevel,
-            Func<uint, double> precursorMzByEntryId = null)
+            Func<uint, double> precursorMzByEntryId = null,
+            EntrapmentPlacement placement = null)
         {
             var data = new ModelDiagnosticsData
             {
@@ -673,7 +789,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             // ---- best-per-precursor reduction (max score per modseq+charge) ----
             var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                out int nWithClass, out int nWithoutClass);
+                out int nWithClass, out int nWithoutClass, null, placement);
 
             // Per-file passing summary at the run-level FDR (kept separate from the
             // reduction so the same reduction serves pass 1 and pass 2). Factored into
@@ -731,7 +847,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (data.HasEntrapment)
             {
                 double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
-                data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+                data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1, placement);
             }
 
             // ---- reproducibility frontier (first-pass, pre-compaction; entrapment-gated) ----
@@ -809,7 +925,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             double runFdr,
             FdrLevel fdrLevel,
             Func<uint, double> precursorMzByEntryId = null,
-            HashSet<uint> stratumBaseIds = null)
+            HashSet<uint> stratumBaseIds = null,
+            EntrapmentPlacement placement = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
 
@@ -849,7 +966,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // the two percent streams print at the same column - the inner one reaching 100%
                 // immediately before the outer prints its next card.
                 var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                    out _, out _, @"  ");
+                    out _, out _, @"  ", placement);
                 progress.Report(++cardIdx);
 
                 // Q-driven half: available whenever a second pass produced reported
@@ -864,7 +981,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 progress.Report(++cardIdx);
                 // Reuses the reduction computed for the ID-yield card above rather than
                 // recomputing an identical one from the same inputs.
-                pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio);
+                pass2.FdpViews = BuildPass2FdpViews(precs, entrapmentRatio, placement);
                 progress.Report(++cardIdx);
                 // Single-peak co-assignment on the REPORTED pool (issue #4522). Post-Stage-6, so
                 // it includes co-assignment reconciliation itself introduced; the pass-1 panel is
@@ -1027,7 +1144,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// for the ID-yield card and used to re-derive a bit-identical reduction here from the
         /// same inputs - the same ~16 s / 89 M-observation walk at 82 files, O(observations), so
         /// ~32 s at 163. Sharing is safe for the reasons given on
-        /// <see cref="BuildPass2FdpViews(List{Prec}, double)"/>.
+        /// <see cref="BuildPass2FdpViews(List{Prec}, double, EntrapmentPlacement)"/>.
         /// </summary>
         private static ModelPass BuildModelPass2(FeatureContributions contributions, List<Prec> precs)
         {
@@ -1057,13 +1174,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, uint> pairByBaseId,
-            double entrapmentRatio)
+            double entrapmentRatio,
+            EntrapmentPlacement placement = null)
         {
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
             return BuildPass2FdpViews(
                 ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
-                    out _, out _),
-                entrapmentRatio);
+                    out _, out _, null, placement),
+                entrapmentRatio, placement);
         }
 
         /// <summary>
@@ -1088,13 +1206,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// that line as redundant - which it would be for a class - and the reduction quietly
         /// stops updating.</para>
         /// </summary>
-        private static List<FdpView> BuildPass2FdpViews(List<Prec> precs, double entrapmentRatio)
+        private static List<FdpView> BuildPass2FdpViews(List<Prec> precs, double entrapmentRatio,
+            EntrapmentPlacement placement)
         {
             bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
             if (!hasEntrapment)
                 return new List<FdpView>();
             double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
-            return BuildFdpViewsFromPrecs(precs, r, 2);
+            return BuildFdpViewsFromPrecs(precs, r, 2, placement);
         }
 
         // Build the experiment- and run-scope FDP calibration views for one pass
@@ -1103,14 +1222,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // the per-run picture FDRBench cannot show. pass = 1 (pre-compaction) or
         // 2 (final reported pool). Shared by pass 1 (Build) and pass 2
         // (BuildPass2FdpViews) so the two passes are computed identically.
-        private static List<FdpView> BuildFdpViewsFromPrecs(List<Prec> precs, double r, int pass)
+        private static List<FdpView> BuildFdpViewsFromPrecs(List<Prec> precs, double r, int pass,
+            EntrapmentPlacement placement)
         {
             var views = new List<FdpView>();
             var expView = BuildFdpView(precs, r, p => p.QExpPrecursor,
-                string.Format(@"Pass {0} - experiment-wide", pass), pass, @"experiment", true);
+                string.Format(@"Pass {0} - experiment-wide", pass), pass, @"experiment", true, placement);
             if (expView != null) views.Add(expView);
             var runView = BuildFdpView(precs, r, p => p.QRunPrecursor,
-                string.Format(@"Pass {0} - per-run", pass), pass, @"run", false);
+                string.Format(@"Pass {0} - per-run", pass), pass, @"run", false, placement);
             if (runView != null) views.Add(runView);
             return views;
         }
@@ -1128,7 +1248,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
             out int nWithClass, out int nWithoutClass,
-            string indent = null)
+            string indent = null,
+            EntrapmentPlacement placement = null)
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
@@ -1156,6 +1277,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         uint pairIdx = 0;
                         bool hasPair = pairByBaseId != null &&
                             pairByBaseId.TryGetValue(baseId, out pairIdx);
+                        bool onTargetProtein = placement != null && placement.IsOnTargetProtein(baseId);
                         string key = e.ModifiedSequence + @"|" + e.Charge;
                         if (!best.TryGetValue(key, out var cur))
                         {
@@ -1176,6 +1298,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                                 PairIndex = pairIdx,
                                 Charge = e.Charge,
                                 HasPair = hasPair,
+                                OnTargetProtein = onTargetProtein,
                             };
                         }
                         else
@@ -1187,6 +1310,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                                 cur.Class = cls;
                                 cur.PairIndex = pairIdx;
                                 cur.HasPair = hasPair;
+                                cur.OnTargetProtein = onTargetProtein;
                             }
                             if (e.RunPrecursorQvalue < cur.QRunPrecursor)
                                 cur.QRunPrecursor = e.RunPrecursorQvalue;
@@ -2051,7 +2175,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // gives the per-run picture when qSel is the run-precursor q. r =
         // entrapment DB size / target DB size, from the manifest.
         private static FdpView BuildFdpView(List<Prec> precs, double r,
-            Func<Prec, double> qSel, string label, int pass, string scope, bool matchesFdrBench)
+            Func<Prec, double> qSel, string label, int pass, string scope, bool matchesFdrBench,
+            EntrapmentPlacement placement)
         {
             // FDRBench thresholds each class by ITS OWN q-value: at q <= t,
             // n_t = targets with q <= t and n_p = entrapment with q <= t. So sort
@@ -2093,8 +2218,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             var targetQ = new List<double>();
             var entrapQ = new List<double>();     // all entrapment q (for n_p)
+            var entrapOnTargetQ = new List<double>();   // the entrapment on real target proteins
             var eventsA = new List<double>();     // +1 at q_e  (entrapment accepted, ranks above target)
             var eventsB = new List<double>();     // +1 at q_t  (paired target then also accepted)
+            bool split = placement != null && placement.HasEntrapmentOnTargetProteins;
             foreach (var p in precs)
             {
                 if (p.IsDecoy)
@@ -2107,6 +2234,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     double qe = qSel(p);
                     entrapQ.Add(qe);
+                    if (split && p.OnTargetProtein)
+                        entrapOnTargetQ.Add(qe);
                     if (!p.HasPair)
                         continue;
                     double[] tgt;
@@ -2131,6 +2260,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // is C#-only diagnostics, off the cross-impl parity path).
             targetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
             entrapQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            entrapOnTargetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
             eventsA.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
             eventsB.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
 
@@ -2139,12 +2269,24 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var comb = new List<double>();
             var paired = new List<double>();
             var ntAcc = new List<int>();
+            var neAcc = new List<int>();
+            var expected = new List<double>();
+            var neOnTarget = new List<int>();
+            var neOnOwn = new List<int>();
+            var combOnTarget = new List<double>();
+            var combOnOwn = new List<double>();
+            // Each half is scaled by its own entrapment-to-target ratio: the half on target
+            // proteins is r_t of the targets, the half on its own proteins r_e, and the plain
+            // combined estimate at r = r_t + r_e is their pooled value.
+            double rOnTarget = split ? placement.RatioOnTargetProteins : 0;
+            double rOnOwn = split ? placement.RatioOnEntrapmentProteins : 0;
 
-            int ei = 0, ai = 0, bi = 0, nE = 0;
+            int ei = 0, ai = 0, bi = 0, nE = 0, oi = 0, nEOnTarget = 0;
             for (int i = 0; i < targetQ.Count; i++)
             {
                 double t = targetQ[i];
                 while (ei < entrapQ.Count && entrapQ[ei] <= t) { nE++; ei++; }
+                while (oi < entrapOnTargetQ.Count && entrapOnTargetQ[oi] <= t) { nEOnTarget++; oi++; }
                 while (ai < eventsA.Count && eventsA[ai] <= t) ai++;
                 while (bi < eventsB.Count && eventsB[bi] <= t) bi++;
                 int nT = i + 1;
@@ -2159,6 +2301,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 comb.Add((1.0 + 1.0 / r) * nE / denom);
                 paired.Add((nE + vt) / denom);
                 ntAcc.Add(nT);
+                neAcc.Add(nE);
+                // The combined estimator at FDP = t, solved for n_p: what a calibrated q would
+                // have let through at this threshold.
+                expected.Add(t * denom * r / (1.0 + r));
+                if (split)
+                {
+                    int nEOnOwn = nE - nEOnTarget;
+                    neOnTarget.Add(nEOnTarget);
+                    neOnOwn.Add(nEOnOwn);
+                    combOnTarget.Add(rOnTarget > 0 ? (1.0 + 1.0 / rOnTarget) * nEOnTarget / (nT + nEOnTarget) : double.NaN);
+                    combOnOwn.Add(rOnOwn > 0 ? (1.0 + 1.0 / rOnOwn) * nEOnOwn / (nT + nEOnOwn) : double.NaN);
+                }
             }
 
             // q-aware thinning: keep the [0, 2%] calibration zoom window dense
@@ -2182,6 +2336,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 Paired = pairedOk ? Pick(paired, idx) : null,
                 PairedSuppressedPartial = anyPair && !pairedOk,
                 NTargetAccepted = Pick(ntAcc, idx),
+                NEntrapmentAccepted = Pick(neAcc, idx),
+                ExpectedEntrapment = Pick(expected, idx),
+                HasPlacementSplit = split,
+                RatioOnTargetProteins = rOnTarget,
+                RatioOnEntrapmentProteins = rOnOwn,
+                NEntrapmentOnTargetProteins = split ? Pick(neOnTarget, idx) : null,
+                NEntrapmentOnEntrapmentProteins = split ? Pick(neOnOwn, idx) : null,
+                CombinedOnTargetProteins = split ? Pick(combOnTarget, idx) : null,
+                CombinedOnEntrapmentProteins = split ? Pick(combOnOwn, idx) : null,
             };
         }
 

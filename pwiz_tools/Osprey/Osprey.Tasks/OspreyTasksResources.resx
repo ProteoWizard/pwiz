@@ -466,6 +466,12 @@
   <data name="ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_second_pass_model_diagnostics___" xml:space="preserve">
     <value>Classifying {0:N0} precursor candidates for second-pass model diagnostics...</value>
   </data>
+  <data name="SecondPassFdrTask_StripEntrapment_Left__0__entrapment_precursors___1__observations__out_of_the_result_" xml:space="preserve">
+    <value>Left {0:N0} entrapment precursors ({1:N0} observations) out of the result.</value>
+  </data>
+  <data name="ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_peptides_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_FDP_by_protein_placement_" xml:space="preserve">
+    <value>{0:N0} of {1:N0} entrapment peptides sit on a target protein; the model diagnostics report splits the entrapment FDP by protein placement.</value>
+  </data>
   <data name="ModelDiagnosticsReport_FinalizePass2_Added_the_second_pass_results_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>Added the second-pass results to the model diagnostics report: {0}</value>
   </data>

@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -29,6 +30,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -80,12 +82,18 @@ namespace pwiz.Osprey.Tasks
                 return;
             }
 
+            // The entrapment peptides, when the result leaves them out (--strip-entrapment):
+            // their precursors and peptides are not counted, and a protein group made only of
+            // entrapment proteins is not listed. The per-replicate protein count still comes
+            // from the engine's own gate and keeps any such group that passes it.
+            var excludedPeptides = config.StripEntrapment ? EntrapmentPeptides(fullLibrary) : null;
+
             if (config.WriteProteinReport)
             {
                 string path = stem + EXT_PROTEIN_GROUPS;
                 TryWriteReport(@"protein-group",
                     OspreyTasksResources.OspreyReportWriter_WriteReports_protein_group_report, path, log, logWarning,
-                    () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
+                    () => WriteProteinGroups(path, experimentResult, fullLibrary, config, excludedPeptides));
             }
 
             if (config.WriteSummaryReport)
@@ -93,8 +101,20 @@ namespace pwiz.Osprey.Tasks
                 string path = stem + EXT_STATS;
                 TryWriteReport(@"summary",
                     OspreyTasksResources.OspreyReportWriter_WriteReports_summary_report, path, log, logWarning,
-                    () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
+                    () => WriteSummary(path, experimentResult, rescored, fullLibrary, config, excludedPeptides));
             }
+        }
+
+        /// <summary>The modified sequences of the library's entrapment peptides.</summary>
+        private static HashSet<string> EntrapmentPeptides(IList<LibraryEntry> fullLibrary)
+        {
+            var peptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in fullLibrary)
+            {
+                if (!entry.IsDecoy && EntrapmentLibraryClassifier.IsEntrapment(entry))
+                    peptides.Add(entry.ModifiedSequence);
+            }
+            return peptides;
         }
 
         // The reports are additive: nothing downstream reads them, and the blib has not been
@@ -132,7 +152,8 @@ namespace pwiz.Osprey.Tasks
             string path,
             SecondPassProteinFdrResult result,
             IList<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            HashSet<string> excludedPeptides = null)
         {
             var groups = result.Parsimony.Groups;
             var groupQ = result.ProteinFdr.GroupQvalues;
@@ -161,6 +182,8 @@ namespace pwiz.Osprey.Tasks
                 foreach (var g in groups)
                 {
                     progress.Report(++groupIdx);
+                    if (excludedPeptides != null && EntrapmentLibraryClassifier.IsEntrapment(g.Accessions))
+                        continue;
                     double q = groupQ.TryGetValue(g.Id, out double qv) ? qv : 1.0;
                     bool passes = q <= config.EffectiveProteinFdr;
 
@@ -169,6 +192,7 @@ namespace pwiz.Osprey.Tasks
                     // stable file.
                     var grouping = g.UniquePeptides
                         .Concat(g.SharedPeptides)
+                        .Where(x => excludedPeptides == null || !excludedPeptides.Contains(x))
                         .OrderBy(x => x, StringComparer.Ordinal)
                         .ToList();
 
@@ -259,7 +283,8 @@ namespace pwiz.Osprey.Tasks
             SecondPassProteinFdrResult experimentResult,
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            HashSet<string> excludedPeptides = null)
         {
             var level = config.FdrLevel;
             var rows = new List<string[]>();
@@ -289,9 +314,9 @@ namespace pwiz.Osprey.Tasks
                 {
                     progress.Report(++runIdx);
                     AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel: false,
-                        expPrecSet, expPepSet);
+                        expPrecSet, expPepSet, excludedPeptides);
                     CountPrecursorsPeptides(new[] { kvp }, level, config, runLevel: true,
-                        out int precursors, out int peptides);
+                        out int precursors, out int peptides, excludedPeptides);
                     int proteins = ProteinFdrEngine.CountPassingProteinGroups(
                         new List<KeyValuePair<string, List<FdrEntry>>> { kvp }, fullLibrary, config, runLevel: true);
                     rows.Add(new[]
@@ -310,8 +335,17 @@ namespace pwiz.Osprey.Tasks
             int expPrec = expPrecSet.Count;
             int expPep = expPepSet.Count;
             int expProteins = 0;
-            foreach (var q in experimentResult.ProteinFdr.GroupQvalues.Values)
-                if (q <= config.EffectiveProteinFdr) expProteins++;
+            foreach (var kv in experimentResult.ProteinFdr.GroupQvalues)
+            {
+                if (kv.Value > config.EffectiveProteinFdr)
+                    continue;
+                if (excludedPeptides != null &&
+                    EntrapmentLibraryClassifier.IsEntrapment(experimentResult.Parsimony.Groups[(int)kv.Key].Accessions))
+                {
+                    continue;
+                }
+                expProteins++;
+            }
             rows.Add(new[]
             {
                 @"Experiment",
@@ -329,12 +363,12 @@ namespace pwiz.Osprey.Tasks
         private static void CountPrecursorsPeptides(
             IEnumerable<KeyValuePair<string, List<FdrEntry>>> entries,
             FdrLevel level, OspreyConfig config, bool runLevel,
-            out int precursors, out int peptides)
+            out int precursors, out int peptides, HashSet<string> excludedPeptides = null)
         {
             var precSet = new HashSet<string>(StringComparer.Ordinal);
             var pepSet = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in entries)
-                AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel, precSet, pepSet);
+                AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel, precSet, pepSet, excludedPeptides);
             precursors = precSet.Count;
             peptides = pepSet.Count;
         }
@@ -343,12 +377,14 @@ namespace pwiz.Osprey.Tasks
         // writes the per-replicate rows instead of taking a second pass over the pool.
         private static void AccumulatePrecursorsPeptides(
             List<FdrEntry> entries, FdrLevel level, OspreyConfig config, bool runLevel,
-            HashSet<string> precSet, HashSet<string> pepSet)
+            HashSet<string> precSet, HashSet<string> pepSet, HashSet<string> excludedPeptides = null)
         {
             double gate = runLevel ? config.RunFdr : config.ExperimentFdr;
             foreach (var e in entries)
             {
                 if (e.IsDecoy)
+                    continue;
+                if (excludedPeptides != null && excludedPeptides.Contains(e.ModifiedSequence))
                     continue;
                 double q = runLevel ? e.EffectiveRunQvalue(level) : e.EffectiveExperimentQvalue(level);
                 if (q > gate)

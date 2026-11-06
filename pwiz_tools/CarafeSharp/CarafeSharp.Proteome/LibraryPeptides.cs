@@ -35,10 +35,12 @@ namespace pwiz.CarafeSharp.Proteome
     /// pairing travel together, and the predictor digests nothing a second time.
     /// <para>
     /// The protein text of a peptide is its source proteins' <c>db|accession|entry</c> labels
-    /// joined by <c>;</c> (a decoy's prefixed, an entrapment peptide's suffixed), without the
+    /// joined by <c>;</c> (a decoy's prefixed, an entrapment peptide's suffixed, unless it was
+    /// placed on a target protein, whose label it then carries as it is), without the
     /// per-protein peptide counter the FASTA route appends to keep a predictor that deduplicates
     /// by accession from dropping entries; nothing here deduplicates, so the library carries the
-    /// accessions as the proteome spells them.
+    /// accessions as the proteome spells them. The pairing's kinds, not the labels, say which
+    /// peptides are entrapment.
     /// </para>
     /// </summary>
     public sealed class LibraryPeptides

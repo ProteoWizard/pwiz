@@ -51,6 +51,16 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>Source proteins, in FASTA order until the builder sorts them.</summary>
         public List<ProteinRecord> Sources { get; } = new List<ProteinRecord>();
 
+        /// <summary>
+        /// The target protein the entrapment peptide (and its p_decoy) was placed on, when it was
+        /// (<see cref="EntrapmentFastaSettings.EntrapmentInTargets"/>), or null when it stays on
+        /// an entrapment protein of its own, labeled from <see cref="Sources"/> with the suffix.
+        /// </summary>
+        public List<ProteinRecord> PTargetSources { get; set; }
+
+        /// <summary>The proteins the entrapment peptide and its decoy are labeled with.</summary>
+        public List<ProteinRecord> EntrapmentSources => PTargetSources ?? Sources;
+
         public override string ToString()
         {
             return Target;

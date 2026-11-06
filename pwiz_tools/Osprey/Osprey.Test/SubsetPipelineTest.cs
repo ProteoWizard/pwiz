@@ -31,6 +31,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.BiblioSpec.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
@@ -321,18 +322,28 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The StellarLibDecoy / StellarGenDecoyEntrap legs: a library that supplies its own
         /// decoys and carries shuffled entrapment peptides, searched with its pairing manifest,
-        /// the model diagnostics report and FDRBench input for both passes. Then the report again
-        /// from the finished analysis alone, with <c>--task ModelDiagnostics</c>.
+        /// the model diagnostics report and FDRBench input for both passes. The manifest places
+        /// half the entrapment on real target proteins (the protein-aware audit), whose class
+        /// only the manifest records: the run must still treat it as entrapment, in the FDP
+        /// views' placement split and the pairing manifest written for FDRBench, and the
+        /// result keeps it. Then the report again from the finished analysis alone, with
+        /// <c>--task ModelDiagnostics</c>. Last, the same search with <c>--strip-entrapment</c>,
+        /// whose library and reports leave every entrapment peptide and entrapment-only
+        /// protein group out.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetLibraryDecoysAndReports()
         {
             string workDir = CreateDir(@"libdecoy");
             string bench = Path.Combine(workDir, @"bench.tsv");
+            string manifest = WriteEntrapmentOnTargetManifest(Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                Path.Combine(workDir, LIBDECOY_PAIRING_FILE), out var onTargetSequences);
+            var entrapmentSequences = new HashSet<string>(DecoyPairingManifest.FromTsv(manifest).Kinds()
+                .Where(kv => kv.Value == PeptideKind.PTarget).Select(kv => kv.Key), StringComparer.Ordinal);
             var args = new[]
             {
                 OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, manifest,
                 OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText,
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
                 OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
@@ -340,18 +351,30 @@ namespace pwiz.Osprey.Test
             RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"RefSpectra") >= MIN_LIBDECOY_PRECURSORS);
-            // No decoy reaches the library, but entrapment peptides compete as targets.
+            // No decoy reaches the library, but entrapment peptides compete as targets and reach
+            // it. On this subset only entrapment on a target protein does, riding that protein's
+            // evidence through the protein gate: no entrapment-only protein group passes, so the
+            // entrapment accession never reaches the library's Proteins table either way.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"accession LIKE 'decoy_%'"));
+            Assert.IsTrue(CountEntrapmentPrecursors(blib, entrapmentSequences) > 0, @"no entrapment precursor in the library");
+            string proteinGroups = Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS));
+            CountEntrapmentGroups(proteinGroups, entrapmentSequences, out int reportedEntrapmentPeptides);
+            Assert.IsTrue(reportedEntrapmentPeptides > 0, @"no entrapment peptide in the protein-group report");
             foreach (string pass in new[] { @"pass1", @"pass2" })
                 AssertHasRows(Path.ChangeExtension(bench, pass + @".tsv"));
+            // The pairing manifest written for FDRBench labels the entrapment on target proteins
+            // as entrapment, which nothing in its accessions does.
+            AssertFdrBenchManifestKinds(Path.ChangeExtension(bench, @"pass1.tsv") + FdrBenchInputWriter.EXT_PAIRING, onTargetSequences);
             // The protein-group and summary reports, under OSPREY_DIANN_REPORTS, are named from
             // the output library.
-            AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS)));
+            AssertHasRows(proteinGroups);
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
-            AssertTrainingSetAnalysis(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1)),
-                Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
+            string pass1Product = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+            AssertTrainingSetAnalysis(pass1Product, Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
+            AssertPlacementSplit(pass1Product);
+            AssertProteinEntrapmentView(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS2)));
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
@@ -361,6 +384,120 @@ namespace pwiz.Osprey.Test
                 args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, ModelDiagnosticsTask.TASK_NAME }).ToArray());
             AssertNoRecompute(log);
             AssertHasRows(diagnosticsReport);
+
+            // The same search leaving the entrapment out of the result: no entrapment precursor
+            // or protein in the library, whichever protein it sits on, and no entrapment peptide
+            // or entrapment-only group in the reports, while the targets are reported as before.
+            string stripDir = CreateDir(@"libdecoy-strip");
+            RunAnalysis(stripDir, DataInputs(), LIBDECOY_FILE, WithDiannReports(Verifier(false)),
+                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, manifest,
+                OspreyCommandArgs.ARG_STRIP_ENTRAPMENT.ArgumentText);
+            string strippedBlib = Path.Combine(stripDir, BLIB_FILE);
+            var targetKeys = ReadPrecursorKeys(blib).Where(key => !entrapmentSequences.Contains(key.Split('|')[0])).ToList();
+            CollectionAssert.AreEquivalent(targetKeys, ReadPrecursorKeys(strippedBlib).ToList(), @"the targets reported differ");
+            Assert.AreEqual(0, CountEntrapmentPrecursors(strippedBlib, entrapmentSequences));
+            Assert.AreEqual(0, CountEntrapmentProteins(strippedBlib));
+            string strippedGroups = Path.Combine(stripDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS));
+            Assert.AreEqual(0, CountEntrapmentGroups(strippedGroups, entrapmentSequences, out int strippedPeptides));
+            Assert.AreEqual(0, strippedPeptides, @"entrapment peptides listed in the protein-group report");
+            AssertHasRows(Path.Combine(stripDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
+        }
+
+        /// <summary>RefSpectra rows of <paramref name="blib"/> whose sequence is one of <paramref name="entrapmentSequences"/>.</summary>
+        private static int CountEntrapmentPrecursors(string blib, HashSet<string> entrapmentSequences)
+        {
+            return ReadPrecursorKeys(blib).Count(key => entrapmentSequences.Contains(key.Split('|')[0]));
+        }
+
+        /// <summary>Proteins rows of <paramref name="blib"/> carrying the entrapment accession marker.</summary>
+        private static int CountEntrapmentProteins(string blib)
+        {
+            return BlibComparer.CountWhere(blib, @"Proteins", @"instr(accession, '_p_target') > 0");
+        }
+
+        /// <summary>
+        /// Rows of the protein-group report at <paramref name="path"/> made only of entrapment
+        /// accessions; <paramref name="entrapmentPeptides"/> receives the number of grouping
+        /// peptides, over every row, whose sequence is one of <paramref name="entrapmentSequences"/>.
+        /// </summary>
+        private static int CountEntrapmentGroups(string path, HashSet<string> entrapmentSequences, out int entrapmentPeptides)
+        {
+            int groups = 0;
+            entrapmentPeptides = 0;
+            foreach (string line in File.ReadLines(path).Skip(1))
+            {
+                var fields = line.Split('\t');
+                if (fields[0].Split(';').All(accession => EntrapmentLibraryClassifier.IsEntrapment(new[] { accession })))
+                    groups++;
+                entrapmentPeptides += fields[6].Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Count(peptide => entrapmentSequences.Contains(DiannTsvLoader.StripModifications(peptide)));
+            }
+            return groups;
+        }
+
+        /// <summary>
+        /// The pairing manifest Osprey wrote for FDRBench at <paramref name="path"/> calls every
+        /// peptide of <paramref name="onTargetSequences"/> it lists entrapment (p_target), and
+        /// lists some of them.
+        /// </summary>
+        private static void AssertFdrBenchManifestKinds(string path, HashSet<string> onTargetSequences)
+        {
+            var kinds = DecoyPairingManifest.FromTsv(path).Kinds().Where(kv => onTargetSequences.Contains(kv.Key)).ToList();
+            Assert.IsTrue(kinds.Count > 0, @"no entrapment on a target protein in " + path);
+            foreach (var kv in kinds)
+                Assert.AreEqual(PeptideKind.PTarget, kv.Value, kv.Key);
+        }
+
+        /// <summary>
+        /// Every FDP view of the first-pass diagnostics product at <paramref name="path"/> splits
+        /// its entrapment by protein placement, with entrapment on target proteins accepted by
+        /// the last threshold and the two halves summing to the entrapment accepted.
+        /// </summary>
+        private static void AssertPlacementSplit(string path)
+        {
+            var views = Token(JObject.Parse(File.ReadAllText(path)), @"fdpViews");
+            Assert.IsTrue(views.Any(), @"no FDP view in " + path);
+            foreach (var view in views)
+            {
+                string label = (string)Token(view, @"label");
+                Assert.IsTrue((bool)Token(view, @"hasPlacementSplit"), label);
+                var accepted = Token(view, @"nEntrapmentAccepted").Select(n => (int)n).ToArray();
+                var onTarget = Token(view, @"nEntrapmentOnTargetProteins").Select(n => (int)n).ToArray();
+                var onOwn = Token(view, @"nEntrapmentOnEntrapmentProteins").Select(n => (int)n).ToArray();
+                Assert.AreEqual(accepted.Length, onTarget.Length, label);
+                Assert.AreEqual(accepted.Length, onOwn.Length, label);
+                for (int i = 0; i < accepted.Length; i++)
+                    Assert.AreEqual(accepted[i], onTarget[i] + onOwn[i], label);
+                Assert.IsTrue(onTarget.Last() > 0, label + @": no entrapment on a target protein accepted");
+                Assert.IsTrue(onOwn.Last() > 0, label + @": no entrapment on its own protein accepted");
+                Assert.IsTrue((double)Token(view, @"ratioOnTargetProteins") > 0, label);
+                Assert.IsTrue((double)Token(view, @"ratioOnEntrapmentProteins") > 0, label);
+            }
+        }
+
+        /// <summary>
+        /// The second-pass diagnostics product at <paramref name="path"/> carries the protein-group
+        /// entrapment view, swept over the reported groups against the library's entrapment proteins.
+        /// </summary>
+        private static void AssertProteinEntrapmentView(string path)
+        {
+            var view = Token(JObject.Parse(File.ReadAllText(path)), @"proteinEntrapment");
+            Assert.IsTrue(view.HasValues, @"proteinEntrapment null in " + path);
+            Assert.IsTrue((int)Token(view, @"nLibraryEntrapmentProteins") > 0, path);
+            Assert.IsTrue((int)Token(view, @"nLibraryTargetProteins") > 0, path);
+            int points = Token(view, @"q").Count();
+            Assert.IsTrue(points > 0, path);
+            Assert.AreEqual(points, Token(view, @"combined").Count(), path);
+            Assert.AreEqual(points, Token(view, @"nEntrapmentGroups").Count(), path);
+        }
+
+        /// <summary>The property <paramref name="key"/> of <paramref name="parent"/>, which must be there.</summary>
+        private static JToken Token(JToken parent, string key)
+        {
+            var value = parent[key];
+            Assert.IsNotNull(value, key + @" missing");
+            return value;
         }
 
         /// <summary>
