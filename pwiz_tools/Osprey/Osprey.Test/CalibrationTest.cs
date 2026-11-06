@@ -716,6 +716,56 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The load the rescoring task and the HPC --task chain calibrate through
+        /// (<see cref="ScoringTaskShared.LoadMassCalibrations"/>) keeps the MS2 offset curve the first
+        /// search saved, rather than falling back to its average: a run scored against the curve in
+        /// the first pass is rescored against the same curve.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestLoadMassCalibrationsKeepsOffsetCurve()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "osprey_ms2curve_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var saved = new MzCalibrationResult
+                {
+                    Mean = -0.6,
+                    SD = 0.1,
+                    Count = 500,
+                    Unit = MzCalibration.UNIT_TH,
+                    AdjustedTolerance = 0.3,
+                    Calibrated = true,
+                    OffsetCurveMz = new[] { 200.0, 700.0, 1200.0 },
+                    OffsetCurve = new[] { -0.4, -0.6, -0.8 }
+                };
+                string input = Path.Combine(dir, "sample.mzML");
+                var calibration = new CalibrationParams
+                {
+                    Metadata = new CalibrationMetadata(),
+                    Ms1Calibration = MzCalibrationJson.Uncalibrated(),
+                    Ms2Calibration = MzCalibrationJson.FromResult(saved)
+                };
+                CalibrationIO.SaveCalibration(calibration, CalibrationIO.CalibrationPathForInput(input, dir), TestStamps.Any);
+
+                ArtifactPathsTest.WithArtifactDirs(dir, null, () =>
+                {
+                    ScoringTaskShared.LoadMassCalibrations(input, "test", out var ms2, out var ms1, out _);
+                    Assert.IsFalse(ms1.Calibrated);
+                    Assert.IsTrue(ms2.HasOffsetCurve);
+                    CollectionAssert.AreEqual(saved.OffsetCurveMz, ms2.OffsetCurveMz);
+                    CollectionAssert.AreEqual(saved.OffsetCurve, ms2.OffsetCurve);
+                    // 450 Th is halfway to the middle knot: -0.5, not the average -0.6.
+                    Assert.AreEqual(450.5, MzCalibration.ApplyCalibration(450.0, ms2), TOLERANCE);
+                });
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>
         /// Verifies calibration filename derivation from input file paths.
         /// </summary>
         [TestMethod]
