@@ -289,6 +289,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         private bool? _hasWebAccess;
         private List<ProteinSearchInfo> _activeUniprotRequeueList;
         private TimeSpan _rateLimitDelay; // How long the web service last asked us to wait
+        private bool _probingWebAccess; // True during the uncancelable HasWebAccess check
 
         /// <summary>
         /// Test seam: when true, a web service that repeatedly fails to return usable data - whether
@@ -368,7 +369,19 @@ namespace pwiz.ProteomeDatabase.Fasta
                 var prot = ParseProteinLine(KNOWNGOOD_UNIPROT_SEARCH_TARGET);
                 var protname = new ProteinSearchInfo(new DbProteinName(prot, new ProteinMetadata(KNOWNGOOD_UNIPROT_SEARCH_TARGET, string.Empty, null, null, null, null,
                     UNIPROTKB_TAG + KNOWNGOOD_UNIPROT_SEARCH_TARGET)), KNOWNGOOD_UNIPROT_SEARCH_TARGET_SEQLEN);
-                _hasWebAccess = DoWebserviceLookup(new []{protname}, null, true).Any();
+                // This check cannot be cancelled, so it must not wait out a rate limit. A refusal for
+                // asking too often still proves the service is reachable, and the answer is kept for
+                // the life of the importer, so it must not be taken as "no internet".
+                _probingWebAccess = true;
+                try
+                {
+                    _hasWebAccess = DoWebserviceLookup(new []{protname}, null, true).Any() ||
+                                    protname.FailureReason == WebSearchFailureReason.rate_limited;
+                }
+                finally
+                {
+                    _probingWebAccess = false;
+                }
             }
             return _hasWebAccess.Value;
         }
@@ -1050,6 +1063,13 @@ namespace pwiz.ProteomeDatabase.Fasta
                         // progress, and repeating it as-is will not either.
                         var rateLimited = lookupResult == WebserviceLookupOutcome.rate_limited;
                         var unresponsiveReason = GetUnresponsiveReason(lookupResult);
+                        if (rateLimited && _probingWebAccess)
+                        {
+                            // The access check has its answer - the service is there - and cannot
+                            // be cancelled, so it ends here rather than waiting
+                            abort = true;
+                            break;
+                        }
                         if (!GiveUpOnUnresponsiveWebService)
                         {
                             // Normal (production) behavior: retry later rather than giving up - the

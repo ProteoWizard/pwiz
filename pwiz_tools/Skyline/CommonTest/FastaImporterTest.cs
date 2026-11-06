@@ -1232,7 +1232,23 @@ namespace CommonTest
             RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: true, out _, out var testWaits);
             Assert.IsTrue(testWaits.All(wait => wait == WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY));
 
+            TestWebAccessProbeRateLimited(retryAfter);
             TestRetryAfterHeader();
+        }
+
+        /// <summary>
+        /// The one-time check for internet access runs on a background loader with no way to cancel
+        /// it, and its answer is kept for the life of the importer. A refusal for asking too often
+        /// still proves the service is reachable, so it must neither wait nor be taken as "no internet",
+        /// which would turn off protein metadata lookups for the rest of the session.
+        /// </summary>
+        private static void TestWebAccessProbeRateLimited(TimeSpan retryAfter)
+        {
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
+            var provider = new RateLimitRecordingWebSearchProvider();
+            var importer = new WebEnabledFastaImporter(provider);
+            Assert.IsTrue(importer.HasWebAccess(), "A rate-limited web service is still a reachable one");
+            Assert.AreEqual(0, provider.Waits.Count, "The access check cannot be cancelled, so it must not wait");
         }
 
         /// <summary>
@@ -1259,16 +1275,20 @@ namespace CommonTest
         private static IList<ProteinSearchInfo> RunRateLimitedLookup(TimeSpan? retryAfter,
             bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed, out IList<TimeSpan> waits)
         {
-            var uri = new Uri(@"https://rest.uniprot.org/uniprotkb/search");
-            const string message = @"Response status code does not indicate success: 429 (Too Many Requests).";
-            var tooManyRequests = new NetworkRequestException(message, HttpStatusCode.TooManyRequests, uri,
-                new HttpRequestException(message), retryAfter: retryAfter);
-            using var helper = new HttpClientTestHelper(tooManyRequests);
+            using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(retryAfter));
 
             var provider = new RateLimitRecordingWebSearchProvider();
             var proteins = RunUniprotLookup(provider, giveUpOnUnresponsiveWebService, out completed);
             waits = provider.Waits;
             return proteins;
+        }
+
+        private static NetworkRequestException CreateTooManyRequestsException(TimeSpan? retryAfter)
+        {
+            var uri = new Uri(@"https://rest.uniprot.org/uniprotkb/search");
+            const string message = @"Response status code does not indicate success: 429 (Too Many Requests).";
+            return new NetworkRequestException(message, HttpStatusCode.TooManyRequests, uri,
+                new HttpRequestException(message), retryAfter: retryAfter);
         }
 
         private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
