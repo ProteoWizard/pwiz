@@ -111,6 +111,28 @@ namespace pwiz.Skyline.Controls
             molecule_list,
             peptide_list,
             empty_list,
+            fragment_unique,
+            fragment_lib_unique,
+        }
+
+        /// <summary>
+        /// Returns a copy of a 16x16 fragment icon with a small "U" badge in its upper-right
+        /// corner, marking a product ion that uniquely localizes a modification. The badge is set
+        /// pixel by pixel so it stays crisp at this size, where rendered text would blur.
+        /// </summary>
+        private static Image AddLocalizingBadge(Image imageFragment)
+        {
+            var bitmap = new Bitmap(imageFragment);
+            var color = Color.FromArgb(0, 90, 200);
+            int left = bitmap.Width - 5, top = 1;
+            for (int y = 0; y < 4; y++)
+            {
+                bitmap.SetPixel(left, top + y, color);
+                bitmap.SetPixel(left + 4, top + y, color);
+            }
+            for (int x = 1; x < 4; x++)
+                bitmap.SetPixel(left + x, top + 4, color);
+            return bitmap;
         }
 
         public enum StateImageId
@@ -176,6 +198,8 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.MoleculeList); // 16bpp
             ImageList.Images.Add(Resources.PeptideList); // 16bpp
             ImageList.Images.Add(Resources.EmptyList);  // 16bpp
+            ImageList.Images.Add(AddLocalizingBadge(Resources.Fragment));
+            ImageList.Images.Add(AddLocalizingBadge(Resources.FragmentLib));
 
             StateImageList = new ImageList
             {

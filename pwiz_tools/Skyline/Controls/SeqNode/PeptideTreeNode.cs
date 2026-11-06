@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -44,6 +45,10 @@ namespace pwiz.Skyline.Controls.SeqNode
            return nodeTree;
         }
 
+        private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
+        private PeptideDocNode _siteDeterminingNode;
+        private SrmSettings _siteDeterminingSettings;
+
 // ReSharper disable SuggestBaseTypeForParameter
         public PeptideTreeNode(SequenceTree tree, PeptideDocNode nodePeptide)
 // ReSharper restore SuggestBaseTypeForParameter
@@ -54,6 +59,29 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public PeptideDocNode DocNode => (PeptideDocNode)Model;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent)?.DocNode;
+
+        /// <summary>
+        /// The <see cref="SiteDeterminingIonAnalyzer"/> for this peptide, shared by its precursor and
+        /// transition nodes for the uniquely localizing ion badge, tooltip and pick-list icon. Null
+        /// when the peptide carries no ambiguously placed modification. Rebuilt when the model of
+        /// this node or the document settings change, since sibling modifications with the same
+        /// mass shift come from the settings.
+        /// </summary>
+        public SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
+        {
+            get
+            {
+                var nodePep = DocNode;
+                var settings = DocSettings;
+                if (!ReferenceEquals(nodePep, _siteDeterminingNode) || !ReferenceEquals(settings, _siteDeterminingSettings))
+                {
+                    _siteDeterminingAnalyzer = SiteDeterminingIonAnalyzer.CreateIfLocalizable(settings, nodePep);
+                    _siteDeterminingNode = nodePep;
+                    _siteDeterminingSettings = settings;
+                }
+                return _siteDeterminingAnalyzer;
+            }
+        }
 
         public override string Heading
         {

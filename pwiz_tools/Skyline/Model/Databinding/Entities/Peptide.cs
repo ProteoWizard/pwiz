@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -45,6 +46,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly Protein _protein;
         private readonly CachedValues _cachedValues = new CachedValues();
+        private readonly CachedValue<SiteDeterminingIonAnalyzer> _siteDeterminingIonAnalyzer;
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Protein(dataSchema, identityPath.GetPathTo(0)), identityPath.Child)
         {
         }
@@ -52,6 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Peptide(Protein protein, Identity peptide) : base(protein.DataSchema, new IdentityPath(protein.IdentityPath, peptide))
         {
             _protein = protein;
+            _siteDeterminingIonAnalyzer = CachedValue.Create(DataSchema, MakeSiteDeterminingIonAnalyzer);
         }
 
         [OneToMany(ForeignKey = "Peptide")]
@@ -129,6 +132,55 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return ProteomicSequence.GetProteomicSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
             }
+        }
+
+        [InvariantDisplayName("ModificationLocalizationGroup")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        public string ModificationLocalizationGroup
+        {
+            get
+            {
+                var analyzer = GetSiteDeterminingIonAnalyzer();
+                return analyzer?.LocalizationGroupKey;
+            }
+        }
+
+        [InvariantDisplayName("LocalizationIsomerCount")]
+        [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public long? LocalizationIsomerCount
+        {
+            get
+            {
+                return GetSiteDeterminingIonAnalyzer()?.IsomerCount;
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="SiteDeterminingIonAnalyzer"/> for this peptide so the localization
+        /// columns can share a single analytic precompute. The value is cached per document, so it is
+        /// rebuilt whenever the document changes. Returns null when there is nothing to localize.
+        /// </summary>
+        private SiteDeterminingIonAnalyzer GetSiteDeterminingIonAnalyzer()
+        {
+            return _siteDeterminingIonAnalyzer.Value;
+        }
+
+        private SiteDeterminingIonAnalyzer MakeSiteDeterminingIonAnalyzer()
+        {
+            return SiteDeterminingIonAnalyzer.CreateIfLocalizable(SrmDocument.Settings, DocNode);
+        }
+
+        /// <summary>
+        /// True iff the given product ion is produced only by this peptide's current modification
+        /// placement, uniquely localizing an ambiguous modification. Reuses the memoized
+        /// <see cref="SiteDeterminingIonAnalyzer"/>. Returns false for small molecules / peptides
+        /// that are not localizable.
+        /// </summary>
+        public bool IsUniquelyLocalizing(TransitionDocNode nodeTran)
+        {
+            var analyzer = GetSiteDeterminingIonAnalyzer();
+            return analyzer != null && analyzer.IsUniqueToPrecursor(nodeTran);
         }
 
         [Obsolete("use MoleculeName instead")]  // It's a molecule, not an ion

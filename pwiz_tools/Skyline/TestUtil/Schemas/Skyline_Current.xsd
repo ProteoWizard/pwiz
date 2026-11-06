@@ -390,6 +390,7 @@
           <xs:attribute name="precursor_mz_window" type="xs:double"/>
           <xs:attribute name="exclusion_use_dia_window" type="xs:boolean"/>
           <xs:attribute name="auto_select" type="xs:boolean"/>
+          <xs:attribute name="include_localizing_ions" type="xs:boolean"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="ion_mobility_filtering" minOccurs="0" maxOccurs="1">
