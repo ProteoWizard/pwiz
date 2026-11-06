@@ -10,7 +10,8 @@
     logger from Get-BuildWarningsLoggerArgs, before the build step builds on top of it
     incrementally, reads the log back with Write-BuildWarnings, and reports the verdict in its own
     GitHub commit status through Publish-GitHubStatus. Warnings turn that one check red; the
-    TeamCity build and its own status are unaffected.
+    TeamCity build and its own status are unaffected. Publish-BuildWarningInspections also lists
+    each warning on the TeamCity build's Code Inspection tab, which does not fail the build either.
 #>
 
 Set-StrictMode -Version Latest
@@ -57,6 +58,65 @@ function Write-BuildWarnings {
     return $warnings.Count
 }
 
+# Reports each warning in $LogPath as a TeamCity inspection, so the build's Code Inspection tab
+# lists them; otherwise they can be read only in the build log. An inspection does not fail the
+# build, which a buildProblem would. TeamCity files an inspection under a path relative to the
+# checkout, so a warning raised in a file outside it - MSB3270 points at the SDK's
+# Microsoft.Common.CurrentVersion.targets - is filed under the project that raised it, with the
+# original location kept in the message. Not for a build that also imports a ReSharper report,
+# whose inspections already fill that tab.
+function Publish-BuildWarningInspections {
+    param(
+        [Parameter(Mandatory)] [string] $LogPath,
+        [string] $RepoRoot = (Split-Path -Parent $PSScriptRoot)
+    )
+    if (-not (Test-Path $LogPath)) { return }
+    $root = [System.IO.Path]::GetFullPath($RepoRoot).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+
+    # A checkout-relative path with forward slashes, or $null for a path outside the checkout.
+    function Get-CheckoutPath([string] $path) {
+        if ([string]::IsNullOrWhiteSpace($path)) { return $null }
+        try { $full = [System.IO.Path]::GetFullPath($path.Trim()) } catch { return $null }
+        if (-not $full.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) { return $null }
+        return $full.Substring($root.Length).Replace('\', '/')
+    }
+
+    # file(line,column): warning CODE: message [project] - MSBuild's form for every warning, with
+    # the location, the line and the project each optional.
+    $pattern = '^\s*(?<file>.+?)(?:\((?<line>\d+)(?:,\d+)*\))?\s*:\s*warning\s+(?<code>[A-Za-z]+\d+)\s*:\s*(?<message>.*?)(?:\s+\[(?<project>[^\[\]]+)\])?\s*$'
+    $declaredTypes = @{}
+    $reported = @{}
+    foreach ($entry in Get-Content -LiteralPath $LogPath) {
+        if ($entry -notmatch $pattern) { continue }
+        $code = $Matches['code'].ToUpperInvariant()
+        $message = $Matches['message']
+        $line = $Matches['line']
+        $file = Get-CheckoutPath $Matches['file']
+        if ($null -eq $file) {
+            $file = Get-CheckoutPath $Matches['project']
+            $location = $Matches['file'].Trim()
+            if ($line) { $location += "($line)" }
+            $message = "$message ($location)"
+            $line = $null
+        }
+        if ($null -eq $file) { $file = $Matches['file'].Trim() }
+
+        # The same warning arrives once per project that compiles a shared file, and a restore
+        # warning twice.
+        $key = "$code|$file|$line|$message"
+        if ($reported.ContainsKey($key)) { continue }
+        $reported[$key] = $true
+
+        if (-not $declaredTypes.ContainsKey($code)) {
+            $declaredTypes[$code] = $true
+            Write-Host ("##teamcity[inspectionType id='{0}' name='{0}' category='Build warnings' description='Compiler, restore or MSBuild warning {0}']" -f (Format-TcValue $code))
+        }
+        $lineAttribute = if ($line) { " line='$line'" } else { '' }
+        Write-Host ("##teamcity[inspection typeId='{0}' message='{1}' file='{2}'{3} SEVERITY='WARNING']" -f
+            (Format-TcValue $code), (Format-TcValue $message), (Format-TcValue $file), $lineAttribute)
+    }
+}
+
 # Posts a GitHub commit status. Never throws and never retries: a status that fails to post is
 # worth a warning in the log, not a failed build. The token is a TeamCity credentialsJSON value,
 # so it is never echoed. Without a token or commit - a developer running a tcinspect.ps1 locally -
@@ -93,4 +153,4 @@ function Publish-GitHubStatus {
     }
 }
 
-Export-ModuleMember -Function Format-TcValue, Get-BuildWarningsLoggerArgs, Write-BuildWarnings, Publish-GitHubStatus
+Export-ModuleMember -Function Format-TcValue, Get-BuildWarningsLoggerArgs, Write-BuildWarnings, Publish-BuildWarningInspections, Publish-GitHubStatus
