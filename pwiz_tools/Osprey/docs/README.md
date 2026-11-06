@@ -64,7 +64,8 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 |-----|----------------|
 | [DIVERGENCES.md](DIVERGENCES.md) | Consolidated cross-implementation parity report — every per-doc "Divergences from the Rust documentation" section in one place, classified (stale-doc / intentional-C# / port-error / unverified). |
 | [peak-model-training.md](peak-model-training.md) | Retraining the opt-in learned peak-pick model (06): feature capture → train → promote, with the score equations. |
-| [fractional-entrapment.md](fractional-entrapment.md) | Entrapment-based FDR-accuracy diagnostics (`--model-diagnostics`): why a fractional entrapment ratio still yields a valid FDP estimate. |
+| [fractional-entrapment.md](fractional-entrapment.md) | Entrapment-based FDR-accuracy diagnostics (`--model-diagnostics`): why a fractional entrapment ratio still yields a valid FDP estimate, and the decoy-based per-run-count FDP that needs no entrapment. |
+| [equal-chance-diagnostics.md](equal-chance-diagnostics.md) | The `--model-diagnostics` equal-chance alarms: decoy-independent mixture null, q-band balance, paired coin, decoy support; definitions and thresholds. |
 | [protein-shuffled-entrapment.md](protein-shuffled-entrapment.md) | Auditing protein-aware FDR: why standard entrapment (on its own proteins) cannot see protein-aware inflation, the protein-shuffled design that can, how to build the shuffled library, and what it found in `protein-compact`. |
 
 ## Cross-implementation status

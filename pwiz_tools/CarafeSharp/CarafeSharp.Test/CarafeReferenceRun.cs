@@ -25,6 +25,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 
 namespace pwiz.CarafeSharp.Test
@@ -94,7 +95,8 @@ namespace pwiz.CarafeSharp.Test
                 Settings.ModelDirectory = folder;
                 CarafeModelDirectory.Open(folder).ApplyTrainingRunOverrides(Settings);
             }
-            Settings.Device = @"cpu";
+            // A comparison that predicts sets TestData.ComparisonDeviceName, which needs the GPU in a CUDA run.
+            Settings.Device = TorchDevice.CPU;
         }
 
         public string Folder { get; }

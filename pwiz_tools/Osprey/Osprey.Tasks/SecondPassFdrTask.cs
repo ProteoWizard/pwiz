@@ -313,8 +313,8 @@ namespace pwiz.Osprey.Tasks
                 // The fold-versus-resident term is GONE with OSPREY_STAGE7_STREAM (2026-09-10):
                 // it distinguished two arms an operator could pick between, and only one arm
                 // remains. It was empty on the streamed default, so no existing output directory
-                // is invalidated by its removal.
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
+                // is invalidated by its removal. So is the library-fragment release term, for the
+                // same reason, with OSPREY_RELEASE_LIBRARY_FRAGMENTS (2026-11).
                 // The frozen first-pass model scores the second pass, so the classifier that
                 // trained it keys the .blib and 2nd-pass sidecars too (empty for the SVM).
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -679,8 +679,8 @@ namespace pwiz.Osprey.Tasks
                 // same reason. Without the pass2Path term the arm reads its own missing product
                 // as an outstanding input and declines every time, which is a self-defeating
                 // condition that looks exactly like the fold not working.
-                if (string.Equals(output, reportPath, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(output, pass2Path, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(output, reportPath, PathComparison.Comparison) ||
+                    string.Equals(output, pass2Path, PathComparison.Comparison))
                 {
                     continue;
                 }
@@ -952,8 +952,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Drop <c>Fragments</c> from every library entry outside the analysis-wide retained
         /// set FirstPassFDR left on disk, keeping the identity fields on all of them. See
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and
-        /// <see cref="LibraryFragmentRelease"/> for the set arithmetic.
+        /// <see cref="LibraryFragmentRelease"/> for the rationale and the set arithmetic.
         ///
         /// <para>This is SecondPassFDR's own release, and on the HPC chain it is the ONLY one.
         /// <c>FirstPassFdrTask</c> - where the Stage 5 -&gt; 6 release lives - is excluded from a
@@ -1300,10 +1299,10 @@ namespace pwiz.Osprey.Tasks
             // blib phase - unavoidable, because each needs the previous one's set complete
             // before it can start - and at 257 files they ran as ~70 s of silence between the
             // protein-FDR line and the first [COUNT] (#4615 review).
-            using (var progress = new ProgressReporter(CountText.Format(nFiles,
-                       OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_peptides_that_pass_experiment_level_FDR_in_1_file,
-                       OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_peptides_that_pass_experiment_level_FDR_across__0__files),
-                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(CountText.Format(nFiles,
+                    OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_peptides_that_pass_experiment_level_FDR_in_1_file,
+                    OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_peptides_that_pass_experiment_level_FDR_across__0__files),
+                nFiles, progress =>
             {
                 int done = 0;
                 foreach (var kvp in perFileEntries)
@@ -1317,8 +1316,7 @@ namespace pwiz.Osprey.Tasks
                             passingPeptides.Add(e.ModifiedSequence);
                     }
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return passingPeptides;
         }
 
@@ -1335,10 +1333,10 @@ namespace pwiz.Osprey.Tasks
             var passingPrecursors = new HashSet<(string, byte)>();
             var bestChargePerPeptide = new Dictionary<string, KeyValuePair<byte, double>>(
                 StringComparer.Ordinal);
-            using (var progress = new ProgressReporter(CountText.Format(nFiles,
-                       OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_charge_states_that_pass_precursor_FDR_in_1_file,
-                       OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_charge_states_that_pass_precursor_FDR_across__0__files),
-                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(CountText.Format(nFiles,
+                    OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_charge_states_that_pass_precursor_FDR_in_1_file,
+                    OspreyTasksResources.SecondPassFdrTask_ComputePassingPeptides_Selecting_charge_states_that_pass_precursor_FDR_across__0__files),
+                nFiles, progress =>
             {
                 int done = 0;
                 foreach (var kvp in perFileEntries)
@@ -1359,8 +1357,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             // Fallback: peptides with no precursor-passing charge state keep their best.
             nFallback = 0;
             foreach (var peptide in passingPeptides)
@@ -1406,11 +1403,13 @@ namespace pwiz.Osprey.Tasks
             out Dictionary<(string, byte), KeyValuePair<string, FdrEntry>> bestByPrecursor)
         {
             var passingEntries = new List<PassingObservation>();
-            bestByPrecursor = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
-            using (var progress = new ProgressReporter(CountText.Format(nFiles,
-                       OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Collecting_passing_precursors_for_the_blib_from_1_file,
-                       OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Collecting_passing_precursors_for_the_blib_from__0__files),
-                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            // A local, because the body below is a lambda and cannot capture an out parameter.
+            var bestMap = new Dictionary<(string, byte), KeyValuePair<string, FdrEntry>>();
+            bestByPrecursor = bestMap;
+            ProgressReporter.Run(CountText.Format(nFiles,
+                    OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Collecting_passing_precursors_for_the_blib_from_1_file,
+                    OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Collecting_passing_precursors_for_the_blib_from__0__files),
+                nFiles, progress =>
             {
                 int done = 0;
                 foreach (var kvp in perFileEntries)
@@ -1433,16 +1432,15 @@ namespace pwiz.Osprey.Tasks
                         passingEntries.Add(new PassingObservation(
                             kvp.Key, modSeq, entry.Charge, runQ, entry.ExperimentPrecursorQvalue,
                             entry.ApexRt, entry.StartRt, entry.EndRt));
-                        if (!bestByPrecursor.TryGetValue(key, out var existing) ||
+                        if (!bestMap.TryGetValue(key, out var existing) ||
                             runQ < existing.Value.EffectiveRunQvalue(FdrLevel.Both))
                         {
-                            bestByPrecursor[key] =
+                            bestMap[key] =
                                 new KeyValuePair<string, FdrEntry>(kvp.Key, entry);
                         }
                     }
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return passingEntries;
         }
 
@@ -1457,10 +1455,10 @@ namespace pwiz.Osprey.Tasks
             // output - so at cohort scale the three ran as one 70 s silence broken only by a
             // blank line. Now over passingEntries, an order of magnitude smaller than the pool
             // they used to walk, but the silence would still be theirs to break.
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Collecting_the_best_experiment_level_q_value_of_each_precursor___0__peaks_,
-                                     passingEntries.Count),
-                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Collecting_the_best_experiment_level_q_value_of_each_precursor___0__peaks_,
+                              passingEntries.Count),
+                passingEntries.Count, progress =>
             {
                 int expIdx = 0;
                 foreach (var obs in passingEntries)
@@ -1474,8 +1472,7 @@ namespace pwiz.Osprey.Tasks
                         bestExpPrecursorQ[keyExp] = obs.ExperimentPrecursorQvalue;
                     }
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return bestExpPrecursorQ;
         }
 
@@ -1496,10 +1493,10 @@ namespace pwiz.Osprey.Tasks
             List<PassingObservation> passingEntries)
         {
             var sharedBounds = new Dictionary<(string, string), double[]>();
-            using (var progress = new ProgressReporter(
-                       string.Format(OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Resolving_shared_peak_boundaries___0__peaks_,
-                                     passingEntries.Count),
-                       passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                string.Format(OspreyTasksResources.SecondPassFdrTask_CollectPassingEntries_Resolving_shared_peak_boundaries___0__peaks_,
+                              passingEntries.Count),
+                passingEntries.Count, progress =>
             {
                 int boundsIdx = 0;
                 foreach (var e in passingEntries)
@@ -1522,8 +1519,7 @@ namespace pwiz.Osprey.Tasks
                         sharedBounds[sk] = new[] { e.ApexRt, e.StartRt, e.EndRt, rq, e.Charge };
                     }
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return sharedBounds;
         }
 

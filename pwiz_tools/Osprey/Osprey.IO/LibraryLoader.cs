@@ -158,7 +158,7 @@ namespace pwiz.Osprey.IO
             string derivedHash = null;
             string retiredCachePath = null;
             bool fromDerived = false;
-            if (format == LibraryFormat.DiannTsv && sourceExists)
+            if (IsParsedSource(format) && sourceExists)
             {
                 derivedPath = Path.Combine(cacheDir, Path.GetFileName(path) + DERIVED_LIBRARY_EXT);
                 retiredCachePath = Path.Combine(cacheDir, Path.GetFileName(path) + RETIRED_CACHE_EXT);
@@ -197,7 +197,8 @@ namespace pwiz.Osprey.IO
             switch (format)
             {
                 case LibraryFormat.DiannTsv:
-                    entries = ParseTsv(path, config, log, logWarning, out parseDetail);
+                case LibraryFormat.DiannParquet:
+                    entries = ParseSource(path, format, config, log, logWarning, out parseDetail);
                     break;
 
                 case LibraryFormat.Blib:
@@ -219,7 +220,8 @@ namespace pwiz.Osprey.IO
                     {
                         // The derived library's read faulted (a damaged blob, a partly relayed
                         // file whose metadata row still matches): warn and parse the source,
-                        // which rebuilds it. A derived library exists only for a .tsv source.
+                        // which rebuilds it. A derived library exists only for a parsed (.tsv or
+                        // .parquet) source.
                         logWarning(string.Format(
                             OspreyIOResources.LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_,
                             path, ex.Message));
@@ -228,7 +230,7 @@ namespace pwiz.Osprey.IO
                         format = config.LibrarySource.Format;
                         log.LogInfo(string.Format(OspreyIOResources.LibraryLoader_Load_Loading_spectral_library_from__0____, path));
                         swParse.Restart();
-                        entries = ParseTsv(path, config, log, logWarning, out parseDetail);
+                        entries = ParseSource(path, format, config, log, logWarning, out parseDetail);
                         break;
                     }
                     parseDetail = string.Format(CultureInfo.InvariantCulture,
@@ -438,14 +440,39 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        /// <summary>The .tsv parse: the DIA-NN reader, with its report on the fragment types the file states.</summary>
-        private static List<LibraryEntry> ParseTsv(string path, OspreyConfig config, IOspreyLog log, Action<string> logWarning,
-            out string parseDetail)
+        /// <summary>
+        /// True for a library <paramref name="format"/> that is parsed and kept as a derived
+        /// library: the DIA-NN .tsv and .parquet.
+        /// </summary>
+        private static bool IsParsedSource(LibraryFormat format)
         {
-            var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
-            var entries = tsvLoader.Load(path, log.LogInfo);
-            tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
-            parseDetail = @"tsv";
+            return format == LibraryFormat.DiannTsv || format == LibraryFormat.DiannParquet;
+        }
+
+        /// <summary>
+        /// The parse of a DIA-NN .tsv or .parquet source, with the reader's report on the fragment
+        /// types the file states.
+        /// </summary>
+        private static List<LibraryEntry> ParseSource(string path, LibraryFormat format, OspreyConfig config, IOspreyLog log,
+            Action<string> logWarning, out string parseDetail)
+        {
+            List<LibraryEntry> entries;
+            FragmentTypeCheck typeCheck;
+            if (format == LibraryFormat.DiannParquet)
+            {
+                var parquetLoader = new DiannParquetLoader(config.FragmentTolerance);
+                entries = parquetLoader.Load(path, log.LogInfo);
+                typeCheck = parquetLoader.TypeCheck;
+                parseDetail = @"parquet";
+            }
+            else
+            {
+                var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
+                entries = tsvLoader.Load(path, log.LogInfo);
+                typeCheck = tsvLoader.TypeCheck;
+                parseDetail = @"tsv";
+            }
+            typeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
             return entries;
         }
 
@@ -919,6 +946,8 @@ namespace pwiz.Osprey.IO
             // tolerance is a different cache.
             if (source.Format == LibraryFormat.DiannTsv)
                 return DiannTsvLoader.CacheTerm(config.FragmentTolerance);
+            if (source.Format == LibraryFormat.DiannParquet)
+                return DiannParquetLoader.CacheTerm(config.FragmentTolerance);
             if (source.Format != LibraryFormat.Blib)
                 return string.Empty;
             return BlibLoader.CacheTerm(config.FragmentTolerance);

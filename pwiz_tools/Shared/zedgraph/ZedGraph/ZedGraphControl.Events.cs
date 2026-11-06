@@ -1569,6 +1569,15 @@ namespace ZedGraph
 			Refresh();
 		}
 
+		/// <summary>
+		/// Cancels a zoom drag in progress, as pressing Escape does, so that releasing the
+		/// mouse button does not zoom.
+		/// </summary>
+		public void CancelZoom()
+		{
+			HandleZoomCancel();
+		}
+
 		private void HandleZoomCancel()
 		{
 			if ( _isZooming )
