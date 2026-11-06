@@ -115,6 +115,42 @@ namespace pwiz.Skyline.Model
         }
 
 
+        /// <summary>
+        /// Gives the search engine (and any spectrum converter already chosen) the spectrum files,
+        /// the FASTA and the document's enzyme, and adds a converter when the engine cannot read
+        /// the spectrum files as they are.
+        /// </summary>
+        /// <param name="document">The document whose enzyme and missed cleavages the search uses.</param>
+        /// <param name="spectrumFiles">The files to search.</param>
+        /// <param name="fastaFile">The FASTA to search against.</param>
+        /// <param name="createConverter">Makes the converter for the workflow when one is needed.</param>
+        public void PrepareSearch(SrmDocument document, MsDataFileUri[] spectrumFiles, string fastaFile,
+            Func<AbstractDdaConverter> createConverter)
+        {
+            var peptideSettings = document.Settings.PeptideSettings;
+            SearchEngine.SetEnzyme(peptideSettings.Enzyme, peptideSettings.DigestSettings.MaxMissedCleavages);
+            SearchEngine.SetSpectrumFiles(spectrumFiles);
+            DdaConverter?.SetSpectrumFiles(spectrumFiles);
+            SearchEngine.SetFastaFiles(fastaFile);
+
+            AbstractDdaConverter.MsdataFileFormat requiredFormat = IsFeatureDetection
+                ? AbstractDdaConverter.MsdataFileFormat.mzML // Hardklor reads only mzML
+                : AbstractDdaConverter.MsdataFileFormat.mz5;
+            if (DdaConverter == null &&
+                (spectrumFiles.Any(f => SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))/* ||
+                !FullScan.SpectrumClassFilter.IsEmpty*/) // CONSIDER(MCC): consider spectrum filters in GetSearchFileNeedsConversion and apply them in Converter
+            {
+                DdaConverter = createConverter();
+                DdaConverter.SetSpectrumFiles(spectrumFiles);
+                DdaConverter.SetRequiredOutputFormat(requiredFormat);
+            }
+            else if (DdaConverter != null &&
+                     DdaConverter.ConvertedSpectrumSources.Any(f => SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
+            {
+                DdaConverter.SetRequiredOutputFormat(requiredFormat);
+            }
+        }
+
         public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches, bool isFeatureDetection = false)
         {
             if (isFeatureDetection)
@@ -599,6 +635,30 @@ namespace pwiz.Skyline.Model
             return document;
         }
 
+        /// <summary>
+        /// Sets the peak scoring model that trains when results are imported: an mProphet model when
+        /// <paramref name="autoTrain"/> is true, or the default model when the document has decoys.
+        /// Returns null when <paramref name="autoTrain"/> is true but the document has no decoys to
+        /// train the mProphet model with.
+        /// </summary>
+        public static SrmDocument ChangeAutoTrain(SrmDocument document, bool autoTrain)
+        {
+            var hasDecoys = document.Peptides.Any(pep => pep.IsDecoy);
+            if (autoTrain)
+            {
+                if (!hasDecoys)
+                    return null;
+                return document.ChangeSettings(document.Settings.ChangePeptideIntegration(i =>
+                    i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.mprophet_model)));
+            }
+            if (hasDecoys)
+            {
+                return document.ChangeSettings(document.Settings.ChangePeptideIntegration(i =>
+                    i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.default_model)));
+            }
+            return document;
+        }
+
         public static SrmDocument RemoveProteinsByPeptideCount(SrmDocument document, int minPeptides)
         {
             return minPeptides > 0 ? new RefinementSettings {MinPeptidesPerProtein = minPeptides}.Refine(document) : document;
@@ -645,6 +705,105 @@ namespace pwiz.Skyline.Model
             //if (proteinsIrt.Any())
             //    return (SrmDocument)result.ChangeChildrenChecked(proteins.Cast<DocNode>().ToArray());
             //return result;
+        }
+
+        /// <summary>
+        /// Adds the molecules feature detection found to the document: one molecule list for each
+        /// library in the document that is not in <paramref name="existingLibraries"/>, with the
+        /// molecules in natural sort order and only the precursor charges the transition filter
+        /// allows. Returns null when feature detection added no library.
+        /// </summary>
+        public static SrmDocument AddDetectedFeatures(SrmDocument document, PeptideLibraries existingLibraries,
+            IProgressMonitor progressMonitor, IProgressStatus status)
+        {
+            progressMonitor.UpdateProgress(status);
+            if (Equals(document.Settings.PeptideSettings.Libraries.LibrarySpecs, existingLibraries.LibrarySpecs))
+                return null;
+
+            var docNew = document;
+            foreach (var lib in document.Settings.PeptideSettings.Libraries.Libraries.Where(l =>
+                         !existingLibraries.Libraries.Contains(l)))
+            {
+                if (lib != null)
+                    docNew = AddDetectedFeatures(docNew, lib, status, progressMonitor);
+                progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+            }
+            return docNew;
+        }
+
+        private static SrmDocument AddDetectedFeatures(SrmDocument document, Library lib, IProgressStatus status, IProgressMonitor progressMonitor)
+        {
+            var adducts = new HashSet<Adduct>(document.Settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts);
+            var nodes = new List<PeptideDocNode>();
+            var keys = lib.Keys.OrderBy(k => ViewLibraryPepInfo.MakeCompareKey(new ViewLibraryPepInfo(k))).ToArray();
+            var keyCount = keys.Length;
+            for (var k = 0; k < keyCount;)
+            {
+                var key = keys[k];
+                var customMolecule = CustomMolecule.FromSmallMoleculeLibraryAttributes(key.SmallMoleculeLibraryAttributes);
+                var mass = customMolecule.GetMass(MassType.Monoisotopic);
+                var peptide = new Peptide(customMolecule);
+                var children = new List<TransitionGroupDocNode>();
+                // Look for multiple charges of same molecule
+                while (k < keyCount && Equals(key.SmallMoleculeLibraryAttributes, keys[k].SmallMoleculeLibraryAttributes))
+                {
+                    key = keys[k];
+                    progressMonitor.UpdateProgress(status.ChangePercentComplete(80 * k / keyCount));
+                    k++;
+                    // Filter on user-requested charge state
+                    if (!document.Settings.TransitionSettings.Filter.PeptidePrecursorCharges.Any(charge => Equals(charge.AdductCharge, key.Adduct.AdductCharge)))
+                    {
+                        continue;
+                    }
+                    Assume.IsTrue(lib.TryLoadSpectrum(key, out SpectrumPeaksInfo _));
+                    var precursor = new TransitionGroup(peptide, key.Adduct, IsotopeLabelType.light);
+                    var precursorTransition = new Transition(precursor, key.Adduct, null,
+                        customMolecule, IonType.precursor);
+                    var precursorTransitionDocNode = new TransitionDocNode(precursorTransition,
+                        Annotations.EMPTY, null, mass,
+                        TransitionDocNode.TransitionQuantInfo.DEFAULT, null,
+                        null);
+                    lib.TryGetLibInfo(key, out var libInfo);
+                    var precursorDocNode = new TransitionGroupDocNode(precursor, Annotations.EMPTY,
+                        document.Settings, null, libInfo, null, null,
+                        new[] { precursorTransitionDocNode },
+                        false); // We will turn on autoManage in the next step
+                    children.Add(precursorDocNode);
+                }
+                if (children.Any())
+                {
+                    var peptideDocNode = new PeptideDocNode(peptide, document.Settings, null, null,
+                        null,
+                        children.ToArray(), false); // We will turn on autoManage in the next step
+                    nodes.Add(peptideDocNode);
+                    adducts.Add(key.Adduct);
+                }
+            }
+
+            var newPeptideGroup = new PeptideGroup();
+            var newPeptideGroupDocNode = new PeptideGroupDocNode(newPeptideGroup,
+                Annotations.EMPTY,
+                lib.Name,
+                null, nodes.ToArray(), true);
+
+            // Make sure that transition settings filters include any newly used adduct types, and both precursor and fragment ions
+            var transitionSettings = document.Settings.TransitionSettings;
+            var filter = transitionSettings.Filter
+                .ChangeSmallMoleculeFragmentAdducts(adducts.ToList())
+                .ChangeSmallMoleculePrecursorAdducts(adducts.ToList())
+                .ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor });
+            var newTransitionSettings = transitionSettings.ChangeFilter(filter);
+            progressMonitor.UpdateProgress(status.ChangePercentComplete(90));
+
+            // Add new nodes with auto select enabled, being careful not to mess with any existing nodes
+            var docTmp = (SrmDocument)(document.ChangeChildren(new List<DocNode>(){newPeptideGroupDocNode})); // Temp doc with just the new nodes
+            docTmp = docTmp.ChangeSettings(docTmp.Settings.ChangeTransitionSettings(newTransitionSettings)); // Update the settings
+            // Now apply auto pick so that M+1, M+2 etc precursors get created
+            docTmp = ChangeAutoManageChildren(docTmp, PickLevel.precursors | PickLevel.transitions, true);
+
+            // Copy the resulting nodes to the actual doc, and update its settings too
+            return ((SrmDocument)document.Add(docTmp.MoleculeGroups.First())).
+                ChangeSettings(docTmp.Settings.ChangeTransitionSettings(newTransitionSettings));
         }
 
         public class FoundResultsFile

@@ -63,17 +63,17 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void OpenSkylineStartupSettingsUI(SkylineWindow skylineWindow)
         {
-            ImportPeptideSearchDlg.Workflow? importPeptideSearchType = null;
+            PeptideSearchWizardDlg.Workflow? importPeptideSearchType = null;
             switch (ImportType)
             {
                 case DataType.peptide_search_dda:
-                    importPeptideSearchType = ImportPeptideSearchDlg.Workflow.dda;
+                    importPeptideSearchType = PeptideSearchWizardDlg.Workflow.dda;
                     break;
                 case DataType.peptide_search_prm:
-                    importPeptideSearchType = ImportPeptideSearchDlg.Workflow.prm;
+                    importPeptideSearchType = PeptideSearchWizardDlg.Workflow.prm;
                     break;
                 case DataType.peptide_search_dia:
-                    importPeptideSearchType = ImportPeptideSearchDlg.Workflow.dia;
+                    importPeptideSearchType = PeptideSearchWizardDlg.Workflow.dia;
                     break;
             }
             if (importPeptideSearchType.HasValue)

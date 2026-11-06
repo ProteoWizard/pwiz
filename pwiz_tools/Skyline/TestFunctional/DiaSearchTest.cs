@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
             public DocumentCounts Initial { get; set; }
             public DocumentCounts Final { get; set; }
 
-            public Action<ImportPeptideSearchDlg, EditIsolationSchemeDlg> EditIsolationSchemeAction { get; set; }
+            public Action<RunPeptideSearchDlg, EditIsolationSchemeDlg> EditIsolationSchemeAction { get; set; }
 
             public Action TestAction { get; set; }
         }
@@ -303,22 +303,22 @@ namespace pwiz.SkylineTestFunctional
             //    FileEx.SafeDelete(file);
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles
                     .Select(o => (MsDataFileUri) new MsDataFilePath(GetTestPath(o))).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             RunUI(() =>
             {
-                Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -327,7 +327,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             });
 
             bool secondLoop = importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Contains(m => m == "Oxidation (M)");
@@ -357,7 +357,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
 
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -365,14 +365,14 @@ namespace pwiz.SkylineTestFunctional
             // We're on the transition settings page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             });
 
             string isolationSchemeName = "DiaUmpire Test Scheme";
@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Import FASTA" page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
@@ -421,10 +421,10 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // We're on the Converter settings page.
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.ConverterSettingsPage));   // Stop to show this form during form testing
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.ConverterSettingsPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.converter_settings_page);
                 importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = false;
@@ -446,7 +446,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the Adjust search settings page
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
             });
 
             RunUI(() =>
@@ -517,7 +517,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on modifications
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on extract chromatograms
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on input files
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles.Select(o => (MsDataFileUri) new MsDataFilePath(GetTestPath(o))).ToArray();
 
@@ -539,7 +539,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // We're on the "Match Modifications" page again.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                              ImportPeptideSearchDlg.Pages.match_modifications_page);
+                              PeptideSearchWizardDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, true); // uncheck C+57
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
@@ -597,24 +597,24 @@ namespace pwiz.SkylineTestFunctional
             PrepareDocument(testDetails.DocumentPath);
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<RunPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             // We're on the "Build Spectral Library" page of the wizard.
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = PeptideSearchWizardDlg.InputFile.dia_raw;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles
                     .Select(o => (MsDataFileUri)new MsDataFilePath(GetTestPath(o))).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -623,7 +623,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             });
 
             bool secondLoop = importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Contains(m => m == "Oxidation (M)");
@@ -653,7 +653,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
 
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -661,14 +661,14 @@ namespace pwiz.SkylineTestFunctional
             // We're on the transition settings page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
             });
 
             string isolationSchemeName = "TestDiaSearch";
@@ -709,7 +709,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Import FASTA" page.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.import_fasta_page);
                 // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
@@ -720,7 +720,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the DIA-Umpire settings page
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.converter_settings_page);
                 Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -729,7 +729,7 @@ namespace pwiz.SkylineTestFunctional
             // We're on the Adjust search settings page
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.dda_search_settings_page);
 
                 // MSFragger should be selected by default
                 Assert.AreEqual(SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
@@ -811,11 +811,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on modifications
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on extract chromatograms
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()); // now on input files
-                Assert.AreEqual(ImportPeptideSearchDlg.Pages.spectra_page, importPeptideSearchDlg.CurrentPage);
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.spectra_page, importPeptideSearchDlg.CurrentPage);
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = testDetails.SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(GetTestPath(o))).ToArray();
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on extract chromatograms
-                Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                Assert.AreEqual(PeptideSearchWizardDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
             });
 
 
@@ -833,7 +833,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // We're on the "Match Modifications" page again.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                              ImportPeptideSearchDlg.Pages.match_modifications_page);
+                              PeptideSearchWizardDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, true); // uncheck C+57
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0

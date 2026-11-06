@@ -136,7 +136,7 @@
     <value>4</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>取消</value>
+    <value>キャンセル</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -163,7 +163,7 @@
     <value>3</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
-    <value>下一步(&amp;N) &gt;</value>
+    <value>次へ(&amp;N) &gt;</value>
   </data>
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
@@ -180,310 +180,6 @@
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
-  <data name="cbMissedCleavages.Items" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="cbMissedCleavages.Items1" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="cbMissedCleavages.Items2" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="cbMissedCleavages.Items3" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="cbMissedCleavages.Items4" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="cbMissedCleavages.Items5" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="cbMissedCleavages.Items6" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="cbMissedCleavages.Items7" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="cbMissedCleavages.Items8" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="cbMissedCleavages.Items9" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="cbMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 95</value>
-  </data>
-  <data name="cbMissedCleavages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 21</value>
-  </data>
-  <data name="cbMissedCleavages.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-    <value>当考虑到蛋白质酶解时，肽段中允许的
-最大遗漏的酶解位点数。</value>
-  </data>
-  <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
-    <value>cbMissedCleavages</value>
-  </data>
-  <data name="&gt;&gt;cbMissedCleavages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
-  </data>
-  <data name="comboEnzyme.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboEnzyme.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="comboEnzyme.ToolTip" xml:space="preserve">
-    <value>在注入质谱仪前用于将蛋白质
-消化成肽段的蛋白酶
-</value>
-  </data>
-  <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
-    <value>comboEnzyme</value>
-  </data>
-  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 158</value>
-  </data>
-  <data name="comboBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboBackgroundProteome.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>处理过的 FASTA 序列信息指定了全部蛋白质，
-这些蛋白质可能存在于用来注入质谱仪的
-样品基质中。</value>
-  </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
-    <value>comboBackgroundProteome</value>
-  </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBox1.Items" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="comboBox1.Items1" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="comboBox1.Items2" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="comboBox1.Items3" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="comboBox1.Items4" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="comboBox1.Items5" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="comboBox1.Items6" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="comboBox1.Items7" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="comboBox1.Items8" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="comboBox1.Items9" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="comboBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 95</value>
-  </data>
-  <data name="comboBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 21</value>
-  </data>
-  <data name="comboBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="comboBox1.ToolTip" xml:space="preserve">
-    <value>当考虑到蛋白质酶解时，肽段中允许的
-最大遗漏的酶解位点数。</value>
-  </data>
-  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
-    <value>comboBox1</value>
-  </data>
-  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
-  </data>
-  <data name="comboBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="comboBox2.ToolTip" xml:space="preserve">
-    <value>在注入质谱仪前用于将蛋白质
-消化成肽段的蛋白酶
-</value>
-  </data>
-  <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
-    <value>comboBox2</value>
-  </data>
-  <data name="&gt;&gt;comboBox2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="comboBox3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 158</value>
-  </data>
-  <data name="comboBox3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
-  </data>
-  <data name="comboBox3.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboBox3.ToolTip" xml:space="preserve">
-    <value>处理过的 FASTA 序列信息指定了全部蛋白质，
-这些蛋白质可能存在于用来注入质谱仪的
-样品基质中。</value>
-  </data>
-  <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
-    <value>comboBox3</value>
-  </data>
-  <data name="&gt;&gt;comboBox3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>最大遗漏的酶解位点数(&amp;M)：</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>酶(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label15.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
-  </data>
-  <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
-  </data>
-  <data name="label15.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label15.Text" xml:space="preserve">
-    <value>背景蛋白质组(&amp;B)：</value>
-  </data>
-  <data name="&gt;&gt;label15.Name" xml:space="preserve">
-    <value>label15</value>
-  </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>最大遗漏的酶解位点数(&amp;M)：</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label8.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label8.Text" xml:space="preserve">
-    <value>酶(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;label8.Name" xml:space="preserve">
-    <value>label8</value>
-  </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
-  </data>
-  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
-  </data>
-  <data name="label9.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label9.Text" xml:space="preserve">
-    <value>背景蛋白质组(&amp;B)：</value>
-  </data>
-  <data name="&gt;&gt;label9.Name" xml:space="preserve">
-    <value>label9</value>
-  </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="btnEarlyFinish.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -500,7 +196,7 @@
     <value>1</value>
   </data>
   <data name="btnEarlyFinish.Text" xml:space="preserve">
-    <value>完成(&amp;F)</value>
+    <value>完了(&amp;F)</value>
   </data>
   <data name="&gt;&gt;btnEarlyFinish.Name" xml:space="preserve">
     <value>btnEarlyFinish</value>
@@ -560,7 +256,7 @@
     <value>0</value>
   </data>
   <data name="label14.Text" xml:space="preserve">
-    <value>谱图库</value>
+    <value>スペクトルライブラリ</value>
   </data>
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
@@ -641,7 +337,7 @@
     <value>0</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
-    <value>提取色谱图</value>
+    <value>クロマトグラムを抽出</value>
   </data>
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
@@ -722,7 +418,7 @@
     <value>0</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-    <value>添加修饰</value>
+    <value>修飾を追加</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -806,7 +502,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>配置离子对设置</value>
+    <value>トランジション設定を行う</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -887,7 +583,7 @@
     <value>0</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-    <value>配置全扫描设置</value>
+    <value>フルスキャン設定を行う</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
@@ -968,7 +664,7 @@
     <value>0</value>
   </data>
   <data name="lblFasta.Text" xml:space="preserve">
-    <value>导入 FASTA</value>
+    <value>FASTAをインポート</value>
   </data>
   <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
     <value>lblFasta</value>
@@ -1052,7 +748,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>转换设置</value>
+    <value>変換設定</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1136,7 +832,7 @@
     <value>0</value>
   </data>
   <data name="lblSearchSettings.Text" xml:space="preserve">
-    <value>搜索设置</value>
+    <value>検索設定</value>
   </data>
   <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
     <value>lblSearchSettings</value>
@@ -1220,7 +916,7 @@
     <value>0</value>
   </data>
   <data name="lblDDASearch.Text" xml:space="preserve">
-    <value>DDA 搜索</value>
+    <value>DDA検索</value>
   </data>
   <data name="&gt;&gt;lblDDASearch.Name" xml:space="preserve">
     <value>lblDDASearch</value>
@@ -1322,7 +1018,7 @@
     <value>2</value>
   </data>
   <data name="btnBack.Text" xml:space="preserve">
-    <value>&lt; 后退(&amp;B)</value>
+    <value>&lt; 戻る(&amp;B)</value>
   </data>
   <data name="btnBack.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1358,7 +1054,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>导入肽段搜索</value>
+    <value>ペプチド検索のインポート</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
@@ -1373,7 +1069,7 @@
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ImportPeptideSearchDlg</value>
+    <value>PeptideSearchWizardDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>

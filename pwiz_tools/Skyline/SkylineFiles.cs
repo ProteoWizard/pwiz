@@ -3691,7 +3691,7 @@ namespace pwiz.Skyline
 
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
-            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
+            ShowFeatureDetectionDlg();
         }
 
         private void runPeptideSearchToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3699,25 +3699,19 @@ namespace pwiz.Skyline
             ShowRunPeptideSearchDlg();
         }
 
-        public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
+        public void ShowImportPeptideSearchDlg(PeptideSearchWizardDlg.Workflow? workflowType)
         {
-            var isFeatureDetection = workflowType is ImportPeptideSearchDlg.Workflow.feature_detection;
-            if (!CheckDocumentExists(isFeatureDetection ?
-                    SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_ :
-                    SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;
             }
             else if (!Document.IsLoaded)
             {
-                MessageDlg.Show(this,
-                    isFeatureDetection ?
-                        SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_ :
-                        SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 
-            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, isFeatureDetection, workflowType))
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, workflowType))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -3738,7 +3732,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, true, null))
+            using (var dlg = new RunPeptideSearchDlg(this, _libraryManager, null))
             {
                 dlg.Text = SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -3878,7 +3872,23 @@ namespace pwiz.Skyline
 
         public void ShowFeatureDetectionDlg()
         {
-            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_);
+                return;
+            }
+
+            using (var dlg = new RunPeptideSearchDlg(this, _libraryManager, PeptideSearchWizardDlg.Workflow.feature_detection))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
         }
 
         private bool CheckDocumentExists(String errorMsg)

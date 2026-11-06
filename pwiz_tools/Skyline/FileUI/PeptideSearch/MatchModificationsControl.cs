@@ -142,9 +142,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public IEnumerable<string> UnmatchedModifications => unmatchedListBox.Items.Cast<string>();
 
+        /// <summary>
+        /// Fills the lists of modifications for the document. Modifications the user checked before
+        /// stay checked, unless a <paramref name="preset"/> is being applied: then the preset's
+        /// modifications are checked, or the document's when the preset does not list any.
+        /// </summary>
         public bool Initialize(SrmDocument document, SearchSettingsPreset preset = null)
         {
             Document = document;
+            var previouslyChecked = modificationsListBox.CheckedItems.Cast<ListBoxModification>().ToHashSet();
+            bool hadItems = modificationsListBox.Items.Count > 0;
 
             if (!ImportPeptideSearch.HasDocLib && !ImportPeptideSearch.IsDDASearch)
                 return false;
@@ -183,6 +190,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     .Concat(preset.HeavyModifications.Select(m => m.Name))
                     .ToHashSet();
                 CheckedModifications = presetModNames;
+            }
+            else if (preset == null && hadItems)
+            {
+                for (int i = 0; i < modificationsListBox.Items.Count; ++i)
+                {
+                    modificationsListBox.SetItemChecked(i,
+                        previouslyChecked.Contains((ListBoxModification) modificationsListBox.Items[i]));
+                }
             }
 
             return modificationsListBox.Items.Count > 0 || unmatchedListBox.Items.Count > 0;

@@ -147,15 +147,15 @@ namespace pwiz.SkylineTestTutorial
 
             // "Build Spectral Library" page
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() => SkylineWindow.ShowImportPeptideSearchDlg());
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Spectral Library page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Spectral Library page");
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.dia;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Spectral Library page - input files");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Spectral Library page - input files");
 
             using (new WaitDocumentChange(1, true))
             {
@@ -164,8 +164,8 @@ namespace pwiz.SkylineTestTutorial
 
                 // "Extract Chromatograms" page
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                     ImportPeptideSearchDlg.Pages.chromatograms_page);
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.ChromatogramsDiaPage));    // So that SkylineTester - Forms tab pauses
+                                     PeptideSearchWizardDlg.Pages.chromatograms_page);
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.ChromatogramsDiaPage));    // So that SkylineTester - Forms tab pauses
             var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsDIAControl;
             Assert.IsNotNull(importResults);
             const string prefixKeep = "Pit0";
@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<OpenDataSourceDialog>("Browse for Results Files form");
                 OkDialog(openDataFiles, openDataFiles.Open);
 
-                PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Extract Chromatograms page");
+                PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsDiaPage>("Extract Chromatograms page");
 
                 var importResultsNameDlg =
                     ShowDialog<ImportResultsNameDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
@@ -200,7 +200,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                     ImportPeptideSearchDlg.Pages.match_modifications_page);
+                                     PeptideSearchWizardDlg.Pages.match_modifications_page);
 
                 // "Add Modifications" page
                 RunUI(() =>
@@ -212,10 +212,10 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
                     Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
                 });
-            // PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Modifications page", 19);
+            // PauseForScreenShot<PeptideSearchWizardDlg.MatchModsPage>("Modifications page", 19);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                         ImportPeptideSearchDlg.Pages.transition_settings_page);
+                                         PeptideSearchWizardDlg.Pages.transition_settings_page);
 
                 // "Configure Transition Settings" page
             // RunUI(() =>
@@ -233,13 +233,13 @@ namespace pwiz.SkylineTestTutorial
                 // importPeptideSearchDlg.TransitionSettingsControl.IonCount = 6;
                 // importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 6;
             // });
-            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition Settings page");
+            PauseForScreenShot<PeptideSearchWizardDlg.TransitionSettingsPage>("Transition Settings page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
-                                     ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                                     PeptideSearchWizardDlg.Pages.full_scan_settings_page);
 
                 // "Configure Full-Scan Settings" page
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Full-Scan Settings page");
+            PauseForScreenShot<PeptideSearchWizardDlg.Ms2FullScanPage>("Full-Scan Settings page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
                 // "Import FASTA" page
@@ -248,7 +248,7 @@ namespace pwiz.SkylineTestTutorial
                     importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("pituitary_database.fasta"));
                     importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = string.Empty;
                 });
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Fasta page");
+            PauseForScreenShot<PeptideSearchWizardDlg.FastaPage>("Fasta page");
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
 
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);

@@ -2638,10 +2638,10 @@ namespace pwiz.Skyline
             // Add iRTs
             if (import.IrtStandard != null && !import.IrtStandard.IsEmpty)
             {
-                ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
-                    out var irtProviders, out var autoStandards, out var cirtPeptides);
+                var calibration = new LibraryIrtCalibration(import.DocLib, docLibSpec, import.IrtStandard, IrtRegressionType.DEFAULT);
+                calibration.LoadRetentionTimes(progressMonitor);
                 int? numCirt = null;
-                if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+                if (calibration.UsesCirtPeptides)
                 {
                     if (!commandArgs.NumCirts.HasValue)
                     {
@@ -2650,47 +2650,22 @@ namespace pwiz.Skyline
                     }
                     numCirt = commandArgs.NumCirts.Value;
                 }
-                else if (import.IrtStandard.IsAuto)
+                else if (calibration.NeedsStandardChoice)
                 {
-                    switch (autoStandards.Count)
-                    {
-                        case 0:
-                            import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
-                            break;
-                        case 1:
-                            import.IrtStandard = autoStandards[0];
-                            break;
-                        default:
-                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
-                                IrtStandard.AUTO.Name);
-                            return false;
-                    }
+                    _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                        IrtStandard.AUTO.Name);
+                    return false;
                 }
 
-                ProcessedIrtAverages processed = null;
-                if (!HandleExceptions(commandArgs, () =>
-                        {
-                            processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
-                                import.IrtStandard.Peptides.ToArray(),
-                                cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
-                            if (newStandardPeptides != null)
-                            {
-                                import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null,
-                                    newStandardPeptides);
-                            }
-                        },
+                if (!HandleExceptions(commandArgs, () => calibration.ProcessRetentionTimes(numCirt, progressMonitor),
                         Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_))
                 {
                     return false;
                 }
 
-                Assume.IsNotNull(processed);
-                var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
-                if (processedDbIrtPeptides.Any())
-                {
-                    ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, import.IrtStandard.Peptides.ToArray(),
-                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
-                }
+                import.IrtStandard = calibration.Standard;
+                if (calibration.HasCalibratedPeptides)
+                    calibration.CreateIrtDb(commandArgs.RecalibrateIrts, progressMonitor);
                 doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
             }
 

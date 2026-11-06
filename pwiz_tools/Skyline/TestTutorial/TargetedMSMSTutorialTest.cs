@@ -354,9 +354,9 @@ namespace pwiz.SkylineTestTutorial
             //p. 15 Import Full-Scan Data
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
-            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm);
+            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = PeptideSearchWizardDlg.Workflow.prm);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page");
 
             const int prefixLen = 35;
             const string lowResDir = "Low Res";
@@ -375,7 +375,7 @@ namespace pwiz.SkylineTestTutorial
             var doc = SkylineWindow.Document;
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
@@ -385,7 +385,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page");
+            PauseForScreenShot<PeptideSearchWizardDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page");
 
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());
             doc = WaitForDocumentChangeLoaded(doc, WAIT_TIME*2);    // double wait time, becuase of intermittent failures on nightly runs
@@ -405,20 +405,20 @@ namespace pwiz.SkylineTestTutorial
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search Extract Chromatograms page");
+            PauseForScreenShot<PeptideSearchWizardDlg.ChromatogramsPage>("Import Peptide Search Extract Chromatograms page");
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
-            TryWaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            TryWaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page);
             var correctPage = false;
-            ImportPeptideSearchDlg.Pages currentPage = 0;
-            RunUI(() => correctPage = ImportPeptideSearchDlg.Pages.chromatograms_page == (currentPage = importPeptideSearchDlg.CurrentPage));
+            PeptideSearchWizardDlg.Pages currentPage = 0;
+            RunUI(() => correctPage = PeptideSearchWizardDlg.Pages.chromatograms_page == (currentPage = importPeptideSearchDlg.CurrentPage));
             if (!correctPage)
             {
                 WaitForConditionUI(1, // Immediate timeout - just want the richer error message that WaitForConditionUI provides
-                    () => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page,
+                    () => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.chromatograms_page,
                     () => string.Format("Expected to be on chromatograms_page, on {0} instead", currentPage));
             }
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -431,11 +431,11 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
             // Skip Match Modifications page.
-            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.match_modifications_page);
             RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
-            // PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 19);
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.TransitionSettingsPage));  // So SkylineTester - Forms page still stops
+            // PauseForScreenShot<PeptideSearchWizardDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 19);
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.TransitionSettingsPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
@@ -443,21 +443,21 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            // PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 19);
-            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.Ms2FullScanPage));  // So SkylineTester - Forms page still stops
+            // PauseForScreenShot<PeptideSearchWizardDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 19);
+            TryWaitForOpenForm(typeof(PeptideSearchWizardDlg.Ms2FullScanPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == PeptideSearchWizardDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
