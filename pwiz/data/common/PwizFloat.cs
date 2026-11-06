@@ -393,4 +393,11 @@ public static class PwizFloat
     /// <summary><c>traits::truncate_to_long</c> for an already-truncated value.</summary>
     private static int ToInt<T>(T value) where T : IFloatingPointIeee754<T>
         => (int)ToDouble(value);
+
+    // TEMPORARY, revert before merging PR #5006: an unused local (CS0168) so the Core Windows
+    // build warns, to check that tcinspect.ps1 lists it on the Code Inspection tab.
+    internal static void CodeInspectionProbe()
+    {
+        int unused;
+    }
 }
