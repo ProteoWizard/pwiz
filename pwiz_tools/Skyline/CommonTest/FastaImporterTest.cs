@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1219,21 +1220,52 @@ namespace CommonTest
             Assert.AreEqual(1, pendingWaits.Count);
             Assert.AreEqual(retryAfter, pendingWaits[0]);
 
-            // A 429 that does not say how long to wait still gets a wait
-            RunRateLimitedLookup(null, giveUpOnUnresponsiveWebService: false, out _, out var defaultWaits);
-            Assert.AreEqual(1, defaultWaits.Count);
-            Assert.AreEqual(WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY, defaultWaits[0]);
+            // A 429 that does not say how long to wait still gets a wait - the default, as far as
+            // the seam's cap allows
+            RunRateLimitedLookup(null, giveUpOnUnresponsiveWebService: true, out _, out var defaultWaits);
+            Assert.AreEqual(Min(WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY, WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY),
+                defaultWaits.Single());
 
-            // Production honors a long demand up to the cap; a test never waits past the default,
-            // so a service asking for minutes cannot push a test past its own timeout
+            // A long demand is capped: in normal use because the wait holds a lock the UI thread can
+            // need, and in a test so a service asking for minutes cannot push it past its timeout
             var longRetryAfter = TimeSpan.FromHours(1);
             RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: false, out _, out var cappedWaits);
             Assert.AreEqual(WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY, cappedWaits.Single());
             RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: true, out _, out var testWaits);
-            Assert.IsTrue(testWaits.All(wait => wait == WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY));
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_TEST_RATE_LIMIT_DELAY, testWaits.Single());
+
+            // Retry-After of zero (or a time already past) still waits, or the next pass asks again at once
+            RunRateLimitedLookup(TimeSpan.Zero, giveUpOnUnresponsiveWebService: false, out _, out var zeroWaits);
+            Assert.AreEqual(WebEnabledFastaImporter.MIN_RATE_LIMIT_DELAY, zeroWaits.Single());
 
             TestWebAccessProbeRateLimited(retryAfter);
+            TestRateLimitWaitCancellation();
             TestRetryAfterHeader();
+        }
+
+        /// <summary>
+        /// The real wait, not a recorded one: cancelling while waiting out a rate limit must end the
+        /// wait promptly, and must not lead to another request or to the proteins being given up on -
+        /// they stay pending for a later lookup.
+        /// </summary>
+        private static void TestRateLimitWaitCancellation()
+        {
+            var longRetryAfter = TimeSpan.FromMinutes(5);
+            foreach (var giveUp in new[] { true, false })
+            {
+                using var helper = new HttpClientTestHelper(CreateTooManyRequestsException(longRetryAfter));
+                var monitor = new CancelDuringWaitProgressMonitor();
+                var provider = new CancelDuringRateLimitWaitProvider(monitor);
+                var proteins = RunUniprotLookup(provider, giveUp, out var completed, monitor);
+
+                Assert.AreEqual(1, provider.WaitTimes.Count);
+                Assert.IsTrue(provider.WaitTimes[0] < TimeSpan.FromSeconds(30),
+                    $"Cancelling took {provider.WaitTimes[0]} to end a wait of {longRetryAfter}");
+                Assert.AreEqual(1, provider.RequestCount, "A cancelled lookup must not ask again");
+                Assert.AreEqual(0, completed.Count);
+                Assert.IsTrue(proteins.All(p => p.GetProteinMetadata().NeedsSearch()));
+                Assert.IsTrue(proteins.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+            }
         }
 
         /// <summary>
@@ -1283,6 +1315,11 @@ namespace CommonTest
             return proteins;
         }
 
+        private static TimeSpan Min(TimeSpan a, TimeSpan b)
+        {
+            return a < b ? a : b;
+        }
+
         private static NetworkRequestException CreateTooManyRequestsException(TimeSpan? retryAfter)
         {
             var uri = new Uri(@"https://rest.uniprot.org/uniprotkb/search");
@@ -1300,7 +1337,8 @@ namespace CommonTest
         }
 
         private static IList<ProteinSearchInfo> RunUniprotLookup(WebEnabledFastaImporter.WebSearchProvider provider,
-            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed)
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed,
+            IProgressMonitor progressMonitor = null)
         {
             // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web.
             // UniProt requests start one protein at a time, so only the first reaches the web before
@@ -1319,7 +1357,7 @@ namespace CommonTest
                 GiveUpOnUnresponsiveWebService = giveUpOnUnresponsiveWebService
             };
             // The lookup yields lazily, so enumerate it to make it run
-            completed = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            completed = importer.DoWebserviceLookup(proteins, progressMonitor ?? new SilentProgressMonitor(), false).ToList();
             return proteins;
         }
 
@@ -1820,6 +1858,61 @@ namespace CommonTest
             {
                 Waits.Add(delay);
             }
+        }
+
+        /// <summary>
+        /// Runs the real rate-limit wait, starting the monitor's countdown to cancellation as the
+        /// wait begins, and counts the requests made.
+        /// </summary>
+        private class CancelDuringRateLimitWaitProvider : QuickFailWebSearchProvider
+        {
+            private readonly CancelDuringWaitProgressMonitor _monitor;
+
+            public CancelDuringRateLimitWaitProvider(CancelDuringWaitProgressMonitor monitor)
+            {
+                _monitor = monitor;
+            }
+
+            public int RequestCount { get; private set; }
+            public List<TimeSpan> WaitTimes { get; } = new List<TimeSpan>();
+
+            public override Stream GetWebResponseStream(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestCount++;
+                return base.GetWebResponseStream(url, progressMonitor, timeout);
+            }
+
+            public override void WaitForRateLimit(TimeSpan delay, IProgressMonitor progressMonitor)
+            {
+                var stopwatch = Stopwatch.StartNew();
+                _monitor.StartCountdown();
+                base.WaitForRateLimit(delay, progressMonitor);
+                WaitTimes.Add(stopwatch.Elapsed);
+            }
+        }
+
+        /// <summary>
+        /// Not cancelled until a countdown, started once a wait is under way, has run out - so the
+        /// request before the wait goes out normally and the cancellation lands mid-wait.
+        /// </summary>
+        private class CancelDuringWaitProgressMonitor : IProgressMonitor
+        {
+            private static readonly TimeSpan CANCEL_AFTER = TimeSpan.FromMilliseconds(300);
+            private Stopwatch _countdown;
+
+            public void StartCountdown()
+            {
+                _countdown = Stopwatch.StartNew();
+            }
+
+            public bool IsCanceled => _countdown != null && _countdown.Elapsed >= CANCEL_AFTER;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                return UpdateProgressResponse.normal;
+            }
+
+            public bool HasUI => false;
         }
 
         /// <summary>

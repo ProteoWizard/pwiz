@@ -1079,7 +1079,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                             // on incomplete data). A rate limit is waited out first, or the pass the
                             // loader schedules next would ask again while the limit still holds.
                             if (rateLimited)
-                                _webSearchProvider.WaitForRateLimit(_rateLimitDelay, progressMonitor);
+                                _webSearchProvider.WaitForRateLimit(GetRateLimitWait(MAX_RATE_LIMIT_DELAY), progressMonitor);
                             abort = true;
                             break;
                         }
@@ -1108,10 +1108,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                             // The request was fine, just too soon. Try the same one again once the
                             // service is willing - but a test waits no longer than a typical refusal
                             // asks for. Asked for more, it tries early and gives up on the next refusal.
-                            var testDelay = _rateLimitDelay < DEFAULT_RATE_LIMIT_DELAY
-                                ? _rateLimitDelay
-                                : DEFAULT_RATE_LIMIT_DELAY;
-                            _webSearchProvider.WaitForRateLimit(testDelay, progressMonitor);
+                            _webSearchProvider.WaitForRateLimit(GetRateLimitWait(MAX_TEST_RATE_LIMIT_DELAY), progressMonitor);
                             continue;
                         }
                         _maxBatchSize[searchType] = Math.Max(1, _maxBatchSize[searchType] / 2);
@@ -1712,10 +1709,24 @@ namespace pwiz.ProteomeDatabase.Fasta
         public static readonly TimeSpan DEFAULT_RATE_LIMIT_DELAY = TimeSpan.FromSeconds(60);
 
         /// <summary>
-        /// Longest wait a Retry-After header is taken at its word for, so a mistaken or hostile
-        /// value cannot stall the lookup indefinitely.
+        /// Shortest wait after a refusal, even when Retry-After says zero or names a time already
+        /// past - otherwise the next pass would ask again at once, which is what the wait prevents.
         /// </summary>
-        public static readonly TimeSpan MAX_RATE_LIMIT_DELAY = TimeSpan.FromMinutes(5);
+        public static readonly TimeSpan MIN_RATE_LIMIT_DELAY = TimeSpan.FromSeconds(2);
+
+        /// <summary>
+        /// Longest wait before a pass ends in normal use. The wait runs while the protein metadata
+        /// loader holds a lock the UI thread can need (closing Skyline clears that loader's cache),
+        /// so it is kept to the order of the request timeouts already held under that lock. A
+        /// service wanting longer gets a few requests a minute until it relents, not one per second.
+        /// </summary>
+        public static readonly TimeSpan MAX_RATE_LIMIT_DELAY = TimeSpan.FromSeconds(15);
+
+        /// <summary>
+        /// Longest wait with the give-up seam on. Long enough to outlast a typical refusal, which
+        /// lets a test complete its lookups, and short enough to leave it inside its own timeout.
+        /// </summary>
+        public static readonly TimeSpan MAX_TEST_RATE_LIMIT_DELAY = TimeSpan.FromSeconds(60);
 
         private bool SimilarSearchTerms(string a, string b)
         {
@@ -1733,6 +1744,17 @@ namespace pwiz.ProteomeDatabase.Fasta
             unusable_response,
             rate_limited,
             cancelled
+        }
+
+        /// <summary>
+        /// The wait the web service last asked for, kept between <see cref="MIN_RATE_LIMIT_DELAY"/>
+        /// and the given maximum.
+        /// </summary>
+        private TimeSpan GetRateLimitWait(TimeSpan max)
+        {
+            if (_rateLimitDelay < MIN_RATE_LIMIT_DELAY)
+                return MIN_RATE_LIMIT_DELAY;
+            return _rateLimitDelay < max ? _rateLimitDelay : max;
         }
 
         private static WebSearchFailureReason GetUnresponsiveReason(WebserviceLookupOutcome outcome)
@@ -1846,8 +1868,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 if (ex.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     RecordFailure(proteins, WebSearchFailureReason.rate_limited, ex);
-                    var retryAfter = ex.RetryAfter ?? DEFAULT_RATE_LIMIT_DELAY;
-                    _rateLimitDelay = retryAfter < MAX_RATE_LIMIT_DELAY ? retryAfter : MAX_RATE_LIMIT_DELAY;
+                    _rateLimitDelay = ex.RetryAfter ?? DEFAULT_RATE_LIMIT_DELAY;
                     return WebserviceLookupOutcome.rate_limited;
                 }
 
