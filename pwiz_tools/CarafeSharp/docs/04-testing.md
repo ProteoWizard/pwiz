@@ -21,7 +21,7 @@ The data packages are listed in `testdata.json`, which the tests and the packagi
 | `-Torch cuda` | The CUDA 12.8 libtorch (about 4 GB of native files) instead of the CPU one; runs the `Cuda` test category. |
 | `-NoTests`, `-NoBuild` | Build only, or test the existing build. |
 | `-TestName <text>` | Run the tests whose name contains the text, whatever their category. |
-| `-TestCategory <name>` | Run one category (`Astral`, `Cuda`). |
+| `-TestCategory <name>` | Run one category (`FullParity`, `Astral`, `Cuda`). |
 | `-RequireData` | Fail when any test did not run (see "Test data"). |
 | `-Coverage` | Run the tests under dotCover and print each assembly's statement coverage (Windows). |
 | `-TeamCity` | TeamCity service messages; imports the test results and coverage. |
@@ -48,7 +48,7 @@ kernels for compute capabilities 7.0, 7.5, 8.0, 8.6, 9.0, 10.0 and 12.0, and no 
   first GPU (the one libtorch uses; `CUDA_VISIBLE_DEVICES` picks another) is older than compute 7.0 or the
   driver is older than 570, and says which.
 - **Fallback:** at run time `--device gpu` falls back to the CPU, as Carafe does, and logs why.
-- **Tested hardware:** a GeForce GTX 1650 (Turing, 7.5, 4 GB) under Windows. `build.sh` and the test passes
+- **Tested hardware:** a GeForce GTX 1650 (Turing, 7.5, 4 GB) and an RTX 4000 Ada (8.9, 20 GB) under Windows. `build.sh` and the test passes
   have not yet been verified on Linux or WSL2.
 
 ## Test data
@@ -58,9 +58,9 @@ repository. They come as zips with one top folder each:
 
 | Package | Holds | Extracted | Tests |
 |---|---|---|---|
-| `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 1.5 GB zip, 5.6 GB extracted | the default pass |
-| `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 4.8 GB zip, 22 GB extracted | category `Astral` |
-| `carafesharp-export-v1` | Osprey's training export of the Stellar run, searching Carafe's starting library | 67 MB zip, 67 MB extracted | masking parity |
+| `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 1.5 GB zip, 5.6 GB extracted | the parity script, `regression.ps1` |
+| `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 4.8 GB zip, 22 GB extracted | the parity script's `-Dataset Astral` |
+| `carafesharp-export-v1` | Osprey's training export of the Stellar run, searching Carafe's starting library | 67 MB zip, 67 MB extracted | the parity script (masking) |
 | `carafesharp-export-v2` | Osprey's training export of the Stellar run, searching CarafeSharp's Chronologer starting library | 60 MB zip, 60 MB extracted | `regression.ps1` |
 | `carafesharp-export-astral-v2` | Osprey's training export of the Astral run, searching CarafeSharp's Chronologer starting library | 144 MB zip, 144 MB extracted | `regression.ps1 -Dataset Astral` |
 
@@ -85,8 +85,10 @@ The packages go in `<Downloads>/Perftests/`, where the Skyline and Osprey perf t
 
 **Fetching and verifying:** `build.ps1 -TestData Fetch` (or `ai/scripts/CarafeSharp/Build-CarafeSharp.ps1
 -TestData Fetch`) downloads the packages the run reads that are not there yet, before it builds:
-- By default those of the default test pass (`testfiles`, `export`), plus `-TestCategory`'s (`Astral` adds
-  `astral` and `astral-export`); `-TestDataPackage all`, or a comma-separated list of ids, picks others.
+- By default the Stellar packages (`testfiles`, `export`, `regression-export`, the `testCategory`-less
+  entries of `testdata.json`), plus `-TestCategory`'s (`Astral` adds `astral` and `astral-export`);
+  `-TestDataPackage all`, or a comma-separated list of ids, picks others. The default test pass itself
+  reads none of them.
 - Each zip is checked against its size and SHA-256 in `testdata.json` and kept beside the packages. A zip
   already there is checked rather than downloaded again, and downloaded again only if it is wrong.
 - It is extracted to a temporary folder that is renamed into place when complete, and its files are then
@@ -101,8 +103,8 @@ above and extract it there yourself.
 
 This works from Visual Studio or ReSharper too, where no script sets variables.
 
-**Committed subsets.** Each parity test also runs on a committed subset of its packages, in the default pass
-and so on every commit, with no download. The zips are in `CarafeSharp.Test/TestData`, each under 5 MB,
+**Committed subsets.** Each full-size parity comparison has a twin on a committed subset of its packages,
+which runs in the default pass and so on every commit, with no download. The zips are in `CarafeSharp.Test/TestData`, each under 5 MB,
 holding package folders laid out as the full packages are, each with its `MANIFEST.sha256`. A test opens one
 with `TestData.UseSubset`, which makes it the data root and ignores the variables below. The scripts that cut
 them, byte-identically, are in `ai/scripts/CarafeSharp/SubsetData` (its README has the rules).
@@ -116,11 +118,12 @@ them, byte-identically, are in `ai/scripts/CarafeSharp/SubsetData` (its README h
 
 What stays download-only: prediction with Carafe's fine-tuned models (16 MB of weights, which do not
 compress), the two builds that need the 14 MB mouse FASTA, the full fine-tune of
-`CARAFESHARP_FINETUNE_FULL`, and the full-scale versions of every check.
+`CARAFESHARP_FINETUNE_FULL`, and the full-scale versions of every check, which the parity script runs
+(see "Full-size parity").
 
 **What the tests do with the data:**
-- **Nothing present:** with no package and no variable set, the full-scale parity tests are Inconclusive,
-  and their subset versions run.
+- **Nothing present:** with no package and no variable set, a full-scale parity test run on its own
+  (`-TestName`, or from Visual Studio) is Inconclusive. The default pass leaves them out.
 - **Anything present:** once any data is there, a missing file fails, naming its path. So does a package
   folder without `MANIFEST.sha256`, the checksum list that is the zip's last entry; an extraction that
   stopped part way has none. An item a test reads with no data of its own fails too, as does a variable
@@ -153,9 +156,8 @@ new version.
 
 | Pass | Command | Tests | Time (i9-14900) |
 |---|---|---|---|
-| CPU, no data | `build.ps1` | 105, of which the 8 full-scale parity tests are Inconclusive; the subset tests and `TestRegressionSubset` run | about 2 min |
-| CPU, with data | `build.ps1 -RequireData` | all 105 | about 4 min |
-| Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
+| CPU | `build.ps1` | every test outside the `Cuda`, `Astral`, `Regression` and `FullParity` categories, none skipped or inconclusive, with no test data: the subset parity twins and `TestRegressionSubset` run | about 2 min |
+| Full-size parity | `scripts/Compare-CarafeParity.ps1 [-Dataset Astral\|All]` | the `FullParity` category, 8 on the Stellar packages, or the `Astral` category, 4 on the Astral package (see "Full-size parity") | Stellar about 4 min, Astral about 4 min, after the fetch |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU, and the subset fine-tuned twice on the GPU | about 2 min |
 | Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral about 36 min on the CPU |
 
@@ -169,18 +171,103 @@ new version.
 CarafeSharp has no TeamCity configuration of its own: Osprey's build it, since it trains the libraries Osprey
 searches, and their scripts are in the repository (`pwiz_tools/Osprey`).
 - **Every commit** (`tcbuild.bat`, Osprey Windows .NET; `tcbuild.sh`, Osprey Linux .NET): `build.ps1 -TeamCity`
-  after Osprey's, with dotCover on Windows. No test data: the committed subsets and `TestRegressionSubset` run, the
-  full-scale parity tests are Inconclusive. It adds about 1.5-2 min on TCA1 or Linux, and about 5 min on a slower
+  after Osprey's, with dotCover on Windows. No test data: the committed subsets and `TestRegressionSubset` run, and
+  nothing is skipped. It adds about 1.5-2 min on TCA1 or Linux, and about 5 min on a slower
   Windows cloud agent. `scripts/misc/vcs_trigger_and_paths_config.py` routes `pwiz_tools/CarafeSharp` (and
   `Shared/Lib/Parquet`) changes to both configs.
 - **Nightly** (`tctest.bat`, Osprey Windows .NET Perf/Regression, after Osprey's lanes): `tcregression.ps1` runs
-  `build.ps1 -TestData Fetch -RequireData`, `regression.ps1 -Dataset Stellar`, and
-  `regression.ps1 -Dataset StellarSubset` twice, whose models and training tables must be the same bytes (a rerun on
-  the agent repeats), about 19 minutes on an i9-14900. Its test data goes in `<Downloads>/Perftests/carafesharp`, not the default
-  folder, so a per-commit build on the same agent does not find it and run the full-scale tests every commit.
-- **Parity coverage:** the Stellar parity checks compare every precursor. The Astral run is ten times
-  larger, so its two whole-set checks compare one hash partition of the precursor keys, a sixteenth, the
-  same on both sides. `CARAFESHARP_FULL_PARITY=1` compares them all, at about 13 GB of memory.
+  `build.ps1 -NoTests -TestData Fetch` for the packages `regression.ps1` reads, `regression.ps1 -Dataset Stellar`,
+  and `regression.ps1 -Dataset StellarSubset` twice, whose models and training tables must be the same bytes (a
+  rerun on the agent repeats). Its test data goes in `<Downloads>/Perftests/carafesharp`, not the default folder.
+- **Not on TeamCity:** the full-size parity comparisons (see "Full-size parity").
+
+## Full-size parity
+
+The full-size comparisons with Carafe 2.2.0 are a developer-run check, not a test pass: no TeamCity
+configuration runs them, as none runs Osprey's comparison with its Rust version. Run them after a change to
+what they compare (peptidoforms, fragment m/z, library assembly, prediction, fine-tuning, the stage-1
+FASTA builds, masking); their subset twins catch most regressions on every commit, and these confirm it on
+every precursor of the reference runs.
+
+```
+pwsh -File scripts/Compare-CarafeParity.ps1                    # the 8 Stellar comparisons
+pwsh -File scripts/Compare-CarafeParity.ps1 -Dataset All       # and the 4 Astral ones
+pwsh -File scripts/Compare-CarafeParity.ps1 -NoBuild -TestName FineTune
+pwsh -File scripts/Compare-CarafeParity.ps1 -Torch cuda        # the same on the GPU
+```
+
+The script fetches the packages the comparisons read (`build.ps1 -TestData Fetch`, so the zips are checked
+against `testdata.json` and the files against each `MANIFEST.sha256`), builds, runs the `FullParity` category
+(or `Astral`) with `-RequireData`, so a comparison that did not run fails, and prints each comparison's outcome,
+time and failure message, then `OVERALL: PASS` or `FAIL` with exit code 0 or 1. Each dataset's results are
+kept as `TestResults/CarafeParity-<Dataset>-<cpu|cuda>.trx`, and every report line names the backend.
+
+**`-Torch cuda`** builds the CUDA libtorch (`build.ps1 -Torch cuda`, with its GPU and driver preflight) and
+runs the same comparisons with `CARAFESHARP_REQUIRE_CUDA=1`, under which `TestData.ComparisonDeviceName` puts
+every prediction and fine-tune on the GPU and fails a comparison whose GPU is not usable, rather than letting
+it pass on the CPU. It is a passing gate that pins today's GPU behavior (`GpuParity.cs`):
+
+- **Self-consistency, zero tolerance.** Each prediction comparison (predictions and predicted library, Stellar
+  and Astral) predicts twice in-process and requires every RT and fragment value, and the library TSV, to be
+  bit-identical; it also compares with the outputs the previous CUDA run saved in
+  `TestResults/CarafeParity-Outputs-cuda-<GPU>-<driver>`, and saves them, once the comparison has passed, when
+  there are none. Any difference fails. Delete the folder to re-baseline after a change meant to move the GPU
+  outputs (turning TF32 off was one: a folder saved before it holds TF32 outputs).
+- **The CPU limits, pinned only where a GPU residual remains.** Two values are beyond their CPU limits on the
+  GPU (below); each has a GPU pin beside it in the test (measured value, date and GPU in the comment). It
+  passes while it stays under the pin and fails beyond it, so the pin is a regression check of the GPU path.
+  Every other value, MS2 included, is held to the CPU limit on the GPU too.
+- **The delta is reported.** Each value a pin decided prints under its comparison, for example
+  `GPU pinned: RT max|diff| 2.34E-006 rt_norm (CPU limit 2E-06; GPU pin 3E-06)`, and the summary reads
+  `OVERALL: PASS (GPU pinned: RT differs from Carafe beyond the CPU limits by up to ...; see docs/04-testing.md)`.
+
+**GPU parity.** Carafe 2.2.0 wrote the reference values on CUDA (torch 2.5.1), but neither backend reproduces
+them bit for bit: libtorch versions and kernels round differently. CarafeSharp turns TF32 off on CUDA
+(`TorchDevice.DisableTf32`, the equivalent of `torch.backends.cuda.matmul.allow_tf32 = False` and
+`torch.backends.cudnn.allow_tf32 = False`), so the GPU computes in float32 as the CPU does and the two give
+about the same library; `NVIDIA_TF32_OVERRIDE=0` is no longer needed. Fine-tuning on the GPU keeps cuDNN's TF32
+(`TorchDevice.AllowTf32ForTraining`): with it off, two GPU fine-tunes of the same data gave different RT models
+(`TestRegressionSubsetRepeatsOnGpu` failed 4 of 4 times), and TorchSharp 0.106 has no way to ask cuDNN for its
+deterministic algorithms (`torch.backends.cudnn.deterministic`). Measured 2026-11-04 on an RTX 4000 Ada
+(driver 596.71) and an i9-14900, libtorch 2.10.0, largest difference from Carafe over the reference folders:
+
+| Comparison (CPU limit) | CPU | CUDA, TF32 off (CarafeSharp) | CUDA, TF32 on (libtorch's default, before) |
+|---|---|---|---|
+| Stellar predictions, MS2 (1.5e-5) | 6.3e-6 | 6.1e-6 | 6.1e-6 |
+| Stellar predictions, RT in rt_norm (2e-6) | 2.4e-7 | 1.6e-6 | 1.0e-4 |
+| Stellar predictions, iRT (5e-4) | 3.5e-5 | 2.7e-4 | 1.5e-2 |
+| Stellar predicted library, TSV RT (0.011 min) | 0.01 | 0.01 | 0.77, `carafe_main_varmod`; 0.03-0.04 elsewhere |
+| Stellar predicted library, .blib RT (1e-3 min) | 3.2e-4 | 7.4e-3, `carafe_main_varmod` (pin 9.3e-3); 9.4e-4 elsewhere | 0.76, `carafe_main_varmod`; 0.03-0.04 elsewhere |
+| Astral predictions, MS2 (1.5e-5) | 2.6e-6 | 2.1e-6 | 2.1e-6 |
+| Astral predictions, RT in rt_norm (2e-6) | 3.3e-7 | 2.3e-6 (pin 3e-6) | 1.3e-4 |
+| Astral predictions, iRT (5e-4) | 4.9e-5 | 3.9e-4 | 2.1e-2 |
+| Astral library, TSV RT (0.011 min) | 0.01 | 0.01 | 0.10 |
+
+All 12 comparisons pass on CUDA, and every GPU prediction repeated bit for bit, in-process and across runs
+(19 of 19 checks in each of six runs, which also matched the outputs of an earlier run under
+`NVIDIA_TF32_OVERRIDE=0`). TF32, which libtorch enables by default for cuDNN convolutions and LSTMs on Ampere
+and newer GPUs, rounds to a 10-bit mantissa and caused nearly all of the GPU's RT delta. Turning it off cost
+nothing measurable on this RTX 4000 Ada: in a same-session A/B of this change against the build before it,
+two runs each, TF32 off took 0.98 to 1.06 times the TF32 time per comparison (1.00 for both predicted
+libraries, 0.99 and 1.00 for their GPU prediction; an earlier A/B with `NVIDIA_TF32_OVERRIDE=0` gave 0.91 to
+1.05). Two residuals remain beyond the CPU limits and are pinned: Astral RT (2.3e-6 against 2e-6) and the `carafe_main_varmod` .blib RT (7.4e-3 min against 1e-3; the CPU's is 3.2e-4).
+Both are float32 rounding, not a TF32 remnant: the GPU's float32 kernels add the same products in another
+order than the CPU's, and the last bits differ. Neither changes a TSV value beyond its 0.01 min precision.
+
+| Comparison (`FullParity`) | Checks | Subset twin, every commit |
+|---|---|---|
+| `TestPeptideFormsMatchCarafe` | peptidoforms and precursor m/z | `TestLibraryParitySubset` |
+| `TestFragmentMzMatchesCarafe` | fragment m/z against Carafe's float32 values | `TestLibraryParitySubset` |
+| `TestLibraryAssemblyMatchesCarafe` | library rows assembled from Carafe's own predictions | `TestLibraryParitySubset` |
+| `TestPredictedLibraryMatchesCarafe` | the predicted library and .blib, end to end | `TestLibraryParitySubset` |
+| `TestPredictionsMatchCarafe` | pretrained and fine-tuned MS2 and RT predictions | `TestPretrainedPredictionsMatchCarafeSubset` |
+| `TestFineTuneMatchesCarafe` | fine-tuning on Carafe's training tables | `TestFineTuneMatchesCarafeSubset` |
+| `TestFullFastaBuildsMatchCarafe` | the 12 stage-1 entrapment FASTA builds | `TestSubsetFastaBuildsMatchCarafe` |
+| `TestMaskingAgreesWithCarafe` | Osprey export masking against Carafe's training | `TestMaskingAgreesWithCarafeSubset` |
+
+The Stellar comparisons compare every precursor. The Astral run is ten times larger, so its two whole-set
+checks compare one hash partition of the precursor keys, a sixteenth, the same on both sides.
+`CARAFESHARP_FULL_PARITY=1` compares them all, at about 13 GB of memory.
 
 ## Regression
 
@@ -362,7 +449,8 @@ DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 t
 ## Coverage
 
 Statement coverage from `build.ps1 -Coverage`, with no test data (what CI sees; the pretrained archive
-is bundled, so its tests run) and with the data (`-RequireData`); and, merged with them, `regression.ps1`'s
+is bundled, so its tests run) and with the data (measured when the full-size parity tests were still in that
+pass; they are now the `FullParity` category); and, merged with them, `regression.ps1`'s
 isolated and (since retired) chained legs, measured by `ai/scripts/CarafeSharp/Measure-CumulativeCoverage.ps1`
 (2026-10-12, before the committed subsets).
 
@@ -403,7 +491,8 @@ Measured on the subset (2026-10-13; the regression gates it, see "Regression"):
 
 - **Training tables, everywhere.** The run alignment maps each run onto the pretrained Chronologer's
   hydrophobic index. Predicted in float32, that index differed in its last bits between the Windows and Linux
-  libtorch builds, and by up to 5e-3 on a GPU, whose cuDNN convolutions use TF32 by default; enough on the GPU to
+  libtorch builds, and by up to 5e-3 on a GPU whose cuDNN convolutions used TF32 (libtorch's default, which
+  CarafeSharp now turns off; see "GPU parity"); enough on the GPU to
   move the KDE ridge and the RT targets by up to 0.4 s. The alignment's reference therefore predicts on the CPU in
   float64, rounded to float32 (`ChronologerModel.AlignmentReference`), which gives the same values everywhere.
   The tables are written with `\n` line ends on every system. The KDE's .NET `Math.Cos` still differs between
@@ -412,6 +501,7 @@ Measured on the subset (2026-10-13; the regression gates it, see "Regression"):
   sums in another order: the models differ slightly, within the tolerances.
 - **GPU fine-tuning** repeats byte for byte since its dropout is seeded: TorchSharp's `manual_seed` leaves the
   CUDA generator unseeded, so `FineTuneRun` seeds it too (`cuda.manual_seed_all`). Its models differ from the
-  CPU's, as its kernels do. `TestRegressionSubsetRepeatsOnGpu` checks it.
+  CPU's, as its kernels do. It keeps cuDNN's TF32, which prediction turns off, because in float32 it did not
+  repeat (see "GPU parity"). `TestRegressionSubsetRepeatsOnGpu` checks it.
 - **Before the fine-tune:** digests, precursor sets and fragment m/z are identical across CPU and GPU,
   and between Windows and Linux on the CPU. Predicted intensities differ between devices by at most about 1e-5.

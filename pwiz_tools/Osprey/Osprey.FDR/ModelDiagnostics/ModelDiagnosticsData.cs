@@ -835,15 +835,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             bool structural = pass2Contributions != null;
             int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
             // A report writer catches and logs our exception as one line, so a card that throws
-            // must not read "all cards done" before "pass-2 enrichment failed": only the
-            // Complete() at the end of the success path closes this scope with 100%.
+            // must not read "all cards done" before "pass-2 enrichment failed": only a body that
+            // returns closes this step with 100%.
             // The heading counts CARDS because that is what the total is; labelling it with the
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;
-            using (var progress = new ProgressReporter(
+            ProgressReporter.Run(
                 CountText.Format(cards, OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel,
                     OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels),
-                cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                cards, progress =>
             {
                 // Indented one level: this reporter nests inside the card reporter, and without it
                 // the two percent streams print at the same column - the inner one reaching 100%
@@ -890,8 +890,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
                     progress.Report(++cardIdx);
                 }
-                progress.Complete();
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             return pass2;
         }
 
@@ -1140,11 +1139,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // whole of it, which is the gap this issue exists to remove, merely deferred to a
             // larger dataset. The reporter's throttle means a small run still costs one line.
             int reduceIdx = 0;
-            using (var progress = new ProgressReporter(
-                       CountText.Format(perFileEntries.Count,
-                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file,
-                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files),
-                       perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                CountText.Format(perFileEntries.Count,
+                    OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file,
+                    OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files),
+                perFileEntries.Count, progress =>
             {
                 foreach (var kvp in perFileEntries)
                 {
@@ -1197,8 +1196,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         best[key] = cur;
                     }
                 }
-                progress.Complete();
-            }
+            }, indent, ProgressReporter.IO_INTERVAL_SECONDS);
             nWithClass = wc; nWithoutClass = woc;
             return best.Values.ToList();
         }
