@@ -322,6 +322,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         AddPdaIndex();
 
         // Restore MS as the active controller so subsequent MS-side reads see the right state.
+        // ReSharper disable once EmptyGeneralCatchClause
         try { _raw.Raw.SelectInstrument(Device.MS, 1); } catch { }
     }
 
@@ -483,6 +484,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         }
         finally
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { raw.SelectInstrument(Device.MS, 1); } catch { }
         }
     }
@@ -574,6 +576,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         if (ie.MsOrder is MSOrderType.Nl or MSOrderType.Ng)
         {
             double analyzerScanOffset = 0;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { if (filter.MassCount > 0) analyzerScanOffset = filter.GetMass(0); } catch { }
             scan.Set(CVID.MS_analyzer_scan_offset, analyzerScanOffset, CVID.MS_m_z);
         }
@@ -767,6 +770,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         {
             int lvl = i < msLevel - 1 ? i + 1 : msLevel - 1;
             double hw = 0;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { hw = filter.GetIsolationWidth(i) / 2.0; } catch { }
             entries.Add((filter.GetMass(i), lvl, hw, filter.GetActivation(i), filter.GetEnergy(i)));
         }
@@ -1034,6 +1038,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             int precursorMsLevel = i + 1;
             bool isPrimary = precursorMsLevel == msLevel - 1;
             double isolationMz = 0;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { isolationMz = filter.GetMass(i); } catch { }
             if (isolationMz <= 0) continue;
 
@@ -1044,6 +1049,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
             // newer DDA files (e.g. TMT MS3) where no "MS{n} Isolation Width:" trailer exists
             // and cpp emits no offsets because the method also has no width for that event.
             double isolationHalfWidth = 0;
+            // ReSharper disable once EmptyGeneralCatchClause
             try { isolationHalfWidth = filter.GetIsolationWidth(i) / 2.0; } catch { }
 
             if (isPrimary)
@@ -1145,6 +1151,7 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
                 // "ms2 180.00@cid35" scan, not to whichever earlier MS2 happens to cover
                 // 104.96. cpp SpectrumList_Thermo.cpp:638.
                 double precursorIsolationMz = 0;
+                // ReSharper disable once EmptyGeneralCatchClause
                 if (i > 0) { try { precursorIsolationMz = filter.GetMass(i - 1); } catch { } }
 
                 int precursorIndex = FindPrecursorIndex(ie.Index, precursorMsLevel, isolationMz,

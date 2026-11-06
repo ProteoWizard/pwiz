@@ -85,6 +85,7 @@ namespace MSConvertGUI
                 else
                 {
                     // compare the items as strings
+                    // ReSharper disable once StringCompareToIsCultureSpecific
                     return xText.CompareTo(yText);
                 }
             }

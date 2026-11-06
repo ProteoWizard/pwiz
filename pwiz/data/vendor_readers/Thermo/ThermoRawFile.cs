@@ -97,7 +97,9 @@ public sealed class ThermoRawFile : IDisposable
             // manager so the OS file lock drops. Otherwise Skyline's bad-file test-cleanup
             // fails with "process cannot access the file because it is being used by
             // another process".
+            // ReSharper disable once EmptyGeneralCatchClause
             if (_raw is IDisposable rd) try { rd.Dispose(); } catch { }
+            // ReSharper disable once EmptyGeneralCatchClause
             if (_manager is IDisposable md) try { md.Dispose(); } catch { }
             _raw = null;
             _manager = null;
@@ -152,6 +154,7 @@ public sealed class ThermoRawFile : IDisposable
                     if (lbl.Contains(s, StringComparison.OrdinalIgnoreCase)) { keep = true; break; }
                 if (!keep) continue;
                 object? v = null;
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { v = Raw.GetTrailerExtraValue(scanNumber, i); } catch { }
                 sb.AppendLine(ci, $"  trailer[{i}] '{lbl}' = '{v}'");
             }
@@ -358,6 +361,7 @@ public sealed class ThermoRawFile : IDisposable
                 }
             }
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         catch { }
 
         ParseInstrumentMethodText(sb.ToString(), _widthBySegmentAndEvent, _defaultWidthBySegmentAndMsLevel,
@@ -526,8 +530,10 @@ public sealed class ThermoRawFile : IDisposable
         // Step 1: explicitly Dispose the SDK objects (in case the SDK closes the file
         // synchronously on Dispose; some Thermo SDK versions do, some don't).
         if (_raw is IDisposable rawDisposable)
+            // ReSharper disable once EmptyGeneralCatchClause
             try { rawDisposable.Dispose(); } catch { }
         if (_manager is IDisposable mgrDisposable)
+            // ReSharper disable once EmptyGeneralCatchClause
             try { mgrDisposable.Dispose(); } catch { }
 
         // Step 2: drop our managed references — this matches cpp's `gcroot::reset()`. After

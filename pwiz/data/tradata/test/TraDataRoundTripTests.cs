@@ -121,6 +121,7 @@ public class TraDataRoundTripTests
             td.Id = Path.GetFileNameWithoutExtension(path);
             Assert.IsTrue(TraDataDiff.IsEqual(td, rt, out string reason), reason);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 

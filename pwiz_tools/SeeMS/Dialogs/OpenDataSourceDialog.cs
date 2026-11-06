@@ -1031,6 +1031,7 @@ namespace Pwiz.SeeMS
                 parentDirectory = new DirectoryInfo( Environment.GetFolderPath( Environment.SpecialFolder.MyComputer ) );
             }
 
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if( parentDirectory != null && parentDirectory.FullName != currentDirectory )
             {
                 previousDirectories.Push( currentDirectory );

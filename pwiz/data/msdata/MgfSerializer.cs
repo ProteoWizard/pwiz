@@ -34,6 +34,7 @@ public sealed class MgfSerializer
     public string Write(MSData msd)
     {
         var sb = new StringBuilder();
+        // ReSharper disable once UsingStatementResourceInitialization
         using var w = new StringWriter(sb) { NewLine = "\n" };
         Write(msd, w);
         return sb.ToString();

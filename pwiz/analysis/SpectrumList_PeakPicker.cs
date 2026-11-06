@@ -264,7 +264,9 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         for (int i = spec.BinaryDataArrays.Count - 1; i >= 0; i--)
         {
             var arr = spec.BinaryDataArrays[i];
+            // ReSharper disable PossibleUnintendedReferenceComparison
             if (arr == mzArr || arr == intArr) continue;
+            // ReSharper restore PossibleUnintendedReferenceComparison
             if (arr.Data.Count == originalLen) spec.BinaryDataArrays.RemoveAt(i);
         }
 

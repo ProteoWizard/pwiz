@@ -516,6 +516,7 @@ public sealed class AgilentRawData : IDisposable
         {
             if (chromReader is not null)
             {
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { chromReader.CloseDataFile(); } catch { }
             }
         }
@@ -547,9 +548,12 @@ public sealed class AgilentRawData : IDisposable
             for (int i = 0; i < frames; i++)
             {
                 IMidacFrameInfo? info = null;
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { info = reader.FrameInfo(i + 1); } catch { }
                 if (info is null) continue;
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { times[i] = info.AcqTimeRange?.Min ?? 0; } catch { }
+                // ReSharper disable once EmptyGeneralCatchClause
                 try { intensities[i] = (float)info.Tic; } catch { }
 
                 // cpp MidacScanRecord::getCollisionEnergy (MidacData.cpp:406-415).
@@ -559,6 +563,7 @@ public sealed class AgilentRawData : IDisposable
                     var energy = info.SpectrumDetails?.FragmentationEnergyRange;
                     if (energy is not null) collisionEnergy = System.Math.Max(energy.Min, energy.Max);
                 }
+                // ReSharper disable once EmptyGeneralCatchClause
                 catch { }
                 if (collisionEnergy == 0)
                 {
@@ -974,6 +979,7 @@ public sealed class AgilentRawData : IDisposable
         catch { /* SDK may throw on bogus state — best-effort close */ }
         if (_imsReader is not null)
         {
+            // ReSharper disable once EmptyGeneralCatchClause
             try { _imsReader.Close(); } catch { }
             _imsReader = null;
         }

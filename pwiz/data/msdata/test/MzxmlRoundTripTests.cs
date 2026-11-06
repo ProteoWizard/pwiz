@@ -228,6 +228,7 @@ public class MzxmlRoundTripTests
             Assert.AreEqual("scan=1", s0meta.Id);
             Assert.AreEqual(0, s0meta.GetMZArray()!.Data.Count);
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 
@@ -288,6 +289,7 @@ public class MzxmlRoundTripTests
             Assert.IsTrue(swWalk.ElapsedMilliseconds < 10_000,
                 $"Full walk of {n} scans took {swWalk.ElapsedMilliseconds} ms — expected O(N), suspect the per-scan read is over-reading to EOF again.");
         }
+        // ReSharper disable once EmptyGeneralCatchClause
         finally { try { File.Delete(path); } catch { } }
     }
 

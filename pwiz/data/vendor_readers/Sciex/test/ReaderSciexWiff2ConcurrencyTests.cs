@@ -120,6 +120,7 @@ public class ReaderSciexWiff2ConcurrencyTests
         Assert.IsNull(DescribeReaderFailure(second.GetExperiment(0), baseline),
             "second reader disagreed with a lone reader before the first was disposed");
 
+        // ReSharper disable once DisposeOnUsingVariable
         first.Dispose();
 
         Assert.IsNull(DescribeReaderFailure(second.GetExperiment(0), baseline),
