@@ -1086,8 +1086,12 @@ namespace pwiz.ProteomeDatabase.Fasta
                         if (rateLimited)
                         {
                             // The request was fine, just too soon. Try the same one again once the
-                            // service is willing.
-                            _webSearchProvider.WaitForRateLimit(_rateLimitDelay, progressMonitor);
+                            // service is willing - but a test waits no longer than a typical refusal
+                            // asks for. Asked for more, it tries early and gives up on the next refusal.
+                            var testDelay = _rateLimitDelay < DEFAULT_RATE_LIMIT_DELAY
+                                ? _rateLimitDelay
+                                : DEFAULT_RATE_LIMIT_DELAY;
+                            _webSearchProvider.WaitForRateLimit(testDelay, progressMonitor);
                             continue;
                         }
                         _maxBatchSize[searchType] = Math.Max(1, _maxBatchSize[searchType] / 2);

@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -1222,6 +1223,37 @@ namespace CommonTest
             RunRateLimitedLookup(null, giveUpOnUnresponsiveWebService: false, out _, out var defaultWaits);
             Assert.AreEqual(1, defaultWaits.Count);
             Assert.AreEqual(WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY, defaultWaits[0]);
+
+            // Production honors a long demand up to the cap; a test never waits past the default,
+            // so a service asking for minutes cannot push a test past its own timeout
+            var longRetryAfter = TimeSpan.FromHours(1);
+            RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: false, out _, out var cappedWaits);
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_RATE_LIMIT_DELAY, cappedWaits.Single());
+            RunRateLimitedLookup(longRetryAfter, giveUpOnUnresponsiveWebService: true, out _, out var testWaits);
+            Assert.IsTrue(testWaits.All(wait => wait == WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY));
+
+            TestRetryAfterHeader();
+        }
+
+        /// <summary>
+        /// Retry-After comes as a number of seconds or as a date. A date is measured from the
+        /// server's own clock, so a skewed local clock does not shrink the wait to nothing.
+        /// </summary>
+        private static void TestRetryAfterHeader()
+        {
+            using var seconds = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            seconds.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.FromSeconds(60));
+            Assert.AreEqual(TimeSpan.FromSeconds(60), NetworkRequestException.GetRetryAfter(seconds.Headers));
+
+            // Server time a day in the past: measured against the local clock this would be no wait at all
+            var serverNow = DateTimeOffset.UtcNow.AddDays(-1);
+            using var date = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            date.Headers.Date = serverNow;
+            date.Headers.RetryAfter = new RetryConditionHeaderValue(serverNow.AddSeconds(90));
+            Assert.AreEqual(TimeSpan.FromSeconds(90), NetworkRequestException.GetRetryAfter(date.Headers));
+
+            using var none = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            Assert.IsNull(NetworkRequestException.GetRetryAfter(none.Headers));
         }
 
         private static IList<ProteinSearchInfo> RunRateLimitedLookup(TimeSpan? retryAfter,

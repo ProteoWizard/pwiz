@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
@@ -1060,24 +1061,7 @@ namespace pwiz.Common.SystemUtil
                     
             // Throw with response body attached for server-specific error extraction
             return new NetworkRequestException(message, response.StatusCode, uri, new HttpRequestException(message), responseBody,
-                GetRetryAfter(response));
-        }
-
-        /// <summary>
-        /// The wait a server asked for in its Retry-After header, given either as a number of
-        /// seconds or as the date when it will accept requests again. Null when there is no header.
-        /// </summary>
-        private static TimeSpan? GetRetryAfter(HttpResponseMessage response)
-        {
-            var retryAfter = response.Headers.RetryAfter;
-            if (retryAfter?.Delta != null)
-                return retryAfter.Delta.Value;
-            if (retryAfter?.Date != null)
-            {
-                var wait = retryAfter.Date.Value - DateTimeOffset.UtcNow;
-                return wait > TimeSpan.Zero ? wait : TimeSpan.Zero;
-            }
-            return null;
+                NetworkRequestException.GetRetryAfter(response.Headers));
         }
 
         private Exception MapHttpException(Exception ex, Uri uri)
@@ -1513,6 +1497,25 @@ namespace pwiz.Common.SystemUtil
                 default:
                     return true;
             }
+        }
+
+        /// <summary>
+        /// The wait a server asked for in its Retry-After header, given either as a number of
+        /// seconds or as the date when it will accept requests again. A date is measured from the
+        /// server's own Date header when it sent one, so a skewed local clock does not shorten the
+        /// wait to nothing. Null when there is no Retry-After header.
+        /// </summary>
+        public static TimeSpan? GetRetryAfter(HttpResponseHeaders headers)
+        {
+            var retryAfter = headers?.RetryAfter;
+            if (retryAfter?.Delta != null)
+                return retryAfter.Delta.Value;
+            if (retryAfter?.Date != null)
+            {
+                var wait = retryAfter.Date.Value - (headers.Date ?? DateTimeOffset.UtcNow);
+                return wait > TimeSpan.Zero ? wait : TimeSpan.Zero;
+            }
+            return null;
         }
 
         public static HttpStatusCode? GetHttpStatusCode(Exception e)
