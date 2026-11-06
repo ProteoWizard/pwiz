@@ -1044,10 +1044,10 @@ namespace pwiz.Osprey.Tasks
             {
                 int files = 0;
                 string error = null;
-                using (var progress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                           OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
-                           OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
-                           projections.PerFile.Count))
+                ProgressReporter.TryRun(CountText.Format(projections.PerFile.Count,
+                    OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
+                    OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
+                    projections.PerFile.Count, progress =>
                 {
                     // A lane reads a file and builds its rows; the sink, which dedups across files
                     // with first-seen ties (or streams per-run rows straight to the TSV), takes them
@@ -1086,9 +1086,8 @@ namespace pwiz.Osprey.Tasks
                             sink.Add(runName, row);
                         return true;
                     });
-                    if (error == null)
-                        progress.Complete();
-                }
+                    return error == null;
+                });
                 if (error != null)
                 {
                     ctx.LogError(error);
@@ -2418,9 +2417,9 @@ namespace pwiz.Osprey.Tasks
             var stubIdentity = StubIdentity(ctx);
             int proteinReduceFiles = 0;
             string reduceError = null;
-            using (var reduceProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count))
+            ProgressReporter.TryRun(CountText.Format(projections.PerFile.Count,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count, reduceProgress =>
             {
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
@@ -2438,9 +2437,8 @@ namespace pwiz.Osprey.Tasks
                     accumulator.Merge(file.Accumulator);
                     return true;
                 });
-                if (reduceError == null)
-                    reduceProgress.Complete();
-            }
+                return reduceError == null;
+            });
             if (reduceError != null)
             {
                 ctx.LogError(reduceError);
@@ -2651,11 +2649,11 @@ namespace pwiz.Osprey.Tasks
             ctx.LogBlockReads(@"First-pass before trim");
             int compactFiles = 0;
             string compactError = null;
-            using (var compactProgress = new ProgressReporter(ScoringTaskShared.IsSingleFileSearch(config)
-                       ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
-                       : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
-                           projections.PerFile.Count),
-                       projections.PerFile.Count))
+            ProgressReporter.TryRun(ScoringTaskShared.IsSingleFileSearch(config)
+                    ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
+                    : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
+                        projections.PerFile.Count),
+                projections.PerFile.Count, compactProgress =>
             {
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
@@ -2710,9 +2708,8 @@ namespace pwiz.Osprey.Tasks
                     firstPassBaseIds.UnionWith(file.Passing);
                     return true;
                 });
-                if (compactError == null)
-                    compactProgress.Complete();
-            }
+                return compactError == null;
+            });
             if (compactError != null)
             {
                 ctx.LogError(compactError);

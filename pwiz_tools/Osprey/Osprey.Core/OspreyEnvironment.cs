@@ -1272,11 +1272,16 @@ namespace pwiz.Osprey.Core
         /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
         /// stays fair. Removing off-stratum decoys from the null lowers q for stratum
         /// members (reduced multiple testing / independent filtering; Bourgon 2010), which
-        /// recovers marginal peptides of already-detected proteins. Honest because the
-        /// protein-membership filter is ~independent of a peptide's own decoy score (a
-        /// protein is detected via its OTHER peptides) and the stratum keeps its paired
-        /// decoys. The frozen model avoids the two-pass retrain's over-separation.</summary>
+        /// recovers marginal peptides of already-detected proteins. The stratum's COMPLEMENT
+        /// is competed the same way, against its own paired decoys, rather than keeping its
+        /// 1st-pass q: the stratum takes most of the high-scoring targets and few of the
+        /// high-scoring decoys, so the decoys it excludes must still count against the
+        /// complement's targets (issue #4581). The frozen model avoids the two-pass
+        /// retrain's over-separation.</summary>
         public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
+
+        /// <summary>The <see cref="Pass2StrataValidityKeySuffix"/> term under protein-compact.</summary>
+        public const string PASS2_STRATA_TERM = @";pass2strata=2";
 
         /// <summary>The <see cref="ExperimentAgg"/> default: each precursor/peptide keeps its
         /// single BEST (max) observation across runs before the experiment-wide target/decoy
@@ -1316,7 +1321,8 @@ namespace pwiz.Osprey.Core
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
         /// only the q-value step changes.
         ///   <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> (default): frozen 1st-pass model, with
-        ///     the target-decoy competition constrained to the protein stratum.
+        ///     the target-decoy competition stratified - the protein stratum and its complement
+        ///     each compete against their own paired decoys.
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
         ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
         ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
@@ -1727,6 +1733,21 @@ namespace pwiz.Osprey.Core
             if (trainFdr.HasValue)
                 suffix += @";fdrtrain=" + trainFdr.Value.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
+        }
+
+        /// <summary>
+        /// Validity-key term for the MEANING of protein-compact's 2nd-pass q (issue #4581): the
+        /// stratum's complement now competes against its own decoys instead of keeping its
+        /// 1st-pass q (an unchanged off-stratum survivor used to take run q 1.0). No byte layout
+        /// and no mode string changed, so without this term a resume or <c>-LinkFrom</c> into an
+        /// output directory written before the change finds the per-run 2nd-pass sidecars and
+        /// the .blib valid and adopts the old answers. Carried by the two tasks that write them,
+        /// PerFileRescoring and SecondPassFDR - not FirstPassFDR, whose outputs did not change.
+        /// Empty under <see cref="PASS2_QVALUE_TRANSFER"/>, which the change does not reach.
+        /// </summary>
+        public static string Pass2StrataValidityKeySuffix()
+        {
+            return Pass2ProteinCompact ? PASS2_STRATA_TERM : string.Empty;
         }
 
         /// <summary>
