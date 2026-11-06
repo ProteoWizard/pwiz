@@ -16,7 +16,8 @@
 // that lets BuildParser look up the peaks at flush time.
 
 using System.Globalization;
-using System.Xml;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.Common.Unimod;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -85,9 +86,6 @@ public sealed class MzTabReader : BuildParser
 
     // cpp parity: mzTabReader.h:49 — PSH column label -> column index.
     private readonly Dictionary<string, int> _psh = new(StringComparer.Ordinal);
-
-    // cpp parity: mzTabReader.cpp:66 — Unimod records, loaded once from <exeDir>/unimod.xml.
-    private readonly Dictionary<int, double> _unimodMonoMass = new();
 
     /// <summary>Returns true if <paramref name="path"/> is recognised as an mzTab file.</summary>
     public static bool AcceptsExtension(string path) =>
@@ -177,17 +175,11 @@ public sealed class MzTabReader : BuildParser
     // --- top-level parse driver ----------------------------------------------------------
 
     /// <summary>
-    /// Load Unimod once, then read every line of the mzTab file into <see cref="_fileMap"/>.
+    /// Read every line of the mzTab file into <see cref="_fileMap"/>.
     /// </summary>
     /// <remarks>cpp parity: mzTabReader.cpp:66 <c>parse()</c>.</remarks>
     private bool Parse()
     {
-        // cpp parity: mzTabReader.cpp:67 — Unimod lookup table for UNIMOD: mod IDs.
-        Verbosity.Debug("Parsing Unimod");
-        var unimodFile = Path.Combine(BlibUtils.GetExeDirectory(), "unimod.xml");
-        LoadUnimod(unimodFile);
-        Verbosity.Debug($"Successfully parsed {_unimodMonoMass.Count.ToString(CultureInfo.InvariantCulture)} Unimod records");
-
         Verbosity.Debug("Opening file");
         if (!File.Exists(_filename))
             return false;
@@ -430,6 +422,20 @@ public sealed class MzTabReader : BuildParser
     }
 
     /// <summary>
+    /// Returns the published monoisotopic delta mass of UniMod record <paramref name="id"/>
+    /// from the unimod.obo that pwiz-sharp embeds, which DiaNNSpecLibReader and TSVReader read too.
+    /// </summary>
+    /// <remarks>cpp parity: mzTabReader.cpp:67 read the 2023 unimod.xml from the exe directory
+    /// instead; both carry UniMod's published delta_mono_mass.</remarks>
+    internal static bool TryGetUnimodMonoMass(int id, out double mass)
+    {
+        // UNIMOD:0 is the obo's root node, not a modification (unimod.xml had no record 0)
+        var mod = id > 0 ? Unimod.Modification((CVID)(id + (int)CVID.UNIMOD_unimod_root_node)) : null;
+        mass = mod?.DeltaMonoisotopicMass ?? 0;
+        return mod is not null;
+    }
+
+    /// <summary>
     /// Parse the modification column into a list of <see cref="SeqMod"/>. Returns false if
     /// the PSM should be skipped (positionless mod, unknown Unimod id, etc.).
     /// </summary>
@@ -541,7 +547,7 @@ public sealed class MzTabReader : BuildParser
                     throw new BlibException(false, string.Format(CultureInfo.InvariantCulture,
                         "Invalid Unimod ID '{0}' on line {1} ({2})", idStr, _lineNum, modStr));
                 }
-                if (!_unimodMonoMass.TryGetValue(id, out mass))
+                if (!TryGetUnimodMonoMass(id, out mass))
                 {
                     Verbosity.Warn(string.Format(CultureInfo.InvariantCulture,
                         "Unrecognized Unimod ID {0} on line {1}", id, _lineNum));
@@ -661,68 +667,5 @@ public sealed class MzTabReader : BuildParser
         if (line.Length > 0 && line[^1] == '\r')
             line = line.Substring(0, line.Length - 1);
         return line.Split('\t');
-    }
-
-    /// <summary>
-    /// Stream the unimod.xml file and populate <see cref="_unimodMonoMass"/> with one entry
-    /// per <c>umod:mod</c> element (keyed by <c>record_id</c>, valued by the <c>umod:delta</c>
-    /// child's <c>mono_mass</c>).
-    /// </summary>
-    /// <remarks>cpp parity: UnimodParser.cpp:61. We only need the (id -> mono_mass) map, so
-    /// instead of a full SAX state machine we walk the elements with <see cref="XmlReader"/>:
-    /// every <c>umod:mod</c> opens a record, the first nested <c>umod:delta</c> closes it.</remarks>
-    private void LoadUnimod(string unimodPath)
-    {
-        if (!File.Exists(unimodPath))
-        {
-            Verbosity.Warn($"Unimod file not found at '{unimodPath}'. Unimod IDs cannot be resolved.");
-            return;
-        }
-
-        try
-        {
-            var settings = new XmlReaderSettings
-            {
-                IgnoreWhitespace = true,
-                IgnoreComments = true,
-                IgnoreProcessingInstructions = true,
-                DtdProcessing = DtdProcessing.Ignore,
-            };
-            using var reader = XmlReader.Create(unimodPath, settings);
-
-            int currentId = -1;
-            while (reader.Read())
-            {
-                if (reader.NodeType != XmlNodeType.Element) continue;
-
-                // cpp uses isElement which compares the QName verbatim; we match LocalName
-                // to be namespace-agnostic ("umod:mod" -> LocalName "mod").
-                if (reader.LocalName == "mod")
-                {
-                    var idAttr = reader.GetAttribute("record_id");
-                    if (int.TryParse(idAttr, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id))
-                        currentId = id;
-                    else
-                        currentId = -1;
-                }
-                else if (reader.LocalName == "delta" && currentId >= 0)
-                {
-                    var mass = reader.GetAttribute("mono_mass");
-                    if (double.TryParse(mass, NumberStyles.Float, CultureInfo.InvariantCulture, out var m))
-                        _unimodMonoMass[currentId] = m;
-                    // Each umod:mod has exactly one umod:delta child; clear the id so any
-                    // later delta inside this mod (none expected) doesn't overwrite the value.
-                    currentId = -1;
-                }
-            }
-        }
-        catch (XmlException ex)
-        {
-            Verbosity.Warn($"Failed to parse unimod.xml: {ex.Message}");
-        }
-        catch (IOException ex)
-        {
-            Verbosity.Warn($"Failed to read unimod.xml: {ex.Message}");
-        }
     }
 }

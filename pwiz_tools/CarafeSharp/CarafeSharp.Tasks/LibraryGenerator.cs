@@ -467,7 +467,7 @@ namespace pwiz.CarafeSharp.Tasks
             int predicted = 0;
             // Predicting is the long step: a throttled percent over the peptide forms says the run is
             // alive between the per-batch lines (a batch is 200,000 forms).
-            using (var progress = new ProgressReporter(@"Predicting spectra", forms.Count, null, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(@"Predicting spectra", forms.Count, progress =>
             {
                 for (int batch = 0; batch < batchCount; batch++)
                 {
@@ -495,7 +495,7 @@ namespace pwiz.CarafeSharp.Tasks
                         writer.Written, _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
                         _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds, ccsTime));
                 }
-            }
+            }, intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
         }
 
         /// <summary>

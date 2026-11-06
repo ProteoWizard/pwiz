@@ -245,9 +245,9 @@ namespace pwiz.Osprey.Scoring
             // scorer invokes it null-conditionally, so this is a no-op then).
             var coelutionScorer = new CoelutionScorer(_diagnostics);
 
-            using (var progress = new ProgressReporter(
+            ProgressReporter.Run(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
-                windowsToScore.Count, passLabel == null ? string.Empty : @"  ", 2.0))
+                windowsToScore.Count, progress =>
             {
                 Parallel.For(0, windowsToScore.Count, new ParallelOptions
                 {
@@ -290,7 +290,7 @@ namespace pwiz.Osprey.Scoring
                         progress.Report(windowsProcessed);
                     }
                 });
-            }
+            }, passLabel == null ? string.Empty : @"  ", 2.0);
 
             // Flatten in deterministic window-index order.
             for (int wIdx = 0; wIdx < windowResults.Length; wIdx++)
@@ -482,7 +482,7 @@ namespace pwiz.Osprey.Scoring
         /// entries: 5 x the median spacing between distinct MS2 retention times, or 0.25 min
         /// when there are fewer than two.
         /// </summary>
-        public static double DoubleCountingRtNeighborhood(IReadOnlyList<double> ms2Rts)
+        private static double DoubleCountingRtNeighborhood(IReadOnlyList<double> ms2Rts)
         {
             var sortedRts = new List<double>(ms2Rts.Count);
             foreach (var rt in ms2Rts) sortedRts.Add(rt);
@@ -510,10 +510,9 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// The double-counting dedup's order: apex RT, then base_id, then entry_id. The dedup
         /// tests each pair with the entry that comes first in it as the first argument of
-        /// <see cref="SharesDoubleCountingFragments"/>, which is not symmetric, so anything that
-        /// counts the dedup's collisions has to ask in this order too.
+        /// <see cref="SharesDoubleCountingFragments"/>, which is not symmetric.
         /// </summary>
-        public static int CompareDoubleCountingOrder(double apexRtA, uint entryIdA, double apexRtB, uint entryIdB)
+        private static int CompareDoubleCountingOrder(double apexRtA, uint entryIdA, double apexRtB, uint entryIdB)
         {
             int c = apexRtA.CompareTo(apexRtB);
             if (c != 0)
@@ -532,7 +531,7 @@ namespace pwiz.Osprey.Scoring
         /// tolerance - a count of the first list's peaks, so the test is not symmetric - where
         /// half is of the smaller top-6 list, rounded up.
         /// </summary>
-        public static bool SharesDoubleCountingFragments(IReadOnlyList<LibraryFragment> fragsA,
+        private static bool SharesDoubleCountingFragments(IReadOnlyList<LibraryFragment> fragsA,
             IReadOnlyList<LibraryFragment> fragsB, double tolerance, ToleranceUnit unit)
         {
             int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,

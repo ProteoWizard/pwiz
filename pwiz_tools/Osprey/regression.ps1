@@ -188,6 +188,13 @@
     so mode 1 asks whether a search through the shared BiblioSpec.IO reader is byte-identical to
     one through the TSV parser; the only gate on the .blib read path, since every dataset's
     library is a .tsv. Opt-in; TeamCity does not pass it. Refused with -CreateGolden.
+.PARAMETER DetectResolution
+    Leave --resolution off every leg's command line, so Osprey measures it from the data
+    (--resolution auto, the default) instead of taking the dataset table's value. The goldens
+    are the explicit searches', so mode 1 asks whether the detected search is byte-identical to
+    the explicit one on every route the dataset runs, the HPC chain's FDR nodes (which read the
+    mode from the scores files) included. Opt-in; TeamCity does not pass it, so the goldens never
+    depend on detection. Refused with -CreateGolden.
 .PARAMETER Threads
     --threads for each run (default 16).
 
@@ -307,12 +314,24 @@ param(
     [string]$Culture,
     # Every leg searches an exported .blib of the dataset's library instead of the .tsv; see
     # the parameter help.
-    [switch]$LibraryAsBlib
+    [switch]$LibraryAsBlib,
+    # Every leg leaves --resolution to be measured from the data; see the parameter help.
+    [switch]$DetectResolution
 )
 
 $ErrorActionPreference = 'Stop'
 if ($LibraryAsBlib -and $CreateGolden) {
     throw "-LibraryAsBlib and -CreateGolden do not mix: the goldens are the .tsv search's, and a .blib run is compared against them."
+}
+if ($DetectResolution -and $CreateGolden) {
+    throw "-DetectResolution and -CreateGolden do not mix: the goldens are the explicit --resolution searches', and a detected run is compared against them."
+}
+
+# The --resolution arguments of a leg: the dataset table's value, or none with -DetectResolution.
+function Get-ResolutionArgs {
+    param([string]$Resolution)
+    if ($DetectResolution) { return @() }
+    return @('--resolution', $Resolution)
 }
 
 # Clean BEFORE a run, not after. Stated ONCE here; every other comment on cleanup points
@@ -364,17 +383,6 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # is what covers the shipped path, and it also costs nothing, because mode 3 already compares the
 # chain's output against the straight leg's.
 $env:OSPREY_PASS2_VERIFY_WORKER = '1'
-
-# The goldens are captured under the shipped first-pass SVM C selection, so an inherited
-# OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
-# under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
-# golden. Cleared, announced, and restored in the finally block.
-$script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
-if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
-    Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
-        "first-pass C selection.") -f $env:OSPREY_SVM_C_TOLERANCE) -ForegroundColor Yellow
-    Remove-Item Env:OSPREY_SVM_C_TOLERANCE -ErrorAction SilentlyContinue
-}
 
 # Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
 # doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
@@ -730,6 +738,61 @@ function Remove-Staging([string]$Path) {
     Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# An Osprey.exe left running by an earlier or an aborted phase holds the build output locked,
+# so the next build fails, and keeps its memory, so the next run can fail too (issue #4503).
+function Stop-LaunchedOsprey {
+    <#
+    Kill every Osprey.exe this script started that is still running, with its process tree,
+    and wait for it to exit (issue #4503). Called from the finally of every launch and from
+    the script's own finally.
+
+    A launch returns only after its Osprey.exe has exited, so on the normal path this finds
+    nothing; it is the guarantee that no abort path - present or future - returns from a phase
+    with the worker still running. Children of THIS pwsh only: regression-parallel.ps1 runs
+    other lanes on the same exe at the same time.
+    #>
+    $exeName = Split-Path -Leaf $ospreyExe
+    $running = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$PID AND Name='$exeName'" `
+        -ErrorAction SilentlyContinue)
+    Stop-OspreyTree $running 'left running by an aborted phase'
+}
+
+function Stop-OrphanedOsprey {
+    <#
+    Kill any Osprey.exe running from THIS build tree whose parent process is gone (issue #4503).
+
+    Stop-LaunchedOsprey cannot cover a run whose pwsh was itself killed - a TeamCity timeout, an
+    OOM kill, a reaped session - because no finally runs then, and Windows does not end a
+    child with its parent. The orphan keeps the build output locked, so the next run fails to
+    build, and keeps its memory, so the run after that can fail too. A run with a live parent
+    is left alone: that is another lane or a developer's own run, not an orphan. A parent PID
+    since reused by a NEWER process is still a dead parent, hence the creation-time test.
+    #>
+    $exeName = Split-Path -Leaf $ospreyExe
+    $all = @(Get-CimInstance Win32_Process -Filter "Name='$exeName'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.ExecutablePath -and
+            [string]::Equals($_.ExecutablePath, $ospreyExe, [StringComparison]::OrdinalIgnoreCase) })
+    $orphans = @(foreach ($p in $all) {
+        $parent = Get-CimInstance Win32_Process -Filter "ProcessId=$($p.ParentProcessId)" `
+            -ErrorAction SilentlyContinue
+        if ($null -eq $parent -or $parent.CreationDate -gt $p.CreationDate) { $p }
+    })
+    Stop-OspreyTree $orphans 'orphaned by an earlier run'
+}
+
+function Stop-OspreyTree([object[]]$Processes, [string]$Why) {
+    foreach ($o in $Processes) {
+        Write-Host ("  WARN: stopping {0} (pid {1}) {2}" -f $o.Name, $o.ProcessId, $Why) -ForegroundColor Yellow
+        & taskkill.exe /T /F /PID $o.ProcessId 2>&1 | Out-Null
+        # taskkill returns before the process is gone, and its handles - the locks on the build
+        # output - are released only at exit.
+        Wait-Process -Id $o.ProcessId -Timeout 60 -ErrorAction SilentlyContinue
+    }
+}
+
+# Before the build, because the build is what an orphan's lock breaks.
+Stop-OrphanedOsprey
+
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
     # Refuse -Source raw without the licence rather than building a reader that cannot
@@ -841,9 +904,8 @@ function Invoke-OspreyRun {
     $logPath = Join-Path $WorkDir $LogName
     $cliArgs = @()
     foreach ($m in $Mzmls) { $cliArgs += @('-i', $m) }
-    $cliArgs += @('-l', $Library, '-o', 'output.blib',
-                  '--resolution', $Resolution, '--protein-fdr', '0.01',
-                  '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
+    $cliArgs += @('-l', $Library, '-o', 'output.blib') + (Get-ResolutionArgs $Resolution) +
+                @('--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--work-dir', $WorkDir)
     $cliArgs += Get-DatasetCliArgs -Spec $Spec -Manifest $Manifest
     $cliArgs += $memStampArgs
     if ($FdrBench) { $cliArgs += @('--fdrbench', 'bench.tsv', '--fdrbench-pass', 'both') }
@@ -859,6 +921,7 @@ function Invoke-OspreyRun {
         $exit = $LASTEXITCODE
         $sw.Stop()
     } finally {
+        Stop-LaunchedOsprey
         Pop-Location
         if ($DumpProteinFdr) { Remove-Item Env:OSPREY_DUMP_STAGE7_PROTEIN_FDR -ErrorAction SilentlyContinue }
     }
@@ -1100,14 +1163,21 @@ function Resolve-DatasetInputs {
         $exportDir = Join-Path $derivedDir 'export'
         $exportLog = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.export.log')
         Remove-Item $blib, $blibTmp -Force -ErrorAction SilentlyContinue
+        # Always the table's --resolution, even with -DetectResolution: the export reads no
+        # inputs, so it has nothing to measure, and the library must be typed as the search's is.
         $exportArgs = @('-l', $library, '--export-library', $blibTmp, '--resolution', $Spec.Resolution,
                         '--threads', $Threads.ToString(), '--work-dir', $exportDir)
         if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
         if ($manifest) { $exportArgs += @('--decoy-pairing-manifest', $manifest) }
         Write-Host "  exporting the library as a .blib for the legs to search..."
-        & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $blibTmp)) {
-            throw "Exporting $library as a .blib failed (exit $LASTEXITCODE); see $exportLog"
+        try {
+            & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
+            $exportExit = $LASTEXITCODE
+        } finally {
+            Stop-LaunchedOsprey
+        }
+        if ($exportExit -ne 0 -or -not (Test-Path $blibTmp)) {
+            throw "Exporting $library as a .blib failed (exit $exportExit); see $exportLog"
         }
         Move-Item $blibTmp $blib -Force
         $saved = Select-String -Path $exportLog -Pattern 'Saved [\d,]+ library precursors? to' | Select-Object -Last 1
@@ -1712,6 +1782,7 @@ function Invoke-OspreyTaskRun {
         & $ospreyExe @CliArgs 2>&1 | Tee-Object -FilePath $logPath | Out-Null
         $exit = $LASTEXITCODE
     } finally {
+        Stop-LaunchedOsprey
         Pop-Location
     }
     Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
@@ -1799,6 +1870,7 @@ function Get-DeclaredTaskFiles {
         $lines = @(& $ospreyExe @CliArgs '--task-files' 2>&1 | ForEach-Object { "$_" })
         $exit = $LASTEXITCODE
     } finally {
+        Stop-LaunchedOsprey
         Pop-Location
     }
     if ($exit -ne 0) {
@@ -1935,8 +2007,8 @@ function Invoke-HpcChain {
     # Stable, file-order stem list (NOT hashtable key order) so the -i
     # argument order matches the straight-through's file order deterministically.
     $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
-    $commonArgs = @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
-                    '--protein-fdr', '0.01', '--threads', $Threads.ToString()) + $extraArgs + $memStampArgs
+    $commonArgs = @('-l', $libName, '-o', 'output.blib') + (Get-ResolutionArgs $Resolution) +
+                  @('--protein-fdr', '0.01', '--threads', $Threads.ToString()) + $extraArgs + $memStampArgs
 
     # EVERY PHASE IS STAGED FROM ITS TASK'S DECLARATIONS (Invoke-HpcNode): what the node is given
     # is what `--task-files` says it reads, found in the earlier phases' dirs. Nothing here lists
@@ -2094,6 +2166,24 @@ if ($StageOnly) {
     Write-Host ("==> staged {0}; -StageOnly stops here" -f ($selected -join ', '))
     Remove-Item $runRoot -Recurse -Force -ErrorAction SilentlyContinue
     exit 0
+}
+
+# The goldens are captured under the shipped first-pass SVM C selection, so an inherited
+# OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
+# under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
+# golden. Cleared, announced, and restored in the finally block.
+#
+# Cleared HERE, immediately before the try, and not at the top of the script: nothing before
+# this point trains an SVM (the only Osprey launch above is Resolve-DatasetInputs'
+# --export-library, which returns before the variable is read), and every exit above it (a failed build, a staging error, the golden
+# folder check, -StageOnly - which regression-parallel.ps1 calls in its own session with &)
+# would otherwise leave the caller's session without the variable, since only the finally
+# below restores it (issue #4542).
+$script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
+if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
+    Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
+        "first-pass C selection.") -f $env:OSPREY_SVM_C_TOLERANCE) -ForegroundColor Yellow
+    Remove-Item Env:OSPREY_SVM_C_TOLERANCE -ErrorAction SilentlyContinue
 }
 
 # Per-dataset and run-root cleanup below go through Remove-Scratch, i.e. they happen
@@ -2556,6 +2646,31 @@ foreach ($name in $selected) {
                         "not reach the SecondPassFDR node")
                     $summaryLines.Add("$name mode3 (chain report is two-pass): FAIL (pass-1 only)")
                 }
+
+                # The chain's entrapment FDP curves must be the straight-through ones (issue
+                # #4645). The blib and sidecar compares above cannot see them: the estimators
+                # read the library-derived classification and pairing, not anything those files
+                # carry. That is how the paired curve once differed by up to 9% while every other
+                # leg was green - SecondPassFDR skips decoy generation, and the classification
+                # walked straight-through's generated DECOY_ entries as targets (until #4860
+                # tested the decoy flag), giving each target its decoy's pair index.
+                #
+                # Every view of both passes, every array, within the gate tolerance; the routes
+                # are byte-identical today. No line on a dataset with no entrapment (no views on
+                # either side); whether views exist at all is pinned by the mode-1b golden.
+                $m3fdp = Compare-FdpViews -Expected (Get-DiagnosticsPayload -HtmlPath $diagHtml) `
+                    -Actual $chainDiag -Tolerance $Tolerance
+                if ($m3fdp.Pass -and $m3fdp.Views -gt 0) {
+                    # Formatted before the call: inside Add(...) the comma would end the -f list.
+                    $m3fdpLine = "$name mode3 (chain FDP curves==straight): PASS ({0} views, {1:N0} paired points)" -f
+                        $m3fdp.Views, $m3fdp.PairedPoints
+                    $summaryLines.Add($m3fdpLine)
+                } elseif (-not $m3fdp.Pass) {
+                    $overallFail = $true
+                    Write-Problem-Tc "$name mode3 (chain FDP curves==straight): FAIL - $($m3fdp.Issues.Count) issue(s)"
+                    $m3fdp.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+                    $summaryLines.Add("$name mode3 (chain FDP curves==straight): FAIL ($($m3fdp.Issues.Count) issues)")
+                }
             }
         }
     }
@@ -2933,6 +3048,8 @@ catch {
     Write-Host ($_.ScriptStackTrace) -ForegroundColor DarkGray
 }
 finally {
+    # No Osprey.exe outlives the run that started it, whatever happened above.
+    Stop-LaunchedOsprey
     # Restore the operator's environment, whatever happened above.
     if (-not [string]::IsNullOrEmpty($script:priorSvmCTolerance)) {
         $env:OSPREY_SVM_C_TOLERANCE = $script:priorSvmCTolerance
