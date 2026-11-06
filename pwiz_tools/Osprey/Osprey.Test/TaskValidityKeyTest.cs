@@ -63,6 +63,7 @@ namespace pwiz.Osprey.Test
             AssertTrainingSampleLeversKeyDifferently();
             AssertFdrExperimentSwitchesKeyDifferently();
             AssertRecordedFeaturesFollowTheMask();
+            AssertHramOnlyFamiliesDropOutAtUnitResolution();
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
             AssertTreeClassifierKeysTheModelTasks();
@@ -767,6 +768,67 @@ namespace pwiz.Osprey.Test
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
             foreach (var task in tasks)
                 Assert.IsFalse(task.ValidityKey(ctx).Contains(@";featrec="), task.Name);
+        }
+
+        /// <summary>
+        /// At unit resolution the HRAM-only families are masked and unrecorded whatever the switches say, so
+        /// unmasking everything gives the FDR vectors and scores columns of the features before those families,
+        /// in their order: the first families on any data, and the key the same as if they did not exist.
+        /// At HRAM, and under the default mask at either resolution, the resolution changes nothing.
+        /// </summary>
+        private static void AssertHramOnlyFamiliesDropOutAtUnitResolution()
+        {
+            const ResolutionMode unit = ResolutionMode.UnitResolution;
+            const ResolutionMode hram = ResolutionMode.HRAM;
+            var names = ParquetScoreCache.PIN_FEATURE_NAMES;
+            int firstHramOnly = Array.IndexOf(names, @"lib_cosine_coel");
+            Assert.AreEqual(names.Length - 8, firstHramOnly, @"the HRAM-only features are the last 8");
+            Assert.AreEqual(firstHramOnly + 3, Array.IndexOf(names, @"spec_match_prob"));
+            foreach (string family in PinFeatureMask.HRAM_ONLY_FAMILIES)
+                CollectionAssert.Contains(PinFeatureMask.FAMILY_FIRST_FEATURES, family);
+            for (int f = 0; f < names.Length; f++)
+            {
+                Assert.AreEqual(f < firstHramOnly, PinFeatureMask.IsAvailable(f, unit), names[f]);
+                Assert.IsTrue(PinFeatureMask.IsAvailable(f, hram), names[f]);
+                Assert.AreEqual(f >= PinFeatureMask.CORE_FEATURE_COUNT, PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(names[f]),
+                    names[f] + @" masked by default like the other families");
+            }
+
+            // Unmasked: dropped at unit resolution, kept at HRAM, from the FDR vectors and the recorded columns.
+            var beforeFamilies = Enumerable.Range(0, firstHramOnly).ToArray();
+            CollectionAssert.AreEqual(beforeFamilies, PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(f => false, unit)));
+            Assert.AreEqual(names.Length, PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(f => false, hram)).Length);
+            foreach (bool recordAll in new[] { false, true })
+            {
+                bool[] unitRecorded = PinFeatureMask.RecordedFeatures(f => false, recordAll, unit);
+                bool[] hramRecorded = PinFeatureMask.RecordedFeatures(f => false, recordAll, hram);
+                for (int f = 0; f < names.Length; f++)
+                {
+                    Assert.AreEqual(f < firstHramOnly, unitRecorded[f], names[f]);
+                    Assert.IsTrue(hramRecorded[f], names[f]);
+                }
+            }
+            // Asking for nothing but an HRAM-only feature records the core alone at unit resolution.
+            int specProb = Array.IndexOf(names, @"spec_match_prob");
+            bool[] onlySpec = PinFeatureMask.RecordedFeatures(f => f != specProb, false, unit);
+            for (int f = 0; f < names.Length; f++)
+                Assert.AreEqual(f < PinFeatureMask.CORE_FEATURE_COUNT, onlySpec[f], names[f]);
+
+            // The default mask is the same at either resolution.
+            Func<int, bool> byDefault = f => PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(names[f]);
+            CollectionAssert.AreEqual(PinFeatureMask.UnmaskedIndices(byDefault),
+                PinFeatureMask.UnmaskedIndices(PinFeatureMask.MaskAtResolution(byDefault, unit)));
+            CollectionAssert.AreEqual(PinFeatureMask.RecordedFeatures(byDefault, false, hram),
+                PinFeatureMask.RecordedFeatures(byDefault, false, unit));
+
+            // Recording everything available keys as all at either resolution; one family keys by name.
+            bool[] unitAll = PinFeatureMask.RecordedFeatures(f => false, true, unit);
+            bool[] hramAll = PinFeatureMask.RecordedFeatures(f => false, true, hram);
+            Assert.AreEqual(@";featrec=all", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => unitAll[f], unit));
+            Assert.AreEqual(@";featrec=all", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => hramAll[f], hram));
+            Assert.AreNotEqual(@";featrec=all", PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => unitAll[f], hram),
+                @"at HRAM the unit-resolution columns are not all of them");
+            Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(f => onlySpec[f], unit));
         }
 
         /// <summary>

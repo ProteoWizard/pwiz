@@ -957,5 +957,77 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_capped__top_6_sum_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library cosine (co-eluting fragments).
+        /// </summary>
+        public static string CoelutingLibraryCosineCalc_DisplayName_Library_cosine__co_eluting_fragments_ {
+            get {
+                return ResourceManager.GetString("CoelutingLibraryCosineCalc_DisplayName_Library_cosine__co_eluting_fragments_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library spectral entropy similarity.
+        /// </summary>
+        public static string LibraryEntropySimilarityCalc_DisplayName_Library_spectral_entropy_similarity {
+            get {
+                return ResourceManager.GetString("LibraryEntropySimilarityCalc_DisplayName_Library_spectral_entropy_similarity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Co-eluting library intensity share.
+        /// </summary>
+        public static string CoelutingLibraryShareCalc_DisplayName_Co_eluting_library_intensity_share {
+            get {
+                return ResourceManager.GetString("CoelutingLibraryShareCalc_DisplayName_Co_eluting_library_intensity_share", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment match probability (apex).
+        /// </summary>
+        public static string ApexMatchProbabilityCalc_DisplayName_Fragment_match_probability__apex_ {
+            get {
+                return ResourceManager.GetString("ApexMatchProbabilityCalc_DisplayName_Fragment_match_probability__apex_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Projected cosine score (apex).
+        /// </summary>
+        public static string ApexProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__apex_ {
+            get {
+                return ResourceManager.GetString("ApexProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__apex_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hyperscore (apex).
+        /// </summary>
+        public static string ApexHyperscoreCalc_DisplayName_Hyperscore__apex_ {
+            get {
+                return ResourceManager.GetString("ApexHyperscoreCalc_DisplayName_Hyperscore__apex_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment match probability (peak maximum).
+        /// </summary>
+        public static string PeakMaxMatchProbabilityCalc_DisplayName_Fragment_match_probability__peak_maximum_ {
+            get {
+                return ResourceManager.GetString("PeakMaxMatchProbabilityCalc_DisplayName_Fragment_match_probability__peak_maximum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Projected cosine score (peak maximum).
+        /// </summary>
+        public static string PeakMaxProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__peak_maximum_ {
+            get {
+                return ResourceManager.GetString("PeakMaxProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__peak_maximum_", resourceCulture);
+            }
+        }
     }
 }

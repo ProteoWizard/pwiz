@@ -391,4 +391,28 @@
   <data name="CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_capped__top_6_sum_" xml:space="preserve">
     <value>Time correlation, interference capped (top 6 sum)</value>
   </data>
+  <data name="CoelutingLibraryCosineCalc_DisplayName_Library_cosine__co_eluting_fragments_" xml:space="preserve">
+    <value>Library cosine (co-eluting fragments)</value>
+  </data>
+  <data name="LibraryEntropySimilarityCalc_DisplayName_Library_spectral_entropy_similarity" xml:space="preserve">
+    <value>Library spectral entropy similarity</value>
+  </data>
+  <data name="CoelutingLibraryShareCalc_DisplayName_Co_eluting_library_intensity_share" xml:space="preserve">
+    <value>Co-eluting library intensity share</value>
+  </data>
+  <data name="ApexMatchProbabilityCalc_DisplayName_Fragment_match_probability__apex_" xml:space="preserve">
+    <value>Fragment match probability (apex)</value>
+  </data>
+  <data name="ApexProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__apex_" xml:space="preserve">
+    <value>Projected cosine score (apex)</value>
+  </data>
+  <data name="ApexHyperscoreCalc_DisplayName_Hyperscore__apex_" xml:space="preserve">
+    <value>Hyperscore (apex)</value>
+  </data>
+  <data name="PeakMaxMatchProbabilityCalc_DisplayName_Fragment_match_probability__peak_maximum_" xml:space="preserve">
+    <value>Fragment match probability (peak maximum)</value>
+  </data>
+  <data name="PeakMaxProjectedCosineScoreCalc_DisplayName_Projected_cosine_score__peak_maximum_" xml:space="preserve">
+    <value>Projected cosine score (peak maximum)</value>
+  </data>
 </root>

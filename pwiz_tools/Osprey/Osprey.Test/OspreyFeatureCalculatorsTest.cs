@@ -657,6 +657,241 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Spectrum-match family on a hand-built 10 ppm spectrum: the density-calibrated Poisson-binomial match
+        /// probability, EncyclopeDIA's projected cosine score and X!Tandem's hyperscore at the apex, and the first two
+        /// at the best scan of the peak, skipping a peak scan past the window's end and scoring an empty scan as 0.
+        /// </summary>
+        [TestMethod]
+        public void TestSpectrumMatchCalculators()
+        {
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.Hram(10.0) };
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment>
+                {
+                    TypedFrag(300.0, 4.0, IonType.B, 2),
+                    TypedFrag(400.0, 1.0, IonType.Y, 1),
+                    TypedFrag(500.0, 9.0, IonType.Y, 2),
+                },
+            };
+            // Apex: 300 matched by one centroid (3.3 ppm), 400 by two (2.5 and 5 ppm, summed), 500 missed (40 ppm).
+            // Every fragment has 2 centroids within +/- 50 Th, a density of 0.02 per Th.
+            var apex = new Spectrum
+            {
+                Mzs = new[] { 260.0, 300.001, 399.999, 400.002, 470.0, 500.02 },
+                Intensities = new[] { 10f, 100f, 30f, 20f, 5f, 10f },
+            };
+            // All three matched; a noise peak beside 300 doubles its density.
+            var clean = new Spectrum
+            {
+                Mzs = new[] { 300.0, 330.0, 400.0, 500.0 },
+                Intensities = new[] { 100f, 1f, 50f, 90f },
+            };
+            var cleaner = new Spectrum
+            {
+                Mzs = new[] { 300.0, 400.0, 500.0 },
+                Intensities = new[] { 100f, 50f, 90f },
+            };
+            var empty = new Spectrum { Mzs = new double[0], Intensities = new float[0] };
+            // Window scans 0..3; peak local 1..4 with its apex at local 2: scan 4 is past the window's end.
+            var windowSpectra = new List<Spectrum> { empty, empty, apex, clean, cleaner };
+            var peakData = new FakePeakData(new List<XicData>(), Bounds(1, 4, 2), candidate: candidate,
+                apexSpectrum: apex, apexGlobalIndex: 2, apexLocalIndex: 2,
+                windowStartIndex: 0, windowLength: 4, windowSpectra: windowSpectra);
+            var context = new OspreyScoringContext(config);
+            context.ClearByproducts();
+
+            // p_j = 1 - exp(-rho * 2 * tol), tol = 10 ppm of the fragment m/z.
+            double p1 = ChanceMatch(0.02, 300.0), p2 = ChanceMatch(0.02, 400.0), p3 = ChanceMatch(0.02, 500.0);
+            double atLeastTwo = p1 * p2 * (1 - p3) + p1 * p3 * (1 - p2) + p2 * p3 * (1 - p1) + p1 * p2 * p3;
+            Assert.AreEqual(-Math.Log10(atLeastTwo), Calc(@"spec_match_prob").Calculate(context, peakData), TOLERANCE);
+            // sqrt intensities: observed (10, sqrt 50, 0) against library (2, 1, 3), k = 2.
+            double cosine = (20 + Math.Sqrt(50)) / (Math.Sqrt(150) * Math.Sqrt(14));
+            Assert.AreEqual(Math.Log10(cosine) + Math.Log10(2) + 2, Calc(@"spec_proj_cosine_xt").Calculate(context, peakData), TOLERANCE);
+            // One b and one y matched: ln 1! + ln 1! + ln(100 + 50).
+            Assert.AreEqual(Math.Log(150), Calc(@"spec_hyperscore").Calculate(context, peakData), TOLERANCE);
+
+            // The best peak scan is the clean one: all three matched, densities 0.02, 0.01, 0.01.
+            double allThree = ChanceMatch(0.02, 300.0) * ChanceMatch(0.01, 400.0) * ChanceMatch(0.01, 500.0);
+            Assert.AreEqual(-Math.Log10(allThree), Calc(@"spec_match_prob_max").Calculate(context, peakData), TOLERANCE);
+            double cleanCosine = (2 * 10 + Math.Sqrt(50) + 3 * Math.Sqrt(90)) / (Math.Sqrt(240) * Math.Sqrt(14));
+            Assert.AreEqual(Math.Log10(cleanCosine) + Math.Log10(6) + 2,
+                Calc(@"spec_proj_cosine_xt_max").Calculate(context, peakData), TOLERANCE);
+
+            // Poisson-binomial tail edge cases.
+            Assert.AreEqual(1.0, SpectrumMatchScores.PoissonBinomialTail(new[] { 0.5, 0.5 }, 0), TOLERANCE);
+            Assert.AreEqual(0.75, SpectrumMatchScores.PoissonBinomialTail(new[] { 0.5, 0.5 }, 1), TOLERANCE);
+            Assert.AreEqual(0.0, SpectrumMatchScores.PoissonBinomialTail(new[] { 0.5, 0.5 }, 3), TOLERANCE);
+            Assert.AreEqual(Math.Log(24), SpectrumMatchScores.LogFactorial(4), TOLERANCE);
+
+            // Nothing matched anywhere: every score 0.
+            var missed = new FakePeakData(new List<XicData>(), Bounds(0, 1, 0), candidate: candidate,
+                apexSpectrum: empty, apexGlobalIndex: 0, apexLocalIndex: 0,
+                windowStartIndex: 0, windowLength: 2, windowSpectra: windowSpectra);
+            context.ClearByproducts();
+            foreach (var name in new[] { @"spec_match_prob", @"spec_proj_cosine_xt", @"spec_hyperscore",
+                         @"spec_match_prob_max", @"spec_proj_cosine_xt_max" })
+            {
+                Assert.AreEqual(0.0, Calc(name).Calculate(context, missed), TOLERANCE);
+            }
+        }
+
+        private static double ChanceMatch(double density, double mz)
+        {
+            return 1 - Math.Exp(-density * 2 * mz * 10e-6);
+        }
+
+        private static LibraryFragment TypedFrag(double mz, double relativeIntensity, IonType ionType, byte ordinal)
+        {
+            return new LibraryFragment
+            {
+                Mz = mz,
+                RelativeIntensity = (float)relativeIntensity,
+                Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal, Charge = 1 },
+            };
+        }
+
+        /// <summary>
+        /// Library agreement family on hand-built XICs: three fragments co-elute over the peak and one does not, so the
+        /// cosine and the library share read the three, and the entropy similarity reads all four.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryAgreementCalculators()
+        {
+            var peakData = LibraryAgreementPeak(out double[] observed, out double[] library);
+            var context = new OspreyScoringContext(new OspreyConfig());
+            context.ClearByproducts();
+
+            // Over the three co-eluting fragments, 0-2; fragment 3 falls as they rise.
+            double dot = 0, obsNorm = 0, libNorm = 0;
+            for (int f = 0; f < 3; f++)
+            {
+                dot += observed[f] * library[f];
+                obsNorm += observed[f] * observed[f];
+                libNorm += library[f] * library[f];
+            }
+            Assert.AreEqual(dot / Math.Sqrt(obsNorm * libNorm), Calc(@"lib_cosine_coel").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(9.0 / 10.0, Calc(@"lib_coel_share").Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(ExpectedEntropySimilarity(observed, library), Calc(@"lib_entropy_sim").Calculate(context, peakData), TOLERANCE);
+
+            // A spectrum identical to the library has similarity 1, whatever its scale.
+            Assert.AreEqual(1.0, ExpectedEntropySimilarity(library, library.Select(v => v * 3).ToArray()), TOLERANCE);
+
+            // Fewer than three co-eluting fragments have no cosine, and a peak too short to correlate over has no scores.
+            var two = new List<XicData>
+            {
+                new XicData(0, RetentionTimes(5), new double[] { 0, 10, 50, 10, 0 }),
+                new XicData(1, RetentionTimes(5), new double[] { 0, 20, 100, 20, 0 }),
+            };
+            var twoPeak = new FakePeakData(two, Bounds(0, 4, 2), candidate: LibraryAgreementCandidate());
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, Calc(@"lib_cosine_coel").Calculate(context, twoPeak), TOLERANCE);
+            Assert.IsTrue(Calc(@"lib_coel_share").Calculate(context, twoPeak) > 0.0);
+            var shortPeak = new FakePeakData(two, Bounds(1, 2, 2), candidate: LibraryAgreementCandidate());
+            context.ClearByproducts();
+            foreach (var name in new[] { @"lib_cosine_coel", @"lib_entropy_sim", @"lib_coel_share" })
+                Assert.AreEqual(0.0, Calc(name).Calculate(context, shortPeak), TOLERANCE);
+        }
+
+        /// <summary>
+        /// The HRAM-only families score 0 at unit resolution, on the same data they score at HRAM, even when something
+        /// asks for them directly (<see cref="CoelutionScorer"/> without recorded flags computes every feature).
+        /// </summary>
+        [TestMethod]
+        public void TestHramOnlyCalculatorsDoNotRunAtUnitResolution()
+        {
+            var peakData = HramOnlyPeak();
+            var hramConfig = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.Hram(10.0) };
+            var unitConfig = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.Hram(10.0) };
+            unitConfig.ApplyResolutionMode(ResolutionMode.UnitResolution);
+            var hram = new OspreyScoringContext(hramConfig);
+            var unit = new OspreyScoringContext(unitConfig);
+            hram.ClearByproducts();
+            unit.ClearByproducts();
+
+            int hramOnlyCount = 0;
+            for (int f = 0; f < OspreyFeatureCalculators.FeatureCount; f++)
+            {
+                if (PinFeatureMask.IsAvailable(f, ResolutionMode.UnitResolution))
+                    continue;
+                hramOnlyCount++;
+                var calc = OspreyFeatureCalculators.Get(f);
+                Assert.IsTrue(calc.Calculate(hram, peakData) > 0.0, calc.Name);
+                Assert.AreEqual(0.0, calc.Calculate(unit, peakData), calc.Name);
+            }
+            Assert.AreEqual(8, hramOnlyCount);
+        }
+
+        private static double[] RetentionTimes(int count)
+        {
+            return Enumerable.Range(0, count).Select(i => (double)i).ToArray();
+        }
+
+        private static LibraryEntry LibraryAgreementCandidate()
+        {
+            return new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment>
+                {
+                    TypedFrag(300.0, 4.0, IonType.B, 2),
+                    TypedFrag(400.0, 2.0, IonType.Y, 1),
+                    TypedFrag(500.0, 3.0, IonType.Y, 2),
+                    TypedFrag(600.0, 1.0, IonType.Y, 3),
+                },
+            };
+        }
+
+        // Fragments 0-2 share an elution shape over scans 0-6, apex 3; fragment 3 is high where they are low.
+        private static FakePeakData LibraryAgreementPeak(out double[] observed, out double[] library)
+        {
+            var rts = RetentionTimes(7);
+            var xics = new List<XicData>
+            {
+                new XicData(0, rts, new double[] { 0, 10, 40, 100, 40, 10, 0 }),
+                new XicData(1, rts, new double[] { 0, 6, 20, 50, 22, 5, 0 }),
+                new XicData(2, rts, new double[] { 0, 8, 30, 90, 25, 7, 0 }),
+                new XicData(3, rts, new double[] { 60, 40, 5, 0, 5, 40, 60 }),
+            };
+            // Each fragment's observed intensity is its sum over apex +/- 1, scans 2-4.
+            observed = new double[] { 180, 92, 145, 10 };
+            library = new double[] { 4, 2, 3, 1 };
+            return new FakePeakData(xics, Bounds(0, 6, 3), candidate: LibraryAgreementCandidate());
+        }
+
+        // 1 - (2 H((p + q) / 2) - H(p) - H(q)) / ln 4 over the normalized vectors.
+        private static double ExpectedEntropySimilarity(double[] p, double[] q)
+        {
+            double sumP = p.Sum(), sumQ = q.Sum();
+            Func<double, double> entropy = x => x > 0 ? -x * Math.Log(x) : 0.0;
+            double hp = p.Sum(v => entropy(v / sumP));
+            double hq = q.Sum(v => entropy(v / sumQ));
+            double hm = p.Zip(q, (a, b) => entropy((a / sumP + b / sumQ) / 2)).Sum();
+            return 1.0 - (2 * hm - hp - hq) / Math.Log(4.0);
+        }
+
+        // Scores above 0 in every HRAM-only feature at 10 ppm: co-eluting XICs and a spectrum matching every fragment.
+        private static FakePeakData HramOnlyPeak()
+        {
+            var candidate = LibraryAgreementCandidate();
+            var rts = RetentionTimes(7);
+            var xics = new List<XicData>
+            {
+                new XicData(0, rts, new double[] { 0, 10, 40, 100, 40, 10, 0 }),
+                new XicData(1, rts, new double[] { 0, 6, 20, 50, 22, 5, 0 }),
+                new XicData(2, rts, new double[] { 0, 8, 30, 90, 25, 7, 0 }),
+            };
+            var apex = new Spectrum
+            {
+                Mzs = new[] { 300.0, 400.0, 500.0, 600.0 },
+                Intensities = new[] { 100f, 50f, 90f, 20f },
+            };
+            var windowSpectra = Enumerable.Repeat(apex, 7).ToList();
+            return new FakePeakData(xics, Bounds(0, 6, 3), candidate: candidate,
+                apexSpectrum: apex, apexGlobalIndex: 3, apexLocalIndex: 3,
+                windowStartIndex: 0, windowLength: 7, windowSpectra: windowSpectra);
+        }
+
+        /// <summary>
         /// The runner-up candidates for a peak rescored at imposed bounds
         /// (<see cref="PeakDataExtractor.OverrideRunnerUpCandidates"/>): the imposed peak first,
         /// then the candidates first-pass detection finds in the normal search window, except

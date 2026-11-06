@@ -180,9 +180,19 @@ namespace pwiz.Osprey.IO
             // Cleaned time correlation: interfered scans left out or capped (2)
             @"tc_clean_sum6",
             @"tc_clip_sum6",
+            // Library agreement over the co-eluting fragments, HRAM only (3)
+            @"lib_cosine_coel",
+            @"lib_entropy_sim",
+            @"lib_coel_share",
+            // Spectrum match: fragment match probability, projected cosine and hyperscore, apex and peak maximum, HRAM only (5)
+            @"spec_match_prob",
+            @"spec_proj_cosine_xt",
+            @"spec_hyperscore",
+            @"spec_match_prob_max",
+            @"spec_proj_cosine_xt_max",
         };
 
-        public const int NUM_PIN_FEATURES = 101;
+        public const int NUM_PIN_FEATURES = 109;
 
         #endregion
 

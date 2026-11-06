@@ -443,6 +443,44 @@ descent then never moves its weight off 0 - but not in floating point, and not a
   be resolved (`PercolatorScorer.BuildBasicFeatures`), and the target-decoy pairing that ranks by
   `Features[0]` when it has no scores (`PercolatorSampling`).
 
+#### The HRAM-only families: library agreement and spectrum match
+
+Two families are masked by default like the others, and in addition **have no effect at unit
+resolution, whatever the switches say** (`PinFeatureMask.HRAM_ONLY_FAMILIES`):
+
+| PIN | Name | Family | Better | Calculator |
+|---|---|---|---|---|
+| 101 | `lib_cosine_coel` | Library agreement | higher | `CoelutingLibraryCosineCalc` |
+| 102 | `lib_entropy_sim` | Library agreement | higher | `LibraryEntropySimilarityCalc` |
+| 103 | `lib_coel_share` | Library agreement | higher | `CoelutingLibraryShareCalc` |
+| 104 | `spec_match_prob` | Spectrum match | higher | `ApexMatchProbabilityCalc` |
+| 105 | `spec_proj_cosine_xt` | Spectrum match | higher | `ApexProjectedCosineScoreCalc` |
+| 106 | `spec_hyperscore` | Spectrum match | higher | `ApexHyperscoreCalc` |
+| 107 | `spec_match_prob_max` | Spectrum match | higher | `PeakMaxMatchProbabilityCalc` |
+| 108 | `spec_proj_cosine_xt_max` | Spectrum match | higher | `PeakMaxProjectedCosineScoreCalc` |
+
+Library agreement takes each extracted fragment's correlation with the sum of the others over the
+peak, calls those above 0.5 co-eluting, and compares their apex +/- 1 intensities with the library:
+the cosine over the co-eluting fragments, the spectral entropy similarity over all of them, and
+the share of library intensity that co-elutes. Spectrum match scores the library fragments against
+one spectrum, at the apex and as the maximum over the peak's scans: `-log10` of the
+Poisson-binomial chance of that many matches, each fragment's chance from the local centroid
+density; EncyclopeDIA's projected square-root cosine; and X!Tandem's b/y hyperscore (apex only).
+
+At 0.4 Th nearly every fragment window holds a peak, so counting matches says nothing. On Stellar
+the match probability alone finds 52-112 precursors at q 1%, against xcorr's 12,812, and the
+families add nothing measurable to the classifier. So at unit resolution they are masked and
+unrecorded (`PinFeatureMask.IsAvailable`): `Program` hands the resolved mode to
+`PinFeatureMask.ApplyResolutionMode`, the FDR vectors and the scores parquet then have no column
+for them (see "Absent, not zero" for why that differs from a column of zeros under gbdt), and
+`OSPREY_FEATURE_MASK=none` or `OSPREY_RECORD_ALL_FEATURES=1` give the output they would give if
+the families did not exist; a logged line says so when the mask left one unmasked. The
+calculators also score 0 there themselves (`context.Config.ResolutionMode`), for a scorer that
+computes every feature.
+
+On one SEA-AD Astral run (A10_014, gbdt, seed 1, the rest of the mask off), first-pass precursors at
+FDP 0.5%: without either family 57,340; with library agreement 58,101; with both 58,681.
+
 #### The XIC count (`OSPREY_XIC_FRAGMENTS`)
 
 How many of a candidate's most intense library fragments the search extracts XICs for: a whole
