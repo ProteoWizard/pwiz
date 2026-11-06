@@ -26,9 +26,9 @@ using pwiz.CarafeSharp.Models;
 namespace pwiz.CarafeSharp.Test
 {
     /// <summary>
-    /// The CUDA allocator settings a GPU request gives libtorch, read from the C runtime's environment as libtorch reads
-    /// them. Needs no GPU: the settings are made directly, from a clean environment that is restored afterwards, since
-    /// other tests' GPU requests set them in this process.
+    /// The settings CarafeSharp gives libtorch for the GPU, made and checked without one. The CUDA allocator settings are
+    /// read from the C runtime's environment as libtorch reads them, from a clean environment that is restored
+    /// afterwards, since other tests' GPU requests set them in this process.
     /// </summary>
     [TestClass]
     public class TorchDeviceTest
@@ -90,6 +90,31 @@ namespace pwiz.CarafeSharp.Test
                     Environment.SetEnvironmentVariable(pair.Key, pair.Value.DotNet);
                 }
             }
+        }
+
+        /// <summary>
+        /// The libtorch functions <see cref="LibTorchContext"/> finds by their C++ names are in the torch_cpu that
+        /// LibTorch.props pins, which both the CPU and the CUDA build carry, and the setting reads back as set. A
+        /// libtorch upgrade that renamed them would leave GPU fine-tuning non-repeatable with only a warning.
+        /// </summary>
+        [TestMethod]
+        public void TestLibTorchContextResolves()
+        {
+            // Any tensor makes TorchSharp load libtorch.
+            TorchSharp.torch.zeros(1).Dispose();
+            var context = LibTorchContext.TryOpen(out string problem);
+            Assert.IsNotNull(context, problem);
+            bool before = context.DeterministicCuDnn;
+            try
+            {
+                context.DeterministicCuDnn = !before;
+                Assert.AreEqual(!before, context.DeterministicCuDnn);
+            }
+            finally
+            {
+                context.DeterministicCuDnn = before;
+            }
+            Assert.AreEqual(before, context.DeterministicCuDnn);
         }
 
         private static void ClearAllocatorSettings()
