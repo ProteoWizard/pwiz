@@ -75,12 +75,11 @@ namespace CommonTest
             {
                 // Segment 1/4 (read): a reporter inside the scope feeds the slice.
                 file.BeginSegment();
-                using (var reader = new ProgressReporter("Reading fileA", 100))
+                ProgressReporter.Run("Reading fileA", 100, reader =>
                 {
                     reader.Report(50);                 // (0*100 + 50) / 4 = 12
                     percents.Add(file.Slot.Percent);
-                    reader.Complete();                 // Banks the segment at 100 -> 25
-                }
+                });                                    // Completing banks the segment at 100 -> 25
                 percents.Add(file.Slot.Percent);
                 // Segment 2/4 (calibrate): no reporter - BeginSegment alone carries
                 // the file to the slice boundary (50%) when segment 3 opens.
@@ -143,7 +142,7 @@ namespace CommonTest
             var capture = new StringWriter();
             CommandOutput.Out = capture;
             AssertEx.IsNull(MultiProgressReporter.Current, "no per-file scope should be active outside BeginFile");
-            using (var progress = new ProgressReporter("Standalone", 100, string.Empty, 0.0))
+            using (var progress = ProgressReporter.Begin("Standalone", 100, string.Empty, 0.0))
                 progress.Report(50);
             string output = capture.ToString();
             AssertEx.Contains(output, Heading("Standalone"));

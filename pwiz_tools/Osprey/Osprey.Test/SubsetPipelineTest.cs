@@ -87,14 +87,18 @@ namespace pwiz.Osprey.Test
         private const double MAX_NEWLY_DETECTED_FRACTION = 0.15;
         // The library-decoy variant reports about 150.
         private const int MIN_LIBDECOY_PRECURSORS = 100;
-        // The Astral subset reports about 164.
+        // The Astral subset reports about 144.
         private const int MIN_ASTRAL_PRECURSORS = 120;
         // A .blib of the subset library reports within a few precursors of the .tsv it came from
         // (the .blib stores intensities as float and its peaks are typed from m/z).
         private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
-        // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
-        // Stellar floor would leave one precursor of headroom.
-        private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
+        // The Astral subset recovers about 141 of the 203 its full run detected (69%). It was
+        // 164 (81%) before the second pass competed the protein stratum's complement against
+        // its own decoys (issue #4581): each subset file's complement holds only 25-28 targets
+        // at a 1% first-pass q, and no decoy winners, so its conservative q (at least 1/28) keeps
+        // none of them at 1%. The full-run reference was itself made with the complement pooled
+        // into the stratum.
+        private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.6;
 
         private static readonly string[] RUN_NAMES =
         {

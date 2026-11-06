@@ -43,16 +43,22 @@ namespace pwiz.Common.SystemUtil
     /// not in finer-grained progress).
     ///
     /// Writes to the process-wide <see cref="CommandOutput.Out"/> seam. Thread-safe: callers in
-    /// parallel loops may call <see cref="Report"/> concurrently. Use with <c>using</c> so the
-    /// scope is visible, and end the success path with <see cref="Complete"/>: success is
-    /// declared, not inferred, so a step that throws or returns early never logs completion.
+    /// parallel loops may call <see cref="Report"/> concurrently. Run a step through
+    /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
+    /// (or <see cref="Run{T}"/> when it produces a value): the wrapper prints the
+    /// heading, runs the body, and closes with <see cref="Complete"/> only when the body returns,
+    /// so a step that throws never logs completion and no success path can forget to declare it.
+    /// An early <c>return</c> from the body is a success like any other.
     /// <code>
-    /// using (var p = new ProgressReporter("Scoring isolation windows", windows.Count))
+    /// ProgressReporter.Run("Scoring isolation windows", windows.Count, p =>
     /// {
     ///     Parallel.For(0, windows.Count, i => { /* ... */ p.Report(Interlocked.Increment(ref done)); });
-    ///     p.Complete();
-    /// }
+    /// });
     /// </code>
+    /// A lambda cannot <c>yield</c>, and cannot capture an outer <c>ref</c> local, <c>ref</c> or
+    /// <c>out</c> parameter or <see cref="Span{T}"/> (it may declare its own); copy such a value to
+    /// an ordinary local, return it through <see cref="Run{T}"/>, or move the code into a method
+    /// the body calls. An iterator that yields inside its step opens it with <see cref="Begin"/>.
     /// </summary>
     public sealed class ProgressReporter : IDisposable
     {
@@ -101,6 +107,98 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public const double MIN_PERCENT_SECONDS = 1.0;
 
+        /// <summary>
+        /// Run one progress-reported step: print the "&lt;activity&gt;..." heading, run
+        /// <paramref name="body"/> with the reporter, and declare success with
+        /// <see cref="Complete"/> when the body returns. There is no <c>catch</c>: an exception
+        /// skips <see cref="Complete"/>, so a failed step ends without a completion line, and
+        /// propagates unchanged.
+        /// <para><paramref name="activity"/> is the heading text, printed first (without the
+        /// trailing "..."); <paramref name="total"/> the number of units the body reports against
+        /// (a <see cref="long"/>, so byte and row counts on Astral-class data cannot overflow);
+        /// <paramref name="indent"/> leading whitespace for the heading (null for none), with the
+        /// percent lines one level (2 spaces) deeper; <paramref name="intervalSeconds"/> the minimum
+        /// seconds between percent lines; <paramref name="heartbeatSeconds"/> the idle threshold
+        /// of the frozen-percent heartbeat (<see cref="HEARTBEAT_SECONDS"/>); and
+        /// <paramref name="minPercentSeconds"/> the run time before a step that showed no percent
+        /// also closes with 100% (<see cref="MIN_PERCENT_SECONDS"/>). The wrappers and
+        /// <see cref="Begin"/> take the same parameters.</para>
+        /// </summary>
+        public static void Run(string activity, long total, Action<ProgressReporter> body, string indent = null,
+            double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
+            double minPercentSeconds = MIN_PERCENT_SECONDS)
+        {
+            TryRun(activity, total, progress =>
+            {
+                body(progress);
+                return true;
+            }, indent, intervalSeconds, heartbeatSeconds, minPercentSeconds);
+        }
+
+        /// <summary>
+        /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
+        /// for a step that produces a value: returns what
+        /// <paramref name="body"/> returns, after declaring the step complete.
+        ///
+        /// <para>Refuses <c>bool</c>: a bool-returning body has the same shape as a
+        /// <see cref="TryRun"/> body, and passed here by mistake it would declare a failed step
+        /// complete. A success flag goes through <see cref="TryRun"/>.</para>
+        /// </summary>
+        public static T Run<T>(string activity, long total, Func<ProgressReporter, T> body, string indent = null,
+            double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
+            double minPercentSeconds = MIN_PERCENT_SECONDS)
+        {
+            if (typeof(T) == typeof(bool))
+                throw new InvalidOperationException(@"ProgressReporter.Run<bool> would declare a failed step complete; use TryRun for a body that returns success.");
+            T result = default;
+            TryRun(activity, total, progress =>
+            {
+                result = body(progress);
+                return true;
+            }, indent, intervalSeconds, heartbeatSeconds, minPercentSeconds);
+            return result;
+        }
+
+        /// <summary>
+        /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
+        /// for a step that can fail without throwing - one that reports its error and returns
+        /// false. The step is declared complete only when <paramref name="body"/> returns true,
+        /// so a failure reported that way ends without a completion line, as a throw does.
+        /// Returns what the body returned.
+        /// </summary>
+        public static bool TryRun(string activity, long total, Func<ProgressReporter, bool> body, string indent = null,
+            double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
+            double minPercentSeconds = MIN_PERCENT_SECONDS)
+        {
+            using (var progress = new ProgressReporter(activity, total, indent, intervalSeconds, heartbeatSeconds, minPercentSeconds))
+            {
+                bool succeeded = body(progress);
+                if (succeeded)
+                    progress.Complete();
+                return succeeded;
+            }
+        }
+
+        /// <summary>
+        /// Open a progress-reported step whose body cannot be a lambda - an iterator that
+        /// <c>yield</c>s inside the step. Prints the "&lt;activity&gt;..." heading now and returns a
+        /// <see cref="Scope"/> for a <c>using</c> block. The body calls
+        /// <see cref="Scope.MarkComplete"/> as the last statement of its success path, and the step
+        /// is declared complete when the scope is disposed, only if that happened: an exception, or
+        /// an iterator its consumer abandoned, disposes the scope unmarked and the step ends without
+        /// a completion line. Prefer
+        /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>
+        /// wherever the body can be a lambda, since there success cannot be left undeclared.
+        /// Parameters as for
+        /// <see cref="Run(string, long, Action{ProgressReporter}, string, double, double, double)"/>.
+        /// </summary>
+        public static Scope Begin(string activity, long total, string indent = null,
+            double intervalSeconds = 1.0, double heartbeatSeconds = HEARTBEAT_SECONDS,
+            double minPercentSeconds = MIN_PERCENT_SECONDS)
+        {
+            return new Scope(new ProgressReporter(activity, total, indent, intervalSeconds, heartbeatSeconds, minPercentSeconds));
+        }
+
         private readonly long _total;
         private readonly string _indent;
         private readonly double _intervalSeconds;
@@ -121,6 +219,10 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Start a reporter for an <paramref name="activity"/> spanning <paramref name="total"/>
         /// units, printing the "&lt;activity&gt;..." heading immediately.
+        ///
+        /// <para>Private: a reporter is created only by the Run wrappers and <see cref="Begin"/>,
+        /// which decide completion from how the step ended, so no caller can construct one and
+        /// forget to declare its success.</para>
         /// </summary>
         /// <param name="activity">Heading text printed on construction (without the trailing "...").</param>
         /// <param name="total">Total number of units; percent is reported as current/total. A
@@ -135,7 +237,7 @@ namespace pwiz.Common.SystemUtil
         /// (see <see cref="HEARTBEAT_SECONDS"/>). Injectable so tests can trip it quickly.</param>
         /// <param name="minPercentSeconds">Minimum run time before the closing 100% is printed
         /// for a step that showed no percent (see <see cref="MIN_PERCENT_SECONDS"/>).</param>
-        public ProgressReporter(string activity, long total, string indent = null, double intervalSeconds = 1.0,
+        private ProgressReporter(string activity, long total, string indent = null, double intervalSeconds = 1.0,
             double heartbeatSeconds = HEARTBEAT_SECONDS, double minPercentSeconds = MIN_PERCENT_SECONDS)
         {
             _total = total;
@@ -215,12 +317,22 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Declare that the step succeeded, and close it with 100% unless it already showed it
-        /// or finished inside <see cref="MIN_PERCENT_SECONDS"/>. Call it as the last statement
-        /// of the success path; a step that throws or returns early without calling it ends with
-        /// no completion line. Calling it more than once has no further effect.
+        /// Close the scope. Prints nothing: only <see cref="Complete"/> can say the step
+        /// succeeded, because Dispose runs the same way whether the scope finished, threw or
+        /// returned early, and forcing 100% here made a failed step log completion (#4583).
         /// </summary>
-        public void Complete()
+        public void Dispose()
+        {
+        }
+
+        /// <summary>
+        /// Declare that the step succeeded, and close it with 100% unless it already showed it
+        /// or finished inside <see cref="MIN_PERCENT_SECONDS"/>. Private: the Run wrappers call it
+        /// when their body succeeds, and a <see cref="Scope"/> when it is disposed after
+        /// <see cref="Scope.MarkComplete"/>; a step that ends without it has no completion line.
+        /// Calling it more than once has no further effect.
+        /// </summary>
+        private void Complete()
         {
             lock (_lock)
             {
@@ -248,15 +360,6 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Close the scope. Prints nothing: only <see cref="Complete"/> can say the step
-        /// succeeded, because Dispose runs the same way whether the scope finished, threw or
-        /// returned early, and forcing 100% here made a failed step log completion (#4583).
-        /// </summary>
-        public void Dispose()
-        {
-        }
-
-        /// <summary>
         /// Compact elapsed-time formatting for the heartbeat line: "45s", "2m03s", "1h05m".
         /// </summary>
         private static string FormatElapsed(TimeSpan elapsed)
@@ -266,6 +369,47 @@ namespace pwiz.Common.SystemUtil
             if (elapsed.TotalMinutes >= 1)
                 return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_m_1_00_s, (int)elapsed.TotalMinutes, elapsed.Seconds);
             return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_s, (int)elapsed.TotalSeconds);
+        }
+
+        /// <summary>
+        /// The handle <see cref="Begin"/> returns: the step's reporter, completed on
+        /// <see cref="Dispose"/> only when <see cref="MarkComplete"/> was called first.
+        /// </summary>
+        public sealed class Scope : IDisposable
+        {
+            private readonly ProgressReporter _progress;
+            private bool _succeeded;
+
+            internal Scope(ProgressReporter progress)
+            {
+                _progress = progress;
+            }
+
+            /// <summary>As <see cref="ProgressReporter.Report"/>.</summary>
+            public void Report(long current)
+            {
+                _progress.Report(current);
+            }
+
+            /// <summary>
+            /// Declare that the step succeeded. Prints nothing itself: the completion line is
+            /// written when the scope is disposed, at the same point in the log a Run wrapper
+            /// writes it.
+            /// </summary>
+            public void MarkComplete()
+            {
+                _succeeded = true;
+            }
+
+            /// <summary>
+            /// Close the step, declaring it complete only if <see cref="MarkComplete"/> was called.
+            /// </summary>
+            public void Dispose()
+            {
+                if (_succeeded)
+                    _progress.Complete();
+                _progress.Dispose();
+            }
         }
     }
 }

@@ -1019,11 +1019,10 @@ namespace pwiz.Osprey.IO
         {
             using (var saver = new SimpleFileSaver(path))
             {
-                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
-                using (var progress = new ProgressReporter(
-                    string.Format(OspreyIOResources.ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks, totalRows), totalRows, string.Empty,
-                    ProgressReporter.IO_INTERVAL_SECONDS))
+                ProgressReporter.Run(
+                    string.Format(OspreyIOResources.ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks, totalRows), totalRows, progress =>
                 {
+                    using var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write);
                     var writer = RunSync(ParquetWriter.CreateAsync(schema, stream, WriteOptions(schema)));
 
                     // Set custom metadata if provided
@@ -1046,8 +1045,7 @@ namespace pwiz.Osprey.IO
                     }
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
-                    progress.Complete();
-                }
+                }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 saver.Commit();
             }
         }
@@ -2051,14 +2049,24 @@ namespace pwiz.Osprey.IO
                         sourceRowCount.ToString(CultureInfo.InvariantCulture);
                 }
 
-                using (var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 // No count in the heading: totalRows is every source row plus the added missing
                 // peaks, and keepIdentities drops most of them, so a count here reads as the
                 // number written and contradicts the "Wrote N" line that follows.
-                using (var progress = progressIndent == null ? null : new ProgressReporter(
-                    OspreyIOResources.ParquetScoreCache_static_Writing_precursor_candidate_peaks, totalRows, progressIndent,
-                    ProgressReporter.IO_INTERVAL_SECONDS))
+                if (progressIndent == null)
                 {
+                    WriteRows(null);
+                }
+                else
+                {
+                    ProgressReporter.Run(OspreyIOResources.ParquetScoreCache_static_Writing_precursor_candidate_peaks, totalRows,
+                        WriteRows, progressIndent, ProgressReporter.IO_INTERVAL_SECONDS);
+                }
+                saver.Commit();
+
+                // The write itself, reporting through progress, or silent when it is null.
+                void WriteRows(ProgressReporter progress)
+                {
+                    using var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write);
                     var writer = RunSync(ParquetWriter.CreateAsync(fields.Schema, writeStream, WriteOptions(fields.Schema)));
                     if (metadata != null && metadata.Count > 0)
                         writer.CustomMetadata = metadata;
@@ -2172,9 +2180,7 @@ namespace pwiz.Osprey.IO
                     nWritten = written;
                     // Writes the footer
                     RunSync(writer.DisposeAsync());
-                    progress?.Complete();
                 }
-                saver.Commit();
             }
 
             // Overlay indices that never matched a streamed row lie past the original's
