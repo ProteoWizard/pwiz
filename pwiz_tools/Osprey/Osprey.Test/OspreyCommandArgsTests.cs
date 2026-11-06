@@ -638,6 +638,9 @@ namespace pwiz.Osprey.Test
                 // Developer options and outputs a user of a host's settings page has no use for
                 OspreyArgNames.DECOY_PAIRING_MANIFEST, OspreyArgNames.TRAINING_EXPORT, @"training-export-claimant-q",
                 @"training-export-xics", @"perf-stats",
+                // Centrix's centroiding options, kept off a host's settings page for now
+                OspreyArgNames.CENTROID, OspreyArgNames.CENTRIX_SIGMA_MS1, OspreyArgNames.CENTRIX_SIGMA_MS2,
+                OspreyArgNames.CENTRIX_SOLVER,
                 // CarafeSharp's, hosted: the training seed
                 CarafeCommandLine.ARG_SEED.Name,
             };

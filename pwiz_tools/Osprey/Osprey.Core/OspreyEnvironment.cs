@@ -335,6 +335,82 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string CrossImplReconciliationOut = ENV_CROSS_IMPL_RECONCILIATION_OUT.Value;
 
+        private static readonly EnvVar ENV_DEMUX_ENGINE = new EnvVar(@"OSPREY_DEMUX_ENGINE", EnvVarGroup.behavior,
+            @"The demultiplexing engine: weighted, msconvert (the overlap demultiplexer, kept to compare against " +
+            @"msconvert) or pwiz (ProteoWizard's own demultiplexer, msconvert's demultiplex filter).")
+            { Values = new[] { @"weighted", @"msconvert", @"pwiz" }, DefaultValue = @"weighted" };
+
+        /// <summary>
+        /// OSPREY_DEMUX_ENGINE: developer override of the <c>--demux</c> engine, weighted (the
+        /// default) | msconvert | pwiz. msconvert runs the overlap demultiplexer, kept to compare against
+        /// msconvert until it is removed; the three variables below apply to it only. pwiz reads a
+        /// multiplexed run through ProteoWizard's own demultiplexer (SpectrumListDemux, msconvert's
+        /// demultiplex filter), for comparing against it. Read each time, so a test can set it
+        /// (<see cref="OverrideVariables"/>).
+        /// </summary>
+        public static string DemuxEngine => ENV_DEMUX_ENGINE.Value;
+
+        private static readonly EnvVar ENV_DEMUX_BLOCK = new EnvVar(@"OSPREY_DEMUX_BLOCK", EnvVarGroup.behavior,
+            @"Block mode of the msconvert demux engine. truncated_slice, with natural_three_point " +
+            @"interpolation, reproduces msconvert's overlap demultiplexer.")
+            { Values = new[] { @"covered_bins", @"truncated_slice" }, DefaultValue = @"covered_bins" };
+
+        private static readonly EnvVar ENV_DEMUX_INTERPOLATION = new EnvVar(@"OSPREY_DEMUX_INTERPOLATION", EnvVarGroup.behavior,
+            @"Retention-time interpolant of the msconvert demux engine: makima, pchip, natural_three_point " +
+            @"or linear.")
+            {
+                // Listed in the description, as the values are too long to show whole on one help line
+                ValueExample = @"<interpolant>", DefaultValue = @"makima",
+                AcceptsValue = v => Array.Exists(DEMUX_INTERPOLANTS, n => string.Equals(n, v.Trim(), StringComparison.OrdinalIgnoreCase))
+            };
+
+        private static readonly string[] DEMUX_INTERPOLANTS = { @"makima", @"pchip", @"natural_three_point", @"linear" };
+
+        private static readonly EnvVar ENV_DEMUX_OUTPUT = new EnvVar(@"OSPREY_DEMUX_OUTPUT", EnvVarGroup.behavior,
+            @"Output of the msconvert demux engine: each observed peak apportioned among its spectrum's " +
+            @"bins, or the solution itself.")
+            { Values = new[] { @"apportioned", @"solution" }, DefaultValue = @"apportioned" };
+
+        /// <summary>
+        /// OSPREY_DEMUX_BLOCK / OSPREY_DEMUX_INTERPOLATION / OSPREY_DEMUX_OUTPUT: developer
+        /// overrides of the msconvert engine's block mode (covered_bins | truncated_slice),
+        /// RT interpolant (makima | pchip | natural_three_point | linear) and output mode
+        /// (apportioned | solution). Setting block and interpolation to truncated_slice and
+        /// natural_three_point reproduces msconvert's overlap demultiplexer, so a difference
+        /// from msconvert can be attributed setting by setting. Deliberately not flags: the
+        /// defaults are the supported configuration. Each value is part of the demux cache
+        /// descriptor, so a cache written under an override is rebuilt without it.
+        /// </summary>
+        public static readonly string DemuxBlockMode = ENV_DEMUX_BLOCK.Value;
+
+        /// <summary>See <see cref="DemuxBlockMode"/>.</summary>
+        public static readonly string DemuxInterpolation = ENV_DEMUX_INTERPOLATION.Value;
+
+        /// <summary>See <see cref="DemuxBlockMode"/>.</summary>
+        public static readonly string DemuxOutputMode = ENV_DEMUX_OUTPUT.Value;
+
+        private static readonly EnvVar ENV_DEMUX_MIN_CHANNEL_IONS = new EnvVar(@"OSPREY_DEMUX_MIN_CHANNEL_IONS", EnvVarGroup.behavior,
+            @"The ions a fragment channel of the weighted demux engine needs over its block to be " +
+            @"demultiplexed rather than split evenly among its bins.")
+            { ValueExample = @"<x>", DefaultValue = @"8" };
+
+        private static readonly EnvVar ENV_DEMUX_COUNTS_PER_ION = new EnvVar(@"OSPREY_DEMUX_COUNTS_PER_ION", EnvVarGroup.behavior,
+            @"A fixed intensity per ion for the weighted demux engine's ion counts, in place of each " +
+            @"spectrum's fill time and analyzer.")
+            { ValueExample = @"<x>" };
+
+        /// <summary>
+        /// OSPREY_DEMUX_MIN_CHANNEL_IONS / OSPREY_DEMUX_COUNTS_PER_ION: developer overrides of the
+        /// weighted engine's channel threshold (the ions a fragment channel needs over its block to
+        /// be demultiplexed rather than split evenly among its bins; 8 by default) and of how it
+        /// counts ions (a fixed intensity per ion instead of each spectrum's fill time and analyzer).
+        /// For measuring their effect on a search; each is part of the demux cache descriptor.
+        /// </summary>
+        public static readonly string DemuxMinChannelIons = ENV_DEMUX_MIN_CHANNEL_IONS.Value;
+
+        /// <summary>See <see cref="DemuxMinChannelIons"/>.</summary>
+        public static readonly string DemuxCountsPerIon = ENV_DEMUX_COUNTS_PER_ION.Value;
+
         private static readonly EnvVar ENV_DROP_BETWEEN_TASKS = new EnvVar(@"OSPREY_DROP_BETWEEN_TASKS", EnvVarGroup.performance,
             @"Make each task release everything but the library when it finishes, so the next one reloads " +
             @"what it needs from disk, as an HPC chain does.");
