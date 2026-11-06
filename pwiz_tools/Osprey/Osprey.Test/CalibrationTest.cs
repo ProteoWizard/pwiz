@@ -535,6 +535,11 @@ namespace pwiz.Osprey.Test
             foreach (double mz in new[] { 300.0, 700.0, 1100.0 })
                 Assert.AreEqual(farOffset, curve.OffsetAt(mz), 0.03, string.Format("M+1 case, offset at m/z {0}", mz));
 
+            AssertOffsetCurveApplication();
+            AssertOffsetCurveGate();
+            AssertOffsetCurvePositiveOffset();
+            AssertOffsetCurveReassociation();
+
             // The experimental ppm curve (OSPREY_MS2_CAL_CURVE_PPM): offsets in ppm, +4 ppm at m/z 200
             // falling to -3 ppm at 1200 with 1.5 ppm scatter, searched at 10 ppm. No M+1 check, and the
             // curve whatever the shift.
@@ -563,6 +568,87 @@ namespace pwiz.Osprey.Test
             // Applied in ppm: the observed m/z less the curve's ppm of it.
             double observedPpm = 1000.0 * (1 + ppmOffset(1000.0) / 1e6);
             Assert.AreEqual(1000.0, MzCalibration.ApplyCalibration(observedPpm, curve), 1000.0 * 0.5e-6);
+        }
+
+        /// <summary>
+        /// <see cref="MzCalibrationResult.OffsetAt"/>: exact at the knots, linear between them, and held at
+        /// the end values past them, where extrapolating a slope fitted at the edge of the fragments would
+        /// grow without bound. Without a curve, the mean at every m/z.
+        /// </summary>
+        private static void AssertOffsetCurveApplication()
+        {
+            var curve = new MzCalibrationResult
+            {
+                Mean = 9.0,
+                Unit = MzCalibration.UNIT_TH,
+                Calibrated = true,
+                OffsetCurveMz = new[] { 200.0, 400.0, 600.0 },
+                OffsetCurve = new[] { -0.5, -0.7, -0.3 }
+            };
+            Assert.AreEqual(-0.5, curve.OffsetAt(100.0), TOLERANCE);
+            Assert.AreEqual(-0.5, curve.OffsetAt(200.0), TOLERANCE);
+            Assert.AreEqual(-0.6, curve.OffsetAt(300.0), TOLERANCE);
+            Assert.AreEqual(-0.7, curve.OffsetAt(400.0), TOLERANCE);
+            Assert.AreEqual(-0.5, curve.OffsetAt(500.0), TOLERANCE);
+            Assert.AreEqual(-0.3, curve.OffsetAt(600.0), TOLERANCE);
+            Assert.AreEqual(-0.3, curve.OffsetAt(2000.0), TOLERANCE);
+            Assert.AreEqual(800.3, MzCalibration.ApplyCalibration(800.0, curve), TOLERANCE);
+            Assert.AreEqual(9.0, new MzCalibrationResult { Mean = 9.0 }.OffsetAt(300.0), TOLERANCE);
+        }
+
+        /// <summary>
+        /// The curve applies only to a shift beyond half the fragment tolerance, on either side of zero:
+        /// 0.05 Th inside the 0.25 Th of a 0.5 Th tolerance the mean is kept, and 0.05 Th outside it the
+        /// curve is used.
+        /// </summary>
+        private static void AssertOffsetCurveGate()
+        {
+            const double fragmentTolerance = 0.5;
+            foreach (double offset in new[] { -0.20, 0.20 })
+            {
+                var inside = SyntheticIonTrapFragments(3000, new Random(31), _ => offset);
+                Assert.IsNull(Ms2OffsetCurve.Calculate(inside, fragmentTolerance, out double shift), string.Format("offset {0}", offset));
+                Assert.AreEqual(offset, shift, 0.03);
+            }
+            foreach (double offset in new[] { -0.30, 0.30 })
+            {
+                var outside = SyntheticIonTrapFragments(3000, new Random(31), _ => offset);
+                var curve = Ms2OffsetCurve.Calculate(outside, fragmentTolerance, out double shift);
+                Assert.IsNotNull(curve, string.Format("offset {0}", offset));
+                Assert.AreEqual(offset, shift, 0.03);
+                Assert.AreEqual(offset, curve.OffsetAt(700.0), 0.03);
+            }
+        }
+
+        /// <summary>
+        /// An offset above the library m/z, with its M+1 past the scan range and no isotope below it to
+        /// step to: the shift stays on the monoisotopic peak, and the curve follows it.
+        /// </summary>
+        private static void AssertOffsetCurvePositiveOffset()
+        {
+            const double offset = 0.70;
+            var fragments = SyntheticIonTrapFragments(3000, new Random(37), _ => offset);
+            var curve = Ms2OffsetCurve.Calculate(fragments, 0.5, out double shift);
+            Assert.IsNotNull(curve);
+            Assert.AreEqual(offset, shift, 0.03);
+            foreach (double mz in new[] { 300.0, 700.0, 1100.0 })
+                Assert.AreEqual(offset, curve.OffsetAt(mz), 0.03, string.Format("positive offset at m/z {0}", mz));
+        }
+
+        /// <summary>
+        /// The second association, about the fitted curve rather than the one shift: an offset that moves
+        /// 0.85 Th across the fragments' m/z, with the shift off center, sits past the association window
+        /// at the high end, where the first association takes the M+1 for many of the real peaks (the
+        /// first fit alone is 0.17 Th off at m/z 1150). Only about the curve is that end right.
+        /// </summary>
+        private static void AssertOffsetCurveReassociation()
+        {
+            Func<double, double> steep = mz => -0.65 - 0.85 * (mz - 700.0) / 1000.0;
+            var fragments = SyntheticIonTrapFragments(6000, new Random(41), steep);
+            var curve = Ms2OffsetCurve.Calculate(fragments, 0.5, out _);
+            Assert.IsNotNull(curve);
+            foreach (double mz in new[] { 250.0, 700.0, 1150.0 })
+                Assert.AreEqual(steep(mz), curve.OffsetAt(mz), 0.03, string.Format("steep offset at m/z {0}", mz));
         }
 
         /// <summary>The offset the synthetic ion trap fragments are drawn about: -0.40 Th at m/z 200 to -0.55 Th above 600.</summary>
