@@ -401,7 +401,20 @@ m/z: linear between the knots, held flat past the ends. In ppm the subtraction i
   line that the mean is kept.
 - **Cost**: the peaks around each target match's fragments are held until aggregation, about
   100-150 MB transient per file; each LOESS fit costs about 0.4 s CPU (n=15,572 fragments on a
-  Stellar run), about 1.5 s a file.
+  Stellar run), about 1.5 s a file. That holds for the first 100,000-target attempt. A large offset
+  leaves few confident matches, so the retry ladder often reaches all targets, and the peaks of
+  every one are held: on the 2024 Stellar file shifted -0.65 Th with a 484,208-target library, peak
+  working set was 5.97 GB against 4.51 GB under `OSPREY_MS2_CAL_MEAN=1` at 8 threads, and
+  calibration took about 4 minutes instead of under one.
+- **Discovery limit**: the calibration's matches are still found within the uncorrected tolerance,
+  so an offset as wide as the tolerance is found only through what remains inside it. Below the
+  library m/z the M+1 moves into the window: the same file shifted -0.65 Th calibrates from 40, 143,
+  then 246 peptides over the three attempts, and reports 94% of the unshifted precursors at the same
+  entrapment FDP. Above it no isotope does: shifted +0.5 Th it finds 87 peptides, and shifted +0.75 Th
+  it finds 2, the calibration fails, and the search ends with no precursor passing the first pass.
+- **Steep curves**: association starts from one shift, so an offset moving by about 1 Th or more
+  across the fragments' m/z can latch onto the M+1 over part of the range, unflagged. Measured
+  offsets move about 0.2 Th.
 
 ### The ppm curve (experimental, `OSPREY_MS2_CAL_CURVE_PPM=1`)
 
