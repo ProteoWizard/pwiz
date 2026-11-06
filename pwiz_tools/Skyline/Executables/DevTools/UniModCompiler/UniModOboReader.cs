@@ -30,7 +30,8 @@ namespace UniModCompiler
 {
     /// <summary>
     /// Reads pwiz/data/common/unimod.obo, the UniMod snapshot the rest of ProteoWizard uses,
-    /// into the same <see cref="mod_t"/> objects the compiler once deserialized from unimod.xml.
+    /// into the same <see cref="mod_t"/> objects the compiler once deserialized from the retired
+    /// unimod.xml (replaced by unimod.obo in #4990/#4991).
     /// The obo carries everything the compiler needs except two things unimod.xml spelled out:
     /// the atoms of the composition "bricks" (Hex, HexNAc, ...) and the element order UniMod
     /// uses when it expands a composition. Both are fixed UniMod definitions, held below.
@@ -38,9 +39,9 @@ namespace UniModCompiler
     public static class UniModOboReader
     {
         /// <summary>
-        /// UniMod's element table order (the umod:elements list of unimod.xml). An expanded
-        /// composition lists its atoms in this order, which is the order the generated formulas
-        /// keep.
+        /// UniMod's element table order (the umod:elements list of the retired unimod.xml). An
+        /// expanded composition lists its atoms in this order, which is the order the generated
+        /// formulas keep.
         /// </summary>
         private static readonly string[] ELEMENT_ORDER =
         {
@@ -51,7 +52,7 @@ namespace UniModCompiler
 
         /// <summary>
         /// UniMod's composition bricks that are not single elements (the umod:mod_bricks list of
-        /// unimod.xml).
+        /// the retired unimod.xml).
         /// </summary>
         private static readonly Dictionary<string, string> BRICKS = new Dictionary<string, string>
         {
@@ -220,7 +221,7 @@ namespace UniModCompiler
 
         /// <summary>
         /// Expands a UniMod composition ("H(-1) C(2) Hex(2)") into its atoms, summed per element
-        /// and listed in UniMod's element order, as unimod.xml lists them.
+        /// and listed in UniMod's element order, as the retired unimod.xml listed them.
         /// </summary>
         public static elem_ref_t[] ParseComposition(string composition)
         {
