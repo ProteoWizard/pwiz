@@ -496,7 +496,7 @@ namespace pwiz.Osprey.Tasks
             // whose consumer threw, did not finish, and its log must not say it did.
             using (var progress = label == null
                        ? null
-                       : new ProgressReporter(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
+                       : ProgressReporter.Begin(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
                            FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;
@@ -523,7 +523,7 @@ namespace pwiz.Osprey.Tasks
                         kv.Value.TrimExcess();
                         consumed++;
                     }
-                    progress?.Complete();
+                    progress?.MarkComplete();
                 }
                 finally
                 {
