@@ -1756,7 +1756,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values..
+        ///   Looks up a localized string similar to Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections, and separately for the other candidates, each against its own decoys..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__recomputing_q_values_for__1__precursor_candidates_from_proteins_with_2_ {
             get {
@@ -1776,7 +1776,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values..
+        ///   Looks up a localized string similar to Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections, and separately for the other candidates, each against its own decoys..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_ {
             get {

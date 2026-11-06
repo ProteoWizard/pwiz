@@ -581,13 +581,13 @@
     <value>Second-pass FDR: no input file matches '{0}', so its second-pass intermediate file cannot be written.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__recomputing_q_values_for__1__precursor_candidates_from_proteins_with_2_" xml:space="preserve">
-    <value>Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values.</value>
+    <value>Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections, and separately for the other candidates, each against its own decoys.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__the_saved_first_pass_model_cannot_be_used_" xml:space="preserve">
     <value>Second-pass FDR: the saved first-pass model cannot be used.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_" xml:space="preserve">
-    <value>Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values.</value>
+    <value>Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections, and separately for the other candidates, each against its own decoys.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_experiment_level_q_values_could_not_be_written_for__0__files____1____Stopping_" xml:space="preserve">
     <value>Second-pass experiment-level q-values could not be written for {0:N0} files: [{1}]. Stopping, because protein FDR would otherwise read values that are not second-pass values.</value>

@@ -307,6 +307,8 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                // The fold now gives the stratum's complement its own experiment q.
+                + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 // The fold-versus-resident term is GONE with OSPREY_STAGE7_STREAM (2026-09-10):
                 // it distinguished two arms an operator could pick between, and only one arm
@@ -615,8 +617,8 @@ namespace pwiz.Osprey.Tasks
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
             // The protein-compact stratum splits the pass-2 acceptance boundary in two (#4573):
-            // in-stratum entries were re-competed, off-stratum ones carry pass-1 q and aggregate
-            // forward. Absent outside protein-compact, which leaves the panel on one boundary.
+            // the stratum and its complement are separate competitions (#4581). Absent outside
+            // protein-compact, which leaves the panel on one boundary.
             if (config.ModelDiagnostics)
             {
                 HashSet<uint> stratumBaseIds = null;

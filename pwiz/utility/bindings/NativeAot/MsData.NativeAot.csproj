@@ -39,4 +39,22 @@
     <ProjectReference Include="..\..\..\data\msdata\MsData.csproj" />
   </ItemGroup>
 
+  <!-- PublishAot makes the SDK add an implicit Microsoft.DotNet.ILCompiler reference at the
+       version it bundles, and every 10.0 SDK released before the fix (any of them can satisfy
+       global.json through rollForward) bundles one covered by GHSA-p3jp-9v83-76w9
+       (CVE-2026-111497, Brotli decoder out-of-bounds write; published 2026-11-03, fixed in
+       10.0.14). NuGet audit reports it as NU1903 on every restore. The SDK takes that version,
+       the ILCompiler host pack version and the NativeAOT runtime pack version all from this
+       item, so overriding it here moves the three together. An explicit PackageReference to
+       Microsoft.DotNet.ILCompiler silences NU1903 too, but restore still downloads the runtime
+       pack at the bundled version and a win-x64 publish then fails ("The PrivateSdkAssemblies
+       ItemGroup is required"). The override only raises net10.0 versions below 10.0.14, so an
+       SDK that bundles a later ILCompiler keeps its own. Remove it once global.json moves to
+       an SDK that bundles ILCompiler 10.0.14 or later. -->
+  <ItemGroup>
+    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
+      <ILCompilerPackVersion Condition="'%(TargetFramework)' == 'net10.0' and $([MSBuild]::VersionLessThan('%(ILCompilerPackVersion)', '10.0.14'))">10.0.14</ILCompilerPackVersion>
+    </KnownILCompilerPack>
+  </ItemGroup>
+
 </Project>

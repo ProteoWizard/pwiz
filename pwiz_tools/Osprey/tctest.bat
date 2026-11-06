@@ -36,9 +36,10 @@ REM regression-parallel.ps1 sizes threads per lane from the agent's logical
 REM processor count, so this is correct on a 16-logical agent and on a 32-logical
 REM dev box without a per-machine setting here.
 REM
-REM Then CarafeSharp's nightly checks (pwiz_tools/CarafeSharp/tcregression.ps1): its tests with
-REM the test data, the full Stellar fine-tune against its golden, and the chained leg, which
-REM reuses the Osprey build above. They run even when Osprey's regression failed.
+REM Then CarafeSharp's nightly checks (pwiz_tools/CarafeSharp/tcregression.ps1): the full Stellar
+REM fine-tune against its golden and the StellarSubset repeat. Its full-size Carafe parity
+REM comparisons are developer-run (scripts/Compare-CarafeParity.ps1), not run here. These nightly
+REM checks run even when Osprey's regression failed.
 setlocal
 pwsh -NoProfile -File "%~dp0regression-parallel.ps1" -TeamCity -Dataset All
 set OSPREYDEV_EXIT=%ERRORLEVEL%
