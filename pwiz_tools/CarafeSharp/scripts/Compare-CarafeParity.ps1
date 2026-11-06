@@ -115,8 +115,8 @@ if ($Torch -eq 'cuda' -and (Get-Command nvidia-smi -ErrorAction SilentlyContinue
 if ($Torch -eq 'cuda') {
     # The comparisons keep the GPU outputs here and require the next run to reproduce them bit for
     # bit (GpuParity.cs). Another GPU or driver changes the outputs, so each keeps its own. CarafeSharp turns
-    # TF32 off for prediction itself (TorchDevice.DisableTf32); NVIDIA_TF32_OVERRIDE=0 is not needed, and would
-    # also turn off the TF32 fine-tuning keeps so that it repeats (TorchDevice.AllowTf32ForTraining).
+    # TF32 off for prediction and fine-tuning itself (TorchDevice.DisableTf32), and fine-tuning repeats with
+    # deterministic cuDNN (TorchDevice.DeterministicCuDnn); NVIDIA_TF32_OVERRIDE=0 is not needed.
     $gpuTag = if ($gpu) { '-' + (($gpu.Trim() -replace '[^A-Za-z0-9.]+', '-').Trim('-')) } else { '' }
     $env:CARAFESHARP_PARITY_OUTPUTS = Join-Path $resultsDir "CarafeParity-Outputs-cuda$gpuTag"
 }

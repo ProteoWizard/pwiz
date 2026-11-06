@@ -353,6 +353,8 @@ namespace pwiz.Osprey.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
+                // The worker's competition now gives the stratum's complement its own run q.
+                + OspreyEnvironment.Pass2StrataValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + PinFeatureMask.ValidityKeySuffix()
                 + PinFeatureMask.RescoreValidityKeySuffix()

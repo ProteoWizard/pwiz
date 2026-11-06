@@ -51,8 +51,10 @@ namespace pwiz.Osprey.Test
     /// </summary>
     public partial class SubsetPipelineTest
     {
-        // A tuning run's export keeps at least this many precursors at 1% run FDR (about 100 on
-        // each subset run with the predicted library).
+        // The tuning runs' exports together keep at least this many precursors at 1% run FDR.
+        // A subset run with the predicted library sits near the 100-target floor of a 1%
+        // conservative q, and the second pass competes the protein stratum and its complement
+        // separately, each with its own +1 (issue #4581), so one run can keep none.
         private const int MIN_EXPORTED_PRECURSORS = 50;
         // Inside the subset's one isolation window: every tuning run's meta.json entry must hold it.
         private const double SUBSET_WINDOW_TARGET = 594.5201;
@@ -480,9 +482,9 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(products.TrainingDirectory, Path.GetFileNameWithoutExtension(run) + TrainingExportParquet.EXT);
                 var export = TrainingExport.Read(path);
                 exported += export.Records.Count;
-                Assert.IsTrue(export.Records.Count >= MIN_EXPORTED_PRECURSORS, string.Format(@"{0}: {1} precursors", path, export.Records.Count));
                 Assert.AreEqual(@"2", export.RunQPass, path + @": run q from the per-run second pass");
             }
+            Assert.IsTrue(exported >= MIN_EXPORTED_PRECURSORS, string.Format(@"{0} precursors exported", exported));
             string folder = products.ModelDirectory;
             foreach (string table in new[] { CarafeTrainingDirectory.INTENSITY_FILE, CarafeTrainingDirectory.VALID_FILE, CarafeTrainingDirectory.RT_FILE })
                 Assert.IsTrue(File.ReadLines(Path.Combine(folder, table)).Count() > 1, table);
