@@ -1,6 +1,7 @@
 /*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2014 University of Washington - Seattle, WA
  * 
@@ -22,6 +23,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -1130,6 +1133,7 @@ namespace CommonTest
 
             TestProteinSearchInfoIntersection();
             TestUniprotErrorBody();
+            TestWebServiceRateLimit();
 
             DoTestFastaImport(false, false);  // Run with simulated web access
             DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
@@ -1180,12 +1184,72 @@ namespace CommonTest
                 "A response with no recognizable header is unusable, not an answer of 'no such protein'");
         }
 
+        /// <summary>
+        /// UniProt rate-limits its REST API, answering HTTP 429 with a Retry-After header that says
+        /// how long to stay away. Treating that like any other transient error - retry at once, then
+        /// end the pass for the background loader to reschedule - only meets another 429, and the
+        /// rescheduled passes keep asking for as long as the limit holds. The caller hangs, and the
+        /// requests keep the limit in force.
+        /// </summary>
+        private void TestWebServiceRateLimit()
+        {
+            var retryAfter = TimeSpan.FromSeconds(7);
+
+            // Seam on, as automated tests opt into: give up after a bounded number of refusals,
+            // waiting as asked before each new attempt but not before giving up
+            var abandoned = RunRateLimitedLookup(retryAfter, giveUpOnUnresponsiveWebService: true,
+                out var abandonedCompleted, out var abandonedWaits);
+            Assert.AreEqual(0, abandoned.Count(p => p.GetProteinMetadata().NeedsSearch()),
+                "A rate-limited web service must not leave proteins pending forever");
+            Assert.IsTrue(abandoned.All(p => p.FailureReason == WebSearchFailureReason.rate_limited));
+            Assert.IsTrue(abandoned.All(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
+            Assert.AreEqual(abandoned.Count, abandonedCompleted.Count);
+            Assert.AreEqual(WebEnabledFastaImporter.MAX_CONSECUTIVE_WEBSERVICE_FAILURES - 1, abandonedWaits.Count);
+            Assert.IsTrue(abandonedWaits.All(wait => wait == retryAfter));
+
+            // Seam off, as production runs: the pass ends retry-eligible, but only after waiting as
+            // asked, so the pass the loader schedules next does not ask again while the limit holds
+            var pending = RunRateLimitedLookup(retryAfter, giveUpOnUnresponsiveWebService: false,
+                out var pendingCompleted, out var pendingWaits);
+            Assert.AreEqual(pending.Count, pending.Count(p => p.GetProteinMetadata().NeedsSearch()));
+            Assert.IsTrue(pending.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+            Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.rate_limited));
+            Assert.AreEqual(0, pendingCompleted.Count);
+            Assert.AreEqual(1, pendingWaits.Count);
+            Assert.AreEqual(retryAfter, pendingWaits[0]);
+
+            // A 429 that does not say how long to wait still gets a wait
+            RunRateLimitedLookup(null, giveUpOnUnresponsiveWebService: false, out _, out var defaultWaits);
+            Assert.AreEqual(1, defaultWaits.Count);
+            Assert.AreEqual(WebEnabledFastaImporter.DEFAULT_RATE_LIMIT_DELAY, defaultWaits[0]);
+        }
+
+        private static IList<ProteinSearchInfo> RunRateLimitedLookup(TimeSpan? retryAfter,
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed, out IList<TimeSpan> waits)
+        {
+            var uri = new Uri(@"https://rest.uniprot.org/uniprotkb/search");
+            const string message = @"Response status code does not indicate success: 429 (Too Many Requests).";
+            var tooManyRequests = new NetworkRequestException(message, HttpStatusCode.TooManyRequests, uri,
+                new HttpRequestException(message), retryAfter: retryAfter);
+            using var helper = new HttpClientTestHelper(tooManyRequests);
+
+            var provider = new RateLimitRecordingWebSearchProvider();
+            var proteins = RunUniprotLookup(provider, giveUpOnUnresponsiveWebService, out completed);
+            waits = provider.Waits;
+            return proteins;
+        }
+
         private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
             bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed)
         {
             using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(responseBody);
             Assert.IsNotNull(helper);
+            return RunUniprotLookup(new QuickFailWebSearchProvider(), giveUpOnUnresponsiveWebService, out completed);
+        }
 
+        private static IList<ProteinSearchInfo> RunUniprotLookup(WebEnabledFastaImporter.WebSearchProvider provider,
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed)
+        {
             // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web.
             // UniProt requests start one protein at a time, so only the first reaches the web before
             // the pass ends; the other two are here to show that giving up completes every protein
@@ -1198,7 +1262,7 @@ namespace CommonTest
                         WebEnabledFastaImporter.UNIPROTKB_TAG + accession)), lengths[i]))
                 .ToList();
 
-            var importer = new WebEnabledFastaImporter(new QuickFailWebSearchProvider())
+            var importer = new WebEnabledFastaImporter(provider)
             {
                 GiveUpOnUnresponsiveWebService = giveUpOnUnresponsiveWebService
             };
@@ -1690,6 +1754,19 @@ namespace CommonTest
             public override int WebRetryCount()
             {
                 return 1; // try only once
+            }
+        }
+
+        /// <summary>
+        /// Records each wait a rate limit asks for, instead of sleeping through it.
+        /// </summary>
+        private class RateLimitRecordingWebSearchProvider : QuickFailWebSearchProvider
+        {
+            public List<TimeSpan> Waits { get; } = new List<TimeSpan>();
+
+            public override void WaitForRateLimit(TimeSpan delay, IProgressMonitor progressMonitor)
+            {
+                Waits.Add(delay);
             }
         }
 
