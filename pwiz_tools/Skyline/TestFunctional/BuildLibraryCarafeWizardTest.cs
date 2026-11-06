@@ -434,12 +434,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => buildLibraryDlg.PredictForFastaPath = missingFasta);
             ShowAndDismissMessage(buildLibraryDlg, string.Format(SettingsUIResources.BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_, missingFasta),
                 BuildLibraryDlg.Pages.predict_for);
+            const double entrapmentPercent = 10;
             RunUI(() =>
             {
                 buildLibraryDlg.PredictForFastaPath = fastaPath;
                 buildLibraryDlg.AddDecoys = true;
                 buildLibraryDlg.AddEntrapment = true;
                 AssertEx.IsFalse(buildLibraryDlg.EntrapmentFromFasta);
+                // The percentages start at the user's last values, 10% and 10% to begin with
+                AssertEx.AreEqual(entrapmentPercent, buildLibraryDlg.EntrapmentPercent);
+                AssertEx.AreEqual(entrapmentPercent, buildLibraryDlg.EntrapmentInTargetsPercent);
+                buildLibraryDlg.EntrapmentPercent = EntrapmentPercentControls.MIN_TOTAL_PERCENT / 2;
+                buildLibraryDlg.EntrapmentInTargetsPercent = 0;
+            });
+            // Together the percentages must reach what CarafeSharp builds
+            ShowAndDismissMessage(buildLibraryDlg, string.Format(SettingsUIResources.EntrapmentPercentControls_Validate_The_entrapment_percentages_together_must_be_at_least__0___and_at_most__1___,
+                EntrapmentPercentControls.MIN_TOTAL_PERCENT, EntrapmentPercentControls.MAX_PERCENT), BuildLibraryDlg.Pages.predict_for);
+            RunUI(() =>
+            {
+                buildLibraryDlg.EntrapmentPercent = buildLibraryDlg.EntrapmentInTargetsPercent = entrapmentPercent;
                 buildLibraryDlg.EntrapmentFromFasta = true;
             });
             // Entrapment from a FASTA file needs the file; shuffled from the predicted FASTA's own peptides needs nothing more
@@ -448,6 +461,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 buildLibraryDlg.EntrapmentFromFasta = false;
+                // What CarafeSharp builds with: a tenth of the targets each way, no decoys of its own
+                var entrapmentSettings = buildLibraryDlg.GetEntrapmentSettings(fastaPath);
+                AssertEx.AreEqual(fastaPath, entrapmentSettings.InputFasta);
+                AssertEx.AreEqual(entrapmentPercent / 100, entrapmentSettings.EntrapmentRatio);
+                AssertEx.AreEqual(entrapmentPercent / 100, entrapmentSettings.EntrapmentInTargetsRatio);
+                AssertEx.IsTrue(entrapmentSettings.AddEntrapment);
+                AssertEx.IsFalse(entrapmentSettings.AddDecoys);
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
             });
             RunUI(buildLibraryDlg.OkWizardPage);
@@ -455,11 +475,14 @@ namespace pwiz.SkylineTestFunctional
             var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsFalse(builder.IsTuning);
             // The FASTA's document, not the open one: the same peptides, digested the same way,
-            // then the entrapment peptides, and a decoy for each
+            // then the entrapment peptides, a fifth of the targets or so rather than one per target,
+            // and a decoy for each
             AssertEx.IsFalse(ReferenceEquals(SkylineWindow.Document, builder.Document));
             int targetCount = builder.Document.Peptides.Count(p => !p.IsDecoy);
             int entrapmentCount = builder.EntrapmentTargets.Count;
             AssertEx.IsTrue(entrapmentCount > 0, @"the entrapment FASTA added no peptides");
+            AssertEx.IsTrue(entrapmentCount < SkylineWindow.Document.PeptideCount / 2,
+                string.Format(@"{0} entrapment peptides for {1} targets is not a fifth of them", entrapmentCount, SkylineWindow.Document.PeptideCount));
             AssertEx.AreEqual(SkylineWindow.Document.PeptideCount + entrapmentCount, targetCount);
             AssertEx.AreEqual(targetCount, builder.Document.Peptides.Count(p => p.IsDecoy));
             AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_REVERSE, builder.DecoyMethod);

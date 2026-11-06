@@ -99,8 +99,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
-            // Leave the bottom of the FASTA page to the existing-library alternative.
-            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60, fastaPage.Height - cbUseExistingLibrary.Top + 6);
+            // Leave the bottom of the FASTA page to the entrapment choice and the existing-library alternative.
+            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60, fastaPage.Height - cbAddEntrapment.Top + 6);
+            helpTip.SetToolTip(cbAddEntrapment, SettingsUIResources.BuildLibraryDlg_BuildLibraryDlg_Peptides_not_expected_in_the_sample__flagged_as_entrapment_in_the_library_to_measure_the_false_discovery_rate);
+            EntrapmentPercentControls.Layout(labelEntrapmentPercent, textEntrapmentPercent, labelEntrapmentInTargetsPercent, textEntrapmentInTargetsPercent);
+            EntrapmentPercentControls.SetToolTips(helpTip, textEntrapmentPercent, textEntrapmentInTargetsPercent);
+            EntrapmentPercentControls.LoadSettings(textEntrapmentPercent, textEntrapmentInTargetsPercent);
 
             LibraryModelControl = new OspreyLibraryModelControl
             {
@@ -158,10 +162,59 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateExistingLibraryControls();
         }
 
+        /// <summary>Entrapment belongs to the library Osprey predicts, so an existing library puts the choice out of reach.</summary>
         private void UpdateExistingLibraryControls()
         {
             tbxLibraryPath.Enabled = btnBrowseLibrary.Enabled = UseExistingLibrary;
+            cbAddEntrapment.Enabled = !UseExistingLibrary;
+            UpdateEntrapmentControls();
         }
+
+        /// <summary>
+        /// Whether the predicted library gets entrapment peptides, shuffled from the FASTA's own
+        /// (<c>--entrapment</c>, <c>--entrapment-in-targets</c>), at the percentages the box reveals.
+        /// </summary>
+        public bool AddEntrapment
+        {
+            get => cbAddEntrapment.Checked;
+            set => cbAddEntrapment.Checked = value;
+        }
+
+        /// <summary>
+        /// The percentage of the targets that get an entrapment peptide on an entrapment protein of
+        /// its own, for measuring the true FDR of the search; 10 to begin with.
+        /// </summary>
+        public double EntrapmentPercent
+        {
+            get => EntrapmentPercentControls.GetPercent(textEntrapmentPercent);
+            set => EntrapmentPercentControls.SetPercent(textEntrapmentPercent, value);
+        }
+
+        /// <summary>
+        /// The percentage of the targets that get an entrapment peptide placed on a real target
+        /// protein, so the protein-aware scoring is audited too; 10 to begin with. With
+        /// <see cref="EntrapmentPercent"/> the total entrapment added.
+        /// </summary>
+        public double EntrapmentInTargetsPercent
+        {
+            get => EntrapmentPercentControls.GetPercent(textEntrapmentInTargetsPercent);
+            set => EntrapmentPercentControls.SetPercent(textEntrapmentInTargetsPercent, value);
+        }
+
+        private void cbAddEntrapment_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateEntrapmentControls();
+        }
+
+        /// <summary>The percentages show once entrapment is asked for, and only while the library is predicted.</summary>
+        private void UpdateEntrapmentControls()
+        {
+            labelEntrapmentPercent.Visible = textEntrapmentPercent.Visible =
+                labelEntrapmentInTargetsPercent.Visible = textEntrapmentInTargetsPercent.Visible = PredictsEntrapment;
+        }
+
+        /// <summary>Entrapment is added to a predicted library, not an existing one.</summary>
+        private bool PredictsEntrapment => AddEntrapment && !UseExistingLibrary;
 
         private void btnBrowseLibrary_Click(object sender, EventArgs e)
         {
@@ -382,6 +435,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FastaPath = ImportFastaControl.FastaFile,
                 LibraryPath = UseExistingLibrary ? ExistingLibraryPath : null,
                 DecoysInLibrary = UseExistingLibrary && OspreyHelpers.LibraryHasDecoyPairs(ExistingLibraryPath),
+                EntrapmentRatio = PredictsEntrapment ? EntrapmentPercentControls.ToRatio(EntrapmentPercent) : (double?)null,
+                EntrapmentInTargetsRatio = PredictsEntrapment ? EntrapmentPercentControls.ToRatio(EntrapmentInTargetsPercent) : (double?)null,
                 ModelPath = !UseExistingLibrary && UseExistingModel && !Model.IsDefault ? Model.FilePath : null,
                 TrainingInputs = IsTuningSearch ? TuningFiles : new List<string>(),
                 OutputPath = OutputLibraryPath,
@@ -575,6 +630,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             PeptideSearchResources.OspreySearchDlg_ValidateCurrentPage_Osprey_cannot_predict_a_library_for_the_enzyme__0___Choose_an_enzyme_with_a_standard_cleavage_rule_,
                             ImportFastaControl.Enzyme?.Name));
                         return false;
+                    }
+                    else if (AddEntrapment)
+                    {
+                        // The percentages must be ones Osprey builds; validated, they are kept as the user's last
+                        if (!EntrapmentPercentControls.Validate(this, textEntrapmentPercent, textEntrapmentInTargetsPercent, out double percent, out double inTargetsPercent))
+                            return false;
+                        EntrapmentPercentControls.SaveSettings(percent, inTargetsPercent);
                     }
                     break;
                 case Pages.modifications_page:
