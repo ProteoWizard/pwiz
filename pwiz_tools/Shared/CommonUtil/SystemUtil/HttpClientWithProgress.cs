@@ -722,7 +722,7 @@ namespace pwiz.Common.SystemUtil
 
             if (!string.IsNullOrEmpty(fileName))
             {
-                request.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue(@"attachment")
+                request.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue(@"attachment")
                 {
                     FileName = fileName
                 };
