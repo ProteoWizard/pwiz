@@ -830,7 +830,7 @@ namespace pwiz.SkylineTestUtil
         {
             var waitMultiplier = 1; // Various conditions may require longer timeouts
 
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
                 // When debugger is attached, some vendor readers are S-L-O-W!
                 waitMultiplier = 10;
@@ -1246,8 +1246,8 @@ namespace pwiz.SkylineTestUtil
                 // Assistance in chasing down intermittent timeout problems
                 if (i == waitCycles - 1 && LaunchDebuggerOnWaitForConditionTimeout)
                 {
-                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
-                    System.Diagnostics.Debugger.Break();
+                    Debugger.Launch(); // Try again, under the debugger
+                    Debugger.Break();
                     i = 0; // For debugging ease - stay in loop
                 }
             }
@@ -1311,8 +1311,8 @@ namespace pwiz.SkylineTestUtil
                 // Assistance in chasing down intermittent timeout problems
                 if (i==waitCycles-1 && LaunchDebuggerOnWaitForConditionTimeout)
                 {
-                    System.Diagnostics.Debugger.Launch(); // Try again, under the debugger
-                    System.Diagnostics.Debugger.Break();
+                    Debugger.Launch(); // Try again, under the debugger
+                    Debugger.Break();
                     i = 0; // For debugging ease - stay in loop
                 }
             }

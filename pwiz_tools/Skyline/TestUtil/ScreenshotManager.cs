@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -231,7 +230,7 @@ namespace pwiz.SkylineTestUtil
             public override Bitmap Take()
             {
                 // Draw on the UI thread, which may still be painting the same panes
-                var emf = (Metafile)_zedGraphControl.Invoke(new Func<Metafile>(() => _zedGraphControl.MasterPane.GetMetafile()));
+                var emf = _zedGraphControl.Invoke(() => _zedGraphControl.MasterPane.GetMetafile());
                 var bmp = new Bitmap(emf.Width, emf.Height);
                 bmp.SetResolution(emf.HorizontalResolution, emf.VerticalResolution);
                 using (var g = Graphics.FromImage(bmp))
