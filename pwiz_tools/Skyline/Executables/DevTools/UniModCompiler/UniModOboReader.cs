@@ -31,7 +31,8 @@ namespace UniModCompiler
     /// <summary>
     /// Reads pwiz/data/common/unimod.obo, the UniMod snapshot the rest of ProteoWizard uses,
     /// into the same <see cref="mod_t"/> objects the compiler once deserialized from the retired
-    /// unimod.xml (replaced by unimod.obo in #4990/#4991).
+    /// unimod.xml (replaced by unimod.obo in #4990/#4991; still readable with
+    /// git show dd1ea43e89:pwiz/data/common/unimod.xml).
     /// The obo carries everything the compiler needs except two things unimod.xml spelled out:
     /// the atoms of the composition "bricks" (Hex, HexNAc, ...) and the element order UniMod
     /// uses when it expands a composition. Both are fixed UniMod definitions, held below.
