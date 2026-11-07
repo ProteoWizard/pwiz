@@ -624,8 +624,8 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// The MS2 profile peak sigma, Th, from the run's MS2 spectra (<see cref="CentrixCalibration"/>): 1.1 point
-        /// spacings when the spacing identifies a linear ion trap scan rate (0.22 Th on the Stellar at 200 kTh/s), else
+        /// The MS2 profile peak sigma, Th, from the run's MS2 spectra (<see cref="CentrixCalibration"/>): three point
+        /// spacings when the spacing identifies a linear ion trap scan rate (0.6 Th on the Stellar at 200 kTh/s), else
         /// one species' peak width measured from spectra sampled across the run. Those are the acquired, multiplexed
         /// spectra, whose peaks merge more species than a narrow window's, so a measured width reads a little wider than
         /// the narrow-window run's would.

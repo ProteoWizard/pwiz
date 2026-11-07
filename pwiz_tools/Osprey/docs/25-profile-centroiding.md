@@ -28,7 +28,7 @@ separately.
 |---|---|---|
 | `--centroid vendor\|centrix` | `vendor` | Who centroids profile spectra. `centrix` reads the profile even from a vendor file |
 | `--centrix-sigma-ms1 <Th>` | from the run | The MS1 peak sigma; 0 or absent takes it from the run: 1.1 point spacings on a linear ion trap (see [The peak sigma](#the-peak-sigma)) |
-| `--centrix-sigma-ms2 <Th>` | from the run | The MS2 peak sigma, likewise |
+| `--centrix-sigma-ms2 <Th>` | from the run | The MS2 peak sigma, likewise: three point spacings on a linear ion trap; about two spacings (0.38 Th on the Stellar) to measure fragment m/z rather than detect peptides (see [Detecting peptides and measuring them](#detecting-peptides-and-measuring-them)) |
 | `--centrix-solver descent\|active-set` | `descent` | Centrix's coordinate descent, or the exact solve (see [Solvers](#solvers)) |
 
 ```
@@ -44,7 +44,7 @@ What happens in a run (`SpectrumFileReader.LoadAllSpectra`):
    (`--threads`). Each spectrum is centroided on its own, so the output does not depend on the
    thread count. Spectra the file holds centroided pass through.
 4. The log names the sigmas: "Centroided the profile spectra with Centrix: peak sigma 0.073 Th
-   for MS1, 0.220 Th for MS2" on the Stellar.
+   for MS1, 0.600 Th for MS2" on the Stellar.
 5. The spectra are cached as `<stem>.centrix-<8 hex>.spectra.bin` (see
    [Caches and keys](#caches-and-keys)).
 
@@ -92,48 +92,109 @@ Per spectrum, in `CentrixCentroider` (`Osprey.Centroid`):
 
 ## The peak sigma
 
-**On a linear ion trap the sigma is 1.1 point spacings** (`CentrixCalibration.SIGMA_PER_SPACING`).
-The firmware fixes the profile point spacing per scan rate, so the spacing identifies the rate
+**On a linear ion trap the MS2 sigma is three point spacings and the MS1 sigma 1.1**
+(`CentrixCalibration.MS2_SIGMA_PER_SPACING`, `MS1_SIGMA_PER_SPACING`): MS2 is searched, so it takes
+the sigma that detects the most peptides; MS1 is measured, so it takes the one that measures
+precursors best ([MS1: measuring precursors](#ms1-measuring-precursors)). The firmware fixes the profile point spacing per scan rate, so the spacing identifies the rate
 (`LinearIonTrapScanRate.FromSpacing`), and the level's first profile spectrum settles its sigma.
 
-| Scan rate | Point spacing | Broadest peak (FWHM) | Measured on the Stellar (FWHM lower quartile) |
-|---|---|---|---|
-| 33 kTh/s | 1/30 Th | 0.5 Th | - |
-| 67 kTh/s | 1/15 Th | 0.6 Th | MS1: 0.40 Th |
-| 125 kTh/s | 1/8 Th | 0.8 Th | - |
-| 200 kTh/s | 1/5 Th | 2.0 Th | MS2: 0.63 to 0.72 Th |
+| Scan rate | Point spacing | MS1 sigma (1.1 spacings) | MS2 sigma (3 spacings) | Broadest peak (FWHM) | Measured on the Stellar (FWHM lower quartile) |
+|---|---|---|---|---|---|
+| 33 kTh/s | 1/30 Th | 0.037 Th | 0.10 Th | 0.5 Th | - |
+| 67 kTh/s | 1/15 Th | 0.073 Th | 0.20 Th | 0.6 Th | MS1: 0.40 Th |
+| 125 kTh/s | 1/8 Th | 0.138 Th | 0.375 Th | 0.8 Th | - |
+| 200 kTh/s | 1/5 Th | 0.22 Th | 0.60 Th | 2.0 Th | MS2: 0.63 to 0.72 Th |
 
 Centrix's table gives each rate's broadest peak and no spacing for 200 kTh/s; 0.2 Th is what the
 Stellar's MS2 at that rate has, five points per Th on the 1000 / rate pattern of the others.
 
-**Why a little over one point spacing.** Centrix is there to split a peak wider than one species,
-and splitting a little too much costs little. The rule comes from one scan rate: the Stellar's 2 Th profile runs
-(three HeLa runs, MS2 at 200 kTh/s), centroided at fixed MS2 sigmas (MS1 0.2 Th in every arm) and
-searched by Osprey with a library fine-tuned on these runs and carrying natural entrapment:
+### Detecting peptides and measuring them
 
-| MS2 sigma | Experiment precursors at q 1% | Entrapment FDP (combined) |
-|---|---|---|
-| 0.12 Th | 33,725 | 0.27% |
-| 0.15 Th | 34,604 | 0.34% |
-| 0.18 Th | 34,621 | 0.32% |
-| 0.20 Th (1 spacing) | 35,077 | 0.34% |
-| 0.21 Th | 35,849 | 0.51% |
-| **0.22 Th (1.1 spacings, the default)** | **36,001** | 0.53% |
-| 0.24 Th | 35,680 | 0.52% |
-| 0.27 Th | 35,116 | 0.63% |
-| 0.30 Th | 34,330 | 0.51% |
-| 0.33 Th | 32,526 | 0.53% |
-| 0.36 Th | 32,297 | 0.47% |
+The MS2 sigma serves two goals, and they want different values:
 
-The same three runs acquired in centroid mode give 47,405 (0.49%). Identifications plateau from
-0.21 to 0.24 Th (1.05 to 1.2 spacings), where the entrapment FDP stays flat, and fall on both
-sides. At one spacing and below, Osprey's calibrated MS2 window narrows from 0.48 Th to 0.31-0.35
-Th and identifications drop, at a lower FDP; by 0.18 Th the centroids per MS2 spectrum have risen
-from about 260 to over 400. The default, 1.1 spacings, sits inside the plateau and clear of that
-drop. A wide sigma merges a fragment with its M+1 isotope into one centroid between them, which
-Osprey's mass calibration reads as a positive offset and a wider window (0.48 Th at sigma 0.21,
-1.04 at 0.33). Identifications alone cannot place the rule finely, since unit-resolution
-scoring barely penalizes splitting.
+| Goal | Best sigma | At 200 kTh/s | How |
+|---|---|---|---|
+| **Detection**: the most peptides identified at a given FDP | 3 point spacings | 0.6 Th | the default |
+| **Measurement**: each fragment's m/z, its M+1 isotope resolved | about 2 point spacings | 0.38 Th | `--centrix-sigma-ms2 0.38`; DemuxTool `--peak-sigma-th 0.38` |
+
+A wide sigma merges a fragment and its M+1 isotope (1 Th away at charge 1, 0.5 Th at charge 2)
+into one centroid between them. Osprey's unit-resolution search tolerates that (fragment
+tolerance 0.5 Th here): the merged centroid still matches the fragment. A measurement does not:
+the isotope is lost and the fragment's m/z moves toward it. A narrow sigma keeps them apart,
+and below about 1.7 spacings it also splits single peaks: 0.22 Th splits 84% of clean
+single-species peaks on the Stellar's MS2, and every centroid's m/z scatters.
+
+Both were measured on the Stellar's 2026-10-09 HeLa runs: three replicates each of 2 Th windows,
+4 Th windows overlapped by half, and SuperOverlap, MS2 at 200 kTh/s. The overlapped runs were
+demultiplexed by the joint solve at the same sigma ([23](23-demultiplexing.md#stellar-profile-data-linear-ion-trap):
+its Gaussian and Centrix share it). Osprey searched them with the scoring of #4950 (gradient-boosted
+trees on every feature) and the MS2 offset curve of #4997, a library fine-tuned on the 2 Th TR02
+run with 1:1 natural Arabidopsis entrapment, and fragment tolerance 0.5 Th.
+
+**Detection.** Precursors at Osprey's experiment-scope entrapment FDP (second pass, combined), at
+0.5% / 1%:
+
+| MS2 sigma | Spacings | 2 Th windows | 4 Th, 50% overlap | 4 Th, SuperOverlap |
+|---|---|---|---|---|
+| 0.22 Th | 1.1 | 41,118 / 45,357 | 35,696 / 39,910 | - |
+| 0.30 Th | 1.5 | 43,952 / 48,215 | - | - |
+| 0.34 Th | 1.7 | 43,734 / 48,826 | - | - |
+| 0.38 Th | 1.9 | 44,548 / 48,957 | 39,021 / 42,776 | 36,837 / 40,333 |
+| 0.41 Th | 2.05 | 46,154 / 49,681 | 40,569 / 43,815 | 36,283 / 40,023 |
+| 0.45 Th | 2.25 | 45,911 / 49,930 | - | - |
+| 0.50 Th | 2.5 | 46,553 / 50,770 | - | - |
+| **0.60 Th** | **3** | 46,771 / **52,125** | 41,485 / 45,522 | **38,046 / 41,355** |
+| 0.70 Th | 3.5 | - | **41,758 / 45,990** | 37,523 / 40,819 |
+| 0.80 Th | 4 | - | 41,354 / 45,517 | 37,346 / 40,855 |
+| 0.85 Th | 4.25 | **46,997** / 50,647 | - | - |
+
+The vendor's centroids of the 2 Th profile runs (RawFileReader `Scan.ToCentroid`) give 43,252 /
+46,601, and separate injections acquired in centroid mode 46,412 / 50,088. Identifications rise from
+1.1 spacings to a broad plateau from 3 to 4.25 spacings, the same in all three acquisitions; 0.6 Th
+is within about 1% of the best in each, at both FDPs. Past 3 spacings the centroids move further toward
+the isotopes (MS2 offset -0.39 Th at 0.6, -0.24 at 0.85) and gain nothing.
+
+The fine-tuned library does not cause the preference for a wide sigma. Tuned on vendor centroids,
+which merge isotopes, it predicts more intensity on doubly charged fragments than the pretrained
+model; tuned on 0.38 Th centroids it mostly does not. Yet the two libraries give the same
+identifications within 2% at either sigma, and 0.6 Th leads 0.38 Th by 5-7% with both.
+
+**Measurement.** In the TR02 run, precursors identified at every sigma, each in the MS2 nearest its
+apex between 8.53 and 11.48 min, and their library b/y fragments at 20% or more of the base peak,
+m/z 250 to 1150, neutral mass 500 Da or more (so the M+1 is at least a quarter of the M+0), and no
+other fragment within 0.6 Th of the M+1. Each centroid is moved by that search's MS2 offset curve;
+a fragment's isotope counts the centroid nearest its m/z within half the isotope spacing. Accuracy
+is the median error, precision 1.4826 times the median absolute deviation. Singly charged
+fragments, Th; "M+1 found" against the same test with each fragment moved by whole Th (chance):
+
+| MS2 sigma | M+0 precision | M+1 accuracy | M+1 precision | M+1 found (chance) |
+|---|---|---|---|---|
+| 2 Th, 0.22 Th | 0.133 | -0.006 | 0.158 | 89% (20%) |
+| 2 Th, 0.30 Th | 0.084 | -0.031 | 0.146 | 87% (18%) |
+| 2 Th, 0.34 Th | 0.070 | -0.024 | 0.116 | 86% (17%) |
+| **2 Th, 0.38 Th** | **0.069** | **+0.007** | **0.114** | 84% (16%) |
+| 2 Th, 0.41 Th | 0.071 | +0.033 | 0.123 | 82% (16%) |
+| 2 Th, 0.45 Th | 0.075 | +0.067 | 0.140 | 78% (15%) |
+| 2 Th, 0.50 Th | 0.081 | +0.114 | 0.172 | 72% (14%) |
+| 2 Th, 0.60 Th | 0.105 | +0.193 | 0.253 | 55% (13%) |
+| 2 Th, 0.85 Th | 0.172 | +0.137 | 0.364 | 11% (10%) |
+| **50% overlap, 0.38 Th** | **0.078** | **-0.005** | **0.125** | 77% (13%) |
+| 50% overlap, 0.60 Th | 0.114 | +0.138 | 0.295 | 49% (10%) |
+| **SuperOverlap, 0.38 Th** | **0.073** | **-0.007** | **0.133** | 72% (11%) |
+| SuperOverlap, 0.60 Th | 0.114 | +0.118 | 0.301 | 37% (8%) |
+
+0.38 Th, 1.9 spacings, measures best in every acquisition: the most precise M+0 and M+1, and the
+M+1 within 0.01 Th of its m/z. It is also the sigma of the Stellar's clean single-species MS2 peaks of ten ions
+or more (0.39 to 0.44 Th), where peaks of fewer ions read 0.23 Th.
+
+The old rule, 1.1 spacings (0.22 Th), came from a sweep of the same 2 Th runs before #4997's MS2 offset
+curve, judged at q 1% rather than at a matched entrapment FDP. It splits most single peaks, gives
+the fewest identifications here, and the least precise M+0 short of 0.85 Th.
+
+**One sigma for demultiplexed and plain MS2.** The sigma depends on the scan rate alone. The joint
+demultiplexer takes its sigma from the acquired MS2 by the same rule, and both tables put each
+goal's optimum in the same place for the plain 2 Th runs and the demultiplexed overlap runs: 0.38 Th
+for measurement, the plateau from 0.6 Th for detection.
 
 **Not a measured width, on the Stellar.** A linear ion trap's peak width depends on the ions in the
 peak, so no single width is one species'. The MS2 widths' lower quartile is 0.71 to 0.74 Th at every
@@ -142,13 +203,38 @@ under 3 ions to 0.50 (3-10), 0.63 (10-30), 0.75 (30-100), 0.81 (100-300) and 0.9
 plateau: few ions arrive as short pulses, many ions spread by space charge and merge with unresolved
 neighbors. A measured sigma is therefore set by which peaks are counted: over a whole 2 Th run, 0.27
 Th (threshold over all points, a quarter of them zeros), 0.31 Th (threshold over positive points, so
-stronger peaks), 0.33 Th (peaks of 30 or more ions). All are wider than the identifications' optimum.
+stronger peaks), 0.33 Th (peaks of 30 or more ions). None of them is either optimum.
 
-**Other scan rates are untested.** At 67 kTh/s the rule gives 0.073 Th, where the Stellar's MS1
-measures 0.17 Th (lower quartile). For Osprey's search of these runs it does not matter: the
-default (MS1 0.073 Th, MS2 0.22 Th) gives exactly the 36,001 precursors of MS1 at 0.2 Th. Stellar
-data at other MS2 scan rates will decide whether the optimum follows the spacing, a fraction of
-the scan rate's broadest peak, or the few-ion peak width.
+**Other scan rates are untested.** Each level's rule rests on one rate, MS2's on 200 kTh/s and
+MS1's on 67 kTh/s. Stellar data at other rates will decide whether either follows the spacing.
+
+### MS1: measuring precursors
+
+MS1's sigma does not change Osprey's identifications: with MS2 at 0.6 Th, MS1 sigmas of 0.073,
+0.15, 0.2 and 0.255 Th give identical precursor counts, and an identical second-pass score file, on
+the 2 Th runs. What it changes is the precursor's isotope envelope, which MS1 quantification and
+charge assignment read, and at charge 3 the isotopes are 0.33 Th apart. So MS1 takes measurement's
+sigma: 1.1 point spacings, 0.073 Th at the Stellar's 67 kTh/s.
+
+Measured in the same TR02 run, on the 371 identified precursors whose M+0 is at or above the 80th
+percentile of intensity in the MS1 nearest their apex in all four arms (most identified precursors
+are too weak in these MS1 to score: their M+0 is found barely more often than by chance). Same
+cells and statistics as above, with no MS1 calibration (Osprey's has too few points on these runs);
+a cell holds a centroid by chance 17% to 30% of the time:
+
+| MS1 sigma | Spacings | z=2: M+1 found, accuracy, precision | z=3: M+1 found, accuracy, precision | z=3: M+2 found |
+|---|---|---|---|---|
+| **0.073 Th** | **1.1** | **100%, -0.000, 0.047** | **100%, +0.007, 0.054** | **100%** |
+| 0.15 Th | 2.25 | 100%, -0.065, 0.058 | 97%, -0.045, 0.056 | 98% |
+| 0.20 Th | 3 | 100%, -0.052, 0.048 | 88%, +0.025, 0.080 | 73% |
+| 0.255 Th | 3.8 | 98%, +0.007, 0.062 | 37%, +0.072, 0.073 | 72% |
+
+At 1.1 spacings every isotope of these precursors is found within 0.01 Th of its m/z. Wider sigmas
+merge triply charged isotopes and move the centroids by up to 0.07 Th. Narrower sigmas were not
+tried. In spacings, measurement's optimum is not the same at the two rates (1.1 at 67 kTh/s, about
+1.9 at 200 kTh/s), so a scan rate other than these needs its own check.
+
+### Off a linear ion trap
 
 **Elsewhere it is measured** (a spacing no scan rate has: a linear grid other than a linear ion
 trap's), for each MS level apart:
@@ -274,11 +360,11 @@ Raise `ALGORITHM_VERSION` with any change that moves a centroid; the tag and key
 - **Adaptive RT spectra** (isolation over 10 m/z on a Stellar) are not filtered from Osprey's
   input or from the mzML DemuxTool writes for Skyline.
 - **The intensity dependence of the width** is not modeled; one sigma serves each MS level.
-- **The joint demultiplexer's sigma** follows the same rule, 1.1 point spacings, for both its
-  Gaussian and Centrix. On the truth benchmark (below) it scores at least as well as the 0.33 Th
-  the staggered searches in [23](23-demultiplexing.md) ran at: median cosine 0.985 against 0.982 at
-  k=2, 0.939 against 0.930 at k=4, each scored against truth centroided at the same sigma. The
-  joint solve at this sigma is not yet searched.
+- **The joint demultiplexer's sigma** follows the same rule, three point spacings, for both its
+  Gaussian and Centrix, and its searches are in [The peak sigma](#detecting-peptides-and-measuring-them).
+  The truth benchmark below was run at 1.1 spacings and 0.33 Th, not yet at 0.6 Th: at 1.1 spacings
+  the median cosine was 0.985 against 0.982 at k=2 and 0.939 against 0.930 at k=4, each scored
+  against truth centroided at the same sigma.
 - **Other scan rates.** The rule rests on 200 kTh/s alone (see [The peak sigma](#the-peak-sigma)).
 - **Other grids.** Orbitrap and TOF profiles are not uniform in m/z. `GridCentroider` (Osprey.Demux)
   runs Centrix on any profile grid's sample index, where a grid uniform in some coordinate of m/z is

@@ -331,7 +331,7 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--cycles`, `--mz` | all | restrict to sweeps `first:last` (0-based) and precursor m/z `low:high` |
 | `--threads` | all | the output does not depend on it |
 | `--centroid centrix` | vendor | read the profile and centroid the output with Centrix, MS1 and MS2 (with `--joint`, MS2 is centroided inside the joint solve) ([24](25-profile-centroiding.md)) |
-| `--centrix-sigma S`, `--centrix-sigma-ms1 S` | from the input | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, 1.1 point spacings on a linear ion trap, else measured from the input |
+| `--centrix-sigma S`, `--centrix-sigma-ms1 S` | from the input | with `--centroid centrix`: the MS2 and MS1 peak sigmas, Th; absent, three point spacings (MS2) and 1.1 (MS1) on a linear ion trap, else measured from the input |
 | `--centrix-param Name=Value` | - | any `CentrixParams` setting (`Solver=active_set` among them); also the joint solve's Centrix |
 | `--channel-th T` | ppm | staggered: fragment channels matched within T Th on a linear axis (unit resolution) |
 | `--ions` | off | ions from each spectrum's fill time and its analyzer's ion response (see [Ions from the fill time](#ions-from-the-fill-time)): spectra combined as rates and written in their own units; each observation's own ions set the Poisson weights and channel thresholds |
@@ -808,8 +808,9 @@ Two ways through `Osprey.DemuxTool --scheme staggered`:
      sweep sees them at once: the pass's own acquisitions as measured, the others interpolated
      (makima, grid point by grid point, in rates) to the pass's time.
   3. *The fit.* The joint solve fits each bin's Gaussian peaks on the 0.2 Th grid. The peak sigma is
-     `--peak-sigma-th`, else taken from the run's MS2: 1.1 point spacings, 0.22 Th (`CentrixCalibration`,
-     see [25-profile-centroiding.md](25-profile-centroiding.md#the-peak-sigma)).
+     `--peak-sigma-th`, else taken from the run's MS2: three point spacings, 0.6 Th (`CentrixCalibration`,
+     see [25-profile-centroiding.md](25-profile-centroiding.md#the-peak-sigma)), the sigma that
+     detects the most peptides; `--peak-sigma-th 0.38` measures fragment m/z best.
   4. *The split.* Each acquired spectrum's measured profile is split among the bins its window covers
      by those bins' fitted peaks at each grid point (equally where none was fitted). The fit decides
      the split; the measurements are what is written.

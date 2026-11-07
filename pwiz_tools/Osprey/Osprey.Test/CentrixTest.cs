@@ -340,11 +340,11 @@ namespace pwiz.Osprey.Test
             // narrow side of the peaks' widths; with too few peaks, Centrix's fallback.
             var rate = LinearIonTrapScanRate.FromSpacing(0.2);
             var many = Enumerable.Range(0, 100).Select(i => 0.6 + 0.01 * i).ToList();
-            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(many, rate), 1e-12);
-            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(new List<double>(), rate), 1e-12);
+            Assert.AreEqual(CentrixCalibration.MS2_SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(many, rate, 2), 1e-12);
+            Assert.AreEqual(CentrixCalibration.MS2_SIGMA_PER_SPACING * 0.2, CentrixCalibration.EstimateSigma(new List<double>(), rate, 2), 1e-12);
             Assert.AreEqual(many[(int)(CentrixCalibration.WIDTH_QUANTILE * 99)] / CentrixCalibration.FWHM_PER_SIGMA,
-                CentrixCalibration.EstimateSigma(many, null), 1e-12);
-            Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, CentrixCalibration.EstimateSigma(new List<double> { 0.7 }, null));
+                CentrixCalibration.EstimateSigma(many, null, 2), 1e-12);
+            Assert.AreEqual(CentrixCalibration.FALLBACK_SIGMA_TH, CentrixCalibration.EstimateSigma(new List<double> { 0.7 }, null, 2));
 
             // The calibrator settles a linear ion trap's level from its first spectrum; any other level takes every sample.
             var calibrator = new CentrixSigmaCalibrator();
@@ -352,7 +352,7 @@ namespace pwiz.Osprey.Test
             calibrator.Add(2, mz, GaussianProfile(mz, sigma, new[] { (410.0, 1000.0) }));
             Assert.IsTrue(calibrator.IsSettled(2));
             Assert.IsFalse(calibrator.IsSettled(1));
-            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, calibrator.Sigma(2), 1e-12);
+            Assert.AreEqual(CentrixCalibration.MS2_SIGMA_PER_SPACING * 0.2, calibrator.Sigma(2), 1e-12);
             var orbitrapLike = Enumerable.Range(0, 200).Select(i => 400 + i * 0.01).ToArray();
             calibrator.Add(1, orbitrapLike, GaussianProfile(orbitrapLike, 0.02, new[] { (401.0, 1000.0) }));
             Assert.IsFalse(calibrator.IsSettled(1));
@@ -363,8 +363,8 @@ namespace pwiz.Osprey.Test
             string folder = Path.Combine(IOTest.FindPwizRoot(), GOLDEN_FOLDER);
             var read = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, GOLDEN_INPUTS[0]),
                 new CentroidingOptions(new CentrixParams { SigmaTh = 0 }, new CentrixParams { SigmaTh = 0 }, 4));
-            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING * 0.2, read.CentroidSigmaMs2, 1e-12);
-            Assert.AreEqual(CentrixCalibration.SIGMA_PER_SPACING / 15, read.CentroidSigmaMs1, 1e-12);
+            Assert.AreEqual(CentrixCalibration.MS2_SIGMA_PER_SPACING * 0.2, read.CentroidSigmaMs2, 1e-12);
+            Assert.AreEqual(CentrixCalibration.MS1_SIGMA_PER_SPACING / 15, read.CentroidSigmaMs1, 1e-12);
         }
 
         [TestMethod]

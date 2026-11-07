@@ -77,13 +77,24 @@ namespace pwiz.Osprey.Centroid
     /// <summary>
     /// The peak sigma Centrix fits a run's profile spectra with.
     /// <para>On a linear ion trap, whose point spacing identifies its scan rate
-    /// (<see cref="LinearIonTrapScanRate.FromSpacing"/>), it is a little over one point spacing
-    /// (<see cref="SIGMA_PER_SPACING"/>). Centrix is there to split a peak wider than one species, and splitting a
-    /// little too much costs little. On a Thermo Stellar's MS2 (200 kTh/s, 0.2 Th points) centroided at a range of
-    /// sigmas and searched with an entrapment library, identifications plateau from 1.05 to 1.2 spacings (0.21 to
-    /// 0.24 Th) and fall on either side, from one spacing down most steeply, as the centroids per spectrum jump
+    /// (<see cref="LinearIonTrapScanRate.FromSpacing"/>), it is three point spacings for MS2
+    /// (<see cref="MS2_SIGMA_PER_SPACING"/>), the sigma that detects the most peptides, and 1.1 for MS1
+    /// (<see cref="MS1_SIGMA_PER_SPACING"/>), the sigma that measures precursors best. A Thermo Stellar's MS2
+    /// (200 kTh/s, 0.2 Th points), acquired with 2 Th windows and with 4 Th windows overlapped by half and SuperOverlap
+    /// (demultiplexed jointly), was centroided at sigmas from 0.22 to 0.85 Th and searched with an entrapment library:
+    /// identifications at matched entrapment FDP rise from 0.22 Th to a broad plateau from 0.6 to 0.85 Th, and 0.6 Th
+    /// is within about 1% of the best in all three
     /// (docs/25-profile-centroiding.md). The rule is set from that one scan rate and stands until others are
     /// measured.</para>
+    /// <para>Detecting peptides is not measuring them. Fragment m/z are measured best near two point spacings
+    /// (0.38 Th at 200 kTh/s), where a fragment and its M+1 isotope come out as two centroids, each at its own m/z,
+    /// in all three acquisitions. Three spacings merges most M+1 isotopes into their fragment's centroid and moves it
+    /// toward them: the search's unit-resolution tolerance does not mind, but the isotope is lost. For measurement,
+    /// pass that sigma explicitly.</para>
+    /// <para>MS1 is measured, not searched for detection: on the Stellar's 67 kTh/s MS1, sigmas from 0.073 to 0.255 Th
+    /// gave the same identifications. So its rule is measurement's. Of precursors with a strong MS1 peak, 1.1 spacings
+    /// (0.073 Th) finds the M+1 and M+2 of every triply charged one, 0.33 Th apart, each within 0.01 Th of its m/z;
+    /// three spacings (0.2 Th) loses 12% of those M+1 and 27% of the M+2, and scatters the rest more.</para>
     /// <para>Elsewhere, a spacing no scan rate has, it is measured from the run: the width of one species' peak.</para>
     /// <list type="bullet">
     /// <item>A wider peak is most often two or more species the instrument did not resolve, which is what Centrix is
@@ -100,8 +111,8 @@ namespace pwiz.Osprey.Centroid
     /// peaks), with no plateau, so which peaks are counted sets it. Whole runs read through Thermo's library, where a
     /// quarter of the profile points are zeros, give sigma 0.27 Th over 3,000 spectra of a 2 Th run, 0.31 Th with the
     /// intensity threshold taken over the positive points only, which keeps stronger peaks; spectra of summed windows
-    /// read wider still (0.331 and 0.340 Th for two and four 2 Th windows summed). The identifications' optimum,
-    /// 0.21 Th, is narrower than all of them.</para>
+    /// read wider still (0.331 and 0.340 Th for two and four 2 Th windows summed). None of them is either optimum:
+    /// identifications favor 0.6 Th, measurement 0.38.</para>
     /// </summary>
     public static class CentrixCalibration
     {
@@ -109,10 +120,16 @@ namespace pwiz.Osprey.Centroid
         public const double FWHM_PER_SIGMA = 2.3548200450309493;
 
         /// <summary>
-        /// A linear ion trap's sigma, in point spacings of the scan rate its spacing identifies: inside the Stellar's
-        /// plateau of 1.05 to 1.2, clear of the fall at one spacing.
+        /// A linear ion trap's MS2 sigma, in point spacings of the scan rate its spacing identifies: the narrow end of
+        /// the Stellar's identification plateau (0.6 Th at 200 kTh/s). About 1.9 spacings measures fragment m/z best.
         /// </summary>
-        public const double SIGMA_PER_SPACING = 1.1;
+        public const double MS2_SIGMA_PER_SPACING = 3.0;
+
+        /// <summary>
+        /// A linear ion trap's MS1 sigma, in point spacings: the one that measures precursor isotopes best on the
+        /// Stellar's 67 kTh/s MS1 (0.073 Th), where MS1's sigma does not change identifications.
+        /// </summary>
+        public const double MS1_SIGMA_PER_SPACING = 1.1;
 
         /// <summary>A width is measured from at least this many peaks; with fewer, <see cref="FALLBACK_SIGMA_TH"/> stands.</summary>
         public const int MIN_PEAKS = 20;
@@ -130,20 +147,29 @@ namespace pwiz.Osprey.Centroid
         private const double MAX_STEP_SPACINGS = 1.5;
 
         /// <summary>
-        /// The sigma, Th, for spectra of one MS level: with a linear ion trap scan rate, <see cref="SIGMA_PER_SPACING"/>
+        /// The sigma, Th, for spectra of one MS level: with a linear ion trap scan rate, <see cref="SigmaPerSpacing"/>
         /// of its point spacing. Without one, from the isolated peaks' FWHMs collected: their
         /// <see cref="WIDTH_QUANTILE"/> quantile over <see cref="FWHM_PER_SIGMA"/>, or <see cref="FALLBACK_SIGMA_TH"/>
         /// with fewer than <see cref="MIN_PEAKS"/> widths.
         /// </summary>
-        public static double EstimateSigma(List<double> fwhms, LinearIonTrapScanRate scanRate)
+        public static double EstimateSigma(List<double> fwhms, LinearIonTrapScanRate scanRate, int msLevel)
         {
             if (scanRate != null)
-                return SIGMA_PER_SPACING * scanRate.SpacingTh;
+                return SigmaPerSpacing(msLevel) * scanRate.SpacingTh;
             if (fwhms.Count < MIN_PEAKS)
                 return FALLBACK_SIGMA_TH;
             var sorted = fwhms.ToArray();
             Array.Sort(sorted); // Array.Sort OK: equal doubles are indistinguishable
             return sorted[(int)(WIDTH_QUANTILE * (sorted.Length - 1))] / FWHM_PER_SIGMA;
+        }
+
+        /// <summary>
+        /// A linear ion trap's sigma for an MS level, in point spacings: <see cref="MS1_SIGMA_PER_SPACING"/> for MS1,
+        /// <see cref="MS2_SIGMA_PER_SPACING"/> for MS2 and above.
+        /// </summary>
+        public static double SigmaPerSpacing(int msLevel)
+        {
+            return msLevel == 1 ? MS1_SIGMA_PER_SPACING : MS2_SIGMA_PER_SPACING;
         }
 
         /// <summary>
@@ -315,7 +341,7 @@ namespace pwiz.Osprey.Centroid
         /// <summary>A level's sigma, Th.</summary>
         public double Sigma(int msLevel)
         {
-            return CentrixCalibration.EstimateSigma(_fwhms[Slot(msLevel)], ScanRate(msLevel));
+            return CentrixCalibration.EstimateSigma(_fwhms[Slot(msLevel)], ScanRate(msLevel), msLevel);
         }
 
         /// <summary>

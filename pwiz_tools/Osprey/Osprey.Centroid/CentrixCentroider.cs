@@ -46,8 +46,8 @@ namespace pwiz.Osprey.Centroid
     /// where Rust takes the first spectrum's of each MS level. Not ported: Centrix's sigma calibration (filter-string
     /// scan rate, wavelet fit), which misreads the Stellar; <see cref="CentrixCalibration"/> replaces it.</para>
     /// <para><b>Settings that matter.</b> The peak sigma (<see cref="CentrixParams.SigmaTh"/>), which
-    /// <see cref="CentrixCalibration"/> gives a run: on a linear ion trap 1.1 point spacings, else one species' width
-    /// measured from the run. The solver
+    /// <see cref="CentrixCalibration"/> gives a run: on a linear ion trap three point spacings for MS2 and 1.1 for MS1,
+    /// else one species' width measured from the run. The solver
     /// (<see cref="CentrixParams.Solver"/>): Centrix's coordinate descent, or the exact active-set solve, several times
     /// faster (6,000 Stellar spectra: 18-31 s against 64-169 s, file I/O included) and equal on the truth benchmark. Intensities must be in the instrument's units (the noise
     /// estimate floors its sigma at 1, which suits an ion trap's rates and not a count of ions).</para>
@@ -68,11 +68,12 @@ namespace pwiz.Osprey.Centroid
         /// (<c>ProfileCentroiding.CacheTag</c>) and of every task's validity key. Raise it with any change that moves a
         /// centroid, so the caches and scores computed from the previous version's centroids are rebuilt rather than
         /// reused; a change to <see cref="CentrixParams"/> defaults counts, and so does one to the sigma
-        /// <see cref="CentrixCalibration"/> gives a run when none is set (2: a linear ion trap's follows its point spacing).
+        /// <see cref="CentrixCalibration"/> gives a run when none is set (2: a linear ion trap's follows its point spacing;
+        /// 3: MS2's is three spacings, not 1.1).
         /// The Rust golden test must still pass, or the change must be one Rust Centrix made too, with the golden
         /// regenerated from it.
         /// </summary>
-        public const int ALGORITHM_VERSION = 2;
+        public const int ALGORITHM_VERSION = 3;
 
         /// <summary>A varying sigma is rounded to this step, so a few bases serve every region.</summary>
         public const double SIGMA_STEP = 0.01;
