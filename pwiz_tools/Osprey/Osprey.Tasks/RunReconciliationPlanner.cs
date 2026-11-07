@@ -50,6 +50,7 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RunReconciliationPlanner
     {
         private readonly double _consensusFdr;
+        private readonly double _refitBandwidth;
         private readonly IReadOnlyDictionary<string, string> _perFileParquetPaths;
         private readonly Lazy<State> _state;
         private readonly PipelineContext _ctx;
@@ -86,6 +87,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             _consensusFdr = config.Reconciliation.ConsensusFdr;
+            _refitBandwidth = config.RtCalibration.LoessBandwidth;
             _perFileParquetPaths = perFileParquetPaths;
             _ctx = ctx;
             _state = new Lazy<State>(() => BuildState(loadConsensus(), perFileCalibrations,
@@ -106,7 +108,7 @@ namespace pwiz.Osprey.Tasks
             var state = _state.Value;
             var entries = new List<FdrEntry>(survivors);
             FdrEntry.SortCanonicalResolved(entries, fileName);
-            var refined = CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr);
+            var refined = CalibrationRefit.Refit(state.Consensus.Consensus, entries, _consensusFdr, _refitBandwidth);
 
             List<KeyValuePair<int, ReconcileAction>> actions = null;
             IReadOnlyList<GapFillTarget> gapFill = Array.Empty<GapFillTarget>();

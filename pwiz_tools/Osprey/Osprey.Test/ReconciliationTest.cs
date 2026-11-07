@@ -1036,6 +1036,33 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(Math.Abs(cal.Predict(10.0) - 10.0) < 1.0);
         }
 
+        [TestMethod]
+        public void TestRefitFollowsGradientEndAtConfiguredBandwidth()
+        {
+            // 200 consensus points, measured RT tracking library RT until the last 20, where the
+            // gradient end bends to slope 3. The first pass needed a narrow span for such a bend;
+            // the refit must use the span it is given, not a fixed 0.3 that smooths the bend away.
+            const int n = 200, bend = 180;
+            var consensus = MakeConsensus(n);
+            var entries = MakeRefitEntries(n, measuredOffset: 0.0);
+            for (int i = bend; i < n; i++)
+                entries[i].ApexRt = i + 2.0 * (i - bend);
+            double truth = (n - 1) + 2.0 * (n - 1 - bend);
+
+            var narrow = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01, bandwidth: 0.1);
+            var wide = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01, bandwidth: 0.3);
+            var unspecified = CalibrationRefit.Refit(consensus, entries, consensusFdr: 0.01);
+            Assert.IsNotNull(narrow);
+            Assert.IsNotNull(wide);
+            double errNarrow = Math.Abs(narrow.Predict(n - 1) - truth);
+            double errWide = Math.Abs(wide.Predict(n - 1) - truth);
+            Assert.IsTrue(errNarrow < 0.5, string.Format(@"span 0.1 misses the gradient end by {0}", errNarrow));
+            Assert.IsTrue(errWide > 4 * errNarrow, string.Format(@"span 0.3 error {0} vs span 0.1 error {1}", errWide, errNarrow));
+            // Unspecified keeps the historical span, so a run that does not set the bandwidth is unchanged
+            for (int i = 0; i < n; i += 7)
+                Assert.AreEqual(wide.Predict(i), unspecified.Predict(i));
+        }
+
         #endregion
 
         #region MultiChargeConsensus
