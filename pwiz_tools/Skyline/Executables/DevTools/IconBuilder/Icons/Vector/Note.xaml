@@ -1,0 +1,26 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Yellow sticky note: khaki left and top edges, dark brown right and bottom edges, a pale
+       yellow to gold vertical gradient as in the original, and a curled fold at the bottom-left
+       corner with a dark crease line. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="2" Width="28" Height="28">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFD4" Offset="0"/>
+        <GradientStop Color="#FFF08C" Offset="0.5"/>
+        <GradientStop Color="#FFD468" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Path Data="M 2,30 L 2,2 L 30,2 L 30,4 L 4,4 L 4,30 Z" Fill="#CDBC8A"/>
+  <Path Data="M 30,2 L 30,30 L 2,30 L 2,28 L 28,28 L 28,2 Z" Fill="#7C6D51"/>
+  <Path Data="M 4,17 L 15,28 L 4,28 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E8AE00" Offset="0"/>
+        <GradientStop Color="#CC8E00" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 4,17 L 15,28" Stroke="#A87600" StrokeThickness="1.2"/>
+  <Path Data="M 6,20.5 L 12.5,27 L 6,27 Z" Fill="#F3C62E" Opacity="0.85"/>
+</Canvas>

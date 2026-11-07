@@ -1,0 +1,54 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Mixed UI mode: the alpha helix from the proteomics icon, scaled to 0.9 and shifted to the left
+       and down, with a smaller red molecule ring from the small-molecules icon at the upper right.
+       Drawn on a transparent background. -->
+  <!-- Molecule ring, upper right -->
+  <Path Data="M 22,3 L 27.2,6 L 27.2,12 L 22,15 L 16.8,12 L 16.8,6 Z" Stroke="#DC3232" StrokeThickness="2.2" StrokeLineJoin="Miter"/>
+  <Path Data="M 22,3 L 22,0.5 M 27.2,6 L 30.5,4.1 M 27.2,12 L 30.5,13.9 M 22,15 L 22,17.5 M 16.8,12 L 13.5,13.9 M 16.8,6 L 13.5,4.1" Stroke="#DC3232" StrokeThickness="2.2"/>
+  <Ellipse Canvas.Left="20.8" Canvas.Top="1.8" Width="2.4" Height="2.4" Fill="#5A5A5A"/>
+  <Ellipse Canvas.Left="26" Canvas.Top="4.8" Width="2.4" Height="2.4" Fill="#5A5A5A"/>
+  <Ellipse Canvas.Left="26" Canvas.Top="10.8" Width="2.4" Height="2.4" Fill="#5A5A5A"/>
+  <Ellipse Canvas.Left="20.8" Canvas.Top="13.8" Width="2.4" Height="2.4" Fill="#5A5A5A"/>
+  <Ellipse Canvas.Left="15.6" Canvas.Top="10.8" Width="2.4" Height="2.4" Fill="#5A5A5A"/>
+  <Ellipse Canvas.Left="15.6" Canvas.Top="4.8" Width="2.4" Height="2.4" Fill="#5A5A5A"/>
+  <!-- Alpha helix, left and lower (same drawing as UIModeProteomic) -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
+        <TranslateTransform X="-2.2" Y="3.7"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <Path Data="M 8,7 L 16,16 L 24,25" Stroke="#1A3FBF" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+    <Ellipse Canvas.Left="1.5" Canvas.Top="3.25" Width="13" Height="7.5" Stroke="#12309F" StrokeThickness="0.8" RenderTransformOrigin="0.5,0.5">
+      <Ellipse.RenderTransform><RotateTransform Angle="-35"/></Ellipse.RenderTransform>
+      <Ellipse.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#A6D2FB" Offset="0"/>
+          <GradientStop Color="#4F8DEA" Offset="0.5"/>
+          <GradientStop Color="#1D45CC" Offset="1"/>
+        </LinearGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+    <Ellipse Canvas.Left="9.5" Canvas.Top="12.25" Width="13" Height="7.5" Stroke="#12309F" StrokeThickness="0.8" RenderTransformOrigin="0.5,0.5">
+      <Ellipse.RenderTransform><RotateTransform Angle="-35"/></Ellipse.RenderTransform>
+      <Ellipse.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#86BCF7" Offset="0"/>
+          <GradientStop Color="#3A78E0" Offset="0.5"/>
+          <GradientStop Color="#1638BD" Offset="1"/>
+        </LinearGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+    <Ellipse Canvas.Left="17.5" Canvas.Top="21.25" Width="13" Height="7.5" Stroke="#12309F" StrokeThickness="0.8" RenderTransformOrigin="0.5,0.5">
+      <Ellipse.RenderTransform><RotateTransform Angle="-35"/></Ellipse.RenderTransform>
+      <Ellipse.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#6CA8F2" Offset="0"/>
+          <GradientStop Color="#2D63D6" Offset="0.5"/>
+          <GradientStop Color="#1228AC" Offset="1"/>
+        </LinearGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+  </Canvas>
+</Canvas>

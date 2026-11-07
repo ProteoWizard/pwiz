@@ -1,0 +1,24 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Warning: a yellow triangle with rounded corners, lighter at the top and orange at the base,
+       a dark gold outline, and a black exclamation mark with a lighter top. -->
+  <Path Data="M 16,2 L 30.5,29 L 1.5,29 Z" StrokeLineJoin="Round" Stroke="#B07A00" StrokeThickness="2">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFF1B8" Offset="0"/>
+        <GradientStop Color="#FFD54A" Offset="0.4"/>
+        <GradientStop Color="#E9A800" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 16,2 L 30.5,29 L 1.5,29 Z" StrokeLineJoin="Round" Stroke="#F7C64A" StrokeThickness="2" Opacity="0.9"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="9" Width="4" Height="11" RadiusX="0.5" RadiusY="0.5">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#6A5A30" Offset="0"/>
+        <GradientStop Color="#1E1E1E" Offset="0.4"/>
+        <GradientStop Color="#1E1E1E" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="14" Canvas.Top="22" Width="4" Height="4" RadiusX="0.5" RadiusY="0.5" Fill="#1E1E1E"/>
+</Canvas>

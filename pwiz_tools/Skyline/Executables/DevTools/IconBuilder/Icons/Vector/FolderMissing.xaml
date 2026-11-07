@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Missing folder: dashed dark gray outline of a folder with a tab at the top left, and a
+       glowing red X over the lower-right corner. -->
+  <Path Data="M 2,4 L 11,4 L 14,7 L 28,7 L 28,25 L 2,25 Z" Stroke="#606060" StrokeThickness="2" StrokeDashArray="1 1" StrokeLineJoin="Miter"/>
+  <!-- Red X with glow -->
+  <Path Data="M 21,21 L 30,30 M 30,21 L 21,30" Stroke="#F08080" StrokeThickness="5" Opacity="0.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 21,21 L 30,30 M 30,21 L 21,30" Stroke="#D81818" StrokeThickness="2"/>
+</Canvas>

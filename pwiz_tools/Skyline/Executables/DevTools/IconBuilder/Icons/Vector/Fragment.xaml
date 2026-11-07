@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Fragment: a green chromatographic peak traced from the native 1-pixel line. Baseline on both
+       sides, a stepped left flank with two shoulders, a sharp apex, and a straighter right leg. -->
+  <Path Data="M 0,25 L 7,25 L 9,23 L 11,23 L 13,21 L 13,17 L 15,15 L 15,7 L 17,2.5 L 19,9 L 19,21 L 21,23 L 21,25 L 32,25" Stroke="#0A8A0A" StrokeThickness="2" StrokeLineJoin="Round"/>
+</Canvas>

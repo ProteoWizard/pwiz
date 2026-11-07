@@ -357,19 +357,6 @@
   <data name="toolButtonUndo.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="toolButtonUndo.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF7SURBVDhPvZFNSwJhFIX9M0EraRGBWdEqi1qUKdEHVqJG
-        bSKNaBUqJVFERNYiNBArs4VI5BiZRUlkDjIQWGCftkvEJJ3RmMXJqYjCAVGoZ/m+5zxc7hX8C5ePLJwB
-        Bj4qi/DNG76eixOKspjaorFKMFjcpbHkZrB9wsB1xvBLGrVX3x/Ufb68SUNrzUCiu0Cdxot6NYFOwxNs
-        hwy8JI9EPHwOVygL8o7FhD0DlTkNkXIPDSo3lIZjDEz7IFLY0DOfhDvII6ju92BkLY0xSwZq8yuqOq0Q
-        D+7AsR/9CHOjN6ms6NDfw+bPFgqEcjtajQn0LqQxYUlg1ESAjDz/CnaPOyEzxrB+xCOobFtBje4BLcb4
-        xyRmD10QatbYIZ1+huOUR1DRNAdOIpRtoLqfQG1+Jz8Xy1HT54LUlICfei0UFCMQjkEyeYOh5ZfSyxx9
-        +hDksyl4g/HSBQdkEu0zKShMnxcpCeo2h665/HlXYuWNfnbNIhDJlVf+YwSCd8eF8t6939QTAAAAAElF
-        TkSuQmCC
-</value>
-  </data>
   <data name="toolButtonUndo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -381,19 +368,6 @@
   </data>
   <data name="toolButtonRedo.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
-  </data>
-  <data name="toolButtonRedo.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF8SURBVDhPxZNLS0JhEIb9M0EraRGBWdFKi1qUF6ISK1Gj
-        NmGGtBIVkzAiImsRGkgXs4VIpEZmUSKZIgcCC6ws2yVi4uUcw8VbR4KIE2QS9Czn/eYZZuBj/Smx21f4
-        CQrOIImrxwo+yrXhCpHYPSOx7CaxtF/CmpeEdqeESKIGkS9Kwn5MQqh/QrvCizalD3z1JaZtRWi3SyCS
-        n5LO6Wum0B0mMbSQBUdqx6jRD5n+FB1yNziyA8gtBWg2i4jeV+CKUOBOXDAF9gCFfl0SPLkN9Cp0zXGY
-        AHdsD01CGxSWPFTWIibXC2ge8TAFGycURIYUBmecX8Jo/BlTJi801gyGFwvoMWTAFm8yBY5zCgLjM7qU
-        zNDiKVUndxvSaFE/oLF3lSkIEHkITBm0SFxfQvpgre87N494wRZtVZsbeGamgGZ85QX82VsEY6nvH/yE
-        L5yGeD4HiS5Sn4BGakqgby6Ho2i2folqNYUBcwHEXbl+STBeRujml3/hn2Cx3gDp9PLeefazYAAAAABJ
-        RU5ErkJggg==
-</value>
   </data>
   <data name="toolButtonRedo.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -407,14 +381,6 @@
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
   </data>
-  <data name="toolButtonFind.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABhSURBVDhPzY/BCQAxCATtvwN7sqc7kEQWXSX5HDfgZ5yE
-        RH7JA7NhroXFzLVgzGbEI1XNh7JrYTFzBVzeTODCzHJQJjWBC/L0TbjuK2yJQbibCzJjg7IsF2MzLhcn
-        zeeIvK7WkD3AZ8ECAAAAAElFTkSuQmCC
-</value>
-  </data>
   <data name="toolButtonFind.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -423,18 +389,6 @@
   </data>
   <data name="toolButtonFind.Text" xml:space="preserve">
     <value>查找列</value>
-  </data>
-  <data name="toolButtonAlphabetical.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFnSURBVDhPY0AG/mWH/kOZWMGDBw9A8v+hNCpoW3jtv2v2
-        9v9LN53HaQheA+IaDv2PrNjx3zVpGukGnL/1/r93wU6woHFA5/+Dp+9jNQSnAdmdx/7HVu/63zln/3/b
-        yAn/M+rXkmaAf9FuuMDhsw/+G/t3/L/35B2GIVgNyOs+9t8masr/jXuvggUdoiaADYjIn0ucAaQAnAZs
-        75v7f1PLpP/7Z634v6l9+v+lGbn/L61fTbwLNtU2wwXmR8b87/N0RFHwHwhANLoBMHE4ODR9/v86fdX/
-        V3ZuwzCgrq7u/5YtW8AG7Nq1639paSlIGKHu6eUb/ye5+/5fWZKHaioUwGyHYQxvLMpv/j/VzeY/yCCo
-        EAoAaRATEwNr5uLiQjXg2KK1//vt7f5fWLcKLri5ugTDoEePHoENuHXrFqpcr43R/xoT7f8bGqr/ry0v
-        +N9iZ/Z/XV0FhgEgW1taWjCdTwpA1czAAAAaXidra4m7BQAAAABJRU5ErkJggg==
-</value>
   </data>
   <data name="toolButtonAlphabetical.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -445,14 +399,6 @@
   <data name="toolButtonAlphabetical.Text" xml:space="preserve">
     <value>字母顺序</value>
   </data>
-  <data name="toolButtonShowHiddenColumns.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABiSURBVDhPrZABCgAhCAR9uj8vNpTWkAxyYNiSWu6SLoYJ
-        XjOAIR94sRFV9UZurzJiJS7gfeaGvuAPFHlZlQEM2Wx2ui62QY1IXt8yYiUu4H3mpu2f+IGqDGDIZrPT
-        dfEfkQm8LZukEz4LtgAAAABJRU5ErkJggg==
-</value>
-  </data>
   <data name="toolButtonShowHiddenColumns.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -461,21 +407,6 @@
   </data>
   <data name="toolButtonShowHiddenColumns.Text" xml:space="preserve">
     <value>显示隐藏列</value>
-  </data>
-  <data name="helpToolStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
   </data>
   <data name="helpToolStripButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -488,21 +419,6 @@
   </data>
   <data name="helpToolStripButton.ToolTipText" xml:space="preserve">
     <value>显示列文档</value>
-  </data>
-  <data name="uiModeDropdown.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
   </data>
   <data name="uiModeDropdown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>

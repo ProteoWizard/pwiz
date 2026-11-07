@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Red X: two diagonal strokes with rounded ends, a saturated core and softer lighter edges. -->
+  <Path Data="M 4.5,4.5 L 27.5,27.5 M 27.5,4.5 L 4.5,27.5" Stroke="#FF8A66" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.6"/>
+  <Path Data="M 5,5 L 27,27 M 27,5 L 5,27" Stroke="#FF5A2C" StrokeThickness="3.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 6,6 L 26,26 M 26,6 L 6,26" Stroke="#FF3A0E" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+</Canvas>

@@ -1,0 +1,52 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Skyline logo: the Space Needle at the left in blue (spire, domed saucer with a tapered
+       underside, one thin vertical core down to the ground),
+       two high-rise buildings behind it to the right with light caps, on a two-tone ground band. -->
+  <!-- Ground -->
+  <Rectangle Canvas.Left="0" Canvas.Top="28" Width="32" Height="2" Fill="#A0BBE1"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="28" Width="28" Height="2" Fill="#1D58A1"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="30" Width="32" Height="2" Fill="#05448C"/>
+  <!-- Building 1: light left column, dark right column, light cap, lower annex -->
+  <Rectangle Canvas.Left="15" Canvas.Top="12" Width="4" Height="2" Fill="#A0B8D3"/>
+  <Rectangle Canvas.Left="15" Canvas.Top="14" Width="2" Height="14">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#3A72BD" Offset="0"/>
+        <GradientStop Color="#5E91DE" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="17" Canvas.Top="14" Width="2" Height="14" Fill="#1D58A1"/>
+  <Rectangle Canvas.Left="19" Canvas.Top="20" Width="2" Height="2" Fill="#A0BBE1"/>
+  <Rectangle Canvas.Left="19" Canvas.Top="22" Width="2" Height="6" Fill="#1D58A1"/>
+  <!-- Building 2: mid-tone sides, dark core, light cap -->
+  <Rectangle Canvas.Left="23" Canvas.Top="9" Width="4" Height="2" Fill="#A0B8D3"/>
+  <Rectangle Canvas.Left="21" Canvas.Top="11" Width="2" Height="17" Fill="#4978AE"/>
+  <Rectangle Canvas.Left="23" Canvas.Top="11" Width="2" Height="17">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#0D4B93" Offset="0"/>
+        <GradientStop Color="#2C66B0" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="25" Canvas.Top="11" Width="2" Height="17" Fill="#0D4B93"/>
+  <Rectangle Canvas.Left="27" Canvas.Top="11" Width="2" Height="17">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#4978AE" Offset="0"/>
+        <GradientStop Color="#4A80CB" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <!-- Space Needle -->
+  <!-- Single vertical core, as in the original icon -->
+  <Rectangle Canvas.Left="7.5" Canvas.Top="11" Width="3" Height="17.5" Fill="#1D58A1"/>
+  <!-- Saucer: tapered underside, wide disc, domed top -->
+  <Path Data="M 2.5,8.5 L 15.5,8.5 L 11,11.5 L 7,11.5 Z" Fill="#2B65AF"/>
+  <Rectangle Canvas.Left="1.5" Canvas.Top="6.5" Width="15" Height="2.5" RadiusX="1.25" RadiusY="1.25" Fill="#1D58A1"/>
+  <Path Data="M 3.5,6.5 Q 9,1.5 14.5,6.5 Z" Fill="#2A63AB"/>
+  <Path Data="M 6,6.5 Q 9,3.6 12,6.5 Z" Fill="#5F8EC8"/>
+  <!-- Spire -->
+  <Rectangle Canvas.Left="8.4" Canvas.Top="0.5" Width="1.2" Height="4" Fill="#1D58A1"/>
+</Canvas>

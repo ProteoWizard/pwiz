@@ -1,0 +1,41 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Scissors: two gray blades forming a V that cross near the middle, blue looped handles
+       below with light holes, the right handle sitting a little higher than the left. -->
+  <Path Data="M 8,3.5 Q 8,2 9.5,2 L 12.5,2 L 17.5,13.5 L 14,15.5 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E6E6E6" Offset="0"/>
+        <GradientStop Color="#B8B8B8" Offset="0.5"/>
+        <GradientStop Color="#8C8C8C" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 22,3.5 Q 22,2 20.5,2 L 17.5,2 L 12.5,13.5 L 16,15.5 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#D8D8D8" Offset="0"/>
+        <GradientStop Color="#A0A0A0" Offset="0.5"/>
+        <GradientStop Color="#707070" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Ellipse Canvas.Left="15" Canvas.Top="14.5" Width="12" Height="13" StrokeThickness="4" Fill="#CAD5E6">
+    <Ellipse.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#5A8BE0" Offset="0"/>
+        <GradientStop Color="#2F63C4" Offset="0.5"/>
+        <GradientStop Color="#1C4BA6" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Stroke>
+  </Ellipse>
+  <Ellipse Canvas.Left="5" Canvas.Top="16.5" Width="12" Height="13" StrokeThickness="4" Fill="#CAD5E6">
+    <Ellipse.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#5A8BE0" Offset="0"/>
+        <GradientStop Color="#2F63C4" Offset="0.5"/>
+        <GradientStop Color="#1C4BA6" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Stroke>
+  </Ellipse>
+  <Ellipse Canvas.Left="13.5" Canvas.Top="13.5" Width="5" Height="5" Fill="#2F63C4"/>
+</Canvas>

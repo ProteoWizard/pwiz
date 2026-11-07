@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="28" Height="28">
+  <!-- LabKey: an Erlenmeyer flask with a dark olive-gray 2-unit outline and a flat rim, white
+       interior, blue liquid filling the lower body with a navy blob, and a white gap above the
+       bottom edge. -->
+  <Path Data="M 10,3 L 10,11 L 3,24.5 Q 2,27 4.5,27 L 23.5,27 Q 26,27 25,24.5 L 18,11 L 18,3 Z" Fill="#FFFFFF" Stroke="#4A4D3A" StrokeThickness="2" StrokeLineJoin="Round"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="0" Width="12" Height="2" Fill="#4A4D3A"/>
+  <Path Data="M 10,12 L 18,12 L 22,24 L 6,24 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#9FBBD6" Offset="0"/>
+        <GradientStop Color="#80A0C0" Offset="0.5"/>
+        <GradientStop Color="#6E8EC0" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Ellipse Canvas.Left="10" Canvas.Top="15" Width="8" Height="9" Fill="#404080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="14" Width="4" Height="2" Fill="#608080"/>
+</Canvas>

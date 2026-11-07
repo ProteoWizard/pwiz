@@ -1,0 +1,24 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Zoom in: a blue-ringed magnifier lens (white to pale blue) with a dark blue plus, and a
+       near-black handle with a light edge going down to the left. -->
+  <Path Data="M 13.5,20 L 4,29.5" Stroke="#1A1A1C" StrokeThickness="4.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Round"/>
+  <Path Data="M 12,19.5 L 3,28.5" Stroke="#C4C4CC" StrokeThickness="1.2"/>
+  <Ellipse Canvas.Left="11" Canvas.Top="1" Width="20" Height="20" StrokeThickness="2">
+    <Ellipse.Fill>
+      <RadialGradientBrush>
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#F2F6FB" Offset="0.6"/>
+        <GradientStop Color="#C4D8EB" Offset="1"/>
+      </RadialGradientBrush>
+    </Ellipse.Fill>
+    <Ellipse.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#6486EC" Offset="0"/>
+        <GradientStop Color="#2C4EB2" Offset="0.5"/>
+        <GradientStop Color="#2446AB" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Stroke>
+  </Ellipse>
+  <Rectangle Canvas.Left="20" Canvas.Top="6" Width="2" Height="10" Fill="#2446AB"/>
+  <Rectangle Canvas.Left="16" Canvas.Top="10" Width="10" Height="2" Fill="#2446AB"/>
+</Canvas>

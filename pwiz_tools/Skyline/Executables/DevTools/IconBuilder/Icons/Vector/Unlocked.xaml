@@ -1,0 +1,24 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Open padlock in warm gray: the shackle swings up and left, its cut end darker, with
+       only the right leg entering the body; the body's left edge is shaded darker. -->
+  <Path Data="M 11,3 L 16,3 A 8,8 0 0 1 24,11 L 24,14" StrokeThickness="4" StrokeLineJoin="Round">
+    <Path.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#8C8181" Offset="0"/>
+        <GradientStop Color="#9E9494" Offset="0.4"/>
+        <GradientStop Color="#ACA4A4" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Stroke>
+  </Path>
+  <Rectangle Canvas.Left="10" Canvas.Top="1" Width="3" Height="4" Fill="#776B6B"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="14" Width="24" Height="16" RadiusX="1" RadiusY="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#776B6B" Offset="0"/>
+        <GradientStop Color="#776B6B" Offset="0.17"/>
+        <GradientStop Color="#928989" Offset="0.2"/>
+        <GradientStop Color="#988C8C" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+</Canvas>

@@ -1,0 +1,15 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32" RenderOptions.EdgeMode="Aliased">
+  <!-- Annotated spectrum, traced from the native 1-pixel bars (2 units here): gray baseline, two
+       purple and two blue peaks each with a small label bar above, and a short gray peak. Aliased
+       edges keep the bars pixel-crisp at every render size. -->
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="28" Height="2" Fill="#7F7F7F"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="12" Width="2" Height="14" Fill="#8A2BE2"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="8" Width="6" Height="2" Fill="#8A2BE2"/>
+  <Rectangle Canvas.Left="10" Canvas.Top="4" Width="2" Height="22" Fill="#0000FF"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="0" Width="6" Height="2" Fill="#0000FF"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="16" Width="2" Height="10" Fill="#7F7F7F"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="10" Width="2" Height="16" Fill="#0000FF"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="6" Width="6" Height="2" Fill="#0000FF"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="20" Width="2" Height="6" Fill="#8A2BE2"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="16" Width="4" Height="2" Fill="#8A2BE2"/>
+</Canvas>

@@ -1,0 +1,13 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Green disc with a lighter rim and a thick white check mark. -->
+  <Ellipse Canvas.Left="2" Canvas.Top="2" Width="28" Height="28">
+    <Ellipse.Fill>
+      <RadialGradientBrush Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+        <GradientStop Color="#1E7F1E" Offset="0"/>
+        <GradientStop Color="#1E7F1E" Offset="0.82"/>
+        <GradientStop Color="#5CA85C" Offset="1"/>
+      </RadialGradientBrush>
+    </Ellipse.Fill>
+  </Ellipse>
+  <Path Data="M 7.5,15 L 13,21 L 23.5,9" Stroke="#FFFFFF" StrokeThickness="4.5" StrokeLineJoin="Miter" StrokeStartLineCap="Square" StrokeEndLineCap="Square"/>
+</Canvas>

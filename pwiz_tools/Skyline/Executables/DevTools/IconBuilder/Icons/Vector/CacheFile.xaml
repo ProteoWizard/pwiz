@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Cache file: blue outlined database cylinder (elliptical top and bottom, open interior as in
+       the native), with a gold lightning bolt over its lower-left side. -->
+  <!-- Cylinder body: sides and the bottom ellipse's front half -->
+  <Path Data="M 9,5 L 9,24 A 9,3.5 0 0 0 27,24 L 27,5" Stroke="#1F6FA6" StrokeThickness="2" Fill="#F4F9FD"/>
+  <!-- Top ellipse -->
+  <Ellipse Canvas.Left="8" Canvas.Top="1.5" Width="20" Height="7" Stroke="#1F6FA6" StrokeThickness="2" Fill="#E6F0F8"/>
+  <!-- Lightning bolt -->
+  <Path Data="M 9,16 L 14,16 L 11.5,21 L 14.5,22 L 7,30 L 9.5,24.5 L 6.5,24.5 Z" Stroke="#7A5A10" StrokeThickness="0.5">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E0B850" Offset="0"/>
+        <GradientStop Color="#C0902E" Offset="0.5"/>
+        <GradientStop Color="#8E6A16" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+</Canvas>
