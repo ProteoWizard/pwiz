@@ -1,5 +1,6 @@
 using System.Globalization;
 using Pwiz.Analysis;
+using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Readers;
@@ -53,6 +54,25 @@ public sealed class Converter
 
     /// <summary>Processes every configured input file. Returns the count that succeeded.</summary>
     public int Run()
+    {
+        // A file written against a newer CV can make the readers download that CV version;
+        // say so on the log, since it is network traffic the user did not ask for directly.
+        var previousMode = CvLookup.OnlineUpdate;
+        if (_config.NoCvUpdate)
+            CvLookup.OnlineUpdate = CvOnlineUpdateMode.Disabled;
+        CvLookup.OnlineUpdateMessage += _log.WriteLine;
+        try
+        {
+            return RunInputs();
+        }
+        finally
+        {
+            CvLookup.OnlineUpdateMessage -= _log.WriteLine;
+            CvLookup.OnlineUpdate = previousMode;
+        }
+    }
+
+    private int RunInputs()
     {
         Directory.CreateDirectory(_config.OutputPath);
         WarnAboutUnimplementedOptions();

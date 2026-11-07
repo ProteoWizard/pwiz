@@ -142,6 +142,7 @@ public class ArgParserTests
             "--simAsSpectra", "--srmAsSpectra", "--combineIonMobilitySpectra",
             "--ddaProcessing", "--ignoreCalibrationScans",
             "--acceptZeroLengthSpectra", "--ignoreMissingZeroSamples", "--ignoreUnknownInstrumentError",
+            "--noCvUpdate",
             "--stripLocationFromSourceFiles", "--stripVersionFromSoftware",
             "--continueOnError");
 
@@ -156,6 +157,7 @@ public class ArgParserTests
         Assert.IsTrue(c.AcceptZeroLengthSpectra);
         Assert.IsTrue(c.IgnoreMissingZeroSamples);
         Assert.IsTrue(c.IgnoreUnknownInstrumentError);
+        Assert.IsTrue(c.NoCvUpdate);
         Assert.IsTrue(c.StripLocationFromSourceFiles);
         Assert.IsTrue(c.StripVersionFromSoftware);
         Assert.IsTrue(c.ContinueOnError);
