@@ -1259,7 +1259,7 @@ namespace CommonTest
                 var proteins = RunUniprotLookup(provider, giveUp, out var completed, monitor);
 
                 Assert.AreEqual(1, provider.WaitTimes.Count);
-                Assert.IsTrue(provider.WaitTimes[0] < TimeSpan.FromSeconds(30),
+                Assert.IsTrue(provider.WaitTimes[0] < TimeSpan.FromSeconds(5),
                     $"Cancelling took {provider.WaitTimes[0]} to end a wait of {longRetryAfter}");
                 Assert.AreEqual(1, provider.RequestCount, "A cancelled lookup must not ask again");
                 Assert.AreEqual(0, completed.Count);
