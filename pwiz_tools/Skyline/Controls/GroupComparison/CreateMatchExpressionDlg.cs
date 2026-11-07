@@ -69,8 +69,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 // Hide the filter options
                 groupBox1.Hide();
                 // Expand the data grid
-                dataGridView1.Location = new Point(12, 51);
-                dataGridView1.Size = new Size(465, 252);
+                // 96-DPI literals scaled for high DPI (issue #4599).
+                dataGridView1.Location = new Point(DpiUtil.Scale(this, 12), DpiUtil.Scale(this, 51));
+                dataGridView1.Size = new Size(DpiUtil.Scale(this, 465), DpiUtil.Scale(this, 252));
             }
             FilterRows();
         }

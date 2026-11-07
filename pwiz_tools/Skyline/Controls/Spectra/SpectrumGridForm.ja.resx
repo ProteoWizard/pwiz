@@ -316,7 +316,7 @@
     <value>Bottom, Left, Right</value>
   </data>
   <data name="lblSummary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 100</value>
+    <value>10, 98</value>
   </data>
   <data name="lblSummary.Size" type="System.Drawing.Size, System.Drawing">
     <value>623, 23</value>

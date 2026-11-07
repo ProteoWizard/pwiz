@@ -31,6 +31,37 @@ namespace pwiz.Common.Controls
     {
         [DefaultValue(null)]
         public int? MaximumColumnCount { get; set; }
+
+        private int _scaledDefaultRowHeight;
+
+        public CommonDataGridView()
+        {
+            ScaleRowTemplateHeight();
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+            ScaleRowTemplateHeight();
+        }
+
+        /// <summary>
+        /// WinForms derives the default row height from the font plus 9 pixels of padding that it
+        /// does not scale with the display DPI, so rows get denser as the scale goes up. Scale the
+        /// padding too, leaving alone a grid that set its own row height (issue #4599).
+        /// </summary>
+        private void ScaleRowTemplateHeight()
+        {
+            const int defaultPadding = 9;
+            if (!DpiScale.IsScaled(this))
+                return;
+            int fontHeight = Font.Height;
+            if (RowTemplate.Height != fontHeight + defaultPadding && RowTemplate.Height != _scaledDefaultRowHeight)
+                return;
+            _scaledDefaultRowHeight = fontHeight + DpiScale.Scale(this, defaultPadding);
+            RowTemplate.Height = _scaledDefaultRowHeight;
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             // An exception is possible in "PerformLayoutPrivate" if ColumnHeadersHeightSizeMode is AutoSize

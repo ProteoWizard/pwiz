@@ -142,6 +142,15 @@ namespace pwiz.Skyline
         /// </summary>
         public SkylineWindow(string[] args = null)
         {
+            // Get placement values before changing anything. At high DPI the form auto-scales
+            // in InitializeComponent, and the Resize handler it has already wired would overwrite
+            // the saved size and maximized state. The persisted size is in 96-DPI logical units
+            // (see DpiUtil); the location is physical screen coordinates, clamped by
+            // ForceOnScreen below.
+            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
+            Size size = Settings.Default.MainWindowSize;
+            Point location = Settings.Default.MainWindowLocation;
+
             InitializeComponent();
             statusStrip.Renderer = new ClassicSizingGripRenderer();
             InitializeMenus();
@@ -224,14 +233,9 @@ namespace pwiz.Skyline
                 }, @"Check for tool updates");
             }
 
-            // Get placement values before changing anything.
-            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
-            Size size = Settings.Default.MainWindowSize;
-            if (!size.IsEmpty)
-                Size = size;
-
             // Restore window placement.
-            Point location = Settings.Default.MainWindowLocation;
+            if (!size.IsEmpty)
+                Size = DpiUtil.ScaleSize(this, size);
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;
@@ -4187,7 +4191,7 @@ namespace pwiz.Skyline
         private void SkylineWindow_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Normal)
-                Settings.Default.MainWindowSize = Size;
+                Settings.Default.MainWindowSize = DpiUtil.ScaleToLogical(this, Size);
             Settings.Default.MainWindowMaximized =
                 (WindowState == FormWindowState.Maximized);
         }

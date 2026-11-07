@@ -16,6 +16,7 @@
 
 using System.Runtime.InteropServices;
 using System;
+using System.Drawing;
 using pwiz.Common.SystemUtil.PInvoke;
 
 namespace TestRunnerLib.PInvoke
@@ -61,5 +62,27 @@ namespace TestRunnerLib.PInvoke
         // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
         public static extern int DwmUpdateThumbnailProperties(IntPtr hThumb, ref THUMBNAIL_PROPERTIES props);
+
+        // ReSharper disable once InconsistentNaming
+        public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+
+        // ReSharper disable once StringLiteralTypo
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out User32.RECT pvAttribute, int cbAttribute);
+
+        /// <summary>
+        /// The visible frame of a top-level window in screen pixels, excluding the invisible
+        /// resize border and drop shadow. Returns false if DWM cannot report it.
+        /// </summary>
+        public static bool TryGetExtendedFrameBounds(IntPtr hwnd, out Rectangle bounds)
+        {
+            if (DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out var rect, Marshal.SizeOf(typeof(User32.RECT))) != 0)
+            {
+                bounds = Rectangle.Empty;
+                return false;
+            }
+            bounds = rect.Rectangle;
+            return true;
+        }
     }
 }

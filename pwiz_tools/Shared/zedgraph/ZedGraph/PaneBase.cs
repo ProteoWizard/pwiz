@@ -747,6 +747,21 @@ namespace ZedGraph
 		}
 
 		/// <summary>
+		/// Scaling applied to fonts, symbols and pen widths so that a graph is the same
+		/// physical size on a high-DPI display as on a 96-DPI one.  Defaults to 1.0, which
+		/// leaves rendering exactly as before; a DPI-aware host sets it once at startup
+		/// (1.5 at 150% scaling, for example).
+		/// </summary>
+		/// <remarks>
+		/// This is needed because <see cref="FontSpec"/> builds its fonts in
+		/// <see cref="GraphicsUnit.World"/> units, which are pixels.  A font size is
+		/// therefore a fixed pixel size that does not follow the display DPI, so on a
+		/// DPI-aware host every graph would draw its text, markers and lines at 96-DPI
+		/// size while the surrounding window chrome scaled up.
+		/// </remarks>
+		public static float DpiScaleFactor = 1.0f;
+
+		/// <summary>
 		/// Calculate the scaling factor based on the ratio of the current <see cref="Rect"/> dimensions and
 		/// the <see cref="Default.BaseDimension"/>.
 		/// </summary>
@@ -769,10 +784,11 @@ namespace ZedGraph
 		{
 			float scaleFactor; //, xInch, yInch;
 			const float ASPECTLIMIT = 1.5F;
-			
-			// if font scaling is turned off, then always return a 1.0 scale factor
+
+			// If font scaling is turned off, scale for DPI only. The size-based scaling
+			// below already grows with the pane's pixel size on a DPI-aware host.
 			if ( !_isFontsScaled )
-				return 1.0f;
+				return DpiScaleFactor;
 
 			// Assume the standard width (BaseDimension) is 8.0 inches
 			// Therefore, if the rect is 8.0 inches wide, then the fonts will be scaled at 1.0
@@ -811,10 +827,12 @@ namespace ZedGraph
 		/// <returns>The scaled pen width, in world pixels</returns>
 		public float ScaledPenWidth( float penWidth, float scaleFactor )
 		{
+			// Pen widths are pixels too, so an unscaled pen still has to follow the
+			// display DPI or lines stay hairline-thin next to scaled text.
 			if ( _isPenWidthScaled )
 				return (float)( penWidth * scaleFactor );
 			else
-				return penWidth;
+				return penWidth * DpiScaleFactor;
 		}
 
 		/// <summary>

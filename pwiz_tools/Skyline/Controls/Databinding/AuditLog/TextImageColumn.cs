@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Controls.Databinding.AuditLog
 {
@@ -28,7 +29,7 @@ namespace pwiz.Skyline.Controls.Databinding.AuditLog
         private TextImageColumnItem[] _items;
         public TextImageColumnItem[] Items
         {
-            get { return _items ?? (_items = Column.Images.Select(img => new TextImageColumnItem(img)).ToArray()); }
+            get { return _items ?? (_items = Column.DisplayImages.Select(img => new TextImageColumnItem(img)).ToArray()); }
         }
 
         private TextImageColumn Column
@@ -53,7 +54,10 @@ namespace pwiz.Skyline.Controls.Databinding.AuditLog
                 item.Visible = Column.ShouldDisplay(value, i);
                 if (item.Visible)
                 {
-                    graphics.DrawImageUnscaled(item.Image, CalculateImageRectangle(item.Image, drawIndex++, cellBounds));
+                    // Into the explicit pixel rectangle: DrawImageUnscaled sizes by the image's DPI
+                    // metadata, which is 96 for the resampled copies and the screen DPI for a Bitmap
+                    // copied in a DPI-aware process, so it inflates one and shrinks the other
+                    graphics.DrawImage(item.Image, CalculateImageRectangle(item.Image, drawIndex++, cellBounds));
                 }    
             }
 
@@ -139,5 +143,26 @@ namespace pwiz.Skyline.Controls.Databinding.AuditLog
         }
 
         public abstract IList<Image> Images { get; }
+
+        private IList<Image> _displayImages;
+
+        /// <summary>
+        /// The images as painted: <see cref="Images"/> are 96-DPI designs, and the cell draws
+        /// them at their own pixel size, so they are resampled once to the grid's DPI
+        /// (issue #4599). Built lazily because the column has no grid when constructed.
+        /// </summary>
+        public IList<Image> DisplayImages
+        {
+            get
+            {
+                if (_displayImages == null)
+                {
+                    _displayImages = DpiScale.IsScaled(DataGridView)
+                        ? Images.Select(img => (Image) DpiScale.Resample(img, DpiScale.ScaleSize(DataGridView, img.Size))).ToArray()
+                        : Images;
+                }
+                return _displayImages;
+            }
+        }
     }
 }

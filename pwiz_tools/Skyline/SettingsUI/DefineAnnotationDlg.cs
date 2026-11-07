@@ -43,6 +43,7 @@ namespace pwiz.Skyline.SettingsUI
         public DefineAnnotationDlg(IEnumerable<AnnotationDef> existing)
         {
             InitializeComponent();
+            DpiUtil.DeferBottomAnchors(this, tabPageEditable, tabPageCalculated);
             Icon = Resources.Skyline;
             checkedListBoxAppliesTo.Items.Clear();
             comboAppliesTo.Items.Clear();

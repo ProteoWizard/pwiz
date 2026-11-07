@@ -1559,7 +1559,9 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 var rect = SkylineWindow.Bounds;
-                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
+                // The dock indicators scale with the display (DigitalRune.Windows.Docking,
+                // issue #4599), so a proportional point reaches the same indicator at any scale.
+                var ptDest = new Point((int) (rect.X + rect.Width * xProportion), (int) (rect.Y + rect.Height * yProportion));
                 SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
             });
         }

@@ -41,6 +41,9 @@ namespace pwiz.Skyline.Controls
             {
                 listView.Items.Add(MakeListViewItem(findResult));
             }
+            // ListView column widths are not scaled by the form's font autoscale
+            colHdrLocation.Width = DpiUtil.Scale(this, colHdrLocation.Width);
+            colHdrType.Width = DpiUtil.Scale(this, colHdrType.Width);
             // Width=-1 means auto-adjust to the length of the longest item
             colHdrDisplayText.Width = -1;
         }

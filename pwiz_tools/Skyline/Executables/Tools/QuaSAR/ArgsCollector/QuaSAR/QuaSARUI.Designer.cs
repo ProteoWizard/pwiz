@@ -117,9 +117,11 @@ namespace QuaSAR
             // 
             // tboxTitle
             // 
+            this.tboxTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tboxTitle.Location = new System.Drawing.Point(45, 12);
             this.tboxTitle.Name = "tboxTitle";
-            this.tboxTitle.Size = new System.Drawing.Size(222, 20);
+            this.tboxTitle.Size = new System.Drawing.Size(214, 20);
             this.tboxTitle.TabIndex = 1;
             // 
             // gboxGenerate
@@ -476,6 +478,9 @@ namespace QuaSAR
             this.tabControl.Controls.Add(this.tabPage1);
             this.tabControl.Controls.Add(this.tabPage2);
             this.tabControl.Controls.Add(this.tabPage3);
+            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl.Location = new System.Drawing.Point(15, 58);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
