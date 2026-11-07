@@ -34,7 +34,7 @@ The FDR stage runs twice in the two-pass architecture:
 
 ```text
 Stage 5 (first pass, after per-file coelution scoring):
-  1. Each observation carries a 21-feature PIN vector (see 03-spectral-scoring.md),
+  1. Each observation carries a 41-feature PIN vector (see 03-spectral-scoring.md; 20 of them masked by default),
      cached per file in .scores.parquet; the resident buffer is a lightweight FdrEntry stub.
   2. Build a flat PercolatorEntry list (one per observation) from the stubs.
   3. Run the native streaming Percolator with the classifier OSPREY_FDR_MODEL selects:
@@ -132,11 +132,14 @@ C# port. See Divergences.
 
 ### GBDT (`OSPREY_FDR_MODEL=gbdt`) - Experimental, C#-only, no Rust counterpart
 
-**Experimental.** GBDT is not expected to improve results with the current features, which
-were chosen for the linear SVM. It exists so that features we want to add later, which do not
-work well with a linear SVM - some were removed earlier for that reason - can be evaluated. It
-has to keep working: every first-pass path trains and scores it, and its tests stay in the
-standing suite.
+**Experimental.** GBDT exists so that features which do not work well with a linear SVM can be
+evaluated. It has to keep working: every first-pass path trains and scores it, and its tests
+stay in the standing suite. With the 21 default features it gains 5-8% at matched entrapment
+FDP over the SVM (Astral, Stellar, ZT Scan). With all 41 PIN features (`OSPREY_FEATURE_MASK=none`)
+it adds 6-13% over the 41-feature SVM on Astral and Stellar, with the reported q still calibrated under the `transfer` second
+pass. It needs enough confident training targets: on a 9.08M-precursor ZT Scan library only
+about 900 of its 150,000 training targets pass 1% FDR, and there the SVM is the better and better
+calibrated choice. Measurements and per-dataset recommendations: `03-spectral-scoring.md` B.7.
 
 `gbdt` reuses the **entire** Percolator scaffold documented below - feature
 standardization, 3-fold peptide-grouped CV, semi-supervised positive-set iteration,

@@ -35,6 +35,7 @@ using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
@@ -352,8 +353,18 @@ namespace pwiz.Osprey.Test
             AssertHasRows(diagnosticsReport);
             AssertTrainingSetAnalysis(Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1)),
                 Path.Combine(workDir, OutputArtifact(FirstPassModelIO.EXT_MODEL)));
+            AssertFragmentMassErrors(workDir, diagnosticsReport);
             // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
+
+            // Mode 2 with the report on: a resume that re-runs the first pass rewrites its q-value
+            // sidecars bit-identically, which must leave the fragment mass-error summaries current,
+            // so PerFileRescoring still skips.
+            DeleteFiles(workDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
+            DeleteSecondPassOutputs(blib);
+            string resumeLog = RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            AssertTasks(resumeLog, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
+                new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
 
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
@@ -415,6 +426,24 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // A fragment mass-error summary that fails while its run re-scores - a directory holds
+            // its path, so it cannot be written - is reported once, not measured again from disk by
+            // the same run, and does not fail the analysis.
+            CutRescore(workDir, cutRun, true);
+            DeleteSecondPassOutputs(blib);
+            string summaryPath = Path.Combine(workDir, cutRun + FragmentMassErrorWriter.EXT);
+            File.Delete(summaryPath);
+            Directory.CreateDirectory(summaryPath);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
+            AssertRescoredOnly(log, 1);
+            string failure = string.Format(
+                OspreyTasksResources.PerFileRescoreTask_WriteFragmentMassErrors_The_fragment_mass_error_summary_failed_for__0____1_,
+                Path.Combine(workDir, cutRun + MZML_EXTENSION), string.Empty);
+            Assert.AreEqual(1, SplitLines(log).Count(line => line.Contains(failure)),
+                @"the failed fragment mass-error summary was not reported exactly once" + Environment.NewLine + log);
+            AssertBlibsEqual(uninterruptedBlib, blib);
+            Directory.Delete(summaryPath);
         }
 
         /// <summary>
@@ -600,14 +629,23 @@ namespace pwiz.Osprey.Test
             RunIn(referenceDir, withFlag);
             RunIn(workDir, withoutFlag);
             AssertBlibsEqual(Path.Combine(referenceDir, BLIB_FILE), Path.Combine(workDir, BLIB_FILE));
+            // The diagnostics measure the spectra after every score is written, so no score moves:
+            // both passes' per-run q-value sidecars are the same with the flag and without it.
+            foreach (var pass in new[] { FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.Pass.SecondPass })
+                AssertFdrSidecarsEqual(referenceDir, workDir, pass, RUN_NAMES);
             foreach (string product in products)
                 Assert.IsFalse(File.Exists(Path.Combine(workDir, product)), @"the analysis without the flag wrote " + product);
+            Assert.AreEqual(0, Directory.GetFiles(workDir, @"*" + FragmentMassErrorWriter.EXT).Length,
+                @"the analysis without the flag wrote fragment mass-error summaries");
 
             // --task ModelDiagnostics folds both products from what the analysis stored.
             string log = RunIn(workDir, withFlag, ModelDiagnosticsTask.TASK_NAME);
             AssertNoRecompute(log);
             AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
             AssertSameAsWithFlag(OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME));
+            // The per-run fragment mass-error summaries, written from the runs' artifacts, are the
+            // ones the analysis wrote while re-scoring with the flag given up front.
+            AssertSameFragmentMassErrors(referenceDir, workDir);
 
             // The original command line with the flag added, products absent, folds them too.
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
@@ -1033,7 +1071,7 @@ namespace pwiz.Osprey.Test
             }).Concat(CommonArgs()).ToArray();
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -1225,7 +1263,7 @@ namespace pwiz.Osprey.Test
             byte[] before = HashFile(library);
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (EnvVar.OverrideVariables(Verifier(false)))
             {
                 exitCode = InProcessOsprey.Run(new[]
                 {
@@ -1559,7 +1597,7 @@ namespace pwiz.Osprey.Test
         {
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(variables))
+            using (EnvVar.OverrideVariables(variables))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
@@ -2082,6 +2120,50 @@ namespace pwiz.Osprey.Test
         {
             Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SCORE_FILE, string.Empty)), log);
             Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty)), log);
+        }
+
+        /// <summary>
+        /// Every run has a fragment mass-error summary that measured something in each intensity
+        /// class, and the report carries them as its mass-error view.
+        /// </summary>
+        private static void AssertFragmentMassErrors(string workDir, string report)
+        {
+            foreach (string run in RUN_NAMES)
+            {
+                string path = Path.Combine(workDir, run + FragmentMassErrorWriter.EXT);
+                var summary = FragmentMassErrorWriter.ReadRun(path);
+                Assert.IsNotNull(summary, @"no fragment mass-error summary " + path);
+                Assert.IsTrue(summary.Precursors > 0, path);
+                Assert.AreEqual(ModelDiagnosticsData.MASS_ERROR_CLASSES.Length, summary.Classes.Count, path);
+                foreach (var massErrorClass in summary.Classes)
+                    Assert.IsTrue(massErrorClass.Total > 0, path + @" " + massErrorClass.Name);
+                Assert.IsTrue(summary.HalfWidth > summary.SearchTolerance, path);
+                Assert.IsFalse(double.IsNaN(summary.Classes.Last().Sd), path);
+            }
+            string html = File.ReadAllText(report);
+            Assert.IsTrue(html.Contains(@"""fragmentMassErrors"":{""files"":[{"), @"the report has no fragment mass-error view");
+        }
+
+        /// <summary>
+        /// The two directories' per-run fragment mass-error summaries hold the same content; only
+        /// the embedded stamp, which names each directory's own input files, may differ.
+        /// </summary>
+        private static void AssertSameFragmentMassErrors(string expectedDir, string actualDir)
+        {
+            foreach (string run in RUN_NAMES)
+            {
+                string expectedPath = Path.Combine(expectedDir, run + FragmentMassErrorWriter.EXT);
+                string actualPath = Path.Combine(actualDir, run + FragmentMassErrorWriter.EXT);
+                Assert.IsTrue(File.Exists(actualPath), @"no fragment mass-error summary " + actualPath);
+                JObject Content(string path)
+                {
+                    var json = JObject.Parse(File.ReadAllText(path));
+                    json.Remove(ArtifactStamp.JSON_PROPERTY);
+                    return json;
+                }
+                Assert.IsTrue(JToken.DeepEquals(Content(expectedPath), Content(actualPath)),
+                    @"the fragment mass-error summary written later differs: " + actualPath);
+            }
         }
 
         private static void AssertBlibsEqual(string expectedBlib, string actualBlib)

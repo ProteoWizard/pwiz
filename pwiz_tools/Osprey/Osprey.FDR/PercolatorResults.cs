@@ -137,6 +137,14 @@ namespace pwiz.Osprey.FDR
         /// <summary>Feature standardizer used during training.</summary>
         public FeatureStandardizer Standardizer { get; set; }
 
+        /// <summary>
+        /// The name of each feature the model was trained on, in feature-vector order, or null when
+        /// the trainer was given no feature metadata. Travels with the weights (and the saved
+        /// first-pass model) so a consumer can check that the vectors it scores are laid out the
+        /// way the model expects, not merely that they are the same length.
+        /// </summary>
+        public string[] FeatureNames { get; set; }
+
         /// <summary>Number of iterations used per fold.</summary>
         public List<int> IterationsPerFold { get; set; }
 

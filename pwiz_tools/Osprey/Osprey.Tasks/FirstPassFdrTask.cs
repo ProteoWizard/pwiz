@@ -36,7 +36,6 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
@@ -409,7 +408,7 @@ namespace pwiz.Osprey.Tasks
                     : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
             });
             var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
-                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES));
+                ScoringTaskShared.FdrFeatureInfos());
             return ModelDiagnosticsData.ModelView.From(contributions);
         }
 
@@ -535,6 +534,8 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
+                + PinFeatureMask.ValidityKeySuffix()
+                + OspreyEnvironment.FdrExperimentValidityKeySuffix()
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -1884,7 +1885,7 @@ namespace pwiz.Osprey.Tasks
                     throw new IOException(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Could_not_write_the_first_pass_intermediate_file_for___0____and_the_analysis_cannot_, fileName));
                 };
-            var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
+            var featureInfos = ScoringTaskShared.FdrFeatureInfos();
             var swFdr = Stopwatch.StartNew();
             bool aborted;
             // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident

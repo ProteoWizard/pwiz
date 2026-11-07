@@ -541,6 +541,7 @@ namespace pwiz.Osprey
                     resolutionDetection = ResolutionDetector.Detect(config);
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
+                PinFeatureMask.ApplyResolutionMode(config.ResolutionMode);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
@@ -683,6 +684,62 @@ namespace pwiz.Osprey
                         OspreyEnvironment.SvmCSelectionToleranceSetting,
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
+                }
+                // Abort for the same reason: an unparseable or out-of-range training q-value
+                // would train under the default and key its directories as the default.
+                if (OspreyEnvironment.FdrTrainFdrUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_FDR_TRAIN_FDR must be a number in (0, 1] such as '0.05', not '{0}'. " +
+                        @"Unset it for the default (the run FDR).", OspreyEnvironment.FdrTrainFdrSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Abort for the same reason: an unparseable round-2 q cut would train on the fixed
+                // row count and key its directories as such.
+                if (OspreyEnvironment.GbtPrefilterQUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_GBT_PREFILTER_Q must be a number in (0, 1] such as '0.1', not '{0}'. " +
+                        @"Unset it for the fixed OSPREY_GBT_PREFILTER_SIZE row count.", OspreyEnvironment.GbtPrefilterQSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                if (OspreyEnvironment.GbtPrefilterLocalFdrUnrecognized)
+                {
+                    LogError(string.Format(
+                        @"OSPREY_GBT_PREFILTER_LFDR must be a number in (0, 1] such as '0.9', not '{0}', " +
+                        @"and cannot be set together with OSPREY_GBT_PREFILTER_Q.", OspreyEnvironment.GbtPrefilterLocalFdrSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Abort for the same reason: without a size there is no round 2, so the switches
+                // would do nothing while the run kept the one-round baseline's key.
+                if (OspreyEnvironment.GbtPrefilterSwitchesWithoutSize)
+                {
+                    LogError(@"OSPREY_GBT_PREFILTER_Q, OSPREY_GBT_PREFILTER_LFDR and OSPREY_GBT_PREFILTER_SAMPLE shape round 2 " +
+                             @"of the two-round training and need OSPREY_GBT_PREFILTER_SIZE (the row cap) set as well.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Abort for the same reason: the mask is resolved when the FDR stage first loads
+                // features, so a mistyped name would otherwise surface only after Stages 1-4.
+                string unknownMaskedFeature = PinFeatureMask.UnknownFeatureName();
+                if (unknownMaskedFeature != null)
+                {
+                    LogError(string.Format(
+                        OspreyResources.Program_Run__0__names_an_unknown_feature___1____Use_PIN_feature_names_separated_by_commas__or___2___to_mask_nothing_,
+                        @"OSPREY_FEATURE_MASK", unknownMaskedFeature, OspreyEnvironment.FEATURE_MASK_NONE));
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // A masked feature is absent from the classifier's vectors, so a mask with nothing
+                // left would hand it vectors of no features at all.
+                if (PinFeatureMask.FdrFeatureIndices.Length == 0)
+                {
+                    LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Not an error: OSPREY_FEATURE_MASK=none is the same request on any data, but say what it did not get.
+                if (PinFeatureMask.LeavesUnavailableFeaturesUnmasked())
+                {
+                    LogInfo(@"OSPREY_FEATURE_MASK leaves HRAM-only features unmasked; at unit resolution they are not computed or used: " +
+                            string.Join(@", ", PinFeatureMask.HRAM_ONLY_FAMILIES));
                 }
                 // Abort for the same reason: a mistyped value would train with the default arm
                 // and key its directories as the default, so a System.Math timing or parity arm

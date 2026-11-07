@@ -283,11 +283,17 @@
   <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
     <value>{0} is damaged: row {1} in row group {5} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it.</value>
   </data>
+  <data name="ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column" xml:space="preserve">
+    <value>{0} has no {1} column: the run that scored it did not record that feature, which this run needs. Score the file again with this run's {2}, or set {3}=1 when scoring to record every feature.</value>
+  </data>
   <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
     <value>The scores file '{0}' is damaged: row group {1} has no readable {2} column, so its row order cannot be established. Delete it and score the file again.</value>
   </data>
   <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
     <value>{0}: a re-scored precursor candidate peak refers to row {1:N0}, past the end of the scores file ({2:N0} rows), and was not written.</value>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__" xml:space="preserve">
+    <value>{0} was scored with {1} XIC fragments, but this run uses {2} ({3}). Score the files again with this setting, or set {3} to match them.</value>
   </data>
   <data name="ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_" xml:space="preserve">
     <value>Could not read the scores file {0}: {1}</value>

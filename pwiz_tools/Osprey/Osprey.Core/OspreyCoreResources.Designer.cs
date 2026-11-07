@@ -330,5 +330,23 @@ namespace pwiz.Osprey.Core {
                 return ResourceManager.GetString("ToleranceUnitExtension_LOCALIZED_VALUES_ppm", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be '{1}' or unset, not '{2}'..
+        /// </summary>
+        public static string OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___ {
+            get {
+                return ResourceManager.GetString("OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be a whole number from {1} to {2}, not '{3}'..
+        /// </summary>
+        public static string OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___ {
+            get {
+                return ResourceManager.GetString("OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___", resourceCulture);
+            }
+        }
     }
 }

@@ -453,7 +453,21 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             data.Completeness = BuildCompleteness(data, runsContributed,
                 HasCompletedSecondPass(config));
-            string html = ModelDiagnosticsHtml.Render(data);
+            // The fragment mass-error view is read from the per-run summaries PerFileRescoring
+            // writes, at every render, and never stored in a pass product: it describes the runs'
+            // spectra rather than either pass, and a page rendered before the summaries exist
+            // simply lacks it until the render after PerFileRescoring.
+            var massErrors = data.FragmentMassErrors;
+            data.FragmentMassErrors = FragmentMassErrorWriter.ReadAll(config);
+            string html;
+            try
+            {
+                html = ModelDiagnosticsHtml.Render(data);
+            }
+            finally
+            {
+                data.FragmentMassErrors = massErrors;
+            }
             // The stamp of the product this page shows, as a comment ahead of the DOCTYPE, so the
             // page is a declared output whose validity is read from the page itself.
             if (stamp != null)
@@ -571,7 +585,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// one) as the document's first property. Every consumer relies on presence proving
         /// completeness (P8), so a partial write must never surface as a corrupt data model.
         /// </summary>
-        private static void WriteJson(string path, object value, ArtifactStamp stamp)
+        internal static void WriteJson(string path, object value, ArtifactStamp stamp)
         {
             string dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir))
@@ -594,7 +608,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
         }
 
-        private static T ReadJson<T>(string path) where T : class
+        internal static T ReadJson<T>(string path) where T : class
         {
             if (!File.Exists(path))
                 return null;

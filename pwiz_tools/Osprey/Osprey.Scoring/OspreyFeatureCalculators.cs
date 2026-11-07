@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using pwiz.Osprey.Core;
 
@@ -30,21 +32,33 @@ namespace pwiz.Osprey.Scoring
     /// The ordered set of Osprey scoring feature calculators, mirroring
     /// Skyline's <c>PeakFeatureCalculator.CALCULATORS</c>. The array index IS the
     /// parity-critical PIN feature index -- the position written into the
-    /// <c>double[21]</c> feature vector and the feature column order in
+    /// <c>double[FeatureCount]</c> feature vector and the feature column order in
     /// <c>.scores.parquet</c>. This is the single place that order lives as
     /// data.
     ///
-    /// All 21 PIN features are now extracted, so every slot is populated and
-    /// <see cref="Get"/> never returns null; this array is the canonical ordered
-    /// calculator set. (Scores the Rust engine computes but excludes from the 21 PIN
-    /// features are intentionally NOT here -- see the non-PIN-scores backlog.)
+    /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
+    /// never returns null. Slots 21-108 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment, wide-span coelution, shadow-isotope, cleaned time-correlation, library agreement and spectrum-match families,
+    /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
+    /// they are evaluated, and computed and written only for a family the mask leaves a feature of,
+    /// or under OSPREY_RECORD_ALL_FEATURES=1. (Scores the Rust engine computes but excludes from its PIN features
+    /// are intentionally NOT here - see the non-PIN-scores backlog.)
     /// </summary>
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 21;
+        public const int FeatureCount = 109;
+
+        /// <summary>
+        /// The core features, the first 21: the Rust PIN features, which the scorer always computes.
+        /// The families after them are computed only when recorded (<c>PinFeatureMask.IsRecorded</c>).
+        /// </summary>
+        public const int CORE_FEATURE_COUNT = 21;
 
         private static readonly IOspreyFeatureCalculator[] _calculators = CreateCalculators();
+
+        // After _calculators, which it reads.
+        private static readonly bool[] _readsCorrelationXics = CreateCorrelationMask();
 
         private static IOspreyFeatureCalculator[] CreateCalculators()
         {
@@ -88,11 +102,122 @@ namespace pwiz.Osprey.Scoring
             calculators[19] = new MedianPolishMinFragmentR2Calc();
             calculators[20] = new MedianPolishResidualCorrelationCalc();
 
+            // Runner-up family: the chosen peak against the other candidates in its window.
+            calculators[21] = new PeakCoelutionMarginCalc();
+            calculators[22] = new PeakRankMarginCalc();
+            calculators[23] = new PeakCandidateCountCalc();
+
+            // Context family: what is being matched, shared by a target and its decoy.
+            calculators[24] = new PeptideLengthCalc();
+            calculators[25] = new PrecursorChargeCalc();
+            calculators[26] = new PrecursorMzCalc();
+
+            // Per-fragment-rank family: the top library fragments matched at the apex, one feature
+            // per rank, so the classifier can weigh each rank separately.
+            for (int r = 1; r <= FragmentRankApexMatch.RANK_COUNT; r++)
+            {
+                calculators[26 + r] = new FragmentRankMassErrorCalc(r);
+                calculators[26 + FragmentRankApexMatch.RANK_COUNT + r] = new FragmentRankIntensityShareCalc(r);
+            }
+
+            // Spectrum-across-peak family: the library cosine at every scan of the peak.
+            calculators[39] = new PeakSpectrumCosineMeanCalc();
+            calculators[40] = new PeakSpectrumCosineSdCalc();
+
+            // Median-polish top-k family: per-fragment R^2 against the robust elution profile,
+            // keeping the best fragments rather than the worst (interference tolerant).
+            calculators[41] = new MedianPolishKthFragmentR2Calc(2);
+            calculators[42] = new MedianPolishKthFragmentR2Calc(3);
+            calculators[43] = new MedianPolishKthFragmentR2Calc(4);
+            calculators[44] = new MedianPolishTop3MeanR2Calc();
+            calculators[45] = new MedianPolishMedianR2Calc();
+            calculators[46] = new MedianPolishGoodFitCountCalc();
+
+            // Reference-correlation family: each fragment against the best-correlated fragment,
+            // raw and spike-filtered, and apex intensity without the top fragment (after DIA-NN).
+            calculators[47] = new ReferenceKthCorrelationCalc(2);
+            calculators[48] = new ReferenceKthCorrelationCalc(3);
+            calculators[49] = new ReferenceKthCorrelationCalc(5);
+            calculators[50] = new ReferenceGoodCountCalc();
+            calculators[51] = new ReferenceMinFilteredTop3Calc();
+            calculators[52] = new ApexIntensityExcludingTopCalc();
+
+            // Peak-profile family: width, 5-bin elution shape, apex-local correlation, library relative
+            // intensities and per-rank shares across the peak (after DIA-NN pShape/pLocCorr/pRef/pSig).
+            calculators[53] = new PeakWidthCalc();
+            for (int b = 1; b <= PeakProfile.SHAPE_BINS; b++)
+                calculators[53 + b] = new ElutionShapeBinCalc(b);
+            calculators[59] = new LocalCorrelationTop3Calc();
+            for (int r = 2; r <= PeakProfile.RANK_COUNT; r++)
+                calculators[58 + r] = new LibraryRelativeIntensityCalc(r);
+            for (int r = 1; r <= PeakProfile.RANK_COUNT; r++)
+                calculators[64 + r] = new WindowShareCalc(r);
+
+            // Time-correlation family: fragments against the smoothed best-correlated fragment over apex
+            // +/- 0.15 min rather than the peak bounds (after DIA-NN pTimeCorr / pCorr / pResCorr).
+            calculators[71] = new TimeCorrelationSumCalc();
+            for (int r = 1; r <= TimeCorrelations.RANK_COUNT; r++)
+                calculators[71 + r] = new TimeCorrelationRankCalc(r);
+            calculators[78] = new TimeCorrelationResidualCalc(false);
+            calculators[79] = new TimeCorrelationResidualCalc(true);
+
+            // Re-extracted-correlation family: the top 6 fragments' M+1 isotopes and the fragments at 0.45 x and
+            // 0.2 x tolerance against the same smoothed reference (after DIA-NN pHeavy / pTightCorr / pTimeCorr).
+            calculators[80] = new HeavyIsotopeSumCalc();
+            calculators[81] = new HeavyIsotopeGoodCountCalc();
+            calculators[82] = new TightToleranceSumCalc(false);
+            calculators[83] = new TightToleranceSumCalc(true);
+            calculators[84] = new TimeCorrelationBestSumCalc();
+
+            // Peak-dominance family: the chosen peak against the other apexes DIA-NN's peak search accepts in the
+            // XIC range (after DIA-NN pBestCorrDelta / pTotCorrSum).
+            calculators[85] = new DominanceBestCorrDeltaCalc();
+            calculators[86] = new DominanceTotalCorrSumCalc();
+            calculators[87] = new DominanceApexCountCalc();
+            calculators[88] = new DominanceCorrMarginCalc();
+
+            // Top-fragment family: reference, median-polish and pairwise agreement restricted to the three most intense
+            // library fragments, which still follow the peak when the deeper fragments are in the noise.
+            calculators[89] = new TopFragmentRefGoodCountCalc();
+            calculators[90] = new TopFragmentMpMinR2Calc();
+            calculators[91] = new TopFragmentMpMedianR2Calc();
+            calculators[92] = new TopFragmentCoelutionMinCalc();
+
+            // Wide-span coelution family: the bounds coelution features over max(bounds, apex +/- 0.08 min), so narrow
+            // bounds on a weak peak do not shrink the correlation to a few scans.
+            calculators[93] = new WideCoelutionSumCalc();
+            calculators[94] = new WideCoelutingCountCalc();
+            calculators[95] = new WideCoelutionMarginCalc();
+            calculators[96] = new WideTop3CoelutionMinCalc();
+
+            // Shadow-isotope family: the trace one 13C spacing below each top-6 fragment, where another ion would
+            // sit whose M+1 isotope interferes with the fragment channel.
+            calculators[97] = new ShadowIsotopeCorrSumCalc();
+            calculators[98] = new ShadowIsotopeFractionCalc();
+
+            // Cleaned time-correlation family: the top-6 time correlation with the scans each fragment exceeds its
+            // library-predicted intensity left out or capped, as interference.
+            calculators[99] = new CleanedTimeCorrelationSumCalc(false);
+            calculators[100] = new CleanedTimeCorrelationSumCalc(true);
+
+            // Library agreement family (HRAM only): the apex +/- 1 intensities of the co-eluting fragments against the library.
+            calculators[101] = new CoelutingLibraryCosineCalc();
+            calculators[102] = new LibraryEntropySimilarityCalc();
+            calculators[103] = new CoelutingLibraryShareCalc();
+
+            // Spectrum-match family (HRAM only): counting and probability scores of the library fragments at the apex and
+            // the best scan of the peak, which hold up in chimeric scans where xcorr does not.
+            calculators[104] = new ApexMatchProbabilityCalc();
+            calculators[105] = new ApexProjectedCosineScoreCalc();
+            calculators[106] = new ApexHyperscoreCalc();
+            calculators[107] = new PeakMaxMatchProbabilityCalc();
+            calculators[108] = new PeakMaxProjectedCosineScoreCalc();
+
             return calculators;
         }
 
         /// <summary>
-        /// The calculator for the given PIN feature index (0..20). All 21 are
+        /// The calculator for the given PIN feature index (0 to FeatureCount - 1). All are
         /// populated, so this never returns null.
         /// </summary>
         public static IOspreyFeatureCalculator Get(int featureIndex)
@@ -101,7 +226,56 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Projects the 21 calculators into a single <see cref="OspreyFeatureInfo"/>
+        /// Whether the feature at <paramref name="featureIndex"/> is a correlation-shape feature,
+        /// scored from the XICs re-extracted at the wider OSPREY_CORR_FRAGMENT_TOLERANCE when that is
+        /// set. Peak detection, the apex, and the intensity-pattern, spectral and mass-error features
+        /// stay on the XICs at the search tolerance: a wider window lets interference into the apex
+        /// and the intensity pattern, while the elution shape of a weak fragment gains the points the
+        /// search tolerance loses.
+        /// </summary>
+        public static bool ReadsCorrelationXics(int featureIndex)
+        {
+            return _readsCorrelationXics[featureIndex];
+        }
+
+        private static bool[] CreateCorrelationMask()
+        {
+            var names = new HashSet<string>
+            {
+                // Pairwise coelution over the bounds, and the chosen peak's margin by it.
+                @"fragment_coelution_sum", @"fragment_coelution_max", @"n_coeluting_fragments",
+                @"peak_coelution_margin",
+                // Per-fragment fit to the median-polish elution profile.
+                @"mp_fragment_r2_rank2", @"mp_fragment_r2_rank3", @"mp_fragment_r2_rank4",
+                @"mp_fragment_r2_top3_mean", @"mp_fragment_r2_median", @"mp_n_fragments_good_fit",
+                // Correlation with the best-correlated fragment.
+                @"ref_corr_rank2", @"ref_corr_rank3", @"ref_corr_rank5", @"ref_n_corr_good",
+                @"ref_minfilt_corr_top3_mean",
+                // Time correlation, and the re-extractions against its reference.
+                @"tc_sum6", @"tc_corr_rank1", @"tc_corr_rank2", @"tc_corr_rank3", @"tc_corr_rank4",
+                @"tc_corr_rank5", @"tc_corr_rank6", @"tc_res_sum", @"tc_res_mean",
+                @"heavy_sum6", @"heavy_n_good", @"tight45_sum6", @"tight20_sum6", @"tc_best_sum6",
+                // Peak dominance, except the apex intensity-weighted total.
+                @"dom_best_corr_delta", @"dom_apex_count", @"dom_corr_margin",
+                // The top-3 and wide-span agreement families.
+                @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
+                @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
+                // The interference families, over the time-correlation window.
+                @"shadow_corr_sum6", @"shadow_frac6", @"tc_clean_sum6", @"tc_clip_sum6",
+            };
+            var mask = new bool[FeatureCount];
+            for (int i = 0; i < FeatureCount; i++)
+                mask[i] = names.Remove(_calculators[i].Name);
+            if (names.Count > 0)
+            {
+                // Exception text for internal diagnostics, not displayed to user
+                throw new InvalidOperationException(string.Format(@"Unknown correlation feature names: {0}", string.Join(@", ", names)));
+            }
+            return mask;
+        }
+
+        /// <summary>
+        /// Projects the calculators into a single <see cref="OspreyFeatureInfo"/>
         /// vector in parity-critical PIN-index order, pairing each supplied machine
         /// <paramref name="featureNames"/> entry with that calculator's
         /// <see cref="IOspreyFeatureCalculator.DisplayName"/> label and
@@ -121,7 +295,7 @@ namespace pwiz.Osprey.Scoring
         public static OspreyFeatureInfo[] BuildFeatureInfos(string[] featureNames)
         {
             if (featureNames == null || featureNames.Length != FeatureCount)
-                throw new System.ArgumentException(
+                throw new ArgumentException(
                     string.Format(@"BuildFeatureInfos expects {0} feature names", FeatureCount),
                     nameof(featureNames));
             // The report label is read in the invariant UI culture, switched on this thread only.

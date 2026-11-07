@@ -42,6 +42,7 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<library-leaf>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/LibraryBlibWriter.cs` from `Osprey.IO/LibraryLoader.cs` | The derived library: a `.tsv` or `.parquet` source's FINISHED form (deduplicated, decoys marked and paired, pairing ids assigned, a `DecoyPairs` table for a decoy or entrapment library), written once from the parse and read on every later run through `BlibLoader`, the same branch a `.blib` source takes. Validated by its `LibMetadata` row `osprey.library_hash` (section 7) |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
 | `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
+| `<stem>.fragment-mass-errors.json` | run | JSON, stamp as the first property | `Osprey.Tasks/FragmentMassErrorWriter.cs` | `--model-diagnostics` only: `PerFileRescoring`'s fixed-bin histogram of the signed m/z error of the peak nearest each top-6 library fragment of the first pass's q <= run FDR targets (apex scan +/- 1, calibrated spectra, a window of max(25 ppm, 3x the configured tolerance)), per observed-intensity tercile. Keyed on the task key plus the identities of the run's calibration and spectra cache (not its 1st-pass sidecar, which FirstPassFDR rewrites bit-identically on every resume); the report renders a summary whose stamp matches the search, library and run FDR, and plots each run's histogram beside its row of the calibration corrections table (CAL Summary) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
 (`Osprey.IO/ArtifactPaths.cs`), so `--output-dir` / `--cache-dir` / `--work-dir`
@@ -83,6 +84,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `FirstPassModelIO` (2 sites) | `<blib-stem>.1st-pass.model.json`, `<blib-stem>.1st-pass.stratum.json` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `TrainingExportWriter` | `<stem>.training.parquet` |
+| `FragmentMassErrorWriter` (via `ModelDiagnosticsReport.WriteJson`) | `<stem>.fragment-mass-errors.json` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.html` and the diagnostics JSON products |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
@@ -727,10 +729,10 @@ written by another build anyway.
 
 ### What a validity key is made of
 
-The base key every task carries is search parameters, library identity, and the peak-pick
-arm (`OspreyTask.ValidityKey`). Tasks with extra state append to it; `FirstPassFDR` adds
-seven components, and each one is in the key because leaving it out produced a specific
-wrong answer:
+The base key every task carries is search parameters, library identity, the peak-pick
+arm and the XIC fragment count (`OspreyTask.ValidityKey`). Tasks with extra state append to it;
+`FirstPassFDR` adds eight components, and each one is in the key because leaving it out produced
+a specific wrong answer:
 
 | Component | Without it |
 |---|---|
@@ -739,6 +741,7 @@ wrong answer:
 | experiment-aggregation mode | an A/B arm re-run in a directory holding the other arm's results reuses the previous mode's q and reports it as the new measurement |
 | pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
 | training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
+| feature mask (`;featmask=`, `PinFeatureMask.ValidityKeySuffix`) | an arm that hides different features from the classifier adopts another arm's model and q-values. Emitted for every mask, the default included. Its `;fdrcols=unmasked` term marks the layout where a masked feature is absent from the FDR vectors: a model or feature sums written when masked features were zero columns are 97 wide where this layout's are 21, and a frozen model of the wrong width declines every vector |
 | library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
 | classifier and tree settings (`OSPREY_FDR_MODEL=gbdt` only, the `;fdrmodel=gbdt` term) | a percolator directory re-run as gbdt, a gbdt directory written while the lean first pass still trained the SVM, or one `OSPREY_GBT_*` sweep point re-run as the next reports "skipping (outputs valid)" and hands back the other arm's results. Empty for the linear SVM, so no existing directory is invalidated (`PercolatorEngine.GbdtValidityKeySuffix`) |
 
@@ -746,7 +749,9 @@ wrong answer:
 sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, the
 survivor-streaming switch, whose two paths must not adopt each other's output, and the
 classifier term, because its competition scores with the first-pass model. `SecondPassFDR`
-carries the classifier term for the same reason.
+carries the classifier term for the same reason. Both also carry the feature mask, since they
+score with the first-pass model. `PerFileRescoring` and `PerFileScoring` carry the recorded-feature
+term `;featrec=` as well, because their parquets hold the recorded feature columns (below).
 
 One output is stamped with more than its task's key: `PerFileRescoring`'s training export
 (`--training-export`). Each run's `<stem>.training.parquet` carries `PerFileRescoring`'s key
@@ -763,6 +768,29 @@ The peak-pick arm sits in the *base* rather than in the overrides because it is 
 lever that reaches every task: the pick decides which peak a precursor's row describes,
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
 also means a task added later carries it without having to know.
+
+The XIC fragment count (`;xic=`, `OSPREY_XIC_FRAGMENTS`) sits in the base for the same reason: it
+decides the peaks Stage 4 finds and the features it writes for them. The feature mask does not:
+it is applied when the FDR stage loads features (`ParquetScoreCache.LoadPinFeaturesFromParquet`).
+What the mask changes in Stage 4 is which feature families are computed and recorded - the core
+21 always, a family only when the mask leaves one of its features unmasked - and that is keyed
+instead, by the recorded-feature term `;featrec=` (`PinFeatureMask.RecordedFeaturesValidityKeySuffix`)
+on PerFileScoring and PerFileRescoring, whose outputs hold the feature columns. It is empty for
+the core alone (the default), so arms that differ only in the mask share their per-file scores
+whenever they record the same families. `OSPREY_RECORD_ALL_FEATURES=1`, a developer and research
+switch, records every family (`;featrec=all`, the same as `OSPREY_FEATURE_MASK=none`), so one
+scoring serves every mask arm. An unrecorded feature has no parquet column, and a reader that
+needs one refuses the file rather than reading zeros. The XIC and mask terms are emitted for every
+setting, the defaults included. Scores written before them carry neither, and were computed under an XIC count
+and a mask (then applied at scoring) that nothing recorded, so no such directory may be adopted.
+
+The validity key decides only whether a task adopts its OWN earlier output. A FDR task pointed at
+scores another run wrote (`--task FirstPassFDR` / `SecondPassFDR` with `--input-scores`) does not
+compare keys - the search hash, which leaves the XIC count out, is all it checks - so the scores
+carry the count themselves: every `.scores.parquet` and reconciled parquet records it in the
+`osprey.xic_fragments` footer entry, and `ParquetScoreCache.ValidateScoresParquetGroup` refuses
+scores whose count differs from the run's. A file without the entry is read by the `;xic=` term of
+its validity stamp, and a file with neither by the default 6, the only count before the switch.
 
 `;blibreader=2` sits in the base for the same reason, on every search of a blib library: the
 reader types every peak from m/z and reads modification text residue- and precision-aware

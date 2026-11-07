@@ -1,6 +1,6 @@
-# 03. Spectral Scoring & the 21 PIN Features (C#)
+# 03. Spectral Scoring & the PIN Features (C#)
 
-> Pipeline stage: Stage 3/4 (scoring). C# port of Rust docs/03-spectral-scoring.md. Corresponds to Rust osprey spectral scoring (calibration XCorr/E-value/isotope) and main-search 21-PIN-feature co-elution scoring.
+> Pipeline stage: Stage 3/4 (scoring). C# port of Rust docs/03-spectral-scoring.md. Corresponds to Rust osprey spectral scoring (calibration XCorr/E-value/isotope) and main-search 21-PIN-feature co-elution scoring, plus 20 C#-only PIN features (B.7).
 
 This document covers the two distinct scoring regimes in the C# Osprey port:
 
@@ -8,7 +8,9 @@ This document covers the two distinct scoring regimes in the C# Osprey port:
    matching + isotope cosine, combined by a 4-feature LDA for target-decoy
    competition that yields calibration points. See also `04-calibration.md`.
 2. **Main-search scoring** (Stage 4): fragment-XIC co-elution analysis producing the
-   **21 PIN features** consumed by the Percolator SVM in `07-fdr-control.md`.
+   **41 PIN features** consumed by the Percolator classifier in `07-fdr-control.md`: the 21 of
+   the Rust engine, and 20 C#-only features the classifier does not see by default (B.7, which
+   also says when to turn them on and how many fragment XICs to extract for each kind of data).
 
 The XCorr primitive that both regimes share is documented in depth in
 `02-xcorr-scoring.md`; peak detection (which drives the main search) is in
@@ -96,11 +98,12 @@ parity is unaffected. See Divergences.
 
 ---
 
-## Part B — Main-search scoring: the 21 PIN features (Stage 4)
+## Part B — Main-search scoring: the PIN features (Stage 4)
 
 The main search does NOT use XCorr+E-value. It runs fragment-XIC co-elution analysis
-and computes a **21-element PIN feature vector** per candidate peak, which is written
-to the `.scores.parquet` cache and consumed by the SVM.
+and computes a **41-element PIN feature vector** per candidate peak, which is written
+to the `.scores.parquet` cache and consumed by the FDR classifier. The first 21 are the
+Rust engine's (B.3-B.4); 21-40 are C#-only and masked from the classifier by default (B.7).
 
 ### B.1 Pipeline order
 
@@ -118,7 +121,8 @@ AnalysisPipeline / PerFileScoring task
                  └─ for each candidate: ScoreCandidate (:180)
                       ├─ PeakDataExtractor.TryExtract   (prefilter, XICs, CWT peaks, apex)
                       ├─ publish Tukey median-polish byproduct
-                      └─ run the 21 OspreyFeatureCalculators → double[21]
+                      ├─ publish the candidate-peak byproduct (runner-up features)
+                      └─ run the 41 OspreyFeatureCalculators → double[41]
 ```
 
 Windows run in parallel (`MaxDegreeOfParallelism = config.NThreads`,
@@ -138,8 +142,9 @@ seam mirroring Skyline's results layer. In order:
    ≥3 of 4 consecutive scans (`FragmentMath.HasTopNFragmentMatch`). Gated by
    `config.PrefilterEnabled` (default true; `--no-prefilter` disables) and **skipped
    for boundary overrides** (the Stage-6 rescore path already decided to score here).
-3. **XIC extraction** (`TopFragmentExtractor.ExtractFragmentXics`, `:146`); `< 2` XICs
-   rejects the candidate.
+3. **XIC extraction** (`TopFragmentExtractor.ExtractFragmentXics`, `:146`) for the top 6
+   library fragments, or `OSPREY_XIC_FRAGMENTS` of them (B.7); `< 2` XICs rejects the
+   candidate. The prefilter in step 2 and calibration keep 6 either way.
 4. **CWT peak detection** (3-tier CWT + fallbacks, `DetectCandidatePeaks`, `:169`) —
    see `06-peak-detection.md`.
 5. **Best-peak ranking** (`:185-217`):
@@ -156,13 +161,14 @@ enters through the same `TryExtract` with `overrideBounds` set, which skips the
 prefilter and CWT and maps the supplied `(apex, start, end)` RTs to scan indices. See
 `11-boundary-overrides.md`.
 
-### B.3 The 21 calculators — order is the parity contract
+### B.3 The calculators — order is the parity contract
 
 `OspreyFeatureCalculators` (`Osprey.Scoring/OspreyFeatureCalculators.cs:41`) holds the
 ordered calculator array; **the array index IS the PIN feature index** and the parquet
 column order. `CoelutionScorer.ScoreCandidate` invokes `Get(0..20).Calculate(...)`
-explicitly (`CoelutionScorer.cs:248-268`). The names match
-`ParquetScoreCache.PIN_FEATURE_NAMES` (`Osprey.IO/ParquetScoreCache.cs:51`).
+explicitly, then 21-40 in a loop (`CoelutionScorer.cs:295-317`). The names match
+`ParquetScoreCache.PIN_FEATURE_NAMES` (`Osprey.IO/ParquetScoreCache.cs:51`). The table
+below is the Rust engine's 21; slots 21-40 are in B.7.
 
 | # | PIN name | Family / tier | Direction (`IsReversedScore`) | C# calculator (file) |
 |---|----------|---------------|-------------------------------|----------------------|
@@ -282,6 +288,300 @@ overlap ≥50% within ±5 spectra, keeping the higher coelution sum) and
 `DeduplicatePairs` (`:526`; one best target + one best decoy per `base_id`, sorted by
 EntryId for determinism). See `07-fdr-control.md` and `16-determinism.md`.
 
+### B.7 The C#-only features (21-40), the feature mask and the XIC count
+
+Twenty features were added after the Rust port, in four families. The FDR classifier sees them
+only when `OSPREY_FEATURE_MASK` lets it, and scoring computes and writes a family to the
+`.scores.parquet` only when the mask leaves one of its features unmasked (or under the
+developer switch `OSPREY_RECORD_ALL_FEATURES=1`; see "What scoring records" below). **By default all 20 are masked**, so a default search reports what
+the 21 Rust features report, and every golden is unchanged. Turning them on is recommended for
+every kind of data measured so far (see "Which settings for which data" below); making that the
+default is a separate decision, because it moves every golden.
+
+| # | PIN name | Family | Direction (`IsReversedScore`) | C# calculator (file) |
+|---|----------|--------|-------------------------------|----------------------|
+| 21 | `peak_coelution_margin` | Runner-up | higher | `PeakCoelutionMarginCalc` (PeakContextCalculators.cs:89) |
+| 22 | `peak_rank_margin` | Runner-up | higher | `PeakRankMarginCalc` (:115) |
+| 23 | `peak_candidate_count` | Runner-up | lower | `PeakCandidateCountCalc` (:140) |
+| 24 | `context_peptide_length` | Context | (none; false) | `PeptideLengthCalc` (:160) |
+| 25 | `context_precursor_charge` | Context | (none; false) | `PrecursorChargeCalc` (:175) |
+| 26 | `context_precursor_mz` | Context | (none; false) | `PrecursorMzCalc` (:190) |
+| 27-32 | `frag_rank1..6_abs_mass_error` | Per-fragment-rank | lower | `FragmentRankMassErrorCalc` (FragmentRankCalculators.cs:101) |
+| 33-38 | `frag_rank1..6_intensity_share` | Per-fragment-rank | (none; false) | `FragmentRankIntensityShareCalc` (:135) |
+| 39 | `peak_spectrum_cosine_mean` | Spectrum across the peak | higher | `PeakSpectrumCosineMeanCalc` (PeakSpectrumCalculators.cs:75) |
+| 40 | `peak_spectrum_cosine_sd` | Spectrum across the peak | higher (see below) | `PeakSpectrumCosineSdCalc` (:90) |
+
+`IsReversedScore` does not reach the classifier: the SVM learns each weight's sign, and the
+direction only labels the feature-contribution table and the model diagnostics (a weight
+against the expected direction is flagged there).
+
+**Runner-up (21-23)** - how far the chosen peak stands above the other candidates in its own
+window, which no apex score can show. `CoelutionScorer.ScoreCandidate` publishes the candidates
+that passed apex acceptance as a `PeakCandidatesByproduct` (`CoelutionScorer.cs:291`).
+`peak_coelution_margin` is the chosen peak's mean pairwise fragment coelution minus the best
+other candidate's, the other floored at 0 (a lone candidate competes with uncorrelated noise); it
+can be negative when the pick preferred a less coeluting peak on RT or intensity.
+`peak_rank_margin` is the same difference in pick score (the learned pick model's, or the
+product form under `OSPREY_PICK_LDA=0`), 0 for a lone candidate. `peak_candidate_count` counts
+the candidates. The boundary-override path (Stage 6: reconciliation and gap-fill) scores a peak
+someone else chose, so it runs the first-pass detection once more over the normal search window
+(`PeakDataExtractor.OverrideRunnerUpCandidates`) and compares the imposed peak with the
+candidates found there, the imposed peak standing in for any candidate whose apex falls inside
+its bounds. A peak moved off a stronger candidate then shows a negative margin. The Stage 6
+candidate list (`cwt_candidates`) stays empty on that path, as in Rust. That second detection
+makes the re-score step 15-20% slower (about 2.5 s per file on the Astral test runs, 0.5 s on
+Stellar; a few percent of PerFileRescoring), so it runs only when a runner-up feature is unmasked (`PinFeatureMask.UsesRunnerUpFeatures`, passed in as
+`ScoringContext.OverrideRunnerUpCandidates`). Under the default mask, an override-path peak
+reports a lone candidate, which the classifier never sees.
+
+**Context (24-26)** - peptide length, precursor charge and precursor m/z, as Percolator and
+DIA-NN use them: how reliable a match is depends on what is being matched. A decoy has its
+target's values, so these carry no target/decoy information of their own; they let the
+classifier weigh the other features differently for, say, a short 2+ precursor and a long 3+
+one. Predicted RT and fragment count were left out, because a decoy's are predicted separately
+and could differ from its target's for reasons unrelated to the data.
+
+**Per-fragment-rank (27-38)** - the six most intense library fragments, each matched in the apex
+spectrum (closest peak by m/z within tolerance, as the apex-match family matches; computed once
+per candidate as `FragmentRankApexMatch`). `frag_rankN_abs_mass_error` is rank N's absolute mass
+error, falling back to the calibrated fragment tolerance when it is unmatched or the library has
+fewer than N fragments (the same fallback as `abs_mass_accuracy_deviation_mean`, and for the same
+reason). `frag_rankN_intensity_share` is rank N's share of the matched intensity of the six, 0
+when none matched; side by side they show whether the observed intensities fall in the
+library's order. Where the apex-match family averages over all fragments, these let the
+classifier weigh each rank separately.
+
+**Spectrum across the peak (39-40)** - the library cosine at every scan from the peak's start to
+its end (the SG sweep's per-scan kernel, `SgWeightedSweep.ComputeCosineAtScan`, skipping scans
+outside the window), reduced to a mean and a population standard deviation. Where
+`sg_weighted_cosine` looks at the apex +/- 2 scans, these ask whether the library spectrum holds
+across the whole elution. `peak_spectrum_cosine_sd` is higher-is-better, against first
+intuition: the trained SVM gives it a positive weight (7th largest on Astral), because a real
+peak's cosine rises and falls with its signal across the peak while noise stays uniformly low.
+
+#### The feature mask (`OSPREY_FEATURE_MASK`)
+
+A comma-separated list of PIN feature names the classifier must not use, or `none` to use all
+41. Unset, the 20 features above are masked (`PinFeatureMask.DEFAULT_MASKED_FEATURES`). An
+unknown name stops the search at startup.
+
+The mask is applied **where the FDR stage loads features**, not at scoring:
+`ParquetScoreCache.LoadPinFeaturesFromParquet` does not read a masked column, and each vector it
+returns holds only the unmasked features, in PIN order (`PinFeatureMask.FdrFeatureIndices`). The
+classifier's matrix is therefore as wide as the unmasked set - 21 columns under the default mask,
+the same matrix the 21-feature engine trained on - and training costs scale with it. (A masked
+feature used to load as a column of zeros, which the classifier could not use but still paid for;
+see "Absent, not zero" below.) The feature names travel with the vectors
+(`PinFeatureMask.FdrFeatureNames`): the trained model records them
+(`PercolatorResults.FeatureNames`, the `FeatureNames` of `.1st-pass.model.json`), and a saved model
+whose names are not the run's FDR features loads as unusable. The mask is not in PerFileScoring's
+key; what scoring records is (below), so:
+- searches that differ only in the mask share their per-file scores when they record the same
+  families. The mask is in the validity keys of FirstPassFDR, PerFileRescoring and SecondPassFDR
+  (`;featmask=default|none|<names>`), so pointing a new mask at scores that hold its features
+  re-runs only the FDR stages (minutes on three runs, against the whole search). See
+  `14-intermediate-files.md`. When a
+  runner-up feature is unmasked, PerFileRescoring and SecondPassFDR also carry
+  `;runnerup=override-candidates`, because only then does the override path find the first
+  pass's candidates (above); under the default mask the term is empty and the detection is
+  skipped. Pointing a mask that unmasks a runner-up feature at a default search's outputs
+  therefore re-runs rescoring too.
+- the training export (`22-training-export.md`) and anything else reading the parquet see every
+  recorded feature unmasked, except that under a mask hiding all three runner-up features, peaks
+  rescored at override bounds carry lone-candidate runner-up values.
+
+#### What scoring records (`OSPREY_RECORD_ALL_FEATURES`)
+
+Computing a feature nothing reads is a cost a released search should not pay, so Stage 4 computes
+only what the FDR path will read. The PIN features fall into the 21 **core** features (PIN 0-20)
+and **families** after them (`PinFeatureMask.FAMILY_FIRST_FEATURES`; a family runs to the next
+one's first feature). A family's features share one per-candidate computation - a byproduct
+cached on `OspreyScoringContext`, computed on first use - so recording one costs nearly what
+recording all of them does, and scoring computes or skips a family as a unit:
+- the core features are always computed and recorded, whatever the mask: the coelution sum is every
+  row's first-pass score (`FdrEntry.CoelutionSum`), and the median-polish dump and the training
+  export read core features directly;
+- a family is computed and recorded when the mask leaves any of its features unmasked
+  (`PinFeatureMask.IsRecorded`), so every feature the classifier reads is recorded;
+- `OSPREY_RECORD_ALL_FEATURES=1` records every family. **It is a developer and research switch,
+  not for release use**: it lets one scoring of a dataset serve every mask arm, at the cost of
+  computing and storing features a default search never reads.
+
+Under the default mask that is the core alone, so a default search costs and writes what the
+21-feature engine did. A skipped feature stays 0 in the in-memory vector (`CoelutionScorer`,
+handed the flags by `ScoringTaskShared.Pipeline`), and the parquet has **no column** for it rather
+than a column of zeros. That keeps the file small and makes a missing feature detectable: a reader
+that needs a column the file lacks - the FDR load, or the full-row read Stage 6 rewrites into the
+reconciled parquet - refuses the file, naming the column and the switch, instead of reading zeros.
+Skipping a family changes no other feature's value (`TrainingEvidenceTest` scores with each family
+alone and compares against scoring everything, bit for bit).
+
+The recorded set is keyed into PerFileScoring and PerFileRescoring (`;featrec=`: empty for the core
+alone, `all` for every family, else the recorded families' first features), so a resume under a
+mask that unmasks a family the scores lack rescores rather than adopting them.
+`OSPREY_FEATURE_MASK=none` and `OSPREY_RECORD_ALL_FEATURES=1` record the same set and share their
+scores.
+
+**Absent, not zero.** A zero column and an absent one train the same model in exact arithmetic -
+the standardizer gives a constant column scale 1 and value 0, and the SVM's dual coordinate
+descent then never moves its weight off 0 - but not in floating point, and not at the same cost:
+- **The linear SVM** (the default) sums its dot products in `Vector<double>` lanes
+  (`LinearSvmClassifier`), so a zero column still shifts which lane each later product lands in
+  and the order the lanes are added. Removing the zero columns changes the rounding, not the
+  model. Under the default mask the unmasked features are PIN 0-20, a prefix, so the reduced
+  matrix is exactly the 21-feature engine's and the committed goldens hold.
+- **Gradient-boosted trees** (`OSPREY_FDR_MODEL=gbdt`) draw a column subsample per tree from the
+  column count, so a different count draws different columns and grows different trees. Under
+  gbdt, results with the mask applied this way differ from the zero-column form; the masked
+  features were never splittable, so the change is in which unmasked columns each tree samples.
+- **Cost**: with every feature written but 21 unmasked, the zero-column form trained on 97 columns.
+  On Stellar that doubled first-pass FDR against the 41-column form before it (1:39 to 3:16);
+  with the 21 columns alone it is 1:04 against that same 41-column build's 1:37, and the run
+  3:28 against 3:53 (Test-PerfGate, 2 paired repeats, 2026-11-02).
+- Two fallbacks index the vector by position and assume PIN 0 (`fragment_coelution_sum`) leads
+  it, which holds unless a mask hides it: the basic vector built for a row whose features cannot
+  be resolved (`PercolatorScorer.BuildBasicFeatures`), and the target-decoy pairing that ranks by
+  `Features[0]` when it has no scores (`PercolatorSampling`).
+
+#### The HRAM-only families: library agreement and spectrum match
+
+Two families are masked by default like the others, and in addition **have no effect at unit
+resolution, whatever the switches say** (`PinFeatureMask.HRAM_ONLY_FAMILIES`):
+
+| PIN | Name | Family | Better | Calculator |
+|---|---|---|---|---|
+| 101 | `lib_cosine_coel` | Library agreement | higher | `CoelutingLibraryCosineCalc` |
+| 102 | `lib_entropy_sim` | Library agreement | higher | `LibraryEntropySimilarityCalc` |
+| 103 | `lib_coel_share` | Library agreement | higher | `CoelutingLibraryShareCalc` |
+| 104 | `spec_match_prob` | Spectrum match | higher | `ApexMatchProbabilityCalc` |
+| 105 | `spec_proj_cosine_xt` | Spectrum match | higher | `ApexProjectedCosineScoreCalc` |
+| 106 | `spec_hyperscore` | Spectrum match | higher | `ApexHyperscoreCalc` |
+| 107 | `spec_match_prob_max` | Spectrum match | higher | `PeakMaxMatchProbabilityCalc` |
+| 108 | `spec_proj_cosine_xt_max` | Spectrum match | higher | `PeakMaxProjectedCosineScoreCalc` |
+
+Library agreement takes each extracted fragment's correlation with the sum of the others over the
+peak, calls those above 0.5 co-eluting, and compares their apex +/- 1 intensities with the library:
+the cosine over the co-eluting fragments, the spectral entropy similarity over all of them, and
+the share of library intensity that co-elutes. Spectrum match scores the library fragments against
+one spectrum, at the apex and as the maximum over the peak's scans: `-log10` of the
+Poisson-binomial chance of that many matches, each fragment's chance from the local centroid
+density; EncyclopeDIA's projected square-root cosine; and X!Tandem's b/y hyperscore (apex only).
+
+At 0.4 Th nearly every fragment window holds a peak, so counting matches says nothing. On Stellar
+the match probability alone finds 52-112 precursors at q 1%, against xcorr's 12,812, and the
+families add nothing measurable to the classifier. So at unit resolution they are masked and
+unrecorded (`PinFeatureMask.IsAvailable`): `Program` hands the resolved mode to
+`PinFeatureMask.ApplyResolutionMode`, the FDR vectors and the scores parquet then have no column
+for them (see "Absent, not zero" for why that differs from a column of zeros under gbdt), and
+`OSPREY_FEATURE_MASK=none` or `OSPREY_RECORD_ALL_FEATURES=1` give the output they would give if
+the families did not exist; a logged line says so when the mask left one unmasked. An HRAM key
+with a mask of its own, or with recorded families, carries the feature count (`;featavail=109`), so
+outputs from before these families are not adopted; default and unit-resolution keys are unchanged. The
+calculators also score 0 there themselves (`context.Config.ResolutionMode`), for a scorer that
+computes every feature.
+
+On one SEA-AD Astral run (A10_014, gbdt, seed 1, the rest of the mask off), first-pass precursors at
+FDP 0.5%: without either family 57,340; with library agreement 58,101; with both 58,681.
+
+#### The XIC count (`OSPREY_XIC_FRAGMENTS`)
+
+How many of a candidate's most intense library fragments the search extracts XICs for: a whole
+number from 2 to 20, default 6. The XICs feed CWT peak detection and the coelution, peak-shape
+and median-polish features (0-5, 15, 16, 19, 20); the apex-match, per-fragment-rank and spectrum
+features match library fragments in the spectra themselves and change only through the peak
+that is picked. Calibration and the 2-of-top-6
+prefilter keep 6 either way. Because the count changes the per-file scores, every task's
+validity key carries it (`;xic=N`), so scores extracted at one count are never adopted at
+another.
+
+The count has to follow the instrument's resolution. At 20 ppm (Astral) a weak fragment's XIC
+is mostly signal and more fragments help; at 0.4 Th (Stellar) each extra fragment window
+collects mostly interference. The library's median is 14 fragments per precursor, and past 12 the
+extra fragments are too weak to help.
+
+| Astral, 21 features, SVM | per run at q 1% | first pass at FDP 0.5% |
+|---|---|---|
+| 6 XICs (default) | 82,449-84,342 | 83,561 |
+| 8 XICs | 87,032-88,407 | 87,411 (+4.6%) |
+| 12 XICs | 91,340-92,525 | 90,264 (+8.0%) |
+| 16 XICs | 88,448-89,222 | lower than 12 |
+
+#### Which settings for which data
+
+All numbers below are experiment-level precursors on the three test runs of each dataset,
+against natural (Arabidopsis) entrapment filed under its targets' proteins, with the
+`transfer` second pass (`12-second-pass-fdr.md`), whose reported q stays calibrated. "FDP" is
+the combined entrapment estimator; "at FDP x" counts precursors at the reported-q threshold
+where the measured FDP reaches x. Astral is HRAM (20 ppm), Stellar unit resolution (0.4 Th),
+ZT Scan HRAM demultiplexed data with a 9.08M-precursor library. The arms with the runner-up
+features on were measured with the override-path candidates described above; the lone-candidate
+values they replaced had moved these counts by at most 16 precursors (0.01%).
+
+| Astral (HRAM) | at q 1% (FDP) | at FDP 0.5% |
+|---|---|---|
+| default: 21 features, SVM, 6 XICs | 93,528 (1.04%) | 83,544 |
+| 21 features, SVM, 12 XICs | 100,071 (1.01%) | 90,238 (+8.0%) |
+| 41 features, SVM, 12 XICs | 106,052 (1.04%) | 96,257 (+15.2%) |
+| 41 features, GBDT, 12 XICs | 112,202 (1.04%) | 102,227 (+22.4%) |
+
+| Stellar (unit resolution) | at q 1% (FDP) | at FDP 0.5% |
+|---|---|---|
+| default: 21 features, SVM, 6 XICs | 31,693 (0.71%) | 30,012 |
+| 21 features, SVM, 12 XICs | 26,313 (0.65%) | 25,413 (-15%) |
+| 41 features, SVM, 6 XICs | 33,118 (0.77%) | 31,540 (+5.1%) |
+| 41 features, SVM, 12 XICs | 27,451 (0.69%) | 26,585 (-11%) |
+| 41 features, GBDT, 6 XICs | 37,969 (0.97%) | 35,562 (+18.5%) |
+| 41 features, GBDT, 12 XICs | 30,999 (1.00%) | 29,514 (-1.7%) |
+
+| ZT Scan (HRAM, demultiplexed) | at q 1% (FDP) | at FDP 0.5% | at FDP 1% |
+|---|---|---|---|
+| default: 21 features, SVM, 6 XICs | 29,236 (0.98%) | 20,450 | 29,370 |
+| 41 features, SVM, 6 XICs | 31,944 (0.88%) | 28,004 (+37%) | 32,708 (+11%) |
+| 41 features, SVM, 12 XICs | 30,811 (1.19%) | 21,501 | 28,827 |
+| 41 features, GBDT, 6 XICs | 27,975 (0.82%) | 24,402 | 29,248 |
+| 41 features, GBDT, 12 XICs | 33,201 (1.14%) | 28,915 | 32,562 |
+
+On a Stellar window-width set (HeLa; 2 Th and 4 Th acquired, 4 Th 50%-overlap and SuperOverlap
+demultiplexed; 3 replicates each), 41 features + GBDT + 6 XICs gained +5% to +10% over the default
+on acquired data and +16% to +21% on demultiplexed data at FDP 0.5%: the features separate
+demultiplexing interference from signal.
+
+Recommendations from these measurements:
+- **Features: use all 41 (`OSPREY_FEATURE_MASK=none`) on every kind of data.** They gain on all
+  three datasets with every classifier. At 6 XICs, and at 12 on Astral, the reported q stays
+  calibrated or conservative; the two 12-XIC arms on ZT Scan do not (1.19% and 1.14% FDP at
+  reported q 1%, SVM and GBDT), which is the XIC count's doing, not the features' (below).
+- **XIC count: 12 on Astral with GBDT; 6 everywhere else measured.** 12 XICs cost Stellar 15-16%
+  with either feature set and gain Astral 8%. ZT Scan is HRAM too, but there 12 XICs make the
+  reported q optimistic with either classifier (above), and with the SVM they also lose (-7% at
+  FDP 1% under the same C rule). So "HRAM" alone does not pick the count: 6 is the safer choice
+  on any HRAM data other than Astral until the ZT Scan behavior is understood.
+- **Classifier: GBDT (`OSPREY_FDR_MODEL=gbdt`, `07-fdr-control.md`) where it has enough
+  confident training targets, the SVM where it does not.** GBDT adds 6-13% over the 41-feature
+  SVM on Astral and Stellar, calibrated. On ZT Scan the very large library leaves only about 900
+  of GBDT's 150,000 training targets at 1% FDR; there the 41-feature SVM is the best calibrated
+  arm, and GBDT finds more only at 10x the training size, with an optimistic q (1.26% at q 1%)
+  and 3.3 h of first-pass FDR against about 15 min.
+
+Which family carries the gain depends on the data. Leaving one family out of the 41-feature SVM
+(FDR stages only, on shared scores; change at FDP 0.5% / FDP 1%):
+
+| left out | Astral, 12 XICs | Stellar, 6 XICs | ZT Scan, 6 XICs |
+|---|---|---|---|
+| runner-up (3) | -0.3% / -1.0% | +0.4% / -0.3% | -18.7% / -3.8% |
+| context (3) | -0.6% / -0.9% | -2.1% / -2.9% | -4.2% / -1.5% |
+| per-fragment-rank (12) | +0.9% / +0.2% | +0.2% / -0.5% | -12.1% / -4.0% |
+| spectrum across the peak (2) | -2.9% / -3.4% | -0.9% / -0.5% | -7.6% / -1.1% |
+| all 20 (the default mask) | -6.3% / -5.3% | -4.8% / -4.9% | -27% / -10.2% |
+
+No family is needed everywhere and none costs identifications anywhere, so the recommendation is
+all 41 rather than a per-instrument subset. Single-run differences under about 1% on Astral and
+Stellar are within the run-to-run movement of the SVM's per-fold C pick
+(`07-fdr-control.md`, "C selection"). On ZT Scan the C pick alone moves results by up to 14% at
+FDP 0.5% and 3% at FDP 1%, because only about 750 training targets pass 1% FDR, so the ZT
+per-family numbers are at about that noise level; the gain from all 20 together (+11% at FDP 1%)
+is well above it.
+
 ---
 
 ## Flags and switches
@@ -299,6 +599,9 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 | `--parallel-files [N]` | off (sequential) | OUTER parallelism across files; no effect on per-candidate feature values. |
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
 | `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
+| `OSPREY_XIC_FRAGMENTS` (env) | unset = 6 | How many top library fragments get XICs (2-20). Changes peak picking and the XIC-based features; in every task's validity key, and checked against the scores' own record when an FDR task loads existing scores. 12 on Astral with GBDT, 6 elsewhere (B.7). |
+| `OSPREY_FEATURE_MASK` (env) | unset = features 21-40 masked | PIN features the FDR classifier must not use (comma-separated names, or `none`). Applied when the FDR stage loads features; also decides which feature families scoring computes and records. In the FDR tasks' validity keys. `none` recommended on every dataset measured (B.7). |
+| `OSPREY_RECORD_ALL_FEATURES=1` (env) | unset = record what the mask needs | Developer and research switch: compute and record every PIN feature, so arms that differ only in the mask can share one scoring. In the PerFileScoring and PerFileRescoring validity keys (`;featrec=all`). Not for release use (B.7, "What scoring records"). |
 
 Diagnostic env vars for this stage (shared with Rust for cross-impl bisection):
 
@@ -335,20 +638,27 @@ presence rather than a CLI flag.
   the same 2000 (bit-identical parity per README); "2001" is a doc approximation.
   Severity: info.
 
-- **[INTENTIONAL-CSHARP-DESIGN] Only the 21 PIN features are computed; the ~26 non-PIN
-  scores are not** - The Rust doc's "Spectral Scores at Apex (15 features)" and
-  "Co-Elution Features (11 features)" tables list `hyperscore`, `dot_product`(+`_smz`,
-  `_top4..6`), `fragment_coverage`, `sequence_coverage`, `elution_weighted_cosine`,
-  `fragment_coelution_min`, `n_fragment_pairs`, `fragment_corr_0..5`, etc. The C#
-  calculator pass computes exactly the 21 PIN features and nothing else; the leftover
-  fields still exist on `CoelutionFeatureSet` but are never populated by the scoring
-  pass.
+- **[INTENTIONAL-CSHARP-DESIGN] Of the Rust engine's scores, only the 21 PIN features are
+  computed; the ~26 non-PIN scores are not** - The Rust doc's "Spectral Scores at Apex (15
+  features)" and "Co-Elution Features (11 features)" tables list `hyperscore`,
+  `dot_product`(+`_smz`, `_top4..6`), `fragment_coverage`, `sequence_coverage`,
+  `elution_weighted_cosine`, `fragment_coelution_min`, `n_fragment_pairs`,
+  `fragment_corr_0..5`, etc. The C# calculator pass computes the 21 PIN features and none of
+  those; the leftover fields still exist on `CoelutionFeatureSet` but are never populated by
+  the scoring pass.
   Evidence: `OspreyFeatureCalculators.cs:36-44` ("Scores the Rust engine computes but
-  excludes from the 21 PIN features are intentionally NOT here"); `CoelutionScorer.cs:247-268`
-  builds only a `double[21]`; `Osprey.Core/CoelutionFeatureSet.cs:30-128` still declares
-  the unused fields. The Rust doc itself notes "21 PIN features (out of ~47 computed)",
-  so this is a deliberate port simplification, not a behavioral output difference.
+  excludes from its PIN features are intentionally NOT here");
+  `Osprey.Core/CoelutionFeatureSet.cs:30-128` still declares the unused fields. The Rust doc
+  itself notes "21 PIN features (out of ~47 computed)", so this is a deliberate port
+  simplification, not a behavioral output difference.
   Severity: minor.
+
+- **[INTENTIONAL-CSHARP-DESIGN] 20 C#-only PIN features (21-40), masked by default** - the
+  runner-up, context, per-fragment-rank and spectrum-across-peak families (B.7) have no Rust
+  counterpart. They widen the parquet to 41 feature columns, but with the default
+  `OSPREY_FEATURE_MASK` they are absent from the classifier's vectors, so default results match the
+  21-feature engine. Evidence: `ParquetScoreCache.PIN_FEATURE_NAMES` (41 names), `PinFeatureMask`.
+  Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] MS1 features gated by resolution strategy, not a config
   flag** - The Rust doc treats MS1 isotope/precursor-coelution as always-on when MS1
@@ -361,7 +671,7 @@ presence rather than a CLI flag.
 
 Otherwise the C# main-search feature computation matches the Rust documentation step
 for step: the pipeline order (calibrated local spectra → per-window parallel scoring →
-prefilter → CWT peak ranking with the Gaussian RT penalty → 21-feature calculator pass
+prefilter → CWT peak ranking with the Gaussian RT penalty → PIN-feature calculator pass
 → dedup), the Comet XCorr preprocessing invariants (no theoretical preprocessing;
 window normalization to 50 at 5% threshold; sliding-window offset 75; scale 0.005), the
 closest-peak-by-mz tie-breaks, the last-on-tie reference-XIC selection, the calibration

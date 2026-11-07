@@ -651,9 +651,25 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
         <b style="color:var(--warn)">amber</b>. A row in <b style="color:var(--bad)">red</b> did not calibrate;
         an amber <b style="color:var(--warn)">⚠</b> after a file name marks a file that calibrated successfully but
         whose anchor-scoring model reduced to a single feature (hover it for details).
-        <b>Click a row</b> to open that file's calibration Model page — the full distributions live on the
-        Model / FDR / Reproducibility tabs.</p>
+        <b>Click a row</b> to plot that file's fragment mass error below; click the file name to open its
+        calibration Model page &mdash; the full distributions live on the Model / FDR / Reproducibility tabs.</p>
       <div id="calSummaryTable"></div>
+    </div>
+    <div class="card" id="calMassErrCard">
+      <div class="calpick" id="calSummaryPick"></div>
+      <div class="cal-single">
+        <h2 id="calMassErrHdr">MS2 fragment mass error</h2>
+        <p class="desc">The m/z error of the peak closest to each of the 6 most intense library fragments of every
+          target the first pass accepted (apex scan and the scan either side), looked for in a window wider than
+          the search tolerance, so the peaks the search never extracted are visible: a distribution with real mass
+          beyond the red lines means the search tolerance is too narrow.
+          Errors are before the calibration correction, so the table's MS2 mean is the center; the flat floor is
+          the nearest unrelated peak. The SDs in the legend are measured over this wide window on accepted targets,
+          by observed-intensity tercile; they differ from the table's SD, which comes from the calibration matches.</p>
+        <div class="legend" id="calMassErrLegend"></div>
+        <div class="chartbox" id="calMassErrChart"></div>
+      </div>
+      <div class="print-only" id="calMassErrPrintAll"></div>
     </div>
   </div>
 </section>
@@ -2415,6 +2431,7 @@ function renderCal(){
   renderCalFdr();
   renderCalRepro();
   renderCalSummary();
+  renderCalMassError();
   // Density + Competition CAL boxes are static n/a markup -- nothing to render.
 }
 
@@ -2423,7 +2440,7 @@ function renderCal(){
 // a re-entry reflects the current index.
 function buildCalPickers(){
   const last=CAL.files.length-1;
-  [["calModelPick","Model"],["calFdrPick","FDR"]].forEach(([host])=>{
+  [["calModelPick","Model"],["calFdrPick","FDR"],["calSummaryPick","Summary"]].forEach(([host])=>{
     const p=document.getElementById(host);if(!p)return;p.innerHTML="";
     H(p,"label",{for:host+"Sel"},"File");
     // Prev stepper: move the shared index back one file (clamped at the first file).
@@ -2457,6 +2474,7 @@ function setCalFile(i){
   buildCalPickers();
   renderCalModel();
   renderCalFdr();
+  renderCalMassError();
   highlightCalSelection();
 }
 
@@ -2673,8 +2691,9 @@ function renderCalSummary(){
   // Mark a cell as an outlier: bold + amber so a bad file pops out of the scan.
   const mark=(td,bad)=>{if(bad){td.style.color="var(--warn)";td.style.fontWeight="700";}};
   files.forEach((f,i)=>{const failed=calNotCalibrated(f), degen=calDegenerate(f);
-    const tr=H(tb,"tr",{class:"clk callink"+(failed?" neg":"")});
-    const fileTd=H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(failed?"  ⚠":""));
+    const tr=H(tb,"tr",{class:"clk"+(failed?" neg":"")});
+    const fileTd=H(tr,"td",{class:"l"});
+    wireJump(H(fileTd,"span",{class:"callink"},(i+1)+". "+calFileName(i)+(failed?"  ⚠":"")),i);
     // Degenerate-but-calibrated: a compact amber warning glyph with a fly-over (title) so it
     // does not wrap and inflate the row; the red failure row is reserved for a genuine no-fit.
     if(degen)H(fileTd,"span",{style:"margin-left:5px;color:var(--warn);cursor:help",
@@ -2689,9 +2708,77 @@ function renderCalSummary(){
     const t2=H(tr,"td",{class:"num"},meanSd(f.ms2Mean,f.ms2Sd));mark(t2,out(bMs2,num(f.ms2Mean)));
     const tr2=H(tr,"td",{class:"num"},fmt(f.rtRSquared,3));mark(tr2,out(bR2,num(f.rtRSquared)));
     const tw=H(tr,"td",{class:"num"},fmt(f.rtToleranceMin,2));mark(tw,out(bWin,num(f.rtToleranceMin)));
-    wireJump(tr,i);   // click-to-jump, but a drag (text selection) does not navigate
+    tr.addEventListener("click",e=>{if(!e.target.closest(".callink"))setCalFile(i);});
   });
+  highlightCalSelection();
   if(!files.length)H(host,"p",{class:"note"},"No per-file calibration data.");
+}
+
+// ---------- CAL Summary tab: the selected file's fragment mass-error histogram ----------
+// D.fragmentMassErrors.files: one fixed-bin histogram per file (classes low / mid / high / all),
+// errors AFTER the calibration shift. Drawn before the shift (x + the file's MS2 mean), so the
+// table's mean is the center, the search window is mean +/- the tolerance the search used, and
+// the configured window is +/- the configured tolerance about zero.
+const CAL_ME_CLASSES=[{k:"low",name:"low intensity",color:COL.pdecoy},{k:"mid",name:"mid intensity",color:COL.ptarget},
+                      {k:"high",name:"high intensity",color:COL.target}];
+const stemOf=n=>String(n||"").replace(/\.[^.\\/]+$/,"");
+function calMassErrorOf(i){
+  const m=D.fragmentMassErrors,f=CAL.files[i];if(!m||!m.files||!f)return null;
+  return m.files.find(r=>r.file===f.file||r.file===stemOf(f.file))||null;
+}
+function renderCalMassError(){
+  const card=document.getElementById("calMassErrCard");if(!card)return;
+  card.style.display=CAL.files.length?"":"none";
+  if(!CAL.files.length)return;
+  // No summary at all: say so in the card rather than hide it, so a page rendered where the
+  // per-run summaries were not shipped does not read as one that never had the view.
+  const any=!!(D.fragmentMassErrors&&D.fragmentMassErrors.files&&D.fragmentMassErrors.files.length);
+  const r=calMassErrorOf(CAL.sel);
+  document.getElementById("calMassErrHdr").textContent="MS2 fragment mass error \u2014 "+calFileName(CAL.sel);
+  if(!any)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary was on disk for any file when this report was rendered.");
+  else if(!r)naChart("calMassErrChart","calMassErrLegend","No fragment mass-error summary for this file.");
+  else drawCalMassError(document.getElementById("calMassErrChart"),document.getElementById("calMassErrLegend"),r,CAL.files[CAL.sel]);
+  // Print-only: every file's histogram (the dropdown shows one on screen).
+  const pall=document.getElementById("calMassErrPrintAll");if(pall){pall.innerHTML="";
+    CAL.files.forEach((cf,i)=>{const ri=calMassErrorOf(i);if(!ri)return;
+      const cell=H(pall,"div",{class:"calfilecell"});
+      H(cell,"h3",{style:"font-size:12.5px;margin:6px 0 2px;font-weight:600"},(i+1)+". "+calFileName(i));
+      const leg=H(cell,"div",{class:"legend"});
+      drawCalMassError(H(cell,"div",{class:"chartbox"}),leg,ri,cf);});
+  }
+}
+function drawCalMassError(host,legHost,r,f){
+  host.innerHTML="";
+  const W=760,Hh=300,box={l:64,t:14,w:W-84,h:Hh-58};
+  const s=svg(W,Hh);host.appendChild(s);
+  const n=r.binCount,hw=r.halfWidth,bw=2*hw/n,num=v=>(v==null||isNaN(v))?NaN:Number(v);
+  const mean=!isNaN(num(f&&f.ms2Mean))?num(f.ms2Mean):(!isNaN(num(r.calibrationMean))?num(r.calibrationMean):0);
+  const lo=mean-hw,hi=mean+hw;
+  const series=CAL_ME_CLASSES.map(c=>({c:c,cl:(r.classes||[]).find(x=>x.name===c.k)})).filter(x=>x.cl);
+  // Each class as a fraction of its own peaks, so the three widths compare at a glance.
+  const frac=series.map(x=>x.cl.counts.map(v=>x.cl.total>0?v/x.cl.total:0));
+  const ymax=Math.max(1e-6,...frac.map(a=>Math.max(...a)))*1.1;
+  const sc=axes(s,box,[lo,hi],[0,ymax],{xlab:"fragment m/z error before calibration ("+CAL.unit+")",
+    ylab:"fraction of peaks",yfmt:v=>pct(v,1)});
+  const vline=(v,color,dash,w)=>{if(isNaN(v)||v<lo||v>hi)return;
+    E(s,"line",{x1:sc.x(v),x2:sc.x(v),y1:box.t,y2:box.t+box.h,stroke:color,"stroke-width":w||1.5,"stroke-dasharray":dash||""});};
+  const tol=num(r.searchTolerance),cfg=num(r.configuredTolerance);
+  vline(mean,COL.muted,"",1);
+  [1,-1].forEach(sg=>{vline(mean+sg*tol,COL.decoy,"",2);vline(sg*cfg,COL.muted,"2 3",1.5);});
+  series.forEach((x,j)=>{let d="";frac[j].forEach((v,i)=>{const x0=sc.x(mean-hw+i*bw),x1=sc.x(mean-hw+(i+1)*bw),y=sc.y(v);
+      d+=(i?"L":"M")+x0.toFixed(1)+" "+y.toFixed(1)+" L"+x1.toFixed(1)+" "+y.toFixed(1)+" ";});
+    E(s,"path",{d:d,fill:"none",stroke:x.c.color,"stroke-width":1.6});});
+  legend(legHost,series.map(x=>({name:x.c.name+" (SD "+fmt(x.cl.sd,2)+")",color:x.c.color,line:true}))
+    .concat([{name:"MS2 mean "+fmt(mean,2),color:COL.muted,line:true},
+             {name:"search tolerance mean \u00b1 "+fmt(tol,2),color:COL.decoy,line:true},
+             {name:"configured \u00b1 "+fmt(cfg,2),color:COL.muted,line:true}]));
+  const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+  ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+    const v=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*2*hw-hw;
+    const i=Math.max(0,Math.min(n-1,Math.floor((v+hw)/bw)));
+    showTip(ev,"<b>"+fmt(mean-hw+i*bw,2)+" to "+fmt(mean-hw+(i+1)*bw,2)+" "+esc(CAL.unit)+"</b><br>"+
+      series.map((x,j)=>esc(x.c.name)+": "+fmt(x.cl.counts[i],0)+" ("+pct(frac[j][i],2)+")").join("<br>"));});
+  ov.addEventListener("mouseleave",hideTip);
 }
 
 // Refresh only the selection highlight in the Summary table (cheap; called on cal-file

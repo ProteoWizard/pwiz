@@ -50,11 +50,17 @@ namespace pwiz.Osprey.Scoring
     {
         private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
+        private readonly bool[] _recordedFeatures;           // null computes every feature
 
-        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics)
+        /// <summary>
+        /// A pipeline that scores through a <see cref="CoelutionScorer"/> computing the PIN features
+        /// <paramref name="recordedFeatures"/> flags (see that constructor), or every feature when null.
+        /// </summary>
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics, bool[] recordedFeatures = null)
         {
             _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
+            _recordedFeatures = recordedFeatures;
         }
 
 
@@ -150,6 +156,18 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
+                context.LocalRtTolerance = OspreyEnvironment.LocalRtToleranceNeighbors.HasValue
+                    ? LocalRtTolerance.Create(rtCalibration, OspreyEnvironment.LocalRtToleranceNeighbors.Value,
+                        rtToleranceGlobal, config.RtCalibration.MaxRtTolerance)
+                    : null;
+                // At default log level: the experiment changes what is searched.
+                if (context.LocalRtTolerance != null && logSearchSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance,
+                        OspreyEnvironment.LocalRtToleranceNeighbors.Value, context.LocalRtTolerance.MaxHalfWidth,
+                        context.LocalRtTolerance.FractionWidened));
+                }
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
@@ -164,6 +182,7 @@ namespace pwiz.Osprey.Scoring
             {
                 rtToleranceGlobal = config.RtCalibration.FallbackRtTolerance;
                 rtSigmaGlobal = rtToleranceGlobal;
+                context.LocalRtTolerance = null;
             }
 
             // Apply MS2 calibration: calibrated fragment tolerance + m/z offset.
@@ -177,12 +196,16 @@ namespace pwiz.Osprey.Scoring
                 MzCalibration.CalibratedTolerance(ms2Calibration,
                     config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
                     out calTol, out calUnit);
+                if (calUnit == ToleranceUnit.Ppm && OspreyEnvironment.MinFragmentTolerancePpm.HasValue)
+                    calTol = Math.Max(calTol, OspreyEnvironment.MinFragmentTolerancePpm.Value);
                 searchFragTol = new FragmentToleranceConfig
                 {
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                if (logSettings)
+                // At default log level: the search tolerance replaces the configured one, so a
+                // log that shows only the configured value misreports what was searched.
+                if (logSearchSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
@@ -201,6 +224,8 @@ namespace pwiz.Osprey.Scoring
                         ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
                 }
             }
+
+            context.CorrelationConfig = CorrelationConfigFor(config, OspreyEnvironment.CorrFragmentTolerancePpm);
 
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
@@ -243,7 +268,7 @@ namespace pwiz.Osprey.Scoring
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when OSPREY_DIAGNOSTICS is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(_diagnostics);
+            var coelutionScorer = new CoelutionScorer(_diagnostics, _recordedFeatures);
 
             ProgressReporter.Run(
                 passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
@@ -304,6 +329,31 @@ namespace pwiz.Osprey.Scoring
             LogWindowTimingSummary(windowTimings);
 
             return allEntries;
+        }
+
+        /// <summary>
+        /// The configuration the correlation-shape features score with (see
+        /// <see cref="ScoringContext.CorrelationConfig"/>): a copy of the search
+        /// <paramref name="config"/> at max(search tolerance, <paramref name="corrTolerancePpm"/>) ppm.
+        /// Null when <paramref name="corrTolerancePpm"/> is null, the search tolerance is not in ppm,
+        /// or the setting is no wider than the search tolerance - the wider XICs would then be the
+        /// search XICs, so nothing is re-extracted.
+        /// </summary>
+        public static OspreyConfig CorrelationConfigFor(OspreyConfig config, double? corrTolerancePpm)
+        {
+            var searchTolerance = config.FragmentTolerance;
+            if (!corrTolerancePpm.HasValue || searchTolerance == null ||
+                searchTolerance.Unit != ToleranceUnit.Ppm || corrTolerancePpm.Value <= searchTolerance.Tolerance)
+            {
+                return null;
+            }
+            var corrConfig = config.ShallowClone();
+            corrConfig.FragmentTolerance = new FragmentToleranceConfig
+            {
+                Tolerance = corrTolerancePpm.Value,
+                Unit = ToleranceUnit.Ppm
+            };
+            return corrConfig;
         }
 
 

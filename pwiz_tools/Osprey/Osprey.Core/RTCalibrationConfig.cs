@@ -35,7 +35,7 @@ namespace pwiz.Osprey.Core
         public bool Enabled { get; set; } = true;
 
         /// <summary>LOESS bandwidth (0.0-1.0, fraction of data to use for local fits).</summary>
-        public double LoessBandwidth { get; set; } = 0.3;
+        public double LoessBandwidth { get; set; } = OspreyEnvironment.LoessBandwidth ?? 0.3;
 
         /// <summary>Minimum detections required for calibration.</summary>
         public int MinCalibrationPoints { get; set; } = 200;
@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Core
         public double FallbackRtTolerance { get; set; } = 2.0;
 
         /// <summary>Minimum RT tolerance (minutes) floor for local tolerance calculation.</summary>
-        public double MinRtTolerance { get; set; } = 0.5;
+        public double MinRtTolerance { get; set; } = OspreyEnvironment.MinRtTolerance ?? 0.5;
 
         /// <summary>Number of target peptides to sample for calibration (0 = use all).</summary>
         public int CalibrationSampleSize { get; set; } = 100000;

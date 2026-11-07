@@ -750,6 +750,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} has no {1} column: the run that scored it did not record that feature, which this run needs. Score the file again with this run&apos;s {2}, or set {3}=1 when scoring to record every feature..
+        /// </summary>
+        public static string ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_RequireFeatureColumn__0__has_no__1__column", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Writing precursor candidate peaks.
         /// </summary>
         public static string ParquetScoreCache_static_Writing_precursor_candidate_peaks {
@@ -786,6 +795,15 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_file" +
                         "s_that___task_PerFileRescoring_writes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was scored with {1} XIC fragments, but this run uses {2} ({3}). Score the files again with this setting, or set {3} to match them..
+        /// </summary>
+        public static string ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup__0__was_scored_with__1__XIC_fragments__but_this_run_uses__2____3__", resourceCulture);
             }
         }
         

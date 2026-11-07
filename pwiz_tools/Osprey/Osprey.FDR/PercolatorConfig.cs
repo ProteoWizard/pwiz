@@ -76,6 +76,30 @@ namespace pwiz.Osprey.FDR
         public int PrefilterTrainSize { get; set; }
 
         /// <summary>
+        /// The round-1 q-value that sets round 2's selection (<c>OSPREY_GBT_PREFILTER_Q</c>), or 0
+        /// (the default) for the fixed <see cref="PrefilterTrainSize"/> row count. When set, round 2
+        /// keeps every peptide group whose best round-1 score reaches the score at which paired
+        /// target-decoy competition on the round-1 scores reaches this q, with
+        /// <see cref="PrefilterTrainSize"/> as the row cap.
+        /// </summary>
+        public double PrefilterTrainQ { get; set; }
+
+        /// <summary>
+        /// The local FDR that sets round 2's selection (<c>OSPREY_GBT_PREFILTER_LFDR</c>), or 0 (the
+        /// default): every peptide group down to the round-1 score where the windowed ratio of decoy to
+        /// target competition winners first exceeds it, with <see cref="PrefilterTrainSize"/> as the row
+        /// cap. Ignored when <see cref="PrefilterTrainQ"/> is set (startup refuses both).
+        /// </summary>
+        public double PrefilterTrainLocalFdr { get; set; }
+
+        /// <summary>
+        /// Round 2 takes a seeded random sample of the eligible peptide groups, up to
+        /// <see cref="PrefilterTrainSize"/> rows, instead of the best-scoring ones
+        /// (<c>OSPREY_GBT_PREFILTER_SAMPLE</c>). Only matters when the eligible groups hold more rows than the cap.
+        /// </summary>
+        public bool PrefilterTrainSample { get; set; }
+
+        /// <summary>
         /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run, so
         /// the caller can score each training row with only the fold model that held it out.
         /// Set from <c>OSPREY_GBT_OOF</c> by the Tasks-layer config build, so the trainer reads no
@@ -172,7 +196,7 @@ namespace pwiz.Osprey.FDR
             TestFdr = 0.01;
             MaxIterations = 10;
             NFolds = 3;
-            Seed = 42;
+            Seed = OspreyEnvironment.FdrSeed ?? 42;
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             CSelectionTolerance = OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE;
             MaxTrainSize = 300000;
@@ -211,6 +235,9 @@ namespace pwiz.Osprey.FDR
                 CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
                 PrefilterTrainSize = PrefilterTrainSize,
+                PrefilterTrainQ = PrefilterTrainQ,
+                PrefilterTrainLocalFdr = PrefilterTrainLocalFdr,
+                PrefilterTrainSample = PrefilterTrainSample,
                 ReportTrainEntryFolds = ReportTrainEntryFolds,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,

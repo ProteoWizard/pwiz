@@ -20,6 +20,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
@@ -757,6 +759,313 @@ namespace pwiz.Osprey.Core
             @"key: run it into its own output directory. A resumed first pass retrains rather than adopt the saved model. " +
             @"Second-pass rescoring still scores training rows with the fold mean.");
 
+        private static readonly EnvVar ENV_XIC_FRAGMENTS = new EnvVar(@"OSPREY_XIC_FRAGMENTS", EnvVarGroup.behavior,
+            @"Experiment: how many of a candidate's most intense library fragments get XICs (CWT " +
+            @"peak detection, coelution, peak-shape and median-polish features). Calibration and " +
+            @"the 2-of-top-6 prefilter keep 6. A whole number from 2 to 20.")
+            { ValueExample = @"<2-20>", DefaultValue = @"6" };
+
+        /// <summary>
+        /// OSPREY_XIC_FRAGMENTS (experiment): how many of a
+        /// candidate's most intense library fragments the search extracts XICs for - the input of the
+        /// CWT peak detection and of the coelution, peak-shape and median-polish features. Null when
+        /// unset (the top 6, <c>TopFragmentExtractor.CAL_TOP_N_FRAGMENTS</c>). Calibration and the
+        /// 2-of-top-6 prefilter keep 6 either way. A value that is not a whole number from 2 to 20
+        /// throws, so an arm can never run under the default while named for another count.
+        /// </summary>
+        public static readonly int? XicFragments = ParseXicFragments(
+            ENV_XIC_FRAGMENTS.Value);
+
+        /// <summary>The XIC count when OSPREY_XIC_FRAGMENTS is unset - the only count before it existed.</summary>
+        public const int DEFAULT_XIC_FRAGMENTS = 6;
+
+        private const int MIN_XIC_FRAGMENTS = 2;
+        private const int MAX_XIC_FRAGMENTS = 20;
+
+        /// <summary>The XIC count in effect: <see cref="XicFragments"/>, else <see cref="DEFAULT_XIC_FRAGMENTS"/>.</summary>
+        public static int SearchXicFragments => XicFragments ?? DEFAULT_XIC_FRAGMENTS;
+
+        private static readonly EnvVar ENV_FEATURE_MASK = new EnvVar(@"OSPREY_FEATURE_MASK", EnvVarGroup.behavior,
+            @"The PIN features hidden from the FDR classifier, as comma-separated feature names, " +
+            @"or none to mask nothing. Unset masks the default set, the features still under " +
+            @"evaluation. An unknown name stops the search at startup.")
+            { ValueExample = @"none|<name>,<name>..." };
+
+        /// <summary>
+        /// OSPREY_FEATURE_MASK: the PIN features to hide from the FDR classifier (left out of the
+        /// vectors the FDR stage loads, so the classifier never sees them), as comma-separated feature
+        /// names, or <c>none</c> to mask nothing. Null when unset: the default set, the features still
+        /// under evaluation, is masked. Scoring computes and records only the feature families the
+        /// mask leaves a feature of (and the 21 core features always), so arms share their per-file
+        /// scores only when they record the same families - see <see cref="RecordAllFeatures"/>.
+        /// An unknown name stops the search at startup.
+        /// </summary>
+        public static readonly string[] FeatureMask = ParseFeatureMask(
+            ENV_FEATURE_MASK.Value);
+
+        /// <summary>The OSPREY_FEATURE_MASK value that masks nothing.</summary>
+        public const string FEATURE_MASK_NONE = @"none";
+
+        private static readonly EnvVar ENV_RECORD_ALL_FEATURES = new EnvVar(@"OSPREY_RECORD_ALL_FEATURES", EnvVarGroup.performance,
+            @"Developer and research switch: scoring computes and records every PIN feature in " +
+            @"the scores parquet, whatever the mask hides, so masks can be compared on the FDR " +
+            @"stage alone. Unset records only what the FDR stage reads. Keyed into the scoring " +
+            @"and rescoring validity keys.");
+
+        /// <summary>
+        /// OSPREY_RECORD_ALL_FEATURES=1 (developer and research switch, not for release use): Stage 4
+        /// computes every PIN feature and records it in the scores parquet, whatever the mask hides
+        /// from the classifier. Unset, scoring computes only the features the FDR stage will read
+        /// (<c>PinFeatureMask.IsRecorded</c>), so a default search costs what it did before the
+        /// features under evaluation were added. Recording everything once lets a researcher compare
+        /// masks on the FDR stage alone. Keyed into the per-file scoring and rescoring validity keys
+        /// through the recorded-feature term, so a run that needs a feature its scores lack rescores.
+        /// </summary>
+        public static readonly bool RecordAllFeatures = ParseIntOrNull(ENV_RECORD_ALL_FEATURES) == 1;
+
+        private static readonly EnvVar ENV_FDR_SEED = new EnvVar(@"OSPREY_FDR_SEED", EnvVarGroup.behavior,
+            @"Experiment: the Percolator seed in place of 42 (fold split, training subsample, " +
+            @"GBDT row and column sampling), to measure how much a comparison owes to the draw.")
+            { ValueExample = @"<N>", DefaultValue = @"42" };
+
+        /// <summary>
+        /// OSPREY_FDR_SEED (experiment): the Percolator seed in place of 42 (fold split, training subsample, GBDT
+        /// row and column sampling), to measure how much a feature-set comparison owes to the draw. Null when unset.
+        /// </summary>
+        public static readonly ulong? FdrSeed = ulong.TryParse(ENV_FDR_SEED.Value,
+            NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) ? seed : null;
+
+        private static readonly EnvVar ENV_FDR_TRAIN_FDR = new EnvVar(@"OSPREY_FDR_TRAIN_FDR", EnvVarGroup.behavior,
+            @"Experiment: the q-value under which Percolator takes targets as training " +
+            @"positives, in place of 0.01; 1 trains on every target. A number in (0, 1]; " +
+            @"anything else stops the run. Keyed into the FDR validity keys.")
+            { ValueExample = @"<q>", DefaultValue = @"0.01" };
+
+        /// <summary>OSPREY_FDR_TRAIN_FDR exactly as set, or null when unset.</summary>
+        public static readonly string FdrTrainFdrSetting = ENV_FDR_TRAIN_FDR.Value;
+
+        /// <summary>True when OSPREY_FDR_TRAIN_FDR is set to anything but a number in (0, 1]. Program startup
+        /// aborts on this rather than training under the default and keying the directories as the default.</summary>
+        public static readonly bool FdrTrainFdrUnrecognized =
+            !string.IsNullOrEmpty(FdrTrainFdrSetting) && !ParseFdrTrainFdr(FdrTrainFdrSetting).HasValue;
+
+        /// <summary>
+        /// OSPREY_FDR_TRAIN_FDR (experiment): the q-value under which Percolator takes targets as positives, in
+        /// place of 0.01. 1 trains on every target against the decoys, as DIA-NN 1.7.12's neural network does.
+        /// Keyed into the FDR validity keys when set. Null when unset or not a number in (0, 1].
+        /// </summary>
+        public static readonly double? FdrTrainFdr = ParseFdrTrainFdr(FdrTrainFdrSetting);
+
+        private static readonly EnvVar ENV_NO_PREFILTER = new EnvVar(@"OSPREY_NO_PREFILTER", EnvVarGroup.behavior,
+            @"Experiment: 1 turns off the coelution signal pre-filter, as the command-line switch " +
+            @"does, for runners that cannot pass Osprey arguments. Enters the search identity.");
+
+        /// <summary>
+        /// OSPREY_NO_PREFILTER=1 (experiment): turns off the coelution signal pre-filter, as --no-prefilter does, for
+        /// runners that cannot pass Osprey arguments. It enters the search identity, so every task keys on it.
+        /// </summary>
+        public static readonly bool NoPrefilter = ParseIntOrNull(ENV_NO_PREFILTER) == 1;
+
+        private static readonly EnvVar ENV_LOESS_BANDWIDTH = new EnvVar(@"OSPREY_LOESS_BANDWIDTH", EnvVarGroup.behavior,
+            @"Experiment: the RT calibration LOESS bandwidth (fraction of points per local fit) " +
+            @"in place of 0.3. Enters the search identity.")
+            { ValueExample = @"<fraction>", DefaultValue = @"0.3" };
+
+        /// <summary>
+        /// OSPREY_LOESS_BANDWIDTH (experiment): the RT calibration LOESS bandwidth (fraction of points per local fit)
+        /// in place of 0.3, to let the curve follow a library whose RTs bend at the gradient end, as DIA-NN 1.7.12's
+        /// 20-segment spline does. It enters the search identity, so every task keys on it. Null when unset.
+        /// </summary>
+        public static readonly double? LoessBandwidth = double.TryParse(ENV_LOESS_BANDWIDTH.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double loessBandwidth) ? loessBandwidth : null;
+
+        private static readonly EnvVar ENV_MIN_RT_TOLERANCE = new EnvVar(@"OSPREY_MIN_RT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: the RT search-window floor in minutes in place of the configured 0.5. " +
+            @"Enters the search identity.")
+            { ValueExample = @"<minutes>", DefaultValue = @"0.5" };
+
+        /// <summary>
+        /// OSPREY_MIN_RT_TOLERANCE (experiment): the RT search-window floor in minutes in place of the configured
+        /// 0.5, to price precursors whose library RT the calibration maps badly (the SEA-AD gradient tail). It
+        /// enters the search identity, so every task keys on it. Null when unset.
+        /// </summary>
+        public static readonly double? MinRtTolerance = double.TryParse(ENV_MIN_RT_TOLERANCE.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double minRtTolerance) ? minRtTolerance : null;
+
+        private static readonly EnvVar ENV_TC_HALF_WINDOW = new EnvVar(@"OSPREY_TC_HALF_WINDOW", EnvVarGroup.behavior,
+            @"Experiment: half-width in minutes of the window the tc_* time-correlation features " +
+            @"correlate over, in place of 0.15. Keyed into every task.")
+            { ValueExample = @"<minutes>", DefaultValue = @"0.15" };
+
+        private static readonly EnvVar ENV_MIN_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_MIN_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: a floor in ppm on the calibrated fragment tolerance the main search extracts " +
+            @"XICs with. Keyed into every task.")
+            { ValueExample = @"<ppm>" };
+
+        private static readonly EnvVar ENV_LOCAL_RT_TOLERANCE = new EnvVar(@"OSPREY_LOCAL_RT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: widen the RT search window at each library RT from the residual spread of this " +
+            @"many nearest calibration points. Keyed into every task.")
+            { ValueExample = @"<N>", AcceptsValue = IsPositiveInt };
+
+        /// <summary>
+        /// OSPREY_LOCAL_RT_TOLERANCE (experiment): widen the RT search window where the calibration fits
+        /// the run worst, from the robust spread of the residuals of this many calibration points nearest
+        /// in library RT (3 * 1.4826 * median |residual|, clamped between the global half-width and the
+        /// maximum RT tolerance). Aimed at a library whose predicted RTs saturate at the gradient end,
+        /// where many precursors share a library RT but elute minutes apart. Keyed into every task through
+        /// <see cref="PickValidityKeySuffix()"/>. Null when unset or not a positive integer.
+        /// </summary>
+        public static readonly int? LocalRtToleranceNeighbors = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
+            NumberStyles.None, CultureInfo.InvariantCulture, out int localRtNeighbors) && localRtNeighbors > 0 ? localRtNeighbors : null;
+
+        /// <summary>
+        /// OSPREY_MIN_FRAGMENT_TOLERANCE (experiment): a floor in ppm on the calibrated fragment tolerance
+        /// the main search extracts XICs with (|mean| + 3 SD of confident matches, which is too tight for
+        /// weak fragment ions). Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? MinFragmentTolerancePpm = double.TryParse(ENV_MIN_FRAGMENT_TOLERANCE.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double minFragTol) ? minFragTol : null;
+
+        private static readonly EnvVar ENV_CORR_FRAGMENT_TOLERANCE = new EnvVar(@"OSPREY_CORR_FRAGMENT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: a tolerance in ppm (at least the calibrated one) the correlation-shape features " +
+            @"re-extract their fragment XICs with. Keyed into every task.")
+            { ValueExample = @"<ppm>" };
+
+        /// <summary>
+        /// OSPREY_CORR_FRAGMENT_TOLERANCE (experiment): a tolerance in ppm the correlation-shape features
+        /// re-extract their fragment XICs with, as max(calibrated, setting), over the same scans. Peak
+        /// detection, the apex, the intensity-pattern and the mass-error features stay on the XICs at the
+        /// calibrated tolerance. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? CorrFragmentTolerancePpm = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
+
+        private static readonly EnvVar ENV_REF_XIC = new EnvVar(@"OSPREY_REF_XIC", EnvVarGroup.behavior,
+            @"Experiment: corr chooses the reference fragment XIC (apex scan, area, SNR, sharpness, MS1 " +
+            @"reference) by agreement with the other fragments inside the chosen peak. Keyed into every task.")
+            { Values = new[] { @"corr" } };
+
+        /// <summary>
+        /// OSPREY_REF_XIC (experiment): <c>corr</c> re-chooses the reference fragment XIC inside the chosen
+        /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
+        /// of the fragment with the largest total intensity over the whole extraction window. The reference
+        /// sets the apex scan (and so every apex-spectrum feature), the recomputed bounds area and SNR, the
+        /// MS1 correlation reference, and the apex/area of the stored CWT candidates; the peak_apex,
+        /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// False when unset.
+        /// </summary>
+        public static readonly bool RefXicByCorrelation = string.Equals(
+            ENV_REF_XIC.Value, @"corr", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
+        /// features correlate over, in place of 0.15. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// Null when unset.
+        /// </summary>
+        public static readonly double? TcHalfWindowMinutes = double.TryParse(ENV_TC_HALF_WINDOW.Value,
+            NumberStyles.Float, CultureInfo.InvariantCulture, out double halfWindow) ? halfWindow : null;
+
+        private static readonly EnvVar ENV_RECONCILIATION = new EnvVar(@"OSPREY_RECONCILIATION", EnvVarGroup.behavior,
+            @"Experiment: symmetric-decoys builds a decoy's consensus RT only from its picks in " +
+            @"the runs where its paired target's peptide qualified. Unset pools every pick.")
+            { Values = new[] { RECONCILIATION_SYMMETRIC_DECOYS } };
+
+        /// <summary>
+        /// OSPREY_RECONCILIATION (experiment): <c>symmetric-decoys</c> builds a decoy's consensus RT
+        /// only from its picks in the runs where its paired target's peptide qualified, as the
+        /// target's consensus is built only from its qualifying runs. Unset, the decoy's consensus
+        /// pools every pick. Any other value throws. (There is no <c>off</c>: with reconciliation
+        /// disabled the first pass writes no reconciliation data and per-file rescoring cannot run.)
+        /// </summary>
+        public static readonly string ReconciliationMode = ParseReconciliationMode(
+            ENV_RECONCILIATION.Value);
+
+        /// <summary>True under OSPREY_RECONCILIATION=symmetric-decoys.</summary>
+        public static bool ReconciliationSymmetricDecoys => ReconciliationMode == RECONCILIATION_SYMMETRIC_DECOYS;
+
+        private const string RECONCILIATION_SYMMETRIC_DECOYS = @"symmetric-decoys";
+
+        private static string ParseReconciliationMode(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            string mode = value.Trim().ToLowerInvariant();
+            if (mode == RECONCILIATION_SYMMETRIC_DECOYS)
+                return mode;
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
+                @"OSPREY_RECONCILIATION", RECONCILIATION_SYMMETRIC_DECOYS, value));
+        }
+
+        private static readonly EnvVar ENV_DUMP_RUN_PEP = new EnvVar(@"OSPREY_DUMP_RUN_PEP", EnvVarGroup.diagnostic,
+            @"Experiment: a folder. The transfer second pass fits each run's PEP from its " +
+            @"first-pass target-vs-paired-decoy winners and writes every survivor's class, " +
+            @"score, run q and run PEP to <run>.run_pep.tsv there.")
+            { ValueExample = @"<folder>" };
+
+        /// <summary>
+        /// OSPREY_DUMP_RUN_PEP (experiment): a folder. When set, the transfer second pass fits each
+        /// run's posterior error probability from that run's first-pass target-vs-paired-decoy
+        /// winners and writes, per run, every survivor's class (unchanged, moved, gap-fill), score,
+        /// run q and run PEP to <c>&lt;run&gt;.run_pep.tsv</c> there. Null when unset: nothing is fitted.
+        /// </summary>
+        public static readonly string RunPepDumpDir = ParseRunPepDumpDir(
+            ENV_DUMP_RUN_PEP.Value);
+
+        private static readonly EnvVar ENV_PEP_FORMULA = new EnvVar(@"OSPREY_PEP_FORMULA", EnvVarGroup.behavior,
+            @"Experiment: ratio estimates PEP as (D/T) fD(s) / fT(s) instead of pi0 fD / (pi0 fD " +
+            @"+ (1 - pi0) fT), which overstates PEP by about 1 / (1 - pi0). Unset keeps the " +
+            @"current formula.")
+            { Values = new[] { @"ratio" } };
+
+        /// <summary>
+        /// OSPREY_PEP_FORMULA=ratio (experiment): <c>PepEstimator</c> estimates PEP as
+        /// (D/T) fD(s) / fT(s) - with paired competition the expected false target winners at a score
+        /// equal the decoy winners there - instead of pi0 fD / (pi0 fD + (1 - pi0) fT), which treats the
+        /// density of ALL target winners (false and true) as the true-match density and so overstates PEP
+        /// by about 1 / (1 - pi0). Unset keeps the current formula; any other value throws.
+        /// </summary>
+        public static readonly bool PepRatioForm = ParsePepFormula(ENV_PEP_FORMULA.Value);
+
+        private static bool ParsePepFormula(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            if (string.Equals(value.Trim(), @"ratio", StringComparison.OrdinalIgnoreCase))
+                return true;
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseSingleValueSwitch__0__must_be___1___or_unset__not___2___,
+                @"OSPREY_PEP_FORMULA", @"ratio", value));
+        }
+
+        private static string[] ParseFeatureMask(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            if (string.Equals(value.Trim(), FEATURE_MASK_NONE, StringComparison.OrdinalIgnoreCase))
+                return Array.Empty<string>();
+            return value.Split(',').Select(name => name.Trim()).Where(name => name.Length > 0).ToArray();
+        }
+
+        private static string ParseRunPepDumpDir(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private static int? ParseXicFragments(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+            if (int.TryParse(value.Trim(), NumberStyles.None,
+                    CultureInfo.InvariantCulture, out int n) && n >= MIN_XIC_FRAGMENTS && n <= MAX_XIC_FRAGMENTS)
+                return n;
+            throw new InvalidOperationException(string.Format(
+                OspreyCoreResources.OspreyEnvironment_ParseXicFragments__0__must_be_a_whole_number_from__1__to__2___not___3___,
+                @"OSPREY_XIC_FRAGMENTS", MIN_XIC_FRAGMENTS, MAX_XIC_FRAGMENTS, value));
+        }
+
         /// <summary>
         /// OSPREY_GBT_OOF=1 (experiment): on the streaming score pass, scores each tree-model training row with
         /// only the fold model that held it out, as the cross-validated direct path does, instead of the average
@@ -785,6 +1094,82 @@ namespace pwiz.Osprey.Core
         /// by the streamed first pass; the projection path ignores it and logs a warning.
         /// </summary>
         public static readonly int GbtPrefilterSize = Math.Max(0, ParseIntOrZero(ENV_GBT_PREFILTER_SIZE));
+
+        private static readonly EnvVar ENV_GBT_PREFILTER_Q = new EnvVar(@"OSPREY_GBT_PREFILTER_Q", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_GBT_PREFILTER_SIZE as a row cap: round 2 keeps every peptide group whose " +
+            @"best round-1 score reaches the score where target-decoy competition on the round-1 scores reaches " +
+            @"this q, instead of a fixed row count. A number in (0, 1]; anything else stops the run. Changes the validity key.")
+            { ValueExample = @"<q>" };
+
+        /// <summary>OSPREY_GBT_PREFILTER_Q exactly as set, or null when unset.</summary>
+        public static readonly string GbtPrefilterQSetting = ENV_GBT_PREFILTER_Q.Value;
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_Q=q (experiment): round 2 of the two-round training
+        /// (<see cref="GbtPrefilterSize"/>, which must also be set and becomes a row cap) keeps every peptide
+        /// group whose best round-1 score reaches the score at which paired target-decoy competition on the
+        /// round-1 scores reaches q, instead of a fixed row count - a cut that scales with the data. The
+        /// selection only chooses training rows: every candidate is still scored and competed afterwards.
+        /// Keyed through the gbdt validity-key term. Null when unset or not a number in (0, 1].
+        /// </summary>
+        public static readonly double? GbtPrefilterQ = ParseFdrTrainFdr(GbtPrefilterQSetting);
+
+        /// <summary>True when OSPREY_GBT_PREFILTER_Q is set to anything but a number in (0, 1]; startup aborts.</summary>
+        public static readonly bool GbtPrefilterQUnrecognized =
+            !string.IsNullOrEmpty(GbtPrefilterQSetting) && !GbtPrefilterQ.HasValue;
+
+        private static readonly EnvVar ENV_GBT_PREFILTER_LFDR = new EnvVar(@"OSPREY_GBT_PREFILTER_LFDR", EnvVarGroup.behavior,
+            @"Experiment, with OSPREY_GBT_PREFILTER_SIZE as a row cap: round 2 keeps every peptide group down to " +
+            @"the round-1 score where the local FDR (the windowed ratio of decoy to target competition winners) " +
+            @"first exceeds this value. A number in (0, 1], not together with OSPREY_GBT_PREFILTER_Q; anything " +
+            @"else stops the run. Changes the validity key.")
+            { ValueExample = @"<f>" };
+
+        /// <summary>OSPREY_GBT_PREFILTER_LFDR exactly as set, or null when unset.</summary>
+        public static readonly string GbtPrefilterLocalFdrSetting = ENV_GBT_PREFILTER_LFDR.Value;
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_LFDR=f (experiment): like <see cref="GbtPrefilterQ"/>, but round 2 keeps every
+        /// peptide group down to the round-1 score where the local FDR - the windowed ratio of decoy to target
+        /// competition winners - first exceeds f, so the cut lands wherever targets and decoys stop separating.
+        /// Keyed through the gbdt validity-key term. Null when unset or not a number in (0, 1].
+        /// </summary>
+        public static readonly double? GbtPrefilterLocalFdr = ParseFdrTrainFdr(GbtPrefilterLocalFdrSetting);
+
+        /// <summary>True when OSPREY_GBT_PREFILTER_LFDR is set to anything but a number in (0, 1], or is set
+        /// together with OSPREY_GBT_PREFILTER_Q; startup aborts.</summary>
+        public static readonly bool GbtPrefilterLocalFdrUnrecognized =
+            !string.IsNullOrEmpty(GbtPrefilterLocalFdrSetting) && (!GbtPrefilterLocalFdr.HasValue || GbtPrefilterQ.HasValue);
+
+        private static readonly EnvVar ENV_GBT_PREFILTER_SAMPLE = new EnvVar(@"OSPREY_GBT_PREFILTER_SAMPLE", EnvVarGroup.behavior,
+            @"Experiment: 1 makes round 2 take a seeded random sample of the eligible peptide groups (those at " +
+            @"or above the OSPREY_GBT_PREFILTER_Q or _LFDR cut, or all of them) up to OSPREY_GBT_PREFILTER_SIZE " +
+            @"rows, instead of the best-scoring ones. Changes the validity key.")
+            { Values = new[] { @"0", @"1" }, DefaultValue = @"0" };
+
+        /// <summary>
+        /// OSPREY_GBT_PREFILTER_SAMPLE=1 (experiment): when the peptide groups eligible for round 2 of the
+        /// two-round training (everything at or above the OSPREY_GBT_PREFILTER_Q / _LFDR cut, or every group
+        /// without one) hold more rows than <see cref="GbtPrefilterSize"/>, round 2 takes a seeded random
+        /// sample of those groups up to that cap instead of the best-scoring ones, so the cap bounds the
+        /// training cost without dropping the low-confidence end of the eligible set. Keyed through the gbdt
+        /// validity-key term.
+        /// </summary>
+        public static readonly bool GbtPrefilterSample = ParseIntOrNull(ENV_GBT_PREFILTER_SAMPLE) == 1;
+
+        /// <summary>
+        /// True when OSPREY_GBT_PREFILTER_Q, _LFDR or _SAMPLE is set without OSPREY_GBT_PREFILTER_SIZE; startup
+        /// aborts. They only shape round 2 of the two-round training, which runs only with a size, so without
+        /// one the run would be the one-round baseline under the baseline's validity key.
+        /// </summary>
+        public static readonly bool GbtPrefilterSwitchesWithoutSize = PrefilterSwitchesWithoutSize(
+            GbtPrefilterQSetting, GbtPrefilterLocalFdrSetting, GbtPrefilterSample, GbtPrefilterSize);
+
+        /// <summary><see cref="GbtPrefilterSwitchesWithoutSize"/> for explicitly supplied settings.</summary>
+        internal static bool PrefilterSwitchesWithoutSize(string qSetting, string localFdrSetting, bool sample, int size)
+        {
+            return size <= 0 && (!string.IsNullOrEmpty(qSetting) || !string.IsNullOrEmpty(localFdrSetting) || sample);
+        }
 
         private static readonly EnvVar ENV_DETERMINISTIC_MATH = new EnvVar(@"OSPREY_DETERMINISTIC_MATH", EnvVarGroup.behavior,
             @"Exp and Log in gradient-boosted tree training: 1 the managed fdlibm port, bit-identical on " +
@@ -1085,7 +1470,7 @@ namespace pwiz.Osprey.Core
         public static string ExperimentAgg =>
             MeanBestN >= 2
                 ? EXPERIMENT_AGG_MEAN_BEST_PREFIX +
-                  MeanBestN.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                  MeanBestN.ToString(CultureInfo.InvariantCulture)
                 : EXPERIMENT_AGG_MAX;
 
         /// <summary>True when <see cref="MeanBestN"/> selects a mean(best-N) reproducibility score
@@ -1197,7 +1582,7 @@ namespace pwiz.Osprey.Core
                 return string.Format(
                     @"OSPREY_MEANBEST2_FLOOR_PCT={0} is outside the valid range [0, 100]. It names a " +
                     @"percentile of the decoy score distribution to use as the missing-run floor.",
-                    pct.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    pct.Value.ToString(CultureInfo.InvariantCulture));
             }
             if (fileCount > 0 && MeanBestN > fileCount)
             {
@@ -1237,7 +1622,7 @@ namespace pwiz.Osprey.Core
             return @";expagg=" + ExperimentAgg
                    + @";floormean=" + MeanBest2FloorMean
                    + @";floorpct=" + (MeanBest2FloorPercentile?.ToString(
-                       System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+                       CultureInfo.InvariantCulture) ?? @"none");
         }
 
         /// <summary>
@@ -1265,7 +1650,12 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string PickValidityKeySuffix()
         {
-            return PickValidityKeySuffix(PickLda, PickLdaModelPath);
+            return PickValidityKeySuffix(PickLda, PickLdaModelPath)
+                   + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (RefXicByCorrelation ? @";refxic=corr" : string.Empty)
+                   + (LocalRtToleranceNeighbors.HasValue ? @";rtlocal=" + LocalRtToleranceNeighbors.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>
@@ -1304,6 +1694,48 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// Validity-key suffix for the FDR experiment switches <see cref="ReconciliationMode"/>
+        /// and <see cref="PepRatioForm"/>: each changes the first-pass consensus or PEP and so
+        /// every FDR output after it. Empty when both are unset, so default outputs keep their key.
+        /// The FDR classifier switches follow (<see cref="FdrClassifierValidityKeySuffix(ulong?, double?)"/>).
+        /// </summary>
+        public static string FdrExperimentValidityKeySuffix()
+        {
+            return FdrExperimentValidityKeySuffix(ReconciliationMode, PepRatioForm)
+                   + FdrClassifierValidityKeySuffix(FdrSeed, FdrTrainFdr);
+        }
+
+        /// <summary>
+        /// <see cref="FdrExperimentValidityKeySuffix()"/> for explicitly supplied settings, in the
+        /// normalized form <see cref="ReconciliationMode"/> holds.
+        /// </summary>
+        public static string FdrExperimentValidityKeySuffix(string reconciliationMode, bool pepRatioForm)
+        {
+            string suffix = string.Empty;
+            if (reconciliationMode != null)
+                suffix += @";recon=" + reconciliationMode;
+            if (pepRatioForm)
+                suffix += @";pep=ratio";
+            return suffix;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the FDR classifier switches <see cref="FdrSeed"/> and
+        /// <see cref="FdrTrainFdr"/>: each changes the draw or the positives the classifier trains
+        /// on, and so every FDR output. A switch emits nothing when unset, so default outputs keep
+        /// their key.
+        /// </summary>
+        public static string FdrClassifierValidityKeySuffix(ulong? seed, double? trainFdr)
+        {
+            string suffix = string.Empty;
+            if (seed.HasValue)
+                suffix += @";fdrseed=" + seed.Value.ToString(CultureInfo.InvariantCulture);
+            if (trainFdr.HasValue)
+                suffix += @";fdrtrain=" + trainFdr.Value.ToString(@"R", CultureInfo.InvariantCulture);
+            return suffix;
+        }
+
+        /// <summary>
         /// Validity-key term for the MEANING of protein-compact's 2nd-pass q (issue #4581): the
         /// stratum's complement now competes against its own decoys instead of keeping its
         /// 1st-pass q (an unchanged off-stratum survivor used to take run q 1.0). No byte layout
@@ -1317,7 +1749,6 @@ namespace pwiz.Osprey.Core
         {
             return Pass2ProteinCompact ? PASS2_STRATA_TERM : string.Empty;
         }
-
 
         /// <summary>
         /// Validity-key suffix for the first-pass TRAINING levers
@@ -1361,9 +1792,9 @@ namespace pwiz.Osprey.Core
             if (maxTrainSizeOverride.HasValue)
             {
                 suffix += @";maxtrain=" +
-                          maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                          maxTrainSizeOverride.Value.ToString(CultureInfo.InvariantCulture);
             }
-            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", System.Globalization.CultureInfo.InvariantCulture);
+            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", CultureInfo.InvariantCulture);
             return suffix;
         }
 
@@ -1391,7 +1822,7 @@ namespace pwiz.Osprey.Core
             if (pct.HasValue)
             {
                 return string.Format(@"decoy {0} percentile (OSPREY_MEANBEST2_FLOOR_PCT)",
-                    pct.Value.ToString(@"0.###", System.Globalization.CultureInfo.InvariantCulture));
+                    pct.Value.ToString(@"0.###", CultureInfo.InvariantCulture));
             }
             return @"decoy MEDIAN (default)";
         }
@@ -1411,8 +1842,8 @@ namespace pwiz.Osprey.Core
             // NumberStyles.None, not Integer: Integer also accepts a leading sign and surrounding
             // whitespace, so "mean-best-+3" and "mean-best- 3" parsed as 3 - two spellings of the
             // same arm that an A/B log could not tell apart from the canonical one.
-            return int.TryParse(tail, System.Globalization.NumberStyles.None,
-                       System.Globalization.CultureInfo.InvariantCulture, out int n) &&
+            return int.TryParse(tail, NumberStyles.None,
+                       CultureInfo.InvariantCulture, out int n) &&
                    n >= 2 && n <= MEAN_BEST_N_MAX
                 ? n
                 : 0;
@@ -1504,8 +1935,8 @@ namespace pwiz.Osprey.Core
             string v = envVar.Value;
             if (string.IsNullOrEmpty(v))
                 return null;
-            return double.TryParse(v, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out double result)
+            return double.TryParse(v, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out double result)
                 ? result : null;
         }
 
@@ -1518,8 +1949,8 @@ namespace pwiz.Osprey.Core
         internal static double? ParseSvmCSelectionTolerance(string raw)
         {
             if (string.IsNullOrEmpty(raw) ||
-                !double.TryParse(raw, System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture, out double tolerance) ||
+                !double.TryParse(raw, NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out double tolerance) ||
                 !(tolerance >= 0 && tolerance < 1))
             {
                 return null;
@@ -1527,6 +1958,22 @@ namespace pwiz.Osprey.Core
             // -0 passes the range check but formats as "-0" in the validity key on .NET Core, so
             // it would key apart from the 0 it selects.
             return tolerance == 0 ? 0 : tolerance;
+        }
+
+        /// <summary>
+        /// An OSPREY_FDR_TRAIN_FDR value as a number in (0, 1] (invariant culture), or null when it is
+        /// unset, unparseable or out of range - the null that <see cref="FdrTrainFdrUnrecognized"/>
+        /// reports for a set variable. Internal so a test can pin what is accepted.
+        /// </summary>
+        internal static double? ParseFdrTrainFdr(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) ||
+                !double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainFdr) ||
+                !(trainFdr > 0 && trainFdr <= 1))
+            {
+                return null;
+            }
+            return trainFdr;
         }
 
         /// <summary>

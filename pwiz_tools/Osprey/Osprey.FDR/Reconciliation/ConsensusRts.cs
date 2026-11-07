@@ -130,6 +130,14 @@ namespace pwiz.Osprey.FDR.Reconciliation
             {
                 if (entries == null)
                     return;
+                // OSPREY_RECONCILIATION=symmetric-decoys: a decoy pick counts only in a run where its
+                // paired target's peptide qualified, as a target pick counts only where it qualifies.
+                // Pooling every decoy pick lets the median move a decoy's best run while a false
+                // target's best run, which qualified, never moves - weakening the decoy exactly where
+                // it stands in for a false target.
+                var decoyRunsAllowed = OspreyEnvironment.ReconciliationSymmetricDecoys
+                    ? QualifyingPairBaseIds(entries)
+                    : null;
                 foreach (var entry in entries)
                 {
                     if (entry.IsDecoy)
@@ -148,7 +156,8 @@ namespace pwiz.Osprey.FDR.Reconciliation
                             _decoyBaseIdsBySequence[entry.ModifiedSequence] = seenBaseIds;
                         }
                         seenBaseIds.Add(decoyBaseId);
-                        AddDetection(entry.ModifiedSequence, true, fileName, entry);
+                        if (decoyRunsAllowed == null || decoyRunsAllowed.Contains(decoyBaseId))
+                            AddDetection(entry.ModifiedSequence, true, fileName, entry);
                         continue;
                     }
 
@@ -288,6 +297,29 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 });
 
                 return consensus;
+            }
+
+            /// <summary>
+            /// The base ids, in this file, of every precursor of a peptide that has a qualifying target
+            /// detection here: the decoy picks <see cref="AddFile"/> keeps under
+            /// OSPREY_RECONCILIATION=symmetric-decoys. By peptide, not base id, because a target's
+            /// consensus pools every qualifying charge state of its peptide.
+            /// </summary>
+            private HashSet<uint> QualifyingPairBaseIds(IReadOnlyList<FdrEntry> entries)
+            {
+                var qualifyingPeptides = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var entry in entries)
+                {
+                    if (!entry.IsDecoy && Qualifies(entry, _consensusFdr, _proteinFdrThreshold))
+                        qualifyingPeptides.Add(entry.ModifiedSequence);
+                }
+                var baseIds = new HashSet<uint>();
+                foreach (var entry in entries)
+                {
+                    if (!entry.IsDecoy && qualifyingPeptides.Contains(entry.ModifiedSequence))
+                        baseIds.Add(entry.EntryId & 0x7FFFFFFFu);
+                }
+                return baseIds;
             }
 
             private void AddDetection(string modifiedSequence, bool isDecoy, string fileName, FdrEntry entry)

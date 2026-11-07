@@ -2245,10 +2245,10 @@ namespace pwiz.Osprey.Test
                 // would silently break both.
                 Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
 
-                // Read PIN features
+                // Read the FDR features: the unmasked ones, which lead with PIN 0-20 under the default mask
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName);
                 Assert.AreEqual(3, features.Count);
-                Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
+                Assert.AreEqual(PinFeatureMask.FdrFeatureIndices.Length, features[0].Length);
                 // Check first entry features
                 Assert.AreEqual(0.9, features[0][0], 0.001); // coelution_sum
                 Assert.AreEqual(0.95, features[0][1], 0.001); // coelution_max
@@ -2667,6 +2667,180 @@ namespace pwiz.Osprey.Test
         #endregion
 
         #region FdrScoresSidecar Tests
+
+        /// <summary>
+        /// The feature mask decides two things. The FDR stage loads only the unmasked features
+        /// (<see cref="ParquetScoreCache.LoadPinFeaturesFromParquet"/>), and the scores parquet holds
+        /// a column only for the recorded ones (<see cref="PinFeatureMask.IsRecorded"/>): the core
+        /// features and each family with an unmasked feature. The test process leaves
+        /// OSPREY_FEATURE_MASK and OSPREY_RECORD_ALL_FEATURES unset, so the default set is masked
+        /// and only the 21 core features are recorded - and a file that lacks a column a reader
+        /// needs is refused, not read as zeros.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureMaskAppliesAtFdrLoad()
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            for (int f = 0; f < features.Length; f++)
+                features[f] = f + 1.0;
+            var entries = new List<FdrEntry>
+            {
+                new FdrEntry { EntryId = 1, Charge = 2, ScanNumber = 10, ModifiedSequence = "PEPTIDE", Features = features },
+            };
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_featmask_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, null, null, "f.mzML");
+
+                double[] stored = ParquetScoreCache.LoadFullFdrEntries(saver.SafeName).Single().Features;
+                double[] loaded = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName).Single();
+                var loadedByName = PinFeatureMask.FdrFeatureNames.Zip(loaded, (name, v) => (name, v))
+                    .ToDictionary(p => p.name, p => p.v);
+                Assert.AreEqual(loaded.Length, loadedByName.Count);
+                int maskedCount = 0;
+                for (int f = 0; f < features.Length; f++)
+                {
+                    string name = ParquetScoreCache.PIN_FEATURE_NAMES[f];
+                    bool masked = PinFeatureMask.DEFAULT_MASKED_FEATURES.Contains(name);
+                    Assert.AreEqual(masked, PinFeatureMask.IsMasked(f), name);
+                    // Every default-masked feature is in a family with no unmasked feature, so
+                    // the default records the core features alone.
+                    bool recorded = f < PinFeatureMask.CORE_FEATURE_COUNT;
+                    Assert.AreEqual(recorded, PinFeatureMask.IsRecorded(f), name);
+                    Assert.AreEqual(recorded, ParquetScoreCache.HasColumn(saver.SafeName, name),
+                        name + " must have a column exactly when it is recorded");
+                    Assert.AreEqual(recorded ? f + 1.0 : 0.0, stored[f], name + " as stored");
+                    if (masked)
+                        Assert.IsFalse(loadedByName.ContainsKey(name), name + " must be absent as the FDR stage loads it");
+                    else
+                        Assert.AreEqual(f + 1.0, loadedByName[name], name + " as the FDR stage loads it");
+                    if (masked)
+                        maskedCount++;
+                }
+                Assert.AreEqual(PinFeatureMask.DEFAULT_MASKED_FEATURES.Length, maskedCount,
+                    "every default-masked name must be a PIN feature");
+            }
+            Assert.IsNull(PinFeatureMask.UnknownFeatureName());
+            Assert.AreEqual(@";featmask=default;fdrcols=unmasked", PinFeatureMask.ValidityKeySuffix());
+            Assert.AreEqual(string.Empty, PinFeatureMask.RecordedFeaturesValidityKeySuffix(),
+                "the default records the core features only, so default keys must not change");
+            AssertMissingFeatureColumnIsRefused();
+        }
+
+        /// <summary>
+        /// A scores file that holds features but not one the reader needs - scored under a
+        /// narrower recorded set than this run uses - is refused by both the FDR load and the full
+        /// row read, naming the column, rather than read as zeros.
+        /// </summary>
+        private static void AssertMissingFeatureColumnIsRefused()
+        {
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_featmissing_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new SimpleFileSaver(dest))
+            {
+                var entryIdField = new DataField<uint>("entry_id");
+                var isDecoyField = new DataField<bool>("is_decoy");
+                var chargeField = new DataField<byte>("charge");
+                var firstFeatureField = new DataField<double>(ParquetScoreCache.PIN_FEATURE_NAMES[0]);
+                var schema = new ParquetSchema(entryIdField, isDecoyField, chargeField, firstFeatureField);
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                {
+                    var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        group.WriteAsync(entryIdField, new ReadOnlyMemory<uint>(new[] { 1u })).GetAwaiter().GetResult();
+                        group.WriteAsync(isDecoyField, new ReadOnlyMemory<bool>(new[] { false })).GetAwaiter().GetResult();
+                        group.WriteAsync(chargeField, new ReadOnlyMemory<byte>(new byte[] { 2 })).GetAwaiter().GetResult();
+                        group.WriteAsync(firstFeatureField, new ReadOnlyMemory<double>(new[] { 1.0 })).GetAwaiter().GetResult();
+                    }
+                    // Writes the footer
+                    writer.DisposeAsync().GetAwaiter().GetResult();
+                }
+
+                string missing = ParquetScoreCache.PIN_FEATURE_NAMES[1];
+                var fdrLoad = Assert.ThrowsException<InvalidDataException>(
+                    () => ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName));
+                StringAssert.Contains(fdrLoad.Message, missing);
+                var fullRead = Assert.ThrowsException<InvalidDataException>(
+                    () => ParquetScoreCache.LoadFullFdrEntries(saver.SafeName));
+                StringAssert.Contains(fullRead.Message, missing);
+            }
+        }
+
+        /// <summary>
+        /// The XIC count is not in the search hash, so a FDR task pointed at existing scores
+        /// (--task FirstPassFDR / SecondPassFDR) must check the count the scores record, or it
+        /// adopts scores from another count and labels its output with its own. Covers where the
+        /// count is read from (footer entry, validity stamp, neither) and that a scores file
+        /// recording another count is refused, naming the file. The test process leaves
+        /// OSPREY_XIC_FRAGMENTS unset, so this run's count is the default.
+        /// </summary>
+        [TestMethod]
+        public void TestScoresXicCountValidatedOnLoad()
+        {
+            int current = OspreyEnvironment.SearchXicFragments;
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, current);
+            string stampOf12 = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
+                @"search=s;library=l;xic=12;featmask=default").ToString();
+            string stampWithoutXic = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current,
+                @"search=s;library=l").ToString();
+
+            // Where the count comes from: the footer entry wins over the stamp; a stamp written
+            // before the entry still carries the count; a file older than both used the default.
+            Assert.AreEqual(12, ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ParquetScoreCache.META_XIC_FRAGMENTS, @"12" }, { ArtifactStamp.PARQUET_KEY, stampWithoutXic } }));
+            Assert.AreEqual(12, ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ArtifactStamp.PARQUET_KEY, stampOf12 } }));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, ParquetScoreCache.RecordedXicFragments(
+                new Dictionary<string, string> { { ArtifactStamp.PARQUET_KEY, stampWithoutXic } }));
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_XIC_FRAGMENTS, ParquetScoreCache.RecordedXicFragments(
+                new Dictionary<string, string>()));
+            Assert.IsNull(ParquetScoreCache.RecordedXicFragments(new Dictionary<string, string>
+                { { ParquetScoreCache.META_XIC_FRAGMENTS, @"twelve" } }));
+
+            // The load-time gate: same count accepted, another count refused with the file named.
+            var config = new OspreyConfig();
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_xicload_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string matching = WriteScoresWithXic(dir, @"matching", config, current);
+                string other = WriteScoresWithXic(dir, @"other", config, current * 2);
+                Assert.IsNull(ParquetScoreCache.ValidateScoresParquetGroup(new[] { matching }, config, OspreyVersion.Current, null));
+                string error = ParquetScoreCache.ValidateScoresParquetGroup(new[] { matching, other }, config, OspreyVersion.Current, null);
+                Assert.IsNotNull(error, "scores from another XIC count must be refused");
+                StringAssert.Contains(error, other);
+                StringAssert.Contains(error, @"OSPREY_XIC_FRAGMENTS");
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        private static string WriteScoresWithXic(string dir, string stem, OspreyConfig config, int xicCount)
+        {
+            var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
+            var entries = new List<FdrEntry>
+            {
+                new FdrEntry { EntryId = 1, Charge = 2, ScanNumber = 10, ModifiedSequence = "PEPTIDE", Features = features },
+            };
+            var metadata = new Dictionary<string, string>
+            {
+                { @"osprey.version", OspreyVersion.Current },
+                { ParquetScoreCache.META_SEARCH_HASH, config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
+                { ParquetScoreCache.META_XIC_FRAGMENTS, ParquetScoreCache.XicFragmentsText(xicCount) },
+            };
+            string path = Path.Combine(dir, stem + @".scores.parquet");
+            using (var saver = new SimpleFileSaver(path))
+            {
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata, null, stem + @".mzML");
+                saver.Commit();
+            }
+            return path;
+        }
 
         /// <summary>
         /// Bounded row-group write: a parquet written as several row groups (forced via the
@@ -3481,9 +3655,11 @@ namespace pwiz.Osprey.Test
 
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)
         {
+            // A value for each recorded feature and 0 for the rest, as scoring leaves the vector:
+            // an unrecorded feature has no parquet column, so it cannot round-trip a value.
             var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];
             for (int f = 0; f < features.Length; f++)
-                features[f] = baseValue + f;
+                features[f] = PinFeatureMask.IsRecorded(f) ? baseValue + f : 0.0;
             return new FdrEntry
             {
                 EntryId = id,
