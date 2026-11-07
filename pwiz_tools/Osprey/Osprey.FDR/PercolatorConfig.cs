@@ -100,6 +100,15 @@ namespace pwiz.Osprey.FDR
         public bool PrefilterTrainSample { get; set; }
 
         /// <summary>
+        /// The protein-aware column (<c>OSPREY_PROTEIN_BEST</c>), or null (the default) for none. Read
+        /// only by the streamed first pass, whose two-round training computes it from round 1's
+        /// scores for round 2 and the score pass. Deliberately not copied by
+        /// <see cref="CloneForTrainOnly"/>: the trainer sees the column as an already appended
+        /// feature, and round 1 must not see it.
+        /// </summary>
+        public ProteinBestRequest ProteinBest { get; set; }
+
+        /// <summary>
         /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run, so
         /// the caller can score each training row with only the fold model that held it out.
         /// Set from <c>OSPREY_GBT_OOF</c> by the Tasks-layer config build, so the trainer reads no

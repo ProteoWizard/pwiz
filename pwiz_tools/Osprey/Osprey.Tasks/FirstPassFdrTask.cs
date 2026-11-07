@@ -1960,7 +1960,8 @@ namespace pwiz.Osprey.Tasks
                 projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums);
+                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums,
+                BuildProteinBestRequest(fullLibrary));
             // How many files' 1st-pass sidecars are on disk after the score pass - written by it
             // or adopted from an earlier run. flushFileRunScope is the only writer of these files
             // on this path, so a shortfall here is a file the compaction gate will fail to read.
@@ -2079,6 +2080,24 @@ namespace pwiz.Osprey.Tasks
             // base_id set (the same predicate RescoreCompaction applies, risk #7). The
             // stratum (protein-compact) admits present-protein peptides that failed 1st-pass FDR.
             return CompactFromSidecars(projections, perFileParquetPaths, beforeCount, config, ctx);
+        }
+
+        /// <summary>
+        /// The protein-aware column's request from the environment, or null when it is off. The
+        /// proteins come from the target library entries, so an entrapment peptide sits on whatever
+        /// accession the library gives it; a decoy finds its target's through their shared base_id.
+        /// The accessions are already free of the Carafe per-peptide suffix
+        /// (<see cref="CarafeProteinIdNormalizer"/>).
+        /// </summary>
+        private static ProteinBestRequest BuildProteinBestRequest(List<LibraryEntry> library)
+        {
+            if (!OspreyEnvironment.ProteinBestEnabled)
+                return null;
+            var precursors = library.Where(entry => !entry.IsDecoy).Select(entry =>
+                new ProteinBestMembership.Precursor(entry.Id, entry.ModifiedSequence, entry.ProteinIds));
+            ulong? shuffleSeed = OspreyEnvironment.ProteinBestShuffle ? OspreyEnvironment.FdrSeed ?? 42UL : null;
+            return new ProteinBestRequest(ProteinBestMembership.Build(precursors, shuffleSeed),
+                OspreyEnvironment.ProteinBestTopN, OspreyEnvironment.ProteinBestDecoyOwn);
         }
 
         /// <summary>

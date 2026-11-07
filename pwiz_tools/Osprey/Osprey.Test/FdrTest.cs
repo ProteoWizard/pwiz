@@ -1633,10 +1633,71 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(anyDiffers, "the round-2 model must replace the round-1 model");
 
             AssertOutOfFoldConfigAndResume(MakeConfig(100, 4), featureInfos, fixture, RunArm);
+            AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
         }
 
         private delegate CapturingSink FirstPassArm(PercolatorConfig config, IOspreyLog log,
             out PercolatorResults model, PercolatorResults pretrained = null);
+
+        /// <summary>
+        /// <c>OSPREY_PROTEIN_BEST</c> through the streamed first pass: the model trains on one more
+        /// feature and names it, the scores move, they are the same bits at any thread count and with
+        /// <c>OSPREY_GBT_OOF</c>'s held-out final scoring they still score at the model's width. A saved
+        /// model is retrained around, not adopted, whatever its width, and the two-round training is required.
+        /// </summary>
+        private static void AssertProteinBestColumnTrains(Func<int, PercolatorConfig> makeConfig,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, CapturingSink sinkOff, PercolatorResults modelOff,
+            FirstPassArm runArm)
+        {
+            // Ten proteins over the population, a precursor's protein decided by its base_id.
+            var precursors = fixture[0].Value.Where(entry => !entry.IsDecoy).Select(entry =>
+                new ProteinBestMembership.Precursor(entry.EntryId, entry.ModifiedSequence,
+                    new[] { string.Format("PROT{0}", (entry.EntryId & 0x7FFFFFFFu) % 10) })).ToArray();
+            var request = new ProteinBestRequest(ProteinBestMembership.Build(precursors), 2, false);
+            PercolatorConfig MakeOn(int threads)
+            {
+                var config = makeConfig(threads);
+                config.ProteinBest = request;
+                return config;
+            }
+
+            var log = new CapturingLog();
+            var sinkOn = runArm(MakeOn(4), log, out var modelOn);
+            Assert.AreEqual(modelOff.Standardizer.NumFeatures + 1, modelOn.Standardizer.NumFeatures);
+            Assert.AreEqual(ProteinBestFeature.FEATURE_NAME, modelOn.FeatureNames.Last());
+            StringAssert.Contains(log.Text, "protein-best column for 100 round-2 rows from 2 file(s)");
+            bool anyDiffers = false;
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                for (int r = 0; r < fixture[f].Value.Count; r++)
+                    anyDiffers |= sinkOff.ScoreAt(f, r) != sinkOn.ScoreAt(f, r);
+            }
+            Assert.IsTrue(anyDiffers, "the column must move the scores");
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, runArm(MakeOn(1), OspreyLog.None, out _)));
+
+            // Scoring the training rows out of fold, as OSPREY_GBT_OOF=1 does, at the model's width.
+            var oofConfig = MakeOn(4);
+            oofConfig.ReportTrainEntryFolds = true;
+            var sinkOof = runArm(oofConfig, OspreyLog.None, out _);
+            var oofSerial = MakeOn(1);
+            oofSerial.ReportTrainEntryFolds = true;
+            Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOof, runArm(oofSerial, OspreyLog.None, out _)));
+
+            // A saved model is not adopted, whether it is the off arm's raw width or this arm's own.
+            foreach (var saved in new[] { modelOff, modelOn })
+            {
+                var resumeLog = new CapturingLog();
+                var sinkResumed = runArm(MakeOn(4), resumeLog, out _, saved);
+                StringAssert.Contains(resumeLog.Text, "OSPREY_PROTEIN_BEST is set: retraining the first-pass model");
+                Assert.AreEqual(fixture.Sum(kv => kv.Value.Count), AssertSinksIdentical(fixture, sinkOn, sinkResumed));
+            }
+
+            // Without two-round training the column has no way into the model.
+            var oneRound = makeConfig(4);
+            oneRound.PrefilterTrainSize = 0;
+            oneRound.ProteinBest = request;
+            Assert.ThrowsException<InvalidOperationException>(() => runArm(oneRound, OspreyLog.None, out _));
+        }
 
         /// <summary>
         /// <c>OSPREY_GBT_OOF</c> travels in the config, not the environment: the config build sets

@@ -526,13 +526,19 @@ namespace pwiz.Osprey.FDR
         /// <param name="round2Entries">The round-2 training rows, which the caller treats as the
         /// training rows from here on (the held-out folds of <c>OSPREY_GBT_OOF</c> are keyed by
         /// them).</param>
+        /// <param name="appendRound2Column">Optional: the protein-aware column
+        /// (<c>OSPREY_PROTEIN_BEST</c>). Handed round 1's model, each round-1 training precursor's
+        /// held-out fold by base_id, and the round-2 rows, whose feature vectors it extends by the
+        /// column, once round 2 is selected and before it trains. Null (the default) leaves round
+        /// 2's feature vectors as they are.</param>
         internal static PercolatorResults TrainWithScorePrefilter(
             IList<PercolatorEntry> candidates,
             int[] round1Subset,
             PercolatorConfig trainConfig,
             IOspreyLog log,
             string passLabel,
-            out List<PercolatorEntry> round2Entries)
+            out List<PercolatorEntry> round2Entries,
+            Action<PercolatorResults, IReadOnlyDictionary<uint, int>, List<PercolatorEntry>> appendRound2Column = null)
         {
             if (!trainConfig.UseGradientBoostedTrees)
                 throw new InvalidOperationException(@"TrainWithScorePrefilter trains the tree model only.");
@@ -623,6 +629,22 @@ namespace pwiz.Osprey.FDR
                 passLabel);
             var round2Config = trainConfig.CloneForTrainOnly();
             round2Config.MaxTrainSize = 0;
+            if (appendRound2Column != null)
+            {
+                // Selection above stays on round 1's scores and raw features: the column is an
+                // input to round 2, not a reason a group was chosen for it. A peptide group shares
+                // one fold across its charges, its decoy and its runs, so keying by base_id also
+                // holds a precursor's rows in OTHER runs out of the models that trained on it.
+                var heldOutFoldByBaseId = new Dictionary<uint, int>(round1Subset.Length);
+                for (int s = 0; s < round1Subset.Length; s++)
+                {
+                    int fold = round1.TrainEntryFolds[s];
+                    if (fold >= 0)
+                        heldOutFoldByBaseId[candidates[round1Subset[s]].EntryId & PercolatorEntry.BASE_ID_MASK] = fold;
+                }
+                appendRound2Column(round1, heldOutFoldByBaseId, round2Entries);
+                round2Config.FeatureInfos = ProteinBestFeature.WithColumnInfo(round2Config.FeatureInfos);
+            }
             return RunPercolator(round2Entries, round2Config, round2InitialScores);
         }
 

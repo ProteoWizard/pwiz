@@ -330,6 +330,15 @@ namespace pwiz.Osprey
                 // which is what let the input KIND retire: it was the OTHER seam saying the
                 // same thing.
                 var pipeline = tasks.PipelineFor(selectedTask);
+                // OSPREY_PROTEIN_BEST: the frozen first-pass model cannot score a second pass without
+                // its column, so the full pipeline ends at the stage that can supply it. A --task run
+                // is checked in ValidateArgs instead. A shorter pipeline rather than a flag every
+                // later stage would have to read.
+                if (selectedTask == null && OspreyEnvironment.ProteinBestEnabled)
+                {
+                    pipeline = pipeline.TakeWhile(stage => stage.Name != OspreyTaskNames.FIRST_PASS_FDR)
+                        .Concat(pipeline.Where(stage => stage.Name == OspreyTaskNames.FIRST_PASS_FDR)).ToList();
+                }
                 config.SelectTask(selectedTask, pipeline);
                 config.LibraryBuild.Phase = libraryPhase;
 
@@ -629,6 +638,9 @@ namespace pwiz.Osprey
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
                 // whose q-values an operator is most likely to attribute to the wrong arm.
                 LogInfo(OspreyEnvironment.DescribeExperimentAgg());
+                string proteinBestLine = OspreyEnvironment.DescribeProteinBest();
+                if (proteinBestLine != null)
+                    LogInfo(proteinBestLine);
                 // Abort, do not fall back: the default arm's q-values filed under the name of the
                 // arm the caller asked for, as for OSPREY_PASS2_QVALUE below. It used to warn and run
                 // max, which a mistyped sweep cell could not be told apart from.
@@ -1141,6 +1153,9 @@ namespace pwiz.Osprey
                 ExperimentAggFileCount(config, hasInputFiles));
             if (aggErr != null)
                 return aggErr;
+            string proteinBestErr = ProteinBestError(config);
+            if (proteinBestErr != null)
+                return proteinBestErr;
 
             // Every run is keyed on its input STEM - the per-file artifacts are
             // <stem>.<suffix>, and every per-run map in the pipeline is keyed the same way -
@@ -1186,6 +1201,36 @@ namespace pwiz.Osprey
             }
             if (string.IsNullOrEmpty(config.OutputBlib))
                 return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, OspreyCommandArgs.UsageOutput);
+            return null;
+        }
+
+        /// <summary>
+        /// The refusal for an OSPREY_PROTEIN_BEST request that cannot be honored, or null. The column
+        /// exists only in FirstPassFDR: a task past it would apply a model of another width to raw
+        /// vectors, the second-pass FDRBench table has no second pass to read, and the one command's
+        /// tuning search runs its own analyses. A full-pipeline run ends at FirstPassFDR on its own.
+        /// </summary>
+        private static string ProteinBestError(OspreyConfig config)
+        {
+            string settingsErr = OspreyEnvironment.ValidateProteinBestSettings(config.FdrClassifier);
+            if (settingsErr != null || !OspreyEnvironment.ProteinBestEnabled)
+                return settingsErr;
+            if (BuildsLibrary(config))
+            {
+                return string.Format(@"OSPREY_PROTEIN_BEST cannot run with the library build ({0}): its searches go on past the first pass.",
+                    OspreyCommandArgs.ARG_FASTA.ArgumentText);
+            }
+            var selected = config.SelectedTask;
+            if (selected != null && selected.Name != OspreyTaskNames.PER_FILE_SCORING && selected.Name != OspreyTaskNames.FIRST_PASS_FDR)
+            {
+                return string.Format(@"OSPREY_PROTEIN_BEST cannot run {0}: the first-pass model needs its column, which exists only in {1}.",
+                    OspreyArgNames.TaskText(selected.Name), OspreyTaskNames.FIRST_PASS_FDR);
+            }
+            if (!string.IsNullOrEmpty(config.OutputFdrBench) && (config.FdrBenchPass & OspreyConfig.FDRBENCH_PASS_2) != 0)
+            {
+                return string.Format(@"OSPREY_PROTEIN_BEST stops after the first pass, so {0} needs {1} 1: there is no second pass to report.",
+                    OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText);
+            }
             return null;
         }
 
