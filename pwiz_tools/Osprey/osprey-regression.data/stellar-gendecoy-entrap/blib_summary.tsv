@@ -8,7 +8,7 @@ RefSpectra	score	35.870139980000005	9.109127345600292E-05	0.009993634627625717
 RefSpectra	ionMobility	0	0	0
 RefSpectra	PrecursorQValue	35.870139980000005	9.109127345600292E-05	0.009993634627625717
 RefSpectra	PrecursorPep	560.404779263506	0	0.160423721280586
-RefSpectra	PeptideQValue	35.870139980000005	9.109127345600292E-05	0.009993634627625717
+RefSpectra	PeptideQValue	36.96288720168706	9.767532721234616E-05	0.011294708220037648
 RetentionTimes	<rows>	94225		
 RetentionTimes	retentionTime	924348.786904976	2.29133285095	20.310047573867
 RetentionTimes	startTime	1064132.8714787362	2.076404061367	20.124279591
@@ -18,7 +18,7 @@ RefSpectraProteins	<rows>	32702
 Modifications	<rows>	6137		
 Modifications	mass	349940.724568	57.021464	57.021464
 Proteins	<rows>	3610		
-Proteins	QValue	0	0	0
+Proteins	QValue	9.530296678944634	0	1
 SpectrumSourceFiles	<rows>	3		
 SpectrumSourceFiles	cutoffScore	0.03	0.01	0.01
 LibMetadata	<rows>	4		
