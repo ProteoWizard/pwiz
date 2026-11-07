@@ -53,7 +53,7 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>
         /// The target protein the entrapment peptide (and its p_decoy) was placed on, when it was
-        /// (<see cref="EntrapmentFastaSettings.EntrapmentInTargets"/>), or null when it stays on
+        /// (<see cref="EntrapmentFastaSettings.EntrapmentInTargetsRatio"/>), or null when it stays on
         /// an entrapment protein of its own, labeled from <see cref="Sources"/> with the suffix.
         /// </summary>
         public List<ProteinRecord> PTargetSources { get; set; }

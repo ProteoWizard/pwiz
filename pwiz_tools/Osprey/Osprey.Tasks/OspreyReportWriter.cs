@@ -182,7 +182,7 @@ namespace pwiz.Osprey.Tasks
                 foreach (var g in groups)
                 {
                     progress.Report(++groupIdx);
-                    if (excludedPeptides != null && EntrapmentLibraryClassifier.IsEntrapment(g.Accessions))
+                    if (excludedPeptides != null && EntrapmentLibraryClassifier.IsEntrapmentOnly(g.Accessions))
                         continue;
                     double q = groupQ.TryGetValue(g.Id, out double qv) ? qv : 1.0;
                     bool passes = q <= config.EffectiveProteinFdr;
@@ -195,6 +195,10 @@ namespace pwiz.Osprey.Tasks
                         .Where(x => excludedPeptides == null || !excludedPeptides.Contains(x))
                         .OrderBy(x => x, StringComparer.Ordinal)
                         .ToList();
+                    // A target protein whose only evidence was entrapment placed on it has no
+                    // peptide left to report once that evidence is stripped.
+                    if (excludedPeptides != null && grouping.Count == 0)
+                        continue;
 
                     var accessionSet = new HashSet<string>(g.Accessions, StringComparer.Ordinal);
                     var libUnique = new List<string>();
@@ -340,7 +344,7 @@ namespace pwiz.Osprey.Tasks
                 if (kv.Value > config.EffectiveProteinFdr)
                     continue;
                 if (excludedPeptides != null &&
-                    EntrapmentLibraryClassifier.IsEntrapment(experimentResult.Parsimony.Groups[(int)kv.Key].Accessions))
+                    EntrapmentLibraryClassifier.IsEntrapmentOnly(experimentResult.Parsimony.Groups[(int)kv.Key].Accessions))
                 {
                     continue;
                 }

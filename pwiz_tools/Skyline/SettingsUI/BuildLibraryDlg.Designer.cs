@@ -85,8 +85,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBrowseEntrapment = new System.Windows.Forms.Button();
             this.labelEntrapmentPercent = new System.Windows.Forms.Label();
             this.textEntrapmentPercent = new System.Windows.Forms.TextBox();
-            this.labelEntrapmentInTargetsPercent = new System.Windows.Forms.Label();
-            this.textEntrapmentInTargetsPercent = new System.Windows.Forms.TextBox();
             this.labelModWarning = new System.Windows.Forms.Label();
             this.labelKoinaPredictFor = new System.Windows.Forms.Label();
             this.comboKoinaPredictFor = new System.Windows.Forms.ComboBox();
@@ -425,8 +423,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPredictFor.Controls.Add(this.labelPredictFor);
             this.tabPredictFor.Controls.Add(this.labelEntrapmentPercent);
             this.tabPredictFor.Controls.Add(this.textEntrapmentPercent);
-            this.tabPredictFor.Controls.Add(this.labelEntrapmentInTargetsPercent);
-            this.tabPredictFor.Controls.Add(this.textEntrapmentInTargetsPercent);
             resources.ApplyResources(this.tabPredictFor, "tabPredictFor");
             this.tabPredictFor.Name = "tabPredictFor";
             //
@@ -502,16 +498,6 @@ namespace pwiz.Skyline.SettingsUI
             //
             resources.ApplyResources(this.textEntrapmentPercent, "textEntrapmentPercent");
             this.textEntrapmentPercent.Name = "textEntrapmentPercent";
-            //
-            // labelEntrapmentInTargetsPercent
-            //
-            resources.ApplyResources(this.labelEntrapmentInTargetsPercent, "labelEntrapmentInTargetsPercent");
-            this.labelEntrapmentInTargetsPercent.Name = "labelEntrapmentInTargetsPercent";
-            //
-            // textEntrapmentInTargetsPercent
-            //
-            resources.ApplyResources(this.textEntrapmentInTargetsPercent, "textEntrapmentInTargetsPercent");
-            this.textEntrapmentInTargetsPercent.Name = "textEntrapmentInTargetsPercent";
             //
             // tabLibraryModel
             //
@@ -720,8 +706,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnBrowseEntrapment;
         private System.Windows.Forms.Label labelEntrapmentPercent;
         private System.Windows.Forms.TextBox textEntrapmentPercent;
-        private System.Windows.Forms.Label labelEntrapmentInTargetsPercent;
-        private System.Windows.Forms.TextBox textEntrapmentInTargetsPercent;
         private System.Windows.Forms.Label labelModWarning;
         private System.Windows.Forms.Label labelKoinaPredictFor;
         private System.Windows.Forms.ComboBox comboKoinaPredictFor;

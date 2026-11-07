@@ -1406,7 +1406,17 @@ namespace pwiz.Osprey.Tasks {
                         "sults_were_not_found__so_the_report_keeps_its_first_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The saved protein-group entrapment results ({0}) belong to a different analysis, so the report leaves that card out..
+        /// </summary>
+        public static string ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_results___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_ {
+            get {
+                return ResourceManager.GetString("ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_r" +
+                        "esults___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Rebuilt the model diagnostics report from the completed analysis: {0}.
         /// </summary>

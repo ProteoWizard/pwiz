@@ -230,13 +230,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Null contributions for the reason the resident sibling passes null: no
                 // surviving pass-2 mode retrains, so there is no pass-2 model to describe.
                 data.Pass2 = accumulator.BuildPass2(null, coAssignment);
-                // The protein-group entrapment card needs the protein FDR result, which only the
-                // join arm has. A diagnostics-only fold of a finished analysis has none, so it
-                // reads the card the join stored beside its other products
-                // (<see cref="WriteProteinEntrapment"/>): the fold then reproduces the join's
-                // product byte for byte rather than writing one without the card.
-                data.Pass2.ProteinEntrapment = proteinEntrapment ??
-                                               ReadJson<ModelDiagnosticsData.ProteinEntrapmentView>(ResolveProteinEntrapmentSidecarPath(config));
+                // As given: the join's own view (null for a library without entrapment proteins),
+                // or on the fold arm the one the join stored (ReadProteinEntrapment). Never read
+                // here, so a join whose view is null cannot pick up a file left by another one.
+                data.Pass2.ProteinEntrapment = proteinEntrapment;
                 FinalizePass2(data, config, validityKey, log);
             }
             catch (Exception ex)
@@ -264,6 +261,29 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return;
             }
             WriteJson(path, view, ProductStamp(SecondPassTaskName, validityKey));
+        }
+
+        /// <summary>
+        /// The protein-group entrapment view the join stored (<see cref="WriteProteinEntrapment"/>),
+        /// for a fold that has no protein FDR result of its own, or null when there is none or
+        /// its stamp is not current for SecondPassFDR under <paramref name="validityKey"/>: a
+        /// file left by a join of another library or settings is refused, with a log line,
+        /// rather than shown as this analysis's card.
+        /// </summary>
+        public static ModelDiagnosticsData.ProteinEntrapmentView ReadProteinEntrapment(OspreyConfig config,
+            string validityKey, IOspreyLog log)
+        {
+            string path = ResolveProteinEntrapmentSidecarPath(config);
+            if (!File.Exists(path))
+                return null;
+            if (string.IsNullOrEmpty(validityKey) || !ArtifactValidity.IsCurrent(path, SecondPassTaskName, validityKey))
+            {
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    OspreyTasksResources.ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_results___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_,
+                    path));
+                return null;
+            }
+            return ReadJson<ModelDiagnosticsData.ProteinEntrapmentView>(path);
         }
 
         /// <summary>

@@ -1506,7 +1506,7 @@ function drawPlacementCard(b){
   kpi(kp,"on target proteins @1% q",fmt(f.nEntrapmentOnTargetProteins[i1],0)+" / FDP "+pct(f.combinedOnTargetProteins[i1],2),cls(f.combinedOnTargetProteins[i1],0.01));
   kpi(kp,"on entrapment proteins @1% q",fmt(f.nEntrapmentOnEntrapmentProteins[i1],0)+" / FDP "+pct(f.combinedOnEntrapmentProteins[i1],2),cls(f.combinedOnEntrapmentProteins[i1],0.01));
   const ratio=(f.combinedOnEntrapmentProteins[i1]>0)?f.combinedOnTargetProteins[i1]/f.combinedOnEntrapmentProteins[i1]:NaN;
-  kpi(kp,"target-protein / own-protein FDP @1% q",isNaN(ratio)?"–":fmt(ratio,2)+"x",isNaN(ratio)?"":(ratio<=1.25?"good":ratio<=2?"warn":"bad"));
+  kpi(kp,"target-protein / own-protein FDP @1% q",isNaN(ratio)?"-":fmt(ratio,2)+"x",isNaN(ratio)?"":(ratio<=1.25?"good":ratio<=2?"warn":"bad"));
   document.getElementById("placementNote").innerHTML=
     "Library ratios: on target proteins r = "+fmt(f.ratioOnTargetProteins,3)+", on entrapment proteins r = "+fmt(f.ratioOnEntrapmentProteins,3)+
     " (total r = "+fmt(f.entrapmentRatio,3)+"). "+

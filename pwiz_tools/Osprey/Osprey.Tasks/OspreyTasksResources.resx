@@ -478,6 +478,9 @@
   <data name="ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_" xml:space="preserve">
     <value>The saved first-pass diagnostics results were not found, so the report keeps its first-pass content and the second-pass results are not added.</value>
   </data>
+  <data name="ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_results___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_" xml:space="preserve">
+    <value>The saved protein-group entrapment results ({0}) belong to a different analysis, so the report leaves that card out.</value>
+  </data>
   <data name="ModelDiagnosticsReport_TryRenderFromProducts_Rebuilt_the_model_diagnostics_report_from_the_completed_analysis___0_" xml:space="preserve">
     <value>Rebuilt the model diagnostics report from the completed analysis: {0}</value>
   </data>

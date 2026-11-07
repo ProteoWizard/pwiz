@@ -78,6 +78,23 @@ namespace pwiz.Osprey.IO
             return IsEntrapment(entry.ProteinIds);
         }
 
+        /// <summary>
+        /// True if every accession is an entrapment protein's: a protein group made only of
+        /// entrapment proteins, which a stripped result leaves out.
+        /// </summary>
+        public static bool IsEntrapmentOnly(IReadOnlyList<string> proteinIds)
+        {
+            if (proteinIds == null || proteinIds.Count == 0)
+                return false;
+            for (int i = 0; i < proteinIds.Count; i++)
+            {
+                var p = proteinIds[i];
+                if (p == null || p.IndexOf(EntrapmentMarker, StringComparison.Ordinal) < 0)
+                    return false;
+            }
+            return true;
+        }
+
         /// <summary>True if any accession marks this as an entrapment (p_target / p_decoy) sequence.</summary>
         public static bool IsEntrapment(IReadOnlyList<string> proteinIds)
         {

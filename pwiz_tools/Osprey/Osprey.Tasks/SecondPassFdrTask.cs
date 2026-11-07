@@ -851,9 +851,10 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-end");
 
             // No protein FDR ran on this arm, so the protein-group entrapment card is not
-            // rebuilt here: the report reads the one the join stored
-            // (ModelDiagnosticsReport.EXT_PROTEIN_ENTRAPMENT) when none is given.
-            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds, null);
+            // rebuilt here: it is the one the join stored, when its stamp says it is this
+            // analysis's (ModelDiagnosticsReport.EXT_PROTEIN_ENTRAPMENT).
+            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds,
+                ModelDiagnosticsReport.ReadProteinEntrapment(config, ValidityKey(ctx), ctx));
             return true;
         }
 
