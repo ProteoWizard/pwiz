@@ -156,6 +156,18 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
+                context.LocalRtTolerance = OspreyEnvironment.LocalRtToleranceNeighbors.HasValue
+                    ? LocalRtTolerance.Create(rtCalibration, OspreyEnvironment.LocalRtToleranceNeighbors.Value,
+                        rtToleranceGlobal, config.RtCalibration.MaxRtTolerance)
+                    : null;
+                // At default log level: the experiment changes what is searched.
+                if (context.LocalRtTolerance != null && logSearchSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance,
+                        OspreyEnvironment.LocalRtToleranceNeighbors.Value, context.LocalRtTolerance.MaxHalfWidth,
+                        context.LocalRtTolerance.FractionWidened));
+                }
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
@@ -170,6 +182,7 @@ namespace pwiz.Osprey.Scoring
             {
                 rtToleranceGlobal = config.RtCalibration.FallbackRtTolerance;
                 rtSigmaGlobal = rtToleranceGlobal;
+                context.LocalRtTolerance = null;
             }
 
             // Apply MS2 calibration: calibrated fragment tolerance + m/z offset.

@@ -902,6 +902,22 @@ namespace pwiz.Osprey.Core
             @"XICs with. Keyed into every task.")
             { ValueExample = @"<ppm>" };
 
+        private static readonly EnvVar ENV_LOCAL_RT_TOLERANCE = new EnvVar(@"OSPREY_LOCAL_RT_TOLERANCE", EnvVarGroup.behavior,
+            @"Experiment: widen the RT search window at each library RT from the residual spread of this " +
+            @"many nearest calibration points. Keyed into every task.")
+            { ValueExample = @"<N>", AcceptsValue = IsPositiveInt };
+
+        /// <summary>
+        /// OSPREY_LOCAL_RT_TOLERANCE (experiment): widen the RT search window where the calibration fits
+        /// the run worst, from the robust spread of the residuals of this many calibration points nearest
+        /// in library RT (3 * 1.4826 * median |residual|, clamped between the global half-width and the
+        /// maximum RT tolerance). Aimed at a library whose predicted RTs saturate at the gradient end,
+        /// where many precursors share a library RT but elute minutes apart. Keyed into every task through
+        /// <see cref="PickValidityKeySuffix()"/>. Null when unset or not a positive integer.
+        /// </summary>
+        public static readonly int? LocalRtToleranceNeighbors = int.TryParse(ENV_LOCAL_RT_TOLERANCE.Value,
+            NumberStyles.None, CultureInfo.InvariantCulture, out int localRtNeighbors) && localRtNeighbors > 0 ? localRtNeighbors : null;
+
         /// <summary>
         /// OSPREY_MIN_FRAGMENT_TOLERANCE (experiment): a floor in ppm on the calibrated fragment tolerance
         /// the main search extracts XICs with (|mean| + 3 SD of confident matches, which is too tight for
@@ -925,6 +941,23 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly double? CorrFragmentTolerancePpm = double.TryParse(ENV_CORR_FRAGMENT_TOLERANCE.Value,
             NumberStyles.Float, CultureInfo.InvariantCulture, out double corrFragTol) ? corrFragTol : null;
+
+        private static readonly EnvVar ENV_REF_XIC = new EnvVar(@"OSPREY_REF_XIC", EnvVarGroup.behavior,
+            @"Experiment: corr chooses the reference fragment XIC (apex scan, area, SNR, sharpness, MS1 " +
+            @"reference) by agreement with the other fragments inside the chosen peak. Keyed into every task.")
+            { Values = new[] { @"corr" } };
+
+        /// <summary>
+        /// OSPREY_REF_XIC (experiment): <c>corr</c> re-chooses the reference fragment XIC inside the chosen
+        /// peak as the fragment with the largest sum of correlations to the other fragments there, in place
+        /// of the fragment with the largest total intensity over the whole extraction window. The reference
+        /// sets the apex scan (and so every apex-spectrum feature), the recomputed bounds area and SNR, the
+        /// MS1 correlation reference, and the apex/area of the stored CWT candidates; the peak_apex,
+        /// peak_area and peak_sharpness features keep their own most-intense-fragment reference. Keyed into every task through <see cref="PickValidityKeySuffix()"/>.
+        /// False when unset.
+        /// </summary>
+        public static readonly bool RefXicByCorrelation = string.Equals(
+            ENV_REF_XIC.Value, @"corr", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
         /// OSPREY_TC_HALF_WINDOW (experiment): half-width in minutes of the window the tc_* time-correlation
@@ -1620,7 +1653,9 @@ namespace pwiz.Osprey.Core
             return PickValidityKeySuffix(PickLda, PickLdaModelPath)
                    + (TcHalfWindowMinutes.HasValue ? @";tcwin=" + TcHalfWindowMinutes.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
                    + (MinFragmentTolerancePpm.HasValue ? @";ftolmin=" + MinFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
-                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty);
+                   + (CorrFragmentTolerancePpm.HasValue ? @";fcorr=" + CorrFragmentTolerancePpm.Value.ToString(@"R", CultureInfo.InvariantCulture) : string.Empty)
+                   + (RefXicByCorrelation ? @";refxic=corr" : string.Empty)
+                   + (LocalRtToleranceNeighbors.HasValue ? @";rtlocal=" + LocalRtToleranceNeighbors.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
         }
 
         /// <summary>

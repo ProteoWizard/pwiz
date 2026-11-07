@@ -98,8 +98,13 @@ namespace pwiz.Osprey.Scoring
                 return false;
 
             // Use the global tolerance passed from RunCoelutionScoring (matches
-            // Rust's single rt_tolerance for all entries in run_search).
-            double rtTolerance = globalRtTolerance;
+            // Rust's single rt_tolerance for all entries in run_search), unless
+            // OSPREY_LOCAL_RT_TOLERANCE widens it for this library RT. The RT-penalty
+            // sigma then widens in proportion, so a peak at the far side of the wider
+            // window is not ranked out by a penalty sized for the narrow one.
+            double rtTolerance = CandidateRtTolerance(candidate, globalRtTolerance, context);
+            if (rtTolerance != globalRtTolerance)
+                rtSigma *= rtTolerance / globalRtTolerance;
             (double Apex, double Start, double End)? overrideBounds;
             double expectedRt;
             int startScan, endScan;
@@ -434,6 +439,13 @@ namespace pwiz.Osprey.Scoring
             // on the two-window Stellar subset).
             int si = bestPeak.StartIndex;
             int ei = bestPeak.EndIndex;
+            if (OspreyEnvironment.RefXicByCorrelation)
+            {
+                // OSPREY_REF_XIC=corr: the reference is the fragment that agrees best with the others
+                // inside the chosen peak, so an intense interfered fragment does not set the apex.
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, si, ei, refXicIdx);
+                refXicIntensities = xics[refXicIdx].Intensities;
+            }
             int newApexIdx = si;
             double newApexVal = refXicIntensities[si];
             for (int i = si + 1; i <= ei; i++)
@@ -763,8 +775,8 @@ namespace pwiz.Osprey.Scoring
             for (int c = 0; c < nCandidates; c++)
             {
                 startScans[c] = -1;
-                if (!TryResolveScanRange(candidates[c], windowRts, rtCalibration, globalRtTolerance,
-                        context, out var overrideBounds, out double expectedRt, out int startScan, out int endScan) ||
+                if (!TryResolveScanRange(candidates[c], windowRts, rtCalibration,
+                        CandidateRtTolerance(candidates[c], globalRtTolerance, context), context, out var overrideBounds, out double expectedRt, out int startScan, out int endScan) ||
                     overrideBounds.HasValue)
                 {
                     continue;
@@ -950,6 +962,20 @@ namespace pwiz.Osprey.Scoring
                 }
             }
             return blockXics;
+        }
+
+        /// <summary>
+        /// The RT search half-width for <paramref name="candidate"/>: the global one, or the
+        /// library-RT-dependent one when <see cref="ScoringContext.LocalRtTolerance"/> is set
+        /// (OSPREY_LOCAL_RT_TOLERANCE). <see cref="TryExtract"/> and
+        /// <see cref="ComputePrefilterScanMajor"/> both resolve it here, so the prefilter's scan
+        /// range and the extraction's apex window agree.
+        /// </summary>
+        internal static double CandidateRtTolerance(LibraryEntry candidate, double globalRtTolerance,
+            ScoringContext context)
+        {
+            var local = context.LocalRtTolerance;
+            return local != null ? local.HalfWidth(candidate.RetentionTime) : globalRtTolerance;
         }
 
         /// <summary>
@@ -1313,6 +1339,8 @@ namespace pwiz.Osprey.Scoring
                     total += inten[k];
                 if (total >= bestTotal) { bestTotal = total; refXicIdx = f; }
             }
+            if (OspreyEnvironment.RefXicByCorrelation)
+                refXicIdx = ReferenceCorrelations.ChooseReference(xics, start, end, refXicIdx);
 
             // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
             // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).

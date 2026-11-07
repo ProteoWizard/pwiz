@@ -129,6 +129,16 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         internal static int ChooseReference(IReadOnlyList<XicData> xics, int start, int end)
         {
+            return ChooseReference(xics, start, end, 0);
+        }
+
+        /// <summary>
+        /// <see cref="ChooseReference(IReadOnlyList{XicData}, int, int)"/>, returning
+        /// <paramref name="fallback"/> when no pair of XICs has a valid correlation over the range.
+        /// </summary>
+        internal static int ChooseReference(IReadOnlyList<XicData> xics, int start, int end, int fallback)
+        {
+            bool anyValid = false;
             var sums = new double[xics.Count];
             for (int i = 0; i < xics.Count; i++)
             {
@@ -139,8 +149,11 @@ namespace pwiz.Osprey.Scoring
                         continue;
                     sums[i] += corr;
                     sums[j] += corr;
+                    anyValid = true;
                 }
             }
+            if (!anyValid)
+                return fallback;
             int best = 0;
             for (int i = 1; i < sums.Length; i++)
             {

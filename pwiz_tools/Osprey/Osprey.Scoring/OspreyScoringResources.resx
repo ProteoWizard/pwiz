@@ -280,6 +280,9 @@
   <data name="ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_" xml:space="preserve">
     <value>Coelution search using calibrated fragment tolerance: {0:F4} {1}</value>
   </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance" xml:space="preserve">
+    <value>Local RT tolerance ({0} nearest calibration points): up to {1:F2} min, wider than global at {2:P1} of points</value>
+  </data>
   <data name="ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows" xml:space="preserve">
     <value>Scoring isolation windows</value>
   </data>
@@ -375,5 +378,17 @@
   </data>
   <data name="WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_" xml:space="preserve">
     <value>Fragment co-elution min (top 3 fragments, widened span)</value>
+  </data>
+  <data name="ShadowIsotopeCorrSumCalc_DisplayName_Fragment_M_1_shadow_correlation__top_6_sum_" xml:space="preserve">
+    <value>Fragment M-1 shadow correlation (top 6 sum)</value>
+  </data>
+  <data name="ShadowIsotopeFractionCalc_DisplayName_Fragment_M_1_shadow_intensity_fraction__top_6_mean_" xml:space="preserve">
+    <value>Fragment M-1 shadow intensity fraction (top 6 mean)</value>
+  </data>
+  <data name="CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_removed__top_6_sum_" xml:space="preserve">
+    <value>Time correlation, interference removed (top 6 sum)</value>
+  </data>
+  <data name="CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_capped__top_6_sum_" xml:space="preserve">
+    <value>Time correlation, interference capped (top 6 sum)</value>
   </data>
 </root>

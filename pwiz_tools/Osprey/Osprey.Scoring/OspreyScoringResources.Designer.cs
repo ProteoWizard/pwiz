@@ -643,7 +643,16 @@ namespace pwiz.Osprey.Scoring {
                 return ResourceManager.GetString("ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Local RT tolerance ({0} nearest calibration points): up to {1:F2} min, wider than global at {2:P1} of points.
+        /// </summary>
+        public static string ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance {
+            get {
+                return ResourceManager.GetString("ScoringPipeline_RunCoelutionScoring_Local_RT_tolerance", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Scoring isolation windows.
         /// </summary>
@@ -910,6 +919,42 @@ namespace pwiz.Osprey.Scoring {
         public static string WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_ {
             get {
                 return ResourceManager.GetString("WideTop3CoelutionMinCalc_DisplayName_Fragment_co_elution_min__top_3_fragments__widened_span_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment M-1 shadow correlation (top 6 sum).
+        /// </summary>
+        public static string ShadowIsotopeCorrSumCalc_DisplayName_Fragment_M_1_shadow_correlation__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("ShadowIsotopeCorrSumCalc_DisplayName_Fragment_M_1_shadow_correlation__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment M-1 shadow intensity fraction (top 6 mean).
+        /// </summary>
+        public static string ShadowIsotopeFractionCalc_DisplayName_Fragment_M_1_shadow_intensity_fraction__top_6_mean_ {
+            get {
+                return ResourceManager.GetString("ShadowIsotopeFractionCalc_DisplayName_Fragment_M_1_shadow_intensity_fraction__top_6_mean_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation, interference removed (top 6 sum).
+        /// </summary>
+        public static string CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_removed__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_removed__top_6_sum_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time correlation, interference capped (top 6 sum).
+        /// </summary>
+        public static string CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_capped__top_6_sum_ {
+            get {
+                return ResourceManager.GetString("CleanedTimeCorrelationSumCalc_DisplayName_Time_correlation_interference_capped__top_6_sum_", resourceCulture);
             }
         }
     }

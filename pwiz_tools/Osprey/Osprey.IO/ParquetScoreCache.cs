@@ -174,9 +174,15 @@ namespace pwiz.Osprey.IO
             @"wide_n_coeluting",
             @"wide_coelution_margin",
             @"wide_top3_coelution_min",
+            // Shadow isotope: the trace one 13C spacing below each top-6 fragment (2)
+            @"shadow_corr_sum6",
+            @"shadow_frac6",
+            // Cleaned time correlation: interfered scans left out or capped (2)
+            @"tc_clean_sum6",
+            @"tc_clip_sum6",
         };
 
-        public const int NUM_PIN_FEATURES = 97;
+        public const int NUM_PIN_FEATURES = 101;
 
         #endregion
 
