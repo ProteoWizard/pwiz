@@ -34,9 +34,6 @@ namespace pwiz.Skyline.SettingsUI
     /// (<c>--entrapment-in-targets</c>), so a protein-aware scoring step is audited too. Together
     /// they are the total entrapment added. Both persist as the user's last values
     /// (<see cref="Settings.LibraryEntrapmentPercent"/>, <see cref="Settings.LibraryEntrapmentInTargetsPercent"/>).
-    /// A page whose library cannot carry the target-protein placement has the first box alone,
-    /// passing null for the second: Build Library's library marks entrapment peptides by sequence
-    /// only, with no protein a protein-aware step could score.
     /// </summary>
     public static class EntrapmentPercentControls
     {
@@ -46,42 +43,34 @@ namespace pwiz.Skyline.SettingsUI
 
         /// <summary>
         /// Places each box after its label, whatever the label's width in the current language,
-        /// and the second pair, if any, after the first, so a longer caption never runs under its box.
+        /// and the second pair after the first, so a longer caption never runs under its box.
         /// </summary>
-        public static void Layout(Label labelPercent, TextBox textPercent, Label labelInTargets = null, TextBox textInTargets = null)
+        public static void Layout(Label labelPercent, TextBox textPercent, Label labelInTargets, TextBox textInTargets)
         {
             textPercent.Left = labelPercent.Right + 4;
-            if (labelInTargets == null || textInTargets == null)
-                return;
             labelInTargets.Left = textPercent.Right + 12;
             textInTargets.Left = labelInTargets.Right + 4;
         }
 
         /// <summary>The captions name the choice; the tooltips say what each percentage does.</summary>
-        public static void SetToolTips(ToolTip helpTip, TextBox textPercent, TextBox textInTargets = null)
+        public static void SetToolTips(ToolTip helpTip, TextBox textPercent, TextBox textInTargets)
         {
             helpTip.SetToolTip(textPercent, SettingsUIResources.EntrapmentPercentControls_SetToolTips_Shuffled_peptides_on_entrapment_proteins_of_their_own__as_a_percentage_of_the_targets__to_measure_the_true_false_discovery_rate_of_a_search_);
-            if (textInTargets != null)
-                helpTip.SetToolTip(textInTargets, SettingsUIResources.EntrapmentPercentControls_SetToolTips_Shuffled_peptides_placed_on_real_target_proteins__as_a_percentage_of_the_targets__so_protein_aware_scoring_is_audited_too__With_the_entrapment_percentage__the_total_entrapment_added_);
+            helpTip.SetToolTip(textInTargets, SettingsUIResources.EntrapmentPercentControls_SetToolTips_Shuffled_peptides_placed_on_real_target_proteins__as_a_percentage_of_the_targets__so_protein_aware_scoring_is_audited_too__With_the_entrapment_percentage__the_total_entrapment_added_);
         }
 
         /// <summary>The boxes start at the user's last values, 10% and 10% to begin with.</summary>
-        public static void LoadSettings(TextBox textPercent, TextBox textInTargets = null)
+        public static void LoadSettings(TextBox textPercent, TextBox textInTargets)
         {
             SetPercent(textPercent, Settings.Default.LibraryEntrapmentPercent);
-            if (textInTargets != null)
-                SetPercent(textInTargets, Settings.Default.LibraryEntrapmentInTargetsPercent);
+            SetPercent(textInTargets, Settings.Default.LibraryEntrapmentInTargetsPercent);
         }
 
-        /// <summary>
-        /// Keeps validated values as the user's last, for the next build; a page without the
-        /// second box (null) leaves its last value for the page that has it.
-        /// </summary>
-        public static void SaveSettings(double percent, double? inTargetsPercent)
+        /// <summary>Keeps validated values as the user's last, for the next build.</summary>
+        public static void SaveSettings(double percent, double inTargetsPercent)
         {
             Settings.Default.LibraryEntrapmentPercent = percent;
-            if (inTargetsPercent.HasValue)
-                Settings.Default.LibraryEntrapmentInTargetsPercent = inTargetsPercent.Value;
+            Settings.Default.LibraryEntrapmentInTargetsPercent = inTargetsPercent;
         }
 
         public static double GetPercent(TextBox textBox)
@@ -103,15 +92,12 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Each box must hold a percentage from 0 to 100, and together they must add up to at
         /// least <see cref="MIN_TOTAL_PERCENT"/> (CarafeSharp refuses less) and at most 100; the
-        /// refusal names the box and leaves the focus in it. The first box alone (no second, null)
-        /// must itself be from <see cref="MIN_TOTAL_PERCENT"/> to 100.
+        /// refusal names the box and leaves the focus in it.
         /// </summary>
         public static bool Validate(Form parent, TextBox textPercent, TextBox textInTargets, out double percent, out double inTargetsPercent)
         {
             var helper = new MessageBoxHelper(parent);
             inTargetsPercent = 0;
-            if (textInTargets == null)
-                return helper.ValidateDecimalTextBox(textPercent, MIN_TOTAL_PERCENT, MAX_PERCENT, out percent);
             if (!helper.ValidateDecimalTextBox(textPercent, 0, MAX_PERCENT, out percent))
                 return false;
             if (!helper.ValidateDecimalTextBox(textInTargets, 0, MAX_PERCENT, out inTargetsPercent))

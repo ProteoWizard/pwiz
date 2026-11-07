@@ -2,6 +2,7 @@
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on Carafe (https://github.com/maccoss/carafe) main.java.ai.AIGear
  *   (generate_spectral_library, generate_spectral_library_parquet,
@@ -193,7 +194,7 @@ namespace pwiz.CarafeSharp.Tasks
                 IReadOnlyDictionary<string, string> peptideToProteins = null;
                 if (PrecursorTablePath != null)
                 {
-                    forms = ReadPrecursorTable();
+                    forms = ReadPrecursorTable(out peptideToProteins);
                 }
                 else
                 {
@@ -608,13 +609,20 @@ namespace pwiz.CarafeSharp.Tasks
 
         /// <summary>
         /// The table's precursors as forms with their charges, in the table's order, a form's
-        /// charges in theirs; a repeated precursor is predicted once.
+        /// charges in theirs; a repeated precursor is predicted once. With a
+        /// <see cref="PrecursorTable.PROTEIN_ID"/> column, <paramref name="peptideToProteins"/> is
+        /// each bare sequence's protein text, as the FASTA route's digest gives it, the labels of a
+        /// sequence listed more than once merged and a sequence the column leaves blank mapped to
+        /// <see cref="LibrarySpectrum.NO_PROTEIN"/>, so it is written without a protein rather than
+        /// refused; null without the column, for a library with no proteins at all.
         /// </summary>
-        private IReadOnlyList<LibraryForm> ReadPrecursorTable()
+        private IReadOnlyList<LibraryForm> ReadPrecursorTable(out IReadOnlyDictionary<string, string> peptideToProteins)
         {
             var precursors = PrecursorTable.Read(PrecursorTablePath);
             var forms = new List<LibraryForm>();
             var chargesByPeptide = new Dictionary<string, List<int>>();
+            var proteins = new Dictionary<string, string>(StringComparer.Ordinal);
+            int withProteins = 0;
             foreach (var precursor in precursors)
             {
                 string key = precursor.Peptide.ToString();
@@ -626,9 +634,20 @@ namespace pwiz.CarafeSharp.Tasks
                 }
                 if (!charges.Contains(precursor.Charge))
                     charges.Add(precursor.Charge);
+                string sequence = precursor.Peptide.Sequence;
+                string proteinId = precursor.ProteinId ?? LibrarySpectrum.NO_PROTEIN;
+                if (!proteins.TryGetValue(sequence, out string existing) || existing == LibrarySpectrum.NO_PROTEIN)
+                    proteins[sequence] = proteinId;
+                else if (proteinId != LibrarySpectrum.NO_PROTEIN)
+                    proteins[sequence] = LibraryPeptides.MergeProteins(existing, proteinId);
+                if (precursor.ProteinId != null)
+                    withProteins++;
             }
-            Log(string.Format(CultureInfo.InvariantCulture, @"Predicting {0} precursors ({1} peptide forms) from {2}",
-                precursors.Count, forms.Count, PrecursorTablePath));
+            peptideToProteins = withProteins > 0 ? proteins : null;
+            Log(string.Format(CultureInfo.InvariantCulture, @"Predicting {0} precursors ({1} peptide forms{2}) from {3}",
+                precursors.Count, forms.Count,
+                peptideToProteins != null ? @", " + proteins.Count(p => p.Value != LibrarySpectrum.NO_PROTEIN) + @" with proteins" : string.Empty,
+                PrecursorTablePath));
             return forms;
         }
 

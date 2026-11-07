@@ -111,7 +111,7 @@ namespace pwiz.CarafeSharp.Proteome
         /// Appends to <paramref name="existing"/> the <c>;</c>-separated labels of
         /// <paramref name="added"/> it does not already carry, in their order.
         /// </summary>
-        private static string MergeProteins(string existing, string added)
+        public static string MergeProteins(string existing, string added)
         {
             var labels = new List<string>(existing.Split(';'));
             var seen = new HashSet<string>(labels, StringComparer.Ordinal);
