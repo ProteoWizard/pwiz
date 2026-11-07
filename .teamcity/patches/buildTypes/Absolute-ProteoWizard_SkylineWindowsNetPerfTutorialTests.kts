@@ -18,6 +18,7 @@ create(DslContext.projectId, BuildType({
     templates(AbsoluteId("ProteoWizard_WindowsBase"), AbsoluteId("ProteoWizard_WindowsCoreRelease"), AbsoluteId("ProteoWizard_GitHubReportingConfig"), AbsoluteId("ProteoWizard_RemoteAccountTestParameters"))
     id = AbsoluteId("ProteoWizard_SkylineWindowsNetPerfTutorialTests")
     name = "Skyline Windows .NET Perf/Tutorial Tests"
+    paused = true
 
     artifactRules = "# Configure artifacts in tcbuild.bat"
 
@@ -78,7 +79,7 @@ create(DslContext.projectId, BuildType({
     features {
         pullRequests {
             id = "BUILD_EXT_554"
-            vcsRootExtId = "ProteoWizard_PwizGithubMasterWithPRs"
+            vcsRootExtId = "${DslContext.settingsRoot.id}"
             provider = github {
                 authType = storedToken {
                     tokenId = "tc_token_id:CID_2c0e75d7e804d2e5c4aea406dff78212:-1:3e6cdadb-90ad-473a-a1c6-7e86c4ad3ea8"

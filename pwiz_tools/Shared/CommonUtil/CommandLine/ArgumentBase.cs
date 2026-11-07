@@ -26,6 +26,26 @@ using System.Text;
 namespace pwiz.Common.CommandLine
 {
     /// <summary>
+    /// What a property's value is, which decides the control a settings page shows for it and
+    /// how the value is checked. See <see cref="ArgumentBase.PropertyType"/>.
+    /// </summary>
+    public enum ArgumentPropertyType
+    {
+        /// <summary>A switch with no value: present or absent.</summary>
+        flag,
+        /// <summary>Free text.</summary>
+        text,
+        /// <summary>A file or folder path.</summary>
+        path,
+        /// <summary>A whole number, within <see cref="ArgumentBase.MinValue"/> and <see cref="ArgumentBase.MaxValue"/> when set.</summary>
+        integer,
+        /// <summary>A decimal number, within <see cref="ArgumentBase.MinValue"/> and <see cref="ArgumentBase.MaxValue"/> when set.</summary>
+        number,
+        /// <summary>One of the declaration's listed values.</summary>
+        list,
+    }
+
+    /// <summary>
     /// The non-generic core of a declarative command-line argument: its name, the value
     /// example/allowed values used to render help, and the flags controlling display and
     /// validation. The strongly-typed value processor lives on <see cref="Argument{TContext}"/>.
@@ -41,6 +61,33 @@ namespace pwiz.Common.CommandLine
             ValueExample = valueExample;
             _fixedValues = fixedValues;
             _dynamicValues = dynamicValues;
+        }
+
+        /// <summary>
+        /// A declaration with everything <paramref name="template"/> declares about its name and
+        /// value - the name, the value example, the listed and accepted values, whether the value
+        /// is optional or variadic - for a host that includes another tool's declarations in its
+        /// own parse (Osprey presents CarafeSharp's library options). The short name and the
+        /// applies-to text are the host's to set: both are spelled in the host's grammar and the
+        /// short names of two tools collide.
+        /// </summary>
+        protected ArgumentBase(ArgumentBase template)
+            : this(template.Name, template.ValueExample, template._fixedValues, template._dynamicValues)
+        {
+            WrapValue = template.WrapValue;
+            OptionalValue = template.OptionalValue;
+            OptionalValueFilter = template.OptionalValueFilter;
+            Variadic = template.Variadic;
+            MissingValueMessage = template.MissingValueMessage;
+            InternalUse = template.InternalUse;
+            HasValueChecking = template.HasValueChecking;
+            AcceptedValues = template.AcceptedValues;
+            AcceptsValue = template.AcceptsValue;
+            PropertyName = template.PropertyName;
+            PropertyType = template.PropertyType;
+            DefaultValue = template.DefaultValue;
+            MinValue = template.MinValue;
+            MaxValue = template.MaxValue;
         }
 
         private readonly string[] _fixedValues;
@@ -102,9 +149,54 @@ namespace pwiz.Common.CommandLine
         public Func<string, bool> AcceptsValue { get; set; }
 
         /// <summary>
+        /// The name of the argument as a property on a settings page (the label of a grid row),
+        /// read on every call so it follows the UI culture. Null for an argument that is no
+        /// property: an input, an output, a command (help, version) or an internal switch. An
+        /// argument with a name is exposed to a host that presents the tool's settings (Skyline's
+        /// Additional settings grid), with <see cref="PropertyType"/> deciding its control and
+        /// validation and <see cref="DefaultValue"/>, <see cref="MinValue"/> and
+        /// <see cref="MaxValue"/> its default and range.
+        /// </summary>
+        public Func<string> PropertyName { get; set; }
+
+        /// <summary>
+        /// The kind of value the property takes, when the declaration does not say: a declaration
+        /// without a value is a <see cref="ArgumentPropertyType.flag"/>, one with listed values a
+        /// <see cref="ArgumentPropertyType.list"/>, and any other takes text. Set for a number,
+        /// an integer or a path, which the declaration cannot tell from text.
+        /// </summary>
+        public ArgumentPropertyType? PropertyType { get; set; }
+
+        /// <summary>The property's type: <see cref="PropertyType"/>, or the one the declaration implies.</summary>
+        public ArgumentPropertyType EffectivePropertyType
+        {
+            get
+            {
+                if (PropertyType.HasValue)
+                    return PropertyType.Value;
+                if (!TakesValue)
+                    return ArgumentPropertyType.flag;
+                return Values != null ? ArgumentPropertyType.list : ArgumentPropertyType.text;
+            }
+        }
+
+        /// <summary>
+        /// The value the tool uses when the argument is absent, as the command line would spell
+        /// it (a number in the invariant culture), or null when the tool has none to name: a
+        /// path, or a value derived from others at run time. Read on every call, since a default
+        /// may depend on the computer (the thread count).
+        /// </summary>
+        public Func<string> DefaultValue { get; set; }
+
+        /// <summary>The smallest value a number or integer property accepts, or null for no bound.</summary>
+        public double? MinValue { get; set; }
+
+        /// <summary>The largest value a number or integer property accepts, or null for no bound.</summary>
+        public double? MaxValue { get; set; }
+
+        /// <summary>
         /// The argument as typed and as help shows it: the installed grammar's
-        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>; <c>-db</c> for
-        /// CarafeSharp).
+        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>, <c>--db</c>).
         /// </summary>
         public string ArgumentText
         {

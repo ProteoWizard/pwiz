@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarafeSharp.Training", "Car
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarafeSharp.Contracts", "CarafeSharp.Contracts\CarafeSharp.Contracts.csproj", "{3C2A7F1E-5B64-4D0A-9E27-6F1B2C8D4A51}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarafeSharp.Tasks", "CarafeSharp.Tasks\CarafeSharp.Tasks.csproj", "{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec.IO", "..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj", "{C9EFB7E9-709B-429B-B2C1-8A0CF0043205}"
 EndProject
 Global
@@ -127,6 +129,18 @@ Global
 		{3C2A7F1E-5B64-4D0A-9E27-6F1B2C8D4A51}.Release|x64.Build.0 = Release|x64
 		{3C2A7F1E-5B64-4D0A-9E27-6F1B2C8D4A51}.Release|x86.ActiveCfg = Release|Any CPU
 		{3C2A7F1E-5B64-4D0A-9E27-6F1B2C8D4A51}.Release|x86.Build.0 = Release|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Debug|x64.ActiveCfg = Debug|x64
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Debug|x64.Build.0 = Debug|x64
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Debug|x86.Build.0 = Debug|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Release|x64.ActiveCfg = Release|x64
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Release|x64.Build.0 = Release|x64
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Release|x86.ActiveCfg = Release|Any CPU
+		{7D3E2B41-6A5C-4F0E-9B8D-2C1A4E5F6B70}.Release|x86.Build.0 = Release|Any CPU
 		{C9EFB7E9-709B-429B-B2C1-8A0CF0043205}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C9EFB7E9-709B-429B-B2C1-8A0CF0043205}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9EFB7E9-709B-429B-B2C1-8A0CF0043205}.Debug|x64.ActiveCfg = Debug|x64

@@ -4,12 +4,12 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
             CheckConvertedSmallMolDocumentOutput();
         }
 
-        private SrmDocument ExportTestLib(string docName, string libName, bool convertFromPeptides, out IList<DbRefSpectra> refSpectra)
+        private SrmDocument ExportTestLib(string docName, string libName, bool convertFromPeptides, out IList<BlibSpectrumRecord> refSpectra)
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName)));
             var docOrig = WaitForDocumentLoaded();
@@ -166,8 +166,8 @@ namespace pwiz.SkylineTestFunctional
                 Equals(m.Transition.Group.Peptide.CustomMolecule.ParsedMolecule.ToString(), "C31H62NO8P")));
         }
 
-        private void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, 
-            double precursorMz, ushort numPeaks, string[] fragmentNames = null, 
+        private void CheckRefSpectra(IList<BlibSpectrumRecord> spectra, string name, string formula, string precursorAdduct, 
+            double precursorMz, int numPeaks, string[] fragmentNames = null, 
             double? ionMobility = null, double? ionMobilityHighEnergyOffset = null)
         {
             if (_convertedFromPeptides)
@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
                     spectrum.ChemicalFormula.Equals(formula) &&
                     spectrum.PrecursorCharge.Equals(Adduct.FromStringAssumeProtonated(precursorAdduct).AdductCharge) &&
                     spectrum.PrecursorAdduct.Equals(precursorAdduct) &&
-                    Math.Abs(spectrum.PrecursorMZ - precursorMz) < 0.001 &&
+                    Math.Abs(spectrum.PrecursorMz - precursorMz) < 0.001 &&
                     spectrum.NumPeaks.Equals(numPeaks))
                 {
                     // Found the item - check its fragment info if provided
@@ -190,8 +190,8 @@ namespace pwiz.SkylineTestFunctional
                     // when the document gave them names."
                     if (fragmentNames != null)
                     {
-                        Assume.AreEqual(fragmentNames.Length, spectrum.PeakAnnotations.Count);
-                        foreach (var annotation in spectrum.PeakAnnotations)
+                        Assume.AreEqual(fragmentNames.Length, spectrum.Annotations.Count);
+                        foreach (var annotation in spectrum.Annotations)
                         {
                             Assume.IsTrue(fragmentNames.Contains(annotation.Name));
                         }

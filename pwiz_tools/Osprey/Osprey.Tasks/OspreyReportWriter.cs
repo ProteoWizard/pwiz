@@ -33,8 +33,10 @@ using pwiz.Osprey.FDR;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// The user-facing end-of-run reports, modeled on DIA-NN's output so the two tools
-    /// are directly comparable:
+    /// The end-of-run reports modeled on DIA-NN's output, so the two tools are directly
+    /// comparable, written only under OSPREY_DIANN_REPORTS
+    /// (<see cref="OspreyEnvironment.DiannReports"/>): they hold nothing the output .blib does
+    /// not, and nothing in Osprey reads them.
     /// <list type="bullet">
     /// <item><c>&lt;output&gt;.protein_groups.tsv</c> -- DIA-NN's <c>pg_matrix</c> shape
     /// (Protein.Group / Protein.Names / N.Peptides / N.Proteotypic / PG.Q.Value), plus the
@@ -45,9 +47,8 @@ namespace pwiz.Osprey.Tasks
     /// experiment-level row.</item>
     /// </list>
     /// These are distinct from the <c>cs_stage7_protein_fdr.tsv</c> cross-impl DIAGNOSTIC
-    /// dump (counts only, env-gated); these are default, user-facing, and additive (new
-    /// files), so the byte-parity gate -- which compares the blib + the Stage-7 dump -- is
-    /// unaffected.
+    /// dump (counts only, env-gated); these are additive (new files), so the byte-parity
+    /// gate -- which compares the blib + the Stage-7 dump -- is unaffected.
     /// </summary>
     public static class OspreyReportWriter
     {
@@ -118,15 +119,11 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        // Report file stem = the output blib without its extension, else the report path,
-        // else null (caller skips). Path.ChangeExtension(x, null) drops the extension.
+        // Report file stem = the output blib without its extension, else null (caller skips).
+        // Path.ChangeExtension(x, null) drops the extension.
         private static string ReportStem(OspreyConfig config)
         {
-            if (!string.IsNullOrEmpty(config.OutputBlib))
-                return Path.ChangeExtension(config.OutputBlib, null);
-            if (!string.IsNullOrEmpty(config.OutputReport))
-                return Path.ChangeExtension(config.OutputReport, null);
-            return null;
+            return string.IsNullOrEmpty(config.OutputBlib) ? null : Path.ChangeExtension(config.OutputBlib, null);
         }
 
         // ------------------------------------------------------------------ protein groups
@@ -156,10 +153,10 @@ namespace pwiz.Osprey.Tasks
             // report off therefore produced no visible output for the entire report step.
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
-            using (var progress = new ProgressReporter(
-                       CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
-                           OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
-                       groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
+                    OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
+                groups.Count, progress =>
             {
                 foreach (var g in groups)
                 {
@@ -202,7 +199,7 @@ namespace pwiz.Osprey.Tasks
                         string.Join(@";", libUnique),
                     });
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Deterministic order: passing first, then most confident, then by accessions
             // (the group identity -- distinct, so the ordering is total). Stable OrderBy
@@ -282,11 +279,11 @@ namespace pwiz.Osprey.Tasks
             // pass per file - a 46 s silence at 82 files on the 2026-08-15 measurement, with only
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
-            using (var progress = new ProgressReporter(
-                       nFiles == 1
-                           ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
-                           : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
-                       nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            ProgressReporter.Run(
+                nFiles == 1
+                    ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
+                    : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
+                nFiles, progress =>
             {
                 foreach (var kvp in rescored.StreamFiles())
                 {
@@ -305,7 +302,7 @@ namespace pwiz.Osprey.Tasks
                         proteins.ToString(CultureInfo.InvariantCulture),
                     });
                 }
-            }
+            }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Experiment row: precursors + peptides passing EXPERIMENT-level FDR (a
             // precursor detected in any run counts once), folded above, and the

@@ -31,7 +31,7 @@ namespace pwiz.Osprey.IO
     /// <summary>
     /// A library precursor in the form a blib stores it: the <c>RefSpectra</c> identity, the
     /// compressed peaks, the <c>Modifications</c> and protein rows. The one place a <see cref="LibraryEntry"/> becomes blib rows, shared by the search
-    /// output and <see cref="LibraryBlibWriter"/>; <see cref="OspreyBlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int)"/>
+    /// output and <see cref="LibraryBlibWriter"/>; <see cref="OspreyBlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int, SearchGlobalValues)"/>
     /// writes it. Built from the entry alone, so it can be prepared on any thread while the
     /// SQLite inserts stay on one.
     ///

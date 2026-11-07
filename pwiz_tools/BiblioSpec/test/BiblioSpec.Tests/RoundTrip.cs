@@ -38,7 +38,7 @@ public class RoundTrip
                 maker.SetLibName(path);
                 maker.Init();
                 Assert.IsFalse(maker.Overwrite, "An existing library is appended to unless overwrite is asked for.");
-                Assert.AreEqual(1, maker.CountSpectra(), "The appended library's rows should be there to add to.");
+                Assert.AreEqual(1, maker.SpectrumCount, "The appended library's rows should be there to add to.");
                 var fileId = maker.AddFile("b.ms2", -1, "b.ssl", WorkflowType.Dda);
                 maker.InsertSpectrum(Spectrum("SAMPLERK", fileId, "P1", "P2"));
                 maker.Commit();

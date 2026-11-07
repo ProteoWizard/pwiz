@@ -61,8 +61,8 @@ namespace pwiz.Osprey.Tasks
         /// blib's entries carry ion types and masses they did not before - which reach the
         /// scores, the generated decoys and every stage after them - so a directory scored
         /// before the change must not be adopted after. A TSV library keys exactly as before.
-        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
-        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the library composition term
+        /// (the derived .blib's validity hash) does, so a change to the reader moves both. The typing tolerance needs no term:
         /// it is the search's fragment tolerance, already in
         /// <see cref="SearchIdentity.SearchParameterHash"/>.
         /// </summary>
@@ -72,8 +72,17 @@ namespace pwiz.Osprey.Tasks
         /// The TSV counterpart of <see cref="BLIB_READER_TERM"/>: what the reader makes of a .tsv
         /// (peaks merged, typed, the modified sequence's text) changes with its version too, so
         /// outputs scored under an earlier reader are not adopted by a search under this one.
+        /// It is <see cref="DiannTsvLoader.READER_VERSION"/>, which a test holds it to.
         /// </summary>
-        public const string TSV_READER_TERM = @";tsvreader=4";
+        public const string TSV_READER_TERM = @";tsvreader=5";
+
+        /// <summary>
+        /// The .parquet counterpart: a DIA-NN .parquet is read by its own column mapping
+        /// (<see cref="DiannParquetLoader.READER_VERSION"/>) into the .tsv reader's row assembly,
+        /// so both versions are in it, held to the loaders' constants by a test as
+        /// <see cref="TSV_READER_TERM"/> is.
+        /// </summary>
+        public const string PARQUET_READER_TERM = TSV_READER_TERM + @";parquetreader=1";
 
         // ---- The selection contract (ISelectableTask) ------------------------------------
         // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
@@ -156,10 +165,12 @@ namespace pwiz.Osprey.Tasks
         public abstract bool Rehydrate(PipelineContext ctx);
 
         /// <summary>
-        /// File paths this task reads as inputs. Documentation only: it
-        /// states what the task consumes, and nothing reads it at run time.
-        /// Default empty; tasks override to list their input files
-        /// (mzML, library, upstream sidecars, etc.).
+        /// File paths this task reads as inputs. Nothing reads it at run time, but it
+        /// is the task's file contract: <c>--task-files</c> prints it, and the test
+        /// harnesses stage an HPC node with exactly these files, so a file the task
+        /// reads and does not declare fails there. Declare every file read, under the
+        /// conditions it is read. Default empty; tasks override to list their input
+        /// files (mzML, library, upstream sidecars, etc.).
         /// </summary>
         public virtual IEnumerable<string> Inputs(PipelineContext ctx) => Array.Empty<string>();
 
@@ -222,6 +233,8 @@ namespace pwiz.Osprey.Tasks
                     return BLIB_READER_TERM;
                 case LibraryFormat.DiannTsv:
                     return TSV_READER_TERM;
+                case LibraryFormat.DiannParquet:
+                    return PARQUET_READER_TERM;
                 default:
                     return string.Empty;
             }

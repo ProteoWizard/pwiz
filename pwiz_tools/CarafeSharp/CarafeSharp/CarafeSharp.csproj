@@ -11,13 +11,10 @@
     <InternalsVisibleTo Include="CarafeSharp.Test" />
   </ItemGroup>
 
+  <!-- The command-line front end over CarafeSharp.Tasks, which holds the stages and the engines
+       and brings every other CarafeSharp assembly with it. -->
   <ItemGroup>
-    <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
-    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
-    <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
-    <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />
-    <ProjectReference Include="..\CarafeSharp.Training\CarafeSharp.Training.csproj" />
-    <ProjectReference Include="..\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Tasks\CarafeSharp.Tasks.csproj" />
   </ItemGroup>
 
 </Project>

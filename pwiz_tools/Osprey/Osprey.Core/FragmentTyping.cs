@@ -51,6 +51,12 @@ namespace pwiz.Osprey.Core
     /// before any run's MS2 calibration sets that run's extraction tolerance. A peak no
     /// unclaimed candidate reaches stays <see cref="IonType.Unknown"/>, which decoy generation
     /// copies unchanged.</para>
+    ///
+    /// <para>Typing runs over every peak of every library precursor - 4.8 million peaks of a
+    /// 242,841-precursor library, 6.2 million precursors at Astral scale - so the per-peak path
+    /// allocates nothing: the candidate window is scanned twice (nearest, then preferred) rather
+    /// than collected and sorted. The rules above are a total order, so this is the same choice
+    /// the sorted form made.</para>
     /// </summary>
     public static class FragmentTyping
     {
@@ -77,23 +83,20 @@ namespace pwiz.Osprey.Core
                 return;
             var candidates = new FragmentCandidates(sequence, modifications, precursorCharge);
             var claimed = new bool[candidates.SlotCount];
-            // Most intense first, so the ion a peak claims goes to the strongest peak it explains.
-            // Ties go to the lower m/z rather than the earlier row, so the typing does not depend
-            // on the order the library lists its peaks in (peaks equal in both are interchangeable).
-            foreach (int i in Enumerable.Range(0, fragments.Length)
-                         .OrderByDescending(i => fragments[i].RelativeIntensity)
-                         .ThenBy(i => fragments[i].Mz).ThenBy(i => i))
+            int typed = 0, untyped = 0;
+            foreach (int i in IntensityOrder(fragments))
             {
                 int slot = candidates.PreferredSlot(fragments[i].Mz, tolerance, claimed);
                 if (slot < 0)
                 {
-                    stats?.CountUntyped();
+                    untyped++;
                     continue;
                 }
                 fragments[i].Annotation = candidates.AnnotationOf(slot);
                 claimed[slot] = true;
-                stats?.CountTyped();
+                typed++;
             }
+            stats?.Add(typed, untyped);
         }
 
         /// <summary>
@@ -125,6 +128,29 @@ namespace pwiz.Osprey.Core
                    !annotation.HasNeutralLoss && annotation.Ordinal >= 1 &&
                    annotation.Charge >= 1 && annotation.Charge <= FragmentLadder.MAX_FRAGMENT_CHARGE;
         }
+
+        /// <summary>
+        /// The indexes of <paramref name="fragments"/> most intense first, so the ion a peak
+        /// claims goes to the strongest peak it explains. Ties go to the lower m/z rather than
+        /// the earlier row, so the typing does not depend on the order the library lists its
+        /// peaks in (peaks equal in both are interchangeable), and then to the earlier row, so
+        /// the order is total.
+        /// </summary>
+        private static int[] IntensityOrder(LibraryFragment[] fragments)
+        {
+            var order = new int[fragments.Length];
+            for (int i = 0; i < order.Length; i++)
+                order[i] = i;
+            Array.Sort(order, (a, b) => // Array.Sort OK: the index is the last key, so the order is total
+            {
+                int byIntensity = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
+                if (byIntensity != 0)
+                    return byIntensity;
+                int byMz = fragments[a].Mz.CompareTo(fragments[b].Mz);
+                return byMz != 0 ? byMz : a.CompareTo(b);
+            });
+            return order;
+        }
     }
 
     /// <summary>
@@ -136,20 +162,33 @@ namespace pwiz.Osprey.Core
     {
         private readonly int _length;
         private readonly double[] _ladder;
-        private readonly Candidate[] _sorted;
+        // The applicable slots by m/z: the m/z values and, at the same index, the slot of each.
+        private readonly double[] _sortedMz;
+        private readonly int[] _sortedSlot;
 
         public FragmentCandidates(string sequence, IEnumerable<Modification> modifications, int precursorCharge)
         {
             _length = sequence?.Length ?? 0;
             _ladder = FragmentLadder.Build(sequence, modifications, precursorCharge);
-            var candidates = new List<Candidate>(_ladder.Length);
+            int count = 0;
             for (int slot = 0; slot < _ladder.Length; slot++)
             {
                 if (!double.IsNaN(_ladder[slot]))
-                    candidates.Add(new Candidate(_ladder[slot], slot));
+                    count++;
             }
-            candidates.Sort((a, b) => a.Mz != b.Mz ? a.Mz.CompareTo(b.Mz) : a.Slot.CompareTo(b.Slot)); // Array.Sort OK: slots are unique, so the order is total
-            _sorted = candidates.ToArray();
+            _sortedMz = new double[count];
+            _sortedSlot = new int[count];
+            count = 0;
+            for (int slot = 0; slot < _ladder.Length; slot++)
+            {
+                if (double.IsNaN(_ladder[slot]))
+                    continue;
+                _sortedMz[count] = _ladder[slot];
+                _sortedSlot[count++] = slot;
+            }
+            // The order among equal m/z does not matter: a peak's window scan visits every
+            // candidate in reach, and the preference among them is a total order of its own.
+            Array.Sort(_sortedMz, _sortedSlot); // Array.Sort OK: equal keys are interchangeable here, see above
         }
 
         /// <summary>Slots of the ladder, applicable or not.</summary>
@@ -170,17 +209,37 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public int PreferredSlot(double peakMz, FragmentToleranceConfig tolerance, bool[] claimed)
         {
-            if (_sorted.Length == 0 || !double.IsFinite(peakMz))
+            if (_sortedMz.Length == 0 || !double.IsFinite(peakMz))
                 return -1;
             double reach = tolerance.ToleranceDa(peakMz) * 1.01;
-            var inReach = new List<Candidate>();
-            for (int i = LowerBound(peakMz - reach); i < _sorted.Length && _sorted[i].Mz <= peakMz + reach; i++)
+            int first = LowerBound(peakMz - reach);
+            double high = peakMz + reach;
+            // The nearest unclaimed candidate in reach, then the preferred of those equally
+            // near it: the nearest, taking those within FragmentTyping.TIE_TOLERANCE of it as
+            // equally near; then the lower fragment charge; then y before b; then the shorter
+            // ion. Two passes over the window and no list, since typing runs over millions of
+            // peaks.
+            double nearest = double.PositiveInfinity;
+            for (int i = first; i < _sortedMz.Length && _sortedMz[i] <= high; i++)
             {
-                var candidate = _sorted[i];
-                if (!claimed[candidate.Slot] && tolerance.WithinTolerance(candidate.Mz, peakMz))
-                    inReach.Add(candidate);
+                if (!claimed[_sortedSlot[i]] && tolerance.WithinTolerance(_sortedMz[i], peakMz))
+                    nearest = Math.Min(nearest, Math.Abs(_sortedMz[i] - peakMz));
             }
-            return Preferred(inReach, peakMz);
+            if (double.IsPositiveInfinity(nearest))
+                return -1;
+            int best = -1;
+            for (int i = first; i < _sortedMz.Length && _sortedMz[i] <= high; i++)
+            {
+                int slot = _sortedSlot[i];
+                if (claimed[slot] || !tolerance.WithinTolerance(_sortedMz[i], peakMz) ||
+                    Math.Abs(_sortedMz[i] - peakMz) - nearest >= FragmentTyping.TIE_TOLERANCE)
+                {
+                    continue;
+                }
+                if (best < 0 || Prefer(slot, best))
+                    best = slot;
+            }
+            return best;
         }
 
         public FragmentAnnotation AnnotationOf(int slot)
@@ -195,21 +254,23 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// The preferred of <paramref name="candidates"/> for a peak at <paramref name="peakMz"/>:
-        /// the nearest, taking those within <see cref="FragmentTyping.TIE_TOLERANCE"/> of it as
-        /// equally near; then the lower fragment charge; then y before b; then the shorter ion.
-        /// -1 for none.
+        /// Whether <paramref name="slot"/> is preferred to <paramref name="other"/> among ions
+        /// equally near a peak: the lower fragment charge, then y before b, then the shorter ion.
         /// </summary>
-        private int Preferred(List<Candidate> candidates, double peakMz)
+        private bool Prefer(int slot, int other)
         {
-            if (candidates.Count == 0)
-                return -1;
-            double nearest = candidates.Min(c => Math.Abs(c.Mz - peakMz));
-            return candidates.Where(c => Math.Abs(c.Mz - peakMz) - nearest < FragmentTyping.TIE_TOLERANCE)
-                .OrderBy(c => FragmentLadder.ChargeOf(c.Slot))
-                .ThenBy(c => FragmentLadder.IonTypeOf(c.Slot) == IonType.Y ? 0 : 1)
-                .ThenBy(c => FragmentLadder.OrdinalOf(c.Slot, _length))
-                .First().Slot;
+            int byCharge = FragmentLadder.ChargeOf(slot).CompareTo(FragmentLadder.ChargeOf(other));
+            if (byCharge != 0)
+                return byCharge < 0;
+            int byType = TypeRank(slot).CompareTo(TypeRank(other));
+            if (byType != 0)
+                return byType < 0;
+            return FragmentLadder.OrdinalOf(slot, _length) < FragmentLadder.OrdinalOf(other, _length);
+        }
+
+        private static int TypeRank(int slot)
+        {
+            return FragmentLadder.IonTypeOf(slot) == IonType.Y ? 0 : 1;
         }
 
         /// <summary>The slot of a primary <paramref name="ion"/> within tolerance of the peak, or -1.</summary>
@@ -229,34 +290,22 @@ namespace pwiz.Osprey.Core
         /// <summary>The first index whose m/z is at least <paramref name="mz"/>.</summary>
         private int LowerBound(double mz)
         {
-            int lo = 0, hi = _sorted.Length;
+            int lo = 0, hi = _sortedMz.Length;
             while (lo < hi)
             {
                 int mid = (lo + hi) / 2;
-                if (_sorted[mid].Mz < mz)
+                if (_sortedMz[mid] < mz)
                     lo = mid + 1;
                 else
                     hi = mid;
             }
             return lo;
         }
-
-        private readonly struct Candidate
-        {
-            public Candidate(double mz, int slot)
-            {
-                Mz = mz;
-                Slot = slot;
-            }
-
-            public double Mz { get; }
-            public int Slot { get; }
-        }
     }
 
     /// <summary>
     /// What <see cref="FragmentTyping.TypeFragments"/> did across a whole library. Counted from
-    /// parallel loads, so the counts are updated atomically.
+    /// parallel loads, so the counts are updated atomically, once per spectrum.
     /// </summary>
     public sealed class FragmentTypingStats
     {
@@ -271,14 +320,11 @@ namespace pwiz.Osprey.Core
 
         public long Total => Typed + Untyped;
 
-        public void CountTyped()
+        /// <summary>Counts one spectrum's peaks: <paramref name="typed"/> given an ion, <paramref name="untyped"/> left Unknown.</summary>
+        public void Add(int typed, int untyped)
         {
-            Interlocked.Increment(ref _typed);
-        }
-
-        public void CountUntyped()
-        {
-            Interlocked.Increment(ref _untyped);
+            Interlocked.Add(ref _typed, typed);
+            Interlocked.Add(ref _untyped, untyped);
         }
     }
 }

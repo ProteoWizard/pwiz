@@ -54,6 +54,12 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-o</c>: where the models, their metrics and the library go.</summary>
         public string OutputDirectory { get; set; } = LibrarySettings.DEFAULT_OUTPUT_DIRECTORY;
 
+        /// <summary>
+        /// Where the fine-tuned model file goes, or null for <see cref="OutputDirectory"/>'s default
+        /// name; a host puts it beside its own output, where a user reuses it from.
+        /// </summary>
+        public string ModelFile { get; set; }
+
         /// <summary><c>-fdr</c>: the run precursor q-value a training precursor needs.</summary>
         public double Fdr { get; set; } = DEFAULT_FDR;
 

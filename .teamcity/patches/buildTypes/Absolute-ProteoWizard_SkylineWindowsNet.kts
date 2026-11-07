@@ -19,6 +19,7 @@ create(DslContext.projectId, BuildType({
     templates(AbsoluteId("ProteoWizard_WindowsBase"), AbsoluteId("ProteoWizard_WindowsCoreRelease"), AbsoluteId("ProteoWizard_GitHubReportingConfig"), AbsoluteId("ProteoWizard_RemoteAccountTestParameters"))
     id = AbsoluteId("ProteoWizard_SkylineWindowsNet")
     name = "Skyline Windows .NET"
+    paused = true
 
     artifactRules = """
         pwiz_tools/Skyline/TestResults/*.trx
@@ -28,20 +29,8 @@ create(DslContext.projectId, BuildType({
     """.trimIndent()
 
     params {
-        // Environment for the inspection step below. These are declared at configuration
-        // level because env.* IS a build-configuration parameter: the generic runners have
-        // no per-step environment variables. param("env.X", ...) inside an exec {} block
-        // compiles and is stored as a runner property, and nothing ever reads it - build
-        // #285 ran the step with all three declared there and tcinspect.ps1 saw none of
-        // them. The steps in this file that look like counterexamples are meta-runners
-        // (RUNNER_73, RUNNER_85), where those names are the runner's declared inputs.
-        //
-        // BUILD_VCS_NUMBER needs no entry: TeamCity predefines it. That is how #285 posted
-        // nothing for the token while still resolving the commit SHA.
-        param("env.GITHUB_STATUS_TOKEN", "%GitHubAuthToken%")
-        // guest=1 so the link from GitHub opens without a TeamCity login, matching what the
-        // standalone inspection config has always linked to.
         param("env.INSPECTION_TARGET_URL", "https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1")
+        param("env.GITHUB_STATUS_TOKEN", "%GitHubAuthToken%")
     }
 
     steps {
@@ -49,33 +38,12 @@ create(DslContext.projectId, BuildType({
             name = "Clean"
             id = "Skyline_Clean"
             path = "clean.bat"
-            // The one clean for the whole build, and it runs first so the code inspection starts
-            // from a clean slate too: on an agent that reuses its checkout, stale bin\x64 and
-            // obj\x64 left by an earlier commit fail inspectcode's own solution build.
-            // tcbuild.bat does not clean again: build.bat builds the same x64 tree the
-            // inspection just built, and picks up from it. clean.bat sweeps the pwiz build outputs
-            // (keeping the extracted vendor SDKs and runtime installer caches) and then runs
-            // pwiz_tools\clean-apps.bat.
         }
         exec {
             name = "Skyline code inspection"
             id = "Skyline_Code_Inspection"
             path = "pwsh"
-            // -AutomatedBuild because tcbuild.bat passes build.bat --automated: the inspection
-            // builds the x64 tree build.bat then builds on top of, and the two only reuse each
-            // other's output when every MSBuild property matches.
             arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1 -AutomatedBuild"
-            // tcinspect.ps1 posts its own GitHub commit status rather than handing a verdict
-            // to a following step, so the check updates when the inspection finishes instead
-            // of when the enclosing step ends - and it stays correct if the inspection ever
-            // moves inside tcbuild.bat. It always exits 0, so it cannot fail this build.
-            //
-            // It publishes the context the standalone "Skyline Code Inspection" config
-            // publishes, character for character, replacing that check on a PR rather than
-            // adding a second one. Note there is no "teamcity - " prefix on that one, unlike
-            // every other config here - verified against the GitHub status API, not inferred.
-            //
-            // GITHUB_STATUS_TOKEN and INSPECTION_TARGET_URL reach it from params above.
         }
         exec {
             id = "RUNNER_simpleRunner_139"
@@ -145,7 +113,7 @@ create(DslContext.projectId, BuildType({
     features {
         pullRequests {
             id = "BUILD_EXT_555"
-            vcsRootExtId = "ProteoWizard_PwizGithubMasterWithPRs"
+            vcsRootExtId = "${DslContext.settingsRoot.id}"
             provider = github {
                 authType = storedToken {
                     tokenId = "tc_token_id:CID_2c0e75d7e804d2e5c4aea406dff78212:-1:3e6cdadb-90ad-473a-a1c6-7e86c4ad3ea8"

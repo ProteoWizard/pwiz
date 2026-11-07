@@ -19,6 +19,7 @@
 using System;
 using System.Data.SQLite;
 using System.IO;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
@@ -27,6 +28,10 @@ namespace pwiz.Skyline.Util
 {
     internal class PooledSqliteConnection : ConnectionId<SQLiteConnection>, IPooledStream
     {
+        // The library reader on the open connection, and the connection it was made for
+        private BlibReader _reader;
+        private SQLiteConnection _readerConnection;
+
         public PooledSqliteConnection(ConnectionPool connectionPool, string filePath) : base(connectionPool)
         {
             FilePath = filePath;
@@ -101,6 +106,25 @@ namespace pwiz.Skyline.Util
                         FilePath), x);
                 }
             }
+        }
+
+        /// <summary>
+        /// Invoke a function passing in a <see cref="BlibReader"/> on the Connection, as
+        /// <see cref="ExecuteWithConnection{T}"/> does with the Connection itself. The reader is
+        /// kept with the connection it reads, since it remembers which tables and columns the
+        /// library has, and made again once the pool has opened the file anew.
+        /// </summary>
+        public T ExecuteWithReader<T>(Func<BlibReader, T> function)
+        {
+            return ExecuteWithConnection(connection =>
+            {
+                if (!ReferenceEquals(connection, _readerConnection))
+                {
+                    _reader = new BlibReader(connection);
+                    _readerConnection = connection;
+                }
+                return function(_reader);
+            });
         }
     }
 }

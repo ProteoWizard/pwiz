@@ -639,9 +639,10 @@ namespace pwiz.Osprey.IO
         }
 
         // Full paths of every per-file sidecar written by this run. Cleared only when a new
-        // command line starts: the question it answers is "twice in one run".
+        // command line starts: the question it answers is "twice in one run". Keyed as the file
+        // system compares names: on Linux the sidecars of runs A and a are two files.
         private static readonly HashSet<string> WrittenThisRun =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(PathComparison.Comparer);
 
         /// <summary>
         /// Start a new run for the write-once check: a sidecar a previous command line in this
@@ -868,12 +869,16 @@ namespace pwiz.Osprey.IO
                 // the second-pass protein FDR has yet to write its value, so an entry is
                 // entitled to the pass-1 protein q it already carries - which is exactly what
                 // the pre-split sidecar column held here too.
+                //
+                // The PEP is applied with the precursor q because the blib reports the two side
+                // by side, and the record's PEP comes from the same competition as its q.
                 if (experimentRecords != null &&
                     experimentRecords.TryGetValue(recordEntryId, out var exp))
                 {
                     e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    e.Pep                       = exp.Pep;
                     // The peptide PEP rides with the peptide q it comes from: the same
                     // experiment-wide peptide competition gives both.
                     e.ExperimentPeptidePep      = exp.PeptidePep;

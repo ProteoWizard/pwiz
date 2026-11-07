@@ -478,6 +478,17 @@ ORBITRAP EXCEDION PRO	ic	0	quadrupole,orbitrap,inductive detector
 ORBITRAP EXCEDION PRO	ion	0	electrospray ionization
 ORBITRAP EXCEDION PRO	analyzer	0	orbitrap
 ORBITRAP EXCEDION PRO	detector	0	inductive detector
+ORBITRAP EXCEDION	cv	0	Orbitrap Excedion
+ORBITRAP EXCEDION	ic	0	quadrupole,orbitrap,inductive detector
+ORBITRAP EXCEDION	ion	0	electrospray ionization
+ORBITRAP EXCEDION	analyzer	0	orbitrap
+ORBITRAP EXCEDION	detector	0	inductive detector
+TRIBRID APEX	cv	0	Orbitrap Tribrid Apex
+TRIBRID APEX	ic	0	quadrupole,orbitrap,inductive detector
+TRIBRID APEX	ic	1	quadrupole,radial ejection linear ion trap,electron multiplier
+TRIBRID APEX	ion	0	electrospray ionization
+TRIBRID APEX	analyzer	0	orbitrap,radial ejection linear ion trap
+TRIBRID APEX	detector	0	inductive detector,electron multiplier
 Q EXACTIVE GC ORBITRAP	cv	0	Q Exactive GC Orbitrap
 Q EXACTIVE GC ORBITRAP	ic	0	quadrupole,orbitrap,inductive detector
 Q EXACTIVE GC ORBITRAP	ion	0	electron ionization

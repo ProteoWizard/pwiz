@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.PanoramaClient;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -42,7 +43,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
@@ -1362,7 +1362,7 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
+        private static void CheckRefSpectraAll(IList<BlibSpectrumRecord> refSpectra)
         {
 
             SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR", 2, 885.920, 4, 24.366);

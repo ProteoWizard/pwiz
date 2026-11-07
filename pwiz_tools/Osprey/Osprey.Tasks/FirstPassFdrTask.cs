@@ -89,31 +89,11 @@ namespace pwiz.Osprey.Tasks
             config.StopAfterStage5 = true;
         }
 
-        /// <summary>
-        /// The Stage 5 -> Stage 6 boundary file pair is only meaningful with 2+ siblings
-        /// to reconcile against and reconciliation enabled, so both are rejected early on
-        /// top of the shared input / library / output requirement.
-        /// </summary>
-        public override string ValidateSelection(OspreyConfig config)
-        {
-            string err = base.ValidateSelection(config);
-            if (err != null)
-                return err;
-            if (config.InputFiles.Count < 2)
-            {
-                return string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                    OspreyArgNames.TaskText(Name), config.InputFiles.Count, PerFileRescoreTask.TASK_NAME,
-                    OspreyArgNames.Text(OspreyArgNames.INPUT));
-            }
-            if (!config.Reconciliation.Enabled)
-            {
-                return string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                    OspreyArgNames.TaskText(Name), PerFileRescoreTask.TASK_NAME);
-            }
-            return null;
-        }
+        // No ValidateSelection of its own: the shared input / library / output requirement is all
+        // it needs. Stage 5 trains the first-pass model and computes the first-pass q-values for
+        // any number of runs, one included, with or without reconciliation, which only adds the
+        // consensus PerFileRescoring plans from; so the chain is the same four tasks whatever the
+        // run count, and a workflow manager need not count the runs to choose its shape.
 
         /// <summary>
         /// The first join writes per-run intermediate files and the analysis-wide ones beside
@@ -207,7 +187,7 @@ namespace pwiz.Osprey.Tasks
         // hands back on the bundle; null where the resume has no retained set to build it
         // from, whose consumers fall back to CompactedEntries.
         private FirstPassSurvivorLoader _survivorLoader;
-        // Built once, on first use, when OSPREY_STUB_IDENTITY asks for it. See StubIdentity.
+        // Built once, on first use. See StubIdentity.
         private LibraryIdentity _stubIdentity;
 
         // Phase B resume surface. Reads each file's .scores.parquet,
@@ -217,11 +197,23 @@ namespace pwiz.Osprey.Tasks
         // ValidityKey adds the reconciliation parameter hash so that
         // toggling reconciliation off/on between runs invalidates the
         // prior outputs.
+        //
+        // Inputs are what a node running this task alone must be given, and nothing else: no
+        // data file and no spectra cache, since the join reads parquets. Each run's
+        // .calibration.json is one, though nothing fails without it - PerFileScoring's rehydrate
+        // reads it behind a File.Exists, for the RT calibrations the cross-run consensus is
+        // planned from, and the calibration view of --model-diagnostics reads it again. Left
+        // behind, the consensus silently changes.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
+            foreach (string libraryInput in ScoringTaskShared.LibraryInputs(ctx.Config))
+                yield return libraryInput;
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
+            {
                 yield return ParquetScoreCache.GetScoresPath(input);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+            }
         }
 
         public override IEnumerable<string> Outputs(PipelineContext ctx)
@@ -482,7 +474,7 @@ namespace pwiz.Osprey.Tasks
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
-                if (string.Equals(output, diagnosticsPath, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(output, diagnosticsPath, PathComparison.Comparison))
                     continue;
                 if (PerFileResumeDriver.IsCurrent(output, Name, validityKey))
                     continue;
@@ -543,7 +535,6 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The classifier this task trains, and its tree settings. Empty for the linear
                 // SVM, so no percolator directory is invalidated.
                 + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
@@ -703,7 +694,7 @@ namespace pwiz.Osprey.Tasks
             prebuiltProjections = null;
 
             if (survivors == null)
-                return false;  // StopAfterStage5 sidecar failure; ExitCode already set
+                return false;  // A sidecar failure, or nothing passed the first pass; ExitCode already set
             perFileEntries = survivors;
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
@@ -1052,10 +1043,10 @@ namespace pwiz.Osprey.Tasks
             {
                 int files = 0;
                 string error = null;
-                using (var progress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                           OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
-                           OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
-                           projections.PerFile.Count))
+                ProgressReporter.TryRun(CountText.Format(projections.PerFile.Count,
+                    OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
+                    OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
+                    projections.PerFile.Count, progress =>
                 {
                     // A lane reads a file and builds its rows; the sink, which dedups across files
                     // with first-seen ties (or streams per-run rows straight to the TSV), takes them
@@ -1094,7 +1085,8 @@ namespace pwiz.Osprey.Tasks
                             sink.Add(runName, row);
                         return true;
                     });
-                }
+                    return error == null;
+                });
                 if (error != null)
                 {
                     ctx.LogError(error);
@@ -1414,8 +1406,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Stage 5 -> 6 boundary: drop <c>Fragments</c> from every library entry that nothing
         /// downstream can score or write, keeping the identity fields on all of them. See
-        /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and the
-        /// safety argument.
+        /// <see cref="LibraryFragmentRelease"/> for the rationale and the safety argument.
         ///
         /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
         /// already pair-symmetric so a target's decoy rides along), and nothing else: no
@@ -1991,7 +1982,7 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"first-pass-fdr-live",
                 string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
 
-            LogFirstPassResultsProjection(projections, sink, config, ctx);
+            LogFirstPassResultsProjection(projections, sink, experiment, config, ctx);
 
             // --model-diagnostics: emit the pass-1 HTML report from the streamed accumulator.
             // Placed here, after first-pass Percolator and BEFORE first-pass protein FDR, so
@@ -2290,6 +2281,19 @@ namespace pwiz.Osprey.Tasks
                 out var rowsPerBaseId);
             if (firstPassBaseIds == null)
                 return null;  // streaming sidecar read fault; ExitCode already set
+            // Nothing survived the gate, so the second pass has no precursor to search and the
+            // run can only end in an empty .blib. Fail here, naming the gate, rather than spend
+            // the rest of the run producing output that only a later step would notice.
+            if (firstPassBaseIds.Count == 0)
+            {
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_CompactFromSidecars_No_precursor_passed_the_first_pass_against__0___none_has_a_run_level_peptide_q_value_at_or_below__1_,
+                    config.LibrarySource?.Path, config.ReconciliationCompactionFdr,
+                    OspreyArgNames.Text(OspreyArgNames.RECONCILIATION_COMPACTION_FDR),
+                    config.EffectiveProteinFdr, OspreyArgNames.Text(OspreyArgNames.PROTEIN_FDR)));
+                ctx.ExitCode = 1;
+                return null;
+            }
             _firstPassBaseIds = firstPassBaseIds;
 
             // The survivor LOADER, not a survivor buffer. Collecting every file's survivors
@@ -2333,12 +2337,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Log per-file and total first-pass passing-target counts from the projection
-        /// rows.
+        /// Log the per-file first-pass passing-target counts from the projection rows, then the
+        /// experiment-level count of distinct precursors.
         /// </summary>
         private void LogFirstPassResultsProjection(
             FdrProjectionSet projections, FdrFirstPassSink sink,
-            OspreyConfig config, PipelineContext ctx)
+            FdrExperimentAccumulator experiment, OspreyConfig config, PipelineContext ctx)
         {
             // Read the per-file passing-target counts the sink accumulated during the
             // score pass (!IsDecoy && EffectiveRunQvalue <= RunFdr) rather than
@@ -2347,28 +2351,36 @@ namespace pwiz.Osprey.Tasks
             // FdrLevel.Precursor. The tally is the identical predicate the tail [COUNT]
             // block uses, so the logged counts are unchanged.
             var filePassingTargets = sink.FilePassingTargets;
-            int passingTargets = 0;
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
-                int fileTargets = filePassingTargets[f];
                 ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR,
-                    projections.PerFile[f].Key, fileTargets, config.RunFdr));
-                passingTargets += fileTargets;
+                    projections.PerFile[f].Key, filePassingTargets[f], config.RunFdr));
             }
-            LogRunLevelTotal(ctx, passingTargets, projections.PerFile.Count);
+            LogExperimentLevelTotal(ctx, experiment, config, projections.PerFile.Count);
         }
 
         /// <summary>
-        /// The total under the per-file run-level lines. Left out for one file, whose own line
-        /// above already states the same number.
+        /// The total under the per-file run-level lines: distinct target precursors passing
+        /// experiment-level FDR, out of all scored, counted once however many files detect them.
+        /// A sum of the per-file counts would count a precursor once per file it passes in.
+        /// Left out for one file, whose experiment q-values are its run q-values.
         /// </summary>
-        private static void LogRunLevelTotal(PipelineContext ctx, int passingTargets, int nFiles)
+        private static void LogExperimentLevelTotal(PipelineContext ctx, FdrExperimentAccumulator experiment,
+            OspreyConfig config, int nFiles)
         {
-            if (nFiles > 1)
+            if (nFiles <= 1)
+                return;
+            int targets = 0, passingTargets = 0;
+            foreach (var record in experiment.Records.Values)
             {
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files,
-                    passingTargets, nFiles));
+                if (record.IsDecoy)
+                    continue;
+                targets++;
+                if (record.EffectiveExperimentQvalue(config.FdrLevel) <= config.ExperimentFdr)
+                    passingTargets++;
             }
+            ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_LogExperimentLevelTotal_Across__0__files___1__of__2__target_precursors_at__3__experiment_level__4__FDR,
+                nFiles, passingTargets, targets, config.ExperimentFdr, config.FdrLevel.GetLocalizedString()));
         }
 
         /// <summary>
@@ -2404,9 +2416,9 @@ namespace pwiz.Osprey.Tasks
             var stubIdentity = StubIdentity(ctx);
             int proteinReduceFiles = 0;
             string reduceError = null;
-            using (var reduceProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count))
+            ProgressReporter.TryRun(CountText.Format(projections.PerFile.Count,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count, reduceProgress =>
             {
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
@@ -2424,7 +2436,8 @@ namespace pwiz.Osprey.Tasks
                     accumulator.Merge(file.Accumulator);
                     return true;
                 });
-            }
+                return reduceError == null;
+            });
             if (reduceError != null)
             {
                 ctx.LogError(reduceError);
@@ -2445,13 +2458,11 @@ namespace pwiz.Osprey.Tasks
             return result;
         }
 
-        // Experimental (OSPREY_STUB_IDENTITY): the library lookup that lets the first-pass walks
-        // take charge, decoy flag and peptide from entry_id rather than decode them from every
-        // row. Null when the switch is off. Call before starting lanes: it builds on first use.
+        // The library lookup that lets the first-pass walks take charge, decoy flag and peptide
+        // from entry_id rather than decode them from every row (OSPREY_STUB_IDENTITY). Call
+        // before starting lanes: it builds on first use.
         private LibraryIdentity StubIdentity(PipelineContext ctx)
         {
-            if (OspreyEnvironment.StubIdentity == 0)
-                return null;
             return _stubIdentity ?? (_stubIdentity = new LibraryIdentity(ctx.Get<FullLibrary>().Value));
         }
 
@@ -2637,11 +2648,11 @@ namespace pwiz.Osprey.Tasks
             ctx.LogBlockReads(@"First-pass before trim");
             int compactFiles = 0;
             string compactError = null;
-            using (var compactProgress = new ProgressReporter(ScoringTaskShared.IsSingleFileSearch(config)
-                       ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
-                       : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
-                           projections.PerFile.Count),
-                       projections.PerFile.Count))
+            ProgressReporter.TryRun(ScoringTaskShared.IsSingleFileSearch(config)
+                    ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
+                    : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
+                        projections.PerFile.Count),
+                projections.PerFile.Count, compactProgress =>
             {
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
@@ -2696,7 +2707,8 @@ namespace pwiz.Osprey.Tasks
                     firstPassBaseIds.UnionWith(file.Passing);
                     return true;
                 });
-            }
+                return compactError == null;
+            });
             if (compactError != null)
             {
                 ctx.LogError(compactError);

@@ -37,11 +37,13 @@ namespace pwiz.BiblioSpec.IO
     ///
     /// <para>The library's header (<see cref="Info"/>) and its small tables (source files,
     /// score types, proteins, metadata, decoy pairs) are read whole. The spectra and the
-    /// retention times stream, each as a scan that can be split into partitions by id
-    /// (<c>WHERE id % count = index</c>) so a caller can scan on several threads, one reader
-    /// on its own connection per thread. A spectrum's peaks, modifications and annotations are
-    /// also read singly by id, for a caller that keeps an index of the library and loads a
-    /// spectrum when it is asked for.</para>
+    /// retention times stream, each as a scan that can be split into partitions by id - the
+    /// span of RefSpectra ids cut into equal ranges, <c>WHERE id BETWEEN low AND high</c>, which
+    /// the rowid index serves, where a modulo partition is a full scan of the table per
+    /// partition - so a caller can scan on several threads, one reader on its own connection
+    /// per thread. A spectrum's peaks, modifications and annotations are also read singly by
+    /// id, for a caller that keeps an index of the library and loads a spectrum when it is
+    /// asked for.</para>
     ///
     /// <para>A library of an older schema reads through the same calls: a column or table the
     /// library lacks reads as the record's default, and a reader tests for a table
@@ -51,16 +53,31 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public sealed class BlibReader : IDisposable
     {
-        public const string TABLE_LIB_INFO = @"LibInfo";
-        public const string TABLE_REF_SPECTRA = @"RefSpectra";
-        public const string TABLE_REF_SPECTRA_PEAKS = @"RefSpectraPeaks";
-        public const string TABLE_REF_SPECTRA_PEAK_ANNOTATIONS = @"RefSpectraPeakAnnotations";
-        public const string TABLE_MODIFICATIONS = @"Modifications";
-        public const string TABLE_PROTEINS = @"Proteins";
-        public const string TABLE_REF_SPECTRA_PROTEINS = @"RefSpectraProteins";
-        public const string TABLE_SPECTRUM_SOURCE_FILES = @"SpectrumSourceFiles";
-        public const string TABLE_SCORE_TYPES = @"ScoreTypes";
-        public const string TABLE_RETENTION_TIMES = @"RetentionTimes";
+        // The table names a tool asks the reader about, spelled once in BlibSchema.
+        public const string TABLE_LIB_INFO = BlibSchema.TABLE_LIB_INFO;
+        public const string TABLE_REF_SPECTRA = BlibSchema.TABLE_REF_SPECTRA;
+        public const string TABLE_REF_SPECTRA_PEAKS = BlibSchema.TABLE_REF_SPECTRA_PEAKS;
+        public const string TABLE_REF_SPECTRA_PEAK_ANNOTATIONS = BlibSchema.TABLE_REF_SPECTRA_PEAK_ANNOTATIONS;
+        public const string TABLE_MODIFICATIONS = BlibSchema.TABLE_MODIFICATIONS;
+        public const string TABLE_PROTEINS = BlibSchema.TABLE_PROTEINS;
+        public const string TABLE_REF_SPECTRA_PROTEINS = BlibSchema.TABLE_REF_SPECTRA_PROTEINS;
+        public const string TABLE_SPECTRUM_SOURCE_FILES = BlibSchema.TABLE_SPECTRUM_SOURCE_FILES;
+        public const string TABLE_SCORE_TYPES = BlibSchema.TABLE_SCORE_TYPES;
+        public const string TABLE_RETENTION_TIMES = BlibSchema.TABLE_RETENTION_TIMES;
+
+        /// <summary>
+        /// The ion mobility columns of the schemas before <see cref="BlibSchema.MinVersionImsUnits"/>,
+        /// which <c>RefSpectra</c> and <c>RetentionTimes</c> both carried under the same names:
+        /// <c>driftTimeMsec</c> (schemas 4 and 5) and <c>ionMobilityValue</c> (2 and 3) for the
+        /// value, <c>driftTimeHighEnergyOffsetMsec</c> and
+        /// <c>ionMobilityHighEnergyDriftTimeOffsetMsec</c> for the high-energy offset. Each reads
+        /// as the current column; <see cref="KnownColumns.ReadLegacyIonMobility"/> settles the units.
+        /// </summary>
+        private static readonly IReadOnlyDictionary<string, string[]> LEGACY_ION_MOBILITY_NAMES = new Dictionary<string, string[]>
+        {
+            { @"ionMobility", new[] { @"driftTimeMsec", @"ionMobilityValue" } },
+            { @"ionMobilityHighEnergyOffset", new[] { @"driftTimeHighEnergyOffsetMsec", @"ionMobilityHighEnergyDriftTimeOffsetMsec" } },
+        };
 
         private readonly SQLiteConnection _connection;
         private readonly bool _ownsConnection;
@@ -70,6 +87,9 @@ namespace pwiz.BiblioSpec.IO
         private BlibLibraryInfo _info;
         private SpectrumColumns _spectrumColumns;
         private RetentionTimeColumns _retentionTimeColumns;
+        // The lowest and highest RefSpectra id, read once for the partitioned scans; (1, 0) for
+        // a library with no spectra, an empty range.
+        private (long Low, long High)? _idSpan;
 
         /// <summary>Opens the library at <paramref name="path"/> read-only, on a connection of its own.</summary>
         public BlibReader(string path)
@@ -115,6 +135,22 @@ namespace pwiz.BiblioSpec.IO
                 return Convert.ToInt32(command.ExecuteScalar());
         }
 
+        /// <summary>
+        /// The <c>RefSpectra</c> ids in ascending order: the order <see cref="ReadSpectra(bool,int,int)"/> reads
+        /// the rows in, so a row's position in this list is its index in that order.
+        /// </summary>
+        public IReadOnlyList<long> ReadSpectrumIds()
+        {
+            var ids = new List<long>();
+            using (var command = new SQLiteCommand(@"SELECT id FROM RefSpectra ORDER BY id", _connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                    ids.Add(reader.GetInt64(0));
+            }
+            return ids;
+        }
+
         /// <summary>The <c>SpectrumSourceFiles</c> rows in id order; empty in a library without the table.</summary>
         public IReadOnlyList<BlibSourceFile> ReadSourceFiles()
         {
@@ -122,9 +158,12 @@ namespace pwiz.BiblioSpec.IO
             var columns = BlibSqlite.ColumnNames(_connection, TABLE_SPECTRUM_SOURCE_FILES);
             if (columns.Count == 0)
                 return files;
+            // The columns after fileName arrived with later schemas; one the library lacks reads as null or DDA.
+            bool hasIdFile = columns.Contains(@"idFileName");
             bool hasCutoff = columns.Contains(@"cutoffScore");
             bool hasWorkflow = columns.Contains(@"workflowType");
-            string sql = @"SELECT id, fileName, idFileName" +
+            string sql = @"SELECT id, fileName" +
+                         (hasIdFile ? @", idFileName" : string.Empty) +
                          (hasCutoff ? @", cutoffScore" : string.Empty) +
                          (hasWorkflow ? @", workflowType" : string.Empty) +
                          @" FROM SpectrumSourceFiles ORDER BY id";
@@ -133,28 +172,79 @@ namespace pwiz.BiblioSpec.IO
             {
                 while (reader.Read())
                 {
-                    int next = 3;
+                    int next = 2;
+                    string idFile = hasIdFile ? GetString(reader, next++) : null;
                     double? cutoff = hasCutoff ? GetDouble(reader, next++) : null;
                     int workflow = hasWorkflow ? GetInt32(reader, next) ?? BlibWriter.WORKFLOW_TYPE_DDA : BlibWriter.WORKFLOW_TYPE_DDA;
-                    files.Add(new BlibSourceFile(reader.GetInt64(0), GetString(reader, 1), GetString(reader, 2), cutoff, workflow));
+                    files.Add(new BlibSourceFile(reader.GetInt64(0), GetString(reader, 1), idFile, cutoff, workflow));
                 }
             }
             return files;
+        }
+
+        /// <summary>
+        /// The distinct <c>RefSpectra.scoreType</c> values, in ascending order: the score types
+        /// the library's spectra actually carry, as against the <see cref="ReadScoreTypes"/> rows
+        /// every library seeds. Empty in a library without the column.
+        /// </summary>
+        public IReadOnlyList<int> ReadScoreTypesInUse()
+        {
+            var scoreTypes = new List<int>();
+            string column = SpectrumColumnsOfLibrary().ScoreTypeColumn;
+            if (column == null)
+                return scoreTypes;
+            using (var command = new SQLiteCommand(@"SELECT DISTINCT " + column + @" FROM RefSpectra WHERE " + column +
+                                                   @" IS NOT NULL ORDER BY 1", _connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                    scoreTypes.Add(GetInt32(reader, 0) ?? BlibWriter.SCORE_TYPE_UNKNOWN);
+            }
+            return scoreTypes;
         }
 
         /// <summary>The <c>ScoreTypes</c> rows, name by id; empty in a library without the table.</summary>
         public IReadOnlyDictionary<int, string> ReadScoreTypes()
         {
             var scoreTypes = new Dictionary<int, string>();
+            foreach (var scoreType in ReadScoreTypeTable())
+                scoreTypes[scoreType.Id] = scoreType.Name;
+            return scoreTypes;
+        }
+
+        /// <summary>
+        /// The <c>ScoreTypes</c> rows in id order, each with how its score reads
+        /// (<see cref="BlibScoreType.ProbabilityType"/>); empty in a library without the table.
+        /// </summary>
+        public IReadOnlyList<BlibScoreType> ReadScoreTypeTable()
+        {
+            var scoreTypes = new List<BlibScoreType>();
             if (!HasTable(TABLE_SCORE_TYPES))
                 return scoreTypes;
-            using (var command = new SQLiteCommand(@"SELECT id, scoreType FROM ScoreTypes", _connection))
+            // The probability type arrived with a later schema than the table.
+            string probability = HasColumn(TABLE_SCORE_TYPES, @"probabilityType") ? @"probabilityType" : @"NULL";
+            using (var command = new SQLiteCommand(@"SELECT id, scoreType, " + probability + @" FROM ScoreTypes ORDER BY id", _connection))
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
-                    scoreTypes[reader.GetInt32(0)] = GetString(reader, 1);
+                    scoreTypes.Add(new BlibScoreType(reader.GetInt32(0), GetString(reader, 1), GetString(reader, 2)));
             }
             return scoreTypes;
+        }
+
+        /// <summary>
+        /// Whether the library has <paramref name="column"/> of <paramref name="table"/> with a
+        /// value in some row: an optional column (<see cref="BlibSchema.OptionalRefSpectraColumns"/>)
+        /// that is NULL throughout offers nothing, as a cutoff on it would fail every row. The
+        /// scan stops at the first value, so a library with values answers at once.
+        /// </summary>
+        public bool HasValues(string table, string column)
+        {
+            if (!HasColumn(table, column))
+                return false;
+            using (var command = new SQLiteCommand(@"SELECT 1 FROM " + table + @" WHERE " + column + @" IS NOT NULL LIMIT 1", _connection))
+            using (var reader = command.ExecuteReader())
+                return reader.Read();
         }
 
         /// <summary>
@@ -202,7 +292,9 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The protein accessions of every spectrum, by RefSpectra id and in the order the
         /// library maps them; empty in a library without the protein tables. A spectrum without
-        /// a protein is absent.
+        /// a protein is absent. The accessions only; <see cref="ReadProteinTable"/> and
+        /// <see cref="ReadProteinIds"/> read the rows with their optional values and the mapping
+        /// by id, for a copy of the library that keeps them.
         /// </summary>
         public ILookup<long, string> ReadProteins()
         {
@@ -224,6 +316,65 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
+        /// The <c>Proteins</c> rows in id order, with the global q-value and PEP where the library
+        /// has those columns; empty in a library without the table.
+        /// </summary>
+        public IReadOnlyList<BlibProtein> ReadProteinTable()
+        {
+            var proteins = new List<BlibProtein>();
+            if (!HasTable(TABLE_PROTEINS))
+                return proteins;
+            string qValue = HasColumn(TABLE_PROTEINS, BlibSchema.ProteinQValue.Name) ? BlibSchema.ProteinQValue.Name : @"NULL";
+            string pep = HasColumn(TABLE_PROTEINS, BlibSchema.ProteinPep.Name) ? BlibSchema.ProteinPep.Name : @"NULL";
+            using (var command = new SQLiteCommand(@"SELECT id, accession, " + qValue + @", " + pep + @" FROM Proteins ORDER BY id", _connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                    proteins.Add(new BlibProtein(reader.GetInt64(0), GetString(reader, 1), GetDouble(reader, 2), GetDouble(reader, 3)));
+            }
+            return proteins;
+        }
+
+        /// <summary>
+        /// The <c>Proteins</c> ids of every spectrum, by RefSpectra id and in the order the
+        /// library maps them (<c>RefSpectraProteins</c>); empty in a library without the table.
+        /// </summary>
+        public ILookup<long, long> ReadProteinIds()
+        {
+            var mappings = new List<KeyValuePair<long, long>>();
+            if (HasTable(TABLE_REF_SPECTRA_PROTEINS))
+            {
+                using (var command = new SQLiteCommand(@"SELECT RefSpectraId, ProteinId FROM RefSpectraProteins ORDER BY RefSpectraId", _connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (!reader.IsDBNull(1))
+                            mappings.Add(new KeyValuePair<long, long>(reader.GetInt64(0), reader.GetInt64(1)));
+                    }
+                }
+            }
+            return mappings.ToLookup(mapping => mapping.Key, mapping => mapping.Value);
+        }
+
+        /// <summary>Whether the library's <paramref name="table"/> has <paramref name="column"/>; false for a table it lacks.</summary>
+        public bool HasColumn(string table, string column)
+        {
+            return HasTable(table) && BlibSqlite.ColumnNames(_connection, table).Contains(column);
+        }
+
+        /// <summary>
+        /// Whether the library records the <c>RefSpectra</c> column <paramref name="column"/>,
+        /// under its current name or an earlier one the reader reads as it
+        /// (<see cref="ReadSpectra(bool,int,int)"/>); a value the library does not record reads
+        /// as the record's default.
+        /// </summary>
+        public bool HasSpectrumColumn(string column)
+        {
+            return SpectrumColumnsOfLibrary().HasNamed(column);
+        }
+
+        /// <summary>
         /// The <c>RefSpectra</c> rows in id order, each with <see cref="BlibSpectrumRecord.Id"/>
         /// set and, with <paramref name="withPeaks"/>, its peak blobs from
         /// <c>RefSpectraPeaks</c> (null blobs for a spectrum without a peaks row, or in a library
@@ -231,43 +382,125 @@ namespace pwiz.BiblioSpec.IO
         /// modifications, proteins and annotations are not filled in: <see cref="ReadProteins"/>
         /// reads them for every spectrum at once, <see cref="ReadModifications"/> and
         /// <see cref="ReadAnnotations"/> for one. With <paramref name="partitionCount"/> above
-        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/>
-        /// (<c>id % count = index</c>), so the partitions together are the whole table and a
-        /// caller can scan them on several threads, each with a reader of its own.
+        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/> of
+        /// the id span cut into that many equal ranges, so the partitions together are the whole
+        /// table, each in id order and every id of one partition below every id of the next, and
+        /// a caller can scan them on several threads, each with a reader of its own.
         /// </summary>
         public IEnumerable<BlibSpectrumRecord> ReadSpectra(bool withPeaks, int partitionCount = 1, int partitionIndex = 0)
         {
-            ValidatePartition(partitionCount, partitionIndex);
-            var columns = _spectrumColumns ?? (_spectrumColumns = new SpectrumColumns(BlibSqlite.ColumnNames(_connection, TABLE_REF_SPECTRA)));
-            return EnumerateSpectra(columns, withPeaks && HasTable(TABLE_REF_SPECTRA_PEAKS), partitionCount, partitionIndex);
+            return ReadSpectra(withPeaks, null, partitionCount, partitionIndex);
         }
 
-        /// <summary>The scan of <see cref="ReadSpectra"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
-        private IEnumerable<BlibSpectrumRecord> EnumerateSpectra(SpectrumColumns columns, bool withPeaks, int partitionCount, int partitionIndex)
+        /// <summary>
+        /// <see cref="ReadSpectra(bool,int,int)"/> narrowed to the rows <paramref name="filter"/>
+        /// admits, in the SQL, so a search tool reads the candidates of one precursor m/z window
+        /// without scanning the library. A null filter admits every row.
+        /// </summary>
+        public IEnumerable<BlibSpectrumRecord> ReadSpectra(bool withPeaks, BlibSpectrumFilter filter, int partitionCount = 1, int partitionIndex = 0)
+        {
+            ValidatePartition(partitionCount, partitionIndex);
+            bool hasPeaksTable = HasTable(TABLE_REF_SPECTRA_PEAKS);
+            bool requirePeaksRow = filter != null && filter.RequirePeaksRow;
+            if (requirePeaksRow && !hasPeaksTable)
+                return Array.Empty<BlibSpectrumRecord>();
+            var where = new WhereClause();
+            if (partitionCount > 1)
+                where.AddPartition(@"r.id", IdSpan(), partitionCount, partitionIndex);
+            AddFilter(where, filter);
+            return EnumerateSpectra(SpectrumColumnsOfLibrary(), withPeaks && hasPeaksTable, requirePeaksRow, where);
+        }
+
+        /// <summary>
+        /// The <c>RefSpectra</c> rows with the spectra of one precursor together, read as
+        /// <see cref="ReadSpectra(bool,int,int)"/> reads them: ordered by modified sequence,
+        /// small-molecule identity, charge and adduct, and within a precursor by the spectrum's
+        /// own columns, so a consumer picking one spectrum per precursor (BlibFilter) walks the
+        /// groups in one pass. Only spectra of at least <paramref name="minPeaks"/> peaks, except
+        /// a precursor-only entry (an empty <c>SpecIDinFile</c>), which has no peaks to count.
+        /// </summary>
+        public IEnumerable<BlibSpectrumRecord> ReadSpectraByPrecursor(bool withPeaks, int minPeaks)
+        {
+            var columns = SpectrumColumnsOfLibrary();
+            var where = new WhereClause();
+            if (columns.NumPeaksColumn != null)
+            {
+                string condition = @"r." + columns.NumPeaksColumn + @" >= @minPeaks";
+                if (columns.SpecIdInFileColumn != null)
+                    condition = @"(" + condition + @" OR r." + columns.SpecIdInFileColumn + @" = '')";
+                where.Add(condition, @"@minPeaks", minPeaks);
+            }
+            return EnumerateSpectra(columns, withPeaks && HasTable(TABLE_REF_SPECTRA_PEAKS), false, where, columns.PrecursorOrder(@"r."));
+        }
+
+        /// <summary>
+        /// The <c>RefSpectra</c> row of id <paramref name="refId"/>, read as
+        /// <see cref="ReadSpectra(bool,int,int)"/> reads a row, or null when the library has no
+        /// such row.
+        /// </summary>
+        public BlibSpectrumRecord ReadSpectrum(long refId, bool withPeaks)
+        {
+            var where = new WhereClause();
+            where.Add(@"r.id = @id", @"@id", refId);
+            return EnumerateSpectra(SpectrumColumnsOfLibrary(), withPeaks && HasTable(TABLE_REF_SPECTRA_PEAKS), false, where).FirstOrDefault();
+        }
+
+        private SpectrumColumns SpectrumColumnsOfLibrary()
+        {
+            return _spectrumColumns ?? (_spectrumColumns = new SpectrumColumns(BlibSqlite.ColumnNames(_connection, TABLE_REF_SPECTRA)));
+        }
+
+        /// <summary>The conditions of <paramref name="filter"/>, each bound inclusive, on the <c>r</c> alias of <c>RefSpectra</c>.</summary>
+        private static void AddFilter(WhereClause where, BlibSpectrumFilter filter)
+        {
+            if (filter == null)
+                return;
+            if (filter.MinPrecursorMz.HasValue)
+                where.Add(@"r.precursorMZ >= @minMz", @"@minMz", filter.MinPrecursorMz.Value);
+            if (filter.MaxPrecursorMz.HasValue)
+                where.Add(@"r.precursorMZ <= @maxMz", @"@maxMz", filter.MaxPrecursorMz.Value);
+            if (filter.MinPrecursorCharge.HasValue)
+                where.Add(@"r.precursorCharge >= @minCharge", @"@minCharge", filter.MinPrecursorCharge.Value);
+            if (filter.MaxPrecursorCharge.HasValue)
+                where.Add(@"r.precursorCharge <= @maxCharge", @"@maxCharge", filter.MaxPrecursorCharge.Value);
+            if (filter.MinNumPeaks.HasValue)
+                where.Add(@"r.numPeaks >= @minPeaks", @"@minPeaks", filter.MinNumPeaks.Value);
+        }
+
+        /// <summary>
+        /// The scan of <see cref="ReadSpectra(bool,int,int)"/>, deferred until enumerated; the
+        /// arguments were checked by the caller. With <paramref name="requirePeaksRow"/> the
+        /// join to the peaks table is inner, so a spectrum without a peaks row is not returned.
+        /// </summary>
+        private IEnumerable<BlibSpectrumRecord> EnumerateSpectra(SpectrumColumns columns, bool withPeaks, bool requirePeaksRow, WhereClause where,
+            string orderBy = @"r.id")
         {
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(@"r."));
             if (withPeaks)
                 sql.Append(@", p.peakMZ, p.peakIntensity");
             sql.Append(@" FROM RefSpectra r");
-            if (withPeaks)
-                sql.Append(@" LEFT JOIN RefSpectraPeaks p ON r.id = p.RefSpectraID");
-            AppendPartition(sql, @"r.id", partitionCount, partitionIndex);
-            sql.Append(@" ORDER BY r.id");
+            if (withPeaks || requirePeaksRow)
+                sql.Append(requirePeaksRow ? @" JOIN" : @" LEFT JOIN").Append(@" RefSpectraPeaks p ON r.id = p.RefSpectraID");
+            where.AppendTo(sql);
+            sql.Append(@" ORDER BY ").Append(orderBy);
             using (var command = new SQLiteCommand(sql.ToString(), _connection))
-            using (var reader = command.ExecuteReader())
             {
-                int peakMz = columns.Count;
-                int peakIntensity = columns.Count + 1;
-                while (reader.Read())
+                where.Bind(command);
+                using (var reader = command.ExecuteReader())
                 {
-                    var spectrum = columns.Read(reader);
-                    if (withPeaks)
+                    int peakMz = columns.Count;
+                    int peakIntensity = columns.Count + 1;
+                    while (reader.Read())
                     {
-                        spectrum.MzBlob = GetBlob(reader, peakMz);
-                        spectrum.IntensityBlob = GetBlob(reader, peakIntensity);
+                        var spectrum = columns.Read(reader);
+                        if (withPeaks)
+                        {
+                            spectrum.MzBlob = GetBlob(reader, peakMz);
+                            spectrum.IntensityBlob = GetBlob(reader, peakIntensity);
+                        }
+                        yield return spectrum;
                     }
-                    yield return spectrum;
                 }
             }
         }
@@ -275,31 +508,67 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The <c>RetentionTimes</c> rows, in RefSpectra id order so one spectrum's observations
         /// come together; empty in a library without the table (a redundant library). Partitioned
-        /// by RefSpectra id as <see cref="ReadSpectra"/> is.
+        /// by RefSpectra id as <see cref="ReadSpectra(bool,int,int)"/> is.
         /// </summary>
         public IEnumerable<BlibRetentionTimeRecord> ReadRetentionTimes(int partitionCount = 1, int partitionIndex = 0)
         {
             ValidatePartition(partitionCount, partitionIndex);
-            var columns = _retentionTimeColumns ??
-                          (_retentionTimeColumns = new RetentionTimeColumns(BlibSqlite.ColumnNames(_connection, TABLE_RETENTION_TIMES)));
+            var columns = RetentionTimeColumnsOfLibrary();
             if (columns.Count == 0)
                 return Array.Empty<BlibRetentionTimeRecord>();
-            return EnumerateRetentionTimes(columns, partitionCount, partitionIndex);
+            var where = new WhereClause();
+            if (partitionCount > 1)
+                where.AddPartition(@"RefSpectraID", IdSpan(), partitionCount, partitionIndex);
+            return EnumerateRetentionTimes(columns, where);
         }
 
-        /// <summary>The scan of <see cref="ReadRetentionTimes"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
-        private IEnumerable<BlibRetentionTimeRecord> EnumerateRetentionTimes(RetentionTimeColumns columns, int partitionCount, int partitionIndex)
+        /// <summary>
+        /// The <c>RetentionTimes</c> rows of spectrum <paramref name="refId"/>, in the order
+        /// written: the observations of one spectrum, for a caller showing them; empty without
+        /// the table. Served by the index <see cref="BlibWriter.Complete"/> adds, or a scan of
+        /// the table in a library written without it.
+        /// </summary>
+        public IReadOnlyList<BlibRetentionTimeRecord> ReadSpectrumRetentionTimes(long refId)
+        {
+            var columns = RetentionTimeColumnsOfLibrary();
+            if (columns.Count == 0)
+                return Array.Empty<BlibRetentionTimeRecord>();
+            var where = new WhereClause();
+            where.Add(@"RefSpectraID = @id", @"@id", refId);
+            return EnumerateRetentionTimes(columns, where).ToList();
+        }
+
+        /// <summary>The <c>RetentionTimes</c> rows counted: every observation of every spectrum; 0 without the table.</summary>
+        public int CountRetentionTimes()
+        {
+            if (!HasTable(TABLE_RETENTION_TIMES))
+                return 0;
+            using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM RetentionTimes", _connection))
+                return Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        private RetentionTimeColumns RetentionTimeColumnsOfLibrary()
+        {
+            return _retentionTimeColumns ??
+                   (_retentionTimeColumns = new RetentionTimeColumns(BlibSqlite.ColumnNames(_connection, TABLE_RETENTION_TIMES)));
+        }
+
+        /// <summary>The scan of <see cref="ReadRetentionTimes(int,int)"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
+        private IEnumerable<BlibRetentionTimeRecord> EnumerateRetentionTimes(RetentionTimeColumns columns, WhereClause where)
         {
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(string.Empty));
             sql.Append(@" FROM RetentionTimes");
-            AppendPartition(sql, @"RefSpectraID", partitionCount, partitionIndex);
+            where.AppendTo(sql);
             sql.Append(@" ORDER BY RefSpectraID");
             using (var command = new SQLiteCommand(sql.ToString(), _connection))
-            using (var reader = command.ExecuteReader())
             {
-                while (reader.Read())
-                    yield return columns.Read(reader);
+                where.Bind(command);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                        yield return columns.Read(reader);
+                }
             }
         }
 
@@ -349,8 +618,8 @@ namespace pwiz.BiblioSpec.IO
             var annotations = new List<BlibPeakAnnotation>();
             if (!HasTable(TABLE_REF_SPECTRA_PEAK_ANNOTATIONS))
                 return annotations;
-            using (var command = new SQLiteCommand(@"SELECT peakIndex, name, charge, mzTheoretical, mzObserved " +
-                                                   @"FROM RefSpectraPeakAnnotations WHERE RefSpectraID = @id ORDER BY id", _connection))
+            using (var command = new SQLiteCommand(@"SELECT peakIndex, name, charge, mzTheoretical, mzObserved, formula, inchiKey, otherKeys, " +
+                                                   @"adduct, comment FROM RefSpectraPeakAnnotations WHERE RefSpectraID = @id ORDER BY id", _connection))
             {
                 command.Parameters.AddWithValue(@"@id", refId);
                 using (var reader = command.ExecuteReader())
@@ -358,7 +627,8 @@ namespace pwiz.BiblioSpec.IO
                     while (reader.Read())
                     {
                         annotations.Add(new BlibPeakAnnotation(reader.GetInt32(0), GetString(reader, 1), GetInt32(reader, 2) ?? 0,
-                            reader.GetDouble(3), reader.GetDouble(4)));
+                            reader.GetDouble(3), reader.GetDouble(4), GetString(reader, 5), GetString(reader, 6), GetString(reader, 7),
+                            GetString(reader, 8), GetString(reader, 9)));
                     }
                 }
             }
@@ -366,7 +636,7 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
-        /// The peaks of a spectrum <see cref="ReadSpectra"/> read with its blobs, or null for a
+        /// The peaks of a spectrum <see cref="ReadSpectra(bool,int,int)"/> read with its blobs, or null for a
         /// spectrum without a peaks row (a null <see cref="BlibSpectrumRecord.MzBlob"/>).
         /// </summary>
         public static BlibPeaks DecodePeaks(BlibSpectrumRecord spectrum)
@@ -410,12 +680,19 @@ namespace pwiz.BiblioSpec.IO
                 throw new ArgumentOutOfRangeException(nameof(partitionIndex));
         }
 
-        private static void AppendPartition(StringBuilder sql, string idColumn, int partitionCount, int partitionIndex)
+        /// <summary>The lowest and highest RefSpectra id, read once; (1, 0) when the table is empty.</summary>
+        private (long Low, long High) IdSpan()
         {
-            if (partitionCount > 1)
+            if (_idSpan.HasValue)
+                return _idSpan.Value;
+            using (var command = new SQLiteCommand(@"SELECT MIN(id), MAX(id) FROM RefSpectra", _connection))
+            using (var reader = command.ExecuteReader())
             {
-                sql.AppendFormat(CultureInfo.InvariantCulture, @" WHERE {0} % {1} = {2}", idColumn, partitionCount, partitionIndex);
+                _idSpan = reader.Read() && !reader.IsDBNull(0)
+                    ? (reader.GetInt64(0), reader.GetInt64(1))
+                    : (1L, 0L);
             }
+            return _idSpan.Value;
         }
 
         private static string GetString(SQLiteDataReader reader, int ordinal)
@@ -430,7 +707,14 @@ namespace pwiz.BiblioSpec.IO
 
         private static int? GetInt32(SQLiteDataReader reader, int ordinal)
         {
-            return reader.IsDBNull(ordinal) ? null : Convert.ToInt32(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
+            if (reader.IsDBNull(ordinal))
+                return null;
+            object value = reader.GetValue(ordinal);
+            // System.Data.SQLite surfaces a TINYINT as an unsigned byte, so the -1 BiblioSpec's
+            // tools have written for an unknown workflow or score type would read as 255.
+            if (value is byte b)
+                return (sbyte)b;
+            return Convert.ToInt32(value, CultureInfo.InvariantCulture);
         }
 
         private static long? GetInt64(SQLiteDataReader reader, int ordinal)
@@ -444,28 +728,84 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
+        /// The conditions of a scan, joined by AND, with the values they compare to bound as
+        /// parameters of the command (new parameter objects per command, since a deferred scan
+        /// may be enumerated more than once); no conditions, no WHERE.
+        /// </summary>
+        private sealed class WhereClause
+        {
+            private readonly List<string> _conditions = new List<string>();
+            private readonly List<KeyValuePair<string, object>> _parameters = new List<KeyValuePair<string, object>>();
+
+            public void Add(string condition)
+            {
+                _conditions.Add(condition);
+            }
+
+            public void Add(string condition, string parameterName, object value)
+            {
+                _conditions.Add(condition);
+                _parameters.Add(new KeyValuePair<string, object>(parameterName, value));
+            }
+
+            /// <summary>
+            /// The rows whose <paramref name="idColumn"/> falls in partition <paramref name="partitionIndex"/>
+            /// of the id <paramref name="span"/> cut into <paramref name="partitionCount"/> equal ranges: a
+            /// range the rowid index serves, so a thread reads its own rows and no other's.
+            /// </summary>
+            public void AddPartition(string idColumn, (long Low, long High) span, int partitionCount, int partitionIndex)
+            {
+                long count = span.High - span.Low + 1;
+                long from = span.Low + count * partitionIndex / partitionCount;
+                long to = span.Low + count * (partitionIndex + 1) / partitionCount - 1;
+                Add(string.Format(CultureInfo.InvariantCulture, @"{0} BETWEEN {1} AND {2}", idColumn, from, to));
+            }
+
+            public void AppendTo(StringBuilder sql)
+            {
+                if (_conditions.Count > 0)
+                    sql.Append(@" WHERE ").Append(string.Join(@" AND ", _conditions));
+            }
+
+            public void Bind(SQLiteCommand command)
+            {
+                foreach (var parameter in _parameters)
+                    command.Parameters.AddWithValue(parameter.Key, parameter.Value);
+            }
+        }
+
+        /// <summary>
         /// The columns of a table the reader knows, with the ordinal each has in a SELECT of
         /// those the library has, or -1 for a column the library lacks, which reads as the
-        /// record's default.
+        /// record's default. A column a library of an older schema holds under an earlier name
+        /// is read from that name (<see cref="Source"/>), as the current column.
         /// </summary>
         private abstract class KnownColumns
         {
             private readonly string[] _names;
+            private readonly string[] _sources;
             private readonly int[] _ordinals;
 
-            protected KnownColumns(string[] names, HashSet<string> present)
+            protected KnownColumns(string[] names, HashSet<string> present, IReadOnlyDictionary<string, string[]> legacyNames = null)
             {
                 _names = names;
+                _sources = new string[names.Length];
                 _ordinals = new int[names.Length];
                 Count = 0;
                 for (int i = 0; i < names.Length; i++)
-                    _ordinals[i] = present.Contains(names[i]) ? Count++ : -1;
+                {
+                    _sources[i] = SourceOf(names[i], present, legacyNames);
+                    _ordinals[i] = _sources[i] != null ? Count++ : -1;
+                }
             }
 
             /// <summary>The columns the library has, which the SELECT lists.</summary>
             public int Count { get; }
 
-            /// <summary>The comma-separated columns the library has, each under <paramref name="prefix"/> (a table alias with its dot).</summary>
+            /// <summary>
+            /// The comma-separated columns the library has, each under <paramref name="prefix"/>
+            /// (a table alias with its dot); one read from an earlier name is aliased to its current one.
+            /// </summary>
             public string SelectList(string prefix)
             {
                 var list = new StringBuilder();
@@ -475,7 +815,9 @@ namespace pwiz.BiblioSpec.IO
                         continue;
                     if (list.Length > 0)
                         list.Append(@", ");
-                    list.Append(prefix).Append(_names[i]);
+                    list.Append(prefix).Append(_sources[i]);
+                    if (_sources[i] != _names[i])
+                        list.Append(@" AS ").Append(_names[i]);
                 }
                 return list.ToString();
             }
@@ -488,6 +830,40 @@ namespace pwiz.BiblioSpec.IO
             protected bool Has(int column)
             {
                 return _ordinals[column] >= 0;
+            }
+
+            /// <summary>Whether the library has the column of current <paramref name="name"/>, under that name or an earlier one.</summary>
+            public bool HasNamed(string name)
+            {
+                int column = Array.IndexOf(_names, name);
+                return column >= 0 && Has(column);
+            }
+
+            /// <summary>The library's column read for <paramref name="column"/>: its current name, an earlier one, or null when the library lacks it.</summary>
+            protected string Source(int column)
+            {
+                return _sources[column];
+            }
+
+            /// <summary>Whether <paramref name="column"/> is read from an earlier name.</summary>
+            protected bool FromLegacyName(int column)
+            {
+                return _sources[column] != null && _sources[column] != _names[column];
+            }
+
+            private static string SourceOf(string name, HashSet<string> present, IReadOnlyDictionary<string, string[]> legacyNames)
+            {
+                if (present.Contains(name))
+                    return name;
+                if (legacyNames != null && legacyNames.TryGetValue(name, out var earlier))
+                {
+                    foreach (string legacy in earlier)
+                    {
+                        if (present.Contains(legacy))
+                            return legacy;
+                    }
+                }
+                return null;
             }
 
             protected string Text(SQLiteDataReader reader, int column)
@@ -509,33 +885,119 @@ namespace pwiz.BiblioSpec.IO
             {
                 return GetInt64(reader, _ordinals[column]);
             }
+
+            /// <summary>
+            /// The ion mobility of a row read from the legacy columns
+            /// (<see cref="LEGACY_ION_MOBILITY_NAMES"/>): a drift time where the library has no
+            /// <c>ionMobilityType</c> to say (schemas 4 and 5); in schemas 2 and 3
+            /// <c>ionMobilityValue</c> held a drift time or a CCS, told apart by a type of that
+            /// schema's own (1 drift time, 2 CCS), so only the drift time is an ion mobility and
+            /// the CCS is returned as one when <paramref name="ccsFromValue"/> says so, which
+            /// BlibFilter never did and Skyline always has.
+            /// </summary>
+            protected static void ReadLegacyIonMobility(string source, bool hasType, bool ccsFromValue,
+                ref double? ionMobility, ref int ionMobilityType, ref double? collisionalCrossSection)
+            {
+                if (source == null)
+                    return;
+                if (!hasType)
+                {
+                    if (ionMobility.HasValue)
+                        ionMobilityType = BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME;
+                    return;
+                }
+                if (source != @"ionMobilityValue" || ionMobilityType == BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME)
+                    return;
+                // The schema-3 type codes are not the current ones: 2 was a CCS.
+                if (ccsFromValue && ionMobilityType == 2 && ionMobility.HasValue)
+                    collisionalCrossSection = ionMobility;
+                ionMobility = null;
+                ionMobilityType = BlibWriter.ION_MOBILITY_TYPE_NONE;
+            }
         }
 
         /// <summary>
         /// The <c>RefSpectra</c> columns, in the order <see cref="BlibSchema.CreateRefSpectra"/>
         /// declares them. A NULL in a column the library has reads as null, or as 0 in a column
-        /// the record holds as a plain number.
+        /// the record holds as a plain number. The ion mobility columns of the schemas before
+        /// <see cref="BlibSchema.MinVersionImsUnits"/> read as the current ones
+        /// (<see cref="LEGACY_ION_MOBILITY_NAMES"/>).
         /// </summary>
         private sealed class SpectrumColumns : KnownColumns
         {
             private const int ID = 0, PEPTIDE_SEQ = 1, PRECURSOR_MZ = 2, PRECURSOR_CHARGE = 3, PEPTIDE_MOD_SEQ = 4, PREV_AA = 5, NEXT_AA = 6,
                 COPIES = 7, NUM_PEAKS = 8, ION_MOBILITY = 9, CCS = 10, ION_MOBILITY_HIGH_ENERGY_OFFSET = 11, ION_MOBILITY_TYPE = 12,
                 RETENTION_TIME = 13, START_TIME = 14, END_TIME = 15, TOTAL_ION_CURRENT = 16, MOLECULE_NAME = 17, CHEMICAL_FORMULA = 18,
-                PRECURSOR_ADDUCT = 19, INCHI_KEY = 20, OTHER_KEYS = 21, FILE_ID = 22, SPEC_ID_IN_FILE = 23, SCORE = 24, SCORE_TYPE = 25;
+                PRECURSOR_ADDUCT = 19, INCHI_KEY = 20, OTHER_KEYS = 21, FILE_ID = 22, SPEC_ID_IN_FILE = 23, SCORE = 24, SCORE_TYPE = 25,
+                PRECURSOR_Q_VALUE = 26, PRECURSOR_PEP = 27, PEPTIDE_Q_VALUE = 28, PEPTIDE_PEP = 29;
 
+            // The standard columns, then the optional ones (BlibSchema.OptionalRefSpectraColumns).
             private static readonly string[] NAMES =
             {
                 @"id", @"peptideSeq", @"precursorMZ", @"precursorCharge", @"peptideModSeq", @"prevAA", @"nextAA", @"copies", @"numPeaks",
                 @"ionMobility", @"collisionalCrossSectionSqA", @"ionMobilityHighEnergyOffset", @"ionMobilityType", @"retentionTime",
                 @"startTime", @"endTime", @"totalIonCurrent", @"moleculeName", @"chemicalFormula", @"precursorAdduct", @"inchiKey",
                 @"otherKeys", @"fileID", @"SpecIDinFile", @"score", @"scoreType",
+                BlibSchema.PrecursorQValue.Name, BlibSchema.PrecursorPep.Name, BlibSchema.PeptideQValue.Name, BlibSchema.PeptidePep.Name,
             };
 
             public SpectrumColumns(HashSet<string> present)
-                : base(NAMES, present)
+                : base(NAMES, present, LEGACY_ION_MOBILITY_NAMES)
             {
                 if (!Has(ID))
                     throw new InvalidDataException(@"The library has no RefSpectra table");
+            }
+
+            /// <summary>
+            /// The ORDER BY that brings the spectra of one precursor together, for a scan that
+            /// groups them: the modified sequence, then the small-molecule identity where the
+            /// library has those columns, then the charge and adduct; within a precursor, the
+            /// spectrum's own columns in a fixed order, so the order of a group's members is a
+            /// property of their values and not of the file. BlibFilter has always sorted this way.
+            /// </summary>
+            public string PrecursorOrder(string prefix)
+            {
+                var columns = new List<int>();
+                columns.Add(PEPTIDE_MOD_SEQ);
+                bool smallMolecules = Has(INCHI_KEY);
+                if (smallMolecules)
+                    columns.AddRange(new[] { MOLECULE_NAME, CHEMICAL_FORMULA, INCHI_KEY, OTHER_KEYS });
+                columns.Add(PRECURSOR_CHARGE);
+                if (smallMolecules)
+                    columns.Add(PRECURSOR_ADDUCT);
+                columns.AddRange(new[]
+                {
+                    SPEC_ID_IN_FILE, RETENTION_TIME, ION_MOBILITY, CCS, ION_MOBILITY_HIGH_ENERGY_OFFSET, START_TIME, END_TIME,
+                    TOTAL_ION_CURRENT,
+                });
+                var order = new StringBuilder();
+                foreach (int column in columns)
+                {
+                    if (!Has(column))
+                        continue;
+                    if (order.Length > 0)
+                        order.Append(@", ");
+                    order.Append(prefix).Append(Source(column));
+                }
+                return order.ToString();
+            }
+
+            /// <summary>The library's name for <c>SpecIDinFile</c>, or null without the column.</summary>
+            public string SpecIdInFileColumn
+            {
+                get { return Source(SPEC_ID_IN_FILE); }
+            }
+
+            /// <summary>The library's name for <c>numPeaks</c>, or null without the column.</summary>
+            public string NumPeaksColumn
+            {
+                get { return Source(NUM_PEAKS); }
+            }
+
+            /// <summary>The library's name for <c>scoreType</c>, or null without the column.</summary>
+            public string ScoreTypeColumn
+            {
+                get { return Source(SCORE_TYPE); }
             }
 
             public BlibSpectrumRecord Read(SQLiteDataReader reader)
@@ -565,6 +1027,16 @@ namespace pwiz.BiblioSpec.IO
                     spectrum.IonMobilityHighEnergyOffset = Real(reader, ION_MOBILITY_HIGH_ENERGY_OFFSET);
                 if (Has(ION_MOBILITY_TYPE))
                     spectrum.IonMobilityType = Integer(reader, ION_MOBILITY_TYPE) ?? BlibWriter.ION_MOBILITY_TYPE_NONE;
+                if (FromLegacyName(ION_MOBILITY))
+                {
+                    // Only the drift time of a schema-3 row is an ion mobility, as BlibFilter has always read it.
+                    double? ionMobility = spectrum.IonMobility, ccs = spectrum.CollisionalCrossSectionSqA;
+                    int ionMobilityType = spectrum.IonMobilityType;
+                    ReadLegacyIonMobility(Source(ION_MOBILITY), Has(ION_MOBILITY_TYPE), false, ref ionMobility, ref ionMobilityType, ref ccs);
+                    spectrum.IonMobility = ionMobility;
+                    spectrum.IonMobilityType = ionMobilityType;
+                    spectrum.CollisionalCrossSectionSqA = ccs;
+                }
                 if (Has(RETENTION_TIME))
                     spectrum.RetentionTime = Real(reader, RETENTION_TIME);
                 if (Has(START_TIME))
@@ -591,11 +1063,24 @@ namespace pwiz.BiblioSpec.IO
                     spectrum.Score = Real(reader, SCORE) ?? 0;
                 if (Has(SCORE_TYPE))
                     spectrum.ScoreType = Integer(reader, SCORE_TYPE) ?? BlibWriter.SCORE_TYPE_UNKNOWN;
+                if (Has(PRECURSOR_Q_VALUE))
+                    spectrum.PrecursorQValue = Real(reader, PRECURSOR_Q_VALUE);
+                if (Has(PRECURSOR_PEP))
+                    spectrum.PrecursorPep = Real(reader, PRECURSOR_PEP);
+                if (Has(PEPTIDE_Q_VALUE))
+                    spectrum.PeptideQValue = Real(reader, PEPTIDE_Q_VALUE);
+                if (Has(PEPTIDE_PEP))
+                    spectrum.PeptidePep = Real(reader, PEPTIDE_PEP);
                 return spectrum;
             }
         }
 
-        /// <summary>The <c>RetentionTimes</c> columns of <see cref="BlibSchema.CreateRetentionTimes"/>.</summary>
+        /// <summary>
+        /// The <c>RetentionTimes</c> columns of <see cref="BlibSchema.CreateRetentionTimes"/>. The
+        /// ion mobility columns of the schemas before <see cref="BlibSchema.MinVersionImsUnits"/>
+        /// read as the current ones (<see cref="LEGACY_ION_MOBILITY_NAMES"/>), a schema-3 CCS
+        /// included, as Skyline has always read its libraries' observations.
+        /// </summary>
         private sealed class RetentionTimeColumns : KnownColumns
         {
             private const int REF_SPECTRA_ID = 0, REDUNDANT_REF_SPECTRA_ID = 1, SPECTRUM_SOURCE_ID = 2, ION_MOBILITY = 3, CCS = 4,
@@ -609,7 +1094,7 @@ namespace pwiz.BiblioSpec.IO
             };
 
             public RetentionTimeColumns(HashSet<string> present)
-                : base(NAMES, present)
+                : base(NAMES, present, LEGACY_ION_MOBILITY_NAMES)
             {
             }
 
@@ -628,6 +1113,15 @@ namespace pwiz.BiblioSpec.IO
                     row.IonMobilityHighEnergyOffset = Real(reader, ION_MOBILITY_HIGH_ENERGY_OFFSET);
                 if (Has(ION_MOBILITY_TYPE))
                     row.IonMobilityType = Integer(reader, ION_MOBILITY_TYPE) ?? BlibWriter.ION_MOBILITY_TYPE_NONE;
+                if (FromLegacyName(ION_MOBILITY))
+                {
+                    double? ionMobility = row.IonMobility, ccs = row.CollisionalCrossSectionSqA;
+                    int ionMobilityType = row.IonMobilityType;
+                    ReadLegacyIonMobility(Source(ION_MOBILITY), Has(ION_MOBILITY_TYPE), true, ref ionMobility, ref ionMobilityType, ref ccs);
+                    row.IonMobility = ionMobility;
+                    row.IonMobilityType = ionMobilityType;
+                    row.CollisionalCrossSectionSqA = ccs;
+                }
                 if (Has(RETENTION_TIME))
                     row.RetentionTime = Real(reader, RETENTION_TIME);
                 if (Has(START_TIME))
@@ -641,5 +1135,25 @@ namespace pwiz.BiblioSpec.IO
                 return row;
             }
         }
+    }
+
+    /// <summary>
+    /// The <c>RefSpectra</c> rows a scan returns
+    /// (<see cref="BlibReader.ReadSpectra(bool,BlibSpectrumFilter,int,int)"/>): each bound
+    /// that is set narrows the scan in its SQL, inclusively, and one left null does not apply.
+    /// </summary>
+    public sealed class BlibSpectrumFilter
+    {
+        public double? MinPrecursorMz { get; set; }
+        public double? MaxPrecursorMz { get; set; }
+        public int? MinPrecursorCharge { get; set; }
+        public int? MaxPrecursorCharge { get; set; }
+        /// <summary>The fewest peaks (<c>RefSpectra.numPeaks</c>) a row may have.</summary>
+        public int? MinNumPeaks { get; set; }
+        /// <summary>
+        /// Only rows with a <c>RefSpectraPeaks</c> row, the join becoming inner, as BiblioSpec's
+        /// own tools select a library's spectra; none in a library without the table.
+        /// </summary>
+        public bool RequirePeaksRow { get; set; }
     }
 }

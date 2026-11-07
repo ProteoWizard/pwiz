@@ -37,7 +37,7 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public static class BlibMetadata
     {
-        public const string TABLE = @"LibMetadata";
+        public const string TABLE = BlibSchema.TABLE_LIB_METADATA;
 
         /// <summary>
         /// The table's name in libraries Osprey wrote before 2026-10-15. Read, never written, for

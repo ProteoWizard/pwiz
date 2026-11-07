@@ -60,4 +60,10 @@
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" />
   </ItemGroup>
 
+  <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
+  <Import Project="$(PwizToolsRoot)\Shared\Lib\VendorNativeCrt.targets" />
+
+  <!-- The wiff2\ plugin folder; see the targets file. -->
+  <Import Project="$(PwizToolsRoot)\Shared\Lib\SciexWiff2Staging.targets" />
+
 </Project>

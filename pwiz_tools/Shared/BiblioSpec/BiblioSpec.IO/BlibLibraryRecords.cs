@@ -53,6 +53,49 @@ namespace pwiz.BiblioSpec.IO
         }
     }
 
+    /// <summary>
+    /// One <c>Proteins</c> row: a protein, or a protein group as its accessions joined by
+    /// semicolons, with the global q-value and PEP of the optional columns
+    /// (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>) where the
+    /// library has them.
+    /// </summary>
+    public sealed class BlibProtein
+    {
+        public BlibProtein(long id, string accession, double? qValue, double? pep)
+        {
+            Id = id;
+            Accession = accession;
+            QValue = qValue;
+            Pep = pep;
+        }
+
+        public long Id { get; }
+        public string Accession { get; }
+        public double? QValue { get; }
+        public double? Pep { get; }
+    }
+
+    /// <summary>
+    /// One <c>ScoreTypes</c> row: a score's name and how to read it, one of BiblioSpec's
+    /// (<see cref="BlibSchema.ScoreTypes"/>, seeded in every library) or one a tool registered
+    /// (<see cref="BlibWriter.AddScoreType"/>).
+    /// </summary>
+    public sealed class BlibScoreType
+    {
+        public BlibScoreType(int id, string name, string probabilityType)
+        {
+            Id = id;
+            Name = name;
+            ProbabilityType = probabilityType;
+        }
+
+        /// <summary>The id <c>RefSpectra.scoreType</c> refers to.</summary>
+        public int Id { get; }
+        public string Name { get; }
+        /// <summary><c>PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT</c>, <c>..._INCORRECT</c>, <c>NOT_A_PROBABILITY_VALUE</c>, or null in a library before the column.</summary>
+        public string ProbabilityType { get; }
+    }
+
     /// <summary>One <c>SpectrumSourceFiles</c> row, as <see cref="BlibWriter.AddSourceFile"/> writes it.</summary>
     public sealed class BlibSourceFile
     {
@@ -106,7 +149,7 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public readonly struct BlibDecoyPair
     {
-        public const string TABLE = @"DecoyPairs";
+        public const string TABLE = BlibSchema.TABLE_DECOY_PAIRS;
 
         public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId = null, string method = null)
         {
@@ -146,6 +189,36 @@ namespace pwiz.BiblioSpec.IO
         public int Count
         {
             get { return Mzs.Length; }
+        }
+    }
+
+    /// <summary>
+    /// A column a library has only when its writer had values for it, so a library without
+    /// them pays no size or read cost: the experiment-wide (global) q-values and PEPs of
+    /// <see cref="BlibSchema.OptionalRefSpectraColumns"/> and
+    /// <see cref="BlibSchema.OptionalProteinsColumns"/>. Added with <c>ALTER TABLE</c> by
+    /// <see cref="BlibWriter.AddOptionalColumn"/>; a reader tests for the column, never for a
+    /// schema version, and BlibFilter carries it from the redundant library to the non-redundant
+    /// one while a BlibBuild merge drops it, since a global value from one experiment means
+    /// nothing next to one from another.
+    /// </summary>
+    public sealed class BlibOptionalColumn
+    {
+        public BlibOptionalColumn(string table, string name, string type)
+        {
+            Table = table;
+            Name = name;
+            Type = type;
+        }
+
+        public string Table { get; }
+        public string Name { get; }
+        /// <summary>The SQLite type the column is added with.</summary>
+        public string Type { get; }
+
+        public override string ToString()
+        {
+            return Table + @"." + Name;
         }
     }
 }

@@ -132,7 +132,7 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Bounded-memory streaming form of <see cref="PercolatorQValues.ComputeFullPopulationPrecursorFdr"/> for
+        /// Bounded-memory streaming full-population precursor competition, for
         /// OSPREY_PASS2_QVALUE=transfer-compete. Streams one file's 1st-pass population at a time
         /// (run-level competition + conservative q per file) while accumulating only the
         /// per-base_id best target/decoy observation for the experiment-level competition.
@@ -167,8 +167,9 @@ namespace pwiz.Osprey.FDR
         ///   as that file's competition finishes, for the survivor entry_ids that won in it. The
         ///   map is the caller's to consume and is not retained here; an entry the caller holds
         ///   for this file that is absent from it won no competition and takes run q 1.0.</param>
-        /// <param name="stratumBaseIds">Null for the full-population competition; non-null restricts
-        ///   the competition to these base_ids (protein-compact).</param>
+        /// <param name="stratumBaseIds">Null for the full-population competition; non-null
+        ///   stratifies it (protein-compact): these base_ids and their complement compete
+        ///   separately, each against its own paired decoys.</param>
         /// <param name="authoritativeContribution">TEMPORARY (#4486). Supplies the per-file
         ///   competition the RESCORE WORKER already computed and wrote to that file's per-run
         ///   2nd-pass sidecar. When it returns non-null, that answer is what gets folded and the
@@ -191,6 +192,10 @@ namespace pwiz.Osprey.FDR
         ///   <paramref name="readFile"/> because that one also reads the file's whole 1st-pass
         ///   population and re-runs the frozen rescore, which only a recomputation needs. Fusing
         ///   the two is what made the shipped path pay for verification it was not doing.</param>
+        /// <param name="complementExperimentQ">protein-compact only: the experiment q of the
+        ///   stratum's complement, from <see cref="ComputeComplementExperimentQ"/>, merged into
+        ///   the state so <see cref="StreamedCompetitionState.ExperimentQ"/> answers for both
+        ///   halves. Null leaves complement entries at experiment q 1.0.</param>
         public static StreamedCompetitionState ComputeFullPopulationPrecursorFdrStreaming(
             IReadOnlyList<string> fileKeys,
             Func<string, (uint[] entryIds, double[] scores,
@@ -201,14 +206,16 @@ namespace pwiz.Osprey.FDR
             HashSet<uint> stratumBaseIds = null,
             Func<string, FileCompetition> authoritativeContribution = null,
             bool verifyAgainstRecompute = false,
-            Action<string> beginFile = null)
+            Action<string> beginFile = null,
+            IReadOnlyDictionary<uint, double> complementExperimentQ = null)
         {
             // stratumBaseIds == null -> full-population competition (transfer-compete).
-            // non-null -> STRATIFIED competition (protein-compact): only observations whose
-            // base_id is in the stratum participate in the run/experiment competitions, so
-            // off-stratum decoys leave the null (reduced multiple testing). The per-base_id
-            // maps hold only stratum members, so peak memory stays flat in file count -- it
-            // only shrinks relative to the full-population path.
+            // non-null -> STRATIFIED competition (protein-compact): the stratum and its
+            // complement compete separately, each against its own paired decoys, so the
+            // stratum's q gains from reduced multiple testing while the complement's decoys
+            // still count against the complement's targets (issue #4581). The per-base_id
+            // maps hold only stratum members, so peak memory stays flat in file count; the
+            // complement's experiment q arrives precomputed in complementExperimentQ.
             var survivorIds = survivorEntryIds as HashSet<uint> ?? new HashSet<uint>(survivorEntryIds);
 
             // Experiment-level per-base_id best target/decoy observation (score + locator),
@@ -246,14 +253,10 @@ namespace pwiz.Osprey.FDR
                 // scores, the global survivor id set and the protein stratum - and a per-file
                 // worker can be handed all three: the model and the stratum already ride the
                 // phase2 -> phase3 -> phase4 relay, and the survivor id set is ~50 MB.
-                // TEMPORARY, and deliberately expensive: while the per-file half moves to
-                // PerFileRescoring (#4486), the WORKER's answer is authoritative and this
-                // recomputation exists only to check it. Recomputing here costs the file's
-                // 1st-pass sidecar read and frozen rescore all over again - the very work the
-                // move removes - which is the point: the shipped path is the one producing
-                // output, and this is the oracle that says so. DELETE THIS RECOMPUTE, its
-                // parameter and the assert below before the PR merges; what survives is the
-                // fold over authoritativeContribution.
+                // The WORKER's answer is authoritative; recomputing it here is the
+                // OSPREY_PASS2_VERIFY_WORKER test instrument, off by default. It costs the
+                // file's 1st-pass sidecar read and frozen rescore all over again - the very work
+                // the per-file worker (#4486) removed - which is why it is opt-in.
                 var authoritative = authoritativeContribution?.Invoke(fileKey);
                 FileCompetition contribution;
                 if (authoritative != null && !verifyAgainstRecompute)
@@ -403,6 +406,92 @@ namespace pwiz.Osprey.FDR
                 wi2++;
             }
 
+            var expQByWinnerId = WinnerQByEntryId(expScore, expIsDecoy, expBaseId);
+            // protein-compact: the stratum's complement competed separately (issue #4581). Its
+            // base_ids are disjoint from the stratum's, so the two maps never share a key.
+            if (complementExperimentQ != null)
+            {
+                foreach (var kv in complementExperimentQ)
+                    expQByWinnerId.Add(kv.Key, kv.Value);
+            }
+
+            var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
+
+            // The per-survivor loop that used to live here - one iteration per (file, entry_id),
+            // filling three whole-run dictionaries - is now the caller's per-file emit pass. Every
+            // value it produced is a function of the bounded state below plus the survivor's own
+            // run q, so handing that state back costs O(distinct) instead of O(files x entries).
+            return new StreamedCompetitionState(
+                expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
+        }
+
+        /// <summary>
+        /// The experiment q of the stratum's COMPLEMENT under protein-compact (issue #4581):
+        /// one target/decoy competition per base_id over every base_id NOT in
+        /// <paramref name="stratumBaseIds"/>, on the per-entry experiment aggregate score the
+        /// 1st pass ranked it on, with the same tie rule, sort and conservative q as the
+        /// stratum's own experiment competition. Keyed by the WINNER's full entry_id; a loser
+        /// is absent and reads as 1.0.
+        ///
+        /// <para>The stratum holds the base_ids of proteins with 2 or more detected TARGET
+        /// peptides, so it takes most of the high-scoring targets and only the base rate of
+        /// the high-scoring decoys. The complement is therefore decoy-rich, and the pass-1
+        /// experiment q its targets used to keep was earned against a null diluted by the
+        /// stratum's true targets. Competing the complement against its own decoys makes the
+        /// two halves each calibrated, and so the reported union.</para>
+        /// </summary>
+        /// <param name="aggregateScores">Every analysis-wide 1st-pass experiment record as
+        /// (entry_id, experiment aggregate score), targets and decoys alike. Order does not
+        /// matter: the competition is a per-base_id reduction followed by a total sort.</param>
+        /// <param name="stratumBaseIds">The protein stratum; its members are excluded.</param>
+        public static Dictionary<uint, double> ComputeComplementExperimentQ(
+            IEnumerable<KeyValuePair<uint, double>> aggregateScores, HashSet<uint> stratumBaseIds)
+        {
+            if (aggregateScores == null)
+                throw new ArgumentNullException(nameof(aggregateScores));
+            if (stratumBaseIds == null)
+                throw new ArgumentNullException(nameof(stratumBaseIds));
+            var bestTarget = new Dictionary<uint, double>();
+            var bestDecoy = new Dictionary<uint, double>();
+            foreach (var kv in aggregateScores)
+            {
+                uint bid = kv.Key & PercolatorEntry.BASE_ID_MASK;
+                if (stratumBaseIds.Contains(bid))
+                    continue;
+                var best = (kv.Key & ~PercolatorEntry.BASE_ID_MASK) != 0u ? bestDecoy : bestTarget;
+                if (!best.TryGetValue(bid, out double cur) || kv.Value > cur)
+                    best[bid] = kv.Value;
+            }
+            var baseIds = new HashSet<uint>(bestTarget.Keys);
+            baseIds.UnionWith(bestDecoy.Keys);
+            int w = baseIds.Count;
+            var expScore = new double[w];
+            var expIsDecoy = new bool[w];
+            var expBaseId = new uint[w];
+            int wi = 0;
+            foreach (uint bid in baseIds)
+            {
+                bool hasT = bestTarget.TryGetValue(bid, out double t);
+                bool hasD = bestDecoy.TryGetValue(bid, out double d);
+                // The stratum's rule: target wins strictly (tScore > dScore); ties go to the decoy.
+                bool decoyWins = hasT && hasD ? !(t > d) : !hasT;
+                expScore[wi] = decoyWins ? d : t;
+                expIsDecoy[wi] = decoyWins;
+                expBaseId[wi] = bid;
+                wi++;
+            }
+            return WinnerQByEntryId(expScore, expIsDecoy, expBaseId);
+        }
+
+        /// <summary>
+        /// Conservative experiment q for one winner per base_id, keyed by the WINNER's full
+        /// entry_id. Shared by the stratum's competition and its complement's so the two halves
+        /// rank, break ties and estimate q identically.
+        /// </summary>
+        private static Dictionary<uint, double> WinnerQByEntryId(
+            double[] expScore, bool[] expIsDecoy, uint[] expBaseId)
+        {
+            int w = expScore.Length;
             // Sort winners by score desc, base_id asc (unique base_id => total order).
             var perm = new int[w];
             for (int i = 0; i < w; i++) perm[i] = i;
@@ -436,14 +525,7 @@ namespace pwiz.Osprey.FDR
                 expQByWinnerId[winnerId] = qExp[i];
             }
 
-            var pepEstimator = PepEstimator.FitDefault(expScore, expIsDecoy);
-
-            // The per-survivor loop that used to live here - one iteration per (file, entry_id),
-            // filling three whole-run dictionaries - is now the caller's per-file emit pass. Every
-            // value it produced is a function of the bounded state below plus the survivor's own
-            // run q, so handing that state back costs O(distinct) instead of O(files x entries).
-            return new StreamedCompetitionState(
-                expQByWinnerId, minRunQ, winnerLoc, aggByEntryId, pepEstimator, fileKeys, fileKeys.Count > 1);
+            return expQByWinnerId;
         }
 
         /// <summary>
@@ -585,7 +667,8 @@ namespace pwiz.Osprey.FDR
         /// caller now enforces the equivalence with a throw rather than relying on it. Taking
         /// the local set is what lets this run in a per-file worker (#4486).</param>
         /// <param name="stratumBaseIds">Null for the full-population competition; otherwise the
-        /// protein stratum, which constrains both competitions - see the remarks.</param>
+        /// protein stratum. The run competition is split into the stratum and its complement,
+        /// and the per-base_id bests are reduced over the stratum only.</param>
         /// <param name="fileKey">This file's stem, for the scope-violation message only.</param>
         public static FileCompetition CompeteOneFile(
             uint[] entryIds, double[] scores,
@@ -595,123 +678,65 @@ namespace pwiz.Osprey.FDR
         {
             int m = entryIds.Length;
             var labels = new bool[m];
-            // Non-null only when stratified: the base_ids whose observations Stage 6 actually
-            // CHANGED. Filled in the scoring pass below rather than recorded positionally in a
-            // parallel bool[m] and re-read afterwards. Two reasons beyond the saved pass: the
-            // bool[] and this set used to be live at the same time, so dropping it lowers the
-            // peak; and a base_id-keyed set needs no materialized per-entry array, which is
-            // the shape that survives if this ever streams entries instead of reading them
-            // into arrays. See the admission rationale below for what "changed" means here.
-            var changedBaseIds = stratumBaseIds != null ? new HashSet<uint>() : null;
             for (int i = 0; i < m; i++)
             {
                 uint eid = entryIds[i];
                 labels[i] = (eid & ~PercolatorEntry.BASE_ID_MASK) != 0u; // decoy high bit set
                 if (survivorScores.TryGetValue(eid, out double ov))
-                {
-                    // BIT-EXACT inequality is the "changed" discriminator, the same one
-                    // Pass2FdrSidecar.AssignPerRunQ uses to separate Moved from Unchanged: an
-                    // unchanged survivor's reconciled features ARE its original Stage-4
-                    // features (ReconciledParquetWriter streams unchanged rows through
-                    // untouched) and the sidecar score came from those same features under
-                    // this same averaged model, so the recomputation reproduces it exactly.
-                    // A moved peak carries rescored features, so its score differs.
-                    if (changedBaseIds != null && ov != scores[i])
-                        changedBaseIds.Add(eid & PercolatorEntry.BASE_ID_MASK);
                     scores[i] = ov; // swap in the reconciled survivor's frozen-model score
-                }
             }
 
-            // protein-compact: a peak Stage 6 CHANGED (reconciliation moved it, or gap-fill
-            // created it) carries a NEW composite score and no longer has a valid pass-1
-            // run q - the old q described a peak that no longer exists, and
-            // PerFileRescoreTask's post-rescore overlay zeroes it precisely to say so. Such
-            // a peak must EARN a fresh run q here, exactly the way on-stratum members do;
-            // neither inheriting the prior q nor keeping the q=1 sentinel is a calibrated
-            // answer for it. The "changed" signal is a frozen-model score that DIFFERS from
-            // the entry's 1st-pass sidecar score, computed above - NOT mere presence in
-            // survivorScoreOverride. That map holds every post-reconciliation survivor whose
-            // identity resolves in the effective parquet, including files Stage 6 never
-            // touched (the effective path falls back to the ORIGINAL parquet), so keying on
-            // presence admitted most of the survivor pool and quietly widened the very
-            // stratum this mode exists to enforce.
+            // Run-level: compete within this file, conservative q on the winners. Stratified
+            // (protein-compact), the file splits in TWO by base_id - the stratum and its
+            // complement - and each half competes against its OWN paired decoys. Both halves
+            // are reported, so both need a calibrated q (issue #4581).
             //
-            // The score comparison is keyed by entry_id, so it means the same thing
-            // in-process and on a distributed SecondPassFDR node (an index-keyed source does NOT -
-            // see #4484), and it needs no extra plumbing: both scores are already in hand.
+            // The complement is not optional. The stratum is chosen by TARGET evidence (proteins
+            // with 2 or more detected target peptides), so it takes most of the high-scoring
+            // targets and only the base rate of the high-scoring decoys; the decoys it leaves
+            // behind are concentrated in the complement. When the complement's targets kept the
+            // q they earned against the whole population, those decoys counted against no one:
+            // measured on one SEA-AD file, the off-stratum survivors at a 1% q held 1,302
+            // targets and 478 decoy winners. Competing the complement against its own decoys is
+            // what gives every decoy the same protein evidence as its paired target - each
+            // counts in the half its target is in.
             //
-            // Admitted BY BASE_ID so a target and its paired decoy always enter together.
-            // Admitting a lone target would let it auto-win its competition and inflate the
-            // null, the cross-validation grouping invariant this file depends on. The set is
-            // complete before this point: it is filled by the scoring pass above, and every
-            // entry of this file has been through that pass. That ordering matters, because a
-            // base_id changed at a LATER entry still admits an earlier one.
-
-            // Called only from the stratified branch below, where both sets are non-null -
-            // the unstratified path builds allIdx directly and never asks. The null guards
-            // this started with were therefore dead, and ReSharper reported them as such.
-            bool Admit(uint baseId)
-            {
-                return stratumBaseIds.Contains(baseId) || changedBaseIds.Contains(baseId);
-            }
-
-            // Run-level: compete within this file (stratum members plus changed peaks when
-            // stratified), conservative q on the winners.
-            int[] allIdx;
+            // A peak Stage 6 changed (reconciliation moved it, or gap-fill created it) competes
+            // on its new score in whichever half its base_id belongs to. Membership is protein
+            // evidence alone, decided before Stage 6, and a moved peak does not change it.
+            // Base_id keeps a target and its paired decoy in the same half always.
+            var fileRunQ = new Dictionary<uint, double>();
             if (stratumBaseIds == null)
             {
-                allIdx = new int[m];
+                var allIdx = new int[m];
                 for (int i = 0; i < m; i++) allIdx[i] = i;
+                CompeteRunQ(scores, labels, entryIds, allIdx, survivorIds, fileRunQ);
             }
             else
             {
-                var idxList = new List<int>(m);
+                var inIdx = new List<int>(m);
+                var offIdx = new List<int>(m);
                 for (int i = 0; i < m; i++)
                 {
-                    if (Admit(entryIds[i] & PercolatorEntry.BASE_ID_MASK))
-                        idxList.Add(i);
+                    if (stratumBaseIds.Contains(entryIds[i] & PercolatorEntry.BASE_ID_MASK))
+                        inIdx.Add(i);
+                    else
+                        offIdx.Add(i);
                 }
-                allIdx = idxList.ToArray();
-            }
-            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, allIdx,
-                out int[] wi, out double[] ws, out bool[] wd);
-            var q = new double[wi.Length];
-            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-            // This file's run q, handed to the caller at the end of the iteration and then
-            // dropped. Sized by the survivors that won a competition HERE, not by the survivor
-            // set across all files, which is what makes the phase flat in file count. The
-            // caller filters to the survivors it actually holds for this file, so the old
-            // (fileKey, entryId) membership test is now the caller's own per-file list.
-            //
-            // Filtered on the GLOBAL survivor set, not this file's own. A file can win a
-            // competition for an entry_id that is not one of ITS survivors but is a survivor
-            // in another file, and that win still has to reach the cross-file minimum the
-            // experiment q floors on. Substituting the local list would silently drop those
-            // contributions and lower experiment q for exactly the precursors seen in many runs.
-            var fileRunQ = new Dictionary<uint, double>();
-            for (int rank = 0; rank < wi.Length; rank++)
-            {
-                uint eid = entryIds[wi[rank]];
-                if (!survivorIds.Contains(eid))
-                    continue;
-                fileRunQ[eid] = q[rank];
+                CompeteRunQ(scores, labels, entryIds, inIdx.ToArray(), survivorIds, fileRunQ);
+                CompeteRunQ(scores, labels, entryIds, offIdx.ToArray(), survivorIds, fileRunQ);
             }
 
             // Experiment-level: reduce every observation to the per-base_id bests. When
-            // stratified this is the STRATUM ONLY - deliberately NOT the run-level admitted
-            // set, which also carries the changed off-stratum peaks.
+            // stratified this is the STRATUM ONLY. The complement's experiment q is competed
+            // from the analysis-wide 1st-pass experiment records instead (see
+            // ComputeComplementExperimentQ), which hold every base_id the complement needs -
+            // its non-survivors included - without a per-file best for each of them.
             //
-            // Two reasons an off-stratum peak must not enter a cross-file maximum here.
-            // First, it would be admitted only in the files that CHANGED it, so its best
-            // would be a max over that subset while every stratum member maxes over all
-            // files - and because reconciliation anchors on the best-scoring peak and
-            // corrects the others toward it, a changed peak is never the one that supplied
-            // the maximum. Maxing over changed observations alone is therefore GUARANTEED to
-            // understate the precursor's experiment-wide score, not merely to skew it.
-            // Second, the correct value is already known: the pass-1 experiment q, which by
-            // that same anchor argument reconciliation cannot have invalidated. The caller
-            // carries it through rather than recomputing it, which is what keeps the
-            // re-scoping additive - see Pass2FdrSidecar's map-back.
+            // A pass-1 aggregate is the right score for the complement because
+            // reconciliation anchors on the best-scoring peak and corrects the others toward
+            // it, so a changed peak is never the one that supplied the maximum. Maxing here
+            // over a complement that holds only survivor rows would understate it instead.
             //
             // Strictly-greater, so the FIRST observation at the maximum wins. The fold across
             // files applies the same rule, which is what makes the two-stage reduction give
@@ -770,6 +795,29 @@ namespace pwiz.Osprey.FDR
             }
 
             return new FileCompetition(fileRunQ, bestTarget, bestDecoy);
+        }
+
+        /// <summary>
+        /// Compete one half of a file (or the whole file) and record the conservative run q of
+        /// every SURVIVOR that won a competition in it.
+        ///
+        /// <para>Filtered on the survivor set, which the caller enforces is the same as the
+        /// global union for this file's rows. An entry absent from the map won no competition
+        /// in this file, and the caller takes 1.0 for it.</para>
+        /// </summary>
+        private static void CompeteRunQ(double[] scores, bool[] labels, uint[] entryIds,
+            int[] indices, HashSet<uint> survivorIds, Dictionary<uint, double> fileRunQ)
+        {
+            TargetDecoyCompetition.CompeteFromIndices(scores, labels, entryIds, indices,
+                out int[] wi, out double[] ws, out bool[] wd);
+            var q = new double[wi.Length];
+            PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+            for (int rank = 0; rank < wi.Length; rank++)
+            {
+                uint eid = entryIds[wi[rank]];
+                if (survivorIds.Contains(eid))
+                    fileRunQ[eid] = q[rank];
+            }
         }
 
         /// <summary>
@@ -861,9 +909,9 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// The experiment aggregate score this competition ranked <paramref name="entryId"/>
             /// on (sidecar v4, issue #4522), or <c>null</c> when the entry took no part in the
-            /// experiment fold - which under protein-compact means an OFF-STRATUM entry, whose
-            /// pass-1 aggregate the caller carries through untouched beside the pass-1
-            /// experiment q it also carries.
+            /// experiment fold - which under protein-compact means an OFF-STRATUM entry. Its
+            /// experiment q comes from the complement's own competition, which ranked it on its
+            /// pass-1 aggregate, so the caller carries that aggregate instead.
             ///
             /// <para><b>Nullable, not an in-band sentinel.</b> The score is a signed
             /// discriminant, so 0.0 is an ordinary mid-distribution value: returning it for "not

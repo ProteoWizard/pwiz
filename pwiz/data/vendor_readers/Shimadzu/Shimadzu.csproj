@@ -53,8 +53,8 @@
   <Target Name="ExtractShimadzuAssemblies"
           Condition="'$(NativeVendorsAvailable)' == 'true'"
           BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths"
-          Inputs="$(ShimadzuArchive)"
-          Outputs="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll">
+          Inputs="$(ShimadzuArchive);$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll"
+          Outputs="$(ShimadzuAssembliesDir)/.ExtractShimadzuAssemblies.stamp">
     <MakeDir Directories="$(ShimadzuAssembliesDir)" />
     <!-- Pull the top-level managed assemblies (no x86/ x64/ subfolder prefix) and the x64
          native helpers used by the file-format readers (CompressedTLMRawDataReader, CRHAKEI2,
@@ -68,6 +68,8 @@
     </ItemGroup>
     <Copy SourceFiles="@(_ShimadzuExtractedTop)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(_ShimadzuExtractedX64)" DestinationFolder="$(ShimadzuAssembliesDir)" SkipUnchangedFiles="true" />
+    <!-- Outputs is this stamp, not the extracted files: see $(SevenZaExe) in Directory.Build.props. -->
+    <Touch Files="$(ShimadzuAssembliesDir)/.ExtractShimadzuAssemblies.stamp" AlwaysCreate="true" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
@@ -80,6 +82,10 @@
       <HintPath>$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll</HintPath>
       <Private>true</Private>
     </Reference>
+    <!-- Skyline's Google.Protobuf version rather than the SDK's 3.7.0 copy: this output reaches
+         msconvert's and bullseye-sharp's bins and from there Skyline's, where 3.7.0 overwrote the
+         version Skyline references. -->
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
   </ItemGroup>
 
   <!-- Runtime dependencies: managed assemblies the SDK's late-bound type loads pull in plus
@@ -106,8 +112,9 @@
           DependsOnTargets="ExtractShimadzuAssemblies"
           BeforeTargets="AssignTargetPaths">
     <ItemGroup>
+      <!-- The SDK's own Google.Protobuf is left out in favor of the package referenced below. -->
       <_ShimadzuRuntime Include="$(ShimadzuAssembliesDir)/*.dll"
-                        Exclude="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll" />
+                        Exclude="$(ShimadzuAssembliesDir)/Shimadzu.LabSolutions.IO.IoModule.dll;$(ShimadzuAssembliesDir)/Google.Protobuf.dll" />
       <Content Include="@(_ShimadzuRuntime)">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <!-- See Sciex.csproj for the rationale: keep the dll out of downstream publish bundles

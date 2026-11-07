@@ -226,7 +226,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestCommandLine()
         {
             // Carafe's effective defaults, not its help text's.
-            var build = CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"out.fasta", @"-db", @"in.fasta" });
+            var build = CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"out.fasta", @"--db", @"in.fasta" });
             Assert.AreEqual(CarafeCommandMode.build_entrapment_fasta, build.Mode);
             var settings = build.BuildSettings;
             Assert.AreEqual(@"in.fasta", settings.InputFasta);
@@ -250,9 +250,9 @@ namespace pwiz.CarafeSharp.Test
             // down collapses to its minimum, and options these modes do not read are ignored.
             settings = CarafeCommandLine.Parse(new[]
             {
-                @"-build_entrapment_fasta", @"out.fasta", @"-db=in.fasta", @"-enzyme", @"0", @"-enzyme", @"2", @"-miss_c", @"1",
-                @"-entrapment_seed", @"-5", @"-min_pep_charge", @"3", @"-max_pep_charge", @"2", @"-entrapment", @"-no_similarity_gate",
-                @"-ignore_pairing_errors", @"-o", @"ignored", @"-I2L", @"stray", @"-entrapment_ratio", @" 0.5d ",
+                @"--build-entrapment-fasta", @"out.fasta", @"--db=in.fasta", @"--enzyme", @"0", @"--enzyme", @"2", @"--miss-c", @"1",
+                @"--entrapment-seed", @"-5", @"--min-pep-charge", @"3", @"--max-pep-charge", @"2", @"--entrapment", @"--no-similarity-gate",
+                @"--ignore-pairing-errors", @"--o", @"ignored", @"--i2l", @"stray", @"--entrapment-ratio", @" 0.5d ",
             }).BuildSettings;
             Assert.AreEqual(@"in.fasta", settings.InputFasta);
             Assert.AreEqual(0, settings.Digest.EnzymeIndex);
@@ -262,10 +262,10 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsFalse(settings.SimilarityGate);
             Assert.IsFalse(settings.FailOnPairingViolation);
             Assert.AreEqual(0.5, settings.EntrapmentRatio);
-            Assert.AreEqual(18, CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"o", @"-db", @"i", @"-enzyme", @"nocut" })
+            Assert.AreEqual(18, CarafeCommandLine.Parse(new[] { @"--build-entrapment-fasta", @"o", @"--db", @"i", @"--enzyme", @"nocut" })
                 .BuildSettings.Digest.EnzymeIndex);
 
-            var reconcile = CarafeCommandLine.Parse(new[] { @"-reconcile_manifest", @"out.tsv", @"-manifest", @"in.tsv", @"-predicted_library", @"lib.blib" });
+            var reconcile = CarafeCommandLine.Parse(new[] { @"--reconcile-manifest", @"out.tsv", @"--manifest", @"in.tsv", @"--predicted-library", @"lib.blib" });
             Assert.AreEqual(CarafeCommandMode.reconcile_manifest, reconcile.Mode);
             Assert.AreEqual(@"out.tsv", reconcile.ReconcileManifestOut);
             Assert.AreEqual(@"in.tsv", reconcile.ReconcileManifestIn);
@@ -280,22 +280,24 @@ namespace pwiz.CarafeSharp.Test
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 1.5");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -entrapment -entrapment_ratio 0.05");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme 19");
-            AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme Trypsin");
+            // An enzyme name is accepted (CarafeSharp takes any name in the table, Carafe only NoCut);
+            // one not in the table is refused.
+            AssertCommandLineError(@"-build_entrapment_fasta o -db i -enzyme NotAnEnzyme");
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -not_an_option");
             AssertCommandLineError(@"-build_entrapment_fasta o -db -entrapment");
             AssertCommandLineError(@"-reconcile_manifest o -manifest m");
             // -db on its own is library prediction, which takes a FASTA.
-            Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"-db", @"i.fasta" }).Mode);
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"i" }));
+            Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"--db", @"i.fasta" }).Mode);
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"--db", @"i" }));
         }
 
         private static EntrapmentFastaResult Build(string arguments, string targets, string foreign, string outputFolder)
         {
             var args = new List<string>
             {
-                @"-build_entrapment_fasta", Path.Combine(outputFolder, @"peptides.fasta"),
-                @"-db", targets,
-                @"-manifest", Path.Combine(outputFolder, @"pairing.tsv"),
+                @"--build-entrapment-fasta", Path.Combine(outputFolder, @"peptides.fasta"),
+                @"--db", targets,
+                @"--manifest", Path.Combine(outputFolder, @"pairing.tsv"),
             };
             // Substituted after splitting: the test folder's path can contain spaces.
             args.AddRange(arguments.Split(' ').Select(arg => arg == FOREIGN_PLACEHOLDER ? foreign : arg));

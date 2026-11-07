@@ -6,9 +6,9 @@ namespace Pwiz.Vendor.Bruker;
 ///
 /// The CompassXtract references below are <c>&lt;c&gt;</c> rather than <c>&lt;see cref&gt;</c>
 /// on purpose: <c>CompassXtractData.cs</c> is compiled out when
-/// <c>$(NativeVendorsAvailable)</c> is not true, and with GenerateDocumentationFile plus
-/// TreatWarningsAsErrors an unresolvable cref is CS1574 - i.e. a build ERROR in exactly the
-/// no-vendor-licenses configuration. A doc comment cannot be conditionally compiled, so the
+/// <c>$(NativeVendorsAvailable)</c> is not true, and with GenerateDocumentationFile an
+/// unresolvable cref is a CS1574 warning in exactly the no-vendor-licenses configuration,
+/// which the warning-free policy does not allow. A doc comment cannot be conditionally compiled, so the
 /// reference has to be one that needs no resolution.</summary>
 public enum BrukerFormat
 {

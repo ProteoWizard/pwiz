@@ -1,0 +1,67 @@
+<Project>
+
+  <!-- The libtorch native runtime for projects that opt in with UseLibTorch=true: CarafeSharp's
+       executable and test project, which let TorchSharp load the natives it finds beside itself.
+       Osprey and Skyline choose their runtime when they run instead (LibTorchRuntimeLayout.targets)
+       and opt in to the models alone with UseCarafeModels=true. The managed TorchSharp reference is
+       in CarafeSharp.Models, which needs no native files to compile. The backend properties come
+       from LibTorch.props, which both trees' Directory.Build.props import. -->
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cpu' AND '$(CarafeSharpTargetIsWindows)' == 'true'">
+    <PackageReference Include="libtorch-cpu-win-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cpu' AND '$(CarafeSharpTargetIsWindows)' != 'true'">
+    <PackageReference Include="libtorch-cpu-linux-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cuda' AND '$(CarafeSharpTargetIsWindows)' == 'true'">
+    <PackageReference Include="libtorch-cuda-12.8-win-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cuda' AND '$(CarafeSharpTargetIsWindows)' != 'true'">
+    <PackageReference Include="libtorch-cuda-12.8-linux-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+
+  <!-- A project on the run-time layout (LibTorchRuntimeLayout.targets, or a test project that receives
+       its output) refuses to run with a libtorch beside TorchSharp.dll, which an output folder built
+       with UseLibTorch before the layout changed still holds under runtimes\<rid>\native. Nothing
+       copies libtorch there any more, so whatever is there is stale and goes before the build copies
+       its files; only libtorch itself needs to go, since TorchSharp finds the loaded one by name. -->
+  <Target Name="RemoveLibTorchBesideTorchSharp" BeforeTargets="CopyFilesToOutputDirectory"
+          Condition="'$(RemoveLibTorchBesideTorchSharp)' == 'true' AND '$(UseLibTorch)' != 'true'">
+    <ItemGroup>
+      <!-- The wildcard includes name only files that exist; the plain ones need the condition -->
+      <_LibTorchBesideTorchSharp Include="$(OutDir)runtimes\*\native\torch_cpu.dll;$(OutDir)runtimes\*\native\torch_cuda.dll;$(OutDir)runtimes\*\native\libtorch_cpu.so;$(OutDir)runtimes\*\native\libtorch_cuda.so" />
+      <_LibTorchBesideTorchSharp Include="$(OutDir)torch_cpu.dll" Condition="Exists('$(OutDir)torch_cpu.dll')" />
+      <_LibTorchBesideTorchSharp Include="$(OutDir)torch_cuda.dll" Condition="Exists('$(OutDir)torch_cuda.dll')" />
+      <_LibTorchBesideTorchSharp Include="$(OutDir)libtorch_cpu.so" Condition="Exists('$(OutDir)libtorch_cpu.so')" />
+      <_LibTorchBesideTorchSharp Include="$(OutDir)libtorch_cuda.so" Condition="Exists('$(OutDir)libtorch_cuda.so')" />
+    </ItemGroup>
+    <Delete Files="@(_LibTorchBesideTorchSharp)" />
+    <Message Importance="high" Text="Removed the libtorch left beside TorchSharp.dll: @(_LibTorchBesideTorchSharp)" Condition="'@(_LibTorchBesideTorchSharp)' != ''" />
+  </Target>
+
+  <!-- The AlphaPeptDeep v1 pretrained models Carafe 2.2 uses, committed in models/alphapeptdeep-v1
+       (its README.md has the provenance), placed beside the executable and the test assembly, where
+       PretrainedModels.DefaultPath looks for them. -->
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' OR '$(UseCarafeModels)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)models\alphapeptdeep-v1\pretrained_models.zip"
+          Link="models\alphapeptdeep-v1\pretrained_models.zip"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)models\alphapeptdeep-v1\LICENSE.txt"
+          Link="models\alphapeptdeep-v1\LICENSE.txt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+  <!-- The Chronologer retention-time model, committed in models/chronologer-20220601193755 (its
+       README.md has the provenance), placed where ChronologerFiles.DefaultDirectory looks for it. -->
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' OR '$(UseCarafeModels)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\Chronologer_20220601193755.pt"
+          Link="models\chronologer-20220601193755\Chronologer_20220601193755.pt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json"
+          Link="models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\LICENSE.txt"
+          Link="models\chronologer-20220601193755\LICENSE.txt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+</Project>

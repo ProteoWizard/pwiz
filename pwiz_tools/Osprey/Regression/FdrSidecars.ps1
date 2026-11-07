@@ -457,8 +457,8 @@ public static class OspreyFdrSidecarComparer
 
     /// CompareBytes for two experiment sidecars, over their header and records only. The
     /// writer's validity stamp follows the records and is PROVENANCE, not content: its key
-    /// names the route (a straight-through and an HPC-chain leg legitimately differ, e.g. by
-    /// ';libfrag=0'), so it is excluded the way BlibComparer excludes the blib's stamp - the
+    /// names the route (a straight-through and an HPC-chain leg may legitimately differ by a
+    /// per-leg term), so it is excluded the way BlibComparer excludes the blib's stamp - the
     /// trailer is dropped and its length field at [24..28] is blanked.
     public static FdrByteDiff CompareExperimentBytes(string pathExpected, string pathActual, long maxCount)
     {

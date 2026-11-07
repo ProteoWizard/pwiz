@@ -25,6 +25,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
@@ -38,7 +40,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -208,14 +209,14 @@ namespace pwiz.SkylineTestTutorial
             if (expectedFileCount != docLib.FileCount)
             {
                 var searchFileNames = searchFiles.Select(Path.GetFileName).ToArray();
-                using (var blibDbRedundant = BlibDb.OpenBlibDb(redundantDocLibPath))
+                using (var readerRedundant = new BlibReader(redundantDocLibPath))
                 {
-                    VerifyLib(searchFileNames, expectedRedundantSpectra, blibDbRedundant.GetIdFilePaths(), blibDbRedundant.GetSpectraCount(),
+                    VerifyLib(searchFileNames, expectedRedundantSpectra, GetIdFilePaths(readerRedundant), readerRedundant.CountSpectra(),
                         "redundant library", buildArgs, buildOutput);
                 }
-                using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
+                using (var reader = new BlibReader(docLibPath))
                 {
-                    VerifyLib(searchFileNames, expectedSpectra, blibDb.GetIdFilePaths(), blibDb.GetSpectraCount(),
+                    VerifyLib(searchFileNames, expectedSpectra, GetIdFilePaths(reader), reader.CountSpectra(),
                         "SQLite library", buildArgs, buildOutput);
                 }
                 VerifyLib(searchFileNames, expectedSpectra, docLib.LibraryDetails.DataFiles.Select(d => d.IdFilePath).ToArray(), docLib.SpectrumCount,
@@ -452,10 +453,10 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
                     bmp =>
                     {
-                        var rectBorder = ScreenshotProcessingExtensions.GetToolWindowBorderRect(
+                        var rectBorder = ScreenshotBorder.GetToolWindowBorderRect(
                             ScreenshotManager.GetFramedWindowBounds(peakAreas));
                         bmp = bmp.CleanupBorder(rectBorder,
-                            ScreenshotProcessingExtensions.CornerToolWindow, 
+                            ScreenshotBorder.CornerToolWindow, 
                             Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
 
                         return ClipRegionAndEraseBackground(bmp,
@@ -817,6 +818,11 @@ namespace pwiz.SkylineTestTutorial
         {
             string replicateName = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[chromIndex].Name;
             return SkylineWindow.GraphChromatograms.FirstOrDefault(chrom => chrom.NameSet == replicateName);
+        }
+
+        private static string[] GetIdFilePaths(BlibReader reader)
+        {
+            return reader.ReadSourceFiles().Select(file => file.IdFileName).ToArray();
         }
 
         private void VerifyLib(string[] expectedPaths, int expectedSpectra, string[] foundPaths, int foundSpectra,

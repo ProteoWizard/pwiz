@@ -207,14 +207,13 @@ namespace pwiz.Osprey.IO
 
                     // MS2 records, grouped by window (contiguous per window).
                     //
-                    // Reported for the same reason LibraryCache reports its own write: this is
-                    // multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
+                    // Reported for the same reason the derived library's writer reports its own:
+                    // this is multi-GB of BinaryWriter output that was previously SILENT. On the 82-file
                     // SEA-AD Astral cohort the cache is ~4.1 GB per file and took ~28 s, which
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
                     // hung, with nothing in the log naming the file being written.
-                    using (var progress = new ProgressReporter(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2,
-                        string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                    ProgressReporter.Run(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2, progress =>
                     {
                         long nWritten = 0;
                         foreach (int key in windowKeyOrder)
@@ -226,7 +225,7 @@ namespace pwiz.Osprey.IO
                                 WriteMs2Record(w, ms2Spectra[i]);
                             }
                         }
-                    }
+                    }, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
                     // MS1 records (acquisition order; every consumer reads them in full)
                     long ms1SectionOffset = fs.Position;
@@ -307,6 +306,42 @@ namespace pwiz.Osprey.IO
                     ms1.Add(ReadMs1Record(r));
 
                 return new SpectraCacheResult(new List<Spectrum>(ms2), ms1);
+            }
+        }
+
+        /// <summary>
+        /// Hands the cache's MS2 spectra to <paramref name="visit"/> in acquisition order, the
+        /// order <see cref="LoadSpectraCache"/> returns them, until it returns false. Reads only
+        /// the index and the records visited, so a sample from the start of a run costs a few
+        /// hundred record reads, not the whole file. False when there is no cache the search
+        /// would accept (absent, refused by its header, or a damaged index), in which case
+        /// nothing was visited.
+        /// </summary>
+        public static bool VisitMs2Spectra(string path, string sourcePath, Func<Spectrum, bool> visit)
+        {
+            if (!File.Exists(path))
+                return false;
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var r = new BinaryReader(fs))
+            {
+                SpectraCacheIndex index;
+                try
+                {
+                    if (!TryReadHeader(r, sourcePath, out uint nMs2, out _, out _))
+                        return false;
+                    index = ReadIndex(fs, r, nMs2);
+                }
+                catch (Exception ex) when (ex is InvalidDataException || ex is EndOfStreamException)
+                {
+                    return false;
+                }
+                for (int i = 0; i < index.RecordOffsets.Length; i++)
+                {
+                    fs.Seek(index.RecordOffsets[i], SeekOrigin.Begin);
+                    if (!visit(ReadMs2Record(r)))
+                        break;
+                }
+                return true;
             }
         }
 

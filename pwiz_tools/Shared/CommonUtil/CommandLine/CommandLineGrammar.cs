@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace pwiz.Common.CommandLine
 {
@@ -39,9 +40,11 @@ namespace pwiz.Common.CommandLine
     /// subclass per tool. <see cref="STRICT"/> is Skyline's <c>--name=value</c>; Osprey adds
     /// values as the next token, short aliases and variadic arguments; CarafeSharp accepts
     /// Carafe's single-dash <c>-name value</c> alongside the standard form. One grammar is in
-    /// force per process, on <see cref="ArgUsage.Grammar"/>, because an argument's text
+    /// force at a time, on <see cref="ArgUsage.Grammar"/>, because an argument's text
     /// (<see cref="ArgumentBase.ArgumentText"/>, the generated help, every error message) is
-    /// spelled with its <see cref="Prefix"/>.
+    /// spelled with its <see cref="Prefix"/>; the program that owns the process installs it
+    /// (<see cref="ArgUsage.Install"/>), and declarations hosted in another program's process
+    /// run under that program's.
     /// <para>Every grammar accepts the inline form <c>--name=value</c>, split at the first
     /// <c>=</c>; the rest is configured here.</para>
     /// </summary>
@@ -59,8 +62,8 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// The prefix an argument's long name is spelled with in help and messages
-        /// (<see cref="ArgumentBase.ArgumentText"/>): <c>--</c> for Skyline and Osprey, <c>-</c>
-        /// for CarafeSharp, which keeps Carafe's spelling.
+        /// (<see cref="ArgumentBase.ArgumentText"/>): <c>--</c> for Skyline, Osprey and
+        /// CarafeSharp, whose grammar also accepts Carafe's single dash when parsing.
         /// </summary>
         public string Prefix { get; init; } = ArgumentBase.ARG_PREFIX;
 
@@ -112,6 +115,16 @@ namespace pwiz.Common.CommandLine
         /// </summary>
         public StrayTokenPolicy StrayTokens { get; init; } = StrayTokenPolicy.ignore;
 
+        /// <summary>
+        /// True when an underscore, a hyphen and a lower-to-upper case boundary are the same
+        /// separator in an option's name, and case is otherwise ignored, so <c>--miss_c</c> names
+        /// the declaration spelled <c>miss-c</c> and <c>-minLength</c> the one spelled
+        /// <c>min-length</c>. Osprey and CarafeSharp spell their names with hyphens and accept
+        /// the underscore and camel-case spellings Carafe's recorded command lines use, with no
+        /// alias per option; false (the default) matches names exactly.
+        /// </summary>
+        public bool NameSeparatorsEquivalent { get; init; }
+
         private IReadOnlyList<string> _longPrefixes;
 
         /// <summary>
@@ -146,6 +159,39 @@ namespace pwiz.Common.CommandLine
                     return true;
             }
             return ShortPrefix != null && token.StartsWith(ShortPrefix, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// True when <paramref name="typed"/>, the name as it was typed, names the declaration
+        /// <paramref name="declared"/>: exactly, or with <see cref="NameSeparatorsEquivalent"/>
+        /// when both read the same as <see cref="StandardName"/> spells them.
+        /// </summary>
+        public bool NamesMatch(string declared, string typed)
+        {
+            if (string.Equals(declared, typed, StringComparison.Ordinal))
+                return true;
+            return NameSeparatorsEquivalent &&
+                   string.Equals(StandardName(declared), StandardName(typed), StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// <paramref name="name"/> in the standard spelling: lower case, with a hyphen for every
+        /// underscore and before every upper-case letter that follows a lower-case one
+        /// (<c>minLength</c> and <c>min_length</c> are <c>min-length</c>; <c>I2L</c> is <c>i2l</c>).
+        /// </summary>
+        public static string StandardName(string name)
+        {
+            var sb = new StringBuilder(name.Length + 4);
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (c == '_')
+                    c = '-';
+                else if (char.IsUpper(c) && i > 0 && char.IsLower(name[i - 1]))
+                    sb.Append('-');
+                sb.Append(char.ToLowerInvariant(c));
+            }
+            return sb.ToString();
         }
     }
 }

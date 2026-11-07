@@ -481,7 +481,8 @@ namespace pwiz.SkylineTestTutorial
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
             var expected20TransitionCount = AsSmallMoleculeMasses  ? 87 : 88; // Expect this many with results (note no library match possible for "as masses" version)
-            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 87;
+            // Stray DRVYIHPF IDs no longer widen its extraction, and its precursor ion no longer coelutes in the narrower range
+            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 86;
 
             // TODO: figure out why these assertions fail when taking screenshots. During screenshots, the expected / actual values:
             //      expected20TransitionCount = 88. Actual = 87
@@ -1147,6 +1148,7 @@ namespace pwiz.SkylineTestTutorial
             var expectedPropertiesDict = isSmallMolecules
                     ? new Dictionary<string, object>
                     {
+                        { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml" },
                         { "FileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2" },
                         { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
                         { "PrecursorMz", 523.7745.ToString( CultureInfo.CurrentCulture) },
@@ -1261,6 +1263,7 @@ namespace pwiz.SkylineTestTutorial
 
             var expectedPropertiesDict = new Dictionary<string, object>
             {
+                { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
                 { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
                 { "PrecursorMz", 582.319 },
                 { "Charge", 2 },
@@ -1281,7 +1284,6 @@ namespace pwiz.SkylineTestTutorial
             else
             {
                 expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3");
-                expectedPropertiesDict.Add("IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml");
                 expectedPropertiesDict.Add("SpecIdInFile", 7901);
             }
 

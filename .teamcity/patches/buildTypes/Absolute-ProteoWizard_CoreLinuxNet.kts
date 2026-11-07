@@ -19,6 +19,7 @@ create(DslContext.projectId, BuildType({
     templates(AbsoluteId("ProteoWizard_GitHubReportingConfig"), AbsoluteId("ProteoWizard_RemoteAccountTestParameters"))
     id = AbsoluteId("ProteoWizard_CoreLinuxNet")
     name = "Core Linux .NET"
+    paused = true
 
     allowExternalStatus = true
     artifactRules = """
@@ -38,7 +39,7 @@ create(DslContext.projectId, BuildType({
     }
 
     vcs {
-        root(AbsoluteId("ProteoWizard_PwizGithubMasterWithPRs"))
+        root(DslContext.settingsRoot)
 
         checkoutMode = CheckoutMode.ON_AGENT
     }

@@ -261,26 +261,40 @@ namespace pwiz.SkylineTestTutorial
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 ValidateNewTargetCounts(proteinCount, peptideCount, precursorCount, transitionCount);
             });
+            // The import progress window would otherwise appear while the Targets view screenshot is taken,
+            // taking activation from the main window at an unpredictable moment. Show it after the screenshot.
+            if (IsPauseForScreenShots)
+                RunUI(() => Settings.Default.AutoShowAllChromatogramsGraph = false);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForClosedForm(importPeptideSearchDlg);
             WaitForConditionUI(() => SkylineWindow.DocumentUI.PeptideGroupCount == 6);
             RunUI(() =>
             {
                 SkylineWindow.ExpandPrecursors();
+                // Otherwise Windows selects whichever node is first visible when the tree first gets the focus,
+                // which depends on where the import has left it scrolled
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 if(IsPauseForScreenShots)
                     SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
             });
 
             if (IsPauseForScreenShots)
             {
-                var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-                RunUI(() =>
-                {
-                    SkylineWindow.Size = new Size(1330, 700);
-                    allChrom.Left = SkylineWindow.Right + 20;
-                });
+                RunUI(() => SkylineWindow.Size = new Size(1330, 700));
 
                 PauseForTargetsScreenShot("Targets view clipped - scrolled left and before fully imported");
+
+                RunUI(() =>
+                {
+                    Settings.Default.AutoShowAllChromatogramsGraph = true;
+                    // Only while the import is still running: after it finishes, Skyline closes the window
+                    // again as soon as it appears (a long pause at the screenshot can outlast the import)
+                    if (!SkylineWindow.DocumentUI.IsLoaded)
+                        SkylineWindow.ShowAllChromatogramsGraph();
+                });
+                var allChrom = FindOpenForm<AllChromatogramsGraph>();
+                if (allChrom != null)
+                    RunUI(() => allChrom.Left = SkylineWindow.Right + 20);
             }
             WaitForDocumentLoaded(10 * 60 * 1000);    // 10 minutes
 

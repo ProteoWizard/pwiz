@@ -14,6 +14,9 @@
 # Windows bytes exactly; only Linux checkouts of formerly CRLF-stored fixtures change.
 * text=auto
 
+# Vendor API archives are binary; never normalize line endings (would corrupt them)
+*.7z binary
+
 *.sh text eol=lf
 
 # cmd.exe tracks its position in a batch file by byte offset, and that accounting

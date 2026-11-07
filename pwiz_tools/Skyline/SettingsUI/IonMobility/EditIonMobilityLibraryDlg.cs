@@ -547,6 +547,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             set { textLibraryName.Text = (value ?? string.Empty).Trim(); }
         }
 
+        public string DatabasePath
+        {
+            get { return textDatabase.Text; }
+            set { textDatabase.Text = value; }
+        }
+
         public void DoPasteLibrary()
         {
             _gridViewLibraryDriver.OnPaste();

@@ -58,9 +58,9 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 182	PYLQLQPFPQPQLPY	622.59414	4	PYLQLQPFPQPQ[+659.4]LPY[-1.0]	-	-	2	10	0.0	0.0	0.0	0	58.253	N/A	N/A	4328000.60	N/A	N/A	N/A	N/A	N/A	3	26141	0.0047297	13
 183	SIHFSSRSTAY	628.30693	2	SIHFSSRSTAY[-1.0]	-	-	1	4	0.0	0.0	0.0	0	50.64	N/A	N/A	69396.39	N/A	N/A	N/A	N/A	N/A	3	21866	0.017285	13
 id	fileName	idFileName	cutoffScore	workflowType
-1	BBM_051_P020_09_HEK_004	/BiblioSpec/tests/inputs/test-mq3-msms.txt	0.0	-1
-2	BBM_051_P020_09_HEK_005	/BiblioSpec/tests/inputs/test-mq3-msms.txt	0.0	-1
-3	BBM_051_P020_09_HEK_006	/BiblioSpec/tests/inputs/test-mq3-msms.txt	0.0	-1
+1	BBM_051_P020_09_HEK_004	/BiblioSpec/tests/inputs/test-mq3-msms.txt	-1.0	0
+2	BBM_051_P020_09_HEK_005	/BiblioSpec/tests/inputs/test-mq3-msms.txt	-1.0	0
+3	BBM_051_P020_09_HEK_006	/BiblioSpec/tests/inputs/test-mq3-msms.txt	-1.0	0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

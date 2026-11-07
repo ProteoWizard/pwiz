@@ -204,7 +204,7 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   worker semantics.
 - **mode 2 — resume vs straight-through self-consistency**
   (`regression.ps1:524-543`). Copies the straight-through blib aside, invalidates
-  the Stage 5 join + blib (`Invoke-ResumeInvalidation`, `regression.ps1:298-304`),
+  the Stage 5 join + blib (`Invoke-ResumeInvalidation` in `Regression/RegressionData.ps1`),
   re-runs the identical command so the rehydrate paths fire, and asserts the
   resume blib equals the cold blib at 1e-9. The build is its own oracle — no
   external baseline. See 14-intermediate-files.md for the cache/sidecar formats
@@ -230,7 +230,7 @@ Run output is cleaned **before** a run, never after. A local run retains its fin
 products under `TestResults/regression-<stamp>` (`<dataset>/straight`, the phase 3/4
 outputs, `chain/logs` — a passing run's files have readers: a later A/B, a memory profile,
 the streamed diagnostics HTML), but the staged input **copies** (the phase-1 mzML copies,
-the per-worker `spectra.bin` / library / `.libcache` copies) are always deleted as they are
+the per-worker `spectra.bin` / library / derived-library copies) are always deleted as they are
 consumed. The next run's startup prune, before it creates its own root, keeps the most
 recent `-KeepRunDirs` completed sets (default 1), so the disk holds KeepRunDirs+1 sets
 between runs — two by default; `-KeepRunDirs 0` keeps only the current run's output. The

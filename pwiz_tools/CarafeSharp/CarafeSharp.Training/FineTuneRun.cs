@@ -144,10 +144,14 @@ namespace pwiz.CarafeSharp.Training
             var shuffle = new NumpyRandomState(options.Seed);
             var result = new FineTuneResult();
 
-            if (rtRows != null)
-                TrainRt(rtRows, pretrained, options, outputDirectory, shuffle, result, log);
-            if (ms2Rows != null)
-                TrainMs2(ms2Rows, pretrained, options, outputDirectory, shuffle, result, log);
+            // On the GPU, float32 training repeats byte for byte only with cuDNN's deterministic algorithms.
+            using (TorchDevice.DeterministicCuDnn(options.Device, log))
+            {
+                if (rtRows != null)
+                    TrainRt(rtRows, pretrained, options, outputDirectory, shuffle, result, log);
+                if (ms2Rows != null)
+                    TrainMs2(ms2Rows, pretrained, options, outputDirectory, shuffle, result, log);
+            }
 
             WriteMetrics(Path.Combine(outputDirectory, ModelFiles.METRICS), result);
             WriteModelInfo(Path.Combine(outputDirectory, MODEL_INFO_FILE), pretrained, options, result);
@@ -168,7 +172,7 @@ namespace pwiz.CarafeSharp.Training
             if (rows != null && rows.Count == 0)
             {
                 throw new InvalidOperationException(string.Format(
-                    @"No {0} training rows: no identification passed the filters for the {0} model -tf asks to fine-tune.", model));
+                    @"No {0} training rows: no identification passed the filters for the {0} model --tf asks to fine-tune.", model));
             }
         }
 

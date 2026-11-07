@@ -9,7 +9,7 @@ RT; 06-saved-models.md has the saved-model format.
 |---|---|
 | Code | `CarafeSharp.Models`: `ChronologerModel`, `Modules/ModelChronologer`, `ChronologerEncoding`, `ChronologerRtPredictor`, `ChronologerFiles`, `ChronologerTrainingExample`; `ModelFineTuner.TrainChronologer`; `FineTuneRun.TrainChronologer` |
 | Files | `models/chronologer-20220601193755` (weights, encoding JSON, license, README) |
-| Option | `-rt_model chronologer` (the default, `LibrarySettings.DEFAULT_RT_MODEL`) or `-rt_model alphapeptdeep` (Carafe's) |
+| Option | `--rt-model chronologer` (the default, `LibrarySettings.DEFAULT_RT_MODEL`) or `--rt-model alphapeptdeep` (Carafe's) |
 | Why the default | AlphaPeptDeep's generic RT model plateaus at the end of the gradient; Chronologer does not (#4759, "Results" below) |
 
 ## Where it comes from
@@ -99,7 +99,7 @@ network normalizes every input with in eval mode; "Fine-tuning" below keeps them
 
 ## In library prediction
 
-Which RT model a library uses: `-rt_model`, else the one a saved model (`-model`) or model folder (`-model_dir`)
+Which RT model a library uses: `--rt-model`, else the one a saved model (`--model`) or model folder (`--model-dir`)
 holds or names, else Chronologer. A fine-tuned RT model of the other kind is replaced by the named kind's
 pretrained model, and the log says so.
 
@@ -109,20 +109,20 @@ pretrained model, and the log says so.
   normalized RT, so the library's RT is `rt_pred x rt_max`, minutes on the training gradient, as for a fine-tuned
   AlphaPeptDeep model, and the model needs nothing else to give them, as a library for a targeted assay wants.
   Predictions are clipped at 0, as AlphaPeptDeep's are. Aligned, they are the runs' median minutes; with
-  `-rt_reference <run>` (the run's name, or a unique end of it such as `_55`) the training runs' maps (`rt_maps.json`,
+  `--rt-reference <run>` (the run's name, or a unique end of it such as `_55`) the training runs' maps (`rt_maps.json`,
   kept beside the model) take them to that run's.
 - **Chronologer of the hydrophobic index with the runs' maps**: fine-tuned on runs of different gradients, or the
-  pretrained one after an aligned `-tf ms2` training. The library takes HI to minutes by the runs' median map
-  (`AlignedRtPredictor`), or one run's with `-rt_reference`. When the runs are on different gradients their median is
-  none of them: the library is iRT, with a warning naming the runs `-rt_reference` can choose. Minutes are clipped
+  pretrained one after an aligned `--tf ms2` training. The library takes HI to minutes by the runs' median map
+  (`AlignedRtPredictor`), or one run's with `--rt-reference`. When the runs are on different gradients their median is
+  none of them: the library is iRT, with a warning naming the runs `--rt-reference` can choose. Minutes are clipped
   at 0.
 - **Forms Chronologer rejects** (`ChronologerRtPredictor`): AlphaPeptDeep's pretrained RT model predicts them, and
   its prediction is carried onto Chronologer's scale through both models' iRT kit fits: with
   `iRT = a x alphapeptdeep + b` and `iRT = c x chronologer + d`, `chronologer = (a / c) x alphapeptdeep + (b - d) / c`.
   The log counts them. This is why a library with Chronologer needs the pretrained AlphaPeptDeep archive too. With
-  the default digest (7 to 35 residues) and modifications (`-fixMod 1` carbamidomethyl-Cys, `-varMod 2` oxidized
+  the default digest (7 to 35 residues) and modifications (`--fix-mod 1` carbamidomethyl-Cys, `--var-mod 2` oxidized
   Met) no form is rejected; protein N-terminal acetyl and phospho S/T/Y are encoded too.
-- Batches of 2,048 forms, on the CPU or the GPU (`-device`).
+- Batches of 2,048 forms, on the CPU or the GPU (`--device`).
 
 ## From HI to minutes, and other gradients
 
@@ -131,8 +131,8 @@ What a library's RT is depends on the model and on whether the training aligned 
 | Library | Its RT | Where minutes come from |
 |---|---|---|
 | Pretrained Chronologer (the starting library) | iRT, from HI by one fixed line (iRT = 7.254 x HI - 45.47) | Osprey fits each run's own map from library RT to minutes on its confident first-pass peptides, as for any iRT library |
-| Fine-tuned Chronologer, runs on one gradient (the default) | minutes on the training gradient (`rt_pred x rt_max`); aligned, the runs' median, or one run's with `-rt_reference` | the fine-tune learned that gradient |
-| Fine-tuned Chronologer, runs on different gradients | iRT, or one run's minutes (`-rt_reference`) | each training run's monotone map between its minutes and HI, kept beside the model (`rt_maps.json`); the network holds no gradient |
+| Fine-tuned Chronologer, runs on one gradient (the default) | minutes on the training gradient (`rt_pred x rt_max`); aligned, the runs' median, or one run's with `--rt-reference` | the fine-tune learned that gradient |
+| Fine-tuned Chronologer, runs on different gradients | iRT, or one run's minutes (`--rt-reference`) | each training run's monotone map between its minutes and HI, kept beside the model (`rt_maps.json`); the network holds no gradient |
 
 Osprey calibrates every run it searches, whichever the library is.
 
@@ -152,29 +152,29 @@ HI: still a monotone function of HI, though not a line.
   another gradient it is retrained to that one; fine-tuned further on runs of different gradients, which share no
   minutes, Chronologer starts over from its pretrained model, with a warning. A model of different gradients
   predicts HI, which holds no gradient: each gradient keeps its own map.
-- **Runs of different gradients together** (`-rt_align kde`): every run's minutes go to HI by its own map, so they
+- **Runs of different gradients together** (`--rt-align kde`): every run's minutes go to HI by its own map, so they
   train one model (on Astral and ZT Scan runs together, each run's RT error stayed at its own model's; "Aligning the
-  runs"). Their library is iRT, or one run's minutes with `-rt_reference`.
+  runs"). Their library is iRT, or one run's minutes with `--rt-reference`.
 - **Another chemistry** (another stationary phase, an ion-pairing agent, high pH). Peptides elute in another order,
   which no map from HI can repair, so the starting library is only approximate. A fine-tune on runs of that
   chemistry relearns the order, starting from the C18 model.
-- **A library in minutes without fine-tuning the RT model:** `-tf ms2` with the runs aligned leaves the pretrained
+- **A library in minutes without fine-tuning the RT model:** `--tf ms2` with the runs aligned leaves the pretrained
   Chronologer and the runs' maps, so its library is the pretrained HI in the runs' median minutes.
 
 ## How CarafeSharp fine-tunes Chronologer
 
-`-rt_model chronologer` with `-tf all` or `-tf rt` fine-tunes the pretrained Chronologer, or with `-model` the
+`--rt-model chronologer` with `--tf all` or `--tf rt` fine-tunes the pretrained Chronologer, or with `--model` the
 saved model's Chronologer, on Osprey's training export. Step by step (`FineTuneRun.TrainChronologer`,
 `ModelFineTuner.TrainChronologer`):
 
 1. **The training rows** are AlphaPeptDeep's (`OspreyTrainingSet`): one row per peptide form passing the run
    q-value threshold, from its best precursor (lowest run q, then highest score, across all runs). `rt_max` is one
-   normalizer for the whole training set: the largest of every run's last MS2 RT plus 0.1 and `-rt_max`.
+   normalizer for the whole training set: the largest of every run's last MS2 RT plus 0.1 and `--rt-max`.
    - Aligned (the default): every observation's minutes first go to HI by its run's map, so the row's HI is its
-     best precursor's (or, with `-rt_select median`, the median over the runs of each run's best), and its
+     best precursor's (or, with `--rt-select median`, the median over the runs of each run's best), and its
      normalized RT is the median map's minutes of that HI over `rt_max`: drift taken out. Runs on one gradient train
      on that normalized RT; runs on different gradients on the HI.
-   - Unaligned (`-rt_align none`): its target is the normalized RT `apex RT / rt_max`, as Carafe's.
+   - Unaligned (`--rt-align none`): its target is the normalized RT `apex RT / rt_max`, as Carafe's.
 2. **The split** is Carafe's (`TrainingSplit`, seed 1337): up to 1,000 held-out forms whose sequences are not in
    training. Forms Chronologer cannot encode are left out of both, and the log counts them per set. When it can
    encode none of the held-out forms it is tested on its training forms, as the split tests on every row when none
@@ -194,7 +194,7 @@ saved model's Chronologer, on Osprey's training export. Step by step (`FineTuneR
    epochs, 10 of them warming up linearly and the rest a half-cosine decay, stepped per epoch; batches of 1,024 forms,
    or, when that gives an epoch fewer than 40 steps, the largest power of two (at least 32) that gives at least 40 (512 for
    22,000-25,000 forms); gradients clipped to norm 1; L1
-   loss on the normalized RT; dropout on; the last epoch's weights kept. The seed (`-seed`, default 2024) sets
+   loss on the normalized RT; dropout on; the last epoch's weights kept. The seed (`--seed`, default 2024) sets
    libtorch's generator and the batch shuffles.
 5. **Every weight trains**, the BatchNorm layers' scale and shift included, but **their running statistics stay
    frozen** (`ModelChronologer.FreezeBatchNorm` keeps those layers in eval mode while the rest trains). Fine-tuning
@@ -239,7 +239,7 @@ next section is about.
 
 ## Training data from many experiments
 
-**Without alignment** (`-rt_align none`, as Carafe trains) every RT row is divided by one normalizer, the largest
+**Without alignment** (`--rt-align none`, as Carafe trains) every RT row is divided by one normalizer, the largest
 run's rt_max, and a form found in several runs takes its RT from its best one. That holds for replicates of one
 method, though each row carries its run's drift, and fails for runs on different gradients: a form's target depends
 on which run it came from, and the library's minutes belong to no run. CarafeSharp aligns the runs first, as
@@ -262,7 +262,7 @@ Its BatchNorm statistics accumulate over batches that mix every source, so they 
 multi-source data. That is the second reason CarafeSharp keeps them frozen for a one-run fine-tune, and the reason
 a training on many sources would let them update.
 
-### Aligning the runs (`-rt_align kde`, the default)
+### Aligning the runs (`--rt-align kde`, the default)
 
 CarafeSharp takes the first of these: it separates what belongs to the peptide (its HI, which one model predicts)
 from what belongs to a run (a monotone map between the run's minutes and HI). The run is the source.
@@ -288,7 +288,7 @@ from what belongs to a run (a monotone map between the run's minutes and HI). Th
    (for the KDE ridge, whose walk only steps up, a correlation of 0.5 or less; real runs are about 0.98). When no run
    can be mapped, the training is unaligned, and the log warns why. The log names each run's fit.
 3. **The rows are chosen on HI**: every observation's minutes go through its run's map, and a form's row is its best
-   precursor's HI, or with `-rt_select median` the median over the runs of each run's best. A form counts once,
+   precursor's HI, or with `--rt-select median` the median over the runs of each run's best. A form counts once,
    whichever run it came from, so a run with more forms carries more of the loss.
 4. **Back to minutes**: the median map is the pointwise median of the runs' inverse maps (HI to minutes) on 1,000
    points, extended past their range with the slope of each end's outer 20% of knots. A median of monotone maps is
@@ -300,14 +300,14 @@ from what belongs to a run (a monotone map between the run's minutes and HI). Th
    they are one gradient: the model trains on the median minutes and predicts minutes itself, so it needs no map to
    be used on its own. Past it, or with no HI range in common, they are different gradients, whose median is no run's
    minutes: Chronologer trains on
-   HI, and its library is iRT, unless `-rt_reference` names a run whose minutes it takes (AlphaPeptDeep, which
+   HI, and its library is iRT, unless `--rt-reference` names a run whose minutes it takes (AlphaPeptDeep, which
    predicts minutes, warns). Three Astral replicates were 0.087 min apart (0.4%); an Astral run and a ZT Scan run
    6.4 min (30%).
 6. **The maps are kept** as `rt_maps.json` in the model folder and the saved model: the reference model, the
    training's normalizer, each run's knots and fit, the median map and the spread (06-saved-models.md). With
-   `-rt_reference`, a minutes model's predictions go back to the median minutes by that normalizer, whatever the
-   library's `-rt_max`, and then to the run's. A training run checks `-rt_reference` before it trains: the run's
-   name, `-rt_align kde` and Chronologer.
+   `--rt-reference`, a minutes model's predictions go back to the median minutes by that normalizer, whatever the
+   library's `--rt-max`, and then to the run's. A training run checks `--rt-reference` before it trains: the run's
+   name, `--rt-align kde` and Chronologer.
 
 **Why the KDE ridge needs 1,000 forms.** Measured on Osprey's exports by how closely the runs' maps put one peptide at
 one place: the 95th percentile, over the forms the runs share, of the largest difference among the runs (a temporary
@@ -332,7 +332,7 @@ parentheses the median distance of the library's minutes, which a targeted assay
 | Training runs | Unaligned | Aligned, a model of minutes | Aligned, a model of HI with the maps |
 |---|---|---|---|
 | Astral `_55` | 0.091 (0.100) min | 0.091 (0.100) min, the default | 0.090 (0.098) min |
-| Astral `_49`, `_55`, `_60` | 0.091 (0.100) min | 0.090 (0.099) min, the default | 0.090 (0.097) min, also with `-rt_select median` |
+| Astral `_49`, `_55`, `_60` | 0.091 (0.100) min | 0.090 (0.099) min, the default | 0.090 (0.097) min, also with `--rt-select median` |
 | Astral `_55` and ZT Scan D1, scored on Astral / ZT Scan | 0.099 / 0.135 min (ZT's last RT bin 0.131) | | 0.092 / 0.053 min (0.037), the default |
 
 Runs of one gradient train a model of minutes, which needs nothing beside it to give them: it scored with the
@@ -357,9 +357,9 @@ tokens beside the row, and `RtTrainingExample` the HI.
   (`carafesharp.chronologer_version`). A file from another version is refused, as its encoding may differ; a file
   without the key was saved before it, from 20220601193755.
 - The saved model's manifest names the RT model (`models.rt.model = chronologer`, `model_version`, `start`);
-  06-saved-models.md has the fields. A `-tf ms2` model holds no RT model and names the pretrained one its library
+  06-saved-models.md has the fields. A `--tf ms2` model holds no RT model and names the pretrained one its library
   predicts with.
-- Fine-tuning further from a saved Chronologer starts from it (no rescale) and keeps its version; `-rt_model
+- Fine-tuning further from a saved Chronologer starts from it (no rescale) and keeps its version; `--rt-model
   alphapeptdeep` on it starts AlphaPeptDeep's pretrained RT model instead, with a warning.
 - An aligned training keeps the runs' maps as `rt_maps.json` (format `carafesharp-rt-maps-1`) beside the models and
   in the saved model; a library from either reads them. A later unaligned training into the same folder removes
@@ -410,14 +410,14 @@ library that found nothing past 19.8 min, their libraries' minutes after 22 min 
     file name from two folders as two runs; and a set no run of which can be aligned, saying why.
 - `FineTuneLoopTest`:
   - `TestRtAlignmentTrainingRun`: two drifting runs of one gradient aligned by default, their maps, a model that
-    predicts minutes after training and from the saved model, one run's minutes with `-rt_reference` (the same with
-    `-rt_max` given), an unknown run and `-rt_reference` with AlphaPeptDeep refused, a misspelled run refused before the
-    training, an aligned `-tf ms2` library in the median minutes, and an `-rt_align none` run removing the maps.
+    predicts minutes after training and from the saved model, one run's minutes with `--rt-reference` (the same with
+    `--rt-max` given), an unknown run and `--rt-reference` with AlphaPeptDeep refused, a misspelled run refused before the
+    training, an aligned `--tf ms2` library in the median minutes, and an `--rt-align none` run removing the maps.
   - `TestRtAlignmentMixedGradients`: runs of different gradients train a model of HI, whose library is iRT with a
-    warning, or one run's minutes with `-rt_reference`; a saved model of one gradient's minutes fine-tuned further on
+    warning, or one run's minutes with `--rt-reference`; a saved model of one gradient's minutes fine-tuned further on
     them starts over from the pretrained Chronologer.
   - `TestChronologerTrainingRun`: a training run, its saved model and the libraries from both, in minutes; a
-    `-tf ms2` model's library in iRT.
+    `--tf ms2` model's library in iRT.
   - `TestChronologerSavedModelChoice`: fine-tuning further, the RT model's kind chosen and its lineage recorded.
   - `TestChronologerUnencodableTestSet`: the test-set fallback, the encoded row counts, and start models of the
     wrong kind refused.

@@ -2,8 +2,9 @@
 <!--
   Maven descriptor for the TeamCity Kotlin DSL in settings.kts.
 
-  SCOPE: this .teamcity/ directory describes the "VersionedConfigs" SUBPROJECT ONLY, not the
-  whole ProteoWizard project - see the header of settings.kts before changing anything here.
+  SCOPE: this Kotlin DSL describes the "VersionedConfigs" SUBPROJECT ONLY, not the whole
+  ProteoWizard project, whose configs are versioned in XML under .teamcity/ProteoWizard/ - see
+  the header of settings.kts before changing anything here.
 
   teamcity.dsl.version MUST match the TeamCity server version (teamcity.labkey.org). A mismatch
   fails DSL compilation on the server with an unresolved-dependency error rather than anything

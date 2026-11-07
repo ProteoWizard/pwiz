@@ -8,7 +8,7 @@
   <param name="ignoreKnownHosts" value="true" />
   <param name="submoduleCheckout" value="CHECKOUT" />
   <param name="teamcity:branchSpec"><![CDATA[+:refs/heads/(master)
-+:refs/(pull/*)/head
++:refs/(pull/*/head)
 +:refs/heads/(container/*)]]></param>
   <param name="url" value="https://github.com/ProteoWizard/container" />
   <param name="useAlternates" value="NO_MIRRORS" />

@@ -6,8 +6,7 @@ namespace Pwiz.Vendor.UNIFI.Tests;
 
 /// <summary>
 /// Round-trips the UNIFI / waters_connect protobuf contracts through Google.Protobuf
-/// (matching Skyline's serializer choice — see UNIFI.csproj reference to
-/// pwiz_tools/Shared/Lib/Google.Protobuf.dll). The wire format is the same protobuf binary
+/// (matching Skyline's serializer choice — see UNIFI.csproj). The wire format is the same protobuf binary
 /// spec the cpp UNIFI client emits via its bundled <c>unifi-protobuf-net.dll</c>, so a
 /// successful round-trip here means our schema lines up tag-for-tag with the cpp port.
 /// </summary>

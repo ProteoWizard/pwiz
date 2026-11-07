@@ -57,9 +57,54 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>Digests, generates, drops, sorts and writes, in Carafe's order.</summary>
         public EntrapmentFastaResult Run()
         {
-            ValidateSettings();
+            ValidateOutputs();
             var result = new EntrapmentFastaResult();
-            var digester = new Digester(_settings.Digest);
+            var kept = Build(result, out _);
+
+            // Both files are written under temporary names, and a FASTA at its final name means the
+            // whole build finished: an earlier build's FASTA is removed before the new manifest takes
+            // its final name, and the new FASTA is moved there last. A FASTA that cannot be removed
+            // stops the build with the earlier FASTA and manifest both as they were.
+            var fasta = new SimpleFileSaver(_settings.OutputFasta);
+            var manifest = _settings.Manifest != null ? new SimpleFileSaver(_settings.Manifest) : null;
+            try
+            {
+                WriteFasta(kept, result, fasta.SafeName);
+                if (manifest != null)
+                {
+                    WriteManifestTo(kept, manifest.SafeName);
+                    if (File.Exists(_settings.OutputFasta))
+                        File.Delete(_settings.OutputFasta);
+                    manifest.Commit();
+                }
+                fasta.Commit();
+            }
+            finally
+            {
+                try
+                {
+                    fasta.Dispose();
+                }
+                finally
+                {
+                    manifest?.Dispose();
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The build without its files: digests, generates, drops and sorts, in Carafe's order,
+        /// and returns the kept quartets, each with its sources in order, counting into
+        /// <paramref name="result"/>. <paramref name="digester"/> is the one the targets were
+        /// digested with, which holds the protein N-terminal peptides. <see cref="Run"/> writes
+        /// what this returns; a library predicted in the same process takes it as it is
+        /// (<see cref="LibraryPeptides"/>).
+        /// </summary>
+        public List<EntrapmentQuartet> Build(EntrapmentFastaResult result, out Digester digester)
+        {
+            ValidateSettings();
+            digester = new Digester(_settings.Digest);
             Log(@"Reading FASTA: " + _settings.InputFasta);
             Log(@"Use enzyme: " + digester.Enzyme.Name);
 
@@ -87,37 +132,30 @@ namespace pwiz.CarafeSharp.Proteome
                 quartet.Sources.Clear();
                 quartet.Sources.AddRange(sorted);
             }
+            return kept;
+        }
 
-            // Both files are written under temporary names, and a FASTA at its final name means the
-            // whole build finished: an earlier build's FASTA is removed before the new manifest takes
-            // its final name, and the new FASTA is moved there last. A FASTA that cannot be removed
-            // stops the build with the earlier FASTA and manifest both as they were.
-            var fasta = new SimpleFileSaver(_settings.OutputFasta);
-            var manifest = _settings.Manifest != null ? new SimpleFileSaver(_settings.Manifest) : null;
-            try
+        /// <summary>
+        /// Writes the pairing manifest of <paramref name="kept"/> to <paramref name="path"/>,
+        /// atomically, refused as <see cref="Run"/> refuses it when the pairing fails its checks.
+        /// </summary>
+        public void WriteManifest(IReadOnlyList<EntrapmentQuartet> kept, string path)
+        {
+            using (var manifest = new SimpleFileSaver(path))
             {
-                WriteFasta(kept, result, fasta.SafeName);
-                if (manifest != null)
-                {
-                    WriteManifest(kept, manifest.SafeName);
-                    if (File.Exists(_settings.OutputFasta))
-                        File.Delete(_settings.OutputFasta);
-                    manifest.Commit();
-                }
-                fasta.Commit();
+                WriteManifestTo(kept, manifest.SafeName);
+                manifest.Commit();
             }
-            finally
-            {
-                try
-                {
-                    fasta.Dispose();
-                }
-                finally
-                {
-                    manifest?.Dispose();
-                }
-            }
-            return result;
+        }
+
+        /// <summary>
+        /// The <c>;</c>-joined <c>db|accession|entry</c> labels of a quartet's sources for one of
+        /// its peptides, without the per-protein peptide counter: the manifest's protein text, and
+        /// the library's when the peptides never pass through a FASTA.
+        /// </summary>
+        public string ProteinLabel(EntrapmentQuartet quartet, bool pTarget, bool decoy)
+        {
+            return JoinedLabel(quartet, null, pTarget, decoy);
         }
 
         /// <summary>
@@ -147,6 +185,13 @@ namespace pwiz.CarafeSharp.Proteome
                 if (z < 1 || z > 10)
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, @"invalid charge state (allowed 1..10): {0}", z));
             }
+        }
+
+        /// <summary>The checks on the files <see cref="Run"/> writes, which a build without files has no need of.</summary>
+        private void ValidateOutputs()
+        {
+            if (_settings.OutputFasta == null)
+                throw new ArgumentException(@"the entrapment FASTA build needs an output FASTA");
             // Each output is written under its own temporary name, which a shared or folder path breaks.
             foreach (string output in new[] { _settings.OutputFasta, _settings.Manifest }.Where(o => o != null))
             {
@@ -467,11 +512,11 @@ namespace pwiz.CarafeSharp.Proteome
         /// Step 5: the manifest, refused (or, when allowed, only warned about) if it fails the
         /// pairing checks. Its proteins column carries no peptide counters.
         /// </summary>
-        private void WriteManifest(List<EntrapmentQuartet> kept, string path)
+        private void WriteManifestTo(IReadOnlyList<EntrapmentQuartet> kept, string path)
         {
             EntrapmentPairingValidator.Enforce(EntrapmentPairingValidator.ValidateQuartets(kept),
                 _settings.FailOnPairingViolation, _log);
-            Log(@"Writing manifest: " + _settings.Manifest);
+            Log(@"Writing manifest: " + (_settings.Manifest ?? path));
             // How the entrapment targets were made travels with the manifest to the library
             // build, which writes it on their DecoyPairs rows; only this stage knows it.
             string entrapmentMethod = _settings.EntrapmentSourceFasta == null

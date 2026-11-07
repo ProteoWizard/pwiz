@@ -16,7 +16,7 @@ other. Writing now runs on its own thread, one chunk behind prediction.
 
 - **Inputs.** The workflow's own final-library step: the library FASTA with targets, decoys and
   entrapment peptides, predicted from the fine-tuned models of a `Run-CarafeSharpWorkflow.ps1`
-  run, with the workflow's library options (`-lf_type blib -fast`, top 20 fragments, precursor
+  run, with the workflow's library options (`--lf-type blib --fast`, top 20 fragments, precursor
   m/z 400-900, charges 2-3).
   - Stellar: 875,411 peptidoforms, 967,226 precursors.
   - Astral: 6,170,973 precursors.
@@ -65,8 +65,8 @@ Phase times, medians in seconds:
 
 - Build both versions with `Build-CarafeSharp.ps1 -Torch cuda`, and copy each output folder aside
   so a rebuild cannot change it mid-run.
-- Run the library step with `-model_dir <workflow>/osprey_new_library` and the workflow's
-  `-pairing_manifest`, then compare the `.blib` files with `compare_blib.py`.
+- Run the library step with `--model-dir <workflow>/osprey_new_library` and the workflow's
+  `--pairing-manifest`, then compare the `.blib` files with `compare_blib.py`.
 - `ai/scripts/CarafeSharp/plot_timings.py library <runs folder> <png>` draws the chart from the
   runs' logs.
 
