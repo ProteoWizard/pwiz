@@ -65,6 +65,82 @@ namespace pwiz.Osprey.Test
             AssertTrainingExportKey();
             AssertTrainingExportKeyFollowsEachRunsInputs();
             AssertLibraryTermsKeyOnlyWhatChanged();
+            AssertMs2CalibrationKeysOnlyUnitResolutionTh();
+        }
+
+        /// <summary>
+        /// The MS2 m/z calibration term: a unit-resolution search with a Th fragment tolerance keys
+        /// on its method - the offset curve by default, the mean under OSPREY_MS2_CAL_MEAN - in every
+        /// task, so a run never adopts outputs calibrated by the other; ppm searches, and HRAM ones
+        /// in Th, whose calibration did not change, key exactly as before under either setting.
+        /// </summary>
+        private static void AssertMs2CalibrationKeysOnlyUnitResolutionTh()
+        {
+            var unitTh = new OspreyConfig
+            {
+                ResolutionMode = ResolutionMode.UnitResolution,
+                FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5)
+            };
+            var hramTh = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.02) };
+            var hramPpm = new OspreyConfig();
+            Assert.AreEqual(ToleranceUnit.Mz, unitTh.FragmentTolerance.Unit);
+            Assert.AreEqual(ResolutionMode.HRAM, hramTh.ResolutionMode);
+            Assert.AreEqual(ToleranceUnit.Ppm, hramPpm.FragmentTolerance.Unit);
+
+            Assert.IsTrue(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.UnitResolution, ToleranceUnit.Mz, false, false));
+            Assert.IsFalse(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.UnitResolution, ToleranceUnit.Mz, true, false));
+            Assert.IsFalse(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.UnitResolution, ToleranceUnit.Ppm, false, false));
+            Assert.IsFalse(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.HRAM, ToleranceUnit.Mz, false, false));
+            Assert.IsFalse(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.HRAM, ToleranceUnit.Ppm, false, false));
+            // The experimental ppm curve: ppm tolerances only, and the mean still wins.
+            Assert.IsTrue(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.HRAM, ToleranceUnit.Ppm, false, true));
+            Assert.IsFalse(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.HRAM, ToleranceUnit.Ppm, true, true));
+            Assert.IsFalse(OspreyEnvironment.UsesMs2OffsetCurve(ResolutionMode.HRAM, ToleranceUnit.Mz, false, true));
+
+            Dictionary<string, string> curveKeys, meanKeys, hramThCurve, hramThMean, hramPpmCurve, hramPpmMean;
+            using (OspreyEnvironment.OverrideVariables(Ms2CalVariables(@"0", @"0")))
+            {
+                curveKeys = TaskKeys(unitTh);
+                hramThCurve = TaskKeys(hramTh);
+                hramPpmCurve = TaskKeys(hramPpm);
+            }
+            using (OspreyEnvironment.OverrideVariables(Ms2CalVariables(@"1", @"0")))
+            {
+                meanKeys = TaskKeys(unitTh);
+                hramThMean = TaskKeys(hramTh);
+                hramPpmMean = TaskKeys(hramPpm);
+            }
+            Dictionary<string, string> unitThPpmCurve, hramThPpmCurve, hramPpmPpmCurve;
+            using (OspreyEnvironment.OverrideVariables(Ms2CalVariables(@"0", @"1")))
+            {
+                unitThPpmCurve = TaskKeys(unitTh);
+                hramThPpmCurve = TaskKeys(hramTh);
+                hramPpmPpmCurve = TaskKeys(hramPpm);
+            }
+            foreach (var task in curveKeys.Keys)
+            {
+                StringAssert.Contains(curveKeys[task], @";ms2cal=curve", task);
+                StringAssert.Contains(meanKeys[task], @";ms2cal=mean", task);
+                Assert.AreEqual(curveKeys[task].Replace(@";ms2cal=curve", @";ms2cal=mean"), meanKeys[task], task);
+                Assert.IsFalse(hramThCurve[task].Contains(@";ms2cal="), task);
+                Assert.IsFalse(hramPpmCurve[task].Contains(@";ms2cal="), task);
+                Assert.AreEqual(hramThCurve[task], hramThMean[task], task);
+                Assert.AreEqual(hramPpmCurve[task], hramPpmMean[task], task);
+                // OSPREY_MS2_CAL_CURVE_PPM keys ppm searches alone.
+                StringAssert.Contains(hramPpmPpmCurve[task], @";ms2cal=curveppm", task);
+                Assert.AreEqual(hramPpmCurve[task], hramPpmPpmCurve[task].Replace(@";ms2cal=curveppm", string.Empty), task);
+                Assert.AreEqual(curveKeys[task], unitThPpmCurve[task], task);
+                Assert.AreEqual(hramThCurve[task], hramThPpmCurve[task], task);
+            }
+        }
+
+        private static Dictionary<string, string> Ms2CalVariables(string mean, string curvePpm)
+        {
+            return new Dictionary<string, string>
+            {
+                [@"OSPREY_MS2_CAL_MEAN"] = mean,
+                [@"OSPREY_MS2_CAL_CURVE_PPM"] = curvePpm
+            };
         }
 
         /// <summary>

@@ -155,6 +155,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | `min_rt_tolerance` default 0.5 not 0.1 | Doc states 0.1 min | Default 0.5 min (matches current Rust default) | `RTCalibrationConfig.cs:50` | minor |
 | STALE | Cache filename `.calibration.json` | `<stem>.osprey_calibration.json` | `<stem>.calibration.json` (matches Rust `calibration_filename_for_input`) | `CalibrationIO.cs:91` | info |
 | UNVER | No retry loop / graduated linear fit (**U1**) | 3-attempt sampling + graduated linear fit + RT-span check | Single sample, hard 200-pt floor → fallback tol; sparse libs fail where Rust recovers | `Calibrator.cs:196-197,259,261-267,479-485` | major |
+| INTENT | MS2 m/z offset curve | One mean MS2 offset | Unit-resolution Th: an m/z-dependent curve when the offset is beyond half the tolerance; ppm: the curve under experimental `OSPREY_MS2_CAL_CURVE_PPM=1`; the mean otherwise, and always under `OSPREY_MS2_CAL_MEAN=1` | `Ms2OffsetCurve.cs`; `OspreyEnvironment.UsesMs2OffsetCurve` | major (large-offset data only) |
 | INTENT | Calibration XCorr is managed, not BLAS | Comet XCorr via BLAS `sdot` | Managed `SpectralScorer(UnitResolution())`, f32 preprocess; equivalent at F10 | `Calibrator.cs:72,563` | info |
 
 ### [05-rt-alignment.md](05-rt-alignment.md) — matches-with-notes

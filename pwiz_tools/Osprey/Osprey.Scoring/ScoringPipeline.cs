@@ -194,7 +194,13 @@ namespace pwiz.Osprey.Scoring
                 // only this fragment-tolerance value is set here.)
                 config.FragmentTolerance = searchFragTol;
 
-                if (logSettings)
+                if (logSettings && ms2Calibration.HasOffsetCurve)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__m_z_dependent_offset__0__to__1___2__,
+                        ms2Calibration.OffsetCurve.Min(), ms2Calibration.OffsetCurve.Max(), MzCalibration.GetUnitText(ms2Calibration.Unit)));
+                }
+                else if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,

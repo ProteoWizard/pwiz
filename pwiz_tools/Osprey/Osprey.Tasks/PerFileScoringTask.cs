@@ -2111,31 +2111,13 @@ namespace pwiz.Osprey.Tasks
                 }
                 if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
                 {
-                    ms2Cal = new MzCalibrationResult
-                    {
-                        Mean = calParams.Ms2Calibration.Mean,
-                        Median = calParams.Ms2Calibration.Median,
-                        SD = calParams.Ms2Calibration.SD,
-                        Count = calParams.Ms2Calibration.Count,
-                        Unit = calParams.Ms2Calibration.Unit,
-                        AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
-                        Calibrated = true
-                    };
+                    ms2Cal = calParams.Ms2Calibration.ToResult();
                     ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_,
                         ms2Cal.Mean, MzCalibration.GetUnitText(ms2Cal.Unit), ms2Cal.SD));
                 }
                 if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
                 {
-                    ms1Cal = new MzCalibrationResult
-                    {
-                        Mean = calParams.Ms1Calibration.Mean,
-                        Median = calParams.Ms1Calibration.Median,
-                        SD = calParams.Ms1Calibration.SD,
-                        Count = calParams.Ms1Calibration.Count,
-                        Unit = calParams.Ms1Calibration.Unit,
-                        AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
-                        Calibrated = true
-                    };
+                    ms1Cal = calParams.Ms1Calibration.ToResult();
                     ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_,
                         ms1Cal.Mean, MzCalibration.GetUnitText(ms1Cal.Unit), ms1Cal.SD));
                 }
