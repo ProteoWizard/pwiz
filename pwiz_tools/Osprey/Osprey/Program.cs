@@ -541,6 +541,7 @@ namespace pwiz.Osprey
                     resolutionDetection = ResolutionDetector.Detect(config);
                     config.ApplyResolutionMode(resolutionDetection?.Mode ?? ResolutionMode.HRAM);
                 }
+                PinFeatureMask.ApplyResolutionMode(config.ResolutionMode);
 
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
@@ -733,6 +734,12 @@ namespace pwiz.Osprey
                 {
                     LogError(@"OSPREY_FEATURE_MASK masks every PIN feature, which leaves the FDR classifier nothing to train on.");
                     return EXIT_CODE_FAILURE_TO_START;
+                }
+                // Not an error: OSPREY_FEATURE_MASK=none is the same request on any data, but say what it did not get.
+                if (PinFeatureMask.LeavesUnavailableFeaturesUnmasked())
+                {
+                    LogInfo(@"OSPREY_FEATURE_MASK leaves HRAM-only features unmasked; at unit resolution they are not computed or used: " +
+                            string.Join(@", ", PinFeatureMask.HRAM_ONLY_FAMILIES));
                 }
                 // Abort for the same reason: a mistyped value would train with the default arm
                 // and key its directories as the default, so a System.Math timing or parity arm

@@ -37,8 +37,8 @@ namespace pwiz.Osprey.Scoring
     /// data.
     ///
     /// The first 21 are the Rust PIN features, every slot populated, so <see cref="Get"/>
-    /// never returns null. Slots 21-100 are C#-only: the runner-up, context, per-fragment-rank,
-    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment, wide-span coelution, shadow-isotope and cleaned time-correlation families,
+    /// never returns null. Slots 21-108 are C#-only: the runner-up, context, per-fragment-rank,
+    /// spectrum-across-peak, median-polish top-k, reference-correlation, peak-profile, time-correlation, re-extracted-correlation, peak-dominance, top-fragment, wide-span coelution, shadow-isotope, cleaned time-correlation, library agreement and spectrum-match families,
     /// hidden from the FDR classifier by default (<c>PinFeatureMask</c>, OSPREY_FEATURE_MASK) while
     /// they are evaluated, and computed and written only for a family the mask leaves a feature of,
     /// or under OSPREY_RECORD_ALL_FEATURES=1. (Scores the Rust engine computes but excludes from its PIN features
@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Scoring
     public static class OspreyFeatureCalculators
     {
         /// <summary>Number of PIN features (the feature-vector width).</summary>
-        public const int FeatureCount = 101;
+        public const int FeatureCount = 109;
 
         /// <summary>
         /// The core features, the first 21: the Rust PIN features, which the scorer always computes.
@@ -199,6 +199,19 @@ namespace pwiz.Osprey.Scoring
             // library-predicted intensity left out or capped, as interference.
             calculators[99] = new CleanedTimeCorrelationSumCalc(false);
             calculators[100] = new CleanedTimeCorrelationSumCalc(true);
+
+            // Library agreement family (HRAM only): the apex +/- 1 intensities of the co-eluting fragments against the library.
+            calculators[101] = new CoelutingLibraryCosineCalc();
+            calculators[102] = new LibraryEntropySimilarityCalc();
+            calculators[103] = new CoelutingLibraryShareCalc();
+
+            // Spectrum-match family (HRAM only): counting and probability scores of the library fragments at the apex and
+            // the best scan of the peak, which hold up in chimeric scans where xcorr does not.
+            calculators[104] = new ApexMatchProbabilityCalc();
+            calculators[105] = new ApexProjectedCosineScoreCalc();
+            calculators[106] = new ApexHyperscoreCalc();
+            calculators[107] = new PeakMaxMatchProbabilityCalc();
+            calculators[108] = new PeakMaxProjectedCosineScoreCalc();
 
             return calculators;
         }

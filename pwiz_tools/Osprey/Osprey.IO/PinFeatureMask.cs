@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Osprey.Core;
 
@@ -43,6 +44,10 @@ namespace pwiz.Osprey.IO
     /// stage. The recorded set keys per-file scoring and rescoring
     /// (<see cref="RecordedFeaturesValidityKeySuffix()"/>), and a reader that needs a column the
     /// file does not hold refuses it rather than reading zeros.
+    ///
+    /// Some families can only use HRAM data (<see cref="HRAM_ONLY_FAMILIES"/>). At unit resolution
+    /// they are masked and unrecorded whatever the switches say, so a run there has the same FDR
+    /// vectors and scores columns as if the families did not exist.
     /// </summary>
     public static class PinFeatureMask
     {
@@ -77,6 +82,9 @@ namespace pwiz.Osprey.IO
             @"top3_ref_n_corr_good", @"top3_mp_min_r2", @"top3_mp_r2_median", @"top3_coelution_min",
             @"wide_coelution_sum", @"wide_n_coeluting", @"wide_coelution_margin", @"wide_top3_coelution_min",
             @"shadow_corr_sum6", @"shadow_frac6", @"tc_clean_sum6", @"tc_clip_sum6",
+            @"lib_cosine_coel", @"lib_entropy_sim", @"lib_coel_share",
+            @"spec_match_prob", @"spec_proj_cosine_xt", @"spec_hyperscore", @"spec_match_prob_max",
+            @"spec_proj_cosine_xt_max",
         };
 
         /// <summary>
@@ -92,7 +100,20 @@ namespace pwiz.Osprey.IO
             @"peak_coelution_margin", @"context_peptide_length", @"frag_rank1_abs_mass_error",
             @"peak_spectrum_cosine_mean", @"mp_fragment_r2_rank2", @"ref_corr_rank2", @"peak_width",
             @"tc_sum6", @"heavy_sum6", @"dom_best_corr_delta", @"top3_ref_n_corr_good", @"wide_coelution_sum",
-            @"shadow_corr_sum6", @"tc_clean_sum6",
+            @"shadow_corr_sum6", @"tc_clean_sum6", @"lib_cosine_coel", @"spec_match_prob",
+        };
+
+        /// <summary>
+        /// The feature families (<see cref="FAMILY_FIRST_FEATURES"/>) only HRAM data can use. At unit
+        /// resolution nearly every library fragment finds a peak in its 1 Th window, so counting
+        /// matches says nothing: on Stellar the match probability alone finds 52-112 precursors at
+        /// q 1%, where xcorr finds 12,812, and the families add nothing measurable to the classifier.
+        /// They would still cost their computation, and as columns they would change which features
+        /// the gradient-boosted trees sample.
+        /// </summary>
+        public static readonly string[] HRAM_ONLY_FAMILIES =
+        {
+            @"lib_cosine_coel", @"spec_match_prob",
         };
 
         /// <summary>
@@ -106,18 +127,59 @@ namespace pwiz.Osprey.IO
 
         // Lazy so an unknown name surfaces as its own exception at first use rather than as a
         // TypeInitializationException; Program checks it at startup with UnknownFeatureName.
-        private static readonly Lazy<bool[]> _masked = new Lazy<bool[]>(() => CreateMask(MaskedNames));
-        private static readonly Lazy<int[]> _fdrFeatureIndices = new Lazy<int[]>(() => UnmaskedIndices(IsMasked));
-        private static readonly Lazy<bool[]> _recorded =
-            new Lazy<bool[]>(() => RecordedFeatures(IsMasked, OspreyEnvironment.RecordAllFeatures));
+        private static readonly Lazy<ResolvedFeatures> _hramFeatures =
+            new Lazy<ResolvedFeatures>(() => new ResolvedFeatures(ResolutionMode.HRAM));
+        private static readonly Lazy<ResolvedFeatures> _unitFeatures =
+            new Lazy<ResolvedFeatures>(() => new ResolvedFeatures(ResolutionMode.UnitResolution));
+        private static readonly Lazy<bool[]> _hramOnly = new Lazy<bool[]>(CreateHramOnlyFlags);
+
+        private static ResolutionMode _resolutionMode = ResolutionMode.HRAM;
 
         /// <summary>The masked feature names in effect: OSPREY_FEATURE_MASK, or the default set when it is unset.</summary>
         private static string[] MaskedNames => OspreyEnvironment.FeatureMask ?? DEFAULT_MASKED_FEATURES;
 
+        private static ResolvedFeatures Resolved =>
+            _resolutionMode == ResolutionMode.UnitResolution ? _unitFeatures.Value : _hramFeatures.Value;
+
+        /// <summary>
+        /// Sets the resolution of this process's search, HRAM until then. The switches this class
+        /// reads are per process, and so is the resolution they combine with: the host calls this once
+        /// the resolution is known, before anything reads the mask.
+        /// </summary>
+        public static void ApplyResolutionMode(ResolutionMode mode)
+        {
+            _resolutionMode = mode;
+        }
+
+        /// <summary>
+        /// True when data of the given <paramref name="mode"/> can use the PIN feature at
+        /// <paramref name="featureIndex"/>: every feature but the <see cref="HRAM_ONLY_FAMILIES"/> at unit resolution.
+        /// </summary>
+        public static bool IsAvailable(int featureIndex, ResolutionMode mode)
+        {
+            return mode == ResolutionMode.HRAM || !_hramOnly.Value[featureIndex];
+        }
+
+        /// <summary>The mask <paramref name="isMasked"/> plus the features <paramref name="mode"/> cannot use.</summary>
+        public static Func<int, bool> MaskAtResolution(Func<int, bool> isMasked, ResolutionMode mode)
+        {
+            return f => isMasked(f) || !IsAvailable(f, mode);
+        }
+
+        /// <summary>
+        /// True when OSPREY_FEATURE_MASK leaves unmasked a feature this search's resolution cannot use.
+        /// Program logs it, because the feature is then dropped however it was asked for.
+        /// </summary>
+        public static bool LeavesUnavailableFeaturesUnmasked()
+        {
+            bool[] named = CreateMask(MaskedNames);
+            return Enumerable.Range(0, named.Length).Any(f => !named[f] && !IsAvailable(f, _resolutionMode));
+        }
+
         /// <summary>True when the PIN feature at <paramref name="featureIndex"/> is masked.</summary>
         public static bool IsMasked(int featureIndex)
         {
-            return _masked.Value[featureIndex];
+            return Resolved.Masked[featureIndex];
         }
 
         /// <summary>
@@ -126,7 +188,7 @@ namespace pwiz.Osprey.IO
         /// is 0 to 20, the 21 features Osprey had before the masked ones were added, so the default
         /// classifier sees exactly the matrix it saw then.
         /// </summary>
-        public static int[] FdrFeatureIndices => _fdrFeatureIndices.Value;
+        public static int[] FdrFeatureIndices => Resolved.FdrIndices;
 
         /// <summary>The PIN names of the FDR feature vector's positions, in its order.</summary>
         public static string[] FdrFeatureNames => SelectFdrFeatures(ParquetScoreCache.PIN_FEATURE_NAMES);
@@ -169,11 +231,12 @@ namespace pwiz.Osprey.IO
         /// True when Stage 4 computes the PIN feature at <paramref name="featureIndex"/> and the
         /// scores parquet holds its column: a core feature, a feature of a family the mask leaves
         /// a feature of, or any feature under OSPREY_RECORD_ALL_FEATURES=1. Every feature the FDR
-        /// classifier reads is recorded.
+        /// classifier reads is recorded. A feature the resolution cannot use never is
+        /// (<see cref="IsAvailable"/>).
         /// </summary>
         public static bool IsRecorded(int featureIndex)
         {
-            return _recorded.Value[featureIndex];
+            return Resolved.Recorded[featureIndex];
         }
 
         /// <summary>
@@ -182,7 +245,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool[] RecordedFeatureFlags()
         {
-            return (bool[])_recorded.Value.Clone();
+            return (bool[])Resolved.Recorded.Clone();
         }
 
         /// <summary>
@@ -205,6 +268,18 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// <see cref="RecordedFeatures(Func{int,bool},bool)"/> at a resolution: nothing records a feature
+        /// <paramref name="mode"/> cannot use, not even <paramref name="recordAll"/>.
+        /// </summary>
+        public static bool[] RecordedFeatures(Func<int, bool> isMasked, bool recordAll, ResolutionMode mode)
+        {
+            var recorded = RecordedFeatures(MaskAtResolution(isMasked, mode), recordAll);
+            for (int f = 0; f < recorded.Length; f++)
+                recorded[f] = recorded[f] && IsAvailable(f, mode);
+            return recorded;
+        }
+
+        /// <summary>
         /// The validity-key term for the tasks whose outputs hold the recorded feature columns:
         /// per-file scoring, which writes the scores parquet, and per-file rescoring, which copies
         /// its rows into the reconciled parquet. It names the recorded families, or <c>all</c>, so
@@ -215,17 +290,29 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string RecordedFeaturesValidityKeySuffix()
         {
-            return RecordedFeaturesValidityKeySuffix(IsRecorded);
+            return RecordedFeaturesValidityKeySuffix(IsRecorded, _resolutionMode);
         }
 
         /// <summary><see cref="RecordedFeaturesValidityKeySuffix()"/> for an explicitly supplied recorded set.</summary>
         public static string RecordedFeaturesValidityKeySuffix(Func<int, bool> isRecorded)
         {
-            var families = FAMILY_FIRST_FEATURES
+            return RecordedFeaturesValidityKeySuffix(isRecorded, ResolutionMode.HRAM);
+        }
+
+        /// <summary>
+        /// <see cref="RecordedFeaturesValidityKeySuffix()"/> for an explicitly supplied recorded set at a
+        /// resolution, where <c>all</c> means every family <paramref name="mode"/> can use.
+        /// </summary>
+        public static string RecordedFeaturesValidityKeySuffix(Func<int, bool> isRecorded, ResolutionMode mode)
+        {
+            var available = FAMILY_FIRST_FEATURES
+                .Where(name => IsAvailable(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name), mode)).ToArray();
+            var families = available
                 .Where(name => isRecorded(Array.IndexOf(ParquetScoreCache.PIN_FEATURE_NAMES, name))).ToArray();
             if (families.Length == 0)
                 return string.Empty;
-            return @";featrec=" + (families.Length == FAMILY_FIRST_FEATURES.Length ? @"all" : string.Join(@"+", families));
+            return @";featrec=" + (families.Length == available.Length ? @"all" : string.Join(@"+", families)) +
+                   AvailableFeaturesTerm(mode);
         }
 
         /// <summary>
@@ -251,14 +338,25 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string ValidityKeySuffix()
         {
-            string mask;
-            if (OspreyEnvironment.FeatureMask == null)
-                mask = @"default";
-            else if (OspreyEnvironment.FeatureMask.Length == 0)
-                mask = @"none";
-            else
-                mask = string.Join(@"+", OspreyEnvironment.FeatureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
-            return @";featmask=" + mask + @";fdrcols=unmasked";
+            return ValidityKeySuffix(OspreyEnvironment.FeatureMask, _resolutionMode);
+        }
+
+        /// <summary>
+        /// <see cref="ValidityKeySuffix()"/> for an explicitly supplied OSPREY_FEATURE_MASK value and
+        /// resolution. A mask names what is hidden, so what it leaves depends on how many features
+        /// exist: an HRAM key with a mask of its own also carries that count (<c>;featavail=</c>), and an
+        /// output from before features were added is not adopted. The default mask leaves the core
+        /// alone however many features exist, and unit resolution has not gained any, so their keys
+        /// do not carry it.
+        /// </summary>
+        public static string ValidityKeySuffix(string[] featureMask, ResolutionMode mode)
+        {
+            if (featureMask == null)
+                return @";featmask=default;fdrcols=unmasked";
+            string mask = featureMask.Length == 0
+                ? @"none"
+                : string.Join(@"+", featureMask.Distinct().OrderBy(name => name, StringComparer.Ordinal));
+            return @";featmask=" + mask + AvailableFeaturesTerm(mode) + @";fdrcols=unmasked";
         }
 
         /// <summary>
@@ -323,6 +421,28 @@ namespace pwiz.Osprey.IO
             return masked;
         }
 
+        // The count of features an HRAM search can use, for the keys that depend on it; nothing at unit
+        // resolution, where the HRAM-only families are not available and the count has not changed.
+        private static string AvailableFeaturesTerm(ResolutionMode mode)
+        {
+            if (mode != ResolutionMode.HRAM)
+                return string.Empty;
+            return @";featavail=" + ParquetScoreCache.NUM_PIN_FEATURES.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static bool[] CreateHramOnlyFlags()
+        {
+            var hramOnly = new bool[ParquetScoreCache.NUM_PIN_FEATURES];
+            foreach (var (start, end) in FamilyRanges())
+            {
+                if (!HRAM_ONLY_FAMILIES.Contains(ParquetScoreCache.PIN_FEATURE_NAMES[start]))
+                    continue;
+                for (int f = start; f < end; f++)
+                    hramOnly[f] = true;
+            }
+            return hramOnly;
+        }
+
         /// <summary>Each family's PIN index range, [start, end), in PIN order.</summary>
         private static IEnumerable<(int Start, int End)> FamilyRanges()
         {
@@ -334,6 +454,23 @@ namespace pwiz.Osprey.IO
                     : ParquetScoreCache.NUM_PIN_FEATURES;
                 yield return (start, end);
             }
+        }
+
+        /// <summary>The process's mask switches resolved for one resolution.</summary>
+        private sealed class ResolvedFeatures
+        {
+            public ResolvedFeatures(ResolutionMode mode)
+            {
+                bool[] named = CreateMask(MaskedNames);
+                var isMasked = MaskAtResolution(f => named[f], mode);
+                Masked = Enumerable.Range(0, named.Length).Select(isMasked).ToArray();
+                FdrIndices = UnmaskedIndices(isMasked);
+                Recorded = RecordedFeatures(isMasked, OspreyEnvironment.RecordAllFeatures, mode);
+            }
+
+            public bool[] Masked { get; }
+            public int[] FdrIndices { get; }
+            public bool[] Recorded { get; }
         }
     }
 }
