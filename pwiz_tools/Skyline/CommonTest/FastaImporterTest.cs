@@ -1241,6 +1241,38 @@ namespace CommonTest
             TestWebAccessProbeRateLimited(retryAfter);
             TestRateLimitWaitCancellation();
             TestRetryAfterHeader();
+            TestEntrezRequestSpacing();
+        }
+
+        /// <summary>
+        /// NCBI refuses a fourth Entrez request within a second when no API key is sent, and each
+        /// Entrez lookup is two requests, the summary and then the full records. Every request,
+        /// not just every lookup, must come at least the request interval after the one before.
+        /// </summary>
+        private static void TestEntrezRequestSpacing()
+        {
+            var provider = new EntrezRequestTimingProvider();
+            var proteins = new[] { "XP_915497", "NP_313205" }
+                .Select((accession, i) => new ProteinSearchInfo(
+                    new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
+                        WebEnabledFastaImporter.ENTREZ_TAG + accession)), 100 * (i + 1)))
+                .ToList();
+            var importer = new WebEnabledFastaImporter(provider)
+            {
+                GiveUpOnUnresponsiveWebService = true
+            };
+            // The lookup yields lazily, so enumerate it to make it run
+            _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+
+            var times = provider.RequestTimes;
+            Assert.IsTrue(times.Count >= 2, $"Expected the summary and full requests, but saw {times.Count}");
+            // Allow for the clock and the sleep not agreeing to the millisecond
+            var shortestGap = WebEnabledFastaImporter.ENTREZ_REQUEST_INTERVAL - TimeSpan.FromMilliseconds(20);
+            for (int i = 1; i < times.Count; i++)
+            {
+                var gap = times[i] - times[i - 1];
+                Assert.IsTrue(gap >= shortestGap, $"Entrez request {i + 1} came {gap.TotalMilliseconds}ms after the one before");
+            }
         }
 
         /// <summary>
@@ -1888,6 +1920,23 @@ namespace CommonTest
                 _monitor.StartCountdown();
                 base.WaitForRateLimit(delay, progressMonitor);
                 WaitTimes.Add(stopwatch.Elapsed);
+            }
+        }
+
+        /// <summary>
+        /// Polite, as the real provider is, and notes when each Entrez request goes out, answering
+        /// each with an empty result instead of going to the web.
+        /// </summary>
+        private class EntrezRequestTimingProvider : QuickFailWebSearchProvider
+        {
+            private readonly Stopwatch _clock = Stopwatch.StartNew();
+
+            public List<TimeSpan> RequestTimes { get; } = new List<TimeSpan>();
+
+            public override System.Xml.XmlTextReader GetXmlTextReader(string url, IProgressMonitor progressMonitor, int timeout)
+            {
+                RequestTimes.Add(_clock.Elapsed);
+                return new System.Xml.XmlTextReader(new StringReader(@"<eSummaryResult></eSummaryResult>"));
             }
         }
 

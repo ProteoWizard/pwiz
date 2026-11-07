@@ -290,6 +290,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         private List<ProteinSearchInfo> _activeUniprotRequeueList;
         private TimeSpan _rateLimitDelay; // How long the web service last asked us to wait
         private bool _probingWebAccess; // True during the uncancelable HasWebAccess check
+        private readonly Stopwatch _entrezRequestClock = new Stopwatch(); // Since the last Entrez request began
 
         /// <summary>
         /// Test seam: when true, a web service that repeatedly fails to return usable data - whether
@@ -1238,6 +1239,22 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
         }
 
+        /// <summary>
+        /// Waits until <see cref="ENTREZ_REQUEST_INTERVAL"/> has passed since the last Entrez request
+        /// began, then starts timing the next. Spacing each request, not each lookup, matters because
+        /// a lookup sends its summary and full requests back to back.
+        /// </summary>
+        private void WaitForEntrezRequestInterval()
+        {
+            if (_webSearchProvider.IsPolite && _entrezRequestClock.IsRunning)
+            {
+                var remaining = ENTREZ_REQUEST_INTERVAL - _entrezRequestClock.Elapsed;
+                if (remaining > TimeSpan.Zero)
+                    Thread.Sleep(remaining);
+            }
+            _entrezRequestClock.Restart();
+        }
+
         private bool EnsureEntrezKnownGood(IList<string> searchterms, char searchType)
         {
             // Throw in something we know will hit (Note: it's important that this particular value appear in the unit tests, so we can mimic web response)
@@ -1254,6 +1271,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             var urlString = _webSearchProvider.ConstructEntrezURL(searchterms, true); // Get in summary form
             int timeout = _webSearchProvider.GetTimeoutMsec(searchterms.Count);
             StampRequestUrl(proteins, urlString);
+            WaitForEntrezRequestInterval();
 
             /*
              * A search on XP_915497 and 15834432 yields something like this (but don't mix GI and non GI in practice):
@@ -1490,6 +1508,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             var urlString = _webSearchProvider.ConstructEntrezURL(searchterms, false); // Not a summary
             int timeout = _webSearchProvider.GetTimeoutMsec(searchterms.Count);
             StampRequestUrl(proteins, urlString);
+            WaitForEntrezRequestInterval();
             using var xmlTextReader = _webSearchProvider.GetXmlTextReader(urlString, progressMonitor, timeout);
             var elementName = String.Empty;
             var latestGbQualifierName = string.Empty;
@@ -1707,6 +1726,13 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// (HTTP 429) without saying, in a Retry-After header, how long it wants.
         /// </summary>
         public static readonly TimeSpan DEFAULT_RATE_LIMIT_DELAY = TimeSpan.FromSeconds(60);
+
+        /// <summary>
+        /// Least time between the starts of two Entrez requests. NCBI refuses a fourth request
+        /// within a second when no API key is sent; a third of a second exactly can still put four
+        /// in one second.
+        /// </summary>
+        public static readonly TimeSpan ENTREZ_REQUEST_INTERVAL = TimeSpan.FromMilliseconds(400);
 
         /// <summary>
         /// Shortest wait after a refusal, even when Retry-After says zero or names a time already
