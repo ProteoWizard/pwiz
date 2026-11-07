@@ -93,8 +93,8 @@ namespace pwiz.Osprey.Centroid
     /// pass that sigma explicitly.</para>
     /// <para>MS1 is measured, not searched for detection: on the Stellar's 67 kTh/s MS1, sigmas from 0.073 to 0.255 Th
     /// gave the same identifications. So its rule is measurement's. Of precursors with a strong MS1 peak, 1.1 spacings
-    /// (0.073 Th) finds the M+1 and M+2 of every triply charged one, 0.33 Th apart, each within 0.01 Th of its m/z;
-    /// three spacings (0.2 Th) loses 12% of those M+1 and 27% of the M+2, and scatters the rest more.</para>
+    /// (0.073 Th) finds the M+1 and M+2 of every triply charged one, 0.33 Th apart, with a median M+1 error within
+    /// 0.01 Th; three spacings (0.2 Th) loses 12% of those M+1 and 27% of the M+2, and scatters the rest more.</para>
     /// <para>Elsewhere, a spacing no scan rate has, it is measured from the run: the width of one species' peak.</para>
     /// <list type="bullet">
     /// <item>A wider peak is most often two or more species the instrument did not resolve, which is what Centrix is

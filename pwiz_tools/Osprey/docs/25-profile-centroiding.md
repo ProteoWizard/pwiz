@@ -183,8 +183,8 @@ fragments, Th; "M+1 found" against the same test with each fragment moved by who
 | **SuperOverlap, 0.38 Th** | **0.073** | **-0.007** | **0.133** | 72% (11%) |
 | SuperOverlap, 0.60 Th | 0.114 | +0.118 | 0.301 | 37% (8%) |
 
-0.38 Th, 1.9 spacings, measures best in every acquisition: the most precise M+0 and M+1, and the
-M+1 within 0.01 Th of its m/z. It is also the sigma of the Stellar's clean single-species MS2 peaks of ten ions
+0.38 Th, 1.9 spacings, measures best in every acquisition: the most precise M+0 and M+1, and a
+median M+1 error within 0.01 Th. It is also the sigma of the Stellar's clean single-species MS2 peaks of ten ions
 or more (0.39 to 0.44 Th), where peaks of fewer ions read 0.23 Th.
 
 The old rule, 1.1 spacings (0.22 Th), came from a sweep of the same 2 Th runs before #4997's MS2 offset
@@ -229,9 +229,10 @@ a cell holds a centroid by chance 17% to 30% of the time:
 | 0.20 Th | 3 | 100%, -0.052, 0.048 | 88%, +0.025, 0.080 | 73% |
 | 0.255 Th | 3.8 | 98%, +0.007, 0.062 | 37%, +0.072, 0.073 | 72% |
 
-At 1.1 spacings every isotope of these precursors is found within 0.01 Th of its m/z. Wider sigmas
-merge triply charged isotopes and move the centroids by up to 0.07 Th. Narrower sigmas were not
-tried. In spacings, measurement's optimum is not the same at the two rates (1.1 at 67 kTh/s, about
+At 1.1 spacings the M+1 and M+2 of every triply charged precursor here, and the M+1 of every doubly
+charged one, are found in their isotope cells, with a median M+1 error within 0.01 Th and a precision
+of about 0.05 Th. Wider sigmas merge triply charged isotopes and move the median errors by up to
+0.07 Th. Narrower sigmas were not tried. In spacings, measurement's optimum is not the same at the two rates (1.1 at 67 kTh/s, about
 1.9 at 200 kTh/s), so a scan rate other than these needs its own check.
 
 ### Off a linear ion trap
