@@ -659,6 +659,24 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));
+                // The complement's q changed meaning without a byte or mode string moving (issue
+                // #4581), so the two tasks that write it must key on it and the rest must not -
+                // FirstPassFDR least of all, whose re-run costs hours at cohort scale.
+                bool expectStrata = task.Name == PerFileRescoreTask.TASK_NAME ||
+                                    task.Name == SecondPassFdrTask.TASK_NAME;
+                Assert.AreEqual(expectStrata, key.Contains(OspreyEnvironment.PASS2_STRATA_TERM), string.Format(
+                    @"{0} must {1} key on the protein-compact complement competition",
+                    task.Name, expectStrata ? @"" : @"NOT "));
+            }
+            Assert.AreEqual(OspreyEnvironment.PASS2_STRATA_TERM, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
+                @"the default protein-compact mode carries the complement term");
+            using (OspreyEnvironment.OverrideVariables(new Dictionary<string, string>
+                   {
+                       { @"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER }
+                   }))
+            {
+                Assert.AreEqual(string.Empty, OspreyEnvironment.Pass2StrataValidityKeySuffix(),
+                    @"transfer does not compete a complement, so its outputs keep their key");
             }
         }
     }
