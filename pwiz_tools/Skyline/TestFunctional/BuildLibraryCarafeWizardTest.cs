@@ -130,8 +130,37 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsTrue(SkylineWindow.Document.PeptideCount > 0, @"the FASTA added no peptides");
 
             string tunedModelPath = BuildTunedLibrary(diaFilePaths, fastaPath);
-            BuildWithSavedModel(tunedModelPath);
             BuildForFasta(fastaPath);
+            BuildWithSavedModel(tunedModelPath);
+        }
+
+        /// <summary>
+        /// The library's Proteins table, which a library built from the document's or a FASTA's
+        /// peptides carries as Osprey's own libraries do: every target spectrum of a document
+        /// protein links to that protein's name, with no entrapment suffix and no decoy prefix on a
+        /// target. Returns the accessions by sequence for further checks.
+        /// </summary>
+        private static Dictionary<string, HashSet<string>> AssertLibraryProteins(string libraryPath, SrmDocument document)
+        {
+            var proteins = LibraryDecoyPairs.ReadProteins(libraryPath);
+            AssertEx.IsTrue(proteins.Count > 0, @"the library has no proteins");
+            int checkedTargets = 0;
+            foreach (var nodeGroup in document.PeptideGroups.Where(g => g.IsProtein))
+            {
+                foreach (var nodePep in nodeGroup.Peptides)
+                {
+                    if (!proteins.TryGetValue(nodePep.Target.Sequence, out var accessions))
+                        continue;   // A peptide the prediction left out
+                    // A FASTA record naming several proteins (sp|A|A;sp|B|B) links to each
+                    AssertEx.IsTrue(nodeGroup.Name.Split(';').All(accessions.Contains),
+                        string.Format(@"{0} links to {1}, not to its protein {2}", nodePep.Target.Sequence, string.Join(@";", accessions), nodeGroup.Name));
+                    AssertEx.IsFalse(accessions.Any(a => a.Contains(EntrapmentFastaSettings.DEFAULT_ENTRAPMENT_SUFFIX) || a.StartsWith(EntrapmentFastaSettings.DEFAULT_DECOY_PREFIX)),
+                        string.Format(@"the target {0} links to {1}", nodePep.Target.Sequence, string.Join(@";", accessions)));
+                    checkedTargets++;
+                }
+            }
+            AssertEx.IsTrue(checkedTargets > 0, @"no target spectrum links to a protein");
+            return proteins;
         }
 
         /// <summary>
@@ -260,6 +289,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(OspreySearchTest.SEARCH_TIMEOUT_MILLIS, () => peptideSettings.AvailableLibraries.Contains(TUNED_LIBRARY_NAME));
             AssertEx.FileExists(libraryPath);
+            // The document's proteins reach the library, as a FASTA's do on Osprey's own route
+            AssertLibraryProteins(libraryPath, SkylineWindow.Document);
             // The library's model, beside it, records the runs it was tuned on
             AssertEx.FileExists(builder.TunedModelPath, @"the fine-tuned model was not saved beside the library");
             var choice = CarafeModelChoice.Read(builder.TunedModelPath);
@@ -434,12 +465,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => buildLibraryDlg.PredictForFastaPath = missingFasta);
             ShowAndDismissMessage(buildLibraryDlg, string.Format(SettingsUIResources.BuildLibraryDlg_ValidatePage_The_FASTA_file__0__does_not_exist_, missingFasta),
                 BuildLibraryDlg.Pages.predict_for);
+            const double entrapmentPercent = 10;
             RunUI(() =>
             {
                 buildLibraryDlg.PredictForFastaPath = fastaPath;
                 buildLibraryDlg.AddDecoys = true;
                 buildLibraryDlg.AddEntrapment = true;
                 AssertEx.IsFalse(buildLibraryDlg.EntrapmentFromFasta);
+                // The percentages start at the user's last values, 10% and 10% to begin with
+                AssertEx.AreEqual(entrapmentPercent, buildLibraryDlg.EntrapmentPercent);
+                AssertEx.AreEqual(entrapmentPercent, buildLibraryDlg.EntrapmentInTargetsPercent);
+                buildLibraryDlg.EntrapmentPercent = EntrapmentPercentControls.MIN_TOTAL_PERCENT / 2;
+                buildLibraryDlg.EntrapmentInTargetsPercent = 0;
+            });
+            // Together the percentages must reach what CarafeSharp builds
+            ShowAndDismissMessage(buildLibraryDlg, string.Format(SettingsUIResources.EntrapmentPercentControls_Validate_The_entrapment_percentages_together_must_be_at_least__0___and_at_most__1___,
+                EntrapmentPercentControls.MIN_TOTAL_PERCENT, EntrapmentPercentControls.MAX_PERCENT), BuildLibraryDlg.Pages.predict_for);
+            RunUI(() =>
+            {
+                buildLibraryDlg.EntrapmentPercent = buildLibraryDlg.EntrapmentInTargetsPercent = entrapmentPercent;
                 buildLibraryDlg.EntrapmentFromFasta = true;
             });
             // Entrapment from a FASTA file needs the file; shuffled from the predicted FASTA's own peptides needs nothing more
@@ -448,6 +492,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 buildLibraryDlg.EntrapmentFromFasta = false;
+                // What CarafeSharp builds with: a tenth of the targets on entrapment proteins of
+                // their own and a tenth placed in target proteins, no decoys of its own
+                var entrapmentSettings = buildLibraryDlg.GetEntrapmentSettings(fastaPath);
+                AssertEx.AreEqual(fastaPath, entrapmentSettings.InputFasta);
+                AssertEx.AreEqual(entrapmentPercent / 100, entrapmentSettings.EntrapmentRatio);
+                AssertEx.AreEqual(entrapmentPercent / 100, entrapmentSettings.EntrapmentInTargetsRatio);
+                AssertEx.IsTrue(entrapmentSettings.AddEntrapment);
+                AssertEx.IsFalse(entrapmentSettings.AddDecoys);
                 AssertEx.AreEqual(Resources.BuildLibraryDlg_OkWizardPage_Finish, buildLibraryDlg.NextButtonText);
             });
             RunUI(buildLibraryDlg.OkWizardPage);
@@ -455,17 +507,56 @@ namespace pwiz.SkylineTestFunctional
             var builder = (CarafeLibraryBuilder)buildLibraryDlg.Builder;
             AssertEx.IsFalse(builder.IsTuning);
             // The FASTA's document, not the open one: the same peptides, digested the same way,
-            // then the entrapment peptides, and a decoy for each
+            // then the entrapment peptides, a fifth of the targets or so rather than one per target,
+            // and a decoy for each
             AssertEx.IsFalse(ReferenceEquals(SkylineWindow.Document, builder.Document));
             int targetCount = builder.Document.Peptides.Count(p => !p.IsDecoy);
             int entrapmentCount = builder.EntrapmentTargets.Count;
             AssertEx.IsTrue(entrapmentCount > 0, @"the entrapment FASTA added no peptides");
+            AssertEx.IsTrue(entrapmentCount < SkylineWindow.Document.PeptideCount / 2,
+                string.Format(@"{0} entrapment peptides for {1} targets is not a fifth of them", entrapmentCount, SkylineWindow.Document.PeptideCount));
             AssertEx.AreEqual(SkylineWindow.Document.PeptideCount + entrapmentCount, targetCount);
             AssertEx.AreEqual(targetCount, builder.Document.Peptides.Count(p => p.IsDecoy));
             AssertEx.AreEqual(BuildLibraryDlg.DECOY_METHOD_REVERSE, builder.DecoyMethod);
+            // Each entrapment peptide carries CarafeSharp's label: an entrapment protein of its own,
+            // or, for the tenth placed in target proteins, a target protein's clean name
+            var entrapmentProteinIds = builder.EntrapmentProteinIds;
+            AssertEx.AreEqual(entrapmentCount, entrapmentProteinIds.Count);
+            var proteinNames = new HashSet<string>(builder.Document.PeptideGroups.Where(g => g.IsProtein).Select(g => g.Name));
+            var ownProtein = entrapmentProteinIds.Where(p => p.Value.Contains(EntrapmentFastaSettings.DEFAULT_ENTRAPMENT_SUFFIX)).ToList();
+            var inTargets = entrapmentProteinIds.Where(p => !p.Value.Contains(EntrapmentFastaSettings.DEFAULT_ENTRAPMENT_SUFFIX)).ToList();
+            AssertEx.IsTrue(ownProtein.Count > 0 && inTargets.Count > 0,
+                string.Format(@"{0} entrapment peptides on their own proteins, {1} placed in target proteins", ownProtein.Count, inTargets.Count));
+            // Compared by accession: CarafeSharp spells a label db|accession|entry from the FASTA
+            // header, and this FASTA's shared-peptide records (sp|A|A;sp|B|B) parse differently there
+            var proteinAccessions = new HashSet<string>(proteinNames.SelectMany(n => n.Split(';')).Select(Accession));
+            AssertEx.IsTrue(inTargets.All(p => proteinAccessions.Contains(Accession(p.Value))),
+                @"an entrapment peptide placed in a target protein carries a label that is not a target protein's: " +
+                string.Join(@", ", inTargets.Select(p => p.Value).Where(v => !proteinAccessions.Contains(Accession(v))).Take(3)));
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(OspreySearchTest.SEARCH_TIMEOUT_MILLIS, () => peptideSettings.AvailableLibraries.Contains(FASTA_LIBRARY_NAME));
             AssertEx.FileExists(libraryPath);
+            // The FASTA's proteins reach the library; an entrapment peptide links to its label's
+            // proteins, flagged as entrapment either way, and a decoy to its target's with the decoy prefix
+            var libraryProteins = AssertLibraryProteins(libraryPath, builder.Document);
+            var entrapmentSequences = LibraryDecoyPairs.ReadEntrapmentSequences(libraryPath);
+            int entrapmentChecked = 0;
+            foreach (var pair in entrapmentProteinIds)
+            {
+                if (!libraryProteins.TryGetValue(pair.Key, out var accessions))
+                    continue;   // A peptide the prediction left out
+                AssertEx.IsTrue(accessions.SetEquals(pair.Value.Split(';')),
+                    string.Format(@"the entrapment peptide {0} links to {1}, not {2}", pair.Key, string.Join(@";", accessions), pair.Value));
+                AssertEx.IsTrue(entrapmentSequences.Contains(pair.Key), @"not flagged as entrapment: " + pair.Key);
+                entrapmentChecked++;
+            }
+            AssertEx.IsTrue(entrapmentChecked > inTargets.Count / 2, string.Format(@"only {0} entrapment peptides in the library", entrapmentChecked));
+            var decoyAccessions = builder.Document.Peptides.Where(p => p.IsDecoy)
+                .Select(p => libraryProteins.TryGetValue(p.Target.Sequence, out var accessions) ? accessions : null)
+                .Where(a => a != null).ToList();
+            AssertEx.IsTrue(decoyAccessions.Count > 0, @"no decoy links to a protein");
+            AssertEx.IsTrue(decoyAccessions.All(a => a.All(accession => accession.StartsWith(EntrapmentFastaSettings.DEFAULT_DECOY_PREFIX))),
+                @"a decoy links to a protein without the decoy prefix");
             // The library pairs its decoys with their targets and flags the entrapment peptides,
             // as Osprey's own libraries do
             AssertEx.IsTrue(OspreyHelpers.LibraryHasDecoyPairs(libraryPath), @"the library has no DecoyPairs table");
@@ -513,6 +604,13 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>Next refuses with <paramref name="message"/> and stays on <paramref name="page"/>.</summary>
+        /// <summary>The accession of a db|accession|entry label, or the label itself when it is not one.</summary>
+        private static string Accession(string label)
+        {
+            var parts = label.Split('|');
+            return parts.Length > 1 ? parts[1] : label;
+        }
+
         private static void ShowAndDismissMessage(BuildLibraryDlg buildLibraryDlg, string message, BuildLibraryDlg.Pages page)
         {
             var messageDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage);

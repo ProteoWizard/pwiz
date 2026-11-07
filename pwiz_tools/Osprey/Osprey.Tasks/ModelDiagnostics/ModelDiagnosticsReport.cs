@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -72,6 +73,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// never "pass 2 had nothing to say" (P13).
         /// </summary>
         public const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
+
+        /// <summary>
+        /// The protein-group entrapment view (<see cref="ModelDiagnosticsData.ProteinEntrapmentView"/>)
+        /// the second pass stores beside its products, with or without <c>--model-diagnostics</c>:
+        /// the one input of the pass-2 report that comes from the protein FDR result, which no
+        /// other stored artifact gives back, so a report asked for later folds the same product.
+        /// Absent when the library has no entrapment proteins.
+        /// </summary>
+        public const string EXT_PROTEIN_ENTRAPMENT = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".protein-entrapment.json";
 
         /// <summary>Logged when no first-pass model views are available, so the Model tab has
         /// nothing to show: the analysis's first-pass model, or a run's share of the feature
@@ -210,7 +220,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             ModelDiagnosticsData.CoAssignmentData coAssignment,
             OspreyConfig config,
             IOspreyLog log,
-            string validityKey = null)
+            string validityKey = null,
+            ModelDiagnosticsData.ProteinEntrapmentView proteinEntrapment = null)
         {
             try
             {
@@ -219,12 +230,60 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Null contributions for the reason the resident sibling passes null: no
                 // surviving pass-2 mode retrains, so there is no pass-2 model to describe.
                 data.Pass2 = accumulator.BuildPass2(null, coAssignment);
+                // As given: the join's own view (null for a library without entrapment proteins),
+                // or on the fold arm the one the join stored (ReadProteinEntrapment). Never read
+                // here, so a join whose view is null cannot pick up a file left by another one.
+                data.Pass2.ProteinEntrapment = proteinEntrapment;
                 FinalizePass2(data, config, validityKey, log);
             }
             catch (Exception ex)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_, ex.Message));
             }
+        }
+
+        /// <summary>
+        /// Stores the protein-group entrapment view of the second pass at
+        /// <see cref="EXT_PROTEIN_ENTRAPMENT"/>, stamped as a second-pass product, or removes
+        /// the file when <paramref name="view"/> is null (a library with no entrapment
+        /// proteins), so nothing stale is read back. Written by the join whether or not the
+        /// report was asked for, because the fold that adds the report later cannot rebuild
+        /// it: the protein FDR result it comes from is not stored anywhere else.
+        /// </summary>
+        public static void WriteProteinEntrapment(OspreyConfig config,
+            ModelDiagnosticsData.ProteinEntrapmentView view, string validityKey)
+        {
+            string path = ResolveProteinEntrapmentSidecarPath(config);
+            if (view == null)
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+                return;
+            }
+            WriteJson(path, view, ProductStamp(SecondPassTaskName, validityKey));
+        }
+
+        /// <summary>
+        /// The protein-group entrapment view the join stored (<see cref="WriteProteinEntrapment"/>),
+        /// for a fold that has no protein FDR result of its own, or null when there is none or
+        /// its stamp is not current for SecondPassFDR under <paramref name="validityKey"/>: a
+        /// file left by a join of another library or settings is refused, with a log line,
+        /// rather than shown as this analysis's card.
+        /// </summary>
+        public static ModelDiagnosticsData.ProteinEntrapmentView ReadProteinEntrapment(OspreyConfig config,
+            string validityKey, IOspreyLog log)
+        {
+            string path = ResolveProteinEntrapmentSidecarPath(config);
+            if (!File.Exists(path))
+                return null;
+            if (string.IsNullOrEmpty(validityKey) || !ArtifactValidity.IsCurrent(path, SecondPassTaskName, validityKey))
+            {
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    OspreyTasksResources.ModelDiagnosticsReport_ReadProteinEntrapment_The_saved_protein_group_entrapment_results___0___belong_to_a_different_analysis__so_the_report_leaves_that_card_out_,
+                    path));
+                return null;
+            }
+            return ReadJson<ModelDiagnosticsData.ProteinEntrapmentView>(path);
         }
 
         /// <summary>
@@ -617,6 +676,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         ///
         /// <paramref name="entrapmentRatio"/> is the library p_target/target count
         /// ratio r (1.0 for a balanced 1-fold entrapment library).
+        /// <paramref name="placement"/> says which entrapment sits on a real target protein
+        /// (the protein-aware audit), with each half's own ratio; null without entrapment.
         /// </summary>
         internal static void BuildClassificationFromLibrary(
             OspreyConfig config,
@@ -625,11 +686,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             int pass,
             out Dictionary<uint, EntrapmentClass> classByBaseId,
             out Dictionary<uint, uint> pairByBaseId,
-            out double entrapmentRatio)
+            out double entrapmentRatio,
+            out EntrapmentPlacement placement)
         {
             classByBaseId = null;
             pairByBaseId = null;
             entrapmentRatio = 1.0;
+            placement = null;
             if (libraryById == null)
                 return;
 
@@ -643,9 +706,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 libraryById.Count));
             var pairing = EntrapmentPairing.Build(libraryById);
 
-            int nTarget = 0, nPTarget = 0;
+            int nTarget = 0, nPTarget = 0, nPTargetOnTargetProtein = 0;
             classByBaseId = new Dictionary<uint, EntrapmentClass>();
             pairByBaseId = new Dictionary<uint, uint>();
+            var onTargetProtein = new EntrapmentPlacement();
             foreach (var kv in libraryById)
             {
                 var lib = kv.Value;
@@ -660,9 +724,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 if (pairing.ExcludedEntrapment.Contains(lib.Sequence))
                     continue;
                 uint baseId = kv.Key & BASE_ID_MASK;
-                bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
+                bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib);
                 classByBaseId[baseId] = entrap ? EntrapmentClass.PTarget : EntrapmentClass.Target;
                 if (entrap) nPTarget++; else nTarget++;
+                // Entrapment flagged by its pairing but carrying no entrapment accession sits on
+                // a real target protein: the half that can receive protein evidence.
+                if (entrap && !EntrapmentLibraryClassifier.IsOnEntrapmentProtein(lib) &&
+                    onTargetProtein.OnTargetProteinBaseIds.Add(baseId))
+                {
+                    nPTargetOnTargetProtein++;
+                }
                 if (pairing.PairIndexBySeq.TryGetValue(lib.Sequence, out uint pairIdx))
                     pairByBaseId[baseId] = pairIdx;
             }
@@ -673,8 +744,19 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return;
             }
             if (nTarget > 0)
+            {
                 entrapmentRatio = (double)nPTarget / nTarget;
-
+                onTargetProtein.RatioOnTargetProteins = (double)nPTargetOnTargetProtein / nTarget;
+                onTargetProtein.RatioOnEntrapmentProteins = (double)(nPTarget - nPTargetOnTargetProtein) / nTarget;
+            }
+            if (nPTarget > 0)
+                placement = onTargetProtein;
+            if (nPTargetOnTargetProtein > 0)
+            {
+                log.LogInfo(LogTag.ENTRAPMENT, string.Format(
+                    OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary__0__of__1__entrapment_peptides_sit_on_a_target_protein__the_model_diagnostics_report_splits_the_entrapment_FDP_by_protein_placement_,
+                    nPTargetOnTargetProtein, nPTarget));
+            }
         }
 
         /// <summary>
@@ -809,6 +891,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         private static string ResolvePass2SidecarPath(OspreyConfig config)
         {
             return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_PASS2);
+        }
+
+        private static string ResolveProteinEntrapmentSidecarPath(OspreyConfig config)
+        {
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_PROTEIN_ENTRAPMENT);
         }
 
         private static string ResolveOutputDir(OspreyConfig config)

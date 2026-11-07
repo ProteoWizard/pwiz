@@ -49,9 +49,13 @@ decoy, and, with entrapment, the entrapment target and its decoy.
    a `DecoyPairs` table (CarafeSharp's), its `IsDecoy` agrees. Without a manifest, a row with
    any decoy accession, or one its `DecoyPairs` row marks, is a decoy row, and the rest of its
    accessions must agree.
-4. **Entrapment is marked.** Every accession of an entrapment row carries `_p_target`
-   (`LibraryContract.ENTRAPMENT_MARKER`, Osprey's `EntrapmentLibraryClassifier` marker), as the
-   manifest's `proteins` column spells it; no accession of a real-protein row does.
+4. **Entrapment is marked where it is on an entrapment protein.** The accessions of an
+   entrapment row all carry `_p_target` (`LibraryContract.ENTRAPMENT_MARKER`), as the manifest's
+   `proteins` column spells it, or, for an entrapment peptide the builder placed on a target
+   protein (CarafeSharp's `--entrapment-in-targets`), none does: that row carries the target
+   protein's accession as it is, and only the manifest's `peptide_type` (and the `.blib`'s
+   `DecoyPairs.IsEntrapment`) marks it as entrapment. No accession of a real-protein row carries
+   the marker.
 5. **The manifest is authoritative.** Every row's sequence is in the manifest - a peptide
    clipped of its N-terminal methionine (Carafe's `clip_n_m`) counts as its unclipped manifest
    peptide; the row's kind (target / decoy, real / entrapment, from rules 3 and 4) is the kind

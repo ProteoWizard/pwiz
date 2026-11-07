@@ -65,6 +65,8 @@ namespace pwiz.Osprey.Core
         public const string INSTALL_CUDA_RUNTIME = @"install-cuda-runtime";
         public const string ENTRAPMENT = @"entrapment";
         public const string ENTRAPMENT_FASTA = @"entrapment-fasta";
+        public const string ENTRAPMENT_IN_TARGETS = @"entrapment-in-targets";
+        public const string STRIP_ENTRAPMENT = @"strip-entrapment";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)

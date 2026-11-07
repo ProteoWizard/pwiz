@@ -40,6 +40,14 @@ namespace pwiz.CarafeSharp.Core
         public const string MOD_SITES = @"mod_sites";
         public const string CHARGE = @"charge";
 
+        /// <summary>
+        /// An optional column: the precursor's proteins as the library's <c>ProteinID</c> text, the
+        /// <c>;</c>-separated labels the FASTA route gives its peptides (<c>db|accession|entry</c>,
+        /// the entrapment suffix, the decoy prefix), so a table written from a document whose
+        /// proteins are known predicts a library with them. Blank, or the column absent, is no protein.
+        /// </summary>
+        public const string PROTEIN_ID = @"protein_id";
+
         public static readonly IReadOnlyList<string> COLUMNS = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
 
         /// <summary>The table's precursors in its order; a blank line is skipped.</summary>
@@ -56,6 +64,7 @@ namespace pwiz.CarafeSharp.Core
                 if (!columns.ContainsKey(column))
                     throw new InvalidDataException(string.Format(@"The precursor table {0} has no {1} column.", path, column));
             }
+            int proteinColumn = columns.TryGetValue(PROTEIN_ID, out int proteinIndex) ? proteinIndex : -1;
             string line;
             while ((line = reader.ReadLine()) != null)
             {
@@ -63,7 +72,10 @@ namespace pwiz.CarafeSharp.Core
                     continue;
                 var fields = line.Split('\t');
                 var peptide = PeptideForm.FromAlphabase(fields[columns[SEQUENCE]], fields[columns[MODS]], fields[columns[MOD_SITES]]);
-                precursors.Add(new PrecursorForm(peptide, int.Parse(fields[columns[CHARGE]], CultureInfo.InvariantCulture)));
+                string proteinId = proteinColumn >= 0 && proteinColumn < fields.Length && fields[proteinColumn].Length > 0
+                    ? fields[proteinColumn]
+                    : null;
+                precursors.Add(new PrecursorForm(peptide, int.Parse(fields[columns[CHARGE]], CultureInfo.InvariantCulture), proteinId));
             }
             return precursors;
         }
