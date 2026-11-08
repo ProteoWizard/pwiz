@@ -201,7 +201,7 @@ namespace pwiz.Osprey.FDR
             }
 
             // 5. Find best initial feature - or, when the caller supplies initial scores (round 2
-            //    of the two-round tree training), start from those instead.
+            //    of the two-round training), start from those instead.
             double trainFdr = config.TrainFdr;
             double[] initialScores;
             if (initialEntryScores != null)
@@ -345,7 +345,7 @@ namespace pwiz.Osprey.FDR
                     Standardizer = standardizer,
                     FeatureNames = FeatureNamesOf(config),
                     IterationsPerFold = trainIterations,
-                    TrainEntryFolds = foldGbtModels != null && config.ReportTrainEntryFolds
+                    TrainEntryFolds = config.ReportTrainEntryFolds
                         ? BuildEntryFolds(n, trainSubset, foldAssignments)
                         : null,
                     TrainingAnalysis = trainingAnalysis
@@ -493,13 +493,17 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Two-round tree training (<see cref="PercolatorConfig.PrefilterTrainSize"/>,
-        /// <c>OSPREY_GBT_PREFILTER_SIZE</c>). Round 1 is the usual train-only
+        /// Two-round training (<see cref="PercolatorConfig.PrefilterTrainSize"/>,
+        /// <c>OSPREY_GBT_PREFILTER_SIZE</c>), for either classifier. Round 1 is the usual train-only
         /// <see cref="RunPercolator"/> on the <paramref name="round1Subset"/> rows of
         /// <paramref name="candidates"/> - the random peptide-grouped subsample. Its fold models
-        /// then score EVERY candidate: a round-1 training row by the one fold model that held it
-        /// out, any other row by the mean of the fold models, which is how the score pass scores a
-        /// row the models never saw. Round 2 is the same train-only training on the
+        /// then score EVERY candidate (<see cref="PercolatorScorer.ScoreRowsWithModel"/>): a round-1
+        /// training row by the one fold model that held it out, any other row by the model the
+        /// score pass applies to a row the models never saw - the mean of the tree margins, or for
+        /// the linear SVM the averaged fold weights. Holding the training rows out is what keeps
+        /// their in-sample scores from winning them round 2; it does not depend on
+        /// <c>OSPREY_GBT_OOF</c>, which governs only the final model's score pass (tree only: the
+        /// linear score pass has no held-out scoring). Round 2 is the same train-only training on the
         /// best-scoring peptide groups (<see cref="PercolatorSampling.SelectTopScoringGroups"/>),
         /// up to <see cref="PercolatorConfig.PrefilterTrainSize"/> rows, and replaces round 1.
         ///
@@ -513,14 +517,14 @@ namespace pwiz.Osprey.FDR
         /// subsample turned off (the subset is already the selection).</para>
         ///
         /// <para>Every candidate must carry its feature vector. Deterministic and independent of
-        /// <see cref="PercolatorConfig.NThreads"/>: a tree score depends only on its own row, and
-        /// the selection orders groups by a total order.</para>
+        /// <see cref="PercolatorConfig.NThreads"/>: a tree or linear score depends only on its own
+        /// row, and the selection orders groups by a total order.</para>
         /// </summary>
         /// <param name="candidates">The best-per-precursor rows the subsampler chose from, at
         /// most one per (base_id, isDecoy).</param>
         /// <param name="round1Subset">Ascending indices into <paramref name="candidates"/>: the
         /// round-1 training rows.</param>
-        /// <param name="trainConfig">The train-only tree config.</param>
+        /// <param name="trainConfig">The train-only config, of either classifier.</param>
         /// <param name="log">Where the round-2 subset is reported.</param>
         /// <param name="passLabel">The pass label for the log lines.</param>
         /// <param name="round2Entries">The round-2 training rows, which the caller treats as the
@@ -540,8 +544,6 @@ namespace pwiz.Osprey.FDR
             out List<PercolatorEntry> round2Entries,
             Action<PercolatorResults, IReadOnlyDictionary<uint, int>, List<PercolatorEntry>> appendRound2Column = null)
         {
-            if (!trainConfig.UseGradientBoostedTrees)
-                throw new InvalidOperationException(@"TrainWithScorePrefilter trains the tree model only.");
             int prefilterSize = trainConfig.PrefilterTrainSize;
             if (prefilterSize <= 0)
                 throw new ArgumentOutOfRangeException(nameof(trainConfig), @"PrefilterTrainSize must be positive.");
@@ -568,8 +570,8 @@ namespace pwiz.Osprey.FDR
             }
             int nFeatures = candidates.Count > 0 ? candidates[0].Features.Length : 0;
             var round1Scores = new double[m];
-            PercolatorScorer.ScoreRowsGbt(m, k => candidates[k].Features, round1.FoldGbtModels,
-                round1.Standardizer, nFeatures, round1Scores, 0, trainConfig.NThreads, heldOutFold);
+            PercolatorScorer.ScoreRowsWithModel(m, k => candidates[k].Features, round1,
+                nFeatures, round1Scores, 0, trainConfig.NThreads, heldOutFold);
 
             // Round 2's subset: the best-scoring peptide groups, kept whole.
             var labels = new bool[m];

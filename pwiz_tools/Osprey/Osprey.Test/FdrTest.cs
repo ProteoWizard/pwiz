@@ -1636,6 +1636,129 @@ namespace pwiz.Osprey.Test
             AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
         }
 
+        /// <summary>
+        /// The two-round training and the protein-best column under the linear SVM, by the path the
+        /// trees take (<see cref="TestGbdtPrefilterTraining"/>): round 1's fold models score every
+        /// candidate, round 2 trains a linear model on the best-scoring groups and replaces round 1,
+        /// at any thread count. <c>OSPREY_GBT_OOF</c>'s held-out folds do not reach the linear score
+        /// pass, which scores every row with the averaged weights. With the column the model trains
+        /// on one more weight, and <see cref="FrozenModelScorer"/>, the second pass's view of it,
+        /// scores every row with its run's persisted column to the same bits the first pass did.
+        /// </summary>
+        [TestMethod]
+        public void TestSvmPrefilterTraining()
+        {
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_monotone", "Monotone feature", false),
+                new OspreyFeatureInfo("feat_nonmonotone", "Non-monotone feature", false)
+            };
+            PercolatorConfig MakeConfig(int prefilterSize, int threads)
+            {
+                return new PercolatorConfig
+                {
+                    MaxIterations = 3,
+                    FeatureInfos = featureInfos,
+                    MaxTrainSize = 120,
+                    PrefilterTrainSize = prefilterSize,
+                    NThreads = threads
+                };
+            }
+
+            var fixture = BuildNonMonotoneFirstPassFixture(out var features);
+            var fileNames = fixture.ConvertAll(kv => kv.Key);
+            var streamRows = StreamRowsFrom(fixture);
+            CapturingSink RunArm(PercolatorConfig config, IOspreyLog log, out PercolatorResults model,
+                PercolatorResults pretrained = null)
+            {
+                PercolatorResults captured = null;
+                var sink = new CapturingSink();
+                Assert.IsFalse(PercolatorEngine.RunStreamingFirstPass(
+                    fileNames, streamRows, f => features[f], config, log, "First-pass",
+                    sink, captureModel: m => captured = m, pretrainedModel: pretrained));
+                model = captured;
+                return sink;
+            }
+            int totalRows = fixture.Sum(kv => kv.Value.Count);
+
+            var log = new CapturingLog();
+            var sinkPrefilter = RunArm(MakeConfig(100, 4), log, out var prefilterModel);
+            AssertLinearModel(prefilterModel, 3);
+            AssertScoresVary(fixture, sinkPrefilter);
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter subsample (round 2): 100 precursors (50 targets, 50 decoys) from 300 candidates");
+            StringAssert.Contains(log.Text, "First-pass Percolator prefilter round 2 initial score: round-1 model");
+            StringAssert.Contains(log.Text,
+                "First-pass Percolator prefilter candidates: loading features for all 300 best-per-precursor precursors");
+            Assert.IsNull(prefilterModel.TrainEntryFolds);
+
+            // Thread-count invariant, and round 2 replaced round 1.
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkPrefilter, RunArm(MakeConfig(100, 1), OspreyLog.None, out _)));
+            var sinkSingle = RunArm(MakeConfig(0, 4), OspreyLog.None, out var singleModel);
+            AssertLinearModel(singleModel, 3);
+            bool anyDiffers = false;
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                for (int r = 0; r < fixture[f].Value.Count; r++)
+                    anyDiffers |= sinkSingle.ScoreAt(f, r) != sinkPrefilter.ScoreAt(f, r);
+            }
+            Assert.IsTrue(anyDiffers, "the round-2 model must replace the round-1 model");
+
+            // The held-out folds stay tree-only: reported, but the linear score pass ignores them.
+            var oofConfig = MakeConfig(100, 4);
+            oofConfig.ReportTrainEntryFolds = true;
+            var oofLog = new CapturingLog();
+            var sinkOof = RunArm(oofConfig, oofLog, out var oofModel);
+            Assert.IsNotNull(oofModel.TrainEntryFolds);
+            Assert.IsFalse(oofLog.Text.Contains("out-of-fold tree scoring"), "the linear score pass has no held-out scoring");
+            Assert.AreEqual(totalRows, AssertSinksIdentical(fixture, sinkPrefilter, sinkOof));
+
+            // The column: the shared assertions the trees pass, then the second pass's scorer.
+            AssertProteinBestColumnTrains(threads => MakeConfig(100, threads), fixture, sinkPrefilter, prefilterModel, RunArm);
+            AssertFrozenLinearScorerReadsColumn(MakeConfig(100, 4), fixture, features, RunArm);
+        }
+
+        /// <summary>
+        /// A linear model trained with the protein-best column, frozen as the second pass freezes it,
+        /// scores each first-pass row - its raw features plus its run's persisted column value - to
+        /// exactly the first pass's score: both apply the one averaged-weights model.
+        /// </summary>
+        private static void AssertFrozenLinearScorerReadsColumn(PercolatorConfig config,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, Dictionary<string, List<double[]>> features,
+            FirstPassArm runArm)
+        {
+            var precursors = fixture[0].Value.Where(entry => !entry.IsDecoy).Select(entry =>
+                new ProteinBestMembership.Precursor(entry.EntryId, entry.ModifiedSequence,
+                    new[] { string.Format("PROT{0}", (entry.EntryId & 0x7FFFFFFFu) % 10) })).ToArray();
+            var columns = new Dictionary<string, ProteinBestRunValues>();
+            config.ProteinBest = new ProteinBestRequest(ProteinBestMembership.Build(precursors), 2, false,
+                (fileName, values) =>
+                {
+                    lock (columns)
+                        columns[fileName] = values;
+                });
+            var sink = runArm(config, OspreyLog.None, out var model);
+            AssertLinearModel(model, 3);
+            Assert.AreEqual(features[fixture[0].Key][0].Length + 1, model.FoldWeights[0].Length);
+            Assert.AreEqual(fixture.Count, columns.Count, "every run's column is persisted");
+
+            var scorer = FrozenModelScorer.TryCreate(model);
+            Assert.IsNotNull(scorer);
+            Assert.IsFalse(scorer.IsGradientBoostedTrees);
+            Assert.IsTrue(scorer.ScoresProteinBest);
+            Assert.AreEqual(features[fixture[0].Key][0].Length, scorer.InputFeatures);
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                string fileName = fixture[f].Key;
+                var rows = fixture[f].Value;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    Assert.AreEqual(sink.ScoreAt(f, r), scorer.Score(features[fileName][r], rows[r].EntryId, columns[fileName]),
+                        0.0, "row {0} of {1}", r, fileName);
+                }
+            }
+        }
+
         private delegate CapturingSink FirstPassArm(PercolatorConfig config, IOspreyLog log,
             out PercolatorResults model, PercolatorResults pretrained = null);
 
@@ -2186,6 +2309,13 @@ namespace pwiz.Osprey.Test
                 "a gbdt first pass must train gradient-boosted trees, not the linear SVM");
             Assert.AreEqual(nFolds, model.FoldGbtModels.Count, "one tree ensemble per fold");
             Assert.AreEqual(0, model.FoldWeights.Count, "a tree model carries no linear weights");
+        }
+
+        private static void AssertLinearModel(PercolatorResults model, int nFolds)
+        {
+            Assert.IsNotNull(model, "the first pass must publish the model it trained");
+            Assert.IsFalse(model.IsGradientBoostedTrees, "the default first pass trains the linear SVM");
+            Assert.AreEqual(nFolds, model.FoldWeights.Count, "one weight vector per fold");
         }
 
         /// <summary>

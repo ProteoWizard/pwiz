@@ -269,6 +269,10 @@ namespace pwiz.Osprey.FDR
         /// sweep point re-run as the next - each reporting "skipping (outputs valid)" and handing
         /// back the other arm's numbers.</para>
         ///
+        /// <para>The one exception for the SVM is the two-round training
+        /// (<c>OSPREY_GBT_PREFILTER_SIZE</c> and its switches, and <c>OSPREY_PROTEIN_BEST</c>), which
+        /// trains a different model under either classifier and appends its terms whenever it is set.</para>
+        ///
         /// <para>Kept out of the base task key and out of <c>SearchParameterHash</c>, which must
         /// match the Rust implementation; gbdt has no Rust counterpart. The term is spelled
         /// <c>fdrmodel=</c> after the variable that selects it; it read <c>fdrmethod=</c> while
@@ -280,7 +284,9 @@ namespace pwiz.Osprey.FDR
                 OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
             // The two-round training (OSPREY_GBT_PREFILTER_SIZE) trains a different model, so it
             // is keyed when set - and only then, so every existing key is unchanged without it.
-            if (suffix.Length > 0 && OspreyEnvironment.GbtPrefilterSize > 0)
+            // The same terms under either classifier: the linear SVM's key has no fdrmodel term,
+            // the tree model's does, so the two cannot collide.
+            if (OspreyEnvironment.GbtPrefilterSize > 0)
             {
                 suffix += string.Format(CultureInfo.InvariantCulture, @";gbtprefilter={0}",
                     OspreyEnvironment.GbtPrefilterSize);
@@ -368,22 +374,15 @@ namespace pwiz.Osprey.FDR
                 // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
                 MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
-                // OSPREY_GBT_PREFILTER_SIZE: two-round tree training on the streamed first pass
-                // (0, the default, trains one round). The tree model only.
-                PrefilterTrainSize = config.FdrClassifier == FdrClassifier.Gbdt
-                    ? OspreyEnvironment.GbtPrefilterSize
-                    : 0,
+                // OSPREY_GBT_PREFILTER_SIZE: two-round training on the streamed first pass (0, the
+                // default, trains one round). Either classifier; the name keeps its GBT_ prefix.
+                PrefilterTrainSize = OspreyEnvironment.GbtPrefilterSize,
                 // OSPREY_GBT_PREFILTER_Q: round 2 by a round-1 q cut, the size above as its cap.
-                PrefilterTrainQ = config.FdrClassifier == FdrClassifier.Gbdt
-                    ? OspreyEnvironment.GbtPrefilterQ ?? 0
-                    : 0,
+                PrefilterTrainQ = OspreyEnvironment.GbtPrefilterQ ?? 0,
                 // OSPREY_GBT_PREFILTER_LFDR: round 2 by a round-1 local-FDR cut instead.
-                PrefilterTrainLocalFdr = config.FdrClassifier == FdrClassifier.Gbdt
-                    ? OspreyEnvironment.GbtPrefilterLocalFdr ?? 0
-                    : 0,
+                PrefilterTrainLocalFdr = OspreyEnvironment.GbtPrefilterLocalFdr ?? 0,
                 // OSPREY_GBT_PREFILTER_SAMPLE: round 2 samples the eligible groups up to the cap.
-                PrefilterTrainSample = config.FdrClassifier == FdrClassifier.Gbdt &&
-                                       OspreyEnvironment.GbtPrefilterSample,
+                PrefilterTrainSample = OspreyEnvironment.GbtPrefilterSample,
                 // OSPREY_GBT_OOF: the trainer reports each training row's held-out fold, so the
                 // score pass scores that row out of fold. The tree model only.
                 ReportTrainEntryFolds = config.FdrClassifier == FdrClassifier.Gbdt &&
@@ -545,7 +544,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n);
             // OSPREY_GBT_PREFILTER_SIZE is keyed for every task, but only the streamed first pass
             // (RunStreamingFirstPass) trains two rounds; say so where it is ignored.
-            if (percConfig.UseGradientBoostedTrees && percConfig.PrefilterTrainSize > 0)
+            if (percConfig.PrefilterTrainSize > 0)
             {
                 log.LogInfo(string.Format(CultureInfo.InvariantCulture,
                     @"Warning: OSPREY_GBT_PREFILTER_SIZE={0} is ignored by the {1} projection path, which trains one round.",
@@ -653,8 +652,9 @@ namespace pwiz.Osprey.FDR
             // no-op (null) on every default run, so this projection first pass stays byte-identical.
             captureModel?.Invoke(trainResults);
 
+            // The tree model only: the linear score pass scores every row with the averaged weights.
             Dictionary<int, int> heldOutFoldByRow = null;
-            if (trainResults.TrainEntryFolds != null)
+            if (trainResults.TrainEntryFolds != null && trainResults.IsGradientBoostedTrees)
             {
                 heldOutFoldByRow = new Dictionary<int, int>(trainSubsetGlobalIdx.Length);
                 for (int k = 0; k < trainSubsetGlobalIdx.Length; k++)
@@ -1061,11 +1061,10 @@ namespace pwiz.Osprey.FDR
 
             // The column reaches a model only through round 2, and startup refuses the settings that
             // have none; nothing else may quietly train without the column it was asked for.
-            if (percConfig.ProteinBest != null &&
-                (!percConfig.UseGradientBoostedTrees || percConfig.PrefilterTrainSize <= 0))
+            if (percConfig.ProteinBest != null && percConfig.PrefilterTrainSize <= 0)
             {
                 throw new InvalidOperationException(
-                    @"The protein-best column needs the two-round tree training.");
+                    @"The protein-best column needs the two-round training.");
             }
 
             int nFiles = fileNames.Count;
@@ -1290,12 +1289,12 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            // OSPREY_GBT_PREFILTER_SIZE: two-round tree training scores EVERY deduped candidate with
-            // the round-1 models, so every candidate becomes an entry and has its features loaded;
-            // the round-1 subset is the same entry objects. Off (the default), only the subset is
-            // built and loaded, as always. A resume trains nothing, so it never needs the candidates.
-            bool prefilter = percConfig.UseGradientBoostedTrees && percConfig.PrefilterTrainSize > 0 &&
-                             pretrainedModel == null;
+            // OSPREY_GBT_PREFILTER_SIZE: two-round training (either classifier) scores EVERY deduped
+            // candidate with the round-1 models, so every candidate becomes an entry and has its
+            // features loaded; the round-1 subset is the same entry objects. Off (the default), only
+            // the subset is built and loaded, as always. A resume trains nothing, so it never needs
+            // the candidates.
+            bool prefilter = percConfig.PrefilterTrainSize > 0 && pretrainedModel == null;
             List<PercolatorEntry> candidateEntries = null;
             if (prefilter)
             {
@@ -1402,9 +1401,10 @@ namespace pwiz.Osprey.FDR
             captureModel?.Invoke(trainResults);
             LogBlockReads(log, passLabel, @"training load");
 
-            // OSPREY_GBT_OOF: each training row's held-out fold, by run and parquet row index.
+            // OSPREY_GBT_OOF: each training row's held-out fold, by run and parquet row index. The
+            // tree model only: the linear score pass scores every row with the averaged weights.
             Dictionary<string, Dictionary<int, int>> heldOutFolds = null;
-            if (trainResults.TrainEntryFolds != null)
+            if (trainResults.TrainEntryFolds != null && trainResults.IsGradientBoostedTrees)
             {
                 heldOutFolds = new Dictionary<string, Dictionary<int, int>>();
                 int heldOutRows = 0;
@@ -1448,23 +1448,12 @@ namespace pwiz.Osprey.FDR
                     @"RunStreamingFirstPass: trainResults contains no fold models");
             // Average fold weights + biases (identical to PercolatorScorer.ScoreProjectionAndComputeFdrInPlace).
             // Trees are averaged per score instead (see PercolatorScorer.AverageGbtScore).
+            // At the model's width: with the protein-best column the linear model has one more
+            // weight than the raw features.
             double[] avgWeights = null;
             double avgBias = 0.0;
             if (gbtModels == null)
-            {
-                avgWeights = new double[nFeatures];
-                for (int fm = 0; fm < nModels; fm++)
-                {
-                    double[] foldW = trainResults.FoldWeights[fm];
-                    for (int j = 0; j < nFeatures; j++)
-                        avgWeights[j] += foldW[j];
-                    avgBias += trainResults.FoldBiases[fm];
-                }
-                double nModelsD = nModels;
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] /= nModelsD;
-                avgBias /= nModelsD;
-            }
+                avgWeights = PercolatorScorer.AverageFoldWeights(trainResults.FoldWeights, trainResults.FoldBiases, scoreFeatures, out avgBias);
             var standardizer = trainResults.Standardizer;
 
             // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
@@ -2063,15 +2052,15 @@ namespace pwiz.Osprey.FDR
         ///
         /// <para>The scores are out of fold whenever they can be: a precursor round 1 trained on is
         /// scored in every run by the one fold model that held its peptide group out. Any other
-        /// row is scored by the mean of the fold models, none of which saw its peptide. So no prior
+        /// row is scored by the mean of the fold models (for the linear SVM, the averaged weights the
+        /// score pass applies), none of which saw its peptide. So no prior
         /// score comes from a model that trained on the peptide it scores, with or without
         /// <c>OSPREY_GBT_OOF</c>, which governs only the final model's score pass.</para>
         /// </summary>
         private sealed class ProteinBestColumn
         {
             private readonly ProteinBestRequest _request;
-            private readonly IReadOnlyList<GradientBoostedTrees> _models;
-            private readonly FeatureStandardizer _standardizer;
+            private readonly PercolatorResults _round1;
             private readonly IReadOnlyDictionary<uint, int> _heldOutFoldByBaseId;
             private readonly int _rawFeatures;
             private readonly int _threads;
@@ -2080,8 +2069,7 @@ namespace pwiz.Osprey.FDR
                 IReadOnlyDictionary<uint, int> heldOutFoldByBaseId, int rawFeatures, int threads)
             {
                 _request = request;
-                _models = round1.FoldGbtModels;
-                _standardizer = round1.Standardizer;
+                _round1 = round1;
                 _heldOutFoldByBaseId = heldOutFoldByBaseId;
                 _rawFeatures = rawFeatures;
                 _threads = threads;
@@ -2117,9 +2105,9 @@ namespace pwiz.Osprey.FDR
                         heldOut[r] = fold;
                 }
                 var priorScores = new double[count];
-                PercolatorScorer.ScoreRowsGbt(count,
+                PercolatorScorer.ScoreRowsWithModel(count,
                     r => PercolatorScorer.ResolveFeatureRow(rawRows, (uint)r, rows.CoelutionSums[r], _rawFeatures),
-                    _models, _standardizer, _rawFeatures, priorScores, 0, _threads, heldOut);
+                    _round1, _rawFeatures, priorScores, 0, _threads, heldOut);
                 return ProteinBestFeature.ComputeColumn(_request.Membership, _request.TopN, _request.DecoyOwn,
                     baseIds, rows.IsDecoys, priorScores, out floor);
             }

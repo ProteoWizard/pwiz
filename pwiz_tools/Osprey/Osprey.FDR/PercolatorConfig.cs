@@ -66,9 +66,9 @@ namespace pwiz.Osprey.FDR
         public int MaxTrainSize { get; set; }
 
         /// <summary>
-        /// Rows in the round-2 training subset of the two-round tree training
+        /// Rows in the round-2 training subset of the two-round training
         /// (<c>OSPREY_GBT_PREFILTER_SIZE</c>), or 0 (the default) for the usual single round.
-        /// Read only by the streamed first pass, and only for the tree model: there round 1
+        /// Read only by the streamed first pass, for either classifier: there round 1
         /// trains on the random <see cref="MaxTrainSize"/> subsample as usual, its fold models
         /// score every best-per-precursor candidate, and round 2 retrains on the best-scoring
         /// peptide groups up to this many rows. See <see cref="PercolatorTrainer.TrainWithScorePrefilter"/>.
@@ -109,8 +109,10 @@ namespace pwiz.Osprey.FDR
         public ProteinBestRequest ProteinBest { get; set; }
 
         /// <summary>
-        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only tree run, so
-        /// the caller can score each training row with only the fold model that held it out.
+        /// Report <see cref="PercolatorResults.TrainEntryFolds"/> from a train-only run, so the
+        /// caller can score each training row with only the fold model that held it out. Either
+        /// classifier reports them; the score passes apply them to the tree model only, since the
+        /// linear score pass scores every row with the averaged weights.
         /// Set from <c>OSPREY_GBT_OOF</c> by the Tasks-layer config build, so the trainer reads no
         /// environment; round 1 of the two-round training also sets it on its own copy, because
         /// it scores its training rows out of fold either way. Copied by

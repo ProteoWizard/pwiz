@@ -1101,7 +1101,7 @@ namespace pwiz.Osprey.Core
         public static readonly bool GbtOutOfFold = ParseIntOrNull(ENV_GBT_OOF) == 1;
 
         private static readonly EnvVar ENV_GBT_PREFILTER_SIZE = new EnvVar(@"OSPREY_GBT_PREFILTER_SIZE", EnvVarGroup.behavior,
-            @"Experiment, gbdt first pass only: two-round training. Round 1 trains on the usual random " +
+            @"Experiment, first pass, either classifier (the GBT_ prefix is historical): two-round training. Round 1 trains on the usual random " +
             @"subsample; its fold models score every best-per-precursor candidate, and round 2 retrains on " +
             @"the N rows of the best-scoring peptide groups. Changes the validity key. Loads the features of every candidate " +
             @"during training (about double the resident features). Ignored, with a warning, by the " +
@@ -1109,10 +1109,12 @@ namespace pwiz.Osprey.Core
             { ValueExample = @"<N>" };
 
         /// <summary>
-        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass tree training. Round 1 trains as usual
+        /// OSPREY_GBT_PREFILTER_SIZE=N (experiment): two-round first-pass training. Round 1 trains as usual
         /// on the random MaxTrainSize subsample; its fold models then score every best-per-precursor candidate, and
-        /// round 2 retrains on the N rows of the peptide groups that score best. Tree model only; 0 when unset.
-        /// Keyed through the gbdt validity-key term, so a run with it never adopts outputs trained without it.
+        /// round 2 retrains on the N rows of the peptide groups that score best. Either classifier, the name
+        /// notwithstanding; 0 when unset. Keyed through the classifier validity-key term
+        /// (PercolatorEngine.GbdtValidityKeySuffix, which appends it for the SVM too), so a run with it never
+        /// adopts outputs trained without it.
         /// Memory: the first pass then loads the features of every best-per-precursor candidate, not only the
         /// MaxTrainSize subsample - about candidates x features doubles resident during training. Read only
         /// by the streamed first pass; the projection path ignores it and logs a warning.
@@ -1212,9 +1214,9 @@ namespace pwiz.Osprey.Core
         private const int PROTEIN_BEST_MEAN_MAX = 16;
 
         private static readonly EnvVar ENV_PROTEIN_BEST = new EnvVar(@"OSPREY_PROTEIN_BEST", EnvVarGroup.behavior,
-            @"Experiment, gbdt two-round first pass only: appends a column to round 2 and the score pass: what " +
+            @"Experiment, two-round first pass only (either classifier): appends a column to round 2 and the score pass: what " +
             @"the other peptides on the candidate's protein scored in round 1 in that run, their maximum or the " +
-            @"mean of the top N (2 to 16) padded with the run's decoy median. Needs OSPREY_FDR_MODEL=gbdt and " +
+            @"mean of the top N (2 to 16) padded with the run's decoy median. Needs " +
             @"OSPREY_GBT_PREFILTER_SIZE. A run with it stops after FirstPassFDR: pass 2 cannot supply the column. " +
             @"Changes the validity key.")
             {
@@ -1311,11 +1313,11 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// The startup refusal for this environment's protein-best settings against the classifier the
-        /// run trains, or null when they hold. Off, the two sub-switches must be unset too: they would do
-        /// nothing while the run kept the baseline's key.
+        /// The startup refusal for this environment's protein-best settings, or null when they hold.
+        /// Either classifier can train with the column, through the two-round training. Off, the
+        /// sub-switches must be unset too: they would do nothing while the run kept the baseline's key.
         /// </summary>
-        public static string ValidateProteinBestSettings(FdrClassifier fdrClassifier)
+        public static string ValidateProteinBestSettings()
         {
             if (!ProteinBestEnabled)
             {
@@ -1323,10 +1325,10 @@ namespace pwiz.Osprey.Core
                     ? @"OSPREY_PROTEIN_BEST_DECOY and OSPREY_PROTEIN_BEST_SHUFFLE shape the column OSPREY_PROTEIN_BEST adds and need it set as well."
                     : null;
             }
-            if (fdrClassifier != FdrClassifier.Gbdt || GbtPrefilterSize <= 0)
+            if (GbtPrefilterSize <= 0)
             {
-                return @"OSPREY_PROTEIN_BEST reaches the model through round 2 of the two-round tree training: " +
-                       @"it needs OSPREY_FDR_MODEL=gbdt and OSPREY_GBT_PREFILTER_SIZE set as well.";
+                return @"OSPREY_PROTEIN_BEST reaches the model through round 2 of the two-round training: " +
+                       @"it needs OSPREY_GBT_PREFILTER_SIZE set as well.";
             }
             return null;
         }

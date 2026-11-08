@@ -406,7 +406,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// The score-ranked counterpart of <see cref="SubsampleByPeptideGroup"/>, for round 2 of
-        /// the two-round tree training: the same peptide groups (a target, its paired decoy and the
+        /// the two-round training: the same peptide groups (a target, its paired decoy and the
         /// peptide's other charge states stay together), taken in descending order of each group's
         /// BEST row score instead of a shuffle, until the next group would pass
         /// <paramref name="maxEntries"/>. Groups whose best scores tie are taken in ordinal key

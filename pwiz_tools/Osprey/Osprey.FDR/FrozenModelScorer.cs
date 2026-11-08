@@ -125,20 +125,9 @@ namespace pwiz.Osprey.FDR
 
             // Average the fold weights + biases into a single linear model -- the same
             // averaged-model math PercolatorScorer applies before scoring a population.
-            int nModels = model.FoldWeights.Count;
             int nFeatures = model.FoldWeights[0].Length;
-            var avgWeights = new double[nFeatures];
-            double avgBias = 0.0;
-            for (int f = 0; f < nModels; f++)
-            {
-                double[] foldW = model.FoldWeights[f];
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += model.FoldBiases[f];
-            }
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModels;
-            avgBias /= nModels;
+            var avgWeights = PercolatorScorer.AverageFoldWeights(model.FoldWeights, model.FoldBiases, nFeatures,
+                out double avgBias);
 
             return new FrozenModelScorer(null, avgWeights, avgBias, model.Standardizer, nFeatures, scoresProteinBest);
         }

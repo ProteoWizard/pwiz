@@ -1204,7 +1204,7 @@ namespace pwiz.Osprey
         /// </summary>
         private static string ProteinBestError(OspreyConfig config)
         {
-            string settingsErr = OspreyEnvironment.ValidateProteinBestSettings(config.FdrClassifier);
+            string settingsErr = OspreyEnvironment.ValidateProteinBestSettings();
             if (settingsErr != null || !OspreyEnvironment.ProteinBestEnabled)
                 return settingsErr;
             if (BuildsLibrary(config))

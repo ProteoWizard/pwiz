@@ -55,6 +55,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 AssertProteinBestRefusals(FdrClassifier.LinearSvm);
+                AssertLinearProteinBestAnalysis();
                 OspreyEnvironment.FdrModel = FdrClassifier.Gbdt;
                 AssertProteinBestRefusals(FdrClassifier.Gbdt);
                 AssertProteinBestArms();
@@ -74,17 +75,11 @@ namespace pwiz.Osprey.Test
 
         private void AssertProteinBestArms()
         {
-            string[] benchArgs(string dir) => new[]
-            {
-                OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, Path.Combine(dir, @"bench.tsv"),
-                OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
-            };
-
             // Off, in two directories, one spelling it out: the same bits, and no column written.
             string offDir = CreateDir(@"protein-best-off");
-            RunAnalysis(offDir, DataInputs(), ProteinBestVariables(null), benchArgs(offDir));
+            RunAnalysis(offDir, DataInputs(), ProteinBestVariables(null), BenchArgs(offDir));
             string explicitOffDir = CreateDir(@"protein-best-explicit-off");
-            RunAnalysis(explicitOffDir, DataInputs(), ProteinBestVariables(@"off"), benchArgs(explicitOffDir));
+            RunAnalysis(explicitOffDir, DataInputs(), ProteinBestVariables(@"off"), BenchArgs(explicitOffDir));
             var offScores = FirstPassScores(offDir);
             AssertScoresIdentical(offScores, FirstPassScores(explicitOffDir), @"off is the baseline");
             AssertBlibsEqual(Path.Combine(offDir, BLIB_FILE), Path.Combine(explicitOffDir, BLIB_FILE));
@@ -92,7 +87,7 @@ namespace pwiz.Osprey.Test
 
             // On, under the default second pass: both passes, both FDRBench tables, the library.
             string onDir = CreateDir(@"protein-best-on");
-            string log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), benchArgs(onDir)
+            string log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), BenchArgs(onDir)
                 .Concat(new[] { OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText }).ToArray());
             StringAssert.Contains(log, @"Protein-best training column (EXPERIMENTAL, OSPREY_PROTEIN_BEST): mean-2, decoys paired");
             string onBlib = Path.Combine(onDir, BLIB_FILE);
@@ -106,7 +101,7 @@ namespace pwiz.Osprey.Test
             File.Copy(onBlib, expectedBlib);
 
             // The same arm again: every output stands.
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), benchArgs(onDir));
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), BenchArgs(onDir));
             AssertNoRecompute(log);
             AssertScoresIdentical(mean2, FirstPassScores(onDir), @"rerun");
             AssertBlibsEqual(expectedBlib, onBlib);
@@ -117,7 +112,7 @@ namespace pwiz.Osprey.Test
             DeleteFiles(onDir, @"*." + FdrScoresSidecar.LABEL_SECOND_PASS + @".*");
             DeleteFiles(onDir, @"*" + ParquetScoreCache.EXT_SCORES_RECONCILED);
             DeleteFiles(onDir, @"*" + ReconciliationFile.EXT);
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), benchArgs(onDir));
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), BenchArgs(onDir));
             AssertTasks(log, new[] { FirstPassFdrTask.TASK_NAME }, new[] { PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
             AssertBlibsEqual(expectedBlib, onBlib);
 
@@ -125,7 +120,7 @@ namespace pwiz.Osprey.Test
             // retrained model (the saved one cannot supply round 1), and the library is the same.
             File.Delete(ProteinBestColumns(onDir).First());
             File.Delete(onBlib);
-            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), benchArgs(onDir));
+            log = RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), BenchArgs(onDir));
             AssertTasks(log, Array.Empty<string>(), new[] { FirstPassFdrTask.TASK_NAME });
             AssertScoresIdentical(mean2, FirstPassScores(onDir), @"resume");
             AssertBlibsEqual(expectedBlib, onBlib);
@@ -133,7 +128,7 @@ namespace pwiz.Osprey.Test
             // Another lane count and one thread.
             string laneDir = CreateDir(@"protein-best-one-lane");
             var oneLane = new Dictionary<string, string>(ProteinBestVariables(@"mean-2")) { [FDR_FILE_LANES] = @"1" };
-            RunAnalysis(laneDir, DataInputs(), oneLane, benchArgs(laneDir));
+            RunAnalysis(laneDir, DataInputs(), oneLane, BenchArgs(laneDir));
             AssertScoresIdentical(mean2, FirstPassScores(laneDir), @"one lane");
             AssertBlibsEqual(expectedBlib, Path.Combine(laneDir, BLIB_FILE));
             string threadDir = CreateDir(@"protein-best-one-thread");
@@ -145,7 +140,7 @@ namespace pwiz.Osprey.Test
             string transferDir = CreateDir(@"protein-best-transfer");
             var transfer = new Dictionary<string, string>(ProteinBestVariables(@"mean-2"))
                 { [PASS2_QVALUE] = OspreyEnvironment.PASS2_QVALUE_TRANSFER };
-            RunAnalysis(transferDir, DataInputs(), transfer, benchArgs(transferDir));
+            RunAnalysis(transferDir, DataInputs(), transfer, BenchArgs(transferDir));
             AssertProteinBestAnalysis(transferDir);
             AssertScoresIdentical(mean2, FirstPassScores(transferDir), @"transfer has the same first pass");
 
@@ -157,11 +152,32 @@ namespace pwiz.Osprey.Test
                          new Dictionary<string, string>(ProteinBestVariables(@"mean-2")) { [PROTEIN_BEST_SHUFFLE] = @"1" }
                      })
             {
-                RunAnalysis(onDir, DataInputs(), other, benchArgs(onDir));
+                RunAnalysis(onDir, DataInputs(), other, BenchArgs(onDir));
                 var arm = FirstPassScores(onDir);
                 Assert.AreEqual(mean2.Count, arm.Count);
                 AssertScoresDiffer(mean2, arm, string.Join(@" ", other.Values));
             }
+        }
+
+        /// <summary>
+        /// The linear SVM (the default classifier) with the two-round training and the column: a
+        /// complete analysis whose saved model is linear and scores with the column, and whose
+        /// first-pass scores the column moves from the two-round run without it.
+        /// </summary>
+        private void AssertLinearProteinBestAnalysis()
+        {
+            string offDir = CreateDir(@"protein-best-svm-off");
+            RunAnalysis(offDir, DataInputs(), ProteinBestVariables(null));
+            string onDir = CreateDir(@"protein-best-svm-on");
+            RunAnalysis(onDir, DataInputs(), ProteinBestVariables(@"mean-2"), BenchArgs(onDir));
+            AssertProteinBestAnalysis(onDir);
+            var saved = FirstPassModelIO.Load(Directory.GetFiles(onDir, @"*" + FirstPassModelIO.EXT_MODEL).Single());
+            Assert.IsNotNull(saved);
+            Assert.IsFalse(saved.Model.IsGradientBoostedTrees, @"the default classifier trains the linear SVM");
+            var offScores = FirstPassScores(offDir);
+            var onScores = FirstPassScores(onDir);
+            Assert.AreEqual(offScores.Count, onScores.Count, @"every row is scored");
+            AssertScoresDiffer(offScores, onScores, @"the column must move the linear scores");
         }
 
         /// <summary>
@@ -183,6 +199,16 @@ namespace pwiz.Osprey.Test
             var scorer = FrozenModelScorer.TryCreate(saved.Model);
             Assert.IsNotNull(scorer);
             Assert.IsTrue(scorer.ScoresProteinBest, @"and scores with it");
+        }
+
+        /// <summary>The FDRBench arguments for both passes, the table written in <paramref name="dir"/>.</summary>
+        private static string[] BenchArgs(string dir)
+        {
+            return new[]
+            {
+                OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, Path.Combine(dir, @"bench.tsv"),
+                OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
+            };
         }
 
         private static string[] ProteinBestColumns(string workDir)
@@ -220,11 +246,6 @@ namespace pwiz.Osprey.Test
             assertNames(refused(ProteinBestVariables(@"mean-99")), PROTEIN_BEST);
             // Without the two-round training that delivers it.
             assertNames(refused(new Dictionary<string, string>(ProteinBestVariables(@"max")) { [PREFILTER_SIZE] = string.Empty }), PREFILTER_SIZE);
-            if (classifier != FdrClassifier.Gbdt)
-            {
-                assertNames(refused(ProteinBestVariables(@"max")), @"OSPREY_FDR_MODEL");
-                return;
-            }
             assertNames(refused(new Dictionary<string, string>(ProteinBestVariables(@"max")) { [PROTEIN_BEST_DECOY] = @"both" }), PROTEIN_BEST_DECOY);
             // The stand-alone report, whose model views read the features without the column.
             assertNames(refused(ProteinBestVariables(@"max"), OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyTaskNames.MODEL_DIAGNOSTICS),
