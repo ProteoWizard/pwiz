@@ -51,8 +51,9 @@ namespace pwiz.SkylineTestUtil
     public static class UniprotApiVersionCheck
     {
         /// <summary>
-        /// Update this whenever the recorded responses in the various WebData.json files are
-        /// refreshed, so that the next API change UniProt makes is the one that gets reported.
+        /// Update this once the tests that go to the web confirm the recorded responses in the various
+        /// WebData.json files still agree with UniProt, or once those recordings are refreshed, so that
+        /// the next API change UniProt makes is the one that gets reported.
         /// </summary>
         public const string RECORDED_API_DEPLOYMENT_DATE = @"06-November-2026";
 
