@@ -48,6 +48,7 @@ namespace pwiz.Osprey.Test
         private const string ASTRAL_GOLDEN = @"astral-me-osprey-demux.golden.tsv";
         private const string STELLAR_SLICE = @"stellar-superoverlap-profile-slice.mzML";
         private const string STELLAR_GOLDEN = @"stellar-superoverlap-joint-demux.golden.tsv";
+        private const string STELLAR_MEASURE_GOLDEN = @"stellar-superoverlap-joint-demux-sigma038.golden.tsv";
         private const string ZTSCAN_SLICE = @"ztscan-a1-profile-slice.mzML";
         private const string ZTSCAN_KERNEL = @"ztscan-a1-kernel.profile.tsv";
         private const string ZTSCAN_GOLDEN = @"ztscan-a1-joint-demux.golden.tsv";
@@ -113,36 +114,15 @@ namespace pwiz.Osprey.Test
         /// Thermo Stellar SuperOverlap, profile: 4 Th windows in four passes 1 Th apart, each acquired spectrum split
         /// among the four 1 Th bins it covers by the staggered joint solve, each share centroided by Centrix, as
         /// <c>Osprey.DemuxTool --scheme staggered --profile --joint --ions</c> runs it. Each spectrum's ions are counted
-        /// from its fill time and the ion trap's ion response.
+        /// from its fill time and the ion trap's ion response. Twice: at the default sigma, which detects the most
+        /// peptides (three point spacings, 0.6 Th), and at 0.38 Th, which measures fragment m/z best and keeps most M+1
+        /// isotopes apart (<c>--peak-sigma-th 0.38</c>).
         /// </summary>
         [TestMethod]
         public void TestDemuxStellarFixture()
         {
-            var read = SpectrumFileReader.LoadAllSpectra(FixturePath(STELLAR_SLICE));
-            var ms2 = read.Ms2Spectra;
-            Assert.AreEqual(200, ms2.Count);
-            var acquisitions = Acquisitions(read, MassAnalyzerKind.ion_trap);
-
-            var scheme = Demultiplexer.DetectScheme(ms2);
-            Assert.AreEqual(DemuxSchemeKind.overlapping, scheme.Kind);
-            Assert.AreEqual(4, scheme.OverlapFactor);
-            Assert.AreEqual(8, scheme.Windows.Count);
-            Assert.AreEqual(11, scheme.Bins.Count);
-
-            var options = new ScanningDemuxOptions { Joint = true, IonsFromFillTime = true, Threads = 4 };
-            options.JointParameters.UseStaggeredDefaults();
-            var pipeline = new StaggeredDemuxPipeline(new SpectraDemuxSource(ms2, acquisitions), options, TextWriter.Null);
-            Assert.AreEqual(4 * ms2.Count, pipeline.OutputCount);
-            var lines = new List<string>();
-            for (int o = 0; o < pipeline.OutputCount; o++)
-            {
-                var bin = pipeline.BinOf(o);
-                var (mz, ions) = pipeline.Peaks(o);
-                double perIon = pipeline.IntensityPerIon(o);
-                lines.Add(Line(o, ms2[pipeline.BaseIndex(o)].ScanNumber.ToString(CultureInfo.InvariantCulture),
-                    bin.LowerBound, bin.UpperBound, mz, ions.Select(v => v * perIon).ToArray()));
-            }
-            CheckGolden(STELLAR_GOLDEN, lines);
+            CheckStellarJoint(0, STELLAR_GOLDEN);
+            CheckStellarJoint(0.38, STELLAR_MEASURE_GOLDEN);
         }
 
         /// <summary>
@@ -204,6 +184,41 @@ namespace pwiz.Osprey.Test
                 lines.Add(Line(o, scan, low, high, mz, ions));
             }
             CheckGolden(ZTSCAN_GOLDEN, lines);
+        }
+
+        /// <summary>
+        /// The Stellar SuperOverlap slice through the staggered joint solve at one profile peak sigma, Th (0: the run's).
+        /// </summary>
+        private static void CheckStellarJoint(double peakSigmaTh, string golden)
+        {
+            var read = SpectrumFileReader.LoadAllSpectra(FixturePath(STELLAR_SLICE));
+            var ms2 = read.Ms2Spectra;
+            Assert.AreEqual(200, ms2.Count);
+            var acquisitions = Acquisitions(read, MassAnalyzerKind.ion_trap);
+
+            var scheme = Demultiplexer.DetectScheme(ms2);
+            Assert.AreEqual(DemuxSchemeKind.overlapping, scheme.Kind);
+            Assert.AreEqual(4, scheme.OverlapFactor);
+            Assert.AreEqual(8, scheme.Windows.Count);
+            Assert.AreEqual(11, scheme.Bins.Count);
+
+            var options = new ScanningDemuxOptions
+            {
+                Joint = true, IonsFromFillTime = true, Threads = 4, LinearPeakSigmaTh = peakSigmaTh
+            };
+            options.JointParameters.UseStaggeredDefaults();
+            var pipeline = new StaggeredDemuxPipeline(new SpectraDemuxSource(ms2, acquisitions), options, TextWriter.Null);
+            Assert.AreEqual(4 * ms2.Count, pipeline.OutputCount);
+            var lines = new List<string>();
+            for (int o = 0; o < pipeline.OutputCount; o++)
+            {
+                var bin = pipeline.BinOf(o);
+                var (mz, ions) = pipeline.Peaks(o);
+                double perIon = pipeline.IntensityPerIon(o);
+                lines.Add(Line(o, ms2[pipeline.BaseIndex(o)].ScanNumber.ToString(CultureInfo.InvariantCulture),
+                    bin.LowerBound, bin.UpperBound, mz, ions.Select(v => v * perIon).ToArray()));
+            }
+            CheckGolden(golden, lines);
         }
 
         private static string FixturePath(string name)

@@ -55,6 +55,7 @@ setting does not: run with `OSPREY_DEMUX_MIN_CHANNEL_IONS=1`, the Astral test fa
 | `astral-me-osprey-demux.golden.tsv` | Osprey's `--demux auto` of it: 688 spectra in 9 bins of 2 Th |
 | `stellar-superoverlap-profile-slice.mzML` | Thermo Stellar SuperOverlap, profile: 200 MS2 spectra, 8 windows of 4 Th in four passes 1 Th apart (centers 600.52-607.53 m/z), 10.0-12.0 min, fragments 450-750 m/z on the 0.2 Th grid, zero points present, with fill times and the ion trap analyzer |
 | `stellar-superoverlap-joint-demux.golden.tsv` | The staggered joint solve, split and Centrix (`--scheme staggered --profile --joint --ions`): 800 spectra in 11 bins of 1 Th |
+| `stellar-superoverlap-joint-demux-sigma038.golden.tsv` | The same at MS2 sigma 0.38 Th, which measures fragment m/z best (`--peak-sigma-th 0.38`); the default, 0.6 Th, detects the most peptides |
 | `ztscan-a1-profile-slice.mzML` | SCIEX ZT Scan (ZenoTOF 8600), profile: six whole sweeps (MS1 at 300.062-304.916 s and their 35 encoded bins 584.83-625.00 m/z, 210 MS2 spectra), fragments 540-565 m/z |
 | `ztscan-a1-kernel.profile.tsv` | The run's measured quadrupole transmission (pwiz-ai `scripts/Osprey/Demux/kernels/A1_rt3-8.profile.tsv`) |
 | `ztscan-a1-joint-demux.golden.tsv` | The scanning joint solve with its own centroids (`--joint --layout centered:7`, output 600.2-609.6 m/z): 60 spectra, six sweeps of the survey scan, centroided by the same solve, and nine layout spectra |

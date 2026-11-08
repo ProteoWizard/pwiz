@@ -96,7 +96,7 @@ Per spectrum, in `CentrixCentroider` (`Osprey.Centroid`):
 **On a linear ion trap the MS2 sigma is three point spacings and the MS1 sigma 1.1**
 (`CentrixCalibration.MS2_SIGMA_PER_SPACING`, `MS1_SIGMA_PER_SPACING`): MS2 is searched, so it takes
 the sigma that detects the most peptides; MS1 is measured, so it takes the one that measures
-precursors best ([MS1: measuring precursors](#ms1-measuring-precursors)). The firmware fixes the
+precursors best of the sigmas tried ([MS1: measuring precursors](#ms1-measuring-precursors)). The firmware fixes the
 profile point spacing per scan rate, so the spacing identifies the rate
 (`LinearIonTrapScanRate.FromSpacing`), and the level's first profile spectrum settles its sigma.
 
@@ -160,8 +160,10 @@ run with 1:1 natural Arabidopsis entrapment, and fragment tolerance 0.5 Th.
 The vendor's centroids of the 2 Th profile runs (RawFileReader `Scan.ToCentroid`) give 43,252 /
 46,601, and separate injections acquired in centroid mode 46,412 / 50,088. Identifications rise from
 1.1 spacings to a broad plateau from 3 to 4.25 spacings, the same in all three acquisitions; 0.6 Th
-is within about 1% of the best in each, at both FDPs. Past 3 spacings the centroids move further toward
-the isotopes (MS2 offset -0.39 Th at 0.6, -0.24 at 0.85) and gain nothing.
+is within about 1% of the best in each, at both FDPs. Past 3 spacings the centroids move further
+toward the isotopes and gain nothing: the MS2 offset, observed minus predicted m/z (Osprey's
+calibration subtracts it), rises from -0.65 Th at 0.22 to -0.39 at 0.6 and -0.24 at 0.85, so the
+centroids sit higher, nearer the M+1.
 
 The fine-tuned library does not cause the preference for a wide sigma. Tuned on vendor centroids,
 which merge isotopes, it predicts more intensity on doubly charged fragments than the pretrained
@@ -373,9 +375,19 @@ Raise `ALGORITHM_VERSION` with any change that moves a centroid; the tag and key
 - **The intensity dependence of the width** is not modeled; one sigma serves each MS level.
 - **The joint demultiplexer's sigma** follows the same rule, three point spacings, for both its
   Gaussian and Centrix, and its searches are in [The peak sigma](#detecting-peptides-and-measuring-them).
-  The truth benchmark below was run at 1.1 spacings and 0.33 Th, not yet at 0.6 Th: at 1.1 spacings
-  the median cosine was 0.985 against 0.982 at k=2 and 0.939 against 0.930 at k=4, each scored
-  against truth centroided at the same sigma.
+  On the truth benchmark ([23](23-demultiplexing.md), rebuilt from the same 2 Th slice), it splits
+  less accurately at 0.6 Th than at narrower sigmas. Median, ion-weighted median and 10th
+  percentile cosine, each sigma scored against truth centroided at that sigma, and in parentheses
+  the share of the no-demultiplexing gap to a perfect cosine that the solve closes:
+
+  | k | 0.22 Th | 0.38 Th | 0.6 Th |
+  |---|---|---|---|
+  | 2 | 0.985 / 0.988 / 0.941 (94%) | 0.982 / 0.985 / 0.923 (94%) | 0.950 / 0.964 / 0.789 (86%) |
+  | 4 | 0.938 / 0.949 / 0.721 (89%) | 0.926 / 0.939 / 0.671 (88%) | 0.839 / 0.873 / 0.498 (76%) |
+
+  The searches still favor 0.6 Th (SuperOverlap 38,046 / 41,355 against 36,837 / 40,333 at
+  0.38 Th): detection tolerates a coarser split as it tolerates merged isotopes. To measure
+  demultiplexed fragments, 0.38 Th is better on both counts.
 - **Other scan rates.** The rule rests on 200 kTh/s alone (see [The peak sigma](#the-peak-sigma)).
 - **Other grids.** Orbitrap and TOF profiles are not uniform in m/z. `GridCentroider` (Osprey.Demux)
   runs Centrix on any profile grid's sample index, where a grid uniform in some coordinate of m/z is

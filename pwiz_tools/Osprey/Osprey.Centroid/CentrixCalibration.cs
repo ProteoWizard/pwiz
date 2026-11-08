@@ -79,7 +79,7 @@ namespace pwiz.Osprey.Centroid
     /// <para>On a linear ion trap, whose point spacing identifies its scan rate
     /// (<see cref="LinearIonTrapScanRate.FromSpacing"/>), it is three point spacings for MS2
     /// (<see cref="MS2_SIGMA_PER_SPACING"/>), the sigma that detects the most peptides, and 1.1 for MS1
-    /// (<see cref="MS1_SIGMA_PER_SPACING"/>), the sigma that measures precursors best. A Thermo Stellar's MS2
+    /// (<see cref="MS1_SIGMA_PER_SPACING"/>), better for precursors than the wider sigmas tried. A Thermo Stellar's MS2
     /// (200 kTh/s, 0.2 Th points), acquired with 2 Th windows and with 4 Th windows overlapped by half and SuperOverlap
     /// (demultiplexed jointly), was centroided at sigmas from 0.22 to 0.85 Th and searched with an entrapment library:
     /// identifications at matched entrapment FDP rise from 0.22 Th to a broad plateau from 0.6 to 0.85 Th, and 0.6 Th
@@ -126,8 +126,9 @@ namespace pwiz.Osprey.Centroid
         public const double MS2_SIGMA_PER_SPACING = 3.0;
 
         /// <summary>
-        /// A linear ion trap's MS1 sigma, in point spacings: the one that measures precursor isotopes best on the
-        /// Stellar's 67 kTh/s MS1 (0.073 Th), where MS1's sigma does not change identifications.
+        /// A linear ion trap's MS1 sigma, in point spacings: of those tried on the Stellar's 67 kTh/s MS1 (0.073, 0.20
+        /// and 0.255 Th), the one that measures precursor isotopes best; narrower sigmas were not tried. MS1's sigma
+        /// does not change identifications.
         /// </summary>
         public const double MS1_SIGMA_PER_SPACING = 1.1;
 
