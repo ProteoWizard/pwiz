@@ -487,9 +487,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Verifies the experiment-level columns of a search blib: absent from a library export,
         /// present once <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> asks for them, then
-        /// a precursor q-value, precursor PEP and peptide q-value on each spectrum and a q-value
-        /// on each protein group, with a group shared by two spectra written once and a spectrum
-        /// linked to two groups.
+        /// a precursor q-value and PEP and a peptide q-value and PEP on each spectrum and a
+        /// q-value and PEP on each protein group, with a group shared by two spectra written once
+        /// and a spectrum linked to two groups.
         /// </summary>
         [TestMethod]
         public void TestSearchGlobalColumns()
@@ -509,7 +509,9 @@ namespace pwiz.Osprey.Test
                     Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorQValue"));
                     Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorPep"));
                     Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptidePep"));
                     Assert.IsFalse(HasColumn(conn, "Proteins", "QValue"));
+                    Assert.IsFalse(HasColumn(conn, "Proteins", "Pep"));
                 }
 
                 long refId2, refId3;
@@ -518,11 +520,11 @@ namespace pwiz.Osprey.Test
                     writer.AddSearchGlobalColumns();
                     writer.BeginBatch();
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
-                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004));
-                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004));
-                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
-                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
-                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002));
+                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004, 0.03));
+                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004, 0.03));
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002, 0.01);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0, 1.0);
+                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002, 0.01));
                     writer.AddSpectrumProtein(refId2, groupA);
                     writer.AddSpectrumProtein(refId2, groupC);
                     writer.AddSpectrumProtein(refId3, groupA);
@@ -539,9 +541,15 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.03, QueryDouble(conn, "SELECT PeptidePep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.03, QueryDouble(conn, "SELECT PeptidePep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
                     Assert.AreEqual(0.002, QueryDouble(conn,
                         "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(0.01, QueryDouble(conn,
+                        "SELECT Pep FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(1.0, QueryDouble(conn,
+                        "SELECT Pep FROM Proteins WHERE accession = 'sp|P33333|C_HUMAN'"), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
                     Assert.AreEqual(2L, QueryLong(conn,
                         "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
