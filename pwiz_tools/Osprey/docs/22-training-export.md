@@ -102,21 +102,19 @@ One row per exported precursor per run, in ascending `entry_id` order:
 
 - **Targets only.** Decoys are never exported.
 - **Run q.** The precursor's run precursor q-value is at most `--training-export-max-q`. It is
-  the second-pass run q when `PerFileRescoring`'s per-run second pass wrote
-  `<stem>.2nd-pass.fdr_scores.bin`, and the first-pass run q from `<stem>.1st-pass.fdr_scores.bin`
-  otherwise (`TrainingExportWriter.RunQPath`); the footer's `osprey.training_export.run_q_pass`
-  says which. That is every run of an ordinary analysis, a single-run one included (measured on
-  Stellar: the worker wrote the second pass, and three runs of one command left the export
-  unchanged). "PerFileRescoring wrote it" means both the stamp embedded in the sidecar names
-  `PerFileRescoring` and this build (`Pass2FdrSidecar.HasWorkerStamp`, the test `SecondPassFDR`
-  folds by) and the worker's `<stem>.2nd-pass.fdr_decoys.bin` exists, which only the worker
-  writes: a worker sidecar without its decoys is not the worker's complete answer.
-  The first pass is used for two cases, and the export warns when it is. A run with no Stage 6
-  work never reaches the worker, and a `PerFileRescoring` with no readable saved first-pass model
-  has no worker at all; either way `SecondPassFDR` computes the run's second pass after the
-  export, so the q-values it reports can differ from the ones the export selected by. A row whose
-  apex reconciliation moved has no first-pass record at that apex; such rows are counted in a
-  warning and cannot be selected.
+  the **first-pass** run q from `<stem>.1st-pass.fdr_scores.bin` (`TrainingExportWriter.RunQPath`);
+  the footer's `osprey.training_export.run_q_pass` records it as `1`. The first pass competes the
+  whole run in one pool against every decoy - the undepleted, calibrated null a fine-tune should
+  learn from. The second pass's run q is a different statistic: under `protein-compact` it comes
+  from the protein stratum and its complement competing separately, each with its own conservative
+  `+1`, so on a small run a half accepts nothing at 1% (see [12-second-pass-fdr.md](12-second-pass-fdr.md)).
+  Selecting on it, as the export did until #4993 made that competition stratified, left two of the
+  three Stellar subset runs with no training rows at all (0 / 102 / 0 of 193 targets, against
+  118 / 111 / 121 at 1% in the first pass), and the RT fine-tune with one test row. The export
+  therefore reads a sidecar written before any re-scoring, so an export written while re-scoring
+  and one written later from disk agree, and `SecondPassFDR`'s reported q-values are expected to
+  differ from the ones the export selected by. A row whose apex reconciliation moved has no
+  first-pass record at that apex; such rows are counted in a warning and cannot be selected.
 - **No experiment-level values.** Experiment q-values and PEP exist only after `SecondPassFDR`,
   which runs after the export, and a per-run file is written once (P11). Join
   `<blib-stem>.2nd-pass.fdr_experiment.bin` by `entry_id` for them.
@@ -292,7 +290,7 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 | `osprey.training_export.max_q`, `osprey.training_export.claimant_q` | The thresholds applied |
 | `osprey.training_export.xics` | `true` / `false` |
 | `osprey.training_export.slot_order` | The slot layout, in words |
-| `osprey.training_export.run_q_pass` | `2` or `1`: the pass whose run q-values the rows were selected on (see Which rows) |
+| `osprey.training_export.run_q_pass` | `1`: the pass whose run q-values the rows were selected on, the first pass (see Which rows); `2` in exports written before that became the rule |
 | `osprey.training_export.mp_cosine_parity` | `N/M`: rows whose `mp_cosine_parity` is true, of all rows. A row with no fit counts as a match (both cosines are the no-fit value) |
 | `osprey.training_export.mp_cosine_parity_fitted` | `N/M`: the same over rows with a median-polish fit only - the count that tests the recomputation |
 | `osprey.rt_min`, `osprey.rt_max` | First and last MS2 retention time of the run, minutes |
