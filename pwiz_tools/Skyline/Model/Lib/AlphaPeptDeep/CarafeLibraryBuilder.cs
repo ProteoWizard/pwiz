@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string MODS = @"mods";
         private const string MOD_SITES = @"mod_sites";
         private const string CHARGE = @"charge";
-        private const string PROTEIN_ID = PrecursorTable.PROTEIN_ID;
+        public const string PROTEIN_ID = PrecursorTable.PROTEIN_ID;
 
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE, PROTEIN_ID };
 
