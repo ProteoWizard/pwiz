@@ -1247,25 +1247,30 @@ namespace CommonTest
         /// <summary>
         /// NCBI refuses a fourth Entrez request within a second when no API key is sent, and each
         /// Entrez lookup is two requests, the summary and then the full records. Every request,
-        /// not just every lookup, must come at least the request interval after the one before.
+        /// not just every lookup, must come at least the request interval after the one before -
+        /// including the first request of an importer created right after another finished.
         /// </summary>
         private static void TestEntrezRequestSpacing()
         {
+            const int IMPORTER_COUNT = 2;
             var provider = new EntrezRequestTimingProvider();
-            var proteins = new[] { "XP_915497", "NP_313205" }
-                .Select((accession, i) => new ProteinSearchInfo(
-                    new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
-                        WebEnabledFastaImporter.ENTREZ_TAG + accession)), 100 * (i + 1)))
-                .ToList();
-            var importer = new WebEnabledFastaImporter(provider)
+            for (int importerIndex = 0; importerIndex < IMPORTER_COUNT; importerIndex++)
             {
-                GiveUpOnUnresponsiveWebService = true
-            };
-            // The lookup yields lazily, so enumerate it to make it run
-            _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+                var proteins = new[] { "XP_915497", "NP_313205" }
+                    .Select((accession, i) => new ProteinSearchInfo(
+                        new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
+                            WebEnabledFastaImporter.ENTREZ_TAG + accession)), 100 * (i + 1)))
+                    .ToList();
+                var importer = new WebEnabledFastaImporter(provider)
+                {
+                    GiveUpOnUnresponsiveWebService = true
+                };
+                // The lookup yields lazily, so enumerate it to make it run
+                _ = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            }
 
             var times = provider.RequestTimes;
-            Assert.IsTrue(times.Count >= 2, $"Expected the summary and full requests, but saw {times.Count}");
+            Assert.IsTrue(times.Count >= 2 * IMPORTER_COUNT, $"Expected the summary and full requests of each importer, but saw {times.Count}");
             // Allow for the clock and the sleep not agreeing to the millisecond
             var shortestGap = WebEnabledFastaImporter.ENTREZ_REQUEST_INTERVAL - TimeSpan.FromMilliseconds(20);
             for (int i = 1; i < times.Count; i++)

@@ -290,7 +290,9 @@ namespace pwiz.ProteomeDatabase.Fasta
         private List<ProteinSearchInfo> _activeUniprotRequeueList;
         private TimeSpan _rateLimitDelay; // How long the web service last asked us to wait
         private bool _probingWebAccess; // True during the uncancelable HasWebAccess check
-        private readonly Stopwatch _entrezRequestClock = new Stopwatch(); // Since the last Entrez request began
+        // NCBI counts every request from this client, whichever importer sent it
+        private static readonly object _entrezRequestLock = new object();
+        private static readonly Stopwatch _entrezRequestClock = new Stopwatch(); // Since the last Entrez request began
 
         /// <summary>
         /// Test seam: when true, a web service that repeatedly fails to return usable data - whether
@@ -894,7 +896,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public IEnumerable<ProteinSearchInfo> DoWebserviceLookup(IEnumerable<ProteinSearchInfo> proteinsToSearch, IProgressMonitor progressMonitor, bool singleBatch)
         {
             const int SINGLE_BATCH_SIZE = 500; // If caller has indicated that it wants to do a single batch and return for more later, stop after this many successes
-            const int ENTREZ_RATELIMIT = 333; // 1/3 second between requests on Entrez
+            const int ENTREZ_RATELIMIT = 0; // Each Entrez request is spaced by WaitForEntrezRequestInterval
             const int UNIPROTKB_RATELIMIT = 10; 
             var searchOrder = new[]
             {
@@ -1025,7 +1027,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         nextSearch++;
                     }
 
-                    // Be a good citizen - no more than three hits per second for Entrez
+                    // Be a good citizen - space out requests to each web service
                     var snoozeMs = _webSearchProvider.IsPolite ?
                         politenessIntervalMsec - politeStopwatch.ElapsedMilliseconds : 0;
                     if (snoozeMs > 0)
@@ -1242,17 +1244,21 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// <summary>
         /// Waits until <see cref="ENTREZ_REQUEST_INTERVAL"/> has passed since the last Entrez request
         /// began, then starts timing the next. Spacing each request, not each lookup, matters because
-        /// a lookup sends its summary and full requests back to back.
+        /// a lookup sends its summary and full requests back to back. The clock is shared by every
+        /// importer, so one created right after another still waits its turn.
         /// </summary>
         private void WaitForEntrezRequestInterval()
         {
-            if (_webSearchProvider.IsPolite && _entrezRequestClock.IsRunning)
+            lock (_entrezRequestLock)
             {
-                var remaining = ENTREZ_REQUEST_INTERVAL - _entrezRequestClock.Elapsed;
-                if (remaining > TimeSpan.Zero)
-                    Thread.Sleep(remaining);
+                if (_webSearchProvider.IsPolite && _entrezRequestClock.IsRunning)
+                {
+                    var remaining = ENTREZ_REQUEST_INTERVAL - _entrezRequestClock.Elapsed;
+                    if (remaining > TimeSpan.Zero)
+                        Thread.Sleep(remaining);
+                }
+                _entrezRequestClock.Restart();
             }
-            _entrezRequestClock.Restart();
         }
 
         private bool EnsureEntrezKnownGood(IList<string> searchterms, char searchType)
