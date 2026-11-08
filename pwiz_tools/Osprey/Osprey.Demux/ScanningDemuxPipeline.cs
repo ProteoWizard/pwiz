@@ -186,6 +186,14 @@ namespace pwiz.Osprey.Demux
         /// <summary>Where Centrix's Th settings (its noise windows) become TOF samples: mid-range for fragments.</summary>
         private const double CENTRIX_REFERENCE_MZ = 600;
 
+        /// <summary>
+        /// The support of MS1's measured TOF kernels, samples either side: the default
+        /// <see cref="JointDemuxParams.PeakHalfWidth"/>, about 3 sigma of MS1's 1.6-1.7 sample peaks. Fixed, so a
+        /// wider MS2 Gaussian does not change MS1, and within the <see cref="TofPeakShape.ISOLATION"/> samples the
+        /// kernels are measured over.
+        /// </summary>
+        private const int SURVEY_PEAK_HALF_WIDTH = 5;
+
         private readonly IDemuxSource _source;
         private readonly ScanningKernel _kernel;
         private readonly ScanningDemuxOptions _options;
@@ -378,6 +386,7 @@ namespace pwiz.Osprey.Demux
                 _source.Release(index);
             }
             _surveyParameters = _options.JointParameters.Copy();
+            _surveyParameters.PeakHalfWidth = SURVEY_PEAK_HALF_WIDTH;
             var kernels = shape.Kernels(_surveyParameters.PeakHalfWidth, 50);
             if (kernels.HasValue)
             {
